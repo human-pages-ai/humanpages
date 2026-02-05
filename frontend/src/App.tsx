@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -28,10 +29,20 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
+function HomeRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<HomeRoute />} />
       <Route
         path="/login"
         element={
