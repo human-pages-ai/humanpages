@@ -30,6 +30,12 @@ interface Profile {
   contactEmail?: string;
   telegram?: string;
   isAvailable: boolean;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  websiteUrl?: string;
   wallets: Wallet[];
   services: Service[];
 }
@@ -50,6 +56,12 @@ export default function Dashboard() {
     skills: '',
     contactEmail: '',
     telegram: '',
+    linkedinUrl: '',
+    twitterUrl: '',
+    githubUrl: '',
+    instagramUrl: '',
+    youtubeUrl: '',
+    websiteUrl: '',
   });
 
   // Wallet form state
@@ -75,6 +87,12 @@ export default function Dashboard() {
         skills: data.skills?.join(', ') || '',
         contactEmail: data.contactEmail || '',
         telegram: data.telegram || '',
+        linkedinUrl: data.linkedinUrl || '',
+        twitterUrl: data.twitterUrl || '',
+        githubUrl: data.githubUrl || '',
+        instagramUrl: data.instagramUrl || '',
+        youtubeUrl: data.youtubeUrl || '',
+        websiteUrl: data.websiteUrl || '',
       });
     } catch (error) {
       console.error('Failed to load profile:', error);
@@ -106,6 +124,12 @@ export default function Dashboard() {
         skills: profileForm.skills.split(',').map(s => s.trim()).filter(Boolean),
         contactEmail: profileForm.contactEmail || null,
         telegram: profileForm.telegram || null,
+        linkedinUrl: profileForm.linkedinUrl || null,
+        twitterUrl: profileForm.twitterUrl || null,
+        githubUrl: profileForm.githubUrl || null,
+        instagramUrl: profileForm.instagramUrl || null,
+        youtubeUrl: profileForm.youtubeUrl || null,
+        websiteUrl: profileForm.websiteUrl || null,
       });
       setProfile(updated);
       setEditingProfile(false);
@@ -297,6 +321,74 @@ export default function Dashboard() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
+
+              {/* Social Profiles Section */}
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Social Profiles (for trust)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">LinkedIn</label>
+                    <input
+                      type="url"
+                      value={profileForm.linkedinUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
+                      placeholder="https://linkedin.com/in/username"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Twitter / X</label>
+                    <input
+                      type="url"
+                      value={profileForm.twitterUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, twitterUrl: e.target.value })}
+                      placeholder="https://twitter.com/username"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">GitHub</label>
+                    <input
+                      type="url"
+                      value={profileForm.githubUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, githubUrl: e.target.value })}
+                      placeholder="https://github.com/username"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Instagram</label>
+                    <input
+                      type="url"
+                      value={profileForm.instagramUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, instagramUrl: e.target.value })}
+                      placeholder="https://instagram.com/username"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">YouTube</label>
+                    <input
+                      type="url"
+                      value={profileForm.youtubeUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, youtubeUrl: e.target.value })}
+                      placeholder="https://youtube.com/@channel"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Website</label>
+                    <input
+                      type="url"
+                      value={profileForm.websiteUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, websiteUrl: e.target.value })}
+                      placeholder="https://yourwebsite.com"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <button
                 onClick={saveProfile}
                 disabled={saving}
@@ -313,6 +405,52 @@ export default function Dashboard() {
               <p><span className="font-medium">Skills:</span> {profile.skills?.join(', ') || 'None'}</p>
               <p><span className="font-medium">Contact Email:</span> {profile.contactEmail || 'Not set'}</p>
               <p><span className="font-medium">Telegram:</span> {profile.telegram || 'Not set'}</p>
+
+              {/* Social Profiles Display */}
+              {(profile.linkedinUrl || profile.twitterUrl || profile.githubUrl ||
+                profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl) && (
+                <div className="pt-3 mt-3 border-t border-gray-200">
+                  <p className="font-medium mb-2">Social Profiles:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.linkedinUrl && (
+                      <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
+                        LinkedIn
+                      </a>
+                    )}
+                    {profile.twitterUrl && (
+                      <a href={profile.twitterUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs hover:bg-sky-200">
+                        Twitter
+                      </a>
+                    )}
+                    {profile.githubUrl && (
+                      <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                        GitHub
+                      </a>
+                    )}
+                    {profile.instagramUrl && (
+                      <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200">
+                        Instagram
+                      </a>
+                    )}
+                    {profile.youtubeUrl && (
+                      <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
+                        YouTube
+                      </a>
+                    )}
+                    {profile.websiteUrl && (
+                      <a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200">
+                        Website
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -26,6 +26,14 @@ model Human {
   githubId      String?  @unique
   avatarUrl     String?
 
+  // Social profiles for trust
+  linkedinUrl   String?
+  twitterUrl    String?
+  githubUrl     String?
+  instagramUrl  String?
+  youtubeUrl    String?
+  websiteUrl    String?
+
   wallets       Wallet[]
   services      Service[]
 }

@@ -17,6 +17,12 @@ interface Human {
   contactEmail?: string;
   telegram?: string;
   isAvailable: boolean;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  websiteUrl?: string;
   wallets: { network: string; address: string; label?: string }[];
   services: { title: string; description: string; category: string; priceRange?: string }[];
 }
@@ -173,6 +179,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         .map((s) => `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${s.priceRange || 'Negotiable'}`)
         .join('\n\n');
 
+      const socialLinks = [
+        human.linkedinUrl && `- LinkedIn: ${human.linkedinUrl}`,
+        human.twitterUrl && `- Twitter: ${human.twitterUrl}`,
+        human.githubUrl && `- GitHub: ${human.githubUrl}`,
+        human.instagramUrl && `- Instagram: ${human.instagramUrl}`,
+        human.youtubeUrl && `- YouTube: ${human.youtubeUrl}`,
+        human.websiteUrl && `- Website: ${human.websiteUrl}`,
+      ].filter(Boolean).join('\n');
+
       const details = `# ${human.name}
 ${human.isAvailable ? '✅ Available' : '❌ Not Available'}
 
@@ -188,6 +203,9 @@ ${human.skills.join(', ') || 'None listed'}
 ## Contact
 - Email: ${human.contactEmail || 'Not provided'}
 - Telegram: ${human.telegram || 'Not provided'}
+
+## Social Profiles
+${socialLinks || 'No social profiles added'}
 
 ## Wallets
 ${walletInfo || 'No wallets added'}

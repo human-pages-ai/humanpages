@@ -13,6 +13,13 @@ const updateProfileSchema = z.object({
   contactEmail: z.string().email().optional(),
   telegram: z.string().optional(),
   isAvailable: z.boolean().optional(),
+  // Social profiles
+  linkedinUrl: z.string().url().optional().nullable(),
+  twitterUrl: z.string().url().optional().nullable(),
+  githubUrl: z.string().url().optional().nullable(),
+  instagramUrl: z.string().url().optional().nullable(),
+  youtubeUrl: z.string().url().optional().nullable(),
+  websiteUrl: z.string().url().optional().nullable(),
 });
 
 // Get current user profile
@@ -87,6 +94,12 @@ router.get('/search', async (req, res) => {
         contactEmail: true,
         telegram: true,
         isAvailable: true,
+        linkedinUrl: true,
+        twitterUrl: true,
+        githubUrl: true,
+        instagramUrl: true,
+        youtubeUrl: true,
+        websiteUrl: true,
         wallets: {
           select: { network: true, address: true, label: true },
         },
@@ -118,6 +131,12 @@ router.get('/:id', async (req, res) => {
         contactEmail: true,
         telegram: true,
         isAvailable: true,
+        linkedinUrl: true,
+        twitterUrl: true,
+        githubUrl: true,
+        instagramUrl: true,
+        youtubeUrl: true,
+        websiteUrl: true,
         wallets: {
           select: { network: true, address: true, label: true },
         },
