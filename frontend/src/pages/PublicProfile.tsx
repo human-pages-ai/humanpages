@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { analytics } from '../lib/analytics';
 
 interface Wallet {
   network: string;
@@ -45,7 +46,10 @@ export default function PublicProfile() {
     if (!id) return;
 
     api.getHumanById(id)
-      .then(setProfile)
+      .then((data) => {
+        setProfile(data);
+        analytics.track('profile_view', { profileId: id });
+      })
       .catch((err) => setError(err.message || 'Profile not found'))
       .finally(() => setLoading(false));
   }, [id]);

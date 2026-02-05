@@ -58,6 +58,7 @@ router.post('/google/callback', async (req, res) => {
     // Account linking logic:
     // 1. Check if user exists by Google ID
     let human = await prisma.human.findUnique({ where: { googleId } });
+    let isNew = false;
 
     if (!human) {
       // 2. Check if email matches existing account
@@ -83,6 +84,7 @@ router.post('/google/callback', async (req, res) => {
             contactEmail: email,
           },
         });
+        isNew = true;
       }
     }
 
@@ -91,6 +93,7 @@ router.post('/google/callback', async (req, res) => {
     res.json({
       human: { id: human.id, email: human.email, name: human.name },
       token,
+      isNew,
     });
   } catch (error) {
     console.error('Google OAuth error:', error);
@@ -132,7 +135,7 @@ router.post('/github/callback', async (req, res) => {
       }),
     });
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = await tokenResponse.json() as { error?: string; error_description?: string; access_token?: string };
 
     if (tokenData.error) {
       return res.status(400).json({ error: tokenData.error_description || 'Failed to get access token' });
@@ -148,7 +151,7 @@ router.post('/github/callback', async (req, res) => {
       },
     });
 
-    const userData = await userResponse.json();
+    const userData = await userResponse.json() as { id: number; avatar_url: string; name?: string; login: string };
     const githubId = String(userData.id);
     const avatarUrl = userData.avatar_url;
     const name = userData.name || userData.login;
@@ -161,8 +164,8 @@ router.post('/github/callback', async (req, res) => {
       },
     });
 
-    const emails = await emailsResponse.json();
-    const primaryEmail = emails.find((e: any) => e.primary)?.email || emails[0]?.email;
+    const emails = await emailsResponse.json() as Array<{ email: string; primary: boolean }>;
+    const primaryEmail = emails.find((e) => e.primary)?.email || emails[0]?.email;
 
     if (!primaryEmail) {
       return res.status(400).json({ error: 'Could not get email from GitHub' });
@@ -171,6 +174,7 @@ router.post('/github/callback', async (req, res) => {
     // Account linking logic:
     // 1. Check if user exists by GitHub ID
     let human = await prisma.human.findUnique({ where: { githubId } });
+    let isNew = false;
 
     if (!human) {
       // 2. Check if email matches existing account
@@ -196,6 +200,7 @@ router.post('/github/callback', async (req, res) => {
             contactEmail: primaryEmail,
           },
         });
+        isNew = true;
       }
     }
 
@@ -204,6 +209,7 @@ router.post('/github/callback', async (req, res) => {
     res.json({
       human: { id: human.id, email: human.email, name: human.name },
       token,
+      isNew,
     });
   } catch (error) {
     console.error('GitHub OAuth error:', error);

@@ -5,6 +5,8 @@ import DevelopersPage from './pages/DevelopersPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Onboarding from './pages/Onboarding';
+import Welcome from './pages/Welcome';
 import OAuthCallback from './pages/OAuthCallback';
 import PublicProfile from './pages/PublicProfile';
 import ForgotPassword from './pages/ForgotPassword';
@@ -66,6 +68,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/welcome"
+        element={
+          <ProtectedRoute>
+            <Welcome />
           </ProtectedRoute>
         }
       />

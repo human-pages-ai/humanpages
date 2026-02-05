@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { analytics } from '../lib/analytics';
 
 export default function OAuthCallback() {
   const [error, setError] = useState<string | null>(null);
@@ -29,10 +30,16 @@ export default function OAuthCallback() {
 
     // Exchange code for token
     api.oauthCallback(provider as 'google' | 'github', code)
-      .then(({ token }) => {
+      .then(({ token, isNew }) => {
         localStorage.setItem('token', token);
-        // Force a full page reload to refresh auth state
-        window.location.href = '/dashboard';
+        if (isNew) {
+          analytics.track('signup_complete', { method: provider });
+          // New users go to onboarding
+          window.location.href = '/onboarding';
+        } else {
+          // Existing users go to dashboard
+          window.location.href = '/dashboard';
+        }
       })
       .catch((err) => {
         setError(err.message || 'Authentication failed');

@@ -44,7 +44,7 @@ export const api = {
     request<{ url: string }>(`/oauth/${provider}`),
 
   oauthCallback: (provider: 'google' | 'github', code: string) =>
-    request<{ human: any; token: string }>(`/oauth/${provider}/callback`, {
+    request<{ human: any; token: string; isNew?: boolean }>(`/oauth/${provider}/callback`, {
       method: 'POST',
       body: JSON.stringify({ code }),
     }),

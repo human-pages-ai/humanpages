@@ -1,6 +1,7 @@
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, FormEvent } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { analytics } from '../lib/analytics';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -11,6 +12,16 @@ export default function Signup() {
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const { signup, loginWithGoogle, loginWithGithub } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    // Store referral ID if present
+    const ref = searchParams.get('ref');
+    if (ref) {
+      localStorage.setItem('referrer_id', ref);
+    }
+    analytics.track('signup_start');
+  }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -19,7 +30,8 @@ export default function Signup() {
 
     try {
       await signup(email, password, name);
-      navigate('/dashboard');
+      analytics.track('signup_complete', { method: 'email' });
+      navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     } finally {
