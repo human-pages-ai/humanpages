@@ -39,6 +39,16 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // OAuth
+  getOAuthUrl: (provider: 'google' | 'github') =>
+    request<{ url: string }>(`/oauth/${provider}`),
+
+  oauthCallback: (provider: 'google' | 'github', code: string) =>
+    request<{ human: any; token: string }>(`/oauth/${provider}/callback`, {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+
   // Profile
   getProfile: () => request<any>('/humans/me'),
 
@@ -77,4 +87,7 @@ export const api = {
 
   deleteService: (id: string) =>
     request<void>(`/services/${id}`, { method: 'DELETE' }),
+
+  // Public profiles
+  getHumanById: (id: string) => request<any>(`/humans/${id}`),
 };

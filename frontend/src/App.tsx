@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import OAuthCallback from './pages/OAuthCallback';
+import PublicProfile from './pages/PublicProfile';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -52,6 +54,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/auth/:provider/callback" element={<OAuthCallback />} />
+      <Route path="/humans/:id" element={<PublicProfile />} />
     </Routes>
   );
 }

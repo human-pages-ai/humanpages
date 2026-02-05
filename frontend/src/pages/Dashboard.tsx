@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
+import ProfileCompleteness from '../components/ProfileCompleteness';
 
 interface Wallet {
   id: string;
@@ -200,6 +201,9 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Profile Completeness */}
+        <ProfileCompleteness profile={profile} onEditProfile={() => setEditingProfile(true)} />
+
         {/* Availability Toggle */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">

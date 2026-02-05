@@ -10,7 +10,7 @@ datasource db {
 model Human {
   id            String   @id @default(cuid())
   email         String   @unique
-  passwordHash  String
+  passwordHash  String?  // Optional for OAuth-only users
   name          String
   bio           String?
   location      String?
@@ -20,6 +20,11 @@ model Human {
   isAvailable   Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // OAuth fields
+  googleId      String?  @unique
+  githubId      String?  @unique
+  avatarUrl     String?
 
   wallets       Wallet[]
   services      Service[]

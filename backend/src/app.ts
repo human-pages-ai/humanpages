@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
+import oauthRoutes from './routes/oauth.js';
 import humansRoutes from './routes/humans.js';
 import walletsRoutes from './routes/wallets.js';
 import servicesRoutes from './routes/services.js';
@@ -17,6 +18,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/oauth', oauthRoutes);
 app.use('/api/humans', humansRoutes);
 app.use('/api/wallets', walletsRoutes);
 app.use('/api/services', servicesRoutes);

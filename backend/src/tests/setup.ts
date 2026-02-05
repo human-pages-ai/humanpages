@@ -2,19 +2,16 @@ import { execSync } from 'child_process';
 import { beforeAll, afterAll } from 'vitest';
 import { prisma } from '../lib/prisma.js';
 
-// Migrate test database before all tests
+// Sync test database schema before all tests
 beforeAll(async () => {
   try {
-    execSync('npx prisma migrate deploy', {
+    execSync('npx prisma db push --accept-data-loss', {
       env: { ...process.env },
       stdio: 'pipe',
     });
   } catch (error) {
-    // If migrate deploy fails, try reset
-    execSync('npx prisma migrate reset --force', {
-      env: { ...process.env },
-      stdio: 'pipe',
-    });
+    console.error('Failed to sync test database:', error);
+    throw error;
   }
 });
 
