@@ -40,6 +40,32 @@ interface Profile {
   services: Service[];
 }
 
+interface Job {
+  id: string;
+  agentId: string;
+  agentName?: string;
+  title: string;
+  description: string;
+  category?: string;
+  priceUsdc: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
+  createdAt: string;
+  acceptedAt?: string;
+  paidAt?: string;
+  completedAt?: string;
+  review?: {
+    id: string;
+    rating: number;
+    comment?: string;
+  };
+}
+
+interface ReviewStats {
+  totalReviews: number;
+  averageRating: number;
+  completedJobs: number;
+}
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -72,8 +98,15 @@ export default function Dashboard() {
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceRange: '' });
 
+  // Jobs state
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [jobFilter, setJobFilter] = useState<'all' | 'pending' | 'active' | 'completed'>('all');
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
+
   useEffect(() => {
     loadProfile();
+    loadJobs();
   }, []);
 
   const loadProfile = async () => {
@@ -94,11 +127,87 @@ export default function Dashboard() {
         youtubeUrl: data.youtubeUrl || '',
         websiteUrl: data.websiteUrl || '',
       });
+      // Load review stats
+      if (data.id) {
+        try {
+          const reviewData = await api.getMyReviews(data.id);
+          setReviewStats(reviewData.stats);
+        } catch (e) {
+          console.error('Failed to load reviews:', e);
+        }
+      }
     } catch (error) {
       console.error('Failed to load profile:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadJobs = async () => {
+    try {
+      const data = await api.getJobs();
+      setJobs(data);
+    } catch (error) {
+      console.error('Failed to load jobs:', error);
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const acceptJob = async (jobId: string) => {
+    try {
+      await api.acceptJob(jobId);
+      await loadJobs();
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  const rejectJob = async (jobId: string) => {
+    if (!confirm('Reject this job offer?')) return;
+    try {
+      await api.rejectJob(jobId);
+      await loadJobs();
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  const completeJob = async (jobId: string) => {
+    try {
+      await api.completeJob(jobId);
+      await loadJobs();
+      // Reload profile to update review stats
+      await loadProfile();
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  const getFilteredJobs = () => {
+    switch (jobFilter) {
+      case 'pending':
+        return jobs.filter(j => j.status === 'PENDING');
+      case 'active':
+        return jobs.filter(j => ['ACCEPTED', 'PAID'].includes(j.status));
+      case 'completed':
+        return jobs.filter(j => j.status === 'COMPLETED');
+      default:
+        return jobs;
+    }
+  };
+
+  const getStatusBadge = (status: Job['status']) => {
+    const styles: Record<Job['status'], string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700',
+      ACCEPTED: 'bg-blue-100 text-blue-700',
+      REJECTED: 'bg-gray-100 text-gray-700',
+      PAID: 'bg-green-100 text-green-700',
+      COMPLETED: 'bg-purple-100 text-purple-700',
+      CANCELLED: 'bg-gray-100 text-gray-700',
+      DISPUTED: 'bg-red-100 text-red-700',
+    };
+    return styles[status] || 'bg-gray-100 text-gray-700';
   };
 
   const toggleAvailability = async () => {
@@ -249,6 +358,116 @@ export default function Dashboard() {
               {profile.isAvailable ? 'Available' : 'Unavailable'}
             </button>
           </div>
+        </div>
+
+        {/* Jobs Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Jobs</h2>
+              {reviewStats && (
+                <p className="text-gray-600 text-sm">
+                  {reviewStats.completedJobs} completed · {reviewStats.totalReviews} reviews ·
+                  {reviewStats.averageRating > 0 ? ` ${reviewStats.averageRating.toFixed(1)}★ avg` : ' No ratings yet'}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-1">
+              {(['all', 'pending', 'active', 'completed'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setJobFilter(filter)}
+                  className={`px-3 py-1 text-sm rounded-md capitalize ${
+                    jobFilter === filter
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {jobsLoading ? (
+            <p className="text-gray-500 text-sm">Loading jobs...</p>
+          ) : getFilteredJobs().length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                {jobFilter === 'all'
+                  ? 'No job offers yet. When AI agents want to hire you, their offers will appear here.'
+                  : `No ${jobFilter} jobs.`}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {getFilteredJobs().map((job) => (
+                <div key={job.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{job.title}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(job.status)}`}>
+                          {job.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{job.description}</p>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                        <span className="font-medium text-green-600">${job.priceUsdc} USDC</span>
+                        {job.agentName && <span>From: {job.agentName}</span>}
+                        {job.category && <span className="bg-gray-100 px-2 py-0.5 rounded">{job.category}</span>}
+                        <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                      </div>
+
+                      {/* Review display */}
+                      {job.review && (
+                        <div className="mt-3 p-3 bg-purple-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="text-yellow-500">{'★'.repeat(job.review.rating)}{'☆'.repeat(5 - job.review.rating)}</span>
+                            <span className="text-sm text-gray-600">Review received</span>
+                          </div>
+                          {job.review.comment && (
+                            <p className="text-sm text-gray-700 mt-1">"{job.review.comment}"</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2 ml-4">
+                      {job.status === 'PENDING' && (
+                        <>
+                          <button
+                            onClick={() => acceptJob(job.id)}
+                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => rejectJob(job.id)}
+                            className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {job.status === 'PAID' && (
+                        <button
+                          onClick={() => completeJob(job.id)}
+                          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+                        >
+                          Mark Complete
+                        </button>
+                      )}
+                      {job.status === 'ACCEPTED' && (
+                        <span className="text-sm text-blue-600">Awaiting payment...</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Profile Section */}

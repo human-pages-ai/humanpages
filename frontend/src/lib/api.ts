@@ -106,4 +106,20 @@ export const api = {
 
   // Public profiles
   getHumanById: (id: string) => request<any>(`/humans/${id}`),
+
+  // Jobs
+  getJobs: (status?: string) =>
+    request<any[]>(`/jobs${status ? `?status=${status}` : ''}`),
+
+  acceptJob: (id: string) =>
+    request<any>(`/jobs/${id}/accept`, { method: 'PATCH' }),
+
+  rejectJob: (id: string) =>
+    request<any>(`/jobs/${id}/reject`, { method: 'PATCH' }),
+
+  completeJob: (id: string) =>
+    request<any>(`/jobs/${id}/complete`, { method: 'PATCH' }),
+
+  getMyReviews: (humanId: string) =>
+    request<{ stats: any; reviews: any[] }>(`/jobs/human/${humanId}/reviews`),
 };
