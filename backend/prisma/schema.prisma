@@ -36,6 +36,71 @@ model Human {
 
   wallets       Wallet[]
   services      Service[]
+  jobs          Job[]
+  reviews       Review[]
+}
+
+// Job status flow: PENDING -> ACCEPTED -> PAID -> COMPLETED
+// Can be REJECTED or CANCELLED at various stages
+enum JobStatus {
+  PENDING    // Agent created offer, waiting for human to accept
+  ACCEPTED   // Human accepted, waiting for payment
+  REJECTED   // Human rejected the offer
+  PAID       // Payment received, work can begin
+  COMPLETED  // Work done, review unlocked
+  CANCELLED  // Cancelled by either party
+  DISPUTED   // Payment dispute
+}
+
+model Job {
+  id              String    @id @default(cuid())
+  humanId         String
+  agentId         String    // Identifier for the AI agent/requester
+  agentName       String?   // Display name for the agent
+
+  // Job details
+  title           String
+  description     String
+  category        String?
+
+  // Agreed price (locked when human accepts)
+  priceUsdc       Decimal   @db.Decimal(18, 6)
+
+  // Payment details (filled when paid)
+  paymentTxHash   String?   // On-chain transaction hash
+  paymentNetwork  String?   // e.g., "ethereum", "solana"
+  paymentAmount   Decimal?  @db.Decimal(18, 6) // Actual amount received
+  paidAt          DateTime?
+
+  status          JobStatus @default(PENDING)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  acceptedAt      DateTime?
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  human           Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  review          Review?
+
+  @@index([humanId, status])
+  @@index([agentId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  jobId       String   @unique
+  humanId     String
+
+  rating      Int      // 1-5 stars
+  comment     String?
+
+  createdAt   DateTime @default(now())
+
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  human       Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([humanId])
 }
 
 model Wallet {

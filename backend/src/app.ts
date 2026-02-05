@@ -5,6 +5,7 @@ import oauthRoutes from './routes/oauth.js';
 import humansRoutes from './routes/humans.js';
 import walletsRoutes from './routes/wallets.js';
 import servicesRoutes from './routes/services.js';
+import jobsRoutes from './routes/jobs.js';
 
 const app = express();
 
@@ -22,5 +23,6 @@ app.use('/api/oauth', oauthRoutes);
 app.use('/api/humans', humansRoutes);
 app.use('/api/wallets', walletsRoutes);
 app.use('/api/services', servicesRoutes);
+app.use('/api/jobs', jobsRoutes);
 
 export default app;

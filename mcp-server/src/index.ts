@@ -27,6 +27,32 @@ interface Human {
   services: { title: string; description: string; category: string; priceRange?: string }[];
 }
 
+interface Job {
+  id: string;
+  humanId: string;
+  agentId: string;
+  agentName?: string;
+  title: string;
+  description: string;
+  category?: string;
+  priceUsdc: string;
+  paymentTxHash?: string;
+  paymentNetwork?: string;
+  paymentAmount?: string;
+  paidAt?: string;
+  status: string;
+  createdAt: string;
+  acceptedAt?: string;
+  completedAt?: string;
+  human: { id: string; name: string };
+  review?: { id: string; rating: number; comment?: string };
+}
+
+interface ApiError {
+  error?: string;
+  reason?: string;
+}
+
 async function searchHumans(params: {
   skill?: string;
   location?: string;
@@ -105,30 +131,107 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
-      name: 'record_job',
+      name: 'create_job_offer',
       description:
-        'Record that a job/task has been assigned to a human. Use this to track job assignments for analytics and to help the human build their reputation.',
+        'Create a job offer for a human. The human must ACCEPT the offer before you can proceed with payment. This mutual handshake prevents spam and enables reputation tracking.',
       inputSchema: {
         type: 'object',
         properties: {
           human_id: {
             type: 'string',
-            description: 'The ID of the human assigned to the job',
+            description: 'The ID of the human to hire',
           },
-          task_description: {
+          title: {
             type: 'string',
-            description: 'Brief description of the task assigned',
+            description: 'Title of the job/task',
           },
-          task_category: {
+          description: {
             type: 'string',
-            description: 'Category of the task (e.g., "research", "development", "design")',
+            description: 'Detailed description of what needs to be done',
           },
-          agreed_price: {
+          category: {
             type: 'string',
-            description: 'The agreed price for the task (optional)',
+            description: 'Category of the task (e.g., "photography", "research", "delivery")',
+          },
+          price_usdc: {
+            type: 'number',
+            description: 'Agreed price in USDC',
+          },
+          agent_id: {
+            type: 'string',
+            description: 'Your unique agent identifier',
+          },
+          agent_name: {
+            type: 'string',
+            description: 'Display name for your agent (optional)',
           },
         },
-        required: ['human_id', 'task_description'],
+        required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id'],
+      },
+    },
+    {
+      name: 'get_job_status',
+      description:
+        'Check the status of a job offer. Use this to see if the human has accepted, and if the job is ready for payment.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: {
+            type: 'string',
+            description: 'The job ID returned from create_job_offer',
+          },
+        },
+        required: ['job_id'],
+      },
+    },
+    {
+      name: 'mark_job_paid',
+      description:
+        'Record that payment has been sent for an ACCEPTED job. The job must be accepted by the human first. Payment amount must match or exceed the agreed price.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: {
+            type: 'string',
+            description: 'The job ID',
+          },
+          payment_tx_hash: {
+            type: 'string',
+            description: 'The on-chain transaction hash',
+          },
+          payment_network: {
+            type: 'string',
+            description: 'The blockchain network (e.g., "ethereum", "solana")',
+          },
+          payment_amount: {
+            type: 'number',
+            description: 'The amount paid in USDC',
+          },
+        },
+        required: ['job_id', 'payment_tx_hash', 'payment_network', 'payment_amount'],
+      },
+    },
+    {
+      name: 'leave_review',
+      description:
+        'Leave a review for a COMPLETED job. Reviews are only allowed after the human marks the job as complete.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: {
+            type: 'string',
+            description: 'The job ID',
+          },
+          rating: {
+            type: 'number',
+            description: 'Rating from 1-5 stars',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional review comment',
+          },
+        },
+        required: ['job_id', 'rating'],
       },
     },
   ],
@@ -218,32 +321,170 @@ ${servicesInfo || 'No services listed'}`;
       };
     }
 
-    if (name === 'record_job') {
-      const humanId = args?.human_id as string;
-      const taskDescription = args?.task_description as string;
-      const taskCategory = args?.task_category as string | undefined;
-      const agreedPrice = args?.agreed_price as string | undefined;
+    if (name === 'create_job_offer') {
+      const res = await fetch(`${API_BASE}/api/jobs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          humanId: args?.human_id,
+          agentId: args?.agent_id,
+          agentName: args?.agent_name,
+          title: args?.title,
+          description: args?.description,
+          category: args?.category,
+          priceUsdc: args?.price_usdc,
+        }),
+      });
 
-      // Verify the human exists
-      const human = await getHuman(humanId);
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
 
-      // Log the job record (in production, this would store to a database)
-      const jobRecord = {
-        humanId,
-        humanName: human.name,
-        taskDescription,
-        taskCategory: taskCategory || 'general',
-        agreedPrice: agreedPrice || 'Not specified',
-        recordedAt: new Date().toISOString(),
-      };
-
-      console.error('Job recorded:', JSON.stringify(jobRecord));
+      const job = await res.json() as Job;
+      const human = await getHuman(args?.human_id as string);
 
       return {
         content: [
           {
             type: 'text',
-            text: `Job recorded successfully!\n\n**Human:** ${human.name}\n**Task:** ${taskDescription}\n**Category:** ${taskCategory || 'general'}\n**Price:** ${agreedPrice || 'Not specified'}\n\nContact ${human.name} at: ${human.contactEmail || human.telegram || 'See profile for contact info'}`,
+            text: `**Job Offer Created!**
+
+**Job ID:** ${job.id}
+**Status:** ${job.status}
+**Human:** ${human.name}
+**Price:** $${args?.price_usdc} USDC
+
+⏳ **Next Step:** Wait for ${human.name} to accept the offer.
+Use \`get_job_status\` with job_id "${job.id}" to check if they've accepted.
+
+Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to record the transaction.`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'get_job_status') {
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}`);
+      if (!res.ok) {
+        throw new Error(`Job not found: ${args?.job_id}`);
+      }
+
+      const job = await res.json() as Job;
+
+      const statusEmoji: Record<string, string> = {
+        PENDING: '⏳',
+        ACCEPTED: '✅',
+        REJECTED: '❌',
+        PAID: '💰',
+        COMPLETED: '🎉',
+        CANCELLED: '🚫',
+        DISPUTED: '⚠️',
+      };
+
+      let nextStep = '';
+      switch (job.status) {
+        case 'PENDING':
+          nextStep = 'Waiting for the human to accept or reject.';
+          break;
+        case 'ACCEPTED':
+          nextStep = `Human accepted! Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`;
+          break;
+        case 'REJECTED':
+          nextStep = 'The human rejected this offer. Consider adjusting your offer or finding another human.';
+          break;
+        case 'PAID':
+          nextStep = 'Payment recorded. Work is in progress. The human will mark it complete when done.';
+          break;
+        case 'COMPLETED':
+          nextStep = job.review
+            ? `Review submitted: ${job.review.rating}/5 stars`
+            : 'Job complete! You can now use `leave_review` to rate the human.';
+          break;
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Job Status**
+
+**Job ID:** ${job.id}
+**Status:** ${statusEmoji[job.status] || ''} ${job.status}
+**Title:** ${job.title}
+**Price:** $${job.priceUsdc} USDC
+**Human:** ${job.human.name}
+
+**Next Step:** ${nextStep}`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'mark_job_paid') {
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/paid`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentTxHash: args?.payment_tx_hash,
+          paymentNetwork: args?.payment_network,
+          paymentAmount: args?.payment_amount,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.reason || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { id: string; status: string; message: string };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Payment Recorded!**
+
+**Job ID:** ${result.id}
+**Status:** ${result.status}
+**Transaction:** ${args?.payment_tx_hash}
+**Network:** ${args?.payment_network}
+**Amount:** $${args?.payment_amount} USDC
+
+The human can now begin work. They will mark the job as complete when finished.
+After completion, you can leave a review using \`leave_review\`.`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'leave_review') {
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: args?.rating,
+          comment: args?.comment,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.reason || error.error || `API error: ${res.status}`);
+      }
+
+      const _review = await res.json() as { id: string; rating: number; message: string };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Review Submitted!**
+
+**Rating:** ${'⭐'.repeat(args?.rating as number)}
+${args?.comment ? `**Comment:** ${args?.comment}` : ''}
+
+Thank you for your feedback. This helps build the human's reputation.`,
           },
         ],
       };

@@ -1,0 +1,358 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import request from 'supertest';
+import app from '../app.js';
+import { prisma } from '../lib/prisma.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+
+describe('Jobs API - Mutual Handshake', () => {
+  let humanId: string;
+  let humanToken: string;
+  let jobId: string;
+
+  beforeAll(async () => {
+    // Create a test human
+    const passwordHash = await bcrypt.hash('password123', 10);
+    const human = await prisma.human.create({
+      data: {
+        email: 'job-test@example.com',
+        passwordHash,
+        name: 'Job Test Human',
+        contactEmail: 'job-test@example.com',
+        wallets: {
+          create: {
+            network: 'ethereum',
+            address: '0x1234567890123456789012345678901234567890',
+          },
+        },
+      },
+    });
+    humanId = human.id;
+    humanToken = jwt.sign({ userId: human.id }, JWT_SECRET, { expiresIn: '1d' });
+  });
+
+  afterAll(async () => {
+    // Clean up
+    await prisma.review.deleteMany({ where: { humanId } });
+    await prisma.job.deleteMany({ where: { humanId } });
+    await prisma.wallet.deleteMany({ where: { humanId } });
+    await prisma.human.delete({ where: { id: humanId } });
+  });
+
+  beforeEach(async () => {
+    // Clean up jobs before each test
+    await prisma.review.deleteMany({ where: { humanId } });
+    await prisma.job.deleteMany({ where: { humanId } });
+  });
+
+  describe('POST /api/jobs - Create Job Offer', () => {
+    it('should create a job offer in PENDING status', async () => {
+      const res = await request(app)
+        .post('/api/jobs')
+        .send({
+          humanId,
+          agentId: 'test-agent-123',
+          agentName: 'Test Agent',
+          title: 'Take photos of storefront',
+          description: 'Need 5 photos of the ABC Store on Main Street',
+          category: 'photography',
+          priceUsdc: 50,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe('PENDING');
+      expect(res.body.id).toBeDefined();
+      jobId = res.body.id;
+    });
+
+    it('should reject job for non-existent human', async () => {
+      const res = await request(app)
+        .post('/api/jobs')
+        .send({
+          humanId: 'non-existent-id',
+          agentId: 'test-agent-123',
+          title: 'Test job',
+          description: 'Test description',
+          priceUsdc: 50,
+        });
+
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/jobs/:id/accept - Human Accepts', () => {
+    beforeEach(async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          title: 'Test Job',
+          description: 'Test Description',
+          priceUsdc: 100,
+          status: 'PENDING',
+        },
+      });
+      jobId = job.id;
+    });
+
+    it('should allow human to accept pending job', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ACCEPTED');
+    });
+
+    it('should reject accept from unauthorized user', async () => {
+      const otherToken = jwt.sign({ userId: 'other-user-id' }, JWT_SECRET);
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${otherToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should reject accept for already accepted job', async () => {
+      // Accept first
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // Try to accept again
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('PATCH /api/jobs/:id/paid - Mark as Paid (Anti-Dusting)', () => {
+    beforeEach(async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          title: 'Test Job',
+          description: 'Test Description',
+          priceUsdc: 100,
+          status: 'PENDING',
+        },
+      });
+      jobId = job.id;
+    });
+
+    it('should REJECT payment for PENDING job (anti-dusting)', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/paid`)
+        .send({
+          paymentTxHash: '0xabc123',
+          paymentNetwork: 'ethereum',
+          paymentAmount: 100,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Payment rejected');
+      expect(res.body.reason).toContain('ACCEPTED');
+    });
+
+    it('should REJECT payment for underpayment', async () => {
+      // Accept the job first
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // Try to pay less than agreed
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/paid`)
+        .send({
+          paymentTxHash: '0xabc123',
+          paymentNetwork: 'ethereum',
+          paymentAmount: 50, // Less than agreed $100
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Payment rejected');
+      expect(res.body.reason).toContain('less than agreed');
+    });
+
+    it('should accept payment for ACCEPTED job with correct amount', async () => {
+      // Accept the job first
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // Pay correct amount
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/paid`)
+        .send({
+          paymentTxHash: '0xabc123',
+          paymentNetwork: 'ethereum',
+          paymentAmount: 100,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('PAID');
+    });
+  });
+
+  describe('POST /api/jobs/:id/review - Leave Review (Anti-Abuse)', () => {
+    beforeEach(async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          title: 'Test Job',
+          description: 'Test Description',
+          priceUsdc: 100,
+          status: 'PENDING',
+        },
+      });
+      jobId = job.id;
+    });
+
+    it('should REJECT review for PENDING job', async () => {
+      const res = await request(app)
+        .post(`/api/jobs/${jobId}/review`)
+        .send({ rating: 1, comment: 'Bad!' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Review rejected');
+    });
+
+    it('should REJECT review for ACCEPTED but not COMPLETED job', async () => {
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      const res = await request(app)
+        .post(`/api/jobs/${jobId}/review`)
+        .send({ rating: 1, comment: 'Bad!' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should REJECT review for PAID but not COMPLETED job', async () => {
+      // Accept
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // Pay
+      await request(app)
+        .patch(`/api/jobs/${jobId}/paid`)
+        .send({
+          paymentTxHash: '0xabc123',
+          paymentNetwork: 'ethereum',
+          paymentAmount: 100,
+        });
+
+      // Try to review before completion
+      const res = await request(app)
+        .post(`/api/jobs/${jobId}/review`)
+        .send({ rating: 1, comment: 'Bad!' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should allow review for COMPLETED job', async () => {
+      // Accept
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // Pay
+      await request(app)
+        .patch(`/api/jobs/${jobId}/paid`)
+        .send({
+          paymentTxHash: '0xabc123',
+          paymentNetwork: 'ethereum',
+          paymentAmount: 100,
+        });
+
+      // Complete
+      await request(app)
+        .patch(`/api/jobs/${jobId}/complete`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // Now review should work
+      const res = await request(app)
+        .post(`/api/jobs/${jobId}/review`)
+        .send({ rating: 5, comment: 'Great work!' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.rating).toBe(5);
+    });
+
+    it('should prevent duplicate reviews', async () => {
+      // Complete the full flow
+      await request(app)
+        .patch(`/api/jobs/${jobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      await request(app)
+        .patch(`/api/jobs/${jobId}/paid`)
+        .send({
+          paymentTxHash: '0xabc123',
+          paymentNetwork: 'ethereum',
+          paymentAmount: 100,
+        });
+
+      await request(app)
+        .patch(`/api/jobs/${jobId}/complete`)
+        .set('Authorization', `Bearer ${humanToken}`);
+
+      // First review
+      await request(app)
+        .post(`/api/jobs/${jobId}/review`)
+        .send({ rating: 5, comment: 'Great!' });
+
+      // Try second review
+      const res = await request(app)
+        .post(`/api/jobs/${jobId}/review`)
+        .send({ rating: 1, comment: 'Changed my mind!' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('already been reviewed');
+    });
+  });
+
+  describe('GET /api/jobs/human/:humanId/reviews - Public Reviews', () => {
+    it('should return reviews with stats', async () => {
+      // Create a completed job with review
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          agentName: 'Test Agent',
+          title: 'Completed Job',
+          description: 'Test',
+          priceUsdc: 100,
+          status: 'COMPLETED',
+          completedAt: new Date(),
+        },
+      });
+
+      await prisma.review.create({
+        data: {
+          jobId: job.id,
+          humanId,
+          rating: 5,
+          comment: 'Excellent!',
+        },
+      });
+
+      const res = await request(app)
+        .get(`/api/jobs/human/${humanId}/reviews`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.stats).toBeDefined();
+      expect(res.body.stats.totalReviews).toBe(1);
+      expect(res.body.stats.averageRating).toBe(5);
+      expect(res.body.reviews).toHaveLength(1);
+    });
+  });
+});
