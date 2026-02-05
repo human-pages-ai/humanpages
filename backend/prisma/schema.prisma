@@ -7,26 +7,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Rate type for pricing
+enum RateType {
+  HOURLY
+  FLAT_TASK
+  NEGOTIABLE
+}
+
 model Human {
   id            String   @id @default(cuid())
   email         String   @unique
   passwordHash  String?  // Optional for OAuth-only users
-  name          String
-  bio           String?
-  location      String?
-  skills        String[] @default([])
+
+  // ===== IDENTITY & TRUST (Human Readable) =====
+  name          String   // Display name (e.g., "Alice P.")
+  username      String?  @unique // Unique handle (e.g., "@alice_sf")
+  bio           String?  @db.VarChar(500) // Free text pitch
+  avatarUrl     String?
+
+  // Location
+  location      String?  // City display (e.g., "San Francisco, CA")
+  locationLat   Float?   // Latitude for radius search
+  locationLng   Float?   // Longitude for radius search
+
+  // ===== CAPABILITIES (Bot Readable) =====
+  skills        String[] @default([]) // Tags for search
+  equipment     String[] @default([]) // Hardware (car, drone, camera, etc.)
+  languages     String[] @default([]) // ISO codes (en, es, zh, etc.)
+  isAvailable   Boolean  @default(true) // Open for work
+
+  // ===== ECONOMICS (Deal Terms) =====
+  minRateUsdc   Decimal? @db.Decimal(18, 2) // Minimum rate filter
+  rateType      RateType @default(NEGOTIABLE)
+
+  // ===== COMMUNICATION =====
   contactEmail  String?
   telegram      String?
-  isAvailable   Boolean  @default(true)
+  signal        String?  // Signal number
+
+  // ===== ACTIVITY & REPUTATION (System Generated) =====
+  lastActiveAt  DateTime @default(now()) // For deprioritizing ghosts
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   // OAuth fields
   googleId      String?  @unique
   githubId      String?  @unique
-  avatarUrl     String?
 
-  // Social profiles for trust
+  // Social profiles for trust verification
   linkedinUrl   String?
   twitterUrl    String?
   githubUrl     String?
@@ -34,10 +62,17 @@ model Human {
   youtubeUrl    String?
   websiteUrl    String?
 
+  // Relations
   wallets       Wallet[]
   services      Service[]
   jobs          Job[]
   reviews       Review[]
+
+  // Indexes for fast agent search
+  @@index([skills])
+  @@index([locationLat, locationLng])
+  @@index([isAvailable])
+  @@index([lastActiveAt])
 }
 
 // Job status flow: PENDING -> ACCEPTED -> PAID -> COMPLETED
@@ -106,14 +141,17 @@ model Review {
 model Wallet {
   id        String   @id @default(cuid())
   humanId   String
-  network   String   // e.g., "ethereum", "solana", "bitcoin"
+  network   String   // e.g., "ethereum", "base", "solana", "bitcoin"
+  chain     String?  // Specific chain: "BASE", "OPTIMISM", "ARBITRUM", etc.
   address   String
   label     String?  // e.g., "Main wallet", "Business"
+  isPrimary Boolean  @default(false) // Preferred payment wallet
   createdAt DateTime @default(now())
 
   human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
 
   @@unique([humanId, network, address])
+  @@index([humanId, isPrimary])
 }
 
 model Service {

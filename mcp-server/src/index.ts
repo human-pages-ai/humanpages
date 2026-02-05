@@ -11,19 +11,35 @@ const API_BASE = process.env.API_BASE_URL || 'http://localhost:3001';
 interface Human {
   id: string;
   name: string;
+  username?: string;
   bio?: string;
+  avatarUrl?: string;
   location?: string;
+  locationLat?: number;
+  locationLng?: number;
   skills: string[];
+  equipment: string[];
+  languages: string[];
+  isAvailable: boolean;
+  minRateUsdc?: string;
+  rateType?: string;
   contactEmail?: string;
   telegram?: string;
-  isAvailable: boolean;
+  signal?: string;
   linkedinUrl?: string;
   twitterUrl?: string;
   githubUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;
-  wallets: { network: string; address: string; label?: string }[];
+  lastActiveAt?: string;
+  createdAt?: string;
+  reputation?: {
+    jobsCompleted: number;
+    avgRating: number;
+    reviewCount: number;
+  };
+  wallets: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
   services: { title: string; description: string; category: string; priceRange?: string }[];
 }
 
@@ -53,14 +69,28 @@ interface ApiError {
   reason?: string;
 }
 
-async function searchHumans(params: {
+interface SearchParams {
   skill?: string;
+  equipment?: string;
+  language?: string;
   location?: string;
+  lat?: number;
+  lng?: number;
+  radius?: number;
+  max_rate?: number;
   available_only?: boolean;
-}): Promise<Human[]> {
+}
+
+async function searchHumans(params: SearchParams): Promise<Human[]> {
   const query = new URLSearchParams();
   if (params.skill) query.set('skill', params.skill);
+  if (params.equipment) query.set('equipment', params.equipment);
+  if (params.language) query.set('language', params.language);
   if (params.location) query.set('location', params.location);
+  if (params.lat) query.set('lat', params.lat.toString());
+  if (params.lng) query.set('lng', params.lng.toString());
+  if (params.radius) query.set('radius', params.radius.toString());
+  if (params.max_rate) query.set('maxRate', params.max_rate.toString());
   if (params.available_only) query.set('available', 'true');
 
   const res = await fetch(`${API_BASE}/api/humans/search?${query}`);
@@ -95,17 +125,41 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'search_humans',
       description:
-        'Search for humans available for hire. Returns a list of humans matching the criteria with their contact info and wallet addresses for direct payment.',
+        'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates), and rate. Returns profiles with contact info, wallet addresses, and reputation stats.',
       inputSchema: {
         type: 'object',
         properties: {
           skill: {
             type: 'string',
-            description: 'Filter by skill (e.g., "javascript", "design", "data-analysis")',
+            description: 'Filter by skill tag (e.g., "photography", "driving", "notary")',
+          },
+          equipment: {
+            type: 'string',
+            description: 'Filter by equipment (e.g., "car", "drone", "camera")',
+          },
+          language: {
+            type: 'string',
+            description: 'Filter by language ISO code (e.g., "en", "es", "zh")',
           },
           location: {
             type: 'string',
-            description: 'Filter by location (partial match, e.g., "San Francisco")',
+            description: 'Filter by location name (partial match, e.g., "San Francisco")',
+          },
+          lat: {
+            type: 'number',
+            description: 'Latitude for radius search (requires lng and radius)',
+          },
+          lng: {
+            type: 'number',
+            description: 'Longitude for radius search (requires lat and radius)',
+          },
+          radius: {
+            type: 'number',
+            description: 'Search radius in kilometers (requires lat and lng)',
+          },
+          max_rate: {
+            type: 'number',
+            description: 'Maximum hourly rate in USDC (filters by minRateUsdc)',
           },
           available_only: {
             type: 'boolean',
@@ -244,7 +298,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'search_humans') {
       const humans = await searchHumans({
         skill: args?.skill as string | undefined,
+        equipment: args?.equipment as string | undefined,
+        language: args?.language as string | undefined,
         location: args?.location as string | undefined,
+        lat: args?.lat as number | undefined,
+        lng: args?.lng as number | undefined,
+        radius: args?.radius as number | undefined,
+        max_rate: args?.max_rate as number | undefined,
         available_only: args?.available_only !== false,
       });
 
@@ -256,13 +316,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       const summary = humans
         .map((h) => {
-          const walletInfo = h.wallets.map((w) => `${w.network}: ${w.address}`).join(', ');
-          const contact = [h.contactEmail, h.telegram].filter(Boolean).join(' | ');
-          return `- **${h.name}** (${h.location || 'Location not specified'})
-  Skills: ${h.skills.join(', ')}
-  Contact: ${contact}
-  Wallets: ${walletInfo}
-  Services: ${h.services.map((s) => `${s.title} (${s.priceRange || 'Price negotiable'})`).join(', ')}`;
+          const primaryWallet = h.wallets.find((w) => w.isPrimary) || h.wallets[0];
+          const walletInfo = primaryWallet
+            ? `${primaryWallet.chain || primaryWallet.network}: ${primaryWallet.address}`
+            : 'No wallet';
+          const contact = [h.contactEmail, h.telegram, h.signal].filter(Boolean).join(' | ');
+          const rep = h.reputation;
+          const rating = rep && rep.avgRating > 0 ? `${rep.avgRating}★ (${rep.reviewCount} reviews)` : 'No reviews';
+
+          return `- **${h.name}**${h.username ? ` (@${h.username})` : ''} [${h.location || 'Location not specified'}]
+  ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${h.minRateUsdc ? `$${h.minRateUsdc}+` : 'Rate negotiable'} | ${rating}
+  Skills: ${h.skills.join(', ') || 'None listed'}
+  Equipment: ${h.equipment.join(', ') || 'None listed'}
+  Languages: ${h.languages.join(', ') || 'Not specified'}
+  Contact: ${contact || 'See profile'}
+  Wallet: ${walletInfo}
+  Jobs completed: ${rep?.jobsCompleted || 0}`;
         })
         .join('\n\n');
 
@@ -274,8 +343,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'get_human') {
       const human = await getHuman(args?.id as string);
 
+      const primaryWallet = human.wallets.find((w) => w.isPrimary) || human.wallets[0];
       const walletInfo = human.wallets
-        .map((w) => `- ${w.network}${w.label ? ` (${w.label})` : ''}: ${w.address}`)
+        .map((w) => `- ${w.chain || w.network}${w.label ? ` (${w.label})` : ''}${w.isPrimary ? ' ⭐' : ''}: ${w.address}`)
         .join('\n');
 
       const servicesInfo = human.services
@@ -291,8 +361,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         human.websiteUrl && `- Website: ${human.websiteUrl}`,
       ].filter(Boolean).join('\n');
 
-      const details = `# ${human.name}
+      const rep = human.reputation;
+      const rating = rep && rep.avgRating > 0 ? `${rep.avgRating}★ (${rep.reviewCount} reviews)` : 'No reviews yet';
+
+      const details = `# ${human.name}${human.username ? ` (@${human.username})` : ''}
 ${human.isAvailable ? '✅ Available' : '❌ Not Available'}
+
+## Reputation
+- Jobs completed: ${rep?.jobsCompleted || 0}
+- Rating: ${rating}
 
 ## Bio
 ${human.bio || 'No bio provided'}
@@ -300,18 +377,26 @@ ${human.bio || 'No bio provided'}
 ## Location
 ${human.location || 'Not specified'}
 
-## Skills
-${human.skills.join(', ') || 'None listed'}
+## Capabilities
+- **Skills:** ${human.skills.join(', ') || 'None listed'}
+- **Equipment:** ${human.equipment.join(', ') || 'None listed'}
+- **Languages:** ${human.languages.join(', ') || 'Not specified'}
+
+## Economics
+- **Minimum Rate:** ${human.minRateUsdc ? `$${human.minRateUsdc} USDC` : 'Negotiable'}
+- **Rate Type:** ${human.rateType || 'NEGOTIABLE'}
 
 ## Contact
 - Email: ${human.contactEmail || 'Not provided'}
 - Telegram: ${human.telegram || 'Not provided'}
+- Signal: ${human.signal || 'Not provided'}
 
-## Social Profiles
-${socialLinks || 'No social profiles added'}
-
-## Wallets
+## Payment Wallets
 ${walletInfo || 'No wallets added'}
+${primaryWallet ? `\n**Preferred wallet:** ${primaryWallet.chain || primaryWallet.network} - ${primaryWallet.address}` : ''}
+
+## Social Profiles (Trust Verification)
+${socialLinks || 'No social profiles added'}
 
 ## Services Offered
 ${servicesInfo || 'No services listed'}`;
