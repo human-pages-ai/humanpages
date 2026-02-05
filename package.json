@@ -8,7 +8,9 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "dev:mcp": "cd mcp-server && npm run dev"
+    "dev:mcp": "cd mcp-server && npm run dev",
+    "test": "cd backend && npm test",
+    "test:watch": "cd backend && npm run test:watch"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

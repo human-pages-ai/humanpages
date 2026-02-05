@@ -17,6 +17,10 @@ cd ..
 echo "⏳ Waiting for PostgreSQL to be ready..."
 sleep 3
 
+# Create test database
+echo "🧪 Creating test database..."
+docker exec humans_db psql -U humans -d humans_marketplace -c "CREATE DATABASE humans_marketplace_test;" 2>/dev/null || echo "Test database already exists"
+
 # Install backend dependencies
 echo "📦 Installing backend dependencies..."
 cd backend
@@ -48,8 +52,10 @@ echo ""
 echo "✅ Setup complete!"
 echo ""
 echo "To start the development servers, run:"
-echo "  Backend:  cd backend && npm run dev"
-echo "  Frontend: cd frontend && npm run dev"
+echo "  npm run dev"
+echo ""
+echo "To run tests:"
+echo "  npm test"
 echo ""
 echo "API will be available at http://localhost:3001"
 echo "Frontend will be available at http://localhost:3000"
