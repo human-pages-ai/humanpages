@@ -18,7 +18,7 @@ interface Human {
   telegram?: string;
   isAvailable: boolean;
   wallets: { network: string; address: string; label?: string }[];
-  jobs: { title: string; description: string; category: string; priceRange?: string }[];
+  services: { title: string; description: string; category: string; priceRange?: string }[];
 }
 
 async function searchHumans(params: {
@@ -86,7 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'get_human',
       description:
-        'Get detailed information about a specific human by their ID, including their bio, skills, contact info, wallet addresses, and job listings.',
+        'Get detailed information about a specific human by their ID, including their bio, skills, contact info, wallet addresses, and service offerings.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -126,7 +126,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   Skills: ${h.skills.join(', ')}
   Contact: ${contact}
   Wallets: ${walletInfo}
-  Jobs: ${h.jobs.map((j) => `${j.title} (${j.priceRange || 'Price negotiable'})`).join(', ')}`;
+  Services: ${h.services.map((s) => `${s.title} (${s.priceRange || 'Price negotiable'})`).join(', ')}`;
         })
         .join('\n\n');
 
@@ -142,8 +142,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         .map((w) => `- ${w.network}${w.label ? ` (${w.label})` : ''}: ${w.address}`)
         .join('\n');
 
-      const jobsInfo = human.jobs
-        .map((j) => `- **${j.title}** [${j.category}]\n  ${j.description}\n  Price: ${j.priceRange || 'Negotiable'}`)
+      const servicesInfo = human.services
+        .map((s) => `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${s.priceRange || 'Negotiable'}`)
         .join('\n\n');
 
       const details = `# ${human.name}
@@ -166,7 +166,7 @@ ${human.skills.join(', ') || 'None listed'}
 ${walletInfo || 'No wallets added'}
 
 ## Services Offered
-${jobsInfo || 'No job listings'}`;
+${servicesInfo || 'No services listed'}`;
 
       return {
         content: [{ type: 'text', text: details }],

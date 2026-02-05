@@ -60,21 +60,21 @@ export const api = {
   deleteWallet: (id: string) =>
     request<void>(`/wallets/${id}`, { method: 'DELETE' }),
 
-  // Jobs
-  getJobs: () => request<any[]>('/jobs'),
+  // Services
+  getServices: () => request<any[]>('/services'),
 
-  createJob: (data: { title: string; description: string; category: string; priceRange?: string }) =>
-    request<any>('/jobs', {
+  createService: (data: { title: string; description: string; category: string; priceRange?: string }) =>
+    request<any>('/services', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  updateJob: (id: string, data: any) =>
-    request<any>(`/jobs/${id}`, {
+  updateService: (id: string, data: any) =>
+    request<any>(`/services/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
 
-  deleteJob: (id: string) =>
-    request<void>(`/jobs/${id}`, { method: 'DELETE' }),
+  deleteService: (id: string) =>
+    request<void>(`/services/${id}`, { method: 'DELETE' }),
 };

@@ -22,14 +22,14 @@ describe('Profile API', () => {
       expect(response.body).not.toHaveProperty('passwordHash');
     });
 
-    it('should include wallets and jobs in profile', async () => {
+    it('should include wallets and services in profile', async () => {
       const response = await authRequest(user.token).get('/api/humans/me');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('wallets');
-      expect(response.body).toHaveProperty('jobs');
+      expect(response.body).toHaveProperty('services');
       expect(Array.isArray(response.body.wallets)).toBe(true);
-      expect(Array.isArray(response.body.jobs)).toBe(true);
+      expect(Array.isArray(response.body.services)).toBe(true);
     });
 
     it('should reject unauthenticated request', async () => {

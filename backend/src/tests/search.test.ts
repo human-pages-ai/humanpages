@@ -45,9 +45,9 @@ describe('Search API', () => {
         isAvailable: false,
       });
 
-    // Create jobs for Alice
+    // Create services for Alice
     await authRequest(alice.token)
-      .post('/api/jobs')
+      .post('/api/services')
       .send({
         title: 'Web Development',
         description: 'I build React apps',
@@ -150,12 +150,12 @@ describe('Search API', () => {
       expect(response.body[0].wallets[0].address).toBe('0xalice');
     });
 
-    it('should include only active jobs in results', async () => {
-      // Add an inactive job to Alice
+    it('should include only active services in results', async () => {
+      // Add an inactive service to Alice
       await authRequest(alice.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
-          title: 'Inactive Job',
+          title: 'Inactive Service',
           description: 'Not available',
           category: 'test',
           isActive: false,
@@ -164,8 +164,8 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?skill=react&available=true');
 
       expect(response.status).toBe(200);
-      expect(response.body[0].jobs).toHaveLength(1); // Only the active job
-      expect(response.body[0].jobs[0].title).toBe('Web Development');
+      expect(response.body[0].services).toHaveLength(1); // Only the active service
+      expect(response.body[0].services[0].title).toBe('Web Development');
     });
 
     it('should not expose passwordHash', async () => {

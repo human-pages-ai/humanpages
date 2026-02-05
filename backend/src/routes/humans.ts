@@ -20,7 +20,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
-      include: { wallets: true, jobs: true },
+      include: { wallets: true, services: true },
     });
 
     if (!human) {
@@ -43,7 +43,7 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     const human = await prisma.human.update({
       where: { id: req.userId },
       data: updates,
-      include: { wallets: true, jobs: true },
+      include: { wallets: true, services: true },
     });
 
     const { passwordHash, ...profile } = human;
@@ -90,7 +90,7 @@ router.get('/search', async (req, res) => {
         wallets: {
           select: { network: true, address: true, label: true },
         },
-        jobs: {
+        services: {
           where: { isActive: true },
           select: { title: true, description: true, category: true, priceRange: true },
         },
@@ -121,7 +121,7 @@ router.get('/:id', async (req, res) => {
         wallets: {
           select: { network: true, address: true, label: true },
         },
-        jobs: {
+        services: {
           where: { isActive: true },
           select: { title: true, description: true, category: true, priceRange: true },
         },

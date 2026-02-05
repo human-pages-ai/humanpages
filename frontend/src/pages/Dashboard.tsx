@@ -10,7 +10,7 @@ interface Wallet {
   label?: string;
 }
 
-interface Job {
+interface Service {
   id: string;
   title: string;
   description: string;
@@ -30,7 +30,7 @@ interface Profile {
   telegram?: string;
   isAvailable: boolean;
   wallets: Wallet[];
-  jobs: Job[];
+  services: Service[];
 }
 
 export default function Dashboard() {
@@ -55,9 +55,9 @@ export default function Dashboard() {
   const [showWalletForm, setShowWalletForm] = useState(false);
   const [walletForm, setWalletForm] = useState({ network: 'ethereum', address: '', label: '' });
 
-  // Job form state
-  const [showJobForm, setShowJobForm] = useState(false);
-  const [jobForm, setJobForm] = useState({ title: '', description: '', category: '', priceRange: '' });
+  // Service form state
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceRange: '' });
 
   useEffect(() => {
     loadProfile();
@@ -139,13 +139,13 @@ export default function Dashboard() {
     }
   };
 
-  const addJob = async () => {
+  const addService = async () => {
     setSaving(true);
     try {
-      await api.createJob(jobForm);
+      await api.createService(serviceForm);
       await loadProfile();
-      setJobForm({ title: '', description: '', category: '', priceRange: '' });
-      setShowJobForm(false);
+      setServiceForm({ title: '', description: '', category: '', priceRange: '' });
+      setShowServiceForm(false);
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -153,22 +153,22 @@ export default function Dashboard() {
     }
   };
 
-  const toggleJobActive = async (job: Job) => {
+  const toggleServiceActive = async (service: Service) => {
     try {
-      await api.updateJob(job.id, { isActive: !job.isActive });
+      await api.updateService(service.id, { isActive: !service.isActive });
       await loadProfile();
     } catch (error) {
-      console.error('Failed to update job:', error);
+      console.error('Failed to update service:', error);
     }
   };
 
-  const deleteJob = async (id: string) => {
-    if (!confirm('Delete this job listing?')) return;
+  const deleteService = async (id: string) => {
+    if (!confirm('Delete this service?')) return;
     try {
-      await api.deleteJob(id);
+      await api.deleteService(id);
       await loadProfile();
     } catch (error) {
-      console.error('Failed to delete job:', error);
+      console.error('Failed to delete service:', error);
     }
   };
 
@@ -393,35 +393,37 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Jobs Section */}
+        {/* Services Section */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Job Listings</h2>
+            <h2 className="text-lg font-semibold">Services</h2>
             <button
-              onClick={() => setShowJobForm(!showJobForm)}
+              onClick={() => setShowServiceForm(!showServiceForm)}
               className="text-indigo-600 hover:text-indigo-500 text-sm"
             >
-              {showJobForm ? 'Cancel' : 'Add Job'}
+              {showServiceForm ? 'Cancel' : 'Add Service'}
             </button>
           </div>
 
-          {showJobForm && (
+          {showServiceForm && (
             <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Title</label>
                 <input
                   type="text"
-                  value={jobForm.title}
-                  onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
+                  value={serviceForm.title}
+                  onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
+                  placeholder="What service do you offer?"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
-                  value={jobForm.description}
-                  onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
+                  value={serviceForm.description}
+                  onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
                   rows={3}
+                  placeholder="Describe what you can do..."
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -429,62 +431,62 @@ export default function Dashboard() {
                 <label className="block text-sm font-medium text-gray-700">Category</label>
                 <input
                   type="text"
-                  value={jobForm.category}
-                  onChange={(e) => setJobForm({ ...jobForm, category: e.target.value })}
+                  value={serviceForm.category}
+                  onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
                   placeholder="e.g., development, design, data"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Price Range</label>
+                <label className="block text-sm font-medium text-gray-700">Price Range (optional)</label>
                 <input
                   type="text"
-                  value={jobForm.priceRange}
-                  onChange={(e) => setJobForm({ ...jobForm, priceRange: e.target.value })}
+                  value={serviceForm.priceRange}
+                  onChange={(e) => setServiceForm({ ...serviceForm, priceRange: e.target.value })}
                   placeholder="e.g., $50-100/hour"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
               <button
-                onClick={addJob}
-                disabled={saving || !jobForm.title || !jobForm.description || !jobForm.category}
+                onClick={addService}
+                disabled={saving || !serviceForm.title || !serviceForm.description || !serviceForm.category}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
               >
-                Add Job
+                Add Service
               </button>
             </div>
           )}
 
-          {profile.jobs.length === 0 ? (
-            <p className="text-gray-500 text-sm">No job listings yet</p>
+          {profile.services.length === 0 ? (
+            <p className="text-gray-500 text-sm">No services listed yet. Add services to show AI agents what you can do!</p>
           ) : (
             <div className="space-y-3">
-              {profile.jobs.map((job) => (
-                <div key={job.id} className="p-4 bg-gray-50 rounded-lg">
+              {profile.services.map((service) => (
+                <div key={service.id} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-medium">{job.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{job.description}</p>
+                      <h3 className="font-medium">{service.title}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                       <div className="flex gap-2 mt-2">
-                        <span className="text-xs bg-gray-200 px-2 py-1 rounded">{job.category}</span>
-                        {job.priceRange && (
+                        <span className="text-xs bg-gray-200 px-2 py-1 rounded">{service.category}</span>
+                        {service.priceRange && (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                            {job.priceRange}
+                            {service.priceRange}
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => toggleJobActive(job)}
+                        onClick={() => toggleServiceActive(service)}
                         className={`text-xs px-2 py-1 rounded ${
-                          job.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+                          service.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
                         }`}
                       >
-                        {job.isActive ? 'Active' : 'Inactive'}
+                        {service.isActive ? 'Active' : 'Inactive'}
                       </button>
                       <button
-                        onClick={() => deleteJob(job.id)}
+                        onClick={() => deleteService(service.id)}
                         className="text-red-600 hover:text-red-700 text-xs"
                       >
                         Delete

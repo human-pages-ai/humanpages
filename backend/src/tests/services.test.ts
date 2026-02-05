@@ -3,32 +3,32 @@ import request from 'supertest';
 import app from '../app.js';
 import { createTestUser, authRequest, cleanDatabase, TestUser } from './helpers.js';
 
-describe('Jobs API', () => {
+describe('Services API', () => {
   let user: TestUser;
 
   beforeEach(async () => {
     await cleanDatabase();
-    user = await createTestUser({ email: 'jobs@example.com' });
+    user = await createTestUser({ email: 'services@example.com' });
   });
 
-  describe('GET /api/jobs', () => {
-    it('should return empty array when no jobs', async () => {
-      const response = await authRequest(user.token).get('/api/jobs');
+  describe('GET /api/services', () => {
+    it('should return empty array when no services', async () => {
+      const response = await authRequest(user.token).get('/api/services');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual([]);
     });
 
-    it('should return user jobs', async () => {
+    it('should return user services', async () => {
       await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
           title: 'Web Development',
           description: 'I build websites',
           category: 'development',
         });
 
-      const response = await authRequest(user.token).get('/api/jobs');
+      const response = await authRequest(user.token).get('/api/services');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -36,16 +36,16 @@ describe('Jobs API', () => {
     });
 
     it('should reject unauthenticated request', async () => {
-      const response = await request(app).get('/api/jobs');
+      const response = await request(app).get('/api/services');
 
       expect(response.status).toBe(401);
     });
   });
 
-  describe('POST /api/jobs', () => {
-    it('should create a new job listing', async () => {
+  describe('POST /api/services', () => {
+    it('should create a new service offering', async () => {
       const response = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
           title: 'Logo Design',
           description: 'Professional logo design services',
@@ -62,9 +62,9 @@ describe('Jobs API', () => {
       expect(response.body.isActive).toBe(true);
     });
 
-    it('should create job without priceRange', async () => {
+    it('should create service without priceRange', async () => {
       const response = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
           title: 'Consulting',
           description: 'Business consulting',
@@ -77,7 +77,7 @@ describe('Jobs API', () => {
 
     it('should reject empty title', async () => {
       const response = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
           title: '',
           description: 'Some description',
@@ -89,9 +89,9 @@ describe('Jobs API', () => {
 
     it('should reject empty description', async () => {
       const response = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
-          title: 'Some Job',
+          title: 'Some Service',
           description: '',
           category: 'other',
         });
@@ -101,9 +101,9 @@ describe('Jobs API', () => {
 
     it('should reject empty category', async () => {
       const response = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
-          title: 'Some Job',
+          title: 'Some Service',
           description: 'Description',
           category: '',
         });
@@ -113,9 +113,9 @@ describe('Jobs API', () => {
 
     it('should reject unauthenticated request', async () => {
       const response = await request(app)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
-          title: 'Job',
+          title: 'Service',
           description: 'Desc',
           category: 'cat',
         });
@@ -124,23 +124,23 @@ describe('Jobs API', () => {
     });
   });
 
-  describe('PATCH /api/jobs/:id', () => {
-    let jobId: string;
+  describe('PATCH /api/services/:id', () => {
+    let serviceId: string;
 
     beforeEach(async () => {
       const createResponse = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
           title: 'Original Title',
           description: 'Original description',
           category: 'original',
         });
-      jobId = createResponse.body.id;
+      serviceId = createResponse.body.id;
     });
 
-    it('should update job title', async () => {
+    it('should update service title', async () => {
       const response = await authRequest(user.token)
-        .patch(`/api/jobs/${jobId}`)
+        .patch(`/api/services/${serviceId}`)
         .send({ title: 'Updated Title' });
 
       expect(response.status).toBe(200);
@@ -148,18 +148,18 @@ describe('Jobs API', () => {
       expect(response.body.description).toBe('Original description'); // unchanged
     });
 
-    it('should update job description', async () => {
+    it('should update service description', async () => {
       const response = await authRequest(user.token)
-        .patch(`/api/jobs/${jobId}`)
+        .patch(`/api/services/${serviceId}`)
         .send({ description: 'Updated description' });
 
       expect(response.status).toBe(200);
       expect(response.body.description).toBe('Updated description');
     });
 
-    it('should toggle job active status', async () => {
+    it('should toggle service active status', async () => {
       const response = await authRequest(user.token)
-        .patch(`/api/jobs/${jobId}`)
+        .patch(`/api/services/${serviceId}`)
         .send({ isActive: false });
 
       expect(response.status).toBe(200);
@@ -167,7 +167,7 @@ describe('Jobs API', () => {
 
       // Toggle back
       const response2 = await authRequest(user.token)
-        .patch(`/api/jobs/${jobId}`)
+        .patch(`/api/services/${serviceId}`)
         .send({ isActive: true });
 
       expect(response2.body.isActive).toBe(true);
@@ -175,74 +175,74 @@ describe('Jobs API', () => {
 
     it('should update priceRange', async () => {
       const response = await authRequest(user.token)
-        .patch(`/api/jobs/${jobId}`)
+        .patch(`/api/services/${serviceId}`)
         .send({ priceRange: '$50-100/hour' });
 
       expect(response.status).toBe(200);
       expect(response.body.priceRange).toBe('$50-100/hour');
     });
 
-    it('should not update another user job', async () => {
+    it('should not update another user service', async () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
 
       const response = await authRequest(otherUser.token)
-        .patch(`/api/jobs/${jobId}`)
+        .patch(`/api/services/${serviceId}`)
         .send({ title: 'Hacked' });
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toBe('Job not found');
+      expect(response.body.error).toBe('Service not found');
     });
 
-    it('should return 404 for non-existent job', async () => {
+    it('should return 404 for non-existent service', async () => {
       const response = await authRequest(user.token)
-        .patch('/api/jobs/nonexistent-id')
+        .patch('/api/services/nonexistent-id')
         .send({ title: 'Test' });
 
       expect(response.status).toBe(404);
     });
   });
 
-  describe('DELETE /api/jobs/:id', () => {
-    it('should delete own job', async () => {
+  describe('DELETE /api/services/:id', () => {
+    it('should delete own service', async () => {
       const createResponse = await authRequest(user.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
           title: 'To Delete',
           description: 'Will be deleted',
           category: 'test',
         });
 
-      const jobId = createResponse.body.id;
+      const serviceId = createResponse.body.id;
 
-      const response = await authRequest(user.token).delete(`/api/jobs/${jobId}`);
+      const response = await authRequest(user.token).delete(`/api/services/${serviceId}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.message).toBe('Job deleted');
+      expect(response.body.message).toBe('Service deleted');
 
       // Verify deletion
-      const listResponse = await authRequest(user.token).get('/api/jobs');
+      const listResponse = await authRequest(user.token).get('/api/services');
       expect(listResponse.body).toHaveLength(0);
     });
 
-    it('should not delete another user job', async () => {
+    it('should not delete another user service', async () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
       const createResponse = await authRequest(otherUser.token)
-        .post('/api/jobs')
+        .post('/api/services')
         .send({
-          title: 'Other Job',
+          title: 'Other Service',
           description: 'Other desc',
           category: 'other',
         });
 
-      const jobId = createResponse.body.id;
+      const serviceId = createResponse.body.id;
 
-      const response = await authRequest(user.token).delete(`/api/jobs/${jobId}`);
+      const response = await authRequest(user.token).delete(`/api/services/${serviceId}`);
 
       expect(response.status).toBe(404);
     });
 
-    it('should return 404 for non-existent job', async () => {
-      const response = await authRequest(user.token).delete('/api/jobs/nonexistent-id');
+    it('should return 404 for non-existent service', async () => {
+      const response = await authRequest(user.token).delete('/api/services/nonexistent-id');
 
       expect(response.status).toBe(404);
     });

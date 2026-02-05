@@ -7,7 +7,7 @@ async function main() {
   console.log('Seeding database...');
 
   // Clear existing data
-  await prisma.job.deleteMany();
+  await prisma.service.deleteMany();
   await prisma.wallet.deleteMany();
   await prisma.human.deleteMany();
 
@@ -31,7 +31,7 @@ async function main() {
           { network: 'solana', address: 'ABC123solana456address789', label: 'Solana Wallet' },
         ],
       },
-      jobs: {
+      services: {
         create: [
           {
             title: 'Website Development',
@@ -67,7 +67,7 @@ async function main() {
           { network: 'bitcoin', address: 'bc1qexamplebitcoinaddress123456789', label: 'BTC' },
         ],
       },
-      jobs: {
+      services: {
         create: [
           {
             title: 'Data Analysis',
@@ -96,7 +96,7 @@ async function main() {
           { network: 'ethereum', address: '0x9876543210fedcba9876543210fedcba98765432', label: 'Design Pay' },
         ],
       },
-      jobs: {
+      services: {
         create: [
           {
             title: 'UI/UX Design',

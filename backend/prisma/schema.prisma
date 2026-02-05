@@ -22,7 +22,7 @@ model Human {
   updatedAt     DateTime @updatedAt
 
   wallets       Wallet[]
-  jobs          Job[]
+  services      Service[]
 }
 
 model Wallet {
@@ -38,7 +38,7 @@ model Wallet {
   @@unique([humanId, network, address])
 }
 
-model Job {
+model Service {
   id          String   @id @default(cuid())
   humanId     String
   title       String

@@ -14,7 +14,7 @@ export interface TestUser {
  */
 export async function cleanDatabase(): Promise<void> {
   // Delete in order respecting foreign key constraints
-  await prisma.job.deleteMany();
+  await prisma.service.deleteMany();
   await prisma.wallet.deleteMany();
   await prisma.human.deleteMany();
 }
