@@ -5,6 +5,8 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import OAuthCallback from './pages/OAuthCallback';
 import PublicProfile from './pages/PublicProfile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -56,6 +58,15 @@ function AppRoutes() {
       />
       <Route path="/auth/:provider/callback" element={<OAuthCallback />} />
       <Route path="/humans/:id" element={<PublicProfile />} />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
+      <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
   );
 }

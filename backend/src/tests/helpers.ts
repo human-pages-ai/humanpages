@@ -17,6 +17,7 @@ export async function cleanDatabase(): Promise<void> {
   await prisma.service.deleteMany();
   await prisma.wallet.deleteMany();
   await prisma.human.deleteMany();
+  await prisma.passwordReset.deleteMany();
 }
 
 /**

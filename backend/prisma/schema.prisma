@@ -56,3 +56,14 @@ model Service {
 
   human       Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
 }
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
