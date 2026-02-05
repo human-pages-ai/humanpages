@@ -1,0 +1,16 @@
+{
+  "name": "humans-marketplace",
+  "version": "1.0.0",
+  "description": "AI-to-Human marketplace - Yellow Pages for AI agents to find humans",
+  "private": true,
+  "scripts": {
+    "setup": "./setup.sh",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:mcp": "cd mcp-server && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

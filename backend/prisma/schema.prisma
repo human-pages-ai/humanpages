@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Human {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  bio           String?
+  location      String?
+  skills        String[] @default([])
+  contactEmail  String?
+  telegram      String?
+  isAvailable   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallets       Wallet[]
+  jobs          Job[]
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  humanId   String
+  network   String   // e.g., "ethereum", "solana", "bitcoin"
+  address   String
+  label     String?  // e.g., "Main wallet", "Business"
+  createdAt DateTime @default(now())
+
+  human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@unique([humanId, network, address])
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  humanId     String
+  title       String
+  description String
+  category    String
+  priceRange  String?  // e.g., "$50-100", "Negotiable"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  human       Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+}
