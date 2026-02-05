@@ -1,0 +1,10 @@
+{
+  "name": "humans-mcp-bundle",
+  "version": "1.0.0",
+  "description": "Humans Marketplace MCP Server Bundle",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

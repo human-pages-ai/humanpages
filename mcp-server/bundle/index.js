@@ -1,4 +1,4 @@
-import 'dotenv/config';
+#!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -6,26 +6,9 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:3001';
+const API_BASE = process.env.HUMANS_API_URL || process.env.API_BASE_URL || 'http://localhost:3001';
 
-interface Human {
-  id: string;
-  name: string;
-  bio?: string;
-  location?: string;
-  skills: string[];
-  contactEmail?: string;
-  telegram?: string;
-  isAvailable: boolean;
-  wallets: { network: string; address: string; label?: string }[];
-  services: { title: string; description: string; category: string; priceRange?: string }[];
-}
-
-async function searchHumans(params: {
-  skill?: string;
-  location?: string;
-  available_only?: boolean;
-}): Promise<Human[]> {
+async function searchHumans(params) {
   const query = new URLSearchParams();
   if (params.skill) query.set('skill', params.skill);
   if (params.location) query.set('location', params.location);
@@ -35,15 +18,15 @@ async function searchHumans(params: {
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);
   }
-  return res.json() as Promise<Human[]>;
+  return res.json();
 }
 
-async function getHuman(id: string): Promise<Human> {
+async function getHuman(id) {
   const res = await fetch(`${API_BASE}/api/humans/${id}`);
   if (!res.ok) {
     throw new Error(`Human not found: ${id}`);
   }
-  return res.json() as Promise<Human>;
+  return res.json();
 }
 
 const server = new Server(
@@ -134,8 +117,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     if (name === 'search_humans') {
       const humans = await searchHumans({
-        skill: args?.skill as string | undefined,
-        location: args?.location as string | undefined,
+        skill: args?.skill,
+        location: args?.location,
         available_only: args?.available_only !== false,
       });
 
@@ -163,7 +146,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     if (name === 'get_human') {
-      const human = await getHuman(args?.id as string);
+      const human = await getHuman(args?.id);
 
       const walletInfo = human.wallets
         .map((w) => `- ${w.network}${w.label ? ` (${w.label})` : ''}: ${w.address}`)
@@ -201,15 +184,15 @@ ${servicesInfo || 'No services listed'}`;
     }
 
     if (name === 'record_job') {
-      const humanId = args?.human_id as string;
-      const taskDescription = args?.task_description as string;
-      const taskCategory = args?.task_category as string | undefined;
-      const agreedPrice = args?.agreed_price as string | undefined;
+      const humanId = args?.human_id;
+      const taskDescription = args?.task_description;
+      const taskCategory = args?.task_category;
+      const agreedPrice = args?.agreed_price;
 
       // Verify the human exists
       const human = await getHuman(humanId);
 
-      // Log the job record (in production, this would store to a database)
+      // Log the job record
       const jobRecord = {
         humanId,
         humanName: human.name,
@@ -237,7 +220,7 @@ ${servicesInfo || 'No services listed'}`;
     };
   } catch (error) {
     return {
-      content: [{ type: 'text', text: `Error: ${(error as Error).message}` }],
+      content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     };
   }

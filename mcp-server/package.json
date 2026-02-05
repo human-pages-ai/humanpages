@@ -1,13 +1,37 @@
 {
-  "name": "humans-mcp-server",
+  "name": "@anthropic/humans-mcp",
   "version": "1.0.0",
-  "description": "MCP Server for AI agents to discover humans",
+  "description": "MCP Server for AI agents to discover and hire humans for real-world tasks",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "humans-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsc && node -e \"const fs=require('fs');const f='dist/index.js';const c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)\"",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
+    "build:bundle": "cd bundle && npm install && cd .. && zip -r humans.mcpb bundle/*"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "agents",
+    "humans",
+    "marketplace",
+    "tasks"
+  ],
+  "author": "Humans AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/humans-mcp"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
