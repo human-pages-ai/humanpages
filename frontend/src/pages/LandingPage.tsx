@@ -74,15 +74,23 @@ export default function LandingPage() {
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-          <span className="text-xl font-bold text-slate-900">
+          <Link to="/" className="text-xl font-bold text-slate-900">
             Human Pages
-          </span>
-          <Link
-            to="/signup"
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Create listing
           </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="text-sm font-medium text-slate-900">
+              Humans
+            </Link>
+            <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700">
+              Developers
+            </Link>
+            <Link
+              to="/signup"
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Start your profile
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -102,7 +110,7 @@ export default function LandingPage() {
                 to="/signup"
                 className="inline-block px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-lg"
               >
-                Create listing
+                Start your profile
               </Link>
               <span className="ml-4 inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
                 Free · No fees
@@ -176,7 +184,7 @@ export default function LandingPage() {
             to="/signup"
             className="mt-6 inline-block px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
           >
-            Create listing
+            Start your profile
           </Link>
         </div>
       </section>
@@ -225,7 +233,7 @@ export default function LandingPage() {
             to="/signup"
             className="mt-6 inline-block px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Create listing
+            Start your profile
           </Link>
         </div>
       </section>
@@ -237,7 +245,7 @@ export default function LandingPage() {
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-slate-500 hover:text-slate-700">Privacy</a>
             <a href="#" className="text-slate-500 hover:text-slate-700">Terms</a>
-            <a href="#" className="text-slate-500 hover:text-slate-700">API</a>
+            <Link to="/dev" className="text-slate-500 hover:text-slate-700">API</Link>
             <a href="#" className="text-slate-500 hover:text-slate-700">Contact</a>
           </div>
         </div>
@@ -249,7 +257,7 @@ export default function LandingPage() {
           to="/signup"
           className="block w-full text-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Create listing
+          Start your profile
         </Link>
       </div>
 
