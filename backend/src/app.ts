@@ -6,6 +6,7 @@ import humansRoutes from './routes/humans.js';
 import walletsRoutes from './routes/wallets.js';
 import servicesRoutes from './routes/services.js';
 import jobsRoutes from './routes/jobs.js';
+import telegramRoutes from './routes/telegram.js';
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use('/api/humans', humansRoutes);
 app.use('/api/wallets', walletsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/telegram', telegramRoutes);
 
 export default app;

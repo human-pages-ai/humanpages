@@ -122,4 +122,14 @@ export const api = {
 
   getMyReviews: (humanId: string) =>
     request<{ stats: any; reviews: any[] }>(`/jobs/human/${humanId}/reviews`),
+
+  // Telegram
+  getTelegramStatus: () =>
+    request<{ connected: boolean; telegramUsername?: string; botAvailable: boolean; botUsername?: string }>('/telegram/status'),
+
+  linkTelegram: () =>
+    request<{ code: string; linkUrl: string; expiresIn: string }>('/telegram/link', { method: 'POST' }),
+
+  unlinkTelegram: () =>
+    request<{ message: string }>('/telegram/link', { method: 'DELETE' }),
 };

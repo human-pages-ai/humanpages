@@ -110,9 +110,19 @@ export default function Dashboard() {
   const [copiedProfile, setCopiedProfile] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
 
+  // Telegram state
+  const [telegramStatus, setTelegramStatus] = useState<{
+    connected: boolean;
+    botAvailable: boolean;
+    botUsername?: string;
+  } | null>(null);
+  const [telegramLinkUrl, setTelegramLinkUrl] = useState<string | null>(null);
+  const [telegramLoading, setTelegramLoading] = useState(false);
+
   useEffect(() => {
     loadProfile();
     loadJobs();
+    loadTelegramStatus();
   }, []);
 
   const loadProfile = async () => {
@@ -157,6 +167,49 @@ export default function Dashboard() {
       console.error('Failed to load jobs:', error);
     } finally {
       setJobsLoading(false);
+    }
+  };
+
+  const loadTelegramStatus = async () => {
+    try {
+      const status = await api.getTelegramStatus();
+      setTelegramStatus(status);
+    } catch (error) {
+      console.error('Failed to load Telegram status:', error);
+    }
+  };
+
+  const connectTelegram = async () => {
+    setTelegramLoading(true);
+    try {
+      const { linkUrl } = await api.linkTelegram();
+      setTelegramLinkUrl(linkUrl);
+      window.open(linkUrl, '_blank');
+      // Poll for connection status
+      const pollInterval = setInterval(async () => {
+        const status = await api.getTelegramStatus();
+        if (status.connected) {
+          clearInterval(pollInterval);
+          setTelegramStatus(status);
+          setTelegramLinkUrl(null);
+        }
+      }, 3000);
+      // Stop polling after 5 minutes
+      setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
+    } catch (error: any) {
+      alert(error.message || 'Failed to generate Telegram link');
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
+
+  const disconnectTelegram = async () => {
+    if (!confirm('Disconnect Telegram notifications?')) return;
+    try {
+      await api.unlinkTelegram();
+      setTelegramStatus({ connected: false, botAvailable: telegramStatus?.botAvailable || false });
+    } catch (error: any) {
+      alert(error.message || 'Failed to disconnect Telegram');
     }
   };
 
@@ -413,6 +466,54 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Telegram Notifications */}
+        {telegramStatus?.botAvailable && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.015-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.751-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.015 3.333-1.386 4.025-1.627 4.477-1.635.099-.002.321.023.465.141.121.1.154.234.169.337.015.102.034.331.019.51z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">Telegram Notifications</h2>
+                  <p className="text-gray-600 text-sm">
+                    {telegramStatus?.connected
+                      ? 'Connected - You\'ll receive job offers via Telegram'
+                      : 'Get instant notifications when you receive job offers'}
+                  </p>
+                </div>
+              </div>
+              {telegramStatus?.connected ? (
+                <button
+                  onClick={disconnectTelegram}
+                  className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-200"
+                >
+                  Connected
+                </button>
+              ) : (
+                <button
+                  onClick={connectTelegram}
+                  disabled={telegramLoading}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50"
+                >
+                  {telegramLoading ? 'Connecting...' : 'Connect Telegram'}
+                </button>
+              )}
+            </div>
+            {telegramLinkUrl && !telegramStatus?.connected && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                Click the button above to open Telegram. If it didn't open,{' '}
+                <a href={telegramLinkUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                  click here
+                </a>
+                . Waiting for confirmation...
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Availability Toggle */}
         <div className="bg-white rounded-lg shadow p-6">

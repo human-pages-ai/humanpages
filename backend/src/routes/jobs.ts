@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { sendJobOfferEmail } from '../lib/email.js';
+import { sendJobOfferTelegram } from '../lib/telegram.js';
 
 const router = Router();
 
@@ -80,7 +81,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
     // Verify human exists and get contact info for notification
     const human = await prisma.human.findUnique({
       where: { id: data.humanId },
-      select: { id: true, name: true, contactEmail: true, email: true },
+      select: { id: true, name: true, contactEmail: true, email: true, telegramChatId: true },
     });
 
     if (!human) {
@@ -100,6 +101,8 @@ router.post('/', ipRateLimiter, async (req, res) => {
       },
     });
 
+    const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`;
+
     // Send email notification (async, don't block response)
     const notifyEmail = human.contactEmail || human.email;
     if (notifyEmail) {
@@ -112,6 +115,19 @@ router.post('/', ipRateLimiter, async (req, res) => {
         agentName: data.agentName,
         category: data.category,
       }).catch((err) => console.error('[Email] Notification failed:', err));
+    }
+
+    // Send Telegram notification (async, don't block response)
+    if (human.telegramChatId) {
+      sendJobOfferTelegram({
+        chatId: human.telegramChatId,
+        humanName: human.name,
+        jobTitle: data.title,
+        jobDescription: data.description,
+        priceUsdc: data.priceUsdc,
+        agentName: data.agentName,
+        dashboardUrl,
+      }).catch((err) => console.error('[Telegram] Notification failed:', err));
     }
 
     res.status(201).json({

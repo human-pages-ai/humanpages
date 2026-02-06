@@ -41,9 +41,10 @@ model Human {
   rateType      RateType @default(NEGOTIABLE)
 
   // ===== COMMUNICATION =====
-  contactEmail  String?
-  telegram      String?
-  signal        String?  // Signal number
+  contactEmail    String?
+  telegram        String?
+  telegramChatId  String?  // For sending notifications via bot
+  signal          String?  // Signal number
 
   // ===== ACTIVITY & REPUTATION (System Generated) =====
   lastActiveAt  DateTime @default(now()) // For deprioritizing ghosts
