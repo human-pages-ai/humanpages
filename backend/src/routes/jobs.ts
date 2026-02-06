@@ -1,10 +1,30 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
+import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { sendJobOfferEmail } from '../lib/email.js';
 
 const router = Router();
+
+// IP-based rate limiting: 20 offers per hour per IP
+// Defense in depth against agentId spoofing
+const ipRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // 20 requests per IP per hour
+  message: {
+    error: 'Too many requests from this IP',
+    message: 'IP rate limit: 20 offers per hour. Try again later.',
+    retryAfter: '1 hour',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For if behind proxy, otherwise use IP
+    return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+  },
+});
 
 // Schema for creating a job offer (called by agents)
 const createJobSchema = z.object({
@@ -35,7 +55,8 @@ const RATE_LIMIT_OFFERS = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // Create a job offer (public endpoint for agents)
-router.post('/', async (req, res) => {
+// Double rate limiting: IP-based (20/hr) + agentId-based (5/hr)
+router.post('/', ipRateLimiter, async (req, res) => {
   try {
     const data = createJobSchema.parse(req.body);
 
@@ -56,9 +77,10 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Verify human exists
+    // Verify human exists and get contact info for notification
     const human = await prisma.human.findUnique({
       where: { id: data.humanId },
+      select: { id: true, name: true, contactEmail: true, email: true },
     });
 
     if (!human) {
@@ -77,6 +99,20 @@ router.post('/', async (req, res) => {
         status: 'PENDING',
       },
     });
+
+    // Send email notification (async, don't block response)
+    const notifyEmail = human.contactEmail || human.email;
+    if (notifyEmail) {
+      sendJobOfferEmail({
+        humanName: human.name,
+        humanEmail: notifyEmail,
+        jobTitle: data.title,
+        jobDescription: data.description,
+        priceUsdc: data.priceUsdc,
+        agentName: data.agentName,
+        category: data.category,
+      }).catch((err) => console.error('[Email] Notification failed:', err));
+    }
 
     res.status(201).json({
       id: job.id,
