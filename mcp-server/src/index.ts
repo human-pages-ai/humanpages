@@ -187,7 +187,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'create_job_offer',
       description:
-        'Create a job offer for a human. The human must ACCEPT the offer before you can proceed with payment. This mutual handshake prevents spam and enables reputation tracking.',
+        'Create a job offer for a human. The human must ACCEPT the offer before you can proceed with payment. This mutual handshake prevents spam and enables reputation tracking. RATE LIMIT: 5 offers per hour per agent_id.',
       inputSchema: {
         type: 'object',
         properties: {

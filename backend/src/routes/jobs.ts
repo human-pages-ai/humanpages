@@ -30,10 +30,31 @@ const reviewSchema = z.object({
   comment: z.string().optional(),
 });
 
+// Rate limit: 5 offers per hour per agent
+const RATE_LIMIT_OFFERS = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 // Create a job offer (public endpoint for agents)
 router.post('/', async (req, res) => {
   try {
     const data = createJobSchema.parse(req.body);
+
+    // Rate limiting: count offers from this agent in the last hour
+    const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+    const recentOfferCount = await prisma.job.count({
+      where: {
+        agentId: data.agentId,
+        createdAt: { gte: oneHourAgo },
+      },
+    });
+
+    if (recentOfferCount >= RATE_LIMIT_OFFERS) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: `Agents are limited to ${RATE_LIMIT_OFFERS} offers per hour`,
+        retryAfter: '1 hour',
+      });
+    }
 
     // Verify human exists
     const human = await prisma.human.findUnique({
@@ -61,6 +82,10 @@ router.post('/', async (req, res) => {
       id: job.id,
       status: job.status,
       message: 'Job offer created. Waiting for human to accept.',
+      rateLimit: {
+        remaining: RATE_LIMIT_OFFERS - recentOfferCount - 1,
+        resetIn: '1 hour',
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -355,4 +355,93 @@ describe('Jobs API - Mutual Handshake', () => {
       expect(res.body.reviews).toHaveLength(1);
     });
   });
+
+  describe('Rate Limiting - Anti-Spam', () => {
+    const spamAgentId = 'spam-agent-' + Date.now();
+
+    beforeEach(async () => {
+      // Clean up any jobs from this agent
+      await prisma.job.deleteMany({ where: { agentId: spamAgentId } });
+    });
+
+    it('should allow up to 5 offers per hour', async () => {
+      // Send 5 offers - all should succeed
+      for (let i = 0; i < 5; i++) {
+        const res = await request(app)
+          .post('/api/jobs')
+          .send({
+            humanId,
+            agentId: spamAgentId,
+            title: `Offer ${i + 1}`,
+            description: 'Test offer',
+            priceUsdc: 50,
+          });
+
+        expect(res.status).toBe(201);
+        expect(res.body.rateLimit.remaining).toBe(4 - i);
+      }
+    });
+
+    it('should reject 6th offer within an hour (rate limit)', async () => {
+      // Send 5 offers first
+      for (let i = 0; i < 5; i++) {
+        await request(app)
+          .post('/api/jobs')
+          .send({
+            humanId,
+            agentId: spamAgentId,
+            title: `Offer ${i + 1}`,
+            description: 'Test offer',
+            priceUsdc: 50,
+          });
+      }
+
+      // 6th offer should be rejected
+      const res = await request(app)
+        .post('/api/jobs')
+        .send({
+          humanId,
+          agentId: spamAgentId,
+          title: 'Spam offer',
+          description: 'This should fail',
+          priceUsdc: 50,
+        });
+
+      expect(res.status).toBe(429);
+      expect(res.body.error).toBe('Rate limit exceeded');
+    });
+
+    it('should track rate limits per agent independently', async () => {
+      const otherAgentId = 'other-agent-' + Date.now();
+
+      // Fill up spam agent's limit
+      for (let i = 0; i < 5; i++) {
+        await request(app)
+          .post('/api/jobs')
+          .send({
+            humanId,
+            agentId: spamAgentId,
+            title: `Spam ${i + 1}`,
+            description: 'Test',
+            priceUsdc: 50,
+          });
+      }
+
+      // Other agent should still be able to send offers
+      const res = await request(app)
+        .post('/api/jobs')
+        .send({
+          humanId,
+          agentId: otherAgentId,
+          title: 'Different agent offer',
+          description: 'This should work',
+          priceUsdc: 50,
+        });
+
+      expect(res.status).toBe(201);
+
+      // Clean up other agent's job
+      await prisma.job.deleteMany({ where: { agentId: otherAgentId } });
+    });
+  });
 });
