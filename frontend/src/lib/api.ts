@@ -27,7 +27,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Auth
-  signup: (data: { email: string; password: string; name: string }) =>
+  signup: (data: { email: string; password: string; name: string; referrerId?: string }) =>
     request<{ human: any; token: string }>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -43,10 +43,10 @@ export const api = {
   getOAuthUrl: (provider: 'google' | 'github') =>
     request<{ url: string }>(`/oauth/${provider}`),
 
-  oauthCallback: (provider: 'google' | 'github', code: string) =>
+  oauthCallback: (provider: 'google' | 'github', code: string, referrerId?: string) =>
     request<{ human: any; token: string; isNew?: boolean }>(`/oauth/${provider}/callback`, {
       method: 'POST',
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, referrerId }),
     }),
 
   // Password Reset

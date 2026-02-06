@@ -28,7 +28,7 @@ router.get('/google', (req, res) => {
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, referrerId } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code required' });
@@ -74,6 +74,13 @@ router.post('/google/callback', async (req, res) => {
           },
         });
       } else {
+        // Validate referrer if provided
+        let validReferrerId: string | undefined;
+        if (referrerId) {
+          const referrer = await prisma.human.findUnique({ where: { id: referrerId } });
+          if (referrer) validReferrerId = referrerId;
+        }
+
         // 3. Create new user (no password needed for OAuth-only)
         human = await prisma.human.create({
           data: {
@@ -82,6 +89,7 @@ router.post('/google/callback', async (req, res) => {
             googleId,
             avatarUrl: picture,
             contactEmail: email,
+            referredBy: validReferrerId,
           },
         });
         isNew = true;
@@ -115,7 +123,7 @@ router.get('/github', (req, res) => {
 // GitHub OAuth - callback handler
 router.post('/github/callback', async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, referrerId } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code required' });
@@ -190,6 +198,13 @@ router.post('/github/callback', async (req, res) => {
           },
         });
       } else {
+        // Validate referrer if provided
+        let validReferrerId: string | undefined;
+        if (referrerId) {
+          const referrer = await prisma.human.findUnique({ where: { id: referrerId } });
+          if (referrer) validReferrerId = referrerId;
+        }
+
         // 3. Create new user (no password needed for OAuth-only)
         human = await prisma.human.create({
           data: {
@@ -198,6 +213,7 @@ router.post('/github/callback', async (req, res) => {
             githubId,
             avatarUrl,
             contactEmail: primaryEmail,
+            referredBy: validReferrerId,
           },
         });
         isNew = true;

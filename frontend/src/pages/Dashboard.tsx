@@ -39,6 +39,7 @@ interface Profile {
   websiteUrl?: string;
   wallets: Wallet[];
   services: Service[];
+  referralCount?: number;
 }
 
 interface Job {
@@ -349,6 +350,11 @@ export default function Dashboard() {
               <h2 className="text-lg font-semibold">Share your profile</h2>
               <p className="text-blue-100 text-sm">
                 Get discovered by AI agents and invite friends to join
+                {profile.referralCount !== undefined && profile.referralCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                    {profile.referralCount} referral{profile.referralCount !== 1 ? 's' : ''}
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">

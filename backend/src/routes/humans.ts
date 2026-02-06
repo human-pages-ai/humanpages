@@ -90,10 +90,39 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
     });
 
     const reputation = await getReputationStats(human.id);
+
+    // Get referral count
+    const referralCount = await prisma.human.count({
+      where: { referredBy: human.id },
+    });
+
     const { passwordHash, ...profile } = human;
-    res.json({ ...profile, reputation });
+    res.json({ ...profile, reputation, referralCount });
   } catch (error) {
     console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get referral stats for current user
+router.get('/me/referrals', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const referrals = await prisma.human.findMany({
+      where: { referredBy: req.userId },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({
+      count: referrals.length,
+      referrals,
+    });
+  } catch (error) {
+    console.error('Get referrals error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

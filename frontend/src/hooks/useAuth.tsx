@@ -42,7 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (email: string, password: string, name: string) => {
-    const { human, token } = await api.signup({ email, password, name });
+    const referrerId = localStorage.getItem('referrer_id') || undefined;
+    const { human, token } = await api.signup({ email, password, name, referrerId });
+    localStorage.removeItem('referrer_id'); // Clean up after use
     localStorage.setItem('token', token);
     setUser(human);
   };

@@ -11,6 +11,7 @@ const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(1),
+  referrerId: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -29,16 +30,31 @@ const resetPasswordSchema = z.object({
 
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password, name } = signupSchema.parse(req.body);
+    const { email, password, name, referrerId } = signupSchema.parse(req.body);
 
     const existingUser = await prisma.human.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
+    // Validate referrer exists if provided
+    let validReferrerId: string | undefined;
+    if (referrerId) {
+      const referrer = await prisma.human.findUnique({ where: { id: referrerId } });
+      if (referrer) {
+        validReferrerId = referrerId;
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const human = await prisma.human.create({
-      data: { email, passwordHash, name, contactEmail: email },
+      data: {
+        email,
+        passwordHash,
+        name,
+        contactEmail: email,
+        referredBy: validReferrerId,
+      },
       select: { id: true, email: true, name: true },
     });
 

@@ -28,9 +28,13 @@ export default function OAuthCallback() {
       return;
     }
 
+    // Get referrer ID if present
+    const referrerId = localStorage.getItem('referrer_id') || undefined;
+
     // Exchange code for token
-    api.oauthCallback(provider as 'google' | 'github', code)
+    api.oauthCallback(provider as 'google' | 'github', code, referrerId)
       .then(({ token, isNew }) => {
+        localStorage.removeItem('referrer_id'); // Clean up after use
         localStorage.setItem('token', token);
         if (isNew) {
           analytics.track('signup_complete', { method: provider });
