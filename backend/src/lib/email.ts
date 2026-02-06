@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { getTranslator } from '../i18n/index.js';
 
 // Configure transporter based on environment
 // In production, use a real SMTP service (SendGrid, SES, Resend, etc.)
@@ -23,6 +24,7 @@ interface JobOfferEmailData {
   priceUsdc: number;
   agentName?: string;
   category?: string;
+  language?: string;
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
@@ -32,29 +34,31 @@ export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolea
     return false;
   }
 
+  const t = getTranslator(data.language || 'en');
+
   try {
     const info = await transporter.sendMail({
       from: `"Humans" <${FROM_EMAIL}>`,
       to: data.humanEmail,
-      subject: `New job offer: ${data.jobTitle}`,
+      subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
       text: `
-Hi ${data.humanName},
+${t('email.jobOffer.greeting', { name: data.humanName })}
 
-You have a new job offer on Humans!
+${t('email.jobOffer.newOffer')}
 
-Title: ${data.jobTitle}
-${data.category ? `Category: ${data.category}` : ''}
-${data.agentName ? `From: ${data.agentName}` : ''}
-Price: $${data.priceUsdc} USDC
+${t('email.jobOffer.title')}: ${data.jobTitle}
+${data.category ? `${t('email.jobOffer.category')}: ${data.category}` : ''}
+${data.agentName ? `${t('email.jobOffer.from')}: ${data.agentName}` : ''}
+${t('email.jobOffer.price')}: $${data.priceUsdc} USDC
 
-Description:
+${t('email.jobOffer.description')}:
 ${data.jobDescription}
 
-Log in to accept or reject this offer:
+${t('email.jobOffer.loginToView')}:
 ${FRONTEND_URL}/dashboard
 
 ---
-Humans - The AI-to-Human Marketplace
+${t('email.jobOffer.footer')}
       `.trim(),
       html: `
 <!DOCTYPE html>
@@ -74,24 +78,24 @@ Humans - The AI-to-Human Marketplace
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0;">New Job Offer</h1>
+      <h1 style="margin: 0;">${t('email.common.newJobOffer')}</h1>
     </div>
     <div class="content">
-      <p>Hi ${data.humanName},</p>
-      <p>You have a new job offer on Humans!</p>
+      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+      <p>${t('email.jobOffer.newOffer')}</p>
 
       <div class="job-card">
         <h2 style="margin-top: 0;">${data.jobTitle}</h2>
-        ${data.category ? `<p style="color: #6b7280; margin: 4px 0;"><strong>Category:</strong> ${data.category}</p>` : ''}
-        ${data.agentName ? `<p style="color: #6b7280; margin: 4px 0;"><strong>From:</strong> ${data.agentName}</p>` : ''}
+        ${data.category ? `<p style="color: #6b7280; margin: 4px 0;"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
+        ${data.agentName ? `<p style="color: #6b7280; margin: 4px 0;"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
         <p class="price">$${data.priceUsdc} USDC</p>
         <p style="color: #374151;">${data.jobDescription}</p>
       </div>
 
-      <a href="${FRONTEND_URL}/dashboard" class="btn">View Offer</a>
+      <a href="${FRONTEND_URL}/dashboard" class="btn">${t('email.jobOffer.viewOffer')}</a>
     </div>
     <div class="footer">
-      <p>Humans - The AI-to-Human Marketplace</p>
+      <p>${t('email.jobOffer.footer')}</p>
     </div>
   </div>
 </body>

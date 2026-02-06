@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import LandingPage from './pages/LandingPage';
 import DevelopersPage from './pages/DevelopersPage';
@@ -13,30 +14,33 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
   }
 
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
   }
 
   return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
 function HomeRoute() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
   }
 
   return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;

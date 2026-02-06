@@ -34,6 +34,7 @@ model Human {
   skills        String[] @default([]) // Tags for search
   equipment     String[] @default([]) // Hardware (car, drone, camera, etc.)
   languages     String[] @default([]) // ISO codes (en, es, zh, etc.)
+  preferredLanguage String @default("en") // UI/email language preference
   isAvailable   Boolean  @default(true) // Open for work
 
   // ===== ECONOMICS (Deal Terms) =====
@@ -110,8 +111,8 @@ model Job {
   priceUsdc       Decimal   @db.Decimal(18, 6)
 
   // Payment details (filled when paid)
-  paymentTxHash   String?   // On-chain transaction hash
-  paymentNetwork  String?   // e.g., "ethereum", "solana"
+  paymentTxHash   String?   @unique // On-chain transaction hash (unique to prevent double-spend)
+  paymentNetwork  String?   // e.g., "ethereum", "base", "polygon", "arbitrum"
   paymentAmount   Decimal?  @db.Decimal(18, 6) // Actual amount received
   paidAt          DateTime?
 

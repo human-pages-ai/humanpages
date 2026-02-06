@@ -20,6 +20,7 @@ const updateProfileSchema = z.object({
   skills: z.array(z.string()).optional(),
   equipment: z.array(z.string()).optional(),
   languages: z.array(z.string()).optional(),
+  preferredLanguage: z.enum(['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th']).optional(),
   isAvailable: z.boolean().optional(),
 
   // Economics

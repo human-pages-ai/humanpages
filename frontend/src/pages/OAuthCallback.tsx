@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
 
 export default function OAuthCallback() {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const { provider } = useParams<{ provider: string }>();
@@ -61,7 +63,7 @@ export default function OAuthCallback() {
             onClick={() => navigate('/login')}
             className="text-indigo-600 hover:text-indigo-500"
           >
-            Back to login
+            {t('auth.backToLogin')}
           </button>
         </div>
       </div>
@@ -72,7 +74,7 @@ export default function OAuthCallback() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Completing sign in...</p>
+        <p className="mt-4 text-gray-600">{t('auth.completingSignIn')}</p>
       </div>
     </div>
   );

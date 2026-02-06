@@ -1,8 +1,11 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
@@ -38,12 +41,12 @@ export default function ResetPassword() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.passwordMismatch'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('errors.passwordTooShort'));
       return;
     }
 
@@ -53,7 +56,7 @@ export default function ResetPassword() {
       await api.resetPassword(token!, password);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to reset password');
+      setError(err.message || t('errors.serverError'));
     } finally {
       setLoading(false);
     }
@@ -64,7 +67,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Validating reset link...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -73,18 +76,18 @@ export default function ResetPassword() {
   if (!token || !tokenValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
         <div className="max-w-md w-full space-y-8 text-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Invalid or expired link</h1>
-            <p className="mt-4 text-gray-600">
-              This password reset link is invalid or has expired.
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('auth.invalidToken')}</h1>
           </div>
           <Link
             to="/forgot-password"
             className="inline-block text-indigo-600 hover:text-indigo-500"
           >
-            Request a new reset link
+            {t('auth.sendResetLink')}
           </Link>
         </div>
       </div>
@@ -94,18 +97,18 @@ export default function ResetPassword() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
         <div className="max-w-md w-full space-y-8 text-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Password reset!</h1>
-            <p className="mt-4 text-gray-600">
-              Your password has been successfully reset.
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('auth.passwordReset')}</h1>
           </div>
           <button
             onClick={() => navigate('/login')}
             className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
           >
-            Sign in with new password
+            {t('auth.signIn')}
           </button>
         </div>
       </div>
@@ -114,10 +117,13 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900">Humans</h1>
-          <h2 className="mt-2 text-center text-xl text-gray-600">Set new password</h2>
+          <h1 className="text-center text-3xl font-bold text-gray-900">Human Pages</h1>
+          <h2 className="mt-2 text-center text-xl text-gray-600">{t('auth.resetPassword')}</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
@@ -128,7 +134,7 @@ export default function ResetPassword() {
           <div className="space-y-4">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                New Password
+                {t('auth.newPassword')}
               </label>
               <input
                 id="password"
@@ -142,7 +148,7 @@ export default function ResetPassword() {
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+                {t('auth.confirmPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -160,7 +166,7 @@ export default function ResetPassword() {
             disabled={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
-            {loading ? 'Resetting...' : 'Reset password'}
+            {loading ? t('auth.resetting') : t('auth.resetPassword')}
           </button>
         </form>
       </div>

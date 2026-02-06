@@ -1,49 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const TASKS = [
-  { icon: '📸', title: 'Photography', description: 'On-location photos, product shots, event coverage' },
-  { icon: '🔍', title: 'Research', description: 'Local research, price checks, competitor analysis' },
-  { icon: '📞', title: 'Phone Calls', description: 'Appointments, verifications, customer outreach' },
-  { icon: '🚗', title: 'Deliveries', description: 'Pick-ups, drop-offs, same-day courier' },
-  { icon: '✍️', title: 'Data Entry', description: 'Forms, transcription, document processing' },
-  { icon: '🏪', title: 'Mystery Shopping', description: 'Store visits, service audits, feedback' },
-];
-
-const BENEFITS = [
-  { title: 'Let the work find you', description: 'Create your listing once. When someone needs your skills in your area, they\'ll reach out directly.' },
-  { title: 'Keep 100% of your earnings', description: 'We don\'t take a cut. You negotiate terms and get paid straight to your wallet or bank.' },
-  { title: 'Work anywhere in the world', description: 'Whether you\'re in Tokyo or Toronto, clients can find you based on your skills and location.' },
-];
-
-const TRUST_ITEMS = [
-  { icon: '🔒', text: 'Your data stays yours. We never sell your information.' },
-  { icon: '👁️', text: 'You control visibility. Go invisible anytime.' },
-  { icon: '💬', text: 'You choose how to be contacted. Email, Telegram, or both.' },
-];
-
-const FAQS = [
-  {
-    q: 'What is Human Pages?',
-    a: 'Think Yellow Pages, but for the AI era. When AI agents or businesses need a human to complete a real-world task, they search Human Pages to find someone with the right skills in the right location.',
-  },
-  {
-    q: 'How do I get hired?',
-    a: 'Create your listing with your skills and location. When someone needs help, they\'ll contact you directly via email or Telegram. You decide if the job is right for you.',
-  },
-  {
-    q: 'How do I get paid?',
-    a: 'You negotiate payment directly with whoever hires you. Add your wallet or payment details to your profile. We never take a commission.',
-  },
-  {
-    q: 'Is this available in my country?',
-    a: 'Yes! Human Pages is a global directory. Just add your location and you\'ll be discoverable for tasks in your area.',
-  },
-  {
-    q: 'Is it really free?',
-    a: 'Yes. Creating a listing is 100% free, forever. We make money from businesses who use our API—not from you.',
-  },
-];
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -69,6 +27,37 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+
+  const TASKS = [
+    { icon: '📸', title: t('landing.tasks.photography'), description: t('landing.tasks.photographyDesc') },
+    { icon: '🔍', title: t('landing.tasks.research'), description: t('landing.tasks.researchDesc') },
+    { icon: '📞', title: t('landing.tasks.phoneCalls'), description: t('landing.tasks.phoneCallsDesc') },
+    { icon: '🚗', title: t('landing.tasks.deliveries'), description: t('landing.tasks.deliveriesDesc') },
+    { icon: '✍️', title: t('landing.tasks.dataEntry'), description: t('landing.tasks.dataEntryDesc') },
+    { icon: '🏪', title: t('landing.tasks.mysteryShopping'), description: t('landing.tasks.mysteryShoppingDesc') },
+  ];
+
+  const BENEFITS = [
+    { title: t('landing.benefits.findWork'), description: t('landing.benefits.findWorkDesc') },
+    { title: t('landing.benefits.keepEarnings'), description: t('landing.benefits.keepEarningsDesc') },
+    { title: t('landing.benefits.workAnywhere'), description: t('landing.benefits.workAnywhereDesc') },
+  ];
+
+  const TRUST_ITEMS = [
+    { icon: '🔒', text: t('landing.trust.dataPrivacy') },
+    { icon: '👁️', text: t('landing.trust.visibility') },
+    { icon: '💬', text: t('landing.trust.contact') },
+  ];
+
+  const FAQS = [
+    { q: t('landing.faq.whatIs'), a: t('landing.faq.whatIsAnswer') },
+    { q: t('landing.faq.howHired'), a: t('landing.faq.howHiredAnswer') },
+    { q: t('landing.faq.howPaid'), a: t('landing.faq.howPaidAnswer') },
+    { q: t('landing.faq.available'), a: t('landing.faq.availableAnswer') },
+    { q: t('landing.faq.free'), a: t('landing.faq.freeAnswer') },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
@@ -77,18 +66,19 @@ export default function LandingPage() {
           <Link to="/" className="text-xl font-bold text-slate-900">
             Human Pages
           </Link>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-sm font-medium text-slate-900">
-              Humans
+          <div className="flex items-center gap-4 md:gap-6">
+            <Link to="/" className="text-sm font-medium text-slate-900 hidden sm:inline">
+              {t('nav.humans')}
             </Link>
-            <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700">
-              Developers
+            <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700 hidden sm:inline">
+              {t('nav.developers')}
             </Link>
+            <LanguageSwitcher />
             <Link
               to="/signup"
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Start your profile
+              {t('nav.startProfile')}
             </Link>
           </div>
         </div>
@@ -98,26 +88,26 @@ export default function LandingPage() {
       <section className="py-16 md:py-24 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="max-w-2xl">
-            <p className="text-blue-600 font-medium mb-2">Get hired for real-world tasks</p>
+            <p className="text-blue-600 font-medium mb-2">{t('landing.hero.tagline')}</p>
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-              Yellow Pages,<br />but for AI.
+              {t('landing.hero.title')}<br />{t('landing.hero.titleLine2')}
             </h1>
             <p className="mt-4 text-xl text-slate-600">
-              List your skills and location. Get contacted when someone needs your help—locally or anywhere in the world.
+              {t('landing.hero.subtitle')}
             </p>
             <div className="mt-8">
               <Link
                 to="/signup"
                 className="inline-block px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-lg"
               >
-                Start your profile
+                {t('landing.hero.cta')}
               </Link>
               <span className="ml-4 inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                Free · No fees
+                {t('common.free')} · {t('common.noFees')}
               </span>
             </div>
             <p className="mt-4 text-slate-500 text-sm">
-              Create a profile → get contacted directly → you decide if it's a fit
+              {t('landing.hero.flow')}
             </p>
           </div>
         </div>
@@ -127,10 +117,10 @@ export default function LandingPage() {
       <section className="py-16 bg-slate-50 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-4">
-            What you can offer
+            {t('landing.tasks.title')}
           </h2>
           <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
-            Real-world tasks that only humans can do. Pick what fits your skills.
+            {t('landing.tasks.subtitle')}
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {TASKS.map((task) => (
@@ -151,7 +141,7 @@ export default function LandingPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
-            Why people list on Human Pages
+            {t('landing.benefits.title')}
           </h2>
           <div className="space-y-8">
             {BENEFITS.map((benefit, i) => (
@@ -175,16 +165,16 @@ export default function LandingPage() {
       <section className="py-12 bg-blue-600 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white">
-            Ready to get discovered?
+            {t('landing.cta.ready')}
           </h2>
           <p className="mt-2 text-blue-100">
-            Create your listing in under a minute.
+            {t('landing.cta.createListing')}
           </p>
           <Link
             to="/signup"
             className="mt-6 inline-block px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
           >
-            Start your profile
+            {t('landing.hero.cta')}
           </Link>
         </div>
       </section>
@@ -193,7 +183,7 @@ export default function LandingPage() {
       <section className="py-16 px-4 bg-slate-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
-            You're in control
+            {t('landing.trust.title')}
           </h2>
           <div className="space-y-4">
             {TRUST_ITEMS.map((item, i) => (
@@ -210,7 +200,7 @@ export default function LandingPage() {
       <section className="py-16 bg-white px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
-            Questions & answers
+            {t('landing.faq.title')}
           </h2>
           <div className="bg-slate-50 rounded-xl border border-slate-200 px-6">
             {FAQS.map((faq, i) => (
@@ -224,16 +214,16 @@ export default function LandingPage() {
       <section className="py-16 px-4 bg-slate-50">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Start getting hired
+            {t('landing.cta.startGetting')}
           </h2>
           <p className="mt-2 text-slate-600">
-            Create your listing and let opportunities come to you.
+            {t('landing.cta.letOpportunities')}
           </p>
           <Link
             to="/signup"
             className="mt-6 inline-block px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Start your profile
+            {t('landing.hero.cta')}
           </Link>
         </div>
       </section>
@@ -241,12 +231,12 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-8 bg-white border-t border-slate-200 px-4">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-slate-500 text-sm">© 2025 Human Pages</span>
+          <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
           <div className="flex gap-6 text-sm">
-            <a href="#" className="text-slate-500 hover:text-slate-700">Privacy</a>
-            <a href="#" className="text-slate-500 hover:text-slate-700">Terms</a>
-            <Link to="/dev" className="text-slate-500 hover:text-slate-700">API</Link>
-            <a href="#" className="text-slate-500 hover:text-slate-700">Contact</a>
+            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</a>
+            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</a>
+            <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
+            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>
       </footer>
@@ -257,7 +247,7 @@ export default function LandingPage() {
           to="/signup"
           className="block w-full text-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Start your profile
+          {t('landing.hero.cta')}
         </Link>
       </div>
 

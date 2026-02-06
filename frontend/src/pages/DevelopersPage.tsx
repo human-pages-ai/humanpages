@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -92,6 +94,7 @@ Response:
 }`;
 
 export default function DevelopersPage() {
+  const { t } = useTranslation();
   const [showRestApi, setShowRestApi] = useState(false);
 
   const scrollToInstall = () => {
@@ -108,16 +111,17 @@ export default function DevelopersPage() {
           </Link>
           <div className="flex items-center gap-6">
             <Link to="/" className="text-sm text-slate-500 hover:text-slate-700">
-              Humans
+              {t('nav.humans')}
             </Link>
             <Link to="/dev" className="text-sm font-medium text-slate-900">
-              Developers
+              {t('nav.developers')}
             </Link>
+            <LanguageSwitcher />
             <Link
               to="/signup?utm_source=dev_page"
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
-              List yourself
+              {t('nav.startProfile')}
             </Link>
           </div>
         </div>
@@ -327,7 +331,7 @@ export default function DevelopersPage() {
             to="/signup?utm_source=dev_page&utm_medium=cta"
             className="mt-6 inline-block px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
           >
-            List yourself
+            {t('nav.startProfile')}
           </Link>
         </div>
       </section>
@@ -335,12 +339,12 @@ export default function DevelopersPage() {
       {/* Footer */}
       <footer className="py-8 bg-white border-t border-slate-200 px-4">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-slate-500 text-sm">© 2025 Human Pages</span>
+          <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
           <div className="flex gap-6 text-sm">
-            <a href="#" className="text-slate-500 hover:text-slate-700">Privacy</a>
-            <a href="#" className="text-slate-500 hover:text-slate-700">Terms</a>
-            <Link to="/dev" className="text-slate-500 hover:text-slate-700">API</Link>
-            <a href="#" className="text-slate-500 hover:text-slate-700">Contact</a>
+            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</a>
+            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</a>
+            <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
+            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>
       </footer>

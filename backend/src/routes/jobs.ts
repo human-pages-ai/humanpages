@@ -6,6 +6,13 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { sendJobOfferEmail } from '../lib/email.js';
 import { sendJobOfferTelegram } from '../lib/telegram.js';
+import {
+  verifyUsdcPayment,
+  PaymentVerificationError,
+  SUPPORTED_NETWORKS,
+  SUPPORTED_TOKENS,
+  type SupportedToken,
+} from '../lib/blockchain/index.js';
 
 const router = Router();
 
@@ -58,8 +65,25 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 // Schema for marking job as paid
 const markPaidSchema = z.object({
-  paymentTxHash: z.string().min(1),
-  paymentNetwork: z.string().min(1),
+  paymentTxHash: z
+    .string()
+    .min(1)
+    .regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash format'),
+  paymentNetwork: z
+    .string()
+    .min(1)
+    .refine(
+      (n) => SUPPORTED_NETWORKS.includes(n.toLowerCase()),
+      `Supported networks: ${SUPPORTED_NETWORKS.join(', ')}`
+    ),
+  paymentToken: z
+    .string()
+    .optional()
+    .default('USDC')
+    .refine(
+      (t) => SUPPORTED_TOKENS.includes(t.toUpperCase() as SupportedToken),
+      `Supported tokens: ${SUPPORTED_TOKENS.join(', ')}`
+    ),
   paymentAmount: z.number().positive(),
 });
 
@@ -105,6 +129,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         contactEmail: true,
         email: true,
         telegramChatId: true,
+        preferredLanguage: true,
         // Filter settings
         minOfferPrice: true,
         maxOfferDistance: true,
@@ -196,6 +221,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         priceUsdc: data.priceUsdc,
         agentName: data.agentName,
         category: data.category,
+        language: human.preferredLanguage,
       }).catch((err) => console.error('[Email] Notification failed:', err));
     }
 
@@ -353,12 +379,26 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 // Mark job as paid (called by agent after sending payment)
+// Performs on-chain verification of USDC transfer
 router.patch('/:id/paid', async (req, res) => {
   try {
     const data = markPaidSchema.parse(req.body);
 
+    // Fetch job with human's wallets included for verification
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
+      include: {
+        human: {
+          include: {
+            wallets: {
+              select: {
+                address: true,
+                network: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!job) {
@@ -374,26 +414,41 @@ router.patch('/:id/paid', async (req, res) => {
       });
     }
 
-    // Verify payment amount matches agreed price
-    const agreedPrice = job.priceUsdc.toNumber();
-    if (data.paymentAmount < agreedPrice) {
+    // Get wallet addresses for the payment network
+    // Match wallets where network matches the payment network (case-insensitive)
+    const networkLower = data.paymentNetwork.toLowerCase();
+    const recipientWallets = job.human.wallets
+      .filter((w) => w.network.toLowerCase() === networkLower || w.network.toLowerCase() === 'ethereum')
+      .map((w) => w.address);
+
+    if (recipientWallets.length === 0) {
       return res.status(400).json({
         error: 'Payment rejected',
-        reason: `Payment amount ($${data.paymentAmount}) is less than agreed price ($${agreedPrice})`,
-        hint: 'Payment must match or exceed the agreed price.',
+        reason: `Human has no registered wallets for network: ${data.paymentNetwork}`,
+        hint: 'The human must register a wallet for this network before receiving payments.',
       });
     }
 
-    // TODO: In production, verify the transaction on-chain
-    // For now, we trust the agent's claim
+    // Verify payment on-chain
+    const agreedPrice = job.priceUsdc.toNumber();
+    const token = (data.paymentToken?.toUpperCase() || 'USDC') as SupportedToken;
+    const verification = await verifyUsdcPayment({
+      txHash: data.paymentTxHash,
+      network: data.paymentNetwork,
+      recipientWallets,
+      expectedAmount: agreedPrice,
+      jobId: job.id,
+      token,
+    });
 
+    // Payment verified! Update job status
     const updated = await prisma.job.update({
       where: { id: job.id },
       data: {
         status: 'PAID',
         paymentTxHash: data.paymentTxHash,
-        paymentNetwork: data.paymentNetwork,
-        paymentAmount: new Decimal(data.paymentAmount),
+        paymentNetwork: networkLower,
+        paymentAmount: new Decimal(verification.amount),
         paidAt: new Date(),
       },
     });
@@ -401,11 +456,23 @@ router.patch('/:id/paid', async (req, res) => {
     res.json({
       id: updated.id,
       status: updated.status,
-      message: 'Payment recorded. Work can begin.',
+      message: 'Payment verified and recorded. Work can begin.',
+      verification: {
+        txHash: verification.txHash,
+        network: verification.network,
+        token: verification.token,
+        from: verification.from,
+        to: verification.to,
+        amount: verification.amount,
+        confirmations: verification.confirmations,
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
+    }
+    if (error instanceof PaymentVerificationError) {
+      return res.status(400).json(error.toResponse());
     }
     console.error('Mark paid error:', error);
     res.status(500).json({ error: 'Internal server error' });

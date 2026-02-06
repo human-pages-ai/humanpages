@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
 
@@ -15,6 +16,7 @@ const EQUIPMENT_SUGGESTIONS = [
 ];
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -143,8 +145,8 @@ export default function Onboarding() {
       <div className="bg-white border-b border-slate-200 px-4 py-3">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700">Complete your profile</span>
-            <span className="text-sm text-slate-500">Step {step} of 3</span>
+            <span className="text-sm font-medium text-slate-700">{t('onboarding.title')}</span>
+            <span className="text-sm text-slate-500">{t('onboarding.stepOf', { step, total: 3 })}</span>
           </div>
           <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
             <div
@@ -161,10 +163,10 @@ export default function Onboarding() {
           {step === 1 && (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                How should clients reach you?
+                {t('onboarding.step1.title')}
               </h2>
               <p className="text-slate-600 mb-6">
-                This is how AI agents and businesses will contact you about jobs.
+                {t('onboarding.step1.subtitle')}
               </p>
 
               <div className="flex gap-2 mb-4">
@@ -176,7 +178,7 @@ export default function Onboarding() {
                       : 'border-slate-200 text-slate-600 hover:border-slate-300'
                   }`}
                 >
-                  Email
+                  {t('onboarding.step1.email')}
                 </button>
                 <button
                   onClick={() => setContactMethod('telegram')}
@@ -186,7 +188,7 @@ export default function Onboarding() {
                       : 'border-slate-200 text-slate-600 hover:border-slate-300'
                   }`}
                 >
-                  Telegram
+                  {t('onboarding.step1.telegram')}
                 </button>
               </div>
 
@@ -194,7 +196,7 @@ export default function Onboarding() {
                 type={contactMethod === 'email' ? 'email' : 'text'}
                 value={contactValue}
                 onChange={(e) => setContactValue(e.target.value)}
-                placeholder={contactMethod === 'email' ? 'you@example.com' : '@username'}
+                placeholder={contactMethod === 'email' ? t('onboarding.step1.emailPlaceholder') : t('onboarding.step1.telegramPlaceholder')}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
 
@@ -203,7 +205,7 @@ export default function Onboarding() {
                 disabled={loading || !contactValue.trim()}
                 className="w-full mt-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Saving...' : 'Continue'}
+                {loading ? t('onboarding.saving') : t('onboarding.continue')}
               </button>
             </div>
           )}
@@ -212,22 +214,22 @@ export default function Onboarding() {
           {step === 2 && (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                What can you do?
+                {t('onboarding.step2.title')}
               </h2>
               <p className="text-slate-600 mb-6">
-                Select your skills so agents can find you for the right jobs.
+                {t('onboarding.step2.subtitle')}
               </p>
 
               {/* Location */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Your location
+                  {t('onboarding.step2.location')}
                 </label>
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g., San Francisco, CA"
+                  placeholder={t('onboarding.step2.locationPlaceholder')}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -235,7 +237,7 @@ export default function Onboarding() {
               {/* Skills */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Your skills (select all that apply)
+                  {t('onboarding.step2.skills')}
                 </label>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {SKILL_SUGGESTIONS.map((skill) => (
@@ -260,7 +262,7 @@ export default function Onboarding() {
                     value={customSkill}
                     onChange={(e) => setCustomSkill(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addCustomSkill()}
-                    placeholder="Add custom skill..."
+                    placeholder={t('onboarding.step2.addCustomSkill')}
                     className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
                   />
                   <button
@@ -268,7 +270,7 @@ export default function Onboarding() {
                     disabled={!customSkill.trim()}
                     className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 disabled:opacity-50"
                   >
-                    Add
+                    {t('onboarding.step2.add')}
                   </button>
                 </div>
 
@@ -276,7 +278,7 @@ export default function Onboarding() {
                 {skills.length > 0 && (
                   <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                     <span className="text-sm text-blue-700 font-medium">
-                      Selected: {skills.join(', ')}
+                      {t('onboarding.step2.selected')}: {skills.join(', ')}
                     </span>
                   </div>
                 )}
@@ -287,7 +289,7 @@ export default function Onboarding() {
                 disabled={loading || !location.trim() || skills.length === 0}
                 className="w-full mt-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Saving...' : 'Continue'}
+                {loading ? t('onboarding.saving') : t('onboarding.continue')}
               </button>
             </div>
           )}
@@ -296,16 +298,16 @@ export default function Onboarding() {
           {step === 3 && (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                Set your rate
+                {t('onboarding.step3.title')}
               </h2>
               <p className="text-slate-600 mb-6">
-                Help agents filter by budget. This is optional.
+                {t('onboarding.step3.subtitle')}
               </p>
 
               {/* Rate */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Minimum rate (USDC)
+                  {t('onboarding.step3.minRate')}
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -324,9 +326,9 @@ export default function Onboarding() {
                     onChange={(e) => setRateType(e.target.value as any)}
                     className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="HOURLY">per hour</option>
-                    <option value="FLAT_TASK">per task</option>
-                    <option value="NEGOTIABLE">negotiable</option>
+                    <option value="HOURLY">{t('onboarding.step3.perHour')}</option>
+                    <option value="FLAT_TASK">{t('onboarding.step3.perTask')}</option>
+                    <option value="NEGOTIABLE">{t('onboarding.step3.negotiable')}</option>
                   </select>
                 </div>
               </div>
@@ -334,7 +336,7 @@ export default function Onboarding() {
               {/* Equipment */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Equipment you have (optional)
+                  {t('onboarding.step3.equipment')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {EQUIPMENT_SUGGESTIONS.map((item) => (
@@ -358,14 +360,14 @@ export default function Onboarding() {
                 disabled={loading}
                 className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? 'Saving...' : 'Complete Profile'}
+                {loading ? t('onboarding.saving') : t('onboarding.completeProfile')}
               </button>
 
               <button
                 onClick={completeOnboarding}
                 className="w-full mt-3 py-3 text-slate-600 font-medium hover:text-slate-800"
               >
-                Skip for now
+                {t('onboarding.skipForNow')}
               </button>
             </div>
           )}
@@ -376,7 +378,7 @@ export default function Onboarding() {
               onClick={skipToEnd}
               className="w-full mt-4 text-sm text-slate-500 hover:text-slate-700"
             >
-              Skip setup and go to dashboard
+              {t('onboarding.skipToDashboard')}
             </button>
           )}
         </div>

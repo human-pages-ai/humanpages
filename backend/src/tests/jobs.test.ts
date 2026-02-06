@@ -1,11 +1,38 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
 import { prisma } from '../lib/prisma.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { PaymentVerificationError, PaymentErrorCode } from '../lib/blockchain/errors.js';
+
+// Mock the blockchain verification module
+vi.mock('../lib/blockchain/verify-payment.js', () => ({
+  verifyUsdcPayment: vi.fn(),
+}));
+
+// Import after mocking
+import { verifyUsdcPayment } from '../lib/blockchain/verify-payment.js';
+const mockVerifyUsdcPayment = vi.mocked(verifyUsdcPayment);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+
+// Valid txHash format for tests
+const VALID_TX_HASH = '0x' + 'a'.repeat(64);
+
+// Default successful verification result
+const mockSuccessfulVerification = () => {
+  mockVerifyUsdcPayment.mockResolvedValue({
+    verified: true,
+    txHash: VALID_TX_HASH,
+    network: 'ethereum',
+    token: 'USDC',
+    from: '0x' + '1'.repeat(40),
+    to: '0x1234567890123456789012345678901234567890',
+    amount: 100,
+    confirmations: 100,
+  });
+};
 
 describe('Jobs API - Mutual Handshake', () => {
   let humanId: string;
@@ -45,6 +72,9 @@ describe('Jobs API - Mutual Handshake', () => {
     // Clean up jobs before each test
     await prisma.review.deleteMany({ where: { humanId } });
     await prisma.job.deleteMany({ where: { humanId } });
+    // Reset mock to default successful verification
+    mockVerifyUsdcPayment.mockReset();
+    mockSuccessfulVerification();
   });
 
   describe('POST /api/jobs - Create Job Offer', () => {
@@ -149,7 +179,7 @@ describe('Jobs API - Mutual Handshake', () => {
       const res = await request(app)
         .patch(`/api/jobs/${jobId}/paid`)
         .send({
-          paymentTxHash: '0xabc123',
+          paymentTxHash: VALID_TX_HASH,
           paymentNetwork: 'ethereum',
           paymentAmount: 100,
         });
@@ -159,24 +189,33 @@ describe('Jobs API - Mutual Handshake', () => {
       expect(res.body.reason).toContain('ACCEPTED');
     });
 
-    it('should REJECT payment for underpayment', async () => {
+    it('should REJECT payment for underpayment (on-chain verification)', async () => {
+      // Mock the verification to fail with insufficient amount
+      mockVerifyUsdcPayment.mockRejectedValue(
+        new PaymentVerificationError(
+          PaymentErrorCode.AMOUNT_INSUFFICIENT,
+          'Payment amount ($50.00) is less than agreed price ($100.00)',
+          { actualAmount: 50, expectedAmount: 100 }
+        )
+      );
+
       // Accept the job first
       await request(app)
         .patch(`/api/jobs/${jobId}/accept`)
         .set('Authorization', `Bearer ${humanToken}`);
 
-      // Try to pay less than agreed
+      // Try to pay less than agreed (on-chain verification catches this)
       const res = await request(app)
         .patch(`/api/jobs/${jobId}/paid`)
         .send({
-          paymentTxHash: '0xabc123',
+          paymentTxHash: VALID_TX_HASH,
           paymentNetwork: 'ethereum',
-          paymentAmount: 50, // Less than agreed $100
+          paymentAmount: 50, // Amount in request doesn't matter - on-chain is what counts
         });
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Payment rejected');
-      expect(res.body.reason).toContain('less than agreed');
+      expect(res.body.error).toBe('Payment verification failed');
+      expect(res.body.code).toBe('AMOUNT_INSUFFICIENT');
     });
 
     it('should accept payment for ACCEPTED job with correct amount', async () => {
@@ -189,7 +228,7 @@ describe('Jobs API - Mutual Handshake', () => {
       const res = await request(app)
         .patch(`/api/jobs/${jobId}/paid`)
         .send({
-          paymentTxHash: '0xabc123',
+          paymentTxHash: VALID_TX_HASH,
           paymentNetwork: 'ethereum',
           paymentAmount: 100,
         });
@@ -245,7 +284,7 @@ describe('Jobs API - Mutual Handshake', () => {
       await request(app)
         .patch(`/api/jobs/${jobId}/paid`)
         .send({
-          paymentTxHash: '0xabc123',
+          paymentTxHash: VALID_TX_HASH,
           paymentNetwork: 'ethereum',
           paymentAmount: 100,
         });
@@ -268,7 +307,7 @@ describe('Jobs API - Mutual Handshake', () => {
       await request(app)
         .patch(`/api/jobs/${jobId}/paid`)
         .send({
-          paymentTxHash: '0xabc123',
+          paymentTxHash: VALID_TX_HASH,
           paymentNetwork: 'ethereum',
           paymentAmount: 100,
         });
@@ -296,7 +335,7 @@ describe('Jobs API - Mutual Handshake', () => {
       await request(app)
         .patch(`/api/jobs/${jobId}/paid`)
         .send({
-          paymentTxHash: '0xabc123',
+          paymentTxHash: VALID_TX_HASH,
           paymentNetwork: 'ethereum',
           paymentAmount: 100,
         });
