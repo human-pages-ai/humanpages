@@ -27,6 +27,8 @@ interface Profile {
   email: string;
   bio?: string;
   location?: string;
+  locationLat?: number;
+  locationLng?: number;
   skills: string[];
   contactEmail?: string;
   telegram?: string;
@@ -40,6 +42,10 @@ interface Profile {
   wallets: Wallet[];
   services: Service[];
   referralCount?: number;
+  // Offer filters
+  minOfferPrice?: number;
+  maxOfferDistance?: number;
+  minRateUsdc?: number;
 }
 
 interface Job {
@@ -119,6 +125,14 @@ export default function Dashboard() {
   const [telegramLinkUrl, setTelegramLinkUrl] = useState<string | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(false);
 
+  // Offer filters state
+  const [editingFilters, setEditingFilters] = useState(false);
+  const [filtersForm, setFiltersForm] = useState({
+    minOfferPrice: '',
+    maxOfferDistance: '',
+    minRateUsdc: '',
+  });
+
   useEffect(() => {
     loadProfile();
     loadJobs();
@@ -142,6 +156,11 @@ export default function Dashboard() {
         instagramUrl: data.instagramUrl || '',
         youtubeUrl: data.youtubeUrl || '',
         websiteUrl: data.websiteUrl || '',
+      });
+      setFiltersForm({
+        minOfferPrice: data.minOfferPrice?.toString() || '',
+        maxOfferDistance: data.maxOfferDistance?.toString() || '',
+        minRateUsdc: data.minRateUsdc?.toString() || '',
       });
       // Load review stats
       if (data.id) {
@@ -303,6 +322,23 @@ export default function Dashboard() {
       setEditingProfile(false);
     } catch (error) {
       console.error('Failed to save profile:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveFilters = async () => {
+    setSaving(true);
+    try {
+      const updated = await api.updateProfile({
+        minOfferPrice: filtersForm.minOfferPrice ? parseFloat(filtersForm.minOfferPrice) : null,
+        maxOfferDistance: filtersForm.maxOfferDistance ? parseInt(filtersForm.maxOfferDistance) : null,
+        minRateUsdc: filtersForm.minRateUsdc ? parseFloat(filtersForm.minRateUsdc) : null,
+      });
+      setProfile(updated);
+      setEditingFilters(false);
+    } catch (error) {
+      console.error('Failed to save filters:', error);
     } finally {
       setSaving(false);
     }
@@ -536,6 +572,124 @@ export default function Dashboard() {
               {profile.isAvailable ? 'Available' : 'Unavailable'}
             </button>
           </div>
+        </div>
+
+        {/* Offer Filters Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Offer Filters</h2>
+              <p className="text-gray-600 text-sm">
+                Auto-filter low-quality offers to your spam folder
+              </p>
+            </div>
+            <button
+              onClick={() => setEditingFilters(!editingFilters)}
+              className="text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              {editingFilters ? 'Cancel' : 'Configure'}
+            </button>
+          </div>
+
+          {editingFilters ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Minimum Offer Price (USDC)
+                </label>
+                <p className="text-xs text-gray-500 mb-1">
+                  Offers below this amount will be automatically rejected
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={filtersForm.minOfferPrice}
+                  onChange={(e) => setFiltersForm({ ...filtersForm, minOfferPrice: e.target.value })}
+                  placeholder="e.g., 50"
+                  className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Minimum Hourly Rate (USDC)
+                </label>
+                <p className="text-xs text-gray-500 mb-1">
+                  Reject offers from agents that don't meet your rate expectations
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={filtersForm.minRateUsdc}
+                  onChange={(e) => setFiltersForm({ ...filtersForm, minRateUsdc: e.target.value })}
+                  placeholder="e.g., 25"
+                  className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Maximum Distance (km)
+                </label>
+                <p className="text-xs text-gray-500 mb-1">
+                  Only accept offers from agents within this distance (requires location)
+                </p>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={filtersForm.maxOfferDistance}
+                  onChange={(e) => setFiltersForm({ ...filtersForm, maxOfferDistance: e.target.value })}
+                  placeholder="e.g., 100"
+                  className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md"
+                />
+                {!profile?.locationLat && filtersForm.maxOfferDistance && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Distance filtering requires setting your location coordinates
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={saveFilters}
+                disabled={saving}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Filters'}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2 text-sm">
+              {!profile?.minOfferPrice && !profile?.maxOfferDistance && !profile?.minRateUsdc ? (
+                <p className="text-gray-500">
+                  No filters configured. All offers will be delivered to your inbox.
+                </p>
+              ) : (
+                <>
+                  {profile?.minOfferPrice && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span>Minimum offer: <strong>${profile.minOfferPrice} USDC</strong></span>
+                    </div>
+                  )}
+                  {profile?.minRateUsdc && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span>Minimum rate: <strong>${profile.minRateUsdc}/hr</strong></span>
+                    </div>
+                  )}
+                  {profile?.maxOfferDistance && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span>Max distance: <strong>{profile.maxOfferDistance} km</strong></span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Jobs Section */}

@@ -187,7 +187,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'create_job_offer',
       description:
-        'Create a job offer for a human. The human must ACCEPT the offer before you can proceed with payment. This mutual handshake prevents spam and enables reputation tracking. RATE LIMIT: 5 offers per hour per agent_id.',
+        'Create a job offer for a human. The human must ACCEPT the offer before you can proceed with payment. RATE LIMIT: 5 offers per hour per agent_id. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code (PRICE_TOO_LOW, BELOW_MIN_RATE, TOO_FAR, LOCATION_REQUIRED). The error will tell you exactly what the human requires.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -209,7 +209,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           price_usdc: {
             type: 'number',
-            description: 'Agreed price in USDC',
+            description: 'Agreed price in USDC. Must meet the human\'s minOfferPrice if set.',
           },
           agent_id: {
             type: 'string',
@@ -218,6 +218,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           agent_name: {
             type: 'string',
             description: 'Display name for your agent (optional)',
+          },
+          agent_lat: {
+            type: 'number',
+            description: 'Agent latitude for distance filtering. Required if human has maxOfferDistance set.',
+          },
+          agent_lng: {
+            type: 'number',
+            description: 'Agent longitude for distance filtering. Required if human has maxOfferDistance set.',
           },
         },
         required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id'],

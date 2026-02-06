@@ -26,6 +26,10 @@ const updateProfileSchema = z.object({
   minRateUsdc: z.number().min(0).optional().nullable(),
   rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
 
+  // Offer filters (anti-spam)
+  minOfferPrice: z.number().min(0).optional().nullable(),
+  maxOfferDistance: z.number().int().min(1).optional().nullable(),
+
   // Communication
   contactEmail: z.string().email().optional().nullable(),
   telegram: z.string().optional().nullable(),

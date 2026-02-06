@@ -8,6 +8,7 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 30000,
     fileParallelism: false, // Run test files sequentially to avoid DB conflicts
+    exclude: ['dist/**', 'node_modules/**'],
     env: {
       DATABASE_URL: 'postgresql://humans:humans_secret@localhost:5432/humans_marketplace_test?schema=public',
       JWT_SECRET: 'test-jwt-secret-for-testing-only',

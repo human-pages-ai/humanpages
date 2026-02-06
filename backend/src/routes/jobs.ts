@@ -25,6 +25,8 @@ const ipRateLimiter = rateLimit({
     // Use X-Forwarded-For if behind proxy, otherwise use IP
     return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
   },
+  // Disable validation - we handle proxied IPs correctly
+  validate: false,
 });
 
 // Schema for creating a job offer (called by agents)
@@ -36,7 +38,23 @@ const createJobSchema = z.object({
   description: z.string().min(1),
   category: z.string().optional(),
   priceUsdc: z.number().positive(),
+  // Agent location for distance filtering
+  agentLat: z.number().min(-90).max(90).optional(),
+  agentLng: z.number().min(-180).max(180).optional(),
 });
+
+// Haversine formula to calculate distance between two coordinates
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 // Schema for marking job as paid
 const markPaidSchema = z.object({
@@ -78,14 +96,78 @@ router.post('/', ipRateLimiter, async (req, res) => {
       });
     }
 
-    // Verify human exists and get contact info for notification
+    // Verify human exists and get contact info + filter settings
     const human = await prisma.human.findUnique({
       where: { id: data.humanId },
-      select: { id: true, name: true, contactEmail: true, email: true, telegramChatId: true },
+      select: {
+        id: true,
+        name: true,
+        contactEmail: true,
+        email: true,
+        telegramChatId: true,
+        // Filter settings
+        minOfferPrice: true,
+        maxOfferDistance: true,
+        minRateUsdc: true,
+        locationLat: true,
+        locationLng: true,
+      },
     });
 
     if (!human) {
       return res.status(404).json({ error: 'Human not found' });
+    }
+
+    // Check offer filters
+    // 1. Minimum price filter
+    if (human.minOfferPrice && data.priceUsdc < human.minOfferPrice.toNumber()) {
+      return res.status(400).json({
+        error: 'Offer filtered',
+        code: 'PRICE_TOO_LOW',
+        message: `This human requires a minimum offer of $${human.minOfferPrice} USDC. Your offer of $${data.priceUsdc} was automatically filtered to their spam folder.`,
+        minPrice: human.minOfferPrice.toNumber(),
+        yourPrice: data.priceUsdc,
+      });
+    }
+
+    // 2. Minimum rate filter (if human has set it and offer seems too low relative to rate)
+    if (human.minRateUsdc && data.priceUsdc < human.minRateUsdc.toNumber()) {
+      return res.status(400).json({
+        error: 'Offer filtered',
+        code: 'BELOW_MIN_RATE',
+        message: `This human's minimum rate is $${human.minRateUsdc} USDC. Your offer of $${data.priceUsdc} was automatically filtered to their spam folder.`,
+        minRate: human.minRateUsdc.toNumber(),
+        yourPrice: data.priceUsdc,
+      });
+    }
+
+    // 3. Distance filter (if human has location and max distance set)
+    if (human.maxOfferDistance && human.locationLat && human.locationLng) {
+      if (!data.agentLat || !data.agentLng) {
+        return res.status(400).json({
+          error: 'Offer filtered',
+          code: 'LOCATION_REQUIRED',
+          message: `This human only accepts offers from agents within ${human.maxOfferDistance}km. Please provide agentLat and agentLng coordinates. Your offer was automatically filtered to their spam folder.`,
+          maxDistance: human.maxOfferDistance,
+        });
+      }
+
+      const distance = calculateDistance(
+        human.locationLat,
+        human.locationLng,
+        data.agentLat,
+        data.agentLng
+      );
+
+      if (distance > human.maxOfferDistance) {
+        return res.status(400).json({
+          error: 'Offer filtered',
+          code: 'TOO_FAR',
+          message: `This human only accepts offers from agents within ${human.maxOfferDistance}km. You are ${Math.round(distance)}km away. Your offer was automatically filtered to their spam folder.`,
+          maxDistance: human.maxOfferDistance,
+          yourDistance: Math.round(distance),
+        });
+      }
     }
 
     const job = await prisma.job.create({

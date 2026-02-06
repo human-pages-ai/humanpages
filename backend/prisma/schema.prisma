@@ -37,8 +37,12 @@ model Human {
   isAvailable   Boolean  @default(true) // Open for work
 
   // ===== ECONOMICS (Deal Terms) =====
-  minRateUsdc   Decimal? @db.Decimal(18, 2) // Minimum rate filter
-  rateType      RateType @default(NEGOTIABLE)
+  minRateUsdc      Decimal? @db.Decimal(18, 2) // Minimum rate filter
+  rateType         RateType @default(NEGOTIABLE)
+
+  // ===== OFFER FILTERS (Anti-Spam) =====
+  minOfferPrice    Decimal? @db.Decimal(18, 2) // Reject offers below this price
+  maxOfferDistance Int?     // Reject offers from agents beyond this distance (km)
 
   // ===== COMMUNICATION =====
   contactEmail    String?
