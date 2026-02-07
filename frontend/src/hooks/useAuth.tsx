@@ -55,12 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    const { url } = await api.getOAuthUrl('google');
+    const { url, state } = await api.getOAuthUrl('google');
+    sessionStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
 
   const loginWithGithub = async () => {
-    const { url } = await api.getOAuthUrl('github');
+    const { url, state } = await api.getOAuthUrl('github');
+    sessionStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
 

@@ -184,6 +184,9 @@
       "completed": "पूर्ण",
       "noJobs": "अभी तक कोई जॉब ऑफर नहीं। जब AI एजेंट्स आपको हायर करना चाहेंगे, उनके ऑफर्स यहां दिखेंगे।",
       "noJobsFiltered": "कोई {{filter}} जॉब्स नहीं।",
+      "emptyTitle": "अभी तक कोई जॉब ऑफर नहीं",
+      "emptyDescription": "ऑफर प्राप्त करने के लिए AI एजेंट्स के साथ अपनी प्रोफ़ाइल शेयर करें",
+      "copyProfileUrl": "प्रोफ़ाइल URL कॉपी करें",
       "accept": "स्वीकार करें",
       "reject": "अस्वीकार करें",
       "markComplete": "पूर्ण मार्क करें",
@@ -208,9 +211,15 @@
       "skills": "स्किल्स",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "कॉमा से अलग करें",
+      "equipment": "उपकरण",
+      "languages": "भाषाएं",
       "contactEmail": "कॉन्टैक्ट ईमेल",
       "telegramHandle": "टेलीग्राम",
       "telegramPlaceholder": "@username",
+      "username": "यूज़रनेम",
+      "usernameLength": "यूज़रनेम 3-30 कैरेक्टर्स का होना चाहिए",
+      "usernameChars": "यूज़रनेम में केवल अक्षर, संख्याएं और अंडरस्कोर हो सकते हैं",
+      "profileUrl": "आपकी प्रोफ़ाइल: humanpages.io/u/{{username}}",
       "socialProfiles": "सोशल प्रोफ़ाइल्स",
       "socialForTrust": "ट्रस्ट के लिए",
       "linkedin": "LinkedIn",
@@ -230,11 +239,12 @@
       "label": "लेबल",
       "labelPlaceholder": "जैसे, मेन वॉलेट",
       "noWallets": "अभी तक कोई वॉलेट नहीं जोड़ा",
+      "emptyTitle": "कोई वॉलेट कनेक्ट नहीं",
+      "emptyDescription": "पूर्ण जॉब्स के लिए पेमेंट प्राप्त करने हेतु वॉलेट जोड़ें",
+      "walletAddress": "वॉलेट एड्रेस",
       "confirmDelete": "यह वॉलेट हटाएं?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "प्राइस रेंज",
       "priceRangePlaceholder": "जैसे, $50-100/घंटा",
       "noServices": "अभी तक कोई सेवाएं लिस्ट नहीं। AI एजेंट्स को दिखाने के लिए सेवाएं जोड़ें कि आप क्या कर सकते हैं!",
+      "emptyTitle": "कोई सेवाएं लिस्ट नहीं",
+      "emptyDescription": "AI एजेंट्स को बताने के लिए सेवाएं जोड़ें कि आप क्या कर सकते हैं",
       "confirmDelete": "यह सेवा हटाएं?",
       "statusActive": "एक्टिव",
       "statusInactive": "इनएक्टिव"
-    }
+    },
+    "yourReferrals": "आपके रेफरल्स",
+    "moreReferrals": "+{{count}} और"
   },
   "onboarding": {
     "title": "अपनी प्रोफ़ाइल पूरी करें",
@@ -325,5 +339,33 @@
     "unauthorized": "जारी रखने के लिए कृपया लॉग इन करें",
     "notFound": "नहीं मिला",
     "serverError": "सर्वर एरर। कृपया बाद में प्रयास करें।"
+  },
+  "errorBoundary": {
+    "title": "कुछ गलत हो गया",
+    "message": "एक अप्रत्याशित त्रुटि हुई। कृपया पेज रीफ्रेश करें।",
+    "tryAgain": "पुनः प्रयास करें"
+  },
+  "confirmDialog": {
+    "confirm": "पुष्टि करें",
+    "cancel": "रद्द करें"
+  },
+  "toast": {
+    "profileSaved": "प्रोफ़ाइल सहेजी गई",
+    "filtersSaved": "फ़िल्टर सहेजे गए",
+    "walletAdded": "वॉलेट जोड़ा गया",
+    "walletDeleted": "वॉलेट हटाया गया",
+    "serviceAdded": "सेवा जोड़ी गई",
+    "serviceDeleted": "सेवा हटाई गई",
+    "jobAccepted": "कार्य स्वीकार किया गया",
+    "jobRejected": "कार्य अस्वीकार किया गया",
+    "jobCompleted": "कार्य पूरा हुआ",
+    "telegramConnected": "टेलीग्राम जुड़ा",
+    "telegramDisconnected": "टेलीग्राम डिस्कनेक्ट हुआ",
+    "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
+  },
+  "notFound": {
+    "title": "पेज नहीं मिला",
+    "message": "आप जो पेज ढूंढ रहे हैं वह मौजूद नहीं है या स्थानांतरित कर दिया गया है।",
+    "goHome": "होम जाएं"
   }
 }

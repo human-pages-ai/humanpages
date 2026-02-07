@@ -2,12 +2,13 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { isTelegramConfigured, getTelegramBotUsername, sendTelegramMessage } from '../lib/telegram.js';
+import { isTelegramConfigured, getTelegramBotUsername, getTelegramWebhookSecret, sendTelegramMessage } from '../lib/telegram.js';
+import { logger } from '../lib/logger.js';
 
 const router = Router();
 
 // Store pending verification codes (in production, use Redis with TTL)
-const pendingCodes = new Map<string, { oderId: string; expiresAt: number }>();
+const pendingCodes = new Map<string, { userId: string; expiresAt: number }>();
 
 // Clean up expired codes periodically
 setInterval(() => {
@@ -37,7 +38,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
       botUsername,
     });
   } catch (error) {
-    console.error('Telegram status error:', error);
+    logger.error({ err: error }, 'Telegram status error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -55,7 +56,7 @@ router.post('/link', authenticateToken, async (req: AuthRequest, res) => {
 
     // Store with 10 minute expiry
     pendingCodes.set(code, {
-      oderId: req.userId!,
+      userId: req.userId!,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
 
@@ -68,7 +69,7 @@ router.post('/link', authenticateToken, async (req: AuthRequest, res) => {
       expiresIn: '10 minutes',
     });
   } catch (error) {
-    console.error('Telegram link error:', error);
+    logger.error({ err: error }, 'Telegram link error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -83,7 +84,7 @@ router.delete('/link', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json({ message: 'Telegram disconnected' });
   } catch (error) {
-    console.error('Telegram disconnect error:', error);
+    logger.error({ err: error }, 'Telegram disconnect error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -91,6 +92,14 @@ router.delete('/link', authenticateToken, async (req: AuthRequest, res) => {
 // Webhook endpoint for Telegram bot updates
 // Set this as webhook URL: https://yourapi.com/api/telegram/webhook
 router.post('/webhook', async (req, res) => {
+  const secret = getTelegramWebhookSecret();
+  if (secret) {
+    const headerSecret = req.headers['x-telegram-bot-api-secret-token'];
+    if (headerSecret !== secret) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
   try {
     const update = req.body;
 
@@ -121,7 +130,7 @@ router.post('/webhook', async (req, res) => {
 
       // Link the account
       await prisma.human.update({
-        where: { id: pending.oderId },
+        where: { id: pending.userId },
         data: {
           telegramChatId: chatId,
           telegram: username ? `@${username}` : undefined,
@@ -135,7 +144,7 @@ router.post('/webhook', async (req, res) => {
         text: `Your Telegram is now connected to Humans! You'll receive notifications here when you get new job offers.`,
       });
 
-      console.log(`[Telegram] Linked chat ${chatId} to user ${pending.oderId}`);
+      logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user');
     }
 
     // Handle plain /start (no code)
@@ -149,7 +158,7 @@ router.post('/webhook', async (req, res) => {
 
     res.json({ ok: true });
   } catch (error) {
-    console.error('Telegram webhook error:', error);
+    logger.error({ err: error }, 'Telegram webhook error');
     res.json({ ok: true }); // Always return 200 to Telegram
   }
 });
@@ -160,7 +169,7 @@ export function verifyTelegramCode(code: string): string | null {
   if (!pending || pending.expiresAt < Date.now()) {
     return null;
   }
-  return pending.oderId;
+  return pending.userId;
 }
 
 export default router;

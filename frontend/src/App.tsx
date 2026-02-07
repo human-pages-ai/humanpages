@@ -1,46 +1,57 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import LandingPage from './pages/LandingPage';
-import DevelopersPage from './pages/DevelopersPage';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import Onboarding from './pages/Onboarding';
-import Welcome from './pages/Welcome';
-import OAuthCallback from './pages/OAuthCallback';
-import PublicProfile from './pages/PublicProfile';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+import ErrorBoundary from './components/ErrorBoundary';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Welcome = lazy(() => import('./pages/Welcome'));
+const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+function LoadingSpinner() {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading">
+      {t('common.loading')}
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
+    return <LoadingSpinner />;
   }
 
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
+    return <LoadingSpinner />;
   }
 
   return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
 function HomeRoute() {
-  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
+    return <LoadingSpinner />;
   }
 
   return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
@@ -102,6 +113,7 @@ function AppRoutes() {
         }
       />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
@@ -109,7 +121,12 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner />}>
+          <AppRoutes />
+        </Suspense>
+      </ErrorBoundary>
+      <Toaster position="top-right" />
     </AuthProvider>
   );
 }

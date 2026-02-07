@@ -184,6 +184,9 @@
       "completed": "เสร็จสิ้น",
       "noJobs": "ยังไม่มีข้อเสนองาน เมื่อ AI agents ต้องการจ้างคุณ ข้อเสนอจะปรากฏที่นี่",
       "noJobsFiltered": "ไม่มีงาน{{filter}}",
+      "emptyTitle": "ยังไม่มีข้อเสนองาน",
+      "emptyDescription": "แชร์โปรไฟล์ของคุณกับ AI agents เพื่อรับข้อเสนอ",
+      "copyProfileUrl": "คัดลอก URL โปรไฟล์",
       "accept": "ยอมรับ",
       "reject": "ปฏิเสธ",
       "markComplete": "ทำเครื่องหมายเสร็จสิ้น",
@@ -208,9 +211,15 @@
       "skills": "ทักษะ",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "คั่นด้วยเครื่องหมายจุลภาค",
+      "equipment": "อุปกรณ์",
+      "languages": "ภาษา",
       "contactEmail": "อีเมลติดต่อ",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
+      "username": "ชื่อผู้ใช้",
+      "usernameLength": "ชื่อผู้ใช้ต้องมี 3-30 ตัวอักษร",
+      "usernameChars": "ชื่อผู้ใช้สามารถมีได้เฉพาะตัวอักษร ตัวเลข และขีดล่าง",
+      "profileUrl": "โปรไฟล์ของคุณ: humanpages.io/u/{{username}}",
       "socialProfiles": "โปรไฟล์โซเชียล",
       "socialForTrust": "เพื่อความน่าเชื่อถือ",
       "linkedin": "LinkedIn",
@@ -230,11 +239,12 @@
       "label": "ป้ายกำกับ",
       "labelPlaceholder": "เช่น กระเป๋าเงินหลัก",
       "noWallets": "ยังไม่มีกระเป๋าเงิน",
+      "emptyTitle": "ยังไม่มีกระเป๋าเงินที่เชื่อมต่อ",
+      "emptyDescription": "เพิ่มกระเป๋าเงินเพื่อรับการชำระเงินสำหรับงานที่เสร็จสิ้น",
+      "walletAddress": "ที่อยู่กระเป๋าเงิน",
       "confirmDelete": "ลบกระเป๋าเงินนี้?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "ช่วงราคา",
       "priceRangePlaceholder": "เช่น $50-100/ชั่วโมง",
       "noServices": "ยังไม่มีบริการ เพิ่มบริการเพื่อแสดงให้ AI agents เห็นว่าคุณทำอะไรได้!",
+      "emptyTitle": "ยังไม่มีบริการ",
+      "emptyDescription": "เพิ่มบริการเพื่อบอก AI agents ว่าคุณทำอะไรได้",
       "confirmDelete": "ลบบริการนี้?",
       "statusActive": "เปิดใช้งาน",
       "statusInactive": "ปิดใช้งาน"
-    }
+    },
+    "yourReferrals": "การแนะนำของคุณ",
+    "moreReferrals": "+{{count}} เพิ่มเติม"
   },
   "onboarding": {
     "title": "กรอกโปรไฟล์ของคุณ",
@@ -325,5 +339,33 @@
     "unauthorized": "กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ",
     "notFound": "ไม่พบ",
     "serverError": "ข้อผิดพลาดเซิร์ฟเวอร์ กรุณาลองอีกครั้งภายหลัง"
+  },
+  "errorBoundary": {
+    "title": "เกิดข้อผิดพลาด",
+    "message": "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองรีเฟรชหน้าเว็บ",
+    "tryAgain": "ลองอีกครั้ง"
+  },
+  "confirmDialog": {
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก"
+  },
+  "toast": {
+    "profileSaved": "บันทึกโปรไฟล์แล้ว",
+    "filtersSaved": "บันทึกตัวกรองแล้ว",
+    "walletAdded": "เพิ่มกระเป๋าเงินแล้ว",
+    "walletDeleted": "ลบกระเป๋าเงินแล้ว",
+    "serviceAdded": "เพิ่มบริการแล้ว",
+    "serviceDeleted": "ลบบริการแล้ว",
+    "jobAccepted": "รับงานแล้ว",
+    "jobRejected": "ปฏิเสธงานแล้ว",
+    "jobCompleted": "ทำงานเสร็จแล้ว",
+    "telegramConnected": "เชื่อมต่อ Telegram แล้ว",
+    "telegramDisconnected": "ยกเลิกการเชื่อมต่อ Telegram แล้ว",
+    "genericError": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง"
+  },
+  "notFound": {
+    "title": "ไม่พบหน้าเว็บ",
+    "message": "หน้าเว็บที่คุณกำลังมองหาไม่มีอยู่หรือถูกย้ายแล้ว",
+    "goHome": "กลับหน้าหลัก"
   }
 }

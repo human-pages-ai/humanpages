@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { logger } from '../lib/logger.js';
 
 const router = Router();
 
@@ -21,7 +22,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
     });
     res.json(services);
   } catch (error) {
-    console.error('Get services error:', error);
+    logger.error({ err: error }, 'Get services error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -43,7 +44,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Create service error:', error);
+    logger.error({ err: error }, 'Create service error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -71,7 +72,7 @@ router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Update service error:', error);
+    logger.error({ err: error }, 'Update service error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -90,7 +91,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     await prisma.service.delete({ where: { id: req.params.id } });
     res.json({ message: 'Service deleted' });
   } catch (error) {
-    console.error('Delete service error:', error);
+    logger.error({ err: error }, 'Delete service error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

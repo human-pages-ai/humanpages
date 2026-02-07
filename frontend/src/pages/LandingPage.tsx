@@ -9,6 +9,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
     <div className="border-b border-slate-200 last:border-b-0">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full py-4 flex justify-between items-center text-left"
       >
         <span className="font-medium text-slate-900">{q}</span>
@@ -17,6 +18,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -147,7 +149,7 @@ export default function LandingPage() {
             {BENEFITS.map((benefit, i) => (
               <div key={i} className="flex gap-4">
                 <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -233,10 +235,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
           <div className="flex gap-6 text-sm">
-            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</a>
-            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</a>
+            <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
+            <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
             <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
+            <a href="mailto:hello@humanpages.io" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>
       </footer>

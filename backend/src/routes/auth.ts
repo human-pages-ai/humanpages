@@ -3,13 +3,17 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
+import { sendPasswordResetEmail } from '../lib/email.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
 const signupSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(6).max(72),
   name: z.string().min(1),
   referrerId: z.string().optional(),
 });
@@ -25,10 +29,23 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(6),
+  password: z.string().min(6).max(72),
 });
 
-router.post('/signup', async (req, res) => {
+// Rate limit auth endpoints: 10 requests per 15 minutes per IP
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    error: 'Too many requests',
+    message: 'Rate limit: 10 requests per 15 minutes. Try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+});
+
+router.post('/signup', authRateLimiter, async (req, res) => {
   try {
     const { email, password, name, referrerId } = signupSchema.parse(req.body);
 
@@ -46,7 +63,7 @@ router.post('/signup', async (req, res) => {
       }
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const human = await prisma.human.create({
       data: {
         email,
@@ -65,12 +82,12 @@ router.post('/signup', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Signup error:', error);
+    logger.error({ err: error }, 'Signup error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authRateLimiter, async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
@@ -99,13 +116,13 @@ router.post('/login', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Login error:', error);
+    logger.error({ err: error }, 'Login error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Request password reset
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authRateLimiter, async (req, res) => {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
 
@@ -136,23 +153,23 @@ router.post('/forgot-password', async (req, res) => {
       data: { email, token, expiresAt },
     });
 
-    // In production, send email here
-    // For now, log the reset link
+    // Send password reset email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    console.log(`Password reset link for ${email}: ${resetUrl}`);
+    await sendPasswordResetEmail(email, resetUrl);
+    logger.info({ email }, 'Password reset link generated');
 
     res.json({ message: 'If an account exists, a reset link has been sent' });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Forgot password error:', error);
+    logger.error({ err: error }, 'Forgot password error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Reset password with token
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', authRateLimiter, async (req, res) => {
   try {
     const { token, password } = resetPasswordSchema.parse(req.body);
 
@@ -181,7 +198,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     // Update password and mark token as used
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     await prisma.$transaction([
       prisma.human.update({
@@ -199,13 +216,13 @@ router.post('/reset-password', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Reset password error:', error);
+    logger.error({ err: error }, 'Reset password error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Verify reset token (for frontend to check if token is valid before showing form)
-router.get('/verify-reset-token', async (req, res) => {
+router.get('/verify-reset-token', authRateLimiter, async (req, res) => {
   try {
     const token = req.query.token as string;
 
@@ -223,8 +240,23 @@ router.get('/verify-reset-token', async (req, res) => {
 
     res.json({ valid: true });
   } catch (error) {
-    console.error('Verify token error:', error);
+    logger.error({ err: error }, 'Verify token error');
     res.status(500).json({ valid: false, error: 'Internal server error' });
+  }
+});
+
+// Logout from all devices (invalidates all existing tokens)
+router.post('/logout-all', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    await prisma.human.update({
+      where: { id: req.userId },
+      data: { tokenInvalidatedAt: new Date() },
+    });
+
+    res.json({ message: 'Logged out from all devices' });
+  } catch (error) {
+    logger.error({ err: error }, 'Logout all error');
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

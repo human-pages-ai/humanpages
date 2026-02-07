@@ -1,4 +1,5 @@
 // Telegram Bot API integration for notifications
+import { logger } from './logger.js';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = 'https://api.telegram.org/bot';
@@ -11,7 +12,7 @@ interface SendMessageOptions {
 
 export async function sendTelegramMessage(options: SendMessageOptions): Promise<boolean> {
   if (!BOT_TOKEN) {
-    console.log('[Telegram] Bot token not configured, skipping notification');
+    logger.info('Telegram bot token not configured, skipping notification');
     return false;
   }
 
@@ -29,14 +30,14 @@ export async function sendTelegramMessage(options: SendMessageOptions): Promise<
     const data = await response.json() as { ok: boolean; description?: string };
 
     if (!data.ok) {
-      console.error('[Telegram] Failed to send message:', data.description);
+      logger.error({ description: data.description }, 'Telegram failed to send message');
       return false;
     }
 
-    console.log('[Telegram] Message sent to chat:', options.chatId);
+    logger.info({ chatId: options.chatId }, 'Telegram message sent');
     return true;
   } catch (error) {
-    console.error('[Telegram] Error sending message:', error);
+    logger.error({ err: error }, 'Telegram error sending message');
     return false;
   }
 }
@@ -79,16 +80,14 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-// Generate a verification code for linking Telegram
-export function generateTelegramCode(userId: string): string {
-  // Simple code: base64 of oderId + timestamp, truncated
-  const data = `${userId}:${Date.now()}`;
-  return Buffer.from(data).toString('base64').slice(0, 12);
-}
-
 // Verify bot token is configured
 export function isTelegramConfigured(): boolean {
   return !!BOT_TOKEN;
+}
+
+// Get webhook secret for verifying incoming Telegram requests
+export function getTelegramWebhookSecret(): string | null {
+  return process.env.TELEGRAM_WEBHOOK_SECRET || null;
 }
 
 // Get bot username for deep links

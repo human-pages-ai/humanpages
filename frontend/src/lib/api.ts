@@ -19,7 +19,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+    throw new Error(error.error || error.message || `Request failed (${res.status})`);
   }
 
   return res.json();
@@ -41,12 +41,12 @@ export const api = {
 
   // OAuth
   getOAuthUrl: (provider: 'google' | 'github') =>
-    request<{ url: string }>(`/oauth/${provider}`),
+    request<{ url: string; state: string }>(`/oauth/${provider}`),
 
-  oauthCallback: (provider: 'google' | 'github', code: string, referrerId?: string) =>
+  oauthCallback: (provider: 'google' | 'github', code: string, state: string, referrerId?: string) =>
     request<{ human: any; token: string; isNew?: boolean }>(`/oauth/${provider}/callback`, {
       method: 'POST',
-      body: JSON.stringify({ code, referrerId }),
+      body: JSON.stringify({ code, state, referrerId }),
     }),
 
   // Password Reset
@@ -103,6 +103,10 @@ export const api = {
 
   deleteService: (id: string) =>
     request<void>(`/services/${id}`, { method: 'DELETE' }),
+
+  // Referrals
+  getReferrals: () =>
+    request<{ count: number; referrals: Array<{ id: string; name: string; createdAt: string }> }>('/humans/me/referrals'),
 
   // Public profiles
   getHumanById: (id: string) => request<any>(`/humans/${id}`),

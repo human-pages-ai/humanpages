@@ -1,9 +1,38 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
 
 const router = Router();
+
+// Store pending OAuth state tokens (in production, use Redis with TTL)
+const pendingStates = new Map<string, number>();
+
+// Clean up expired states every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [state, expiresAt] of pendingStates) {
+    if (expiresAt < now) pendingStates.delete(state);
+  }
+}, 5 * 60 * 1000);
+
+function generateOAuthState(): string {
+  const state = crypto.randomBytes(32).toString('hex');
+  pendingStates.set(state, Date.now() + 10 * 60 * 1000); // 10 min expiry
+  return state;
+}
+
+function consumeOAuthState(state: string): boolean {
+  const expiresAt = pendingStates.get(state);
+  if (!expiresAt || expiresAt < Date.now()) {
+    pendingStates.delete(state!);
+    return false;
+  }
+  pendingStates.delete(state);
+  return true;
+}
 
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -18,20 +47,26 @@ function generateToken(userId: string): string {
 
 // Google OAuth - redirect to consent screen
 router.get('/google', (req, res) => {
+  const state = generateOAuthState();
   const authorizeUrl = googleClient.generateAuthUrl({
     access_type: 'offline',
     scope: ['openid', 'email', 'profile'],
+    state,
   });
-  res.json({ url: authorizeUrl });
+  res.json({ url: authorizeUrl, state });
 });
 
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
   try {
-    const { code, referrerId } = req.body;
+    const { code, state, referrerId } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code required' });
+    }
+
+    if (!state || !consumeOAuthState(state)) {
+      return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 
     // Exchange code for tokens
@@ -104,29 +139,35 @@ router.post('/google/callback', async (req, res) => {
       isNew,
     });
   } catch (error) {
-    console.error('Google OAuth error:', error);
+    logger.error({ err: error }, 'Google OAuth error');
     res.status(500).json({ error: 'OAuth authentication failed' });
   }
 });
 
 // GitHub OAuth - redirect to auth page
 router.get('/github', (req, res) => {
+  const state = generateOAuthState();
   const params = new URLSearchParams({
     client_id: process.env.GITHUB_CLIENT_ID!,
     redirect_uri: `${process.env.FRONTEND_URL}/auth/github/callback`,
     scope: 'read:user user:email',
+    state,
   });
 
-  res.json({ url: `https://github.com/login/oauth/authorize?${params}` });
+  res.json({ url: `https://github.com/login/oauth/authorize?${params}`, state });
 });
 
 // GitHub OAuth - callback handler
 router.post('/github/callback', async (req, res) => {
   try {
-    const { code, referrerId } = req.body;
+    const { code, state, referrerId } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code required' });
+    }
+
+    if (!state || !consumeOAuthState(state)) {
+      return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 
     // Exchange code for access token
@@ -228,7 +269,7 @@ router.post('/github/callback', async (req, res) => {
       isNew,
     });
   } catch (error) {
-    console.error('GitHub OAuth error:', error);
+    logger.error({ err: error }, 'GitHub OAuth error');
     res.status(500).json({ error: 'OAuth authentication failed' });
   }
 });

@@ -184,6 +184,9 @@
       "completed": "hoàn thành",
       "noJobs": "Chưa có offer công việc. Khi AI agent muốn thuê bạn, offer sẽ xuất hiện ở đây.",
       "noJobsFiltered": "Không có công việc {{filter}}.",
+      "emptyTitle": "Chưa có offer công việc",
+      "emptyDescription": "Chia sẻ hồ sơ của bạn với AI agent để bắt đầu nhận offer",
+      "copyProfileUrl": "Sao chép URL hồ sơ",
       "accept": "Chấp nhận",
       "reject": "Từ chối",
       "markComplete": "Đánh dấu hoàn thành",
@@ -208,9 +211,15 @@
       "skills": "Kỹ năng",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "phân cách bằng dấu phẩy",
+      "equipment": "Thiết bị",
+      "languages": "Ngôn ngữ",
       "contactEmail": "Email liên hệ",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
+      "username": "Tên người dùng",
+      "usernameLength": "Tên người dùng phải có 3-30 ký tự",
+      "usernameChars": "Tên người dùng chỉ có thể chứa chữ cái, số và dấu gạch dưới",
+      "profileUrl": "Hồ sơ của bạn: humanpages.io/u/{{username}}",
       "socialProfiles": "Hồ sơ mạng xã hội",
       "socialForTrust": "để tạo niềm tin",
       "linkedin": "LinkedIn",
@@ -230,11 +239,12 @@
       "label": "Nhãn",
       "labelPlaceholder": "VD: Ví chính",
       "noWallets": "Chưa thêm ví nào",
+      "emptyTitle": "Chưa kết nối ví",
+      "emptyDescription": "Thêm ví để nhận thanh toán cho các công việc đã hoàn thành",
+      "walletAddress": "Địa chỉ ví",
       "confirmDelete": "Xóa ví này?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "Khoảng giá",
       "priceRangePlaceholder": "VD: $50-100/giờ",
       "noServices": "Chưa có dịch vụ nào. Thêm dịch vụ để cho AI agent thấy bạn có thể làm gì!",
+      "emptyTitle": "Chưa có dịch vụ nào",
+      "emptyDescription": "Thêm dịch vụ để cho AI agent biết bạn có thể làm gì",
       "confirmDelete": "Xóa dịch vụ này?",
       "statusActive": "Hoạt động",
       "statusInactive": "Không hoạt động"
-    }
+    },
+    "yourReferrals": "Giới thiệu của bạn",
+    "moreReferrals": "+{{count}} nữa"
   },
   "onboarding": {
     "title": "Hoàn thành hồ sơ",
@@ -325,5 +339,33 @@
     "unauthorized": "Vui lòng đăng nhập để tiếp tục",
     "notFound": "Không tìm thấy",
     "serverError": "Lỗi máy chủ. Vui lòng thử lại sau."
+  },
+  "errorBoundary": {
+    "title": "Đã xảy ra lỗi",
+    "message": "Đã xảy ra lỗi không mong muốn. Vui lòng thử tải lại trang.",
+    "tryAgain": "Thử lại"
+  },
+  "confirmDialog": {
+    "confirm": "Xác nhận",
+    "cancel": "Hủy"
+  },
+  "toast": {
+    "profileSaved": "Đã lưu hồ sơ",
+    "filtersSaved": "Đã lưu bộ lọc",
+    "walletAdded": "Đã thêm ví",
+    "walletDeleted": "Đã xóa ví",
+    "serviceAdded": "Đã thêm dịch vụ",
+    "serviceDeleted": "Đã xóa dịch vụ",
+    "jobAccepted": "Đã chấp nhận công việc",
+    "jobRejected": "Đã từ chối công việc",
+    "jobCompleted": "Đã hoàn thành công việc",
+    "telegramConnected": "Đã kết nối Telegram",
+    "telegramDisconnected": "Đã ngắt kết nối Telegram",
+    "genericError": "Đã xảy ra lỗi. Vui lòng thử lại."
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "message": "Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.",
+    "goHome": "Về trang chủ"
   }
 }

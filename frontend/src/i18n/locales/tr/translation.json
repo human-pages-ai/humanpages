@@ -184,6 +184,9 @@
       "completed": "tamamlanan",
       "noJobs": "Henüz iş teklifi yok. AI ajanları sizi işe almak istediğinde, teklifleri burada görünecek.",
       "noJobsFiltered": "{{filter}} iş yok.",
+      "emptyTitle": "Henüz iş teklifi yok",
+      "emptyDescription": "Teklif almaya başlamak için profilinizi AI ajanlarıyla paylaşın",
+      "copyProfileUrl": "Profil URL'sini Kopyala",
       "accept": "Kabul Et",
       "reject": "Reddet",
       "markComplete": "Tamamlandı İşaretle",
@@ -208,9 +211,15 @@
       "skills": "Yetenekler",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "virgülle ayrılmış",
+      "equipment": "Ekipman",
+      "languages": "Diller",
       "contactEmail": "İletişim E-postası",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@kullaniciadi",
+      "username": "Kullanıcı Adı",
+      "usernameLength": "Kullanıcı adı 3-30 karakter olmalıdır",
+      "usernameChars": "Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir",
+      "profileUrl": "Profiliniz: humanpages.io/u/{{username}}",
       "socialProfiles": "Sosyal Profiller",
       "socialForTrust": "güven için",
       "linkedin": "LinkedIn",
@@ -230,11 +239,12 @@
       "label": "Etiket",
       "labelPlaceholder": "örn., Ana cüzdan",
       "noWallets": "Henüz cüzdan eklenmedi",
+      "emptyTitle": "Bağlı cüzdan yok",
+      "emptyDescription": "Tamamlanan işler için ödeme almak üzere cüzdan ekleyin",
+      "walletAddress": "Cüzdan adresi",
       "confirmDelete": "Bu cüzdanı sil?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "Fiyat Aralığı",
       "priceRangePlaceholder": "örn., $50-100/saat",
       "noServices": "Henüz hizmet listelenmedi. AI ajanlarına neler yapabileceğinizi göstermek için hizmet ekleyin!",
+      "emptyTitle": "Hizmet listelenmedi",
+      "emptyDescription": "AI ajanlarına neler yapabileceğinizi göstermek için hizmet ekleyin",
       "confirmDelete": "Bu hizmeti sil?",
       "statusActive": "Aktif",
       "statusInactive": "Pasif"
-    }
+    },
+    "yourReferrals": "Yönlendirmeleriniz",
+    "moreReferrals": "+{{count}} daha"
   },
   "onboarding": {
     "title": "Profilinizi Tamamlayın",
@@ -325,5 +339,33 @@
     "unauthorized": "Devam etmek için lütfen giriş yapın",
     "notFound": "Bulunamadı",
     "serverError": "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
+  },
+  "errorBoundary": {
+    "title": "Bir şeyler ters gitti",
+    "message": "Beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyin.",
+    "tryAgain": "Tekrar dene"
+  },
+  "confirmDialog": {
+    "confirm": "Onayla",
+    "cancel": "İptal"
+  },
+  "toast": {
+    "profileSaved": "Profil kaydedildi",
+    "filtersSaved": "Filtreler kaydedildi",
+    "walletAdded": "Cüzdan eklendi",
+    "walletDeleted": "Cüzdan silindi",
+    "serviceAdded": "Hizmet eklendi",
+    "serviceDeleted": "Hizmet silindi",
+    "jobAccepted": "İş kabul edildi",
+    "jobRejected": "İş reddedildi",
+    "jobCompleted": "İş tamamlandı",
+    "telegramConnected": "Telegram bağlandı",
+    "telegramDisconnected": "Telegram bağlantısı kesildi",
+    "genericError": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+  },
+  "notFound": {
+    "title": "Sayfa bulunamadı",
+    "message": "Aradığınız sayfa mevcut değil veya taşınmış.",
+    "goHome": "Ana sayfaya git"
   }
 }

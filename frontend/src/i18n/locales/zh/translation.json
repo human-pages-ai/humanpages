@@ -184,6 +184,9 @@
       "completed": "已完成",
       "noJobs": "还没有工作邀约。当AI代理想要雇佣你时，他们的邀约会显示在这里。",
       "noJobsFiltered": "没有{{filter}}的工作。",
+      "emptyTitle": "还没有工作邀约",
+      "emptyDescription": "与AI代理分享你的资料以开始接收邀约",
+      "copyProfileUrl": "复制个人资料链接",
       "accept": "接受",
       "reject": "拒绝",
       "markComplete": "标记完成",
@@ -208,9 +211,15 @@
       "skills": "技能",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "用逗号分隔",
+      "equipment": "设备",
+      "languages": "语言",
       "contactEmail": "联系邮箱",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@用户名",
+      "username": "用户名",
+      "usernameLength": "用户名必须为3-30个字符",
+      "usernameChars": "用户名只能包含字母、数字和下划线",
+      "profileUrl": "你的资料：humanpages.io/u/{{username}}",
       "socialProfiles": "社交资料",
       "socialForTrust": "用于信任验证",
       "linkedin": "领英",
@@ -230,11 +239,12 @@
       "label": "标签",
       "labelPlaceholder": "例如：主钱包",
       "noWallets": "还没有添加钱包",
+      "emptyTitle": "没有连接钱包",
+      "emptyDescription": "添加钱包以接收完成工作的付款",
+      "walletAddress": "钱包地址",
       "confirmDelete": "删除这个钱包？",
       "networks": {
         "ethereum": "以太坊",
-        "solana": "Solana",
-        "bitcoin": "比特币",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "价格范围",
       "priceRangePlaceholder": "例如：$50-100/小时",
       "noServices": "还没有列出服务。添加服务来向AI代理展示你能做什么！",
+      "emptyTitle": "没有列出服务",
+      "emptyDescription": "添加服务让AI代理了解你能做什么",
       "confirmDelete": "删除这个服务？",
       "statusActive": "活跃",
       "statusInactive": "停用"
-    }
+    },
+    "yourReferrals": "你的推荐",
+    "moreReferrals": "+{{count}} 更多"
   },
   "onboarding": {
     "title": "完善你的资料",
@@ -325,5 +339,33 @@
     "unauthorized": "请登录以继续",
     "notFound": "未找到",
     "serverError": "服务器错误，请稍后重试。"
+  },
+  "errorBoundary": {
+    "title": "出了点问题",
+    "message": "发生了意外错误。请尝试刷新页面。",
+    "tryAgain": "重试"
+  },
+  "confirmDialog": {
+    "confirm": "确认",
+    "cancel": "取消"
+  },
+  "toast": {
+    "profileSaved": "个人资料已保存",
+    "filtersSaved": "筛选条件已保存",
+    "walletAdded": "钱包已添加",
+    "walletDeleted": "钱包已删除",
+    "serviceAdded": "服务已添加",
+    "serviceDeleted": "服务已删除",
+    "jobAccepted": "工作已接受",
+    "jobRejected": "工作已拒绝",
+    "jobCompleted": "工作已完成",
+    "telegramConnected": "Telegram已连接",
+    "telegramDisconnected": "Telegram已断开",
+    "genericError": "出了点问题。请重试。"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "message": "您查找的页面不存在或已被移动。",
+    "goHome": "返回首页"
   }
 }

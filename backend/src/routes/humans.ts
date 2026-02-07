@@ -1,9 +1,36 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { calculateDistance } from '../lib/geo.js';
+import { logger } from '../lib/logger.js';
 
 const router = Router();
+
+// Helper function to validate URL domain
+const isUrlFromDomain = (url: string, domains: string[]) => {
+  try {
+    const hostname = new URL(url).hostname;
+    return domains.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch { return false; }
+};
+
+const searchRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: {
+    error: 'Too many search requests',
+    message: 'Search rate limit: 30 requests per minute. Try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+      || req.ip || 'unknown';
+  },
+  validate: false,
+});
 
 const updateProfileSchema = z.object({
   // Identity
@@ -37,26 +64,28 @@ const updateProfileSchema = z.object({
   signal: z.string().optional().nullable(),
 
   // Social profiles
-  linkedinUrl: z.string().url().optional().nullable(),
-  twitterUrl: z.string().url().optional().nullable(),
-  githubUrl: z.string().url().optional().nullable(),
-  instagramUrl: z.string().url().optional().nullable(),
-  youtubeUrl: z.string().url().optional().nullable(),
+  linkedinUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['linkedin.com']),
+    'Must be a LinkedIn URL'
+  ).optional().nullable(),
+  twitterUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['twitter.com', 'x.com']),
+    'Must be a Twitter/X URL'
+  ).optional().nullable(),
+  githubUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['github.com']),
+    'Must be a GitHub URL'
+  ).optional().nullable(),
+  instagramUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['instagram.com']),
+    'Must be an Instagram URL'
+  ).optional().nullable(),
+  youtubeUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['youtube.com', 'youtu.be']),
+    'Must be a YouTube URL'
+  ).optional().nullable(),
   websiteUrl: z.string().url().optional().nullable(),
 });
-
-// Helper: Calculate distance between two coordinates (Haversine formula)
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // Helper: Get reputation stats for a human
 async function getReputationStats(humanId: string) {
@@ -104,7 +133,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
     const { passwordHash, ...profile } = human;
     res.json({ ...profile, reputation, referralCount });
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error({ err: error }, 'Get profile error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -127,7 +156,7 @@ router.get('/me/referrals', authenticateToken, async (req: AuthRequest, res) => 
       referrals,
     });
   } catch (error) {
-    console.error('Get referrals error:', error);
+    logger.error({ err: error }, 'Get referrals error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -166,14 +195,14 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Update profile error:', error);
+    logger.error({ err: error }, 'Update profile error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Search humans (public endpoint for AI agents)
 // Supports: skill, equipment, language, location (text), lat/lng + radius, minRate, maxRate
-router.get('/search', async (req, res) => {
+router.get('/search', searchRateLimiter, async (req, res) => {
   try {
     const {
       skill,
@@ -219,12 +248,12 @@ router.get('/search', async (req, res) => {
 
     // Filter by rate range
     if (minRate) {
-      where.minRateUsdc = { lte: parseFloat(minRate as string) };
+      where.minRateUsdc = { gte: parseFloat(minRate as string) };
     }
     if (maxRate) {
       where.minRateUsdc = {
         ...where.minRateUsdc,
-        gte: parseFloat(maxRate as string) * 0, // They're willing to work at this rate or less
+        lte: parseFloat(maxRate as string),
       };
     }
 
@@ -283,17 +312,49 @@ router.get('/search', async (req, res) => {
       });
     }
 
-    // Add reputation stats to each human
-    const humansWithReputation = await Promise.all(
-      humans.map(async (h) => ({
-        ...h,
-        reputation: await getReputationStats(h.id),
-      }))
+    // Add reputation stats to each human using batch queries
+    const humanIds = humans.map((h) => h.id);
+
+    // Batch query for completed jobs count
+    const jobCounts = await prisma.job.groupBy({
+      by: ['humanId'],
+      where: { humanId: { in: humanIds }, status: 'COMPLETED' },
+      _count: true,
+    });
+
+    // Batch query for reviews
+    const reviewStats = await prisma.review.groupBy({
+      by: ['humanId'],
+      where: { humanId: { in: humanIds } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    // Build lookup maps
+    const jobCountMap = new Map(jobCounts.map((jc) => [jc.humanId, jc._count]));
+    const reviewStatsMap = new Map(
+      reviewStats.map((rs) => [
+        rs.humanId,
+        {
+          avgRating: rs._avg.rating ? Math.round(rs._avg.rating * 10) / 10 : 0,
+          reviewCount: rs._count.rating,
+        },
+      ])
     );
+
+    // Attach stats to each human
+    const humansWithReputation = humans.map((h) => ({
+      ...h,
+      reputation: {
+        jobsCompleted: jobCountMap.get(h.id) || 0,
+        avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
+        reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
+      },
+    }));
 
     res.json(humansWithReputation);
   } catch (error) {
-    console.error('Search error:', error);
+    logger.error({ err: error }, 'Search error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -346,7 +407,7 @@ router.get('/:id', async (req, res) => {
     const reputation = await getReputationStats(human.id);
     res.json({ ...human, reputation });
   } catch (error) {
-    console.error('Get human error:', error);
+    logger.error({ err: error }, 'Get human error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -396,7 +457,7 @@ router.get('/u/:username', async (req, res) => {
     const reputation = await getReputationStats(human.id);
     res.json({ ...human, reputation });
   } catch (error) {
-    console.error('Get human by username error:', error);
+    logger.error({ err: error }, 'Get human by username error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

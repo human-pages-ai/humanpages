@@ -184,6 +184,9 @@
       "completed": "nakumpleto",
       "noJobs": "Wala pang job offers. Kapag gusto kang i-hire ng mga AI agent, ang kanilang offers ay lalabas dito.",
       "noJobsFiltered": "Walang {{filter}} jobs.",
+      "emptyTitle": "Wala pang job offers",
+      "emptyDescription": "I-share ang iyong profile sa mga AI agent para magsimulang makatanggap ng offers",
+      "copyProfileUrl": "Kopyahin ang Profile URL",
       "accept": "Tanggapin",
       "reject": "Tanggihan",
       "markComplete": "Markahang Kumpleto",
@@ -208,9 +211,15 @@
       "skills": "Mga Kasanayan",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "pinaghihiwalay ng comma",
+      "equipment": "Kagamitan",
+      "languages": "Mga Wika",
       "contactEmail": "Contact Email",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
+      "username": "Username",
+      "usernameLength": "Ang username ay dapat 3-30 characters",
+      "usernameChars": "Ang username ay maaaring may letters, numbers, at underscores lamang",
+      "profileUrl": "Ang iyong profile: humanpages.io/u/{{username}}",
       "socialProfiles": "Social Profiles",
       "socialForTrust": "para sa trust",
       "linkedin": "LinkedIn",
@@ -230,11 +239,12 @@
       "label": "Label",
       "labelPlaceholder": "hal., Main wallet",
       "noWallets": "Wala pang naidagdag na wallets",
+      "emptyTitle": "Walang konektadong wallet",
+      "emptyDescription": "Magdagdag ng wallet para makatanggap ng bayad para sa mga nakumpletong trabaho",
+      "walletAddress": "Wallet address",
       "confirmDelete": "Tanggalin ang wallet na ito?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "Price Range",
       "priceRangePlaceholder": "hal., $50-100/oras",
       "noServices": "Wala pang nakalista na services. Magdagdag ng services para ipakita sa mga AI agent kung ano ang kaya mong gawin!",
+      "emptyTitle": "Walang nakalista na services",
+      "emptyDescription": "Magdagdag ng services para malaman ng mga AI agent kung ano ang kaya mong gawin",
       "confirmDelete": "Tanggalin ang serbisyong ito?",
       "statusActive": "Active",
       "statusInactive": "Inactive"
-    }
+    },
+    "yourReferrals": "Iyong mga referral",
+    "moreReferrals": "+{{count}} pa"
   },
   "onboarding": {
     "title": "Kumpletuhin ang Iyong Profile",
@@ -325,5 +339,33 @@
     "unauthorized": "Mangyaring mag-login para magpatuloy",
     "notFound": "Hindi nahanap",
     "serverError": "Server error. Pakisubukang muli mamaya."
+  },
+  "errorBoundary": {
+    "title": "May nangyaring mali",
+    "message": "Nagkaroon ng hindi inaasahang error. Subukang i-refresh ang pahina.",
+    "tryAgain": "Subukan muli"
+  },
+  "confirmDialog": {
+    "confirm": "Kumpirmahin",
+    "cancel": "Kanselahin"
+  },
+  "toast": {
+    "profileSaved": "Na-save ang profile",
+    "filtersSaved": "Na-save ang mga filter",
+    "walletAdded": "Naidagdag ang wallet",
+    "walletDeleted": "Natanggal ang wallet",
+    "serviceAdded": "Naidagdag ang serbisyo",
+    "serviceDeleted": "Natanggal ang serbisyo",
+    "jobAccepted": "Tinanggap ang trabaho",
+    "jobRejected": "Tinanggihan ang trabaho",
+    "jobCompleted": "Nakumpleto ang trabaho",
+    "telegramConnected": "Nakakonekta ang Telegram",
+    "telegramDisconnected": "Nadiskonekta ang Telegram",
+    "genericError": "May nangyaring mali. Subukan muli."
+  },
+  "notFound": {
+    "title": "Hindi natagpuan ang pahina",
+    "message": "Ang pahina na hinahanap mo ay hindi umiiral o inilipat na.",
+    "goHome": "Pumunta sa home"
   }
 }

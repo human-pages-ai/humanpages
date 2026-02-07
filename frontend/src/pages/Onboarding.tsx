@@ -15,6 +15,12 @@ const EQUIPMENT_SUGGESTIONS = [
   'tools', 'van', 'motorcycle',
 ];
 
+const LANGUAGE_SUGGESTIONS = [
+  'English', 'Spanish', 'Chinese', 'Hindi', 'Filipino',
+  'Vietnamese', 'Turkish', 'Thai', 'French', 'Arabic',
+  'Portuguese', 'German', 'Japanese', 'Korean', 'Russian',
+];
+
 export default function Onboarding() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -28,6 +34,7 @@ export default function Onboarding() {
   const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
   const [equipment, setEquipment] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
   const [minRate, setMinRate] = useState('');
   const [rateType, setRateType] = useState<'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE'>('NEGOTIABLE');
 
@@ -51,6 +58,7 @@ export default function Onboarding() {
       if (data.location) setLocation(data.location);
       if (data.skills?.length) setSkills(data.skills);
       if (data.equipment?.length) setEquipment(data.equipment);
+      if (data.languages?.length) setLanguages(data.languages);
       if (data.minRateUsdc) setMinRate(data.minRateUsdc.toString());
       if (data.rateType) setRateType(data.rateType);
     } catch (error) {
@@ -96,7 +104,7 @@ export default function Onboarding() {
   const handleStep3 = async () => {
     setLoading(true);
     try {
-      const updates: any = { equipment };
+      const updates: any = { equipment, languages };
       if (minRate) updates.minRateUsdc = parseFloat(minRate);
       updates.rateType = rateType;
 
@@ -136,6 +144,12 @@ export default function Onboarding() {
   const toggleEquipment = (item: string) => {
     setEquipment((prev) =>
       prev.includes(item) ? prev.filter((e) => e !== item) : [...prev, item]
+    );
+  };
+
+  const toggleLanguage = (lang: string) => {
+    setLanguages((prev) =>
+      prev.includes(lang) ? prev.filter((l) => l !== lang) : [...prev, lang]
     );
   };
 
@@ -192,7 +206,11 @@ export default function Onboarding() {
                 </button>
               </div>
 
+              <label htmlFor="contact-value" className="sr-only">
+                {contactMethod === 'email' ? t('onboarding.step1.email') : t('onboarding.step1.telegram')}
+              </label>
               <input
+                id="contact-value"
                 type={contactMethod === 'email' ? 'email' : 'text'}
                 value={contactValue}
                 onChange={(e) => setContactValue(e.target.value)}
@@ -222,10 +240,11 @@ export default function Onboarding() {
 
               {/* Location */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="location-input" className="block text-sm font-medium text-slate-700 mb-2">
                   {t('onboarding.step2.location')}
                 </label>
                 <input
+                  id="location-input"
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
@@ -257,7 +276,11 @@ export default function Onboarding() {
 
                 {/* Custom skill input */}
                 <div className="flex gap-2">
+                  <label htmlFor="custom-skill" className="sr-only">
+                    {t('onboarding.step2.addCustomSkill')}
+                  </label>
                   <input
+                    id="custom-skill"
                     type="text"
                     value={customSkill}
                     onChange={(e) => setCustomSkill(e.target.value)}
@@ -306,13 +329,14 @@ export default function Onboarding() {
 
               {/* Rate */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="min-rate" className="block text-sm font-medium text-slate-700 mb-2">
                   {t('onboarding.step3.minRate')}
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
                     <input
+                      id="min-rate"
                       type="number"
                       value={minRate}
                       onChange={(e) => setMinRate(e.target.value)}
@@ -321,7 +345,11 @@ export default function Onboarding() {
                       className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
+                  <label htmlFor="rate-type" className="sr-only">
+                    {t('onboarding.step3.perHour')} / {t('onboarding.step3.perTask')} / {t('onboarding.step3.negotiable')}
+                  </label>
                   <select
+                    id="rate-type"
                     value={rateType}
                     onChange={(e) => setRateType(e.target.value as any)}
                     className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -350,6 +378,28 @@ export default function Onboarding() {
                       }`}
                     >
                       {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Languages */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  {t('onboarding.step3.languages')}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {LANGUAGE_SUGGESTIONS.map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => toggleLanguage(lang)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        languages.includes(lang)
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      {lang}
                     </button>
                   ))}
                 </div>

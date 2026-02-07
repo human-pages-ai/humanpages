@@ -10,6 +10,7 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "yes": "Yes",
     "no": "No",
     "or": "Or",
@@ -184,6 +185,9 @@
       "completed": "completed",
       "noJobs": "No job offers yet. When AI agents want to hire you, their offers will appear here.",
       "noJobsFiltered": "No {{filter}} jobs.",
+      "emptyTitle": "No job offers yet",
+      "emptyDescription": "Share your profile with AI agents to start receiving offers",
+      "copyProfileUrl": "Copy Profile URL",
       "accept": "Accept",
       "reject": "Reject",
       "markComplete": "Mark Complete",
@@ -208,9 +212,15 @@
       "skills": "Skills",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "comma-separated",
+      "equipment": "Equipment",
+      "languages": "Languages",
       "contactEmail": "Contact Email",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
+      "username": "Username",
+      "usernameLength": "Username must be 3-30 characters",
+      "usernameChars": "Username can only contain letters, numbers, and underscores",
+      "profileUrl": "Your profile: humanpages.io/u/{{username}}",
       "socialProfiles": "Social Profiles",
       "socialForTrust": "for trust",
       "linkedin": "LinkedIn",
@@ -230,11 +240,12 @@
       "label": "Label",
       "labelPlaceholder": "e.g., Main wallet",
       "noWallets": "No wallets added yet",
+      "emptyTitle": "No wallets connected",
+      "emptyDescription": "Add a wallet to receive payments for completed jobs",
+      "walletAddress": "Wallet address",
       "confirmDelete": "Delete this wallet?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +263,14 @@
       "priceRange": "Price Range",
       "priceRangePlaceholder": "e.g., $50-100/hour",
       "noServices": "No services listed yet. Add services to show AI agents what you can do!",
+      "emptyTitle": "No services listed",
+      "emptyDescription": "Add services to let AI agents know what you can do",
       "confirmDelete": "Delete this service?",
       "statusActive": "Active",
       "statusInactive": "Inactive"
-    }
+    },
+    "yourReferrals": "Your referrals",
+    "moreReferrals": "+{{count}} more"
   },
   "onboarding": {
     "title": "Complete Your Profile",
@@ -293,7 +308,8 @@
       "perHour": "per hour",
       "perTask": "per task",
       "negotiable": "negotiable",
-      "equipment": "Equipment you have (optional)"
+      "equipment": "Equipment you have (optional)",
+      "languages": "Languages you speak (optional)"
     }
   },
   "welcome": {
@@ -325,5 +341,33 @@
     "unauthorized": "Please log in to continue",
     "notFound": "Not found",
     "serverError": "Server error. Please try again later."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "An unexpected error occurred. Please try refreshing the page.",
+    "tryAgain": "Try again"
+  },
+  "confirmDialog": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "profileSaved": "Profile saved",
+    "filtersSaved": "Filters saved",
+    "walletAdded": "Wallet added",
+    "walletDeleted": "Wallet deleted",
+    "serviceAdded": "Service added",
+    "serviceDeleted": "Service deleted",
+    "jobAccepted": "Job accepted",
+    "jobRejected": "Job rejected",
+    "jobCompleted": "Job completed",
+    "telegramConnected": "Telegram connected",
+    "telegramDisconnected": "Telegram disconnected",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "The page you're looking for doesn't exist or has been moved.",
+    "goHome": "Go home"
   }
 }

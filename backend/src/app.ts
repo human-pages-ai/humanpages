@@ -1,5 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import pinoHttp from 'pino-http';
+import { logger } from './lib/logger.js';
 import authRoutes from './routes/auth.js';
 import oauthRoutes from './routes/oauth.js';
 import humansRoutes from './routes/humans.js';
@@ -10,8 +13,21 @@ import telegramRoutes from './routes/telegram.js';
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Trust first proxy (nginx/ALB) so X-Forwarded-For is used for rate limiting
+app.set('trust proxy', 1);
+
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+}));
+app.use(express.json({ limit: '10kb' }));
+app.use(pinoHttp({
+  logger,
+  autoLogging: {
+    ignore: (req) => req.url === '/health',
+  },
+}));
 
 // Health check
 app.get('/health', (req, res) => {

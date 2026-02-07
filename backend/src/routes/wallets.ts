@@ -2,13 +2,15 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { SUPPORTED_NETWORKS } from '../lib/blockchain/chains.js';
+import { logger } from '../lib/logger.js';
 
 const router = Router();
 
 const addWalletSchema = z.object({
-  network: z.string().min(1),
-  address: z.string().min(1),
-  label: z.string().optional(),
+  network: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]),
+  address: z.string().regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid EVM address format'),
+  label: z.string().max(50).optional(),
 });
 
 // Get all wallets for current user
@@ -19,7 +21,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
     });
     res.json(wallets);
   } catch (error) {
-    console.error('Get wallets error:', error);
+    logger.error({ err: error }, 'Get wallets error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -46,7 +48,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     if ((error as any).code === 'P2002') {
       return res.status(400).json({ error: 'This wallet address is already added for this network' });
     }
-    console.error('Add wallet error:', error);
+    logger.error({ err: error }, 'Add wallet error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -65,7 +67,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
     await prisma.wallet.delete({ where: { id: req.params.id } });
     res.json({ message: 'Wallet deleted' });
   } catch (error) {
-    console.error('Delete wallet error:', error);
+    logger.error({ err: error }, 'Delete wallet error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

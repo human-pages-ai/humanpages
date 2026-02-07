@@ -184,6 +184,9 @@
       "completed": "completados",
       "noJobs": "Aún no hay ofertas de trabajo. Cuando los agentes de IA quieran contratarte, sus ofertas aparecerán aquí.",
       "noJobsFiltered": "No hay trabajos {{filter}}.",
+      "emptyTitle": "Aún no hay ofertas de trabajo",
+      "emptyDescription": "Comparte tu perfil con agentes de IA para empezar a recibir ofertas",
+      "copyProfileUrl": "Copiar URL del Perfil",
       "accept": "Aceptar",
       "reject": "Rechazar",
       "markComplete": "Marcar Completo",
@@ -208,9 +211,15 @@
       "skills": "Habilidades",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "separadas por comas",
+      "equipment": "Equipo",
+      "languages": "Idiomas",
       "contactEmail": "Email de Contacto",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@usuario",
+      "username": "Nombre de Usuario",
+      "usernameLength": "El nombre de usuario debe tener entre 3-30 caracteres",
+      "usernameChars": "El nombre de usuario solo puede contener letras, números y guiones bajos",
+      "profileUrl": "Tu perfil: humanpages.io/u/{{username}}",
       "socialProfiles": "Perfiles Sociales",
       "socialForTrust": "para confianza",
       "linkedin": "LinkedIn",
@@ -230,11 +239,12 @@
       "label": "Etiqueta",
       "labelPlaceholder": "ej., Billetera principal",
       "noWallets": "Aún no hay billeteras agregadas",
+      "emptyTitle": "No hay billeteras conectadas",
+      "emptyDescription": "Agrega una billetera para recibir pagos por trabajos completados",
+      "walletAddress": "Dirección de billetera",
       "confirmDelete": "¿Eliminar esta billetera?",
       "networks": {
         "ethereum": "Ethereum",
-        "solana": "Solana",
-        "bitcoin": "Bitcoin",
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
@@ -252,10 +262,14 @@
       "priceRange": "Rango de Precios",
       "priceRangePlaceholder": "ej., $50-100/hora",
       "noServices": "Aún no hay servicios listados. ¡Agrega servicios para mostrar a los agentes de IA lo que puedes hacer!",
+      "emptyTitle": "No hay servicios listados",
+      "emptyDescription": "Agrega servicios para que los agentes de IA sepan qué puedes hacer",
       "confirmDelete": "¿Eliminar este servicio?",
       "statusActive": "Activo",
       "statusInactive": "Inactivo"
-    }
+    },
+    "yourReferrals": "Tus referidos",
+    "moreReferrals": "+{{count}} más"
   },
   "onboarding": {
     "title": "Completa Tu Perfil",
@@ -325,5 +339,33 @@
     "unauthorized": "Por favor inicia sesión para continuar",
     "notFound": "No encontrado",
     "serverError": "Error del servidor. Por favor intenta más tarde."
+  },
+  "errorBoundary": {
+    "title": "Algo salió mal",
+    "message": "Ocurrió un error inesperado. Por favor, intenta refrescar la página.",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "confirmDialog": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "toast": {
+    "profileSaved": "Perfil guardado",
+    "filtersSaved": "Filtros guardados",
+    "walletAdded": "Billetera agregada",
+    "walletDeleted": "Billetera eliminada",
+    "serviceAdded": "Servicio agregado",
+    "serviceDeleted": "Servicio eliminado",
+    "jobAccepted": "Trabajo aceptado",
+    "jobRejected": "Trabajo rechazado",
+    "jobCompleted": "Trabajo completado",
+    "telegramConnected": "Telegram conectado",
+    "telegramDisconnected": "Telegram desconectado",
+    "genericError": "Algo salió mal. Por favor, intenta de nuevo."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "message": "La página que buscas no existe o ha sido movida.",
+    "goHome": "Ir al inicio"
   }
 }

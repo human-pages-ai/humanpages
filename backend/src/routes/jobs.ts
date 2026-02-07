@@ -13,6 +13,8 @@ import {
   SUPPORTED_TOKENS,
   type SupportedToken,
 } from '../lib/blockchain/index.js';
+import { calculateDistance } from '../lib/geo.js';
+import { logger } from '../lib/logger.js';
 
 const router = Router();
 
@@ -49,19 +51,6 @@ const createJobSchema = z.object({
   agentLat: z.number().min(-90).max(90).optional(),
   agentLng: z.number().min(-180).max(180).optional(),
 });
-
-// Haversine formula to calculate distance between two coordinates
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // Schema for marking job as paid
 const markPaidSchema = z.object({
@@ -222,7 +211,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         agentName: data.agentName,
         category: data.category,
         language: human.preferredLanguage,
-      }).catch((err) => console.error('[Email] Notification failed:', err));
+      }).catch((err) => logger.error({ err }, 'Email notification failed'));
     }
 
     // Send Telegram notification (async, don't block response)
@@ -235,7 +224,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         priceUsdc: data.priceUsdc,
         agentName: data.agentName,
         dashboardUrl,
-      }).catch((err) => console.error('[Telegram] Notification failed:', err));
+      }).catch((err) => logger.error({ err }, 'Telegram notification failed'));
     }
 
     res.status(201).json({
@@ -251,7 +240,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Create job error:', error);
+    logger.error({ err: error }, 'Create job error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -275,7 +264,7 @@ router.get('/:id', async (req, res) => {
 
     res.json(job);
   } catch (error) {
-    console.error('Get job error:', error);
+    logger.error({ err: error }, 'Get job error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -300,7 +289,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json(jobs);
   } catch (error) {
-    console.error('Get jobs error:', error);
+    logger.error({ err: error }, 'Get jobs error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -338,7 +327,7 @@ router.patch('/:id/accept', authenticateToken, async (req: AuthRequest, res) => 
       message: 'Job accepted. Price is now locked. Waiting for payment.',
     });
   } catch (error) {
-    console.error('Accept job error:', error);
+    logger.error({ err: error }, 'Accept job error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -373,7 +362,7 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
       message: 'Job rejected.',
     });
   } catch (error) {
-    console.error('Reject job error:', error);
+    logger.error({ err: error }, 'Reject job error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -474,7 +463,7 @@ router.patch('/:id/paid', async (req, res) => {
     if (error instanceof PaymentVerificationError) {
       return res.status(400).json(error.toResponse());
     }
-    console.error('Mark paid error:', error);
+    logger.error({ err: error }, 'Mark paid error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -512,7 +501,7 @@ router.patch('/:id/complete', authenticateToken, async (req: AuthRequest, res) =
       message: 'Job marked as completed. Review is now unlocked.',
     });
   } catch (error) {
-    console.error('Complete job error:', error);
+    logger.error({ err: error }, 'Complete job error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -563,7 +552,7 @@ router.post('/:id/review', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Create review error:', error);
+    logger.error({ err: error }, 'Create review error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -599,7 +588,7 @@ router.get('/human/:humanId/reviews', async (req, res) => {
 
     res.json({ stats, reviews });
   } catch (error) {
-    console.error('Get reviews error:', error);
+    logger.error({ err: error }, 'Get reviews error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

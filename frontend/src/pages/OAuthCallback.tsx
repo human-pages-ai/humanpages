@@ -30,11 +30,20 @@ export default function OAuthCallback() {
       return;
     }
 
+    // Retrieve and consume the stored OAuth state
+    const storedState = sessionStorage.getItem('oauth_state');
+    sessionStorage.removeItem('oauth_state');
+
+    if (!storedState) {
+      setError('OAuth state missing. Please try logging in again.');
+      return;
+    }
+
     // Get referrer ID if present
     const referrerId = localStorage.getItem('referrer_id') || undefined;
 
     // Exchange code for token
-    api.oauthCallback(provider as 'google' | 'github', code, referrerId)
+    api.oauthCallback(provider as 'google' | 'github', code, storedState, referrerId)
       .then(({ token, isNew }) => {
         localStorage.removeItem('referrer_id'); // Clean up after use
         localStorage.setItem('token', token);
