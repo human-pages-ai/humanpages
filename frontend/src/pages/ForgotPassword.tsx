@@ -61,7 +61,7 @@ export default function ForgotPassword() {
       </div>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center"><Logo size="lg" /></h1>
+          <h1 className="text-center"><Link to="/"><Logo size="lg" /></Link></h1>
           <h2 className="mt-2 text-center text-xl text-gray-600">{t('auth.resetPassword')}</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

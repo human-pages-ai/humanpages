@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -382,7 +382,7 @@ export default function Dashboard() {
       <SEO title="Dashboard" noindex />
       <nav className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center overflow-x-auto">
-          <h1 className="whitespace-nowrap"><Logo /></h1>
+          <h1 className="whitespace-nowrap"><Link to="/"><Logo /></Link></h1>
           <div className="flex items-center gap-4 whitespace-nowrap">
             <LanguageSwitcher />
             <span className="text-gray-600">{user?.name}</span>
