@@ -1,3 +1,5 @@
+import type { Profile, Wallet, Service, Job, ReviewStats } from '../components/dashboard/types';
+
 const API_BASE = '/api';
 
 function getToken(): string | null {
@@ -25,16 +27,53 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return res.json();
 }
 
+export interface AuthResponse {
+  human: Profile;
+  token: string;
+  isNew?: boolean;
+}
+
+export interface PublicHuman {
+  id: string;
+  name: string;
+  bio?: string;
+  location?: string;
+  skills: string[];
+  contactEmail?: string;
+  telegram?: string;
+  isAvailable: boolean;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  websiteUrl?: string;
+  wallets: Array<{ network: string; address: string; label?: string }>;
+  services: Array<{ title: string; description: string; category: string; priceRange?: string }>;
+}
+
+export interface ReviewsResponse {
+  stats: ReviewStats;
+  reviews: Array<{
+    id: string;
+    rating: number;
+    comment?: string;
+    createdAt: string;
+    jobId: string;
+    agentName?: string;
+  }>;
+}
+
 export const api = {
   // Auth
   signup: (data: { email: string; password: string; name: string; referrerId?: string }) =>
-    request<{ human: any; token: string }>('/auth/signup', {
+    request<AuthResponse>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   login: (data: { email: string; password: string }) =>
-    request<{ human: any; token: string }>('/auth/login', {
+    request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -44,7 +83,7 @@ export const api = {
     request<{ url: string; state: string }>(`/oauth/${provider}`),
 
   oauthCallback: (provider: 'google' | 'github', code: string, state: string, referrerId?: string) =>
-    request<{ human: any; token: string; isNew?: boolean }>(`/oauth/${provider}/callback`, {
+    request<AuthResponse>(`/oauth/${provider}/callback`, {
       method: 'POST',
       body: JSON.stringify({ code, state, referrerId }),
     }),
@@ -66,19 +105,19 @@ export const api = {
     request<{ valid: boolean }>(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`),
 
   // Profile
-  getProfile: () => request<any>('/humans/me'),
+  getProfile: () => request<Profile>('/humans/me'),
 
-  updateProfile: (data: any) =>
-    request<any>('/humans/me', {
+  updateProfile: (data: Record<string, unknown>) =>
+    request<Profile>('/humans/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
 
   // Wallets
-  getWallets: () => request<any[]>('/wallets'),
+  getWallets: () => request<Wallet[]>('/wallets'),
 
   addWallet: (data: { network: string; address: string; label?: string }) =>
-    request<any>('/wallets', {
+    request<Wallet>('/wallets', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -87,16 +126,16 @@ export const api = {
     request<void>(`/wallets/${id}`, { method: 'DELETE' }),
 
   // Services
-  getServices: () => request<any[]>('/services'),
+  getServices: () => request<Service[]>('/services'),
 
   createService: (data: { title: string; description: string; category: string; priceRange?: string }) =>
-    request<any>('/services', {
+    request<Service>('/services', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  updateService: (id: string, data: any) =>
-    request<any>(`/services/${id}`, {
+  updateService: (id: string, data: Partial<Pick<Service, 'title' | 'description' | 'category' | 'priceRange' | 'isActive'>>) =>
+    request<Service>(`/services/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
@@ -109,23 +148,23 @@ export const api = {
     request<{ count: number; referrals: Array<{ id: string; name: string; createdAt: string }> }>('/humans/me/referrals'),
 
   // Public profiles
-  getHumanById: (id: string) => request<any>(`/humans/${id}`),
+  getHumanById: (id: string) => request<PublicHuman>(`/humans/${id}`),
 
   // Jobs
   getJobs: (status?: string) =>
-    request<any[]>(`/jobs${status ? `?status=${status}` : ''}`),
+    request<Job[]>(`/jobs${status ? `?status=${status}` : ''}`),
 
   acceptJob: (id: string) =>
-    request<any>(`/jobs/${id}/accept`, { method: 'PATCH' }),
+    request<Job>(`/jobs/${id}/accept`, { method: 'PATCH' }),
 
   rejectJob: (id: string) =>
-    request<any>(`/jobs/${id}/reject`, { method: 'PATCH' }),
+    request<Job>(`/jobs/${id}/reject`, { method: 'PATCH' }),
 
   completeJob: (id: string) =>
-    request<any>(`/jobs/${id}/complete`, { method: 'PATCH' }),
+    request<Job>(`/jobs/${id}/complete`, { method: 'PATCH' }),
 
   getMyReviews: (humanId: string) =>
-    request<{ stats: any; reviews: any[] }>(`/jobs/human/${humanId}/reviews`),
+    request<ReviewsResponse>(`/jobs/human/${humanId}/reviews`),
 
   // Telegram
   getTelegramStatus: () =>

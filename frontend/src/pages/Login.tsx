@@ -2,7 +2,10 @@ import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -21,6 +24,7 @@ export default function Login() {
 
     try {
       await login(email, password);
+      analytics.track('login_success', { method: 'email' });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || t('auth.loginFailed'));
@@ -52,13 +56,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <SEO title="Sign In" noindex />
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900">Human Pages</h1>
+          <h1 className="text-center"><Logo size="lg" /></h1>
           <h2 className="mt-2 text-center text-xl text-gray-600">{t('auth.signInTo')}</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -157,6 +162,6 @@ export default function Login() {
           </p>
         </form>
       </div>
-    </div>
+    </main>
   );
 }

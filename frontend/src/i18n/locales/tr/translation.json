@@ -219,7 +219,7 @@
       "username": "Kullanıcı Adı",
       "usernameLength": "Kullanıcı adı 3-30 karakter olmalıdır",
       "usernameChars": "Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir",
-      "profileUrl": "Profiliniz: humanpages.io/u/{{username}}",
+      "profileUrl": "Profiliniz: humanpages.ai/u/{{username}}",
       "socialProfiles": "Sosyal Profiller",
       "socialForTrust": "güven için",
       "linkedin": "LinkedIn",

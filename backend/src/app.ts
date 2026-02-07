@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
+import path from 'path';
 import { logger } from './lib/logger.js';
 import authRoutes from './routes/auth.js';
 import oauthRoutes from './routes/oauth.js';
@@ -10,6 +11,9 @@ import walletsRoutes from './routes/wallets.js';
 import servicesRoutes from './routes/services.js';
 import jobsRoutes from './routes/jobs.js';
 import telegramRoutes from './routes/telegram.js';
+import sitemapRoutes from './routes/sitemap.js';
+import ogRoutes from './routes/og.js';
+import { getProfileMetaHtml } from './lib/seo.js';
 
 const app = express();
 
@@ -42,5 +46,40 @@ app.use('/api/wallets', walletsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/telegram', telegramRoutes);
+
+// SEO routes
+app.use(sitemapRoutes);
+app.use('/api/og', ogRoutes);
+
+// Serve frontend static files in production
+const frontendDistPath = path.join(process.cwd(), '../frontend/dist');
+
+// Try to serve static files from the frontend build
+app.use(express.static(frontendDistPath, { index: false }));
+
+// Profile pages: inject dynamic meta tags for social sharing / SEO
+app.get('/humans/:id', async (req, res, next) => {
+  try {
+    const html = await getProfileMetaHtml(req.params.id);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+// SPA catch-all: serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  const indexPath = path.join(frontendDistPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      // In development, frontend is served by Vite
+      res.status(404).json({ error: 'Frontend not built. Run: cd frontend && npm run build' });
+    }
+  });
+});
 
 export default app;

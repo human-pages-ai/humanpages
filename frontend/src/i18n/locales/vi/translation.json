@@ -219,7 +219,7 @@
       "username": "Tên người dùng",
       "usernameLength": "Tên người dùng phải có 3-30 ký tự",
       "usernameChars": "Tên người dùng chỉ có thể chứa chữ cái, số và dấu gạch dưới",
-      "profileUrl": "Hồ sơ của bạn: humanpages.io/u/{{username}}",
+      "profileUrl": "Hồ sơ của bạn: humanpages.ai/u/{{username}}",
       "socialProfiles": "Hồ sơ mạng xã hội",
       "socialForTrust": "để tạo niềm tin",
       "linkedin": "LinkedIn",

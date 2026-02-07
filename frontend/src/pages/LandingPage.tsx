@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -62,12 +64,35 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Human Pages",
+          "url": "https://humanpages.ai",
+          "description": "AI-to-Human marketplace connecting AI agents with real people for real-world tasks",
+          "sameAs": []
+        }}
+      />
+      <SEO
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": FAQS.map(faq => ({
+            "@type": "Question",
+            "name": faq.q,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": faq.a
+            }
+          }))
+        }}
+      />
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold text-slate-900">
-            Human Pages
-          </Link>
+          <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-4 md:gap-6">
             <Link to="/" className="text-sm font-medium text-slate-900 hidden sm:inline">
               {t('nav.humans')}
@@ -86,8 +111,9 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="py-16 md:py-24 px-4 bg-white">
+      <main>
+        {/* Hero */}
+        <section className="py-16 md:py-24 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="max-w-2xl">
             <p className="text-blue-600 font-medium mb-2">{t('landing.hero.tagline')}</p>
@@ -229,6 +255,7 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="py-8 bg-white border-t border-slate-200 px-4">
@@ -238,7 +265,7 @@ export default function LandingPage() {
             <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
             <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
             <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <a href="mailto:hello@humanpages.io" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
+            <a href="mailto:hello@humanpages.ai" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>
       </footer>

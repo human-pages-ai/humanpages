@@ -186,6 +186,14 @@ model Service {
   human       Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
 }
 
+model OAuthState {
+  token     String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
 model PasswordReset {
   id        String   @id @default(cuid())
   email     String

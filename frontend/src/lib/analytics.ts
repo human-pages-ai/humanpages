@@ -13,7 +13,8 @@ type EventName =
   | 'profile_share_click'
   | 'profile_share_copy'
   | 'referral_link_copy'
-  | 'profile_view';
+  | 'profile_view'
+  | 'login_success';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

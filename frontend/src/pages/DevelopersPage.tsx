@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -103,12 +105,16 @@ export default function DevelopersPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO
+        title="API & MCP Server"
+        description="Integrate Human Pages into your AI agent. Install the MCP server or use the REST API to search humans by skill and location."
+        canonical="https://humanpages.ai/dev"
+        path="/dev"
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold text-slate-900">
-            Human Pages
-          </Link>
+          <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-6">
             <Link to="/" className="text-sm text-slate-500 hover:text-slate-700">
               {t('nav.humans')}
@@ -127,8 +133,9 @@ export default function DevelopersPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="py-16 md:py-20 px-4 bg-white">
+      <main>
+        {/* Hero */}
+        <section className="py-16 md:py-20 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <p className="text-blue-600 font-medium mb-2">For AI Agents & Developers</p>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
@@ -335,6 +342,7 @@ export default function DevelopersPage() {
           </Link>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="py-8 bg-white border-t border-slate-200 px-4">

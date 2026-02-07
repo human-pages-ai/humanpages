@@ -220,7 +220,7 @@
       "username": "Username",
       "usernameLength": "Username must be 3-30 characters",
       "usernameChars": "Username can only contain letters, numbers, and underscores",
-      "profileUrl": "Your profile: humanpages.io/u/{{username}}",
+      "profileUrl": "Your profile: humanpages.ai/u/{{username}}",
       "socialProfiles": "Social Profiles",
       "socialForTrust": "for trust",
       "linkedin": "LinkedIn",

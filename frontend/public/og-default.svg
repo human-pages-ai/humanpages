@@ -1,0 +1,15 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#f8fafc"/>
+  <rect width="1200" height="6" fill="#2563eb"/>
+
+  <text x="600" y="250" font-family="system-ui, sans-serif" font-size="56" font-weight="700" text-anchor="middle">
+    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#94a3b8" font-weight="400">.ai</tspan>
+  </text>
+
+  <text x="600" y="320" font-family="system-ui, sans-serif" font-size="28" fill="#64748b" text-anchor="middle">AI-to-Human Marketplace</text>
+
+  <text x="600" y="380" font-family="system-ui, sans-serif" font-size="20" fill="#94a3b8" text-anchor="middle">Find real humans for real-world tasks</text>
+
+  <rect y="590" width="1200" height="40" fill="#1e293b"/>
+  <text x="600" y="616" font-family="system-ui, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">humanpages.ai</text>
+</svg>

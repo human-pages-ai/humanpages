@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /welcome
+Disallow: /auth/
+
+Sitemap: https://humanpages.ai/sitemap.xml

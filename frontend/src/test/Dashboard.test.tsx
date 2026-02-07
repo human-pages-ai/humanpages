@@ -59,7 +59,7 @@ describe('Dashboard', () => {
       services: [],
     });
     vi.mocked(api.getJobs).mockResolvedValue([]);
-    vi.mocked(api.getMyReviews).mockResolvedValue({ stats: { totalReviews: 0, averageRating: 0 }, reviews: [] });
+    vi.mocked(api.getMyReviews).mockResolvedValue({ stats: { totalReviews: 0, averageRating: 0, completedJobs: 0 }, reviews: [] });
     vi.mocked(api.getTelegramStatus).mockResolvedValue({ connected: false, botAvailable: false });
     vi.mocked(api.getReferrals).mockResolvedValue({ referrals: [], count: 0 });
   });
@@ -86,8 +86,8 @@ describe('Dashboard', () => {
         id: 'job-1',
         title: 'Test Job',
         description: 'Test description',
-        status: 'pending',
-      },
+        status: 'PENDING',
+      } as any,
     ]);
 
     renderWithProviders(<Dashboard />);

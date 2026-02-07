@@ -3,6 +3,8 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -65,6 +67,7 @@ export default function ResetPassword() {
   if (validating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <SEO title="Reset Password" noindex />
         <div className="text-center" role="status" aria-label="Loading">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('common.loading')}</p>
@@ -76,6 +79,7 @@ export default function ResetPassword() {
   if (!token || !tokenValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <SEO title="Reset Password" noindex />
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
@@ -97,6 +101,7 @@ export default function ResetPassword() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <SEO title="Reset Password" noindex />
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
@@ -117,12 +122,13 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <SEO title="Reset Password" noindex />
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900">Human Pages</h1>
+          <h1 className="text-center"><Logo size="lg" /></h1>
           <h2 className="mt-2 text-center text-xl text-gray-600">{t('auth.resetPassword')}</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

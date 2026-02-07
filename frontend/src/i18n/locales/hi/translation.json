@@ -219,7 +219,7 @@
       "username": "यूज़रनेम",
       "usernameLength": "यूज़रनेम 3-30 कैरेक्टर्स का होना चाहिए",
       "usernameChars": "यूज़रनेम में केवल अक्षर, संख्याएं और अंडरस्कोर हो सकते हैं",
-      "profileUrl": "आपकी प्रोफ़ाइल: humanpages.io/u/{{username}}",
+      "profileUrl": "आपकी प्रोफ़ाइल: humanpages.ai/u/{{username}}",
       "socialProfiles": "सोशल प्रोफ़ाइल्स",
       "socialForTrust": "ट्रस्ट के लिए",
       "linkedin": "LinkedIn",

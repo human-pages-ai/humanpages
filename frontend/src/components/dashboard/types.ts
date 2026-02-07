@@ -41,6 +41,8 @@ export interface Profile {
   minOfferPrice?: number;
   maxOfferDistance?: number;
   minRateUsdc?: number;
+  rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
+  preferredLanguage?: string;
 }
 
 export interface Job {

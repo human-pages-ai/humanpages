@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
+import SEO from '../components/SEO';
 
 const SKILL_SUGGESTIONS = [
   'photography', 'videography', 'delivery', 'driving', 'research',
@@ -155,6 +156,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <SEO title="Complete Your Profile" noindex />
       {/* Progress bar */}
       <div className="bg-white border-b border-slate-200 px-4 py-3">
         <div className="max-w-lg mx-auto">

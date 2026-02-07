@@ -7,31 +7,34 @@ import { logger } from '../lib/logger.js';
 
 const router = Router();
 
-// Store pending OAuth state tokens (in production, use Redis with TTL)
-const pendingStates = new Map<string, number>();
-
-// Clean up expired states every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [state, expiresAt] of pendingStates) {
-    if (expiresAt < now) pendingStates.delete(state);
+// Clean up expired OAuth states every 5 minutes
+setInterval(async () => {
+  try {
+    await prisma.oAuthState.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  } catch (err) {
+    logger.error({ err }, 'Failed to clean up expired OAuth states');
   }
 }, 5 * 60 * 1000);
 
-function generateOAuthState(): string {
-  const state = crypto.randomBytes(32).toString('hex');
-  pendingStates.set(state, Date.now() + 10 * 60 * 1000); // 10 min expiry
-  return state;
+async function generateOAuthState(): Promise<string> {
+  const token = crypto.randomBytes(32).toString('hex');
+  await prisma.oAuthState.create({
+    data: {
+      token,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min expiry
+    },
+  });
+  return token;
 }
 
-function consumeOAuthState(state: string): boolean {
-  const expiresAt = pendingStates.get(state);
-  if (!expiresAt || expiresAt < Date.now()) {
-    pendingStates.delete(state!);
+async function consumeOAuthState(state: string): Promise<boolean> {
+  try {
+    const record = await prisma.oAuthState.delete({ where: { token: state } });
+    return record.expiresAt > new Date();
+  } catch {
+    // delete throws if not found — means invalid/already consumed
     return false;
   }
-  pendingStates.delete(state);
-  return true;
 }
 
 const googleClient = new OAuth2Client(
@@ -46,8 +49,8 @@ function generateToken(userId: string): string {
 }
 
 // Google OAuth - redirect to consent screen
-router.get('/google', (req, res) => {
-  const state = generateOAuthState();
+router.get('/google', async (req, res) => {
+  const state = await generateOAuthState();
   const authorizeUrl = googleClient.generateAuthUrl({
     access_type: 'offline',
     scope: ['openid', 'email', 'profile'],
@@ -65,7 +68,7 @@ router.post('/google/callback', async (req, res) => {
       return res.status(400).json({ error: 'Authorization code required' });
     }
 
-    if (!state || !consumeOAuthState(state)) {
+    if (!state || !(await consumeOAuthState(state))) {
       return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 
@@ -145,8 +148,8 @@ router.post('/google/callback', async (req, res) => {
 });
 
 // GitHub OAuth - redirect to auth page
-router.get('/github', (req, res) => {
-  const state = generateOAuthState();
+router.get('/github', async (req, res) => {
+  const state = await generateOAuthState();
   const params = new URLSearchParams({
     client_id: process.env.GITHUB_CLIENT_ID!,
     redirect_uri: `${process.env.FRONTEND_URL}/auth/github/callback`,
@@ -166,7 +169,7 @@ router.post('/github/callback', async (req, res) => {
       return res.status(400).json({ error: 'Authorization code required' });
     }
 
-    if (!state || !consumeOAuthState(state)) {
+    if (!state || !(await consumeOAuthState(state))) {
       return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 

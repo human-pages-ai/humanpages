@@ -219,7 +219,7 @@
       "username": "Username",
       "usernameLength": "Ang username ay dapat 3-30 characters",
       "usernameChars": "Ang username ay maaaring may letters, numbers, at underscores lamang",
-      "profileUrl": "Ang iyong profile: humanpages.io/u/{{username}}",
+      "profileUrl": "Ang iyong profile: humanpages.ai/u/{{username}}",
       "socialProfiles": "Social Profiles",
       "socialForTrust": "para sa trust",
       "linkedin": "LinkedIn",

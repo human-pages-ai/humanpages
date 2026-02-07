@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import ProfileCompleteness from '../components/ProfileCompleteness';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Profile, Job, ReviewStats, Service } from '../components/dashboard/types';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
@@ -16,6 +17,7 @@ import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
 import WalletsSection from '../components/dashboard/WalletsSection';
 import ServicesSection from '../components/dashboard/ServicesSection';
+import SEO from '../components/SEO';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -377,9 +379,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO title="Dashboard" noindex />
       <nav className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center overflow-x-auto">
-          <h1 className="text-xl font-bold whitespace-nowrap">Human Pages</h1>
+          <h1 className="whitespace-nowrap"><Logo /></h1>
           <div className="flex items-center gap-4 whitespace-nowrap">
             <LanguageSwitcher />
             <span className="text-gray-600">{user?.name}</span>

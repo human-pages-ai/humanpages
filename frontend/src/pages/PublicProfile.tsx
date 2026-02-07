@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 interface Wallet {
   network: string;
@@ -108,9 +110,26 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title={profile.name}
+        description={profile.bio || `${profile.name} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
+        canonical={`https://humanpages.ai/humans/${id}`}
+        ogImage={`https://humanpages.ai/api/og/${id}`}
+        ogType="profile"
+        path={`/humans/${id}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Person",
+          "name": profile.name,
+          "description": profile.bio,
+          "url": `https://humanpages.ai/humans/${id}`,
+          ...(profile.location && { "address": { "@type": "PostalAddress", "addressLocality": profile.location } }),
+          ...(profile.skills.length > 0 && { "knowsAbout": profile.skills }),
+        }}
+      />
       <nav className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold">Human Pages</Link>
+          <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <Link
@@ -132,7 +151,7 @@ export default function PublicProfile() {
                 <h1 className="text-2xl font-bold text-white">{profile.name}</h1>
                 {profile.location && (
                   <p className="text-indigo-200 mt-1 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>

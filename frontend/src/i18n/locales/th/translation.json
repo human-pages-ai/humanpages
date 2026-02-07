@@ -219,7 +219,7 @@
       "username": "ชื่อผู้ใช้",
       "usernameLength": "ชื่อผู้ใช้ต้องมี 3-30 ตัวอักษร",
       "usernameChars": "ชื่อผู้ใช้สามารถมีได้เฉพาะตัวอักษร ตัวเลข และขีดล่าง",
-      "profileUrl": "โปรไฟล์ของคุณ: humanpages.io/u/{{username}}",
+      "profileUrl": "โปรไฟล์ของคุณ: humanpages.ai/u/{{username}}",
       "socialProfiles": "โปรไฟล์โซเชียล",
       "socialForTrust": "เพื่อความน่าเชื่อถือ",
       "linkedin": "LinkedIn",

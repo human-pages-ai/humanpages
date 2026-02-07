@@ -219,7 +219,7 @@
       "username": "Nombre de Usuario",
       "usernameLength": "El nombre de usuario debe tener entre 3-30 caracteres",
       "usernameChars": "El nombre de usuario solo puede contener letras, números y guiones bajos",
-      "profileUrl": "Tu perfil: humanpages.io/u/{{username}}",
+      "profileUrl": "Tu perfil: humanpages.ai/u/{{username}}",
       "socialProfiles": "Perfiles Sociales",
       "socialForTrust": "para confianza",
       "linkedin": "LinkedIn",

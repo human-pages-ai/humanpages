@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import PublicProfile from '../pages/PublicProfile';
 import React from 'react';
 import { api } from '../lib/api';
@@ -54,17 +55,19 @@ const mockPublicProfile = {
 
 function renderWithRouter(ui: React.ReactElement, { route = '/profile/test-id' } = {}) {
   return render(
-    <MemoryRouter initialEntries={[route]}>
-      <Routes>
-        <Route path="/profile/:id" element={ui} />
-      </Routes>
-    </MemoryRouter>
+    <HelmetProvider>
+      <MemoryRouter initialEntries={[route]}>
+        <Routes>
+          <Route path="/profile/:id" element={ui} />
+        </Routes>
+      </MemoryRouter>
+    </HelmetProvider>
   );
 }
 
 describe('PublicProfile', () => {
   beforeEach(() => {
-    vi.mocked(api.getHumanById).mockResolvedValue(mockPublicProfile);
+    vi.mocked(api.getHumanById).mockResolvedValue(mockPublicProfile as any);
   });
 
   it('renders loading state', () => {
@@ -158,7 +161,7 @@ describe('PublicProfile', () => {
     vi.mocked(api.getHumanById).mockResolvedValue({
       ...mockPublicProfile,
       isAvailable: false,
-    });
+    } as any);
 
     renderWithRouter(<PublicProfile />);
 
@@ -197,7 +200,7 @@ describe('PublicProfile', () => {
     vi.mocked(api.getHumanById).mockResolvedValue({
       ...mockPublicProfile,
       skills: [],
-    });
+    } as any);
 
     renderWithRouter(<PublicProfile />);
 
@@ -212,7 +215,7 @@ describe('PublicProfile', () => {
     vi.mocked(api.getHumanById).mockResolvedValue({
       ...mockPublicProfile,
       services: [],
-    });
+    } as any);
 
     renderWithRouter(<PublicProfile />);
 
@@ -227,7 +230,7 @@ describe('PublicProfile', () => {
     vi.mocked(api.getHumanById).mockResolvedValue({
       ...mockPublicProfile,
       wallets: [],
-    });
+    } as any);
 
     renderWithRouter(<PublicProfile />);
 

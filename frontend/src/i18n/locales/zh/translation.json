@@ -219,7 +219,7 @@
       "username": "用户名",
       "usernameLength": "用户名必须为3-30个字符",
       "usernameChars": "用户名只能包含字母、数字和下划线",
-      "profileUrl": "你的资料：humanpages.io/u/{{username}}",
+      "profileUrl": "你的资料：humanpages.ai/u/{{username}}",
       "socialProfiles": "社交资料",
       "socialForTrust": "用于信任验证",
       "linkedin": "领英",

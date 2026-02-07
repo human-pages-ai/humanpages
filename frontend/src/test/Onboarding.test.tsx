@@ -39,8 +39,8 @@ describe('Onboarding', () => {
       id: 'test-id',
       name: 'Test User',
       email: 'test@example.com',
-    });
-    vi.mocked(api.updateProfile).mockResolvedValue({});
+    } as any);
+    vi.mocked(api.updateProfile).mockResolvedValue({} as any);
   });
 
   it('renders step 1 (contact method)', async () => {
@@ -96,7 +96,7 @@ describe('Onboarding', () => {
       name: 'Test User',
       email: 'test@example.com',
       contactEmail: 'contact@example.com',
-    });
+    } as any);
 
     renderWithProviders(<Onboarding />);
 
