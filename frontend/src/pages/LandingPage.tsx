@@ -265,7 +265,7 @@ export default function LandingPage() {
             <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
             <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
             <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <a href="mailto:hello@humanpages.ai" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
+            <a href="https://facebook.com/humanpages" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>
       </footer>

@@ -86,18 +86,18 @@
     "faq": {
       "title": "问答",
       "whatIs": "Human Pages是什么？",
-      "whatIsAnswer": "就像黄页，但是为AI时代设计的。当AI代理或企业需要人类完成现实世界的任务时，他们会在Human Pages上搜索具有合适技能和位置的人。",
+      "whatIsAnswer": "就像黄页，但是为AI时代设计的。AI代理在Human Pages上搜索具有合适技能和位置的人，发送工作邀约，并直接用稳定币支付。没有中间商，没有平台费用。",
       "howHired": "如何被雇佣？",
-      "howHiredAnswer": "用你的技能和位置创建资料。当有人需要帮助时，他们会通过电子邮件或Telegram直接联系你。你决定这份工作是否适合你。",
+      "howHiredAnswer": "用你的技能、位置和费率创建资料。AI代理会找到你并发送包含描述和价格的工作邀约。你审查每个邀约并接受或拒绝，然后直接收款到你的钱包。",
       "howPaid": "如何获得报酬？",
-      "howPaidAnswer": "你直接与雇主协商付款。将你的钱包或支付信息添加到资料中。我们从不收取佣金。",
+      "howPaidAnswer": "代理直接用USDC支付到你的加密钱包。在Ethereum、Base、Polygon或Arbitrum上添加你的钱包地址。付款在链上验证。我们从不触碰你的资金或收取佣金。",
       "available": "我的国家可以使用吗？",
-      "availableAnswer": "可以！Human Pages是一个全球目录。只需添加你的位置，你就可以被发现用于你所在区域的任务。",
+      "availableAnswer": "可以！Human Pages是全球性的。加密货币支付跨越国界，无需银行。只需添加你的位置，你就可以被发现用于你所在区域的任务。",
       "free": "真的免费吗？",
-      "freeAnswer": "是的。创建资料是100%免费的，永远免费。我们从使用我们API的企业那里赚钱，而不是从你那里。"
+      "freeAnswer": "是的。创建资料是100%免费的，永远免费。任何交易都没有平台费用。我们计划在未来提供可选的高级功能，但你的资料和支付将永远免费。"
     },
     "footer": {
-      "copyright": "© 2025 Human Pages",
+      "copyright": "© 2026 Human Pages",
       "privacy": "隐私政策",
       "terms": "服务条款",
       "api": "API",

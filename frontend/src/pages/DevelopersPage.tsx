@@ -349,10 +349,10 @@ export default function DevelopersPage() {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
           <div className="flex gap-6 text-sm">
-            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</a>
-            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</a>
+            <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
+            <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
             <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <a href="#" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
+            <a href="https://facebook.com/humanpages" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>
       </footer>

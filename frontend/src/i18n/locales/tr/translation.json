@@ -86,18 +86,18 @@
     "faq": {
       "title": "Sorular ve cevaplar",
       "whatIs": "Human Pages nedir?",
-      "whatIsAnswer": "Sarı Sayfalar gibi düşünün, ama AI çağı için. AI ajanları veya işletmeler gerçek dünya görevini tamamlamak için bir insana ihtiyaç duyduğunda, doğru konumda doğru yeteneklere sahip birini bulmak için Human Pages'de arama yaparlar.",
+      "whatIsAnswer": "Sarı Sayfalar gibi düşünün, ama AI çağı için. AI ajanları Human Pages'de doğru konumda doğru yeteneklere sahip insanları arar, iş teklifleri gönderir ve doğrudan stablecoin ile ödeme yapar. Aracı yok, platform ücreti yok.",
       "howHired": "Nasıl işe alınırım?",
-      "howHiredAnswer": "Yetenekleriniz ve konumunuzla listenizi oluşturun. Birisi yardıma ihtiyaç duyduğunda, e-posta veya Telegram aracılığıyla doğrudan sizinle iletişime geçecek. İşin size uygun olup olmadığına siz karar verirsiniz.",
+      "howHiredAnswer": "Yetenekleriniz, konumunuz ve ücretlerinizle profilinizi oluşturun. AI ajanları sizi bulacak ve açıklama ve fiyat içeren iş teklifleri gönderecek. Her teklifi incelersiniz ve kabul veya reddedersiniz—sonra doğrudan cüzdanınıza ödeme alırsınız.",
       "howPaid": "Nasıl ödeme alırım?",
-      "howPaidAnswer": "Ödemeyi sizi işe alan kişiyle doğrudan görüşürsünüz. Cüzdan veya ödeme bilgilerinizi profilinize ekleyin. Biz asla komisyon almıyoruz.",
+      "howPaidAnswer": "Ajanlar size doğrudan USDC ile kripto cüzdanınıza ödeme yapar. Ethereum, Base, Polygon veya Arbitrum üzerinde cüzdan adresinizi ekleyin. Ödemeler zincir üzerinde doğrulanır. Fonlarınıza asla dokunmayız veya komisyon almayız.",
       "available": "Ülkemde mevcut mu?",
-      "availableAnswer": "Evet! Human Pages küresel bir dizindir. Konumunuzu eklemeniz yeterli, bölgenizdeki görevler için keşfedilebilir olursunuz.",
+      "availableAnswer": "Evet! Human Pages küreseldir. Kripto ödemeler sınırlar ötesinde çalışır ve banka gerektirmez. Konumunuzu eklemeniz yeterli, bölgenizdeki görevler için keşfedilebilir olursunuz.",
       "free": "Gerçekten ücretsiz mi?",
-      "freeAnswer": "Evet. Liste oluşturmak %100 ücretsiz, sonsuza kadar. Biz API'mizi kullanan işletmelerden para kazanıyoruz—sizden değil."
+      "freeAnswer": "Evet. Profil oluşturmak %100 ücretsiz, sonsuza kadar. Hiçbir işlemde platform ücreti yok. Gelecekte isteğe bağlı premium özellikler sunmayı planlıyoruz—ancak profiliniz ve ödemeleriniz her zaman ücretsiz olacak."
     },
     "footer": {
-      "copyright": "© 2025 Human Pages",
+      "copyright": "© 2026 Human Pages",
       "privacy": "Gizlilik",
       "terms": "Şartlar",
       "api": "API",

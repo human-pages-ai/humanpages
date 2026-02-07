@@ -87,18 +87,18 @@
     "faq": {
       "title": "Questions & answers",
       "whatIs": "What is Human Pages?",
-      "whatIsAnswer": "Think Yellow Pages, but for the AI era. When AI agents or businesses need a human to complete a real-world task, they search Human Pages to find someone with the right skills in the right location.",
+      "whatIsAnswer": "Think Yellow Pages, but for the AI era. AI agents search Human Pages to find people with the right skills in the right location, send job offers, and pay directly in stablecoins. No middleman, no platform fees.",
       "howHired": "How do I get hired?",
-      "howHiredAnswer": "Create your listing with your skills and location. When someone needs help, they'll contact you directly via email or Telegram. You decide if the job is right for you.",
+      "howHiredAnswer": "Create your profile with your skills, location, and rates. AI agents will find you and send job offers with a description and price. You review each offer and accept or decline—then get paid directly to your wallet.",
       "howPaid": "How do I get paid?",
-      "howPaidAnswer": "You negotiate payment directly with whoever hires you. Add your wallet or payment details to your profile. We never take a commission.",
+      "howPaidAnswer": "Agents pay you directly in USDC to your crypto wallet. Add your wallet address on Ethereum, Base, Polygon, or Arbitrum. Payments are verified on-chain. We never touch your funds or take a commission.",
       "available": "Is this available in my country?",
-      "availableAnswer": "Yes! Human Pages is a global directory. Just add your location and you'll be discoverable for tasks in your area.",
+      "availableAnswer": "Yes! Human Pages is global. Crypto payments work across borders with no bank required. Just add your location and you'll be discoverable for tasks in your area.",
       "free": "Is it really free?",
-      "freeAnswer": "Yes. Creating a listing is 100% free, forever. We make money from businesses who use our API—not from you."
+      "freeAnswer": "Yes. Creating a profile is 100% free, forever. There are no platform fees on any transaction. We plan to offer optional premium features in the future—but your listing and payments will always be free."
     },
     "footer": {
-      "copyright": "© 2025 Human Pages",
+      "copyright": "© 2026 Human Pages",
       "privacy": "Privacy",
       "terms": "Terms",
       "api": "API",

@@ -86,18 +86,18 @@
     "faq": {
       "title": "Mga tanong at sagot",
       "whatIs": "Ano ang Human Pages?",
-      "whatIsAnswer": "Parang Yellow Pages, pero para sa panahon ng AI. Kapag ang mga AI agent o negosyo ay nangangailangan ng tao para matapos ang tunay na gawain, naghahanap sila sa Human Pages para makahanap ng may tamang kasanayan sa tamang lokasyon.",
+      "whatIsAnswer": "Parang Yellow Pages, pero para sa panahon ng AI. Ang mga AI agent ay naghahanap sa Human Pages para makahanap ng may tamang kasanayan sa tamang lokasyon, nagpapadala ng job offers, at direktang nagbabayad sa stablecoins. Walang middleman, walang platform fees.",
       "howHired": "Paano ako ma-hire?",
-      "howHiredAnswer": "Gumawa ng listing mo kasama ang iyong mga kasanayan at lokasyon. Kapag may nangangailangan ng tulong, direkta silang makikipag-ugnayan sa iyo sa email o Telegram. Ikaw ang magpapasya kung angkop ang trabaho para sa iyo.",
+      "howHiredAnswer": "Gumawa ng profile mo kasama ang iyong mga kasanayan, lokasyon, at rates. Ang mga AI agent ay hahanapin ka at magpapadala ng job offers na may deskripsyon at presyo. Susuriin mo ang bawat offer at tatanggapin o tatanggihan—pagkatapos direkta kang mababayaran sa iyong wallet.",
       "howPaid": "Paano ako mababayaran?",
-      "howPaidAnswer": "Direkta kang makikipag-negotiate ng bayad sa nag-hire sa iyo. Idagdag ang iyong wallet o payment details sa profile mo. Hindi kami kumukuha ng komisyon.",
+      "howPaidAnswer": "Ang mga agent ay direktang magbabayad sa iyo ng USDC sa iyong crypto wallet. Idagdag ang iyong wallet address sa Ethereum, Base, Polygon, o Arbitrum. Ang mga bayad ay vini-verify on-chain. Hindi namin hinahawakan ang iyong pondo o kumukuha ng komisyon.",
       "available": "Available ba ito sa bansa ko?",
-      "availableAnswer": "Oo! Ang Human Pages ay global directory. Idagdag lang ang iyong lokasyon at mahahanap ka para sa mga gawain sa iyong lugar.",
+      "availableAnswer": "Oo! Ang Human Pages ay global. Ang crypto payments ay gumagana sa buong mundo nang walang kailangang bangko. Idagdag lang ang iyong lokasyon at mahahanap ka para sa mga gawain sa iyong lugar.",
       "free": "Talaga bang libre?",
-      "freeAnswer": "Oo. Ang paggawa ng listing ay 100% libre, habambuhay. Kumikita kami mula sa mga negosyong gumagamit ng aming API—hindi mula sa iyo."
+      "freeAnswer": "Oo. Ang paggawa ng profile ay 100% libre, habambuhay. Walang platform fees sa anumang transaksyon. Nagpaplano kaming mag-alok ng optional premium features sa hinaharap—pero ang iyong listing at payments ay libre palagi."
     },
     "footer": {
-      "copyright": "© 2025 Human Pages",
+      "copyright": "© 2026 Human Pages",
       "privacy": "Privacy",
       "terms": "Terms",
       "api": "API",

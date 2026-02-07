@@ -19,6 +19,8 @@ router.get('/sitemap.xml', async (req, res) => {
       { url: '/dev', priority: '0.8', changefreq: 'weekly' },
       { url: '/signup', priority: '0.7', changefreq: 'monthly' },
       { url: '/login', priority: '0.3', changefreq: 'monthly' },
+      { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
+      { url: '/terms', priority: '0.3', changefreq: 'yearly' },
     ];
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';

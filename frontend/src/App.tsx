@@ -16,6 +16,8 @@ const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function LoadingSpinner() {
@@ -113,6 +115,8 @@ function AppRoutes() {
         }
       />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfUse />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

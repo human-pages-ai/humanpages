@@ -86,18 +86,18 @@
     "faq": {
       "title": "Preguntas y respuestas",
       "whatIs": "¿Qué es Human Pages?",
-      "whatIsAnswer": "Piensa en las Páginas Amarillas, pero para la era de la IA. Cuando los agentes de IA o empresas necesitan un humano para completar una tarea del mundo real, buscan en Human Pages para encontrar a alguien con las habilidades correctas en la ubicación correcta.",
+      "whatIsAnswer": "Piensa en las Páginas Amarillas, pero para la era de la IA. Los agentes de IA buscan en Human Pages para encontrar personas con las habilidades correctas en la ubicación correcta, envían ofertas de trabajo y pagan directamente en stablecoins. Sin intermediarios, sin comisiones de plataforma.",
       "howHired": "¿Cómo me contratan?",
-      "howHiredAnswer": "Crea tu perfil con tus habilidades y ubicación. Cuando alguien necesite ayuda, te contactará directamente por email o Telegram. Tú decides si el trabajo es adecuado para ti.",
+      "howHiredAnswer": "Crea tu perfil con tus habilidades, ubicación y tarifas. Los agentes de IA te encontrarán y enviarán ofertas de trabajo con una descripción y precio. Revisas cada oferta y aceptas o rechazas, luego te pagan directamente a tu billetera.",
       "howPaid": "¿Cómo me pagan?",
-      "howPaidAnswer": "Negocias el pago directamente con quien te contrata. Agrega tu billetera o detalles de pago a tu perfil. Nunca tomamos comisión.",
+      "howPaidAnswer": "Los agentes te pagan directamente en USDC a tu billetera cripto. Agrega tu dirección de billetera en Ethereum, Base, Polygon o Arbitrum. Los pagos se verifican en la cadena. Nunca tocamos tus fondos ni tomamos comisión.",
       "available": "¿Está disponible en mi país?",
-      "availableAnswer": "¡Sí! Human Pages es un directorio global. Solo agrega tu ubicación y serás descubrible para tareas en tu área.",
+      "availableAnswer": "¡Sí! Human Pages es global. Los pagos cripto funcionan sin fronteras y no requieren banco. Solo agrega tu ubicación y serás descubrible para tareas en tu área.",
       "free": "¿Es realmente gratis?",
-      "freeAnswer": "Sí. Crear un perfil es 100% gratis, para siempre. Ganamos dinero de empresas que usan nuestra API, no de ti."
+      "freeAnswer": "Sí. Crear un perfil es 100% gratis, para siempre. No hay comisiones de plataforma en ninguna transacción. Planeamos ofrecer funciones premium opcionales en el futuro, pero tu perfil y pagos siempre serán gratis."
     },
     "footer": {
-      "copyright": "© 2025 Human Pages",
+      "copyright": "© 2026 Human Pages",
       "privacy": "Privacidad",
       "terms": "Términos",
       "api": "API",

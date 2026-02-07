@@ -86,18 +86,18 @@
     "faq": {
       "title": "Câu hỏi & trả lời",
       "whatIs": "Human Pages là gì?",
-      "whatIsAnswer": "Giống như Trang Vàng, nhưng cho kỷ nguyên AI. Khi các AI agent hoặc doanh nghiệp cần người thực hiện công việc thực tế, họ tìm kiếm trên Human Pages để tìm người có kỹ năng phù hợp ở vị trí phù hợp.",
+      "whatIsAnswer": "Giống như Trang Vàng, nhưng cho kỷ nguyên AI. Các AI agent tìm kiếm trên Human Pages để tìm người có kỹ năng phù hợp ở vị trí phù hợp, gửi offer công việc, và trả tiền trực tiếp bằng stablecoin. Không có trung gian, không có phí nền tảng.",
       "howHired": "Làm sao tôi được thuê?",
-      "howHiredAnswer": "Tạo hồ sơ với kỹ năng và vị trí của bạn. Khi ai đó cần giúp đỡ, họ sẽ liên hệ trực tiếp qua email hoặc Telegram. Bạn quyết định công việc có phù hợp không.",
+      "howHiredAnswer": "Tạo hồ sơ với kỹ năng, vị trí và mức giá của bạn. Các AI agent sẽ tìm bạn và gửi offer công việc có mô tả và giá. Bạn xem xét từng offer và chấp nhận hoặc từ chối—sau đó nhận tiền trực tiếp vào ví.",
       "howPaid": "Tôi được trả tiền như thế nào?",
-      "howPaidAnswer": "Bạn thương lượng thanh toán trực tiếp với người thuê. Thêm ví hoặc thông tin thanh toán vào hồ sơ. Chúng tôi không bao giờ thu hoa hồng.",
+      "howPaidAnswer": "Các agent trả tiền trực tiếp cho bạn bằng USDC vào ví crypto của bạn. Thêm địa chỉ ví của bạn trên Ethereum, Base, Polygon, hoặc Arbitrum. Thanh toán được xác minh on-chain. Chúng tôi không bao giờ chạm vào tiền của bạn hoặc thu hoa hồng.",
       "available": "Dịch vụ có sẵn ở nước tôi không?",
-      "availableAnswer": "Có! Human Pages là danh bạ toàn cầu. Chỉ cần thêm vị trí và bạn sẽ được tìm thấy cho các công việc trong khu vực.",
+      "availableAnswer": "Có! Human Pages là toàn cầu. Thanh toán crypto hoạt động xuyên biên giới mà không cần ngân hàng. Chỉ cần thêm vị trí và bạn sẽ được tìm thấy cho các công việc trong khu vực.",
       "free": "Có thực sự miễn phí không?",
-      "freeAnswer": "Có. Tạo hồ sơ 100% miễn phí, mãi mãi. Chúng tôi kiếm tiền từ doanh nghiệp sử dụng API—không phải từ bạn."
+      "freeAnswer": "Có. Tạo hồ sơ 100% miễn phí, mãi mãi. Không có phí nền tảng trên bất kỳ giao dịch nào. Chúng tôi dự định cung cấp các tính năng cao cấp tùy chọn trong tương lai—nhưng hồ sơ và thanh toán của bạn sẽ luôn miễn phí."
     },
     "footer": {
-      "copyright": "© 2025 Human Pages",
+      "copyright": "© 2026 Human Pages",
       "privacy": "Quyền riêng tư",
       "terms": "Điều khoản",
       "api": "API",
