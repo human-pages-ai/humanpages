@@ -28,11 +28,6 @@ function getLinkHref(rel: string, hreflang?: string): string | null {
   return null;
 }
 
-// Helper to check if element exists
-function hasElement(selector: string): boolean {
-  return document.querySelector(selector) !== null;
-}
-
 describe('SEO Component', () => {
   beforeEach(() => {
     // Clear the document head before each test
