@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
-import { createTestUser, cleanDatabase } from './helpers.js';
+import { prisma } from '../lib/prisma.js';
+import { createTestUser, cleanDatabase, authRequest } from './helpers.js';
 
 beforeEach(async () => {
   await cleanDatabase();
@@ -152,6 +153,60 @@ describe('Auth API', () => {
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
+    });
+
+    it('should reject login for OAuth-only user (no password)', async () => {
+      // Create OAuth-only user directly in DB
+      await prisma.human.create({
+        data: {
+          email: 'oauthonly@example.com',
+          name: 'OAuth Only User',
+          googleId: 'google-oauth-only-123',
+        },
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'oauthonly@example.com',
+          password: 'anypassword',
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('Please use social login for this account');
+    });
+  });
+
+  describe('Token-based auth access', () => {
+    it('should return valid JWT that can access protected routes', async () => {
+      const user = await createTestUser({ email: 'tokentest@example.com' });
+
+      const profileResponse = await authRequest(user.token).get('/api/humans/me');
+
+      expect(profileResponse.status).toBe(200);
+      expect(profileResponse.body.email).toBe('tokentest@example.com');
+    });
+  });
+
+  describe('POST /api/auth/logout-all', () => {
+    it('should invalidate tokens after logout-all', async () => {
+      const user = await createTestUser({ email: 'logoutall@example.com' });
+
+      // Verify token works before logout
+      const beforeResponse = await authRequest(user.token).get('/api/humans/me');
+      expect(beforeResponse.status).toBe(200);
+
+      // Logout from all devices
+      const logoutResponse = await authRequest(user.token).post('/api/auth/logout-all');
+      expect(logoutResponse.status).toBe(200);
+      expect(logoutResponse.body.message).toBe('Logged out from all devices');
+
+      // Wait a moment so the new token timestamp differs
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Old token should now be rejected
+      const afterResponse = await authRequest(user.token).get('/api/humans/me');
+      expect([401, 403]).toContain(afterResponse.status);
     });
   });
 });

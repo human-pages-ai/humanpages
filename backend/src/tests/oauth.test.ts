@@ -156,6 +156,103 @@ describe('OAuth API', () => {
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Authorization code required');
     });
+
+    it('should reject callback with invalid state token', async () => {
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state: 'nonexistent-state-token' });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('Invalid or expired OAuth state');
+    });
+
+    it('should reject callback with expired state token', async () => {
+      // Create an already-expired state token
+      const token = crypto.randomBytes(32).toString('hex');
+      await prisma.oAuthState.create({
+        data: { token, expiresAt: new Date(Date.now() - 1000) },
+      });
+
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state: token });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('Invalid or expired OAuth state');
+    });
+
+    it('should reject callback with already consumed state token', async () => {
+      const state = await createOAuthState();
+
+      // First call consumes the state
+      await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state, termsAccepted: true });
+
+      // Second call with same state should fail
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('Invalid or expired OAuth state');
+    });
+
+    it('should handle Google token exchange failure', async () => {
+      const { OAuth2Client } = await import('google-auth-library');
+      const clientInstance = new OAuth2Client();
+      (clientInstance.getToken as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Token exchange failed'));
+
+      const state = await createOAuthState();
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'bad-code', state });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('OAuth authentication failed');
+    });
+
+    it('should handle Google ID token verification failure', async () => {
+      const { OAuth2Client } = await import('google-auth-library');
+      const clientInstance = new OAuth2Client();
+      (clientInstance.getToken as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        tokens: { id_token: 'invalid-token' },
+      });
+      (clientInstance.verifyIdToken as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Verification failed'));
+
+      const state = await createOAuthState();
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('OAuth authentication failed');
+    });
+
+    it('should track referral for new Google user', async () => {
+      // Create a referrer user
+      const referrer = await prisma.human.create({
+        data: {
+          email: 'referrer@example.com',
+          name: 'Referrer',
+          passwordHash: 'hashedpassword',
+        },
+      });
+
+      const state = await createOAuthState();
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state, termsAccepted: true, referrerId: referrer.id });
+
+      expect(response.status).toBe(200);
+      expect(response.body.isNew).toBe(true);
+
+      // Verify referral was tracked
+      const user = await prisma.human.findUnique({
+        where: { email: 'googleuser@gmail.com' },
+      });
+      expect(user?.referredBy).toBe(referrer.id);
+    });
   });
 
   describe('GET /api/oauth/github', () => {
