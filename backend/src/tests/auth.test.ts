@@ -1,8 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import app from '../app.js';
 import { prisma } from '../lib/prisma.js';
 import { createTestUser, cleanDatabase, authRequest } from './helpers.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+
+// Mock email module
+vi.mock('../lib/email.js', () => ({
+  sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
+  sendVerificationEmail: vi.fn(() => Promise.resolve()),
+  sendJobOfferEmail: vi.fn(() => Promise.resolve()),
+}));
 
 beforeEach(async () => {
   await cleanDatabase();
@@ -207,6 +218,95 @@ describe('Auth API', () => {
       // Old token should now be rejected
       const afterResponse = await authRequest(user.token).get('/api/humans/me');
       expect([401, 403]).toContain(afterResponse.status);
+    });
+  });
+
+  describe('GET /api/auth/verify-email', () => {
+    it('should redirect with success when token is valid', async () => {
+      const user = await createTestUser({ email: 'verify@example.com' });
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      await prisma.human.update({
+        where: { id: user.id },
+        data: { emailVerificationToken: verificationToken },
+      });
+
+      const res = await request(app).get(`/api/auth/verify-email?token=${verificationToken}`);
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toContain('emailVerified=true');
+
+      // Verify the user is now verified
+      const human = await prisma.human.findUnique({ where: { id: user.id } });
+      expect(human?.emailVerified).toBe(true);
+      expect(human?.emailVerificationToken).toBeNull();
+    });
+
+    it('should redirect with error when token is missing', async () => {
+      const res = await request(app).get('/api/auth/verify-email');
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toContain('emailVerifyError=true');
+    });
+
+    it('should redirect with error when token is invalid', async () => {
+      const res = await request(app).get('/api/auth/verify-email?token=invalid-token');
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toContain('emailVerifyError=true');
+    });
+  });
+
+  describe('GET /api/auth/unsubscribe', () => {
+    it('should disable email notifications with valid JWT token', async () => {
+      const user = await createTestUser({ email: 'unsub@example.com' });
+      const unsubToken = jwt.sign({ userId: user.id, action: 'unsubscribe' }, JWT_SECRET);
+
+      const res = await request(app).get(`/api/auth/unsubscribe?token=${unsubToken}`);
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toContain('unsubscribed=true');
+
+      const human = await prisma.human.findUnique({ where: { id: user.id } });
+      expect(human?.emailNotifications).toBe(false);
+    });
+
+    it('should redirect to dashboard when token is missing', async () => {
+      const res = await request(app).get('/api/auth/unsubscribe');
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toContain('/dashboard');
+    });
+
+    it('should redirect to dashboard when token action is wrong', async () => {
+      const user = await createTestUser({ email: 'wrongaction@example.com' });
+      const wrongToken = jwt.sign({ userId: user.id, action: 'wrong' }, JWT_SECRET);
+
+      const res = await request(app).get(`/api/auth/unsubscribe?token=${wrongToken}`);
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toContain('/dashboard');
+      expect(res.headers.location).not.toContain('unsubscribed');
+    });
+  });
+
+  describe('POST /api/auth/resend-verification', () => {
+    it('should send verification email for unverified user', async () => {
+      const user = await createTestUser({ email: 'unverified@example.com' });
+
+      const res = await authRequest(user.token).post('/api/auth/resend-verification');
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Verification email sent');
+    });
+
+    it('should return success message if already verified', async () => {
+      const user = await createTestUser({ email: 'verified@example.com' });
+      await prisma.human.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
+
+      const res = await authRequest(user.token).post('/api/auth/resend-verification');
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Email already verified');
+    });
+
+    it('should require authentication', async () => {
+      const res = await request(app).post('/api/auth/resend-verification');
+      expect(res.status).toBe(401);
     });
   });
 });

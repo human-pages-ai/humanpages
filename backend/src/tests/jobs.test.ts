@@ -484,4 +484,385 @@ describe('Jobs API - Mutual Handshake', () => {
       await prisma.job.deleteMany({ where: { agentId: otherAgentId } });
     });
   });
+
+  describe('GET /api/jobs/:id - Get Job by ID', () => {
+    it('should return job with human info and review', async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          agentName: 'Test Agent',
+          title: 'Visible Job',
+          description: 'Test',
+          priceUsdc: 100,
+          status: 'COMPLETED',
+          completedAt: new Date(),
+        },
+      });
+
+      await prisma.review.create({
+        data: { jobId: job.id, humanId, rating: 4, comment: 'Good' },
+      });
+
+      const res = await request(app).get(`/api/jobs/${job.id}`);
+      expect(res.status).toBe(200);
+      expect(res.body.title).toBe('Visible Job');
+      expect(res.body.human).toBeDefined();
+      expect(res.body.human.name).toBe('Job Test Human');
+      expect(res.body.review).toBeDefined();
+      expect(res.body.review.rating).toBe(4);
+    });
+
+    it('should return 404 for non-existent job', async () => {
+      const res = await request(app).get('/api/jobs/non-existent-id');
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Job not found');
+    });
+  });
+
+  describe('GET /api/jobs (authenticated list)', () => {
+    it('should return all jobs for authenticated human', async () => {
+      await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'agent-1',
+          title: 'Job 1',
+          description: 'Test',
+          priceUsdc: 50,
+          status: 'PENDING',
+        },
+      });
+      await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'agent-2',
+          title: 'Job 2',
+          description: 'Test',
+          priceUsdc: 75,
+          status: 'ACCEPTED',
+        },
+      });
+
+      const res = await request(app)
+        .get('/api/jobs')
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(2);
+    });
+
+    it('should filter by status query param', async () => {
+      await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'agent-1',
+          title: 'Pending Job',
+          description: 'Test',
+          priceUsdc: 50,
+          status: 'PENDING',
+        },
+      });
+      await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'agent-2',
+          title: 'Accepted Job',
+          description: 'Test',
+          priceUsdc: 75,
+          status: 'ACCEPTED',
+        },
+      });
+
+      const res = await request(app)
+        .get('/api/jobs?status=PENDING')
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].title).toBe('Pending Job');
+    });
+
+    it('should return empty array when no jobs', async () => {
+      const res = await request(app)
+        .get('/api/jobs')
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual([]);
+    });
+
+    it('should require authentication', async () => {
+      const res = await request(app).get('/api/jobs');
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('PATCH /api/jobs/:id/reject', () => {
+    beforeEach(async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          title: 'Rejectable Job',
+          description: 'Test',
+          priceUsdc: 100,
+          status: 'PENDING',
+        },
+      });
+      jobId = job.id;
+    });
+
+    it('should reject pending job', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/reject`)
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('REJECTED');
+    });
+
+    it('should return 403 if not job owner', async () => {
+      const otherToken = jwt.sign({ userId: 'other-user-id' }, JWT_SECRET);
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/reject`)
+        .set('Authorization', `Bearer ${otherToken}`);
+      expect(res.status).toBe(401);
+    });
+
+    it('should return 400 if not PENDING status', async () => {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: { status: 'ACCEPTED' },
+      });
+
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/reject`)
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 404 for non-existent job', async () => {
+      const res = await request(app)
+        .patch('/api/jobs/non-existent/reject')
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/jobs/:id/complete', () => {
+    beforeEach(async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          title: 'Completable Job',
+          description: 'Test',
+          priceUsdc: 100,
+          status: 'PAID',
+        },
+      });
+      jobId = job.id;
+    });
+
+    it('should complete paid job', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/complete`)
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('COMPLETED');
+    });
+
+    it('should return 403 if not job owner', async () => {
+      const otherToken = jwt.sign({ userId: 'other-user-id' }, JWT_SECRET);
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/complete`)
+        .set('Authorization', `Bearer ${otherToken}`);
+      expect(res.status).toBe(401);
+    });
+
+    it('should return 400 if not PAID status', async () => {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: { status: 'PENDING' },
+      });
+
+      const res = await request(app)
+        .patch(`/api/jobs/${jobId}/complete`)
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 404 for non-existent job', async () => {
+      const res = await request(app)
+        .patch('/api/jobs/non-existent/complete')
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('Offer Filtering', () => {
+    // Use unique X-Forwarded-For IPs to avoid IP rate limiter
+    const filterIp = '10.99.0';
+
+    it('should reject offer below minOfferPrice (PRICE_TOO_LOW)', async () => {
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: 100 },
+      });
+
+      const res = await request(app)
+        .post('/api/jobs')
+        .set('X-Forwarded-For', `${filterIp}.1`)
+        .send({
+          humanId,
+          agentId: 'filter-agent-1',
+          title: 'Cheap offer',
+          description: 'Test',
+          priceUsdc: 50,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('PRICE_TOO_LOW');
+    });
+
+    it('should reject offer below minRateUsdc (BELOW_MIN_RATE)', async () => {
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: null, minRateUsdc: 75 },
+      });
+
+      const res = await request(app)
+        .post('/api/jobs')
+        .set('X-Forwarded-For', `${filterIp}.2`)
+        .send({
+          humanId,
+          agentId: 'filter-agent-2',
+          title: 'Below rate',
+          description: 'Test',
+          priceUsdc: 50,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('BELOW_MIN_RATE');
+    });
+
+    it('should require agent location when human has maxOfferDistance (LOCATION_REQUIRED)', async () => {
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: null, minRateUsdc: null, maxOfferDistance: 50, locationLat: 37.7749, locationLng: -122.4194 },
+      });
+
+      const res = await request(app)
+        .post('/api/jobs')
+        .set('X-Forwarded-For', `${filterIp}.3`)
+        .send({
+          humanId,
+          agentId: 'filter-agent-3',
+          title: 'No location',
+          description: 'Test',
+          priceUsdc: 100,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('LOCATION_REQUIRED');
+    });
+
+    it('should reject offer when agent is too far (TOO_FAR)', async () => {
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: null, minRateUsdc: null, maxOfferDistance: 50, locationLat: 37.7749, locationLng: -122.4194 },
+      });
+
+      const res = await request(app)
+        .post('/api/jobs')
+        .set('X-Forwarded-For', `${filterIp}.4`)
+        .send({
+          humanId,
+          agentId: 'filter-agent-4',
+          title: 'Too far',
+          description: 'Test',
+          priceUsdc: 100,
+          agentLat: 40.7128,
+          agentLng: -74.006, // New York - far from SF
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('TOO_FAR');
+    });
+
+    it('should accept offer within distance and price limits', async () => {
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: 50, minRateUsdc: null, maxOfferDistance: 100, locationLat: 37.7749, locationLng: -122.4194 },
+      });
+
+      const res = await request(app)
+        .post('/api/jobs')
+        .set('X-Forwarded-For', `${filterIp}.5`)
+        .send({
+          humanId,
+          agentId: 'filter-agent-5',
+          title: 'Good offer',
+          description: 'Test',
+          priceUsdc: 100,
+          agentLat: 37.78,
+          agentLng: -122.42, // Very close to human
+        });
+
+      expect(res.status).toBe(201);
+    });
+  });
+
+  describe('Full Job Lifecycle - Integration', () => {
+    it('should complete full workflow: create → accept → pay → complete → review', async () => {
+      // Reset human filter settings
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: null, minRateUsdc: null, maxOfferDistance: null },
+      });
+
+      // 1. Create job offer
+      const createRes = await request(app)
+        .post('/api/jobs')
+        .set('X-Forwarded-For', '10.88.0.1')
+        .send({
+          humanId,
+          agentId: 'lifecycle-agent',
+          agentName: 'Lifecycle Agent',
+          title: 'Full lifecycle test',
+          description: 'End-to-end test',
+          priceUsdc: 100,
+        });
+      expect(createRes.status).toBe(201);
+      const lifecycleJobId = createRes.body.id;
+
+      // 2. Accept
+      const acceptRes = await request(app)
+        .patch(`/api/jobs/${lifecycleJobId}/accept`)
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(acceptRes.status).toBe(200);
+      expect(acceptRes.body.status).toBe('ACCEPTED');
+
+      // 3. Pay
+      const payRes = await request(app)
+        .patch(`/api/jobs/${lifecycleJobId}/paid`)
+        .send({
+          paymentTxHash: VALID_TX_HASH,
+          paymentNetwork: 'ethereum',
+          paymentAmount: 100,
+        });
+      expect(payRes.status).toBe(200);
+      expect(payRes.body.status).toBe('PAID');
+
+      // 4. Complete
+      const completeRes = await request(app)
+        .patch(`/api/jobs/${lifecycleJobId}/complete`)
+        .set('Authorization', `Bearer ${humanToken}`);
+      expect(completeRes.status).toBe(200);
+      expect(completeRes.body.status).toBe('COMPLETED');
+
+      // 5. Review
+      const reviewRes = await request(app)
+        .post(`/api/jobs/${lifecycleJobId}/review`)
+        .send({ rating: 5, comment: 'Perfect end-to-end!' });
+      expect(reviewRes.status).toBe(201);
+      expect(reviewRes.body.rating).toBe(5);
+    });
+  });
 });

@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
-import { createTestUser, authRequest, cleanDatabase, TestUser } from './helpers.js';
+import { prisma } from '../lib/prisma.js';
+import { createTestUser, createTestUserWithProfile, authRequest, cleanDatabase, TestUser } from './helpers.js';
 
 describe('Search API', () => {
   let alice: TestUser;
@@ -183,6 +184,106 @@ describe('Search API', () => {
       expect(response.status).toBe(200);
       // contactEmail should be present (it's the public contact method)
       expect(response.body[0]).toHaveProperty('contactEmail');
+    });
+  });
+
+  describe('GET /api/humans/search - Additional Filters', () => {
+    it('should filter by equipment', async () => {
+      await authRequest(alice.token)
+        .patch('/api/humans/me')
+        .send({ equipment: ['camera', 'drone'] });
+
+      const response = await request(app).get('/api/humans/search?equipment=camera');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Alice Smith');
+    });
+
+    it('should filter by language', async () => {
+      await authRequest(bob.token)
+        .patch('/api/humans/me')
+        .send({ languages: ['spanish', 'english'] });
+
+      const response = await request(app).get('/api/humans/search?language=spanish');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Bob Johnson');
+    });
+
+    it('should filter by minRate', async () => {
+      await authRequest(alice.token)
+        .patch('/api/humans/me')
+        .send({ minRateUsdc: 50 });
+      await authRequest(bob.token)
+        .patch('/api/humans/me')
+        .send({ minRateUsdc: 100 });
+
+      const response = await request(app).get('/api/humans/search?minRate=75');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Bob Johnson');
+    });
+
+    it('should filter by maxRate', async () => {
+      await authRequest(alice.token)
+        .patch('/api/humans/me')
+        .send({ minRateUsdc: 50 });
+      await authRequest(bob.token)
+        .patch('/api/humans/me')
+        .send({ minRateUsdc: 100 });
+
+      const response = await request(app).get('/api/humans/search?maxRate=75');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Alice Smith');
+    });
+
+    it('should respect limit parameter', async () => {
+      const response = await request(app).get('/api/humans/search?limit=1');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+    });
+
+    it('should respect offset parameter', async () => {
+      const allResponse = await request(app).get('/api/humans/search');
+      const offsetResponse = await request(app).get('/api/humans/search?offset=1');
+      expect(offsetResponse.status).toBe(200);
+      expect(offsetResponse.body).toHaveLength(allResponse.body.length - 1);
+    });
+
+    it('should filter by distance (lat/lng/radius)', async () => {
+      // Set Alice in San Francisco (37.7749, -122.4194)
+      await authRequest(alice.token)
+        .patch('/api/humans/me')
+        .send({ locationLat: 37.7749, locationLng: -122.4194 });
+      // Set Bob in New York (40.7128, -74.0060)
+      await authRequest(bob.token)
+        .patch('/api/humans/me')
+        .send({ locationLat: 40.7128, locationLng: -74.006 });
+
+      // Search near San Francisco with 100km radius - should only find Alice
+      const response = await request(app).get(
+        '/api/humans/search?lat=37.7749&lng=-122.4194&radius=100'
+      );
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Alice Smith');
+    });
+
+    it('should combine equipment + language + rate range filters', async () => {
+      await authRequest(alice.token)
+        .patch('/api/humans/me')
+        .send({ equipment: ['camera'], languages: ['english'], minRateUsdc: 50 });
+      await authRequest(bob.token)
+        .patch('/api/humans/me')
+        .send({ equipment: ['camera'], languages: ['spanish'], minRateUsdc: 100 });
+
+      const response = await request(app).get(
+        '/api/humans/search?equipment=camera&language=english&minRate=25&maxRate=75'
+      );
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe('Alice Smith');
     });
   });
 });

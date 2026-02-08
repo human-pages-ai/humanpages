@@ -179,7 +179,7 @@ describe('Dashboard', () => {
     vi.mocked(api.getProfile).mockResolvedValue({
       ...mockProfile,
       wallets: [
-        { id: 'w1', network: 'ethereum', address: '0xabc123', isPrimary: true },
+        { id: 'w1', network: 'ethereum', address: '0xabc123' },
       ],
       services: [],
     });
@@ -211,7 +211,9 @@ describe('Dashboard', () => {
     expect(screen.getByText('Web Development')).toBeInTheDocument();
   });
 
-  it('renders telegram section', async () => {
+  it('renders telegram section when bot is available', async () => {
+    vi.mocked(api.getTelegramStatus).mockResolvedValue({ connected: false, botAvailable: true, botUsername: 'test_bot' });
+
     renderWithProviders(<Dashboard />);
 
     await waitFor(() => {
@@ -221,7 +223,7 @@ describe('Dashboard', () => {
     expect(screen.getAllByText('dashboard.telegram.title').length).toBeGreaterThan(0);
   });
 
-  it('renders reputation stats', async () => {
+  it('renders job stats with review data', async () => {
     vi.mocked(api.getMyReviews).mockResolvedValue({
       stats: { totalReviews: 5, averageRating: 4.5, completedJobs: 10 },
       reviews: [],
@@ -233,16 +235,17 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('dashboard.reputation.title').length).toBeGreaterThan(0);
+    // Jobs section renders stats inline
+    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThan(0);
   });
 
-  it('renders referral section', async () => {
+  it('renders share/referral section', async () => {
     renderWithProviders(<Dashboard />);
 
     await waitFor(() => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('dashboard.referrals.title').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('dashboard.shareProfile').length).toBeGreaterThan(0);
   });
 });

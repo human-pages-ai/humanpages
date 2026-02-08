@@ -65,6 +65,21 @@ export async function loginUser(email: string, password: string): Promise<string
 }
 
 /**
+ * Create a test user and update their profile with additional fields
+ */
+export async function createTestUserWithProfile(
+  profileOverrides: Record<string, any>,
+  userOverrides?: { email?: string; password?: string; name?: string }
+): Promise<TestUser> {
+  const user = await createTestUser(userOverrides);
+  await prisma.human.update({
+    where: { id: user.id },
+    data: profileOverrides,
+  });
+  return user;
+}
+
+/**
  * Make an authenticated request
  */
 export function authRequest(token: string) {
