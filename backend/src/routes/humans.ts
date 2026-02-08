@@ -64,7 +64,11 @@ const updateProfileSchema = z.object({
   // Communication
   contactEmail: z.string().email().optional().nullable(),
   telegram: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
   signal: z.string().optional().nullable(),
+
+  // Payment methods
+  paymentMethods: z.string().optional().nullable(),
 
   // Notification preferences
   emailNotifications: z.boolean().optional(),
@@ -351,7 +355,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         paymentPreference: true,
         contactEmail: true,
         telegram: true,
+        whatsapp: true,
         signal: true,
+        paymentMethods: true,
         linkedinUrl: true,
         twitterUrl: true,
         githubUrl: true,
@@ -461,7 +467,9 @@ router.get('/:id', async (req, res) => {
         paymentPreference: true,
         contactEmail: true,
         telegram: true,
+        whatsapp: true,
         signal: true,
+        paymentMethods: true,
         linkedinUrl: true,
         twitterUrl: true,
         githubUrl: true,
@@ -517,6 +525,8 @@ router.get('/u/:username', async (req, res) => {
         paymentPreference: true,
         contactEmail: true,
         telegram: true,
+        whatsapp: true,
+        paymentMethods: true,
         linkedinUrl: true,
         twitterUrl: true,
         githubUrl: true,

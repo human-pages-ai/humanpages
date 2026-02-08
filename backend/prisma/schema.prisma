@@ -57,7 +57,11 @@ model Human {
   contactEmail    String?
   telegram        String?
   telegramChatId  String?  // For sending notifications via bot
+  whatsapp        String?  // WhatsApp number
   signal          String?  // Signal number
+
+  // ===== PAYMENT METHODS =====
+  paymentMethods  String?  // Free-text: PayPal, Venmo, Wise links, etc.
 
   // ===== ACTIVITY & REPUTATION (System Generated) =====
   lastActiveAt  DateTime @default(now()) // For deprioritizing ghosts
