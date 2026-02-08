@@ -47,8 +47,8 @@ const updateProfileSchema = z.object({
 
   // Capabilities
   skills: z.array(z.string()).optional(),
-  equipment: z.array(z.string()).optional(),
-  languages: z.array(z.string()).optional(),
+  equipment: z.array(z.string()).nullable().optional().transform(v => v ?? undefined),
+  languages: z.array(z.string()).nullable().optional().transform(v => v ?? undefined),
   preferredLanguage: z.enum(['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th']).optional(),
   isAvailable: z.boolean().optional(),
 
