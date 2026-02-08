@@ -262,6 +262,59 @@ describe('Profile API', () => {
     });
   });
 
+  describe('PATCH /api/humans/me - WhatsApp validation', () => {
+    it('should accept valid WhatsApp number with country code', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: '+14155551234' });
+      expect(response.status).toBe(200);
+      expect(response.body.whatsapp).toBe('+14155551234');
+    });
+
+    it('should accept valid international WhatsApp number', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: '+442071234567' });
+      expect(response.status).toBe(200);
+      expect(response.body.whatsapp).toBe('+442071234567');
+    });
+
+    it('should reject WhatsApp number without country code', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: '4155551234' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject WhatsApp number that is too short', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: '+123' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject WhatsApp number with letters', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: '+1abc5551234' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should accept null to clear WhatsApp number', async () => {
+      // First set a number
+      await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: '+14155551234' });
+
+      // Then clear it
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ whatsapp: null });
+      expect(response.status).toBe(200);
+      expect(response.body.whatsapp).toBeNull();
+    });
+  });
+
   describe('DELETE /api/humans/me', () => {
     it('should delete account with correct password', async () => {
       const response = await authRequest(user.token)

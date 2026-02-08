@@ -16,9 +16,9 @@ describe('ProfileCompleteness', () => {
 
     render(<ProfileCompleteness profile={incompleteProfile} />);
 
-    // Name is complete (10%), other fields incomplete
-    // Total weight: 100, Completed weight: 10
-    expect(screen.getByText('10%')).toBeInTheDocument();
+    // Name is complete (15%), other fields incomplete
+    // Total weight: 100, Completed weight: 15
+    expect(screen.getByText('15%')).toBeInTheDocument();
   });
 
   it('shows 100% and success message when profile is complete', () => {
@@ -30,9 +30,8 @@ describe('ProfileCompleteness', () => {
       location: 'San Francisco',
       skills: ['react', 'typescript'],
       contactEmail: 'contact@example.com',
-      telegram: '@testuser',
       isAvailable: true,
-      wallets: [{ network: 'ethereum', address: '0x123' }],
+      wallets: [],
       services: [
         {
           title: 'Test Service',
@@ -61,13 +60,65 @@ describe('ProfileCompleteness', () => {
 
     render(<ProfileCompleteness profile={incompleteProfile} />);
 
-    // Should show missing items
+    // Should show missing items (no longer includes telegram or wallets)
     expect(screen.getByText('dashboard.profile.bio')).toBeInTheDocument();
     expect(screen.getByText('dashboard.profile.location')).toBeInTheDocument();
     expect(screen.getByText('dashboard.profile.contactEmail')).toBeInTheDocument();
-    expect(screen.getByText('dashboard.profile.telegramHandle')).toBeInTheDocument();
     expect(screen.getByText('dashboard.profile.skills')).toBeInTheDocument();
     expect(screen.getByText('dashboard.services.title')).toBeInTheDocument();
-    expect(screen.getByText('dashboard.wallets.title')).toBeInTheDocument();
+  });
+
+  it('does not list telegram as a required completion item', () => {
+    const incompleteProfile = {
+      id: 'test-id',
+      name: 'Test User',
+      email: 'test@example.com',
+      skills: [],
+      isAvailable: true,
+      wallets: [],
+      services: [],
+    };
+
+    render(<ProfileCompleteness profile={incompleteProfile} />);
+
+    // Telegram should NOT be in the missing items list
+    expect(screen.queryByText('dashboard.profile.telegramHandle')).not.toBeInTheDocument();
+  });
+
+  it('does not list wallets as a required completion item', () => {
+    const incompleteProfile = {
+      id: 'test-id',
+      name: 'Test User',
+      email: 'test@example.com',
+      skills: [],
+      isAvailable: true,
+      wallets: [],
+      services: [],
+    };
+
+    render(<ProfileCompleteness profile={incompleteProfile} />);
+
+    // Wallets should NOT be in the missing items list
+    expect(screen.queryByText('dashboard.wallets.title')).not.toBeInTheDocument();
+  });
+
+  it('calculates partial completion correctly', () => {
+    const partialProfile = {
+      id: 'test-id',
+      name: 'Test User',
+      email: 'test@example.com',
+      bio: 'A very detailed bio that is more than fifty characters long to meet the requirement',
+      location: 'San Francisco',
+      skills: ['react'],
+      contactEmail: '',
+      isAvailable: true,
+      wallets: [],
+      services: [],
+    };
+
+    render(<ProfileCompleteness profile={partialProfile} />);
+
+    // name (15) + bio (20) + location (15) + skills (20) = 70 out of 100
+    expect(screen.getByText('70%')).toBeInTheDocument();
   });
 });

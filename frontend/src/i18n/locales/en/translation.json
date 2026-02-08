@@ -253,6 +253,8 @@
       "instagram": "Instagram",
       "youtube": "YouTube",
       "website": "Website",
+      "howToReachYou": "How to reach you",
+      "howToPayYou": "How to pay you",
       "saveProfile": "Save Profile",
       "saving": "Saving..."
     },
@@ -330,14 +332,16 @@
     "skipForNow": "Skip for now",
     "skipToDashboard": "Skip setup and go to dashboard",
     "step1": {
-      "title": "How should clients reach you?",
+      "title": "How to reach you",
       "subtitle": "This is how AI agents and businesses will contact you about jobs.",
       "email": "Email",
       "whatsapp": "WhatsApp",
       "telegram": "Telegram",
       "emailPlaceholder": "you@example.com",
       "whatsappPlaceholder": "+1234567890",
-      "telegramPlaceholder": "@username"
+      "telegramPlaceholder": "@username",
+      "errorRequired": "Please enter your contact information",
+      "errorWhatsapp": "Please enter a valid phone number with country code (e.g. +1234567890)"
     },
     "step2": {
       "title": "What can you do?",
@@ -347,7 +351,10 @@
       "skills": "Your skills (select all that apply)",
       "addCustomSkill": "Add custom skill...",
       "add": "Add",
-      "selected": "Selected"
+      "selected": "Selected",
+      "errorLocation": "Please enter your location",
+      "errorSkills": "Please select at least one skill",
+      "errorBoth": "Please enter your location and select at least one skill"
     },
     "step3": {
       "title": "Set your rate",

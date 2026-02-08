@@ -217,51 +217,64 @@ export default function ProfileSection({
               ))}
             </div>
           </div>
-          <div>
-            <label htmlFor="profile-contact-email" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.contactEmail')}</label>
-            <input
-              id="profile-contact-email"
-              type="email"
-              value={profileForm.contactEmail}
-              onChange={(e) => setProfileForm({ ...profileForm, contactEmail: e.target.value })}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">
+              {t('dashboard.profile.howToReachYou')}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="profile-contact-email" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.contactEmail')}</label>
+                <input
+                  id="profile-contact-email"
+                  type="email"
+                  value={profileForm.contactEmail}
+                  onChange={(e) => setProfileForm({ ...profileForm, contactEmail: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <label htmlFor="profile-telegram" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.telegramHandle')}</label>
+                <input
+                  id="profile-telegram"
+                  type="text"
+                  value={profileForm.telegram}
+                  onChange={(e) => setProfileForm({ ...profileForm, telegram: e.target.value })}
+                  placeholder={t('dashboard.profile.telegramPlaceholder')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <label htmlFor="profile-whatsapp" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.whatsapp')}</label>
+                <input
+                  id="profile-whatsapp"
+                  type="tel"
+                  value={profileForm.whatsapp}
+                  onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
+                  placeholder={t('dashboard.profile.whatsappPlaceholder')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <label htmlFor="profile-telegram" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.telegramHandle')}</label>
-            <input
-              id="profile-telegram"
-              type="text"
-              value={profileForm.telegram}
-              onChange={(e) => setProfileForm({ ...profileForm, telegram: e.target.value })}
-              placeholder={t('dashboard.profile.telegramPlaceholder')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label htmlFor="profile-whatsapp" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.whatsapp')}</label>
-            <input
-              id="profile-whatsapp"
-              type="tel"
-              value={profileForm.whatsapp}
-              onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
-              placeholder={t('dashboard.profile.whatsappPlaceholder')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
-              {t('dashboard.profile.paymentMethods')}
-            </label>
-            <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
-            <textarea
-              id="profile-payment-methods"
-              value={profileForm.paymentMethods}
-              onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
-              placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
-              rows={2}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
+
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">
+              {t('dashboard.profile.howToPayYou')}
+            </h3>
+            <div>
+              <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
+                {t('dashboard.profile.paymentMethods')}
+              </label>
+              <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
+              <textarea
+                id="profile-payment-methods"
+                value={profileForm.paymentMethods}
+                onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
+                placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
+                rows={2}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
           </div>
 
           <div className="pt-4 border-t border-gray-200">

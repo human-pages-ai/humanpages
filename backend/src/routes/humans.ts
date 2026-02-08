@@ -64,7 +64,7 @@ const updateProfileSchema = z.object({
   // Communication
   contactEmail: z.string().email().optional().nullable(),
   telegram: z.string().optional().nullable(),
-  whatsapp: z.string().optional().nullable(),
+  whatsapp: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Must be a valid phone number with country code (e.g. +1234567890)').optional().nullable(),
   signal: z.string().optional().nullable(),
 
   // Payment methods

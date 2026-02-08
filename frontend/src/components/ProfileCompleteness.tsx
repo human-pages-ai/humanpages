@@ -49,37 +49,31 @@ export default function ProfileCompleteness({ profile, onEditProfile }: ProfileC
     {
       labelKey: 'name',
       complete: Boolean(profile.name && profile.name.trim().length > 0),
-      weight: 10,
+      weight: 15,
       action: 'Edit Profile',
     },
     {
       labelKey: 'bio',
       complete: Boolean(profile.bio && profile.bio.length >= 50),
-      weight: 15,
+      weight: 20,
       action: 'Edit Profile',
     },
     {
       labelKey: 'location',
       complete: Boolean(profile.location && profile.location.trim().length > 0),
-      weight: 10,
+      weight: 15,
       action: 'Edit Profile',
     },
     {
       labelKey: 'contactEmail',
       complete: Boolean(profile.contactEmail && profile.contactEmail.trim().length > 0),
-      weight: 10,
-      action: 'Edit Profile',
-    },
-    {
-      labelKey: 'telegram',
-      complete: Boolean(profile.telegram && profile.telegram.trim().length > 0),
-      weight: 10,
+      weight: 15,
       action: 'Edit Profile',
     },
     {
       labelKey: 'skills',
       complete: profile.skills && profile.skills.length > 0,
-      weight: 15,
+      weight: 20,
       action: 'Edit Profile',
     },
     {
@@ -87,12 +81,6 @@ export default function ProfileCompleteness({ profile, onEditProfile }: ProfileC
       complete: profile.services?.some(s => s.isActive) ?? false,
       weight: 15,
       action: 'Add Service',
-    },
-    {
-      labelKey: 'wallets',
-      complete: profile.wallets && profile.wallets.length > 0,
-      weight: 15,
-      action: 'Add Wallet',
     },
   ];
 
@@ -102,10 +90,8 @@ export default function ProfileCompleteness({ profile, onEditProfile }: ProfileC
       bio: t('dashboard.profile.bio'),
       location: t('dashboard.profile.location'),
       contactEmail: t('dashboard.profile.contactEmail'),
-      telegram: t('dashboard.profile.telegramHandle'),
       skills: t('dashboard.profile.skills'),
       services: t('dashboard.services.title'),
-      wallets: t('dashboard.wallets.title'),
     };
     return labels[key] || key;
   };

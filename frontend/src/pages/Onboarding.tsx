@@ -7,9 +7,12 @@ import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 
 const SKILL_SUGGESTIONS = [
-  'photography', 'videography', 'delivery', 'driving', 'research',
-  'data-entry', 'translation', 'transcription', 'mystery-shopping',
-  'event-staffing', 'moving-help', 'pet-care', 'errands', 'notary',
+  'Local Photography', 'Phone Calls', 'In-Person Verification',
+  'Package Pickup & Delivery', 'Document Notarization', 'Store Price Check',
+  'Restaurant Reservation', 'Apartment Viewing', 'Queue Waiting',
+  'Government Office Visit', 'Interpretation', 'Pet Care',
+  'Furniture Assembly', 'Tech Support Home Visit',
+  'Grocery Shopping', 'Event Attendance', 'Product Returns',
 ];
 
 const EQUIPMENT_SUGGESTIONS = [
@@ -39,6 +42,8 @@ export default function Onboarding() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [minRate, setMinRate] = useState('');
   const [rateType, setRateType] = useState<'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE'>('NEGOTIABLE');
+  const [step1Error, setStep1Error] = useState('');
+  const [step2Error, setStep2Error] = useState('');
 
   useEffect(() => {
     loadProfile();
@@ -72,15 +77,29 @@ export default function Onboarding() {
     }
   };
 
-  const handleStep1 = async () => {
-    if (!contactValue.trim()) return;
+  const isValidWhatsApp = (value: string) => {
+    // Must start with + followed by country code and number, 7-15 digits total
+    return /^\+[1-9]\d{6,14}$/.test(value.replace(/[\s\-()]/g, ''));
+  };
 
+  const handleStep1 = async () => {
+    if (!contactValue.trim()) {
+      setStep1Error(t('onboarding.step1.errorRequired'));
+      return;
+    }
+
+    if (contactMethod === 'whatsapp' && !isValidWhatsApp(contactValue)) {
+      setStep1Error(t('onboarding.step1.errorWhatsapp'));
+      return;
+    }
+
+    setStep1Error('');
     setLoading(true);
     try {
       const updates = contactMethod === 'email'
         ? { contactEmail: contactValue }
         : contactMethod === 'whatsapp'
-        ? { whatsapp: contactValue }
+        ? { whatsapp: contactValue.replace(/[\s\-()]/g, '') }
         : { telegram: contactValue };
 
       await api.updateProfile(updates);
@@ -89,13 +108,26 @@ export default function Onboarding() {
       setStep(2);
     } catch (error) {
       console.error('Failed to save contact:', error);
+      setStep1Error(t('common.error'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleStep2 = async () => {
-    if (!location.trim() || skills.length === 0) return;
+    if (!location.trim() && skills.length === 0) {
+      setStep2Error(t('onboarding.step2.errorBoth'));
+      return;
+    }
+    if (!location.trim()) {
+      setStep2Error(t('onboarding.step2.errorLocation'));
+      return;
+    }
+    if (skills.length === 0) {
+      setStep2Error(t('onboarding.step2.errorSkills'));
+      return;
+    }
+    setStep2Error('');
 
     setLoading(true);
     try {
@@ -105,6 +137,7 @@ export default function Onboarding() {
       setStep(3);
     } catch (error) {
       console.error('Failed to save skills/location:', error);
+      setStep2Error(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -197,7 +230,7 @@ export default function Onboarding() {
 
               <div className="flex gap-2 mb-4">
                 <button
-                  onClick={() => setContactMethod('email')}
+                  onClick={() => { setContactMethod('email'); setStep1Error(''); }}
                   className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-colors ${
                     contactMethod === 'email'
                       ? 'border-blue-600 bg-blue-50 text-blue-700'
@@ -207,7 +240,7 @@ export default function Onboarding() {
                   {t('onboarding.step1.email')}
                 </button>
                 <button
-                  onClick={() => setContactMethod('whatsapp')}
+                  onClick={() => { setContactMethod('whatsapp'); setStep1Error(''); }}
                   className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-colors ${
                     contactMethod === 'whatsapp'
                       ? 'border-blue-600 bg-blue-50 text-blue-700'
@@ -217,7 +250,7 @@ export default function Onboarding() {
                   {t('onboarding.step1.whatsapp')}
                 </button>
                 <button
-                  onClick={() => setContactMethod('telegram')}
+                  onClick={() => { setContactMethod('telegram'); setStep1Error(''); }}
                   className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-colors ${
                     contactMethod === 'telegram'
                       ? 'border-blue-600 bg-blue-50 text-blue-700'
@@ -239,6 +272,10 @@ export default function Onboarding() {
                 placeholder={contactMethod === 'email' ? t('onboarding.step1.emailPlaceholder') : contactMethod === 'whatsapp' ? t('onboarding.step1.whatsappPlaceholder') : t('onboarding.step1.telegramPlaceholder')}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+
+              {step1Error && (
+                <p className="mt-3 text-sm text-red-600">{step1Error}</p>
+              )}
 
               <button
                 onClick={handleStep1}
@@ -329,9 +366,13 @@ export default function Onboarding() {
                 )}
               </div>
 
+              {step2Error && (
+                <p className="mt-4 text-sm text-red-600">{step2Error}</p>
+              )}
+
               <button
                 onClick={handleStep2}
-                disabled={loading || !location.trim() || skills.length === 0}
+                disabled={loading}
                 className="w-full mt-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? t('onboarding.saving') : t('onboarding.continue')}
