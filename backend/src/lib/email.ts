@@ -3,8 +3,14 @@ import jwt from 'jsonwebtoken';
 import { getTranslator } from '../i18n/index.js';
 import { logger } from './logger.js';
 
-// Configure Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize Resend to avoid crashing when API key is not set (e.g. in tests)
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 const FROM_EMAIL = process.env.FROM_EMAIL || 'hello@humanpages.ai';
 const FROM_NAME = process.env.FROM_NAME || 'HumanPages';
@@ -104,7 +110,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
   `.trim();
 
   try {
-    const { data: response, error } = await resend.emails.send({
+    const { data: response, error } = await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: [data.humanEmail],
       subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
@@ -179,7 +185,7 @@ Human Pages - Get hired for real-world tasks
   `.trim();
 
   try {
-    const { data: response, error } = await resend.emails.send({
+    const { data: response, error } = await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: [email],
       subject: 'Verify your email - Human Pages',
@@ -255,7 +261,7 @@ Human Pages - Decentralized freelancing on blockchain
   `.trim();
 
   try {
-    const { data: response, error } = await resend.emails.send({
+    const { data: response, error } = await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: [email],
       subject: 'Reset your password - Human Pages',
