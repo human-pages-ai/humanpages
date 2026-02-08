@@ -6,9 +6,9 @@ services:
     container_name: humans_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: humans
-      POSTGRES_PASSWORD: humans_secret
-      POSTGRES_DB: humans_marketplace
+      POSTGRES_USER: ${POSTGRES_USER:-humans}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-humans_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-humans_marketplace}
     ports:
       - "5432:5432"
     volumes:
