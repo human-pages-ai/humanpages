@@ -373,7 +373,7 @@
     "noServices": "未列出服务",
     "hireMe": "雇佣我",
     "contactInfo": "联系方式",
-    "contactHidden": "联系方式会在 AI 代理通过 API 发送工作邀约时共享。",
+    "contactHidden": "联系方式仅在此人接受工作邀约后才会共享。",
     "reviews": "评价",
     "noReviews": "暂无评价",
     "paymentPreference": "付款偏好"

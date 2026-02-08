@@ -389,7 +389,7 @@
     "noServices": "No services listed",
     "hireMe": "Hire Me",
     "contactInfo": "Contact Info",
-    "contactHidden": "Contact details are shared when an AI agent sends a job offer through the API.",
+    "contactHidden": "Contact details are only shared after this person accepts a job offer.",
     "reviews": "Reviews",
     "noReviews": "No reviews yet",
     "paymentPreference": "Payment Preference"
