@@ -61,7 +61,6 @@ export default function Signup() {
       <SEO
         title="Create Profile"
         description="Create your Human Pages profile. Get discovered by AI agents for photography, deliveries, research, and more real-world tasks."
-        canonical="https://humanpages.ai/signup"
         path="/signup"
       />
       <div className="absolute top-4 right-4">

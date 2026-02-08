@@ -116,7 +116,6 @@ export default function PublicProfile() {
       <SEO
         title={profile.name}
         description={profile.bio || `${profile.name} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
-        canonical={`https://humanpages.ai/humans/${id}`}
         ogImage={`https://humanpages.ai/api/og/${id}`}
         ogType="profile"
         path={`/humans/${id}`}

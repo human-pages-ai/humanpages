@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { renderWithProviders } from './mocks';
 
 // Mock useAuth hook
 vi.mock('../hooks/useAuth', () => ({
@@ -18,14 +19,14 @@ vi.mock('../lib/api', () => ({
 
 describe('LanguageSwitcher', () => {
   it('renders the language switcher button', () => {
-    render(<LanguageSwitcher />);
+    renderWithProviders(<LanguageSwitcher />);
 
     const button = screen.getByRole('button', { name: /select language/i });
     expect(button).toBeInTheDocument();
   });
 
   it('shows the dropdown when clicked', () => {
-    render(<LanguageSwitcher />);
+    renderWithProviders(<LanguageSwitcher />);
 
     const button = screen.getByRole('button', { name: /select language/i });
     fireEvent.click(button);

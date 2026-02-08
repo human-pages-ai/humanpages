@@ -1,12 +1,42 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supportedLanguages, SupportedLanguage } from '../i18n';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 
+const NON_LANG_CODES = new Set<string>(supportedLanguages.map(l => l.code));
+
+/** SEO routes that get language-prefixed URLs */
+const SEO_ROUTE_PATTERNS = [
+  /^\/$/,
+  /^\/dev$/,
+  /^\/humans\/.+$/,
+  /^\/signup$/,
+  /^\/blog(\/.*)?$/,
+  /^\/privacy$/,
+  /^\/terms$/,
+];
+
+/** Strip any existing lang prefix from a pathname */
+function stripLangPrefix(pathname: string): string {
+  const match = pathname.match(/^\/([a-z]{2})(\/.*)?$/);
+  if (match && NON_LANG_CODES.has(match[1]) && match[1] !== 'en') {
+    return match[2] || '/';
+  }
+  return pathname;
+}
+
+/** Check if a path (unprefixed) is a localizable SEO route */
+function isLocalizedRoute(pathname: string): boolean {
+  return SEO_ROUTE_PATTERNS.some(pattern => pattern.test(pathname));
+}
+
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +58,16 @@ export default function LanguageSwitcher() {
   const handleLanguageChange = (code: SupportedLanguage) => {
     i18n.changeLanguage(code);
     setIsOpen(false);
+
+    // Navigate to lang-prefixed URL if on a SEO page
+    const strippedPath = stripLangPrefix(location.pathname);
+    if (isLocalizedRoute(strippedPath)) {
+      if (code === 'en') {
+        navigate(strippedPath + location.search + location.hash);
+      } else {
+        navigate(`/${code}${strippedPath === '/' ? '' : strippedPath}${location.search}${location.hash}`);
+      }
+    }
 
     // Sync language preference to backend if user is logged in
     if (user) {

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
+import LangWrapper from './components/LangWrapper';
 import { posthog } from './lib/posthog';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -140,6 +141,19 @@ function AppRoutes() {
       <Route path="/blog/ai-agents-hiring-humans" element={<AiAgentsHiringHumans />} />
       <Route path="/blog/getting-paid-usdc-freelancers" element={<GettingPaidUsdc />} />
       <Route path="/blog/mcp-protocol-ai-agents" element={<McpProtocol />} />
+
+      {/* Language-prefixed routes for SEO */}
+      <Route path="/:lang" element={<LangWrapper><LandingPage /></LangWrapper>} />
+      <Route path="/:lang/dev" element={<LangWrapper><DevelopersPage /></LangWrapper>} />
+      <Route path="/:lang/humans/:id" element={<LangWrapper><PublicProfile /></LangWrapper>} />
+      <Route path="/:lang/signup" element={<LangWrapper><PublicRoute><Signup /></PublicRoute></LangWrapper>} />
+      <Route path="/:lang/blog" element={<LangWrapper><BlogIndex /></LangWrapper>} />
+      <Route path="/:lang/blog/ai-agents-hiring-humans" element={<LangWrapper><AiAgentsHiringHumans /></LangWrapper>} />
+      <Route path="/:lang/blog/getting-paid-usdc-freelancers" element={<LangWrapper><GettingPaidUsdc /></LangWrapper>} />
+      <Route path="/:lang/blog/mcp-protocol-ai-agents" element={<LangWrapper><McpProtocol /></LangWrapper>} />
+      <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
+      <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

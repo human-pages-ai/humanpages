@@ -43,7 +43,8 @@ i18n
     supportedLngs: supportedLanguages.map(l => l.code),
 
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['path', 'localStorage', 'navigator', 'htmlTag'],
+      lookupFromPathIndex: 0,
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
     },

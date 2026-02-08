@@ -60,6 +60,22 @@ const frontendDistPath = path.join(process.cwd(), '../frontend/dist');
 app.use(express.static(frontendDistPath, { index: false }));
 
 // Profile pages: inject dynamic meta tags for social sharing / SEO
+const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
+
+app.get('/:lang/humans/:id', async (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  try {
+    const html = await getProfileMetaHtml(req.params.id, req.params.lang);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
 app.get('/humans/:id', async (req, res, next) => {
   try {
     const html = await getProfileMetaHtml(req.params.id);

@@ -11,7 +11,6 @@ export default function PrivacyPolicy() {
       <SEO
         title="Privacy Policy"
         description="Learn how Human Pages collects, uses, and protects your personal information."
-        canonical="https://humanpages.ai/privacy"
         path="/privacy"
       />
 

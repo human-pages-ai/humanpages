@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import { supportedLanguages } from '../i18n';
 
 interface SEOProps {
   title?: string;
@@ -9,12 +11,18 @@ interface SEOProps {
   noindex?: boolean;
   jsonLd?: Record<string, unknown>;
   path?: string;
+  lang?: string;
 }
 
 const SITE_NAME = 'Human Pages';
 const DEFAULT_DESCRIPTION = 'Find real humans for real-world tasks. AI agents and developers use Human Pages to discover people by skill and location.';
 const SITE_URL = 'https://humanpages.ai';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.png`;
+
+function getLangUrl(langCode: string, pagePath: string): string {
+  if (langCode === 'en') return `${SITE_URL}${pagePath}`;
+  return `${SITE_URL}/${langCode}${pagePath}`;
+}
 
 export default function SEO({
   title,
@@ -24,10 +32,13 @@ export default function SEO({
   ogType = 'website',
   noindex = false,
   jsonLd,
-  path
+  path,
+  lang
 }: SEOProps) {
+  const { i18n } = useTranslation();
+  const currentLang = lang || i18n.language || 'en';
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - AI-to-Human Marketplace`;
-  const canonicalUrl = canonical || SITE_URL;
+  const canonicalUrl = canonical || (path ? getLangUrl(currentLang, path) : SITE_URL);
 
   return (
     <Helmet>
@@ -53,15 +64,10 @@ export default function SEO({
       {/* hreflang tags */}
       {path && (
         <>
-          <link rel="alternate" hrefLang="x-default" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="en" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="es" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="zh" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="tl" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="hi" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="vi" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="tr" href={`https://humanpages.ai${path}`} />
-          <link rel="alternate" hrefLang="th" href={`https://humanpages.ai${path}`} />
+          <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}${path}`} />
+          {supportedLanguages.map(l => (
+            <link key={l.code} rel="alternate" hrefLang={l.code} href={getLangUrl(l.code, path)} />
+          ))}
         </>
       )}
 

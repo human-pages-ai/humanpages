@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const SITE_URL = process.env.FRONTEND_URL || 'https://humanpages.ai';
+const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
 
 // Cache the index.html template
 let indexHtmlTemplate: string | null = null;
@@ -33,7 +34,16 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-export async function getProfileMetaHtml(humanId: string): Promise<string | null> {
+function buildHreflangTags(pagePath: string): string {
+  let tags = `\n    <link rel="alternate" hreflang="x-default" href="${SITE_URL}${pagePath}" />`;
+  tags += `\n    <link rel="alternate" hreflang="en" href="${SITE_URL}${pagePath}" />`;
+  for (const lang of SUPPORTED_LANGS) {
+    tags += `\n    <link rel="alternate" hreflang="${lang}" href="${SITE_URL}/${lang}${pagePath}" />`;
+  }
+  return tags;
+}
+
+export async function getProfileMetaHtml(humanId: string, lang?: string): Promise<string | null> {
   const html = getIndexHtml();
   if (!html) return null;
 
@@ -51,12 +61,17 @@ export async function getProfileMetaHtml(humanId: string): Promise<string | null
         || `${human.name} on Human Pages${human.location ? ` in ${human.location}` : ''}${human.skills.length > 0 ? ` - ${human.skills.slice(0, 3).join(', ')}` : ''}`
     );
     const ogImage = `${SITE_URL}/api/og/${humanId}`;
-    const canonicalUrl = `${SITE_URL}/humans/${humanId}`;
+    const unprefixedPath = `/humans/${humanId}`;
+    const canonicalUrl = lang && lang !== 'en'
+      ? `${SITE_URL}/${lang}${unprefixedPath}`
+      : `${SITE_URL}${unprefixedPath}`;
+
+    const hreflangTags = buildHreflangTags(unprefixedPath);
 
     const metaTags = `
     <title>${title}</title>
     <meta name="description" content="${description}" />
-    <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:image" content="${ogImage}" />

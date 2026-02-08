@@ -41,7 +41,8 @@ describe('SEO Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toContain('application/xml');
       expect(res.text).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-      expect(res.text).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+      expect(res.text).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
+      expect(res.text).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
       expect(res.text).toContain('</urlset>');
     });
 

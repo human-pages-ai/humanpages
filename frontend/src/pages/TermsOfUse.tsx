@@ -11,7 +11,6 @@ export default function TermsOfUse() {
       <SEO
         title="Terms of Use"
         description="Read the terms and conditions for using Human Pages, the AI-to-human marketplace."
-        canonical="https://humanpages.ai/terms"
         path="/terms"
       />
 

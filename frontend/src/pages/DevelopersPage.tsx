@@ -108,7 +108,6 @@ export default function DevelopersPage() {
       <SEO
         title="API & MCP Server"
         description="Integrate Human Pages into your AI agent. Install the MCP server or use the REST API to search humans by skill and location."
-        canonical="https://humanpages.ai/dev"
         path="/dev"
       />
       <SEO
