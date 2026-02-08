@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
 

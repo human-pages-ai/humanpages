@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';

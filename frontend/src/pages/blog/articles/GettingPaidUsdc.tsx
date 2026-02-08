@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from '../../../components/LocalizedLink';
 import BlogPost from '../BlogPost';
 
 export default function GettingPaidUsdc() {

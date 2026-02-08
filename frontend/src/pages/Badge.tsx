@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Link from '../components/LocalizedLink';
 import { useAuth } from '../hooks/useAuth';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';

@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';

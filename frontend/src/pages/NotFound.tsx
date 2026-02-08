@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Link from '../components/LocalizedLink';
 import SEO from '../components/SEO';
 
 export default function NotFound() {
