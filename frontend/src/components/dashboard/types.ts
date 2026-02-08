@@ -50,6 +50,8 @@ export interface Profile {
   hasPassword?: boolean;
   emailVerified?: boolean;
   emailNotifications?: boolean;
+  telegramNotifications?: boolean;
+  whatsappNotifications?: boolean;
 }
 
 export interface Job {

@@ -75,6 +75,8 @@ const updateProfileSchema = z.object({
 
   // Notification preferences
   emailNotifications: z.boolean().optional(),
+  telegramNotifications: z.boolean().optional(),
+  whatsappNotifications: z.boolean().optional(),
 
   // Social profiles
   linkedinUrl: z.string().url().refine(

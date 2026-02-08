@@ -5,6 +5,8 @@ import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
 import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
+import PhoneInput from '../components/PhoneInput';
+import LocationAutocomplete from '../components/LocationAutocomplete';
 
 const SKILL_SUGGESTIONS = [
   'Local Photography', 'Phone Calls', 'In-Person Verification',
@@ -36,6 +38,8 @@ export default function Onboarding() {
   const [contactMethod, setContactMethod] = useState<'email' | 'whatsapp' | 'telegram'>('email');
   const [contactValue, setContactValue] = useState('');
   const [location, setLocation] = useState('');
+  const [locationLat, setLocationLat] = useState<number | undefined>();
+  const [locationLng, setLocationLng] = useState<number | undefined>();
   const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
   const [equipment, setEquipment] = useState<string[]>([]);
@@ -131,7 +135,11 @@ export default function Onboarding() {
 
     setLoading(true);
     try {
-      await api.updateProfile({ location, skills });
+      await api.updateProfile({
+        location,
+        ...(locationLat != null && locationLng != null ? { locationLat, locationLng } : {}),
+        skills,
+      });
       analytics.track('onboarding_step_2', { skillCount: skills.length });
       posthog.capture('onboarding_step_completed', { step: 2, skillCount: skills.length });
       setStep(3);
@@ -264,14 +272,23 @@ export default function Onboarding() {
               <label htmlFor="contact-value" className="sr-only">
                 {contactMethod === 'email' ? t('onboarding.step1.email') : contactMethod === 'whatsapp' ? t('onboarding.step1.whatsapp') : t('onboarding.step1.telegram')}
               </label>
-              <input
-                id="contact-value"
-                type={contactMethod === 'email' ? 'email' : contactMethod === 'whatsapp' ? 'tel' : 'text'}
-                value={contactValue}
-                onChange={(e) => setContactValue(e.target.value)}
-                placeholder={contactMethod === 'email' ? t('onboarding.step1.emailPlaceholder') : contactMethod === 'whatsapp' ? t('onboarding.step1.whatsappPlaceholder') : t('onboarding.step1.telegramPlaceholder')}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {contactMethod === 'whatsapp' ? (
+                <PhoneInput
+                  id="contact-value"
+                  value={contactValue}
+                  onChange={(val) => setContactValue(val)}
+                  className="w-full"
+                />
+              ) : (
+                <input
+                  id="contact-value"
+                  type={contactMethod === 'email' ? 'email' : 'text'}
+                  value={contactValue}
+                  onChange={(e) => setContactValue(e.target.value)}
+                  placeholder={contactMethod === 'email' ? t('onboarding.step1.emailPlaceholder') : t('onboarding.step1.telegramPlaceholder')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
 
               {step1Error && (
                 <p className="mt-3 text-sm text-red-600">{step1Error}</p>
@@ -302,11 +319,16 @@ export default function Onboarding() {
                 <label htmlFor="location-input" className="block text-sm font-medium text-slate-700 mb-2">
                   {t('onboarding.step2.location')}
                 </label>
-                <input
+                <LocationAutocomplete
                   id="location-input"
-                  type="text"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(loc, lat, lng) => {
+                    setLocation(loc);
+                    if (lat != null && lng != null) {
+                      setLocationLat(lat);
+                      setLocationLng(lng);
+                    }
+                  }}
                   placeholder={t('onboarding.step2.locationPlaceholder')}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />

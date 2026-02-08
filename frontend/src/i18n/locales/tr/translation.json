@@ -197,9 +197,13 @@
       "resend": "Doğrulama e-postasını yeniden gönder"
     },
     "notifications": {
-      "title": "E-posta Bildirimleri",
-      "emailLabel": "İş teklifi e-postaları",
-      "emailDesc": "AI ajanlar size iş teklifi gönderdiğinde e-posta bildirimi alın"
+      "title": "Bildirimler",
+      "emailLabel": "E-posta",
+      "emailDesc": "İş teklifleri için e-posta bildirimleri alın",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "İş teklifleri için Telegram mesajları alın",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "İş teklifleri için WhatsApp mesajları alın"
     },
     "account": {
       "dangerZone": "Hesap Yönetimi",
@@ -364,7 +368,11 @@
     "shareText": "Artık Humans'da AI ajanları tarafından işe alınmak için müsaitim! Profilime göz atın:",
     "more": "+{{count}} daha",
     "bioTipTitle": "Bağlantınızı sosyal medya biyografilerinize ekleyin",
-    "bioTipDesc": "Profil bağlantınızı LinkedIn, X, GitHub ve Instagram biyografilerinize yapıştırın, böylece yapay zeka ajanları ve işe alımcılar sizi doğrudan bulup işe alabilir."
+    "bioTipDesc": "Profil bağlantınızı LinkedIn, X, GitHub ve Instagram biyografilerinize yapıştırın, böylece yapay zeka ajanları sizi doğrudan bulup işe alabilir.",
+    "addServiceTitle": "Daha hızlı işe alınmak için bir hizmet ekleyin",
+    "addServiceDesc": "Yapay zeka ajanları hizmet türüne göre arama yapar. En az bir hizmet eklemek sizi bulmayı çok daha kolay hale getirir.",
+    "addServiceBtn": "İlk Hizmetinizi Ekleyin",
+    "skipForNow": "Sonra yapacağım"
   },
   "publicProfile": {
     "available": "Çalışmaya uygun",

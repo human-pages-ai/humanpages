@@ -196,6 +196,27 @@ export default function Welcome() {
           </div>
         </div>
 
+        {/* Add a Service CTA */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 text-left">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-900 mb-1">{t('welcome.addServiceTitle')}</h3>
+              <p className="text-sm text-blue-800 mb-3">{t('welcome.addServiceDesc')}</p>
+              <button
+                onClick={() => navigate('/dashboard?addService=1')}
+                className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                {t('welcome.addServiceBtn')}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Skip to Dashboard */}
         <button
           onClick={goToDashboard}

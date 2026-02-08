@@ -294,9 +294,13 @@
       "resend": "Gửi lại email xác minh"
     },
     "notifications": {
-      "title": "Thông báo Email",
-      "emailLabel": "Email mời làm việc",
-      "emailDesc": "Nhận thông báo qua email khi các AI agent gửi cho bạn lời mời làm việc"
+      "title": "Thông báo",
+      "emailLabel": "Email",
+      "emailDesc": "Nhận thông báo email cho lời mời việc làm",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "Nhận tin nhắn Telegram cho lời mời việc làm",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "Nhận tin nhắn WhatsApp cho lời mời việc làm"
     },
     "account": {
       "dangerZone": "Quản lý Tài khoản",
@@ -364,7 +368,11 @@
     "shareText": "Tôi hiện có sẵn để được AI agent thuê trên Humans! Xem hồ sơ của tôi:",
     "more": "+{{count}} nữa",
     "bioTipTitle": "Thêm liên kết vào tiểu sử mạng xã hội",
-    "bioTipDesc": "Dán liên kết hồ sơ của bạn vào tiểu sử LinkedIn, X, GitHub và Instagram để các AI agent và nhà tuyển dụng có thể tìm và thuê bạn trực tiếp."
+    "bioTipDesc": "Dán liên kết hồ sơ của bạn vào tiểu sử LinkedIn, X, GitHub và Instagram để các AI agent có thể tìm và thuê bạn trực tiếp.",
+    "addServiceTitle": "Thêm dịch vụ để được thuê nhanh hơn",
+    "addServiceDesc": "AI agent tìm kiếm theo loại dịch vụ. Thêm ít nhất một dịch vụ giúp bạn dễ được tìm thấy hơn.",
+    "addServiceBtn": "Thêm Dịch Vụ Đầu Tiên",
+    "skipForNow": "Để sau"
   },
   "publicProfile": {
     "available": "Sẵn sàng làm việc",

@@ -179,11 +179,17 @@ describe('Search API', () => {
     });
 
     it('should expose contactEmail for public profiles', async () => {
+      // Explicitly unhide contact info (hideContact defaults to true)
+      await authRequest(alice.token)
+        .patch('/api/humans/me')
+        .send({ hideContact: false });
+
       const response = await request(app).get('/api/humans/search?available=true');
 
       expect(response.status).toBe(200);
-      // contactEmail should be present (it's the public contact method)
-      expect(response.body[0]).toHaveProperty('contactEmail');
+      // contactEmail should be present when hideContact is false
+      const aliceResult = response.body.find((h: any) => h.name === 'Alice Smith');
+      expect(aliceResult).toHaveProperty('contactEmail');
     });
   });
 

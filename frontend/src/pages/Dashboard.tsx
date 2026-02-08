@@ -36,6 +36,8 @@ export default function Dashboard() {
     name: '',
     bio: '',
     location: '',
+    locationLat: undefined as number | undefined,
+    locationLng: undefined as number | undefined,
     skills: '',
     equipment: [] as string[],
     languages: [] as string[],
@@ -115,6 +117,8 @@ export default function Dashboard() {
         name: data.name || '',
         bio: data.bio || '',
         location: data.location || '',
+        locationLat: data.locationLat,
+        locationLng: data.locationLng,
         skills: data.skills?.join(', ') || '',
         equipment: data.equipment || [],
         languages: data.languages || [],
@@ -288,6 +292,8 @@ export default function Dashboard() {
         name: profileForm.name,
         bio: profileForm.bio || null,
         location: profileForm.location || null,
+        locationLat: profileForm.locationLat ?? null,
+        locationLng: profileForm.locationLng ?? null,
         skills: profileForm.skills.split(',').map(s => s.trim()).filter(Boolean),
         equipment: profileForm.equipment.length > 0 ? profileForm.equipment : null,
         languages: profileForm.languages.length > 0 ? profileForm.languages : null,
@@ -410,11 +416,14 @@ export default function Dashboard() {
     });
   };
 
-  const toggleEmailNotifications = async () => {
+  const toggleNotification = async (channel: 'email' | 'telegram' | 'whatsapp') => {
     if (!profile) return;
     setSaving(true);
     try {
-      const updated = await api.updateProfile({ emailNotifications: !profile.emailNotifications });
+      const key = channel === 'email' ? 'emailNotifications'
+        : channel === 'telegram' ? 'telegramNotifications'
+        : 'whatsappNotifications';
+      const updated = await api.updateProfile({ [key]: !(profile as any)[key] });
       setProfile(updated);
       toast.success(t('toast.preferencesSaved'));
     } catch (error) {
@@ -531,8 +540,10 @@ export default function Dashboard() {
 
         <NotificationPreferencesSection
           emailNotifications={profile.emailNotifications !== false}
+          telegramNotifications={profile.telegramNotifications !== false}
+          whatsappNotifications={profile.whatsappNotifications !== false}
           saving={saving}
-          onToggle={toggleEmailNotifications}
+          onToggle={toggleNotification}
         />
 
         <AvailabilitySection

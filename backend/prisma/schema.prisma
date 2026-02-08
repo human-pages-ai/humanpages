@@ -64,7 +64,7 @@ model Human {
   paymentMethods  String?  // Free-text: PayPal, Venmo, Wise links, etc.
 
   // ===== PRIVACY =====
-  hideContact     Boolean  @default(false) // Hide contact info from public profile
+  hideContact     Boolean  @default(true) // Hide contact info from public profile
 
   // ===== ACTIVITY & REPUTATION (System Generated) =====
   lastActiveAt  DateTime @default(now()) // For deprioritizing ghosts
@@ -85,6 +85,8 @@ model Human {
   emailVerified          Boolean    @default(false)
   emailVerificationToken String?    @unique
   emailNotifications     Boolean    @default(true)
+  telegramNotifications  Boolean    @default(true)
+  whatsappNotifications  Boolean    @default(true)
 
   // Social profiles for trust verification
   linkedinUrl   String?

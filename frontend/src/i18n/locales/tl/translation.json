@@ -183,9 +183,13 @@
       "resend": "Ipadala muli ang verification email"
     },
     "notifications": {
-      "title": "Mga Notification sa Email",
-      "emailLabel": "Mga email ng alok ng trabaho",
-      "emailDesc": "Makatanggap ng email notification kapag nagpadala sa iyo ng alok ng trabaho ang mga AI agent"
+      "title": "Mga Notipikasyon",
+      "emailLabel": "Email",
+      "emailDesc": "Tumanggap ng email notification para sa mga job offer",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "Tumanggap ng Telegram message para sa mga job offer",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "Tumanggap ng WhatsApp message para sa mga job offer"
     },
     "account": {
       "dangerZone": "Pamamahala ng Account",
@@ -364,7 +368,11 @@
     "shareText": "Available na ako para ma-hire ng mga AI agent sa Humans! Tingnan ang profile ko:",
     "more": "+{{count}} pa",
     "bioTipTitle": "Idagdag ang iyong link sa iyong mga social bio",
-    "bioTipDesc": "I-paste ang iyong profile link sa iyong LinkedIn, X, GitHub, at Instagram bio para mahanap ka at ma-hire ka ng mga AI agent at recruiter."
+    "bioTipDesc": "I-paste ang iyong profile link sa iyong LinkedIn, X, GitHub, at Instagram bio para mahanap ka at ma-hire ka ng mga AI agent.",
+    "addServiceTitle": "Magdagdag ng serbisyo para mas mabilis kang ma-hire",
+    "addServiceDesc": "Naghahanap ang mga AI agent ayon sa uri ng serbisyo. Ang pagdagdag ng kahit isang serbisyo ay nagpapadali sa paghahanap sa iyo.",
+    "addServiceBtn": "Idagdag ang Unang Serbisyo Mo",
+    "skipForNow": "Mamaya na lang"
   },
   "publicProfile": {
     "available": "Available para sa trabaho",

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Profile } from './types';
+import PhoneInput from '../PhoneInput';
+import LocationAutocomplete from '../LocationAutocomplete';
 
 interface Props {
   profile: Profile;
@@ -10,6 +12,8 @@ interface Props {
     name: string;
     bio: string;
     location: string;
+    locationLat?: number;
+    locationLng?: number;
     skills: string;
     equipment: string[];
     languages: string[];
@@ -155,11 +159,16 @@ export default function ProfileSection({
           </div>
           <div>
             <label htmlFor="profile-location" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.location')}</label>
-            <input
+            <LocationAutocomplete
               id="profile-location"
-              type="text"
               value={profileForm.location}
-              onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+              onChange={(loc, lat, lng) => {
+                setProfileForm({
+                  ...profileForm,
+                  location: loc,
+                  ...(lat != null && lng != null ? { locationLat: lat, locationLng: lng } : {}),
+                });
+              }}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
@@ -259,13 +268,11 @@ export default function ProfileSection({
               </div>
               <div>
                 <label htmlFor="profile-whatsapp" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.whatsapp')}</label>
-                <input
+                <PhoneInput
                   id="profile-whatsapp"
-                  type="tel"
                   value={profileForm.whatsapp}
-                  onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
-                  placeholder={t('dashboard.profile.whatsappPlaceholder')}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  onChange={(val) => setProfileForm({ ...profileForm, whatsapp: val })}
+                  className="mt-1 w-full"
                 />
               </div>
             </div>

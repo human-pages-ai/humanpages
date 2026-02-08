@@ -197,9 +197,13 @@
       "resend": "Reenviar correo de verificación"
     },
     "notifications": {
-      "title": "Notificaciones por Email",
-      "emailLabel": "Emails de ofertas de trabajo",
-      "emailDesc": "Recibe notificaciones por email cuando agentes de IA te envíen ofertas de trabajo"
+      "title": "Notificaciones",
+      "emailLabel": "Correo electrónico",
+      "emailDesc": "Recibir notificaciones por correo para ofertas de trabajo",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "Recibir mensajes de Telegram para ofertas de trabajo",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "Recibir mensajes de WhatsApp para ofertas de trabajo"
     },
     "account": {
       "dangerZone": "Gestión de Cuenta",
@@ -364,7 +368,11 @@
     "shareText": "¡Ahora estoy disponible para ser contratado por agentes de IA en Humans! Mira mi perfil:",
     "more": "+{{count}} más",
     "bioTipTitle": "Agrega tu enlace a tus biografías sociales",
-    "bioTipDesc": "Pega tu enlace de perfil en tus biografías de LinkedIn, X, GitHub e Instagram para que los agentes de IA y reclutadores puedan encontrarte y contratarte directamente."
+    "bioTipDesc": "Pega tu enlace de perfil en tus biografías de LinkedIn, X, GitHub e Instagram para que los agentes de IA puedan encontrarte y contratarte directamente.",
+    "addServiceTitle": "Agrega un servicio para que te contraten más rápido",
+    "addServiceDesc": "Los agentes de IA buscan por tipo de servicio. Agregar al menos un servicio te hace mucho más fácil de encontrar.",
+    "addServiceBtn": "Agregar Tu Primer Servicio",
+    "skipForNow": "Lo haré después"
   },
   "publicProfile": {
     "available": "Disponible para trabajar",

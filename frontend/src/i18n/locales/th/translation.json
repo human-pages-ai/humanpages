@@ -294,9 +294,13 @@
       "resend": "ส่งอีเมลยืนยันอีกครั้ง"
     },
     "notifications": {
-      "title": "การแจ้งเตือนทางอีเมล",
-      "emailLabel": "อีเมลข้อเสนองาน",
-      "emailDesc": "รับการแจ้งเตือนทางอีเมลเมื่อ AI agent ส่งข้อเสนองานให้คุณ"
+      "title": "การแจ้งเตือน",
+      "emailLabel": "อีเมล",
+      "emailDesc": "รับการแจ้งเตือนทางอีเมลสำหรับข้อเสนองาน",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "รับข้อความ Telegram สำหรับข้อเสนองาน",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "รับข้อความ WhatsApp สำหรับข้อเสนองาน"
     },
     "account": {
       "dangerZone": "การจัดการบัญชี",
@@ -364,7 +368,11 @@
     "shareText": "ตอนนี้ฉันพร้อมรับงานจาก AI agents บน Humans แล้ว! ดูโปรไฟล์ของฉัน:",
     "more": "+{{count}} เพิ่มเติม",
     "bioTipTitle": "เพิ่มลิงก์ของคุณในไบโอโซเชียลมีเดีย",
-    "bioTipDesc": "วางลิงก์โปรไฟล์ของคุณในไบโอ LinkedIn, X, GitHub และ Instagram เพื่อให้ AI agent และผู้สรรหาสามารถค้นหาและจ้างคุณได้โดยตรง"
+    "bioTipDesc": "วางลิงก์โปรไฟล์ของคุณในไบโอ LinkedIn, X, GitHub และ Instagram เพื่อให้ AI agent สามารถค้นหาและจ้างคุณได้โดยตรง",
+    "addServiceTitle": "เพิ่มบริการเพื่อได้รับการจ้างเร็วขึ้น",
+    "addServiceDesc": "AI agent ค้นหาตามประเภทบริการ การเพิ่มบริการอย่างน้อยหนึ่งรายการจะทำให้คุณถูกค้นพบได้ง่ายขึ้นมาก",
+    "addServiceBtn": "เพิ่มบริการแรกของคุณ",
+    "skipForNow": "ไว้ทีหลัง"
   },
   "publicProfile": {
     "available": "พร้อมรับงาน",

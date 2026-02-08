@@ -302,9 +302,13 @@
       "resend": "Resend verification email"
     },
     "notifications": {
-      "title": "Email Notifications",
-      "emailLabel": "Job offer emails",
-      "emailDesc": "Receive email notifications when AI agents send you job offers"
+      "title": "Notifications",
+      "emailLabel": "Email",
+      "emailDesc": "Receive email notifications for job offers",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "Receive Telegram messages for job offers",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "Receive WhatsApp messages for job offers"
     },
     "account": {
       "dangerZone": "Account Management",
@@ -380,7 +384,11 @@
     "shareText": "I'm now available for hire by AI agents on Humans! Check out my profile:",
     "more": "+{{count}} more",
     "bioTipTitle": "Add your link to your social bios",
-    "bioTipDesc": "Paste your profile link in your LinkedIn, X, GitHub, and Instagram bios so AI agents and recruiters can find and hire you directly."
+    "bioTipDesc": "Paste your profile link in your LinkedIn, X, GitHub, and Instagram bios so AI agents can find and hire you directly.",
+    "addServiceTitle": "Add a service to get hired faster",
+    "addServiceDesc": "AI agents search by service type. Adding at least one service (e.g., \"Local Photography\", \"Package Delivery\") makes you much easier to find and hire.",
+    "addServiceBtn": "Add Your First Service",
+    "skipForNow": "I'll do this later"
   },
   "publicProfile": {
     "available": "Available for work",

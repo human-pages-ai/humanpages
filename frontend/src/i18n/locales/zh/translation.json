@@ -197,9 +197,13 @@
       "resend": "重新发送验证邮件"
     },
     "notifications": {
-      "title": "邮件通知",
-      "emailLabel": "工作邀约邮件",
-      "emailDesc": "当AI代理向您发送工作邀约时接收邮件通知"
+      "title": "通知",
+      "emailLabel": "电子邮件",
+      "emailDesc": "接收工作邀约的邮件通知",
+      "telegramLabel": "Telegram",
+      "telegramDesc": "接收工作邀约的Telegram消息",
+      "whatsappLabel": "WhatsApp",
+      "whatsappDesc": "接收工作邀约的WhatsApp消息"
     },
     "account": {
       "dangerZone": "账户管理",
@@ -364,7 +368,11 @@
     "shareText": "我现在可以在Humans上被AI代理雇佣了！查看我的资料：",
     "more": "+{{count}} 更多",
     "bioTipTitle": "将链接添加到社交媒体简介",
-    "bioTipDesc": "将个人资料链接粘贴到 LinkedIn、X、GitHub 和 Instagram 的简介中，让 AI 代理和招聘人员直接找到并雇用您。"
+    "bioTipDesc": "将个人资料链接粘贴到 LinkedIn、X、GitHub 和 Instagram 的简介中，让 AI 代理直接找到并雇用您。",
+    "addServiceTitle": "添加服务，更快获得工作",
+    "addServiceDesc": "AI 代理按服务类型搜索。添加至少一项服务会让您更容易被找到和雇用。",
+    "addServiceBtn": "添加您的第一项服务",
+    "skipForNow": "稍后再说"
   },
   "publicProfile": {
     "available": "可接受工作",
