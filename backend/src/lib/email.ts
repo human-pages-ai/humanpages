@@ -126,17 +126,12 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 }
 
 export async function sendVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
-  if (!process.env.SMTP_USER) {
-    logger.info({ email }, 'SMTP not configured, skipping verification email');
+  if (!process.env.RESEND_API_KEY) {
+    logger.info({ email }, 'Resend API key not configured, skipping verification email');
     return false;
   }
 
-  try {
-    const info = await transporter.sendMail({
-      from: `"Humans" <${FROM_EMAIL}>`,
-      to: email,
-      subject: 'Verify your email - Human Pages',
-      text: `
+  const textContent = `
 Welcome to Human Pages!
 
 Please verify your email address by clicking the link below:
@@ -148,8 +143,9 @@ If you did not create an account, please ignore this email.
 
 ---
 Human Pages - Get hired for real-world tasks
-      `.trim(),
-      html: `
+  `.trim();
+
+  const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -180,13 +176,26 @@ Human Pages - Get hired for real-world tasks
   </div>
 </body>
 </html>
-      `.trim(),
+  `.trim();
+
+  try {
+    const { data: response, error } = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [email],
+      subject: 'Verify your email - Human Pages',
+      text: textContent,
+      html: htmlContent,
     });
 
-    logger.info({ messageId: info.messageId }, 'Verification email sent');
+    if (error) {
+      logger.error({ err: error }, 'Verification email failed to send via Resend');
+      return false;
+    }
+
+    logger.info({ messageId: response?.id }, 'Verification email sent via Resend');
     return true;
   } catch (error) {
-    logger.error({ err: error }, 'Verification email failed to send');
+    logger.error({ err: error }, 'Verification email failed to send via Resend');
     return false;
   }
 }
