@@ -416,5 +416,54 @@
     "title": "Hindi natagpuan ang pahina",
     "message": "Ang pahina na hinahanap mo ay hindi umiiral o inilipat na.",
     "goHome": "Pumunta sa home"
+  },
+  "dev": {
+    "hero": {
+      "tagline": "Para sa mga AI Agent at Developer",
+      "title": "Maghanap ng mga tao para sa",
+      "titleLine2": "mga gawain sa totoong mundo",
+      "subtitle": "Ang Human Pages ay isang direktoryo ng mga tunay na tao para sa mga gawain sa totoong mundo. I-install ang MCP server (o tawagan ang REST API) at makakapaghanap ang iyong agent ng mga tao ayon sa kakayahan at lokasyon.",
+      "installBtn": "I-install ang MCP Server",
+      "viewToolsBtn": "Tingnan ang mga Tool"
+    },
+    "install": {
+      "title": "I-install sa pamamagitan ng MCP",
+      "optionA": "Opsyon A: Idagdag sa .mcp.json (inirerekomenda)",
+      "optionADesc": "Idagdag ito sa <code>.mcp.json</code> file ng iyong proyekto:",
+      "optionB": "Opsyon B: Claude Code CLI",
+      "optionBDesc": "O direktang idagdag sa pamamagitan ng Claude Code CLI:"
+    },
+    "tools": {
+      "title": "Mga available na tool",
+      "searchTitle": "search_humans",
+      "searchDesc": "Maghanap ng mga tao ayon sa kakayahan, lokasyon, at availability. Nagbabalik ng contact info at wallet address.",
+      "searchParams": "Mga parameter:",
+      "getTitle": "get_human",
+      "getDesc": "Kunin ang detalyadong profile ng isang tao kabilang ang bio, mga serbisyo, at mga social profile.",
+      "getParams": "Mga parameter:",
+      "recordTitle": "record_job",
+      "recordDesc": "I-record na ang isang gawain ay nai-assign na (para sa analytics at pagbuo ng reputasyon).",
+      "recordParams": "Mga parameter:",
+      "exampleTitle": "Halimbawa ng paggamit"
+    },
+    "restApi": {
+      "toggle": "Mas gusto mo ang HTTP? REST API Reference",
+      "searchTitle": "Maghanap ng mga tao",
+      "getTitle": "Kunin ang tao ayon sa ID",
+      "baseUrl": "Base URL:"
+    },
+    "howItWorks": {
+      "title": "Paano ito gumagana",
+      "discoveryTitle": "Discovery lamang",
+      "discoveryDesc": "Walang escrow, walang custody. Kinokonekta ka namin sa mga tao—ikaw na ang bahala sa iba.",
+      "contactTitle": "Direktang kontak",
+      "contactDesc": "Walang platform messaging. Ibinabahagi ng mga tao ang kanilang email, WhatsApp, o Telegram para sa direktang komunikasyon.",
+      "paymentsTitle": "Peer-to-peer na pagbabayad",
+      "paymentsDesc": "Hindi hinahawakan ng platform ang pondo. Magbayad sa pamamagitan ng kanilang payment link, wallet, o preferred na paraan."
+    },
+    "cta": {
+      "title": "Kailangan ng mga tao sa iyong direktoryo?",
+      "subtitle": "Ibahagi ang signup link sa iyong komunidad para palaguin ang supply."
+    }
   }
 }

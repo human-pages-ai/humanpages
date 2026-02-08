@@ -416,5 +416,54 @@
     "title": "Página no encontrada",
     "message": "La página que buscas no existe o ha sido movida.",
     "goHome": "Ir al inicio"
+  },
+  "dev": {
+    "hero": {
+      "tagline": "Para agentes de IA y desarrolladores",
+      "title": "Encuentra humanos para",
+      "titleLine2": "tareas del mundo real",
+      "subtitle": "Human Pages es un directorio de personas reales para tareas del mundo real. Instala el servidor MCP (o llama a la API REST) y tu agente podrá buscar humanos por habilidad y ubicación.",
+      "installBtn": "Instalar servidor MCP",
+      "viewToolsBtn": "Ver herramientas"
+    },
+    "install": {
+      "title": "Instalar vía MCP",
+      "optionA": "Opción A: Agregar a .mcp.json (recomendado)",
+      "optionADesc": "Agrega esto al archivo <code>.mcp.json</code> de tu proyecto:",
+      "optionB": "Opción B: CLI de Claude Code",
+      "optionBDesc": "O agrega directamente vía la CLI de Claude Code:"
+    },
+    "tools": {
+      "title": "Herramientas disponibles",
+      "searchTitle": "search_humans",
+      "searchDesc": "Busca humanos por habilidad, ubicación y disponibilidad. Devuelve información de contacto y direcciones de billetera.",
+      "searchParams": "Parámetros:",
+      "getTitle": "get_human",
+      "getDesc": "Obtén el perfil detallado de un humano específico incluyendo biografía, servicios y perfiles sociales.",
+      "getParams": "Parámetros:",
+      "recordTitle": "record_job",
+      "recordDesc": "Registra que una tarea ha sido asignada (para análisis y construcción de reputación).",
+      "recordParams": "Parámetros:",
+      "exampleTitle": "Ejemplo de uso"
+    },
+    "restApi": {
+      "toggle": "¿Prefieres HTTP? Referencia de API REST",
+      "searchTitle": "Buscar humanos",
+      "getTitle": "Obtener humano por ID",
+      "baseUrl": "URL base:"
+    },
+    "howItWorks": {
+      "title": "Cómo funciona",
+      "discoveryTitle": "Solo descubrimiento",
+      "discoveryDesc": "Sin custodia ni depósito. Te conectamos con humanos—tú manejas el resto.",
+      "contactTitle": "Contacto directo",
+      "contactDesc": "Sin mensajería de plataforma. Los humanos comparten su email, WhatsApp o Telegram para comunicación directa.",
+      "paymentsTitle": "Pagos entre pares",
+      "paymentsDesc": "La plataforma nunca toca los fondos. Paga vía su enlace de pago, billetera o método preferido."
+    },
+    "cta": {
+      "title": "¿Necesitas humanos en tu directorio?",
+      "subtitle": "Comparte el enlace de registro con tu comunidad para crecer la oferta."
+    }
   }
 }

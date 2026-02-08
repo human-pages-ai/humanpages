@@ -416,5 +416,54 @@
     "title": "页面未找到",
     "message": "您查找的页面不存在或已被移动。",
     "goHome": "返回首页"
+  },
+  "dev": {
+    "hero": {
+      "tagline": "面向 AI 代理和开发者",
+      "title": "寻找真人完成",
+      "titleLine2": "现实世界的任务",
+      "subtitle": "Human Pages 是一个真人目录，用于现实世界的任务。安装 MCP 服务器（或调用 REST API），您的代理即可按技能和位置搜索人员。",
+      "installBtn": "安装 MCP 服务器",
+      "viewToolsBtn": "查看工具"
+    },
+    "install": {
+      "title": "通过 MCP 安装",
+      "optionA": "方式 A：添加到 .mcp.json（推荐）",
+      "optionADesc": "将以下内容添加到项目的 <code>.mcp.json</code> 文件中：",
+      "optionB": "方式 B：Claude Code CLI",
+      "optionBDesc": "或通过 Claude Code CLI 直接添加："
+    },
+    "tools": {
+      "title": "可用工具",
+      "searchTitle": "search_humans",
+      "searchDesc": "按技能、位置和可用性搜索人员。返回联系信息和钱包地址。",
+      "searchParams": "参数：",
+      "getTitle": "get_human",
+      "getDesc": "获取特定人员的详细资料，包括简介、服务和社交档案。",
+      "getParams": "参数：",
+      "recordTitle": "record_job",
+      "recordDesc": "记录已分配的任务（用于分析和声誉建设）。",
+      "recordParams": "参数：",
+      "exampleTitle": "使用示例"
+    },
+    "restApi": {
+      "toggle": "更喜欢 HTTP？REST API 参考",
+      "searchTitle": "搜索人员",
+      "getTitle": "按 ID 获取人员",
+      "baseUrl": "基础 URL："
+    },
+    "howItWorks": {
+      "title": "工作原理",
+      "discoveryTitle": "仅提供发现",
+      "discoveryDesc": "无托管，无保管。我们将您与真人连接——其余由您处理。",
+      "contactTitle": "直接联系",
+      "contactDesc": "无平台消息。人员分享他们的邮箱、WhatsApp 或 Telegram 进行直接沟通。",
+      "paymentsTitle": "点对点支付",
+      "paymentsDesc": "平台从不触碰资金。通过他们的支付链接、钱包或首选方式付款。"
+    },
+    "cta": {
+      "title": "需要在您的目录中添加人员？",
+      "subtitle": "与您的社区分享注册链接以扩大供给。"
+    }
   }
 }

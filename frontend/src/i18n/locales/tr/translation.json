@@ -416,5 +416,54 @@
     "title": "Sayfa bulunamadı",
     "message": "Aradığınız sayfa mevcut değil veya taşınmış.",
     "goHome": "Ana sayfaya git"
+  },
+  "dev": {
+    "hero": {
+      "tagline": "AI Ajanları ve Geliştiriciler İçin",
+      "title": "Gerçek dünya görevleri için",
+      "titleLine2": "insanları bulun",
+      "subtitle": "Human Pages, gerçek dünya görevleri için gerçek insanların dizinidir. MCP sunucusunu kurun (veya REST API'yi çağırın) ve ajanınız beceri ve konuma göre insan arayabilir.",
+      "installBtn": "MCP Sunucusunu Kur",
+      "viewToolsBtn": "Araçları Gör"
+    },
+    "install": {
+      "title": "MCP ile Kurulum",
+      "optionA": "Seçenek A: .mcp.json'a ekle (önerilen)",
+      "optionADesc": "Bunu projenizin <code>.mcp.json</code> dosyasına ekleyin:",
+      "optionB": "Seçenek B: Claude Code CLI",
+      "optionBDesc": "Veya doğrudan Claude Code CLI ile ekleyin:"
+    },
+    "tools": {
+      "title": "Mevcut Araçlar",
+      "searchTitle": "search_humans",
+      "searchDesc": "Beceri, konum ve müsaitlik durumuna göre insan arayın. İletişim bilgileri ve cüzdan adresleri döner.",
+      "searchParams": "Parametreler:",
+      "getTitle": "get_human",
+      "getDesc": "Biyografi, hizmetler ve sosyal profiller dahil belirli bir insanın detaylı profilini alın.",
+      "getParams": "Parametreler:",
+      "recordTitle": "record_job",
+      "recordDesc": "Bir görevin atandığını kaydedin (analiz ve itibar oluşturma için).",
+      "recordParams": "Parametreler:",
+      "exampleTitle": "Kullanım Örneği"
+    },
+    "restApi": {
+      "toggle": "HTTP mi tercih ediyorsunuz? REST API Referansı",
+      "searchTitle": "İnsan Ara",
+      "getTitle": "ID ile İnsan Getir",
+      "baseUrl": "Temel URL:"
+    },
+    "howItWorks": {
+      "title": "Nasıl çalışır",
+      "discoveryTitle": "Sadece keşif",
+      "discoveryDesc": "Emanet yok, saklama yok. Sizi insanlarla buluşturuyoruz—gerisini siz halledin.",
+      "contactTitle": "Doğrudan iletişim",
+      "contactDesc": "Platform mesajlaşması yok. İnsanlar doğrudan iletişim için e-posta, WhatsApp veya Telegram paylaşır.",
+      "paymentsTitle": "Eşler arası ödeme",
+      "paymentsDesc": "Platform asla fonlara dokunmaz. Ödeme bağlantıları, cüzdan veya tercih ettikleri yöntemle ödeyin."
+    },
+    "cta": {
+      "title": "Dizininizde insanlara mı ihtiyacınız var?",
+      "subtitle": "Arzı artırmak için kayıt bağlantısını topluluğunuzla paylaşın."
+    }
   }
 }

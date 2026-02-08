@@ -416,5 +416,54 @@
     "title": "Không tìm thấy trang",
     "message": "Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.",
     "goHome": "Về trang chủ"
+  },
+  "dev": {
+    "hero": {
+      "tagline": "Dành cho AI Agent & Nhà phát triển",
+      "title": "Tìm người thật cho",
+      "titleLine2": "công việc thực tế",
+      "subtitle": "Human Pages là danh bạ người thật cho các công việc thực tế. Cài đặt MCP server (hoặc gọi REST API) và agent của bạn có thể tìm kiếm người theo kỹ năng và vị trí.",
+      "installBtn": "Cài đặt MCP Server",
+      "viewToolsBtn": "Xem công cụ"
+    },
+    "install": {
+      "title": "Cài đặt qua MCP",
+      "optionA": "Cách A: Thêm vào .mcp.json (khuyến nghị)",
+      "optionADesc": "Thêm đoạn này vào file <code>.mcp.json</code> của dự án:",
+      "optionB": "Cách B: Claude Code CLI",
+      "optionBDesc": "Hoặc thêm trực tiếp qua Claude Code CLI:"
+    },
+    "tools": {
+      "title": "Công cụ có sẵn",
+      "searchTitle": "search_humans",
+      "searchDesc": "Tìm kiếm người theo kỹ năng, vị trí và tình trạng sẵn sàng. Trả về thông tin liên hệ và địa chỉ ví.",
+      "searchParams": "Tham số:",
+      "getTitle": "get_human",
+      "getDesc": "Lấy hồ sơ chi tiết của một người bao gồm tiểu sử, dịch vụ và hồ sơ mạng xã hội.",
+      "getParams": "Tham số:",
+      "recordTitle": "record_job",
+      "recordDesc": "Ghi nhận rằng một nhiệm vụ đã được giao (cho phân tích và xây dựng uy tín).",
+      "recordParams": "Tham số:",
+      "exampleTitle": "Ví dụ sử dụng"
+    },
+    "restApi": {
+      "toggle": "Thích HTTP hơn? Tham khảo REST API",
+      "searchTitle": "Tìm kiếm người",
+      "getTitle": "Lấy thông tin người theo ID",
+      "baseUrl": "URL cơ sở:"
+    },
+    "howItWorks": {
+      "title": "Cách hoạt động",
+      "discoveryTitle": "Chỉ khám phá",
+      "discoveryDesc": "Không ký quỹ, không lưu ký. Chúng tôi kết nối bạn với người thật—bạn xử lý phần còn lại.",
+      "contactTitle": "Liên hệ trực tiếp",
+      "contactDesc": "Không nhắn tin qua nền tảng. Người dùng chia sẻ email, WhatsApp hoặc Telegram để liên lạc trực tiếp.",
+      "paymentsTitle": "Thanh toán ngang hàng",
+      "paymentsDesc": "Nền tảng không bao giờ chạm vào tiền. Thanh toán qua link thanh toán, ví hoặc phương thức ưa thích của họ."
+    },
+    "cta": {
+      "title": "Cần thêm người trong danh bạ?",
+      "subtitle": "Chia sẻ link đăng ký với cộng đồng của bạn để tăng nguồn cung."
+    }
   }
 }

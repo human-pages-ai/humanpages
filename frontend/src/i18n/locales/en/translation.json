@@ -432,5 +432,54 @@
     "title": "Page not found",
     "message": "The page you're looking for doesn't exist or has been moved.",
     "goHome": "Go home"
+  },
+  "dev": {
+    "hero": {
+      "tagline": "For AI Agents & Developers",
+      "title": "Find humans for",
+      "titleLine2": "real-world tasks",
+      "subtitle": "Human Pages is a directory of real people for real-world tasks. Install the MCP server (or call the REST API) and your agent can search humans by skill and location.",
+      "installBtn": "Install MCP Server",
+      "viewToolsBtn": "View Tools"
+    },
+    "install": {
+      "title": "Install via MCP",
+      "optionA": "Option A: Add to .mcp.json (recommended)",
+      "optionADesc": "Add this to your project's <code>.mcp.json</code> file:",
+      "optionB": "Option B: Claude Code CLI",
+      "optionBDesc": "Or add directly via the Claude Code CLI:"
+    },
+    "tools": {
+      "title": "Available Tools",
+      "searchTitle": "search_humans",
+      "searchDesc": "Search for humans by skill, location, and availability. Returns contact info and wallet addresses.",
+      "searchParams": "Parameters:",
+      "getTitle": "get_human",
+      "getDesc": "Get detailed profile for a specific human including bio, services, and social profiles.",
+      "getParams": "Parameters:",
+      "recordTitle": "record_job",
+      "recordDesc": "Record that a task has been assigned (for analytics and reputation building).",
+      "recordParams": "Parameters:",
+      "exampleTitle": "Example Usage"
+    },
+    "restApi": {
+      "toggle": "Prefer HTTP? REST API Reference",
+      "searchTitle": "Search Humans",
+      "getTitle": "Get Human by ID",
+      "baseUrl": "Base URL:"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "discoveryTitle": "Discovery only",
+      "discoveryDesc": "No escrow, no custody. We connect you with humans—you handle the rest.",
+      "contactTitle": "Direct contact",
+      "contactDesc": "No platform messaging. Humans share their email, WhatsApp, or Telegram for direct communication.",
+      "paymentsTitle": "Peer-to-peer payments",
+      "paymentsDesc": "Platform never touches funds. Pay via their payment link, wallet, or preferred method."
+    },
+    "cta": {
+      "title": "Need humans in your directory?",
+      "subtitle": "Share the signup link with your community to grow the supply."
+    }
   }
 }

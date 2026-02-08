@@ -152,26 +152,25 @@ export default function DevelopersPage() {
         {/* Hero */}
         <section className="py-16 md:py-20 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
-          <p className="text-blue-600 font-medium mb-2">For AI Agents & Developers</p>
+          <p className="text-blue-600 font-medium mb-2">{t('dev.hero.tagline')}</p>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-            Find humans for<br />real-world tasks
+            {t('dev.hero.title')}<br />{t('dev.hero.titleLine2')}
           </h1>
           <p className="mt-4 text-xl text-slate-600">
-            Human Pages is a directory of real people for real-world tasks.
-            Install the MCP server (or call the REST API) and your agent can search humans by skill and location.
+            {t('dev.hero.subtitle')}
           </p>
           <div className="mt-8 flex gap-4">
             <button
               onClick={scrollToInstall}
               className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Install MCP Server
+              {t('dev.hero.installBtn')}
             </button>
             <a
               href="#tools"
               className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
             >
-              View Tools
+              {t('dev.hero.viewToolsBtn')}
             </a>
           </div>
         </div>
@@ -181,27 +180,25 @@ export default function DevelopersPage() {
       <section id="install" className="py-16 px-4 bg-slate-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
-            Install via MCP
+            {t('dev.install.title')}
           </h2>
 
           {/* Option A: .mcp.json */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-slate-900 mb-3">
-              Option A: Add to .mcp.json (recommended)
+              {t('dev.install.optionA')}
             </h3>
-            <p className="text-slate-600 mb-4">
-              Add this to your project's <code className="bg-slate-200 px-1 rounded">.mcp.json</code> file:
-            </p>
+            <p className="text-slate-600 mb-4" dangerouslySetInnerHTML={{ __html: t('dev.install.optionADesc') }} />
             <CodeBlock code={MCP_CONFIG} />
           </div>
 
           {/* Option B: Claude Code CLI */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-slate-900 mb-3">
-              Option B: Claude Code CLI
+              {t('dev.install.optionB')}
             </h3>
             <p className="text-slate-600 mb-4">
-              Or add directly via the Claude Code CLI:
+              {t('dev.install.optionBDesc')}
             </p>
             <CodeBlock code={CLAUDE_CODE_INSTALL} />
           </div>
@@ -212,44 +209,44 @@ export default function DevelopersPage() {
       <section id="tools" className="py-16 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
-            Available Tools
+            {t('dev.tools.title')}
           </h2>
 
           <div className="space-y-6">
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h3 className="font-mono text-blue-600 font-semibold">search_humans</h3>
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.searchTitle')}</h3>
               <p className="text-slate-600 mt-1">
-                Search for humans by skill, location, and availability. Returns contact info and wallet addresses.
+                {t('dev.tools.searchDesc')}
               </p>
               <div className="mt-2 text-sm text-slate-500">
-                <span className="font-medium">Parameters:</span> skill, location, available_only
+                <span className="font-medium">{t('dev.tools.searchParams')}</span> skill, location, available_only
               </div>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h3 className="font-mono text-blue-600 font-semibold">get_human</h3>
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.getTitle')}</h3>
               <p className="text-slate-600 mt-1">
-                Get detailed profile for a specific human including bio, services, and social profiles.
+                {t('dev.tools.getDesc')}
               </p>
               <div className="mt-2 text-sm text-slate-500">
-                <span className="font-medium">Parameters:</span> id (required)
+                <span className="font-medium">{t('dev.tools.getParams')}</span> id (required)
               </div>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h3 className="font-mono text-blue-600 font-semibold">record_job</h3>
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.recordTitle')}</h3>
               <p className="text-slate-600 mt-1">
-                Record that a task has been assigned (for analytics and reputation building).
+                {t('dev.tools.recordDesc')}
               </p>
               <div className="mt-2 text-sm text-slate-500">
-                <span className="font-medium">Parameters:</span> human_id, task_description, task_category, agreed_price
+                <span className="font-medium">{t('dev.tools.recordParams')}</span> human_id, task_description, task_category, agreed_price
               </div>
             </div>
           </div>
 
           {/* Usage Example */}
           <div className="mt-8">
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">Example Usage</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.tools.exampleTitle')}</h3>
             <CodeBlock code={SEARCH_EXAMPLE} />
           </div>
         </div>
@@ -262,7 +259,7 @@ export default function DevelopersPage() {
             onClick={() => setShowRestApi(!showRestApi)}
             className="w-full flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
           >
-            <span className="font-semibold text-slate-900">Prefer HTTP? REST API Reference</span>
+            <span className="font-semibold text-slate-900">{t('dev.restApi.toggle')}</span>
             <svg
               className={`w-5 h-5 text-slate-400 transition-transform ${showRestApi ? 'rotate-180' : ''}`}
               fill="none"
@@ -276,17 +273,17 @@ export default function DevelopersPage() {
           {showRestApi && (
             <div className="mt-4 space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Search Humans</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.searchTitle')}</h3>
                 <CodeBlock code={REST_SEARCH} />
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Get Human by ID</h3>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.getTitle')}</h3>
                 <CodeBlock code={REST_GET_HUMAN} />
               </div>
 
               <p className="text-sm text-slate-500">
-                Base URL: <code className="bg-slate-200 px-1 rounded">https://api.humanpages.ai</code>
+                {t('dev.restApi.baseUrl')} <code className="bg-slate-200 px-1 rounded">https://api.humanpages.ai</code>
               </p>
             </div>
           )}
@@ -297,7 +294,7 @@ export default function DevelopersPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
-            How it works
+            {t('dev.howItWorks.title')}
           </h2>
 
           <div className="grid gap-4">
@@ -308,8 +305,8 @@ export default function DevelopersPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Discovery only</h3>
-                <p className="text-slate-600 text-sm">No escrow, no custody. We connect you with humans—you handle the rest.</p>
+                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.discoveryTitle')}</h3>
+                <p className="text-slate-600 text-sm">{t('dev.howItWorks.discoveryDesc')}</p>
               </div>
             </div>
 
@@ -320,8 +317,8 @@ export default function DevelopersPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Direct contact</h3>
-                <p className="text-slate-600 text-sm">No platform messaging. Humans share their email, WhatsApp, or Telegram for direct communication.</p>
+                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.contactTitle')}</h3>
+                <p className="text-slate-600 text-sm">{t('dev.howItWorks.contactDesc')}</p>
               </div>
             </div>
 
@@ -332,8 +329,8 @@ export default function DevelopersPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Peer-to-peer payments</h3>
-                <p className="text-slate-600 text-sm">Platform never touches funds. Pay via their payment link, wallet, or preferred method.</p>
+                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.paymentsTitle')}</h3>
+                <p className="text-slate-600 text-sm">{t('dev.howItWorks.paymentsDesc')}</p>
               </div>
             </div>
           </div>
@@ -344,10 +341,10 @@ export default function DevelopersPage() {
       <section className="py-16 px-4 bg-blue-600">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white">
-            Need humans in your directory?
+            {t('dev.cta.title')}
           </h2>
           <p className="mt-2 text-blue-100">
-            Share the signup link with your community to grow the supply.
+            {t('dev.cta.subtitle')}
           </p>
           <Link
             to="/signup?utm_source=dev_page&utm_medium=cta"
