@@ -130,7 +130,7 @@
 - Wallet connection (planned)
 
 ### Integrations
-- Google & GitHub OAuth
+- Google OAuth
 - Telegram Bot API
 - Email (SMTP)
 - Blockchain RPCs (multiple fallbacks)

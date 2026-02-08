@@ -28,6 +28,8 @@ export interface Profile {
   languages?: string[];
   contactEmail?: string;
   telegram?: string;
+  whatsapp?: string;
+  paymentMethods?: string;
   isAvailable: boolean;
   linkedinUrl?: string;
   twitterUrl?: string;

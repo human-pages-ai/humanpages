@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
             <li>Name and email address</li>
             <li>Password (stored securely hashed, never in plain text)</li>
-            <li>OAuth profile data if you sign in via Google or GitHub (name, email, avatar)</li>
+            <li>OAuth profile data if you sign in via Google (name, email, avatar)</li>
           </ul>
 
           <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Profile Information</h3>
@@ -108,7 +108,7 @@ export default function PrivacyPolicy() {
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">6. Third-Party Services</h2>
           <p>We integrate with the following third-party services:</p>
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
-            <li><strong>Google / GitHub OAuth:</strong> If you choose to sign in with Google or GitHub, those providers share your basic profile information (name, email) with us according to their own privacy policies. We do not share your data back with them.</li>
+            <li><strong>Google OAuth:</strong> If you choose to sign in with Google, Google shares your basic profile information (name, email) with us according to their own privacy policy. We do not share your data back with them.</li>
             <li><strong>Telegram Bot:</strong> If you connect your Telegram account for notifications, we use the Telegram Bot API to send you job offer alerts. We store your Telegram chat ID to deliver messages. You can disconnect at any time from your dashboard.</li>
             <li><strong>SMTP Email Provider:</strong> We use an SMTP email service to send transactional emails (job offers, password resets, email verification). Your email address is shared with our email provider solely for delivery purposes.</li>
           </ul>

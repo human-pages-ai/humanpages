@@ -15,6 +15,8 @@ interface Props {
     languages: string[];
     contactEmail: string;
     telegram: string;
+    whatsapp: string;
+    paymentMethods: string;
     username?: string;
     linkedinUrl: string;
     twitterUrl: string;
@@ -236,6 +238,31 @@ export default function ProfileSection({
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
+          <div>
+            <label htmlFor="profile-whatsapp" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.whatsapp')}</label>
+            <input
+              id="profile-whatsapp"
+              type="tel"
+              value={profileForm.whatsapp}
+              onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
+              placeholder={t('dashboard.profile.whatsappPlaceholder')}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          <div>
+            <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
+              {t('dashboard.profile.paymentMethods')}
+            </label>
+            <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
+            <textarea
+              id="profile-payment-methods"
+              value={profileForm.paymentMethods}
+              onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
+              placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
+              rows={2}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
 
           <div className="pt-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-900 mb-3">
@@ -334,6 +361,10 @@ export default function ProfileSection({
           )}
           <p><span className="font-medium">{t('dashboard.profile.contactEmail')}:</span> {profile.contactEmail || t('common.notSet')}</p>
           <p><span className="font-medium">{t('dashboard.profile.telegramHandle')}:</span> {profile.telegram || t('common.notSet')}</p>
+          <p><span className="font-medium">{t('dashboard.profile.whatsapp')}:</span> {profile.whatsapp || t('common.notSet')}</p>
+          {profile.paymentMethods && (
+            <p><span className="font-medium">{t('dashboard.profile.paymentMethods')}:</span> {profile.paymentMethods}</p>
+          )}
 
           {(profile.linkedinUrl || profile.twitterUrl || profile.githubUrl ||
             profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl) && (

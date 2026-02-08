@@ -37,7 +37,6 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
-    loginWithGithub: vi.fn(),
   }),
 }));
 
@@ -152,5 +151,98 @@ describe('Dashboard', () => {
     });
 
     expect(screen.getByText('common.error')).toBeInTheDocument();
+  });
+
+  it('renders pending jobs with accept/reject buttons', async () => {
+    vi.mocked(api.getJobs).mockResolvedValue([
+      {
+        id: 'job-1',
+        title: 'Pending Job',
+        description: 'Test',
+        status: 'PENDING',
+        priceUsdc: 50,
+        agentName: 'Agent A',
+        createdAt: new Date().toISOString(),
+      } as any,
+    ]);
+
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Pending Job')).toBeInTheDocument();
+  });
+
+  it('renders wallet addresses', async () => {
+    vi.mocked(api.getProfile).mockResolvedValue({
+      ...mockProfile,
+      wallets: [
+        { id: 'w1', network: 'ethereum', address: '0xabc123', isPrimary: true },
+      ],
+      services: [],
+    });
+
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/0xabc123/)).toBeInTheDocument();
+  });
+
+  it('renders services list', async () => {
+    vi.mocked(api.getProfile).mockResolvedValue({
+      ...mockProfile,
+      wallets: [],
+      services: [
+        { id: 's1', title: 'Web Development', description: 'Build websites', category: 'development', isActive: true },
+      ],
+    });
+
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Web Development')).toBeInTheDocument();
+  });
+
+  it('renders telegram section', async () => {
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText('dashboard.telegram.title').length).toBeGreaterThan(0);
+  });
+
+  it('renders reputation stats', async () => {
+    vi.mocked(api.getMyReviews).mockResolvedValue({
+      stats: { totalReviews: 5, averageRating: 4.5, completedJobs: 10 },
+      reviews: [],
+    });
+
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText('dashboard.reputation.title').length).toBeGreaterThan(0);
+  });
+
+  it('renders referral section', async () => {
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText('dashboard.referrals.title').length).toBeGreaterThan(0);
   });
 });

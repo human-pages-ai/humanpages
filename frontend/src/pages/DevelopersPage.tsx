@@ -322,7 +322,7 @@ export default function DevelopersPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900">Direct contact</h3>
-                <p className="text-slate-600 text-sm">No platform messaging. Humans share their email or Telegram for direct communication.</p>
+                <p className="text-slate-600 text-sm">No platform messaging. Humans share their email, WhatsApp, or Telegram for direct communication.</p>
               </div>
             </div>
 
@@ -334,7 +334,7 @@ export default function DevelopersPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900">Peer-to-peer payments</h3>
-                <p className="text-slate-600 text-sm">Platform never touches funds. Pay directly to their wallet or via their preferred method.</p>
+                <p className="text-slate-600 text-sm">Platform never touches funds. Pay via their payment link, wallet, or preferred method.</p>
               </div>
             </div>
           </div>

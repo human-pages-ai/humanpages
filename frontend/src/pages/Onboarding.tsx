@@ -30,7 +30,7 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
 
   // Form state
-  const [contactMethod, setContactMethod] = useState<'email' | 'telegram'>('email');
+  const [contactMethod, setContactMethod] = useState<'email' | 'whatsapp' | 'telegram'>('email');
   const [contactValue, setContactValue] = useState('');
   const [location, setLocation] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
@@ -53,6 +53,9 @@ export default function Onboarding() {
       if (data.contactEmail) {
         setContactMethod('email');
         setContactValue(data.contactEmail);
+      } else if (data.whatsapp) {
+        setContactMethod('whatsapp');
+        setContactValue(data.whatsapp);
       } else if (data.telegram) {
         setContactMethod('telegram');
         setContactValue(data.telegram);
@@ -76,6 +79,8 @@ export default function Onboarding() {
     try {
       const updates = contactMethod === 'email'
         ? { contactEmail: contactValue }
+        : contactMethod === 'whatsapp'
+        ? { whatsapp: contactValue }
         : { telegram: contactValue };
 
       await api.updateProfile(updates);
@@ -202,6 +207,16 @@ export default function Onboarding() {
                   {t('onboarding.step1.email')}
                 </button>
                 <button
+                  onClick={() => setContactMethod('whatsapp')}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-colors ${
+                    contactMethod === 'whatsapp'
+                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  {t('onboarding.step1.whatsapp')}
+                </button>
+                <button
                   onClick={() => setContactMethod('telegram')}
                   className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-colors ${
                     contactMethod === 'telegram'
@@ -214,14 +229,14 @@ export default function Onboarding() {
               </div>
 
               <label htmlFor="contact-value" className="sr-only">
-                {contactMethod === 'email' ? t('onboarding.step1.email') : t('onboarding.step1.telegram')}
+                {contactMethod === 'email' ? t('onboarding.step1.email') : contactMethod === 'whatsapp' ? t('onboarding.step1.whatsapp') : t('onboarding.step1.telegram')}
               </label>
               <input
                 id="contact-value"
-                type={contactMethod === 'email' ? 'email' : 'text'}
+                type={contactMethod === 'email' ? 'email' : contactMethod === 'whatsapp' ? 'tel' : 'text'}
                 value={contactValue}
                 onChange={(e) => setContactValue(e.target.value)}
-                placeholder={contactMethod === 'email' ? t('onboarding.step1.emailPlaceholder') : t('onboarding.step1.telegramPlaceholder')}
+                placeholder={contactMethod === 'email' ? t('onboarding.step1.emailPlaceholder') : contactMethod === 'whatsapp' ? t('onboarding.step1.whatsappPlaceholder') : t('onboarding.step1.telegramPlaceholder')}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
 

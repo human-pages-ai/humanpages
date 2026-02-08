@@ -153,7 +153,7 @@ router.post('/forgot-password', authRateLimiter, async (req, res) => {
     }
 
     // Check if user is OAuth-only
-    if (!human.passwordHash && (human.googleId || human.githubId)) {
+    if (!human.passwordHash && human.googleId) {
       return res.json({ message: 'If an account exists, a reset link has been sent' });
     }
 

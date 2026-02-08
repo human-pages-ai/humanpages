@@ -11,7 +11,7 @@ export default function OAuthCallback() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsLoading, setTermsLoading] = useState(false);
   const [oauthData, setOauthData] = useState<{
-    provider: 'google' | 'github';
+    provider: 'google';
     code: string;
     state: string;
     referrerId?: string;
@@ -21,7 +21,7 @@ export default function OAuthCallback() {
   const navigate = useNavigate();
 
   const completeOAuth = async (
-    oauthProvider: 'google' | 'github',
+    oauthProvider: 'google',
     code: string,
     state: string,
     referrerId?: string,
@@ -59,7 +59,7 @@ export default function OAuthCallback() {
       return;
     }
 
-    if (!provider || !['google', 'github'].includes(provider)) {
+    if (!provider || provider !== 'google') {
       setError('Invalid OAuth provider');
       return;
     }
@@ -75,7 +75,7 @@ export default function OAuthCallback() {
 
     const referrerId = localStorage.getItem('referrer_id') || undefined;
 
-    completeOAuth(provider as 'google' | 'github', code, storedState, referrerId)
+    completeOAuth(provider as 'google', code, storedState, referrerId)
       .catch((err) => {
         setError(err.message || 'Authentication failed');
       });

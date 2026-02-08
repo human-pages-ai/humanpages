@@ -81,10 +81,10 @@ export const api = {
     }),
 
   // OAuth
-  getOAuthUrl: (provider: 'google' | 'github') =>
+  getOAuthUrl: (provider: 'google') =>
     request<{ url: string; state: string }>(`/oauth/${provider}`),
 
-  oauthCallback: (provider: 'google' | 'github', code: string, state: string, referrerId?: string, termsAccepted?: boolean) =>
+  oauthCallback: (provider: 'google', code: string, state: string, referrerId?: string, termsAccepted?: boolean) =>
     request<AuthResponse>(`/oauth/${provider}/callback`, {
       method: 'POST',
       body: JSON.stringify({ code, state, referrerId, termsAccepted }),
