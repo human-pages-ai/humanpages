@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useParams, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../i18n';
@@ -13,12 +12,6 @@ export default function LangWrapper({ children }: { children: React.ReactNode })
 
   const isValid = lang && supportedCodes.includes(lang as typeof supportedCodes[number]);
 
-  useEffect(() => {
-    if (isValid && lang !== 'en' && i18n.language !== lang) {
-      i18n.changeLanguage(lang);
-    }
-  }, [lang, i18n, isValid]);
-
   // Redirect /en/* to unprefixed path
   if (lang === 'en') {
     const unprefixedPath = location.pathname.replace(/^\/en/, '') || '/';
@@ -28,6 +21,12 @@ export default function LangWrapper({ children }: { children: React.ReactNode })
   // Invalid language code — show 404
   if (!isValid) {
     return <NotFound />;
+  }
+
+  // Set language synchronously before rendering children so they
+  // pick up the correct language on the very first paint.
+  if (i18n.language !== lang) {
+    i18n.changeLanguage(lang);
   }
 
   return <>{children}</>;
