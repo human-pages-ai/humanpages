@@ -389,7 +389,7 @@
     "noServices": "No services listed",
     "hireMe": "Hire Me",
     "contactInfo": "Contact Info",
-    "contactHidden": "Contact details are only shared after this person accepts a job offer.",
+    "contactHidden": "Contact info is private. Send a job offer via the API and they'll be notified directly.",
     "reviews": "Reviews",
     "noReviews": "No reviews yet",
     "paymentPreference": "Payment Preference"

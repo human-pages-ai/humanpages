@@ -373,7 +373,7 @@
     "noServices": "Chưa liệt kê dịch vụ",
     "hireMe": "Thuê tôi",
     "contactInfo": "Thông tin liên hệ",
-    "contactHidden": "Thông tin liên hệ chỉ được chia sẻ sau khi người này chấp nhận lời mời công việc.",
+    "contactHidden": "Thông tin liên hệ là riêng tư. Gửi lời mời công việc qua API và họ sẽ được thông báo trực tiếp.",
     "reviews": "Đánh giá",
     "noReviews": "Chưa có đánh giá",
     "paymentPreference": "Hình thức thanh toán"

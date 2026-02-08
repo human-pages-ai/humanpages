@@ -373,7 +373,7 @@
     "noServices": "Hizmet listelenmedi",
     "hireMe": "Beni İşe Al",
     "contactInfo": "İletişim Bilgileri",
-    "contactHidden": "İletişim bilgileri yalnızca bu kişi bir iş teklifini kabul ettikten sonra paylaşılır.",
+    "contactHidden": "İletişim bilgileri gizlidir. API üzerinden iş teklifi gönderin, doğrudan bilgilendirilecekler.",
     "reviews": "Değerlendirmeler",
     "noReviews": "Henüz değerlendirme yok",
     "paymentPreference": "Ödeme Tercihi"

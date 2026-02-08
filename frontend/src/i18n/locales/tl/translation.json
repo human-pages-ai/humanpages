@@ -373,7 +373,7 @@
     "noServices": "Walang nakalista na serbisyo",
     "hireMe": "I-hire Ako",
     "contactInfo": "Contact Info",
-    "contactHidden": "Ang contact details ay ibabahagi lamang pagkatapos tanggapin ng taong ito ang isang job offer.",
+    "contactHidden": "Ang contact info ay pribado. Magpadala ng job offer sa pamamagitan ng API at maabisuhan sila nang direkta.",
     "reviews": "Mga Review",
     "noReviews": "Wala pang reviews",
     "paymentPreference": "Kagustuhan sa Pagbabayad"
