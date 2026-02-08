@@ -18,7 +18,12 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
+const Badge = lazy(() => import('./pages/Badge'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
+const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
+const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
+const McpProtocol = lazy(() => import('./pages/blog/articles/McpProtocol'));
 
 function LoadingSpinner() {
   const { t } = useTranslation();
@@ -117,6 +122,11 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfUse />} />
+      <Route path="/badge" element={<Badge />} />
+      <Route path="/blog" element={<BlogIndex />} />
+      <Route path="/blog/ai-agents-hiring-humans" element={<AiAgentsHiringHumans />} />
+      <Route path="/blog/getting-paid-usdc-freelancers" element={<GettingPaidUsdc />} />
+      <Route path="/blog/mcp-protocol-ai-agents" element={<McpProtocol />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -119,6 +119,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         email: true,
         telegramChatId: true,
         preferredLanguage: true,
+        emailNotifications: true,
         // Filter settings
         minOfferPrice: true,
         maxOfferDistance: true,
@@ -201,10 +202,11 @@ router.post('/', ipRateLimiter, async (req, res) => {
 
     // Send email notification (async, don't block response)
     const notifyEmail = human.contactEmail || human.email;
-    if (notifyEmail) {
+    if (notifyEmail && human.emailNotifications) {
       sendJobOfferEmail({
         humanName: human.name,
         humanEmail: notifyEmail,
+        humanId: human.id,
         jobTitle: data.title,
         jobDescription: data.description,
         priceUsdc: data.priceUsdc,

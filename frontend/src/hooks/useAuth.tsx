@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, termsAccepted: boolean) => Promise<void>;
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
   loginWithGithub: () => Promise<void>;
@@ -41,9 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(human);
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true) => {
     const referrerId = localStorage.getItem('referrer_id') || undefined;
-    const { human, token } = await api.signup({ email, password, name, referrerId });
+    const { human, token } = await api.signup({ email, password, name, referrerId, termsAccepted });
     localStorage.removeItem('referrer_id'); // Clean up after use
     localStorage.setItem('token', token);
     setUser(human);

@@ -130,7 +130,13 @@
     "passwordMismatch": "รหัสผ่านไม่ตรงกัน",
     "invalidToken": "โทเค็นรีเซ็ตไม่ถูกต้องหรือหมดอายุ",
     "backToLogin": "กลับไปเข้าสู่ระบบ",
-    "completingSignIn": "กำลังดำเนินการเข้าสู่ระบบ..."
+    "completingSignIn": "กำลังดำเนินการเข้าสู่ระบบ...",
+    "agreeToTerms": "ฉันยอมรับ",
+    "termsOfUse": "ข้อกำหนดการใช้งาน",
+    "privacyPolicy": "นโยบายความเป็นส่วนตัว",
+    "acceptTermsTitle": "ยอมรับข้อกำหนดเพื่อดำเนินการต่อ",
+    "acceptTermsDesc": "ก่อนสร้างบัญชี กรุณาตรวจสอบและยอมรับข้อกำหนดของเรา",
+    "continueSignUp": "ดำเนินการสมัครต่อ"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -147,6 +153,13 @@
       "hidden": "คุณซ่อนจากการค้นหา",
       "available": "พร้อมรับงาน",
       "unavailable": "ไม่พร้อมรับงาน"
+    },
+    "paymentPreference": {
+      "title": "ความต้องการการชำระเงิน",
+      "subtitle": "แจ้งตัวแทนว่าคุณต้องการรับเงินอย่างไร",
+      "upfront": "ชำระล่วงหน้า",
+      "escrow": "เอสโครว์",
+      "both": "ยืดหยุ่น (อย่างใดก็ได้)"
     },
     "telegram": {
       "title": "การแจ้งเตือน Telegram",
@@ -268,6 +281,28 @@
       "statusActive": "เปิดใช้งาน",
       "statusInactive": "ปิดใช้งาน"
     },
+    "emailVerification": {
+      "banner": "กรุณายืนยันที่อยู่อีเมลของคุณ ตรวจสอบกล่องจดหมายเพื่อดูลิงก์ยืนยัน",
+      "resend": "ส่งอีเมลยืนยันอีกครั้ง"
+    },
+    "notifications": {
+      "title": "การแจ้งเตือนทางอีเมล",
+      "emailLabel": "อีเมลข้อเสนองาน",
+      "emailDesc": "รับการแจ้งเตือนทางอีเมลเมื่อ AI agent ส่งข้อเสนองานให้คุณ"
+    },
+    "account": {
+      "dangerZone": "การจัดการบัญชี",
+      "exportTitle": "ส่งออกข้อมูลของคุณ",
+      "exportDesc": "ดาวน์โหลดสำเนาข้อมูลทั้งหมดของคุณในรูปแบบ JSON",
+      "exportButton": "ส่งออกข้อมูล",
+      "deleteTitle": "ลบบัญชี",
+      "deleteDesc": "ลบบัญชีและข้อมูลที่เกี่ยวข้องทั้งหมดอย่างถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "deleteButton": "ลบบัญชี",
+      "confirmPassword": "กรอกรหัสผ่านเพื่อยืนยัน",
+      "confirmDelete": "ใช่ ลบบัญชีของฉัน",
+      "confirmDeleteTitle": "ลบบัญชี?",
+      "confirmDeleteMsg": "การดำเนินการนี้จะลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร"
+    },
     "yourReferrals": "การแนะนำของคุณ",
     "moreReferrals": "+{{count}} เพิ่มเติม"
   },
@@ -329,7 +364,8 @@
     "hireMe": "จ้างฉัน",
     "contactInfo": "ข้อมูลติดต่อ",
     "reviews": "รีวิว",
-    "noReviews": "ยังไม่มีรีวิว"
+    "noReviews": "ยังไม่มีรีวิว",
+    "paymentPreference": "ความต้องการการชำระเงิน"
   },
   "errors": {
     "required": "ต้องกรอกข้อมูลนี้",
@@ -361,6 +397,11 @@
     "jobCompleted": "ทำงานเสร็จแล้ว",
     "telegramConnected": "เชื่อมต่อ Telegram แล้ว",
     "telegramDisconnected": "ยกเลิกการเชื่อมต่อ Telegram แล้ว",
+    "accountDeleted": "ลบบัญชีสำเร็จ",
+    "dataExported": "ส่งออกข้อมูลสำเร็จ",
+    "verificationSent": "ส่งอีเมลยืนยันแล้ว",
+    "emailVerified": "ยืนยันอีเมลสำเร็จ",
+    "preferencesSaved": "บันทึกการตั้งค่าแล้ว",
     "genericError": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง"
   },
   "notFound": {

@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import crypto from 'crypto';
 import request from 'supertest';
 import { prisma } from '../lib/prisma.js';
 import { cleanDatabase } from './helpers.js';
+
+/** Create a valid OAuth state record in DB and return the token */
+async function createOAuthState(): Promise<string> {
+  const token = crypto.randomBytes(32).toString('hex');
+  await prisma.oAuthState.create({
+    data: { token, expiresAt: new Date(Date.now() + 10 * 60 * 1000) },
+  });
+  return token;
+}
 
 // Mock google-auth-library before importing app
 vi.mock('google-auth-library', () => {
@@ -54,9 +64,10 @@ describe('OAuth API', () => {
 
   describe('POST /api/oauth/google/callback', () => {
     it('should create new user on first Google login', async () => {
+      const state = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/google/callback')
-        .send({ code: 'mock-auth-code' });
+        .send({ code: 'mock-auth-code', state, termsAccepted: true });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token');
@@ -73,18 +84,32 @@ describe('OAuth API', () => {
       expect(user?.googleId).toBe('google-123');
       expect(user?.avatarUrl).toBe('https://example.com/avatar.jpg');
       expect(user?.passwordHash).toBeNull();
+      expect(user?.termsAcceptedAt).not.toBeNull();
+      expect(user?.emailVerified).toBe(true);
+    });
+
+    it('should require terms acceptance for new users', async () => {
+      const state = await createOAuthState();
+      const response = await request(app)
+        .post('/api/oauth/google/callback')
+        .send({ code: 'mock-auth-code', state });
+
+      expect(response.status).toBe(200);
+      expect(response.body.requiresTerms).toBe(true);
     });
 
     it('should return existing user on subsequent Google login', async () => {
       // First login
+      const state1 = await createOAuthState();
       await request(app)
         .post('/api/oauth/google/callback')
-        .send({ code: 'mock-auth-code' });
+        .send({ code: 'mock-auth-code', state: state1, termsAccepted: true });
 
       // Second login
+      const state2 = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/google/callback')
-        .send({ code: 'mock-auth-code' });
+        .send({ code: 'mock-auth-code', state: state2 });
 
       expect(response.status).toBe(200);
       expect(response.body.human.email).toBe('googleuser@gmail.com');
@@ -104,12 +129,14 @@ describe('OAuth API', () => {
           email: 'googleuser@gmail.com',
           password: 'password123',
           name: 'Existing User',
+          termsAccepted: true,
         });
 
       // Login with Google using same email
+      const state = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/google/callback')
-        .send({ code: 'mock-auth-code' });
+        .send({ code: 'mock-auth-code', state });
 
       expect(response.status).toBe(200);
 
@@ -172,9 +199,10 @@ describe('OAuth API', () => {
     });
 
     it('should create new user on first GitHub login', async () => {
+      const state = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'mock-github-code' });
+        .send({ code: 'mock-github-code', state, termsAccepted: true });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token');
@@ -190,18 +218,32 @@ describe('OAuth API', () => {
       expect(user).not.toBeNull();
       expect(user?.githubId).toBe('12345');
       expect(user?.avatarUrl).toBe('https://github.com/avatar.jpg');
+      expect(user?.termsAcceptedAt).not.toBeNull();
+      expect(user?.emailVerified).toBe(true);
+    });
+
+    it('should require terms acceptance for new GitHub users', async () => {
+      const state = await createOAuthState();
+      const response = await request(app)
+        .post('/api/oauth/github/callback')
+        .send({ code: 'mock-github-code', state });
+
+      expect(response.status).toBe(200);
+      expect(response.body.requiresTerms).toBe(true);
     });
 
     it('should return existing user on subsequent GitHub login', async () => {
       // First login
+      const state1 = await createOAuthState();
       await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'mock-github-code' });
+        .send({ code: 'mock-github-code', state: state1, termsAccepted: true });
 
       // Second login
+      const state2 = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'mock-github-code' });
+        .send({ code: 'mock-github-code', state: state2 });
 
       expect(response.status).toBe(200);
 
@@ -220,12 +262,14 @@ describe('OAuth API', () => {
           email: 'githubuser@github.com',
           password: 'password123',
           name: 'Existing User',
+          termsAccepted: true,
         });
 
       // Login with GitHub using same email
+      const state = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'mock-github-code' });
+        .send({ code: 'mock-github-code', state });
 
       expect(response.status).toBe(200);
 
@@ -256,9 +300,10 @@ describe('OAuth API', () => {
         })
       );
 
+      const state = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'invalid-code' });
+        .send({ code: 'invalid-code', state });
 
       expect(response.status).toBe(400);
     });
@@ -290,9 +335,10 @@ describe('OAuth API', () => {
         return Promise.reject(new Error('Unknown URL'));
       });
 
+      const state = await createOAuthState();
       const response = await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'mock-code' });
+        .send({ code: 'mock-code', state, termsAccepted: true });
 
       expect(response.status).toBe(200);
       expect(response.body.human.name).toBe('noname-user');
@@ -302,9 +348,10 @@ describe('OAuth API', () => {
   describe('OAuth user can access protected routes', () => {
     it('should allow OAuth user to access profile', async () => {
       // Create user via Google OAuth
+      const state = await createOAuthState();
       const oauthResponse = await request(app)
         .post('/api/oauth/google/callback')
-        .send({ code: 'mock-auth-code' });
+        .send({ code: 'mock-auth-code', state, termsAccepted: true });
 
       const token = oauthResponse.body.token;
 
@@ -345,9 +392,10 @@ describe('OAuth API', () => {
         return Promise.reject(new Error('Unknown URL'));
       });
 
+      const state = await createOAuthState();
       const oauthResponse = await request(app)
         .post('/api/oauth/github/callback')
-        .send({ code: 'mock-code' });
+        .send({ code: 'mock-code', state, termsAccepted: true });
 
       const token = oauthResponse.body.token;
 

@@ -16,6 +16,7 @@ describe('Auth API', () => {
           email: 'newuser@example.com',
           password: 'password123',
           name: 'New User',
+          termsAccepted: true,
         });
 
       expect(response.status).toBe(201);
@@ -24,6 +25,19 @@ describe('Auth API', () => {
       expect(response.body.human.email).toBe('newuser@example.com');
       expect(response.body.human.name).toBe('New User');
       expect(response.body.human).not.toHaveProperty('passwordHash');
+    });
+
+    it('should reject signup without accepting terms', async () => {
+      const response = await request(app)
+        .post('/api/auth/signup')
+        .send({
+          email: 'noterms@example.com',
+          password: 'password123',
+          name: 'No Terms User',
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
     });
 
     it('should reject duplicate email', async () => {
@@ -35,6 +49,7 @@ describe('Auth API', () => {
           email: 'duplicate@example.com',
           password: 'password123',
           name: 'Another User',
+          termsAccepted: true,
         });
 
       expect(response.status).toBe(400);
@@ -48,6 +63,7 @@ describe('Auth API', () => {
           email: 'not-an-email',
           password: 'password123',
           name: 'Test User',
+          termsAccepted: true,
         });
 
       expect(response.status).toBe(400);
@@ -61,6 +77,7 @@ describe('Auth API', () => {
           email: 'test@example.com',
           password: '12345',
           name: 'Test User',
+          termsAccepted: true,
         });
 
       expect(response.status).toBe(400);
@@ -74,6 +91,7 @@ describe('Auth API', () => {
           email: 'test@example.com',
           password: 'password123',
           name: '',
+          termsAccepted: true,
         });
 
       expect(response.status).toBe(400);

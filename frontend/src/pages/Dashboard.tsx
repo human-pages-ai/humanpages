@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -11,18 +11,21 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { Profile, Job, ReviewStats, Service } from '../components/dashboard/types';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
+import NotificationPreferencesSection from '../components/dashboard/NotificationPreferencesSection';
 import AvailabilitySection from '../components/dashboard/AvailabilitySection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
 import WalletsSection from '../components/dashboard/WalletsSection';
 import ServicesSection from '../components/dashboard/ServicesSection';
+import AccountSection from '../components/dashboard/AccountSection';
 import SEO from '../components/SEO';
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,6 +89,18 @@ export default function Dashboard() {
     loadProfile();
     loadJobs();
     loadTelegramStatus();
+
+    // Handle query param toasts
+    if (searchParams.get('emailVerified') === 'true') {
+      toast.success(t('toast.emailVerified'));
+      searchParams.delete('emailVerified');
+      setSearchParams(searchParams, { replace: true });
+    }
+    if (searchParams.get('unsubscribed') === 'true') {
+      toast.success(t('toast.preferencesSaved'));
+      searchParams.delete('unsubscribed');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, []);
 
   const loadProfile = async () => {
@@ -241,6 +256,19 @@ export default function Dashboard() {
     }
   };
 
+  const changePaymentPreference = async (pref: 'ESCROW' | 'UPFRONT' | 'BOTH') => {
+    if (!profile) return;
+    setSaving(true);
+    try {
+      const updated = await api.updateProfile({ paymentPreference: pref });
+      setProfile(updated);
+    } catch (error) {
+      console.error('Failed to update payment preference:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveProfile = async () => {
     setSaving(true);
     try {
@@ -364,6 +392,64 @@ export default function Dashboard() {
     });
   };
 
+  const toggleEmailNotifications = async () => {
+    if (!profile) return;
+    setSaving(true);
+    try {
+      const updated = await api.updateProfile({ emailNotifications: !profile.emailNotifications });
+      setProfile(updated);
+      toast.success(t('toast.preferencesSaved'));
+    } catch (error) {
+      toast.error(t('toast.genericError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteAccount = async (password?: string) => {
+    setSaving(true);
+    try {
+      await api.deleteAccount(password);
+      toast.success(t('toast.accountDeleted'));
+      logout();
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || t('toast.genericError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const exportData = async () => {
+    setSaving(true);
+    try {
+      const data = await api.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `human-pages-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(t('toast.dataExported'));
+    } catch (error) {
+      toast.error(t('toast.genericError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    try {
+      await api.resendVerification();
+      toast.success(t('toast.verificationSent'));
+    } catch (error: any) {
+      toast.error(error.message || t('toast.genericError'));
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -394,6 +480,19 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Email verification banner */}
+        {profile.emailVerified === false && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
+            <p className="text-sm text-yellow-800">{t('dashboard.emailVerification.banner')}</p>
+            <button
+              onClick={resendVerification}
+              className="ml-4 text-sm font-medium text-yellow-800 hover:text-yellow-900 underline whitespace-nowrap"
+            >
+              {t('dashboard.emailVerification.resend')}
+            </button>
+          </div>
+        )}
+
         <ProfileCompleteness profile={profile} onEditProfile={() => setEditingProfile(true)} />
 
         <ShareReferralSection
@@ -412,10 +511,18 @@ export default function Dashboard() {
           onDisconnect={disconnectTelegram}
         />
 
+        <NotificationPreferencesSection
+          emailNotifications={profile.emailNotifications !== false}
+          saving={saving}
+          onToggle={toggleEmailNotifications}
+        />
+
         <AvailabilitySection
           isAvailable={profile.isAvailable}
+          paymentPreference={profile.paymentPreference || 'BOTH'}
           saving={saving}
           onToggle={toggleAvailability}
+          onPaymentPreferenceChange={changePaymentPreference}
         />
 
         <OfferFiltersSection
@@ -472,6 +579,13 @@ export default function Dashboard() {
           onAddService={addService}
           onToggleServiceActive={toggleServiceActive}
           onDeleteService={deleteService}
+        />
+
+        <AccountSection
+          profile={profile}
+          onDeleteAccount={deleteAccount}
+          onExportData={exportData}
+          saving={saving}
         />
       </main>
 

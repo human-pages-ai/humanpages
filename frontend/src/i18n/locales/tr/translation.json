@@ -130,7 +130,13 @@
     "passwordMismatch": "Şifreler eşleşmiyor",
     "invalidToken": "Geçersiz veya süresi dolmuş sıfırlama tokeni",
     "backToLogin": "Girişe geri dön",
-    "completingSignIn": "Giriş tamamlanıyor..."
+    "completingSignIn": "Giriş tamamlanıyor...",
+    "agreeToTerms": "Kabul ediyorum",
+    "termsOfUse": "Kullanım Koşulları",
+    "privacyPolicy": "Gizlilik Politikası",
+    "acceptTermsTitle": "Devam Etmek İçin Koşulları Kabul Edin",
+    "acceptTermsDesc": "Hesabınızı oluşturmadan önce lütfen koşullarımızı inceleyin ve kabul edin.",
+    "continueSignUp": "Kayda Devam Et"
   },
   "dashboard": {
     "title": "Panel",
@@ -147,6 +153,13 @@
       "hidden": "Aramalardan gizlisiniz",
       "available": "Uygun",
       "unavailable": "Uygun Değil"
+    },
+    "paymentPreference": {
+      "title": "Ödeme Tercihi",
+      "subtitle": "Ajanlara nasıl ödeme almak istediğinizi bildirin",
+      "upfront": "Peşin Ödeme",
+      "escrow": "Emanet",
+      "both": "Esnek (Her ikisi)"
     },
     "telegram": {
       "title": "Telegram Bildirimleri",
@@ -172,6 +185,28 @@
       "noFilters": "Filtre yapılandırılmadı. Tüm teklifler gelen kutunuza teslim edilecek.",
       "distanceWarning": "Mesafe filtreleme, konum koordinatlarınızı ayarlamanızı gerektirir",
       "saveFilters": "Filtreleri Kaydet"
+    },
+    "emailVerification": {
+      "banner": "Lütfen e-posta adresinizi doğrulayın. Doğrulama bağlantısı için gelen kutunuzu kontrol edin.",
+      "resend": "Doğrulama e-postasını yeniden gönder"
+    },
+    "notifications": {
+      "title": "E-posta Bildirimleri",
+      "emailLabel": "İş teklifi e-postaları",
+      "emailDesc": "AI ajanlar size iş teklifi gönderdiğinde e-posta bildirimi alın"
+    },
+    "account": {
+      "dangerZone": "Hesap Yönetimi",
+      "exportTitle": "Verilerinizi Dışa Aktarın",
+      "exportDesc": "Tüm verilerinizin bir kopyasını JSON formatında indirin.",
+      "exportButton": "Verileri Dışa Aktar",
+      "deleteTitle": "Hesabı Sil",
+      "deleteDesc": "Hesabınızı ve tüm ilişkili verileri kalıcı olarak silin. Bu işlem geri alınamaz.",
+      "deleteButton": "Hesabı Sil",
+      "confirmPassword": "Onaylamak için şifrenizi girin",
+      "confirmDelete": "Evet, Hesabımı Sil",
+      "confirmDeleteTitle": "Hesap Silinsin mi?",
+      "confirmDeleteMsg": "Bu, hesabınızı ve tüm verilerinizi kalıcı olarak silecektir."
     },
     "jobs": {
       "title": "İşler",
@@ -329,7 +364,8 @@
     "hireMe": "Beni İşe Al",
     "contactInfo": "İletişim Bilgileri",
     "reviews": "Değerlendirmeler",
-    "noReviews": "Henüz değerlendirme yok"
+    "noReviews": "Henüz değerlendirme yok",
+    "paymentPreference": "Ödeme Tercihi"
   },
   "errors": {
     "required": "Bu alan zorunludur",
@@ -361,6 +397,11 @@
     "jobCompleted": "İş tamamlandı",
     "telegramConnected": "Telegram bağlandı",
     "telegramDisconnected": "Telegram bağlantısı kesildi",
+    "accountDeleted": "Hesap başarıyla silindi",
+    "dataExported": "Veriler başarıyla dışa aktarıldı",
+    "verificationSent": "Doğrulama e-postası gönderildi",
+    "emailVerified": "E-posta başarıyla doğrulandı",
+    "preferencesSaved": "Tercihler kaydedildi",
     "genericError": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
   },
   "notFound": {

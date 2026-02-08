@@ -1,12 +1,12 @@
-# Humans MCP Server
+# Human Pages MCP Server
 
-An MCP (Model Context Protocol) server that enables AI agents to search for and hire humans for real-world tasks.
+An MCP (Model Context Protocol) server that enables AI agents to search for and hire humans for real-world tasks via [humanpages.ai](https://humanpages.ai).
 
 ## Quick Install
 
 ### Claude Code
 ```bash
-claude mcp add humans -- npx -y @anthropic/humans-mcp
+claude mcp add humanpages -- npx -y humanpages
 ```
 
 ### Claude Desktop
@@ -14,12 +14,20 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "humans": {
+    "humanpages": {
       "command": "npx",
-      "args": ["-y", "@anthropic/humans-mcp"]
+      "args": ["-y", "humanpages"],
+      "env": {
+        "API_BASE_URL": "https://api.humanpages.ai"
+      }
     }
   }
 }
+```
+
+### npm Global Install
+```bash
+npm install -g humanpages
 ```
 
 ## Tools
@@ -28,14 +36,13 @@ Add to your `claude_desktop_config.json`:
 Search for humans available for hire.
 
 **Parameters:**
-- `skill` (string, optional): Filter by skill
-- `location` (string, optional): Filter by location
+- `skill` (string, optional): Filter by skill (e.g., "photography", "driving")
+- `equipment` (string, optional): Filter by equipment (e.g., "car", "drone")
+- `language` (string, optional): Filter by language ISO code (e.g., "en", "es")
+- `location` (string, optional): Filter by location name
+- `lat`, `lng`, `radius` (number, optional): Radius search in km
+- `max_rate` (number, optional): Maximum hourly rate in USDC
 - `available_only` (boolean, default: true): Only show available humans
-
-**Example:**
-```
-Search for humans with javascript skills in New York
-```
 
 ### get_human
 Get detailed information about a specific human.
@@ -43,46 +50,59 @@ Get detailed information about a specific human.
 **Parameters:**
 - `id` (string, required): The human's ID
 
-**Example:**
-```
-Get the profile for human clx123abc
-```
-
-### record_job
-Record a job assignment for tracking.
+### create_job_offer
+Create a job offer for a human.
 
 **Parameters:**
 - `human_id` (string, required): The human's ID
-- `task_description` (string, required): Description of the task
-- `task_category` (string, optional): Category of the task
-- `agreed_price` (string, optional): Agreed price
+- `title` (string, required): Job title
+- `description` (string, required): What needs to be done
+- `price_usdc` (number, required): Price in USDC
+- `agent_id` (string, required): Your agent identifier
 
-**Example:**
-```
-Record that I've assigned the data analysis task to human clx123abc for $100
-```
+### get_job_status
+Check the status of a job offer.
 
-## Development
+**Parameters:**
+- `job_id` (string, required): The job ID
 
-```bash
-# Install dependencies
-npm install
+### mark_job_paid
+Record payment for an accepted job.
 
-# Run in development mode
-npm run dev
+**Parameters:**
+- `job_id` (string, required): The job ID
+- `payment_tx_hash` (string, required): Transaction hash
+- `payment_network` (string, required): Blockchain network
+- `payment_amount` (number, required): Amount paid in USDC
 
-# Build for production
-npm run build
+### leave_review
+Leave a review for a completed job.
 
-# Start production server
-npm start
-```
+**Parameters:**
+- `job_id` (string, required): The job ID
+- `rating` (number, required): Rating 1-5
+- `comment` (string, optional): Review comment
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HUMANS_API_URL` | Base URL of the Humans API | `http://localhost:3001` |
+| `API_BASE_URL` | Base URL of the Human Pages API | `https://api.humanpages.ai` |
+
+## Development
+
+```bash
+npm install
+npm run dev      # Development mode
+npm run build    # Build for production
+npm start        # Start production server
+```
+
+## Testing
+
+```bash
+npx @modelcontextprotocol/inspector npx -y humanpages
+```
 
 ## License
 

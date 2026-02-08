@@ -131,7 +131,13 @@
     "passwordMismatch": "Passwords do not match",
     "invalidToken": "Invalid or expired reset token",
     "backToLogin": "Back to login",
-    "completingSignIn": "Completing sign in..."
+    "completingSignIn": "Completing sign in...",
+    "agreeToTerms": "I agree to the",
+    "termsOfUse": "Terms of Use",
+    "privacyPolicy": "Privacy Policy",
+    "acceptTermsTitle": "Accept Terms to Continue",
+    "acceptTermsDesc": "Before creating your account, please review and accept our terms.",
+    "continueSignUp": "Continue Sign Up"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -148,6 +154,13 @@
       "hidden": "You are hidden from searches",
       "available": "Available",
       "unavailable": "Unavailable"
+    },
+    "paymentPreference": {
+      "title": "Payment Preference",
+      "subtitle": "Tell agents how you prefer to be paid for jobs",
+      "upfront": "Payment Upfront",
+      "escrow": "Escrow",
+      "both": "Flexible (Either)"
     },
     "telegram": {
       "title": "Telegram Notifications",
@@ -269,6 +282,28 @@
       "statusActive": "Active",
       "statusInactive": "Inactive"
     },
+    "emailVerification": {
+      "banner": "Please verify your email address. Check your inbox for a verification link.",
+      "resend": "Resend verification email"
+    },
+    "notifications": {
+      "title": "Email Notifications",
+      "emailLabel": "Job offer emails",
+      "emailDesc": "Receive email notifications when AI agents send you job offers"
+    },
+    "account": {
+      "dangerZone": "Account Management",
+      "exportTitle": "Export Your Data",
+      "exportDesc": "Download a copy of all your data in JSON format.",
+      "exportButton": "Export Data",
+      "deleteTitle": "Delete Account",
+      "deleteDesc": "Permanently delete your account and all associated data. This action cannot be undone.",
+      "deleteButton": "Delete Account",
+      "confirmPassword": "Enter your password to confirm",
+      "confirmDelete": "Yes, Delete My Account",
+      "confirmDeleteTitle": "Delete Account?",
+      "confirmDeleteMsg": "This will permanently delete your account and all your data."
+    },
     "yourReferrals": "Your referrals",
     "moreReferrals": "+{{count}} more"
   },
@@ -331,7 +366,8 @@
     "hireMe": "Hire Me",
     "contactInfo": "Contact Info",
     "reviews": "Reviews",
-    "noReviews": "No reviews yet"
+    "noReviews": "No reviews yet",
+    "paymentPreference": "Payment Preference"
   },
   "errors": {
     "required": "This field is required",
@@ -363,6 +399,11 @@
     "jobCompleted": "Job completed",
     "telegramConnected": "Telegram connected",
     "telegramDisconnected": "Telegram disconnected",
+    "accountDeleted": "Account deleted successfully",
+    "dataExported": "Data exported successfully",
+    "verificationSent": "Verification email sent",
+    "emailVerified": "Email verified successfully",
+    "preferencesSaved": "Preferences saved",
     "genericError": "Something went wrong. Please try again."
   },
   "notFound": {

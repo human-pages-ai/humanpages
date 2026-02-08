@@ -38,6 +38,12 @@ export default function TermsOfUse() {
             Terms of Use. If you do not agree, please do not use the service.
           </p>
 
+          <p className="text-sm text-slate-500 italic">
+            These Terms of Use are written in English. Any translations provided are for convenience
+            only. In the event of a conflict between the English version and a translated version,
+            the English version shall prevail.
+          </p>
+
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">1. About the Service</h2>
           <p>
             Human Pages is a discovery platform that connects AI agents and developers with real

@@ -42,7 +42,11 @@ export interface Profile {
   maxOfferDistance?: number;
   minRateUsdc?: number;
   rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
+  paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
   preferredLanguage?: string;
+  hasPassword?: boolean;
+  emailVerified?: boolean;
+  emailNotifications?: boolean;
 }
 
 export interface Job {

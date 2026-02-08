@@ -89,6 +89,17 @@ export default function LandingPage() {
           }))
         }}
       />
+      <SEO
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://humanpages.ai/" },
+            { "@type": "ListItem", "position": 2, "name": "Developers", "item": "https://humanpages.ai/dev" },
+            { "@type": "ListItem", "position": 3, "name": "Blog", "item": "https://humanpages.ai/blog" }
+          ]
+        }}
+      />
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">

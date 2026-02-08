@@ -14,6 +14,13 @@ enum RateType {
   NEGOTIABLE
 }
 
+// Payment preference for deals
+enum PaymentPreference {
+  ESCROW    // Willing to use escrow
+  UPFRONT   // Wants payment before starting work
+  BOTH      // Flexible — accepts either
+}
+
 model Human {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -40,6 +47,7 @@ model Human {
   // ===== ECONOMICS (Deal Terms) =====
   minRateUsdc      Decimal? @db.Decimal(18, 6) // Minimum rate filter
   rateType         RateType @default(NEGOTIABLE)
+  paymentPreference PaymentPreference @default(BOTH) // Escrow vs upfront
 
   // ===== OFFER FILTERS (Anti-Spam) =====
   minOfferPrice    Decimal? @db.Decimal(18, 6) // Reject offers below this price
@@ -65,6 +73,12 @@ model Human {
 
   // Token invalidation for logout-all
   tokenInvalidatedAt DateTime? // All tokens issued before this time are invalid
+
+  // Privacy & legal compliance
+  termsAcceptedAt        DateTime?
+  emailVerified          Boolean    @default(false)
+  emailVerificationToken String?    @unique
+  emailNotifications     Boolean    @default(true)
 
   // Social profiles for trust verification
   linkedinUrl   String?

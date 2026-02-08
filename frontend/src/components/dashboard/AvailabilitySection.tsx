@@ -2,15 +2,29 @@ import { useTranslation } from 'react-i18next';
 
 interface Props {
   isAvailable: boolean;
+  paymentPreference: 'ESCROW' | 'UPFRONT' | 'BOTH';
   saving: boolean;
   onToggle: () => void;
+  onPaymentPreferenceChange: (pref: 'ESCROW' | 'UPFRONT' | 'BOTH') => void;
 }
 
-export default function AvailabilitySection({ isAvailable, saving, onToggle }: Props) {
+export default function AvailabilitySection({
+  isAvailable,
+  paymentPreference,
+  saving,
+  onToggle,
+  onPaymentPreferenceChange,
+}: Props) {
   const { t } = useTranslation();
 
+  const PAYMENT_OPTIONS: { value: 'ESCROW' | 'UPFRONT' | 'BOTH'; labelKey: string }[] = [
+    { value: 'UPFRONT', labelKey: 'dashboard.paymentPreference.upfront' },
+    { value: 'ESCROW', labelKey: 'dashboard.paymentPreference.escrow' },
+    { value: 'BOTH', labelKey: 'dashboard.paymentPreference.both' },
+  ];
+
   return (
-    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{t('dashboard.availability.title')}</h2>
@@ -29,6 +43,27 @@ export default function AvailabilitySection({ isAvailable, saving, onToggle }: P
         >
           {isAvailable ? t('dashboard.availability.available') : t('dashboard.availability.unavailable')}
         </button>
+      </div>
+
+      <div className="pt-3 border-t border-gray-100">
+        <h3 className="text-sm font-medium text-gray-700 mb-2">{t('dashboard.paymentPreference.title')}</h3>
+        <p className="text-gray-500 text-xs mb-3">{t('dashboard.paymentPreference.subtitle')}</p>
+        <div className="flex flex-wrap gap-2">
+          {PAYMENT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => onPaymentPreferenceChange(opt.value)}
+              disabled={saving}
+              className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                paymentPreference === opt.value
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
+              }`}
+            >
+              {t(opt.labelKey)}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

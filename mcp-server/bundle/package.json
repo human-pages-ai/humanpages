@@ -1,7 +1,7 @@
 {
-  "name": "humans-mcp-bundle",
+  "name": "humanpages-bundle",
   "version": "1.0.0",
-  "description": "Humans Marketplace MCP Server Bundle",
+  "description": "Human Pages MCP Server Bundle",
   "main": "index.js",
   "type": "module",
   "dependencies": {

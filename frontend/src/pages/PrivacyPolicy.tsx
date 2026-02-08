@@ -31,11 +31,17 @@ export default function PrivacyPolicy() {
       <main className="py-12 md:py-16 px-4">
         <article className="max-w-3xl mx-auto prose prose-slate">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-          <p className="text-slate-500 mb-8">Last updated: February 7, 2026</p>
+          <p className="text-slate-500 mb-8">Last updated: February 8, 2026</p>
 
           <p>
             Human Pages ("we", "us", "our") operates humanpages.ai. This Privacy Policy explains what
             information we collect, how we use it, and your choices regarding your data.
+          </p>
+
+          <p className="text-sm text-slate-500 italic">
+            This Privacy Policy is written in English. Any translations provided are for convenience
+            only. In the event of a conflict between the English version and a translated version,
+            the English version shall prevail.
           </p>
 
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">1. Information We Collect</h2>
@@ -100,11 +106,12 @@ export default function PrivacyPolicy() {
           <p>We do not use tracking cookies or third-party advertising cookies.</p>
 
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">6. Third-Party Services</h2>
-          <p>
-            If you choose to sign in with Google or GitHub, those providers share your basic profile
-            information (name, email) with us according to their own privacy policies. We do not share
-            your data back with them.
-          </p>
+          <p>We integrate with the following third-party services:</p>
+          <ul className="list-disc pl-6 space-y-1 text-slate-700">
+            <li><strong>Google / GitHub OAuth:</strong> If you choose to sign in with Google or GitHub, those providers share your basic profile information (name, email) with us according to their own privacy policies. We do not share your data back with them.</li>
+            <li><strong>Telegram Bot:</strong> If you connect your Telegram account for notifications, we use the Telegram Bot API to send you job offer alerts. We store your Telegram chat ID to deliver messages. You can disconnect at any time from your dashboard.</li>
+            <li><strong>SMTP Email Provider:</strong> We use an SMTP email service to send transactional emails (job offers, password resets, email verification). Your email address is shared with our email provider solely for delivery purposes.</li>
+          </ul>
 
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">7. Wallet Addresses</h2>
           <p>
@@ -117,8 +124,9 @@ export default function PrivacyPolicy() {
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
             <li><strong>Visibility:</strong> You can set your profile to unavailable at any time to hide from search results.</li>
             <li><strong>Edit or delete:</strong> You can update or remove any profile information from your dashboard.</li>
-            <li><strong>Account deletion:</strong> Contact us to request full account deletion. We will remove all your data.</li>
-            <li><strong>Data export:</strong> Contact us to request a copy of your data.</li>
+            <li><strong>Account deletion:</strong> You can delete your account and all associated data directly from your dashboard under Account Management. Deletion is immediate and permanent.</li>
+            <li><strong>Data export:</strong> You can download a copy of all your data in JSON format from your dashboard under Account Management.</li>
+            <li><strong>Email preferences:</strong> You can toggle email notifications on or off from your dashboard, or click the unsubscribe link in any notification email.</li>
           </ul>
 
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">9. Children's Privacy</h2>

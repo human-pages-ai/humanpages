@@ -140,14 +140,14 @@ describe('Search API', () => {
       // Add wallet to Alice
       await authRequest(alice.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xalice' });
+        .send({ network: 'ethereum', address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' });
 
       const response = await request(app).get('/api/humans/search?skill=react&available=true');
 
       expect(response.status).toBe(200);
       expect(response.body[0]).toHaveProperty('wallets');
       expect(response.body[0].wallets).toHaveLength(1);
-      expect(response.body[0].wallets[0].address).toBe('0xalice');
+      expect(response.body[0].wallets[0].address).toBe('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     });
 
     it('should include only active services in results', async () => {

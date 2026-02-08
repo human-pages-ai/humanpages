@@ -130,7 +130,13 @@
     "passwordMismatch": "两次密码不一致",
     "invalidToken": "无效或过期的重置令牌",
     "backToLogin": "返回登录",
-    "completingSignIn": "正在完成登录..."
+    "completingSignIn": "正在完成登录...",
+    "agreeToTerms": "我同意",
+    "termsOfUse": "使用条款",
+    "privacyPolicy": "隐私政策",
+    "acceptTermsTitle": "接受条款以继续",
+    "acceptTermsDesc": "在创建帐户之前，请查看并接受我们的条款。",
+    "continueSignUp": "继续注册"
   },
   "dashboard": {
     "title": "控制面板",
@@ -147,6 +153,13 @@
       "hidden": "你已从搜索中隐藏",
       "available": "可接单",
       "unavailable": "暂不接单"
+    },
+    "paymentPreference": {
+      "title": "付款偏好",
+      "subtitle": "告诉代理您希望如何接收工作报酬",
+      "upfront": "预付款",
+      "escrow": "托管付款",
+      "both": "灵活（均可）"
     },
     "telegram": {
       "title": "Telegram通知",
@@ -172,6 +185,28 @@
       "noFilters": "未配置过滤器。所有邀约都会送达你的收件箱。",
       "distanceWarning": "距离过滤需要设置你的位置坐标",
       "saveFilters": "保存过滤器"
+    },
+    "emailVerification": {
+      "banner": "请验证您的电子邮件地址。检查您的收件箱中的验证链接。",
+      "resend": "重新发送验证邮件"
+    },
+    "notifications": {
+      "title": "邮件通知",
+      "emailLabel": "工作邀约邮件",
+      "emailDesc": "当AI代理向您发送工作邀约时接收邮件通知"
+    },
+    "account": {
+      "dangerZone": "账户管理",
+      "exportTitle": "导出您的数据",
+      "exportDesc": "以JSON格式下载您所有数据的副本。",
+      "exportButton": "导出数据",
+      "deleteTitle": "删除账户",
+      "deleteDesc": "永久删除您的账户和所有相关数据。此操作不可撤销。",
+      "deleteButton": "删除账户",
+      "confirmPassword": "输入密码以确认",
+      "confirmDelete": "是的，删除我的账户",
+      "confirmDeleteTitle": "删除账户？",
+      "confirmDeleteMsg": "这将永久删除您的账户和所有数据。"
     },
     "jobs": {
       "title": "工作",
@@ -329,7 +364,8 @@
     "hireMe": "雇佣我",
     "contactInfo": "联系方式",
     "reviews": "评价",
-    "noReviews": "暂无评价"
+    "noReviews": "暂无评价",
+    "paymentPreference": "付款偏好"
   },
   "errors": {
     "required": "此字段为必填",
@@ -361,6 +397,11 @@
     "jobCompleted": "工作已完成",
     "telegramConnected": "Telegram已连接",
     "telegramDisconnected": "Telegram已断开",
+    "accountDeleted": "账户已成功删除",
+    "dataExported": "数据导出成功",
+    "verificationSent": "验证邮件已发送",
+    "emailVerified": "邮箱验证成功",
+    "preferencesSaved": "偏好设置已保存",
     "genericError": "出了点问题。请重试。"
   },
   "notFound": {

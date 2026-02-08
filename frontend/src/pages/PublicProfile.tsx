@@ -29,6 +29,7 @@ interface PublicHuman {
   contactEmail?: string;
   telegram?: string;
   isAvailable: boolean;
+  paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
   linkedinUrl?: string;
   twitterUrl?: string;
   githubUrl?: string;
@@ -125,6 +126,18 @@ export default function PublicProfile() {
           "url": `https://humanpages.ai/humans/${id}`,
           ...(profile.location && { "address": { "@type": "PostalAddress", "addressLocality": profile.location } }),
           ...(profile.skills.length > 0 && { "knowsAbout": profile.skills }),
+          ...(profile.services.length > 0 && {
+            "makesOffer": profile.services.map(s => ({
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": s.title,
+                "description": s.description,
+                ...(s.category && { "category": s.category }),
+              },
+              ...(s.priceRange && { "priceSpecification": { "@type": "PriceSpecification", "price": s.priceRange } }),
+            }))
+          })
         }}
       />
       <nav className="bg-white shadow">
@@ -201,6 +214,22 @@ export default function PublicProfile() {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.profile.skills')}</h2>
                 <p className="text-gray-500 text-sm">{t('publicProfile.noSkills')}</p>
+              </div>
+            )}
+
+            {/* Payment Preference */}
+            {profile.paymentPreference && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('publicProfile.paymentPreference')}</h2>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                  profile.paymentPreference === 'UPFRONT'
+                    ? 'bg-amber-100 text-amber-700'
+                    : profile.paymentPreference === 'ESCROW'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-green-100 text-green-700'
+                }`}>
+                  {t(`dashboard.paymentPreference.${profile.paymentPreference.toLowerCase()}`)}
+                </span>
               </div>
             )}
 

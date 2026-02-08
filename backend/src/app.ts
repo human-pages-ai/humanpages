@@ -13,6 +13,7 @@ import jobsRoutes from './routes/jobs.js';
 import telegramRoutes from './routes/telegram.js';
 import sitemapRoutes from './routes/sitemap.js';
 import ogRoutes from './routes/og.js';
+import badgeRoutes from './routes/badge.js';
 import { getProfileMetaHtml } from './lib/seo.js';
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/telegram', telegramRoutes);
 // SEO routes
 app.use(sitemapRoutes);
 app.use('/api/og', ogRoutes);
+app.use('/api/badge', badgeRoutes);
 
 // Serve frontend static files in production
 const frontendDistPath = path.join(process.cwd(), '../frontend/dist');

@@ -1,4 +1,4 @@
-# Humans MCP Bundle
+# Human Pages MCP Bundle
 
 This is the `.mcpb` bundle for Claude Desktop.
 

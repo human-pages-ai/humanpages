@@ -12,6 +12,7 @@ export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await signup(email, password, name);
+      await signup(email, password, name, termsAccepted);
       analytics.track('signup_complete', { method: 'email' });
       navigate('/onboarding');
     } catch (err: any) {
@@ -119,9 +120,28 @@ export default function Signup() {
               />
             </div>
           </div>
+          <div className="flex items-start">
+            <input
+              id="terms"
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="h-4 w-4 mt-0.5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
+              {t('auth.agreeToTerms')}{' '}
+              <Link to="/terms" target="_blank" className="text-indigo-600 hover:text-indigo-500">
+                {t('auth.termsOfUse')}
+              </Link>{' '}
+              {t('common.and')}{' '}
+              <Link to="/privacy" target="_blank" className="text-indigo-600 hover:text-indigo-500">
+                {t('auth.privacyPolicy')}
+              </Link>
+            </label>
+          </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !termsAccepted}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
 {loading ? (

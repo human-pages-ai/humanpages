@@ -21,6 +21,10 @@ router.get('/sitemap.xml', async (req, res) => {
       { url: '/login', priority: '0.3', changefreq: 'monthly' },
       { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       { url: '/terms', priority: '0.3', changefreq: 'yearly' },
+      { url: '/blog', priority: '0.7', changefreq: 'weekly' },
+      { url: '/blog/ai-agents-hiring-humans', priority: '0.6', changefreq: 'monthly' },
+      { url: '/blog/getting-paid-usdc-freelancers', priority: '0.6', changefreq: 'monthly' },
+      { url: '/blog/mcp-protocol-ai-agents', priority: '0.6', changefreq: 'monthly' },
     ];
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';

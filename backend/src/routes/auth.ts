@@ -6,7 +6,7 @@ import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
-import { sendPasswordResetEmail } from '../lib/email.js';
+import { sendPasswordResetEmail, sendVerificationEmail } from '../lib/email.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -16,6 +16,7 @@ const signupSchema = z.object({
   password: z.string().min(6).max(72),
   name: z.string().min(1),
   referrerId: z.string().optional(),
+  termsAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the Terms of Use and Privacy Policy' }) }),
 });
 
 const loginSchema = z.object({
@@ -43,11 +44,12 @@ const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 router.post('/signup', authRateLimiter, async (req, res) => {
   try {
-    const { email, password, name, referrerId } = signupSchema.parse(req.body);
+    const { email, password, name, referrerId, termsAccepted } = signupSchema.parse(req.body);
 
     const existingUser = await prisma.human.findUnique({ where: { email } });
     if (existingUser) {
@@ -71,11 +73,24 @@ router.post('/signup', authRateLimiter, async (req, res) => {
         name,
         contactEmail: email,
         referredBy: validReferrerId,
+        termsAcceptedAt: new Date(),
       },
       select: { id: true, email: true, name: true },
     });
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+    // Send verification email (async, don't block signup)
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    prisma.human.update({
+      where: { id: human.id },
+      data: { emailVerificationToken: verificationToken },
+    }).then(() => {
+      const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
+      sendVerificationEmail(email, verifyUrl).catch((err) =>
+        logger.error({ err }, 'Failed to send verification email')
+      );
+    }).catch((err) => logger.error({ err }, 'Failed to save verification token'));
 
     res.status(201).json({ human, token });
   } catch (error) {
@@ -242,6 +257,87 @@ router.get('/verify-reset-token', authRateLimiter, async (req, res) => {
   } catch (error) {
     logger.error({ err: error }, 'Verify token error');
     res.status(500).json({ valid: false, error: 'Internal server error' });
+  }
+});
+
+// Verify email
+router.get('/verify-email', async (req, res) => {
+  try {
+    const token = req.query.token as string;
+    if (!token) {
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
+    }
+
+    const human = await prisma.human.findFirst({
+      where: { emailVerificationToken: token },
+    });
+
+    if (!human) {
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
+    }
+
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { emailVerified: true, emailVerificationToken: null },
+    });
+
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerified=true`);
+  } catch (error) {
+    logger.error({ err: error }, 'Verify email error');
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
+  }
+});
+
+// Unsubscribe from email notifications
+router.get('/unsubscribe', async (req, res) => {
+  try {
+    const token = req.query.token as string;
+    if (!token) {
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    }
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; action: string };
+    if (payload.action !== 'unsubscribe') {
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    }
+
+    await prisma.human.update({
+      where: { id: payload.userId },
+      data: { emailNotifications: false },
+    });
+
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard?unsubscribed=true`);
+  } catch (error) {
+    logger.error({ err: error }, 'Unsubscribe error');
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+  }
+});
+
+// Resend verification email
+router.post('/resend-verification', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({ where: { id: req.userId } });
+    if (!human) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (human.emailVerified) {
+      return res.json({ message: 'Email already verified' });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { emailVerificationToken: verificationToken },
+    });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
+    await sendVerificationEmail(human.email, verifyUrl);
+
+    res.json({ message: 'Verification email sent' });
+  } catch (error) {
+    logger.error({ err: error }, 'Resend verification error');
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -13,6 +13,7 @@ export default defineConfig({
       DATABASE_URL: 'postgresql://humans:humans_secret@localhost:5432/humans_marketplace_test?schema=public',
       JWT_SECRET: 'test-jwt-secret-for-testing-only',
       PORT: '3002',
+      NODE_ENV: 'test',
     },
   },
 });

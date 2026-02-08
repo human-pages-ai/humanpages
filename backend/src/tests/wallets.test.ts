@@ -3,6 +3,14 @@ import request from 'supertest';
 import app from '../app.js';
 import { createTestUser, authRequest, cleanDatabase, TestUser } from './helpers.js';
 
+// Valid EVM addresses (0x + 40 hex chars) for testing
+const ADDR_1 = '0x1111111111111111111111111111111111111111';
+const ADDR_2 = '0x2222222222222222222222222222222222222222';
+const ADDR_DUP = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const ADDR_MULTI = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const ADDR_DEL = '0xcccccccccccccccccccccccccccccccccccccccc';
+const ADDR_OTHER = '0xdddddddddddddddddddddddddddddddddddddd';
+
 describe('Wallets API', () => {
   let user: TestUser;
 
@@ -23,14 +31,14 @@ describe('Wallets API', () => {
       // Create a wallet first
       await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0x123', label: 'Main' });
+        .send({ network: 'ethereum', address: ADDR_1, label: 'Main' });
 
       const response = await authRequest(user.token).get('/api/wallets');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
       expect(response.body[0].network).toBe('ethereum');
-      expect(response.body[0].address).toBe('0x123');
+      expect(response.body[0].address).toBe(ADDR_1);
     });
 
     it('should reject unauthenticated request', async () => {
@@ -46,14 +54,14 @@ describe('Wallets API', () => {
         .post('/api/wallets')
         .send({
           network: 'ethereum',
-          address: '0xabcdef1234567890',
+          address: ADDR_2,
           label: 'My ETH Wallet',
         });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
       expect(response.body.network).toBe('ethereum');
-      expect(response.body.address).toBe('0xabcdef1234567890');
+      expect(response.body.address).toBe(ADDR_2);
       expect(response.body.label).toBe('My ETH Wallet');
     });
 
@@ -61,23 +69,23 @@ describe('Wallets API', () => {
       const response = await authRequest(user.token)
         .post('/api/wallets')
         .send({
-          network: 'solana',
-          address: 'SolanaAddress123',
+          network: 'base',
+          address: ADDR_1,
         });
 
       expect(response.status).toBe(201);
-      expect(response.body.network).toBe('solana');
+      expect(response.body.network).toBe('base');
       expect(response.body.label).toBeNull();
     });
 
     it('should reject duplicate wallet address for same network', async () => {
       await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xduplicate' });
+        .send({ network: 'ethereum', address: ADDR_DUP });
 
       const response = await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xduplicate' });
+        .send({ network: 'ethereum', address: ADDR_DUP });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('already added');
@@ -86,11 +94,11 @@ describe('Wallets API', () => {
     it('should allow same address on different networks', async () => {
       await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xmultichain' });
+        .send({ network: 'ethereum', address: ADDR_MULTI });
 
       const response = await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: 'polygon', address: '0xmultichain' });
+        .send({ network: 'polygon', address: ADDR_MULTI });
 
       expect(response.status).toBe(201);
     });
@@ -98,7 +106,7 @@ describe('Wallets API', () => {
     it('should reject empty network', async () => {
       const response = await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: '', address: '0x123' });
+        .send({ network: '', address: ADDR_1 });
 
       expect(response.status).toBe(400);
     });
@@ -114,7 +122,7 @@ describe('Wallets API', () => {
     it('should reject unauthenticated request', async () => {
       const response = await request(app)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0x123' });
+        .send({ network: 'ethereum', address: ADDR_1 });
 
       expect(response.status).toBe(401);
     });
@@ -124,7 +132,7 @@ describe('Wallets API', () => {
     it('should delete own wallet', async () => {
       const createResponse = await authRequest(user.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xtodelete' });
+        .send({ network: 'ethereum', address: ADDR_DEL });
 
       const walletId = createResponse.body.id;
 
@@ -143,7 +151,7 @@ describe('Wallets API', () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
       const createResponse = await authRequest(otherUser.token)
         .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xother' });
+        .send({ network: 'ethereum', address: ADDR_OTHER });
 
       const walletId = createResponse.body.id;
 

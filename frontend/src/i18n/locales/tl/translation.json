@@ -130,7 +130,13 @@
     "passwordMismatch": "Hindi tugma ang mga password",
     "invalidToken": "Invalid o expired na reset token",
     "backToLogin": "Bumalik sa login",
-    "completingSignIn": "Kinukumpleto ang pag-sign in..."
+    "completingSignIn": "Kinukumpleto ang pag-sign in...",
+    "agreeToTerms": "Sumasang-ayon ako sa",
+    "termsOfUse": "Mga Tuntunin ng Paggamit",
+    "privacyPolicy": "Patakaran sa Privacy",
+    "acceptTermsTitle": "Tanggapin ang mga Tuntunin para Magpatuloy",
+    "acceptTermsDesc": "Bago gumawa ng account, suriin at tanggapin ang aming mga tuntunin.",
+    "continueSignUp": "Magpatuloy sa Pagpaparehistro"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -148,6 +154,13 @@
       "available": "Available",
       "unavailable": "Hindi Available"
     },
+    "paymentPreference": {
+      "title": "Kagustuhan sa Pagbabayad",
+      "subtitle": "Sabihin sa mga ahente kung paano mo gustong mabayaran",
+      "upfront": "Bayad Muna",
+      "escrow": "Escrow",
+      "both": "Flexible (Alinman)"
+    },
     "telegram": {
       "title": "Telegram Notifications",
       "connected": "Nakakonekta - Makakatanggap ka ng job offers sa Telegram",
@@ -158,6 +171,28 @@
       "openTelegram": "I-click ang button sa itaas para buksan ang Telegram. Kung hindi bumukas,",
       "clickHere": "i-click dito",
       "waiting": "Naghihintay ng confirmation..."
+    },
+    "emailVerification": {
+      "banner": "Pakiverify ang iyong email address. Tingnan ang iyong inbox para sa verification link.",
+      "resend": "Ipadala muli ang verification email"
+    },
+    "notifications": {
+      "title": "Mga Notification sa Email",
+      "emailLabel": "Mga email ng alok ng trabaho",
+      "emailDesc": "Makatanggap ng email notification kapag nagpadala sa iyo ng alok ng trabaho ang mga AI agent"
+    },
+    "account": {
+      "dangerZone": "Pamamahala ng Account",
+      "exportTitle": "I-export ang Iyong Data",
+      "exportDesc": "Mag-download ng kopya ng lahat ng iyong data sa JSON format.",
+      "exportButton": "I-export ang Data",
+      "deleteTitle": "Burahin ang Account",
+      "deleteDesc": "Permanenteng burahin ang iyong account at lahat ng kaugnay na data. Hindi na ito maibabalik.",
+      "deleteButton": "Burahin ang Account",
+      "confirmPassword": "Ilagay ang iyong password para kumpirmahin",
+      "confirmDelete": "Oo, Burahin ang Aking Account",
+      "confirmDeleteTitle": "Burahin ang Account?",
+      "confirmDeleteMsg": "Permanente nitong buburahin ang iyong account at lahat ng iyong data."
     },
     "filters": {
       "title": "Offer Filters",
@@ -329,7 +364,8 @@
     "hireMe": "I-hire Ako",
     "contactInfo": "Contact Info",
     "reviews": "Mga Review",
-    "noReviews": "Wala pang reviews"
+    "noReviews": "Wala pang reviews",
+    "paymentPreference": "Kagustuhan sa Pagbabayad"
   },
   "errors": {
     "required": "Kinakailangan ang field na ito",
@@ -361,6 +397,11 @@
     "jobCompleted": "Nakumpleto ang trabaho",
     "telegramConnected": "Nakakonekta ang Telegram",
     "telegramDisconnected": "Nadiskonekta ang Telegram",
+    "accountDeleted": "Matagumpay na nabura ang account",
+    "dataExported": "Matagumpay na na-export ang data",
+    "verificationSent": "Naipadala na ang verification email",
+    "emailVerified": "Matagumpay na na-verify ang email",
+    "preferencesSaved": "Nai-save ang mga kagustuhan",
     "genericError": "May nangyaring mali. Subukan muli."
   },
   "notFound": {

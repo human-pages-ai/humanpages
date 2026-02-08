@@ -130,7 +130,13 @@
     "passwordMismatch": "Las contraseñas no coinciden",
     "invalidToken": "Token de restablecimiento inválido o expirado",
     "backToLogin": "Volver a iniciar sesión",
-    "completingSignIn": "Completando inicio de sesión..."
+    "completingSignIn": "Completando inicio de sesión...",
+    "agreeToTerms": "Acepto los",
+    "termsOfUse": "Términos de Uso",
+    "privacyPolicy": "Política de Privacidad",
+    "acceptTermsTitle": "Aceptar Términos para Continuar",
+    "acceptTermsDesc": "Antes de crear tu cuenta, revisa y acepta nuestros términos.",
+    "continueSignUp": "Continuar Registro"
   },
   "dashboard": {
     "title": "Panel",
@@ -147,6 +153,13 @@
       "hidden": "Estás oculto de las búsquedas",
       "available": "Disponible",
       "unavailable": "No Disponible"
+    },
+    "paymentPreference": {
+      "title": "Preferencia de Pago",
+      "subtitle": "Indica a los agentes cómo prefieres recibir el pago",
+      "upfront": "Pago por adelantado",
+      "escrow": "Depósito en garantía",
+      "both": "Flexible (Cualquiera)"
     },
     "telegram": {
       "title": "Notificaciones de Telegram",
@@ -172,6 +185,28 @@
       "noFilters": "No hay filtros configurados. Todas las ofertas llegarán a tu bandeja.",
       "distanceWarning": "El filtro de distancia requiere configurar tu ubicación",
       "saveFilters": "Guardar Filtros"
+    },
+    "emailVerification": {
+      "banner": "Por favor verifica tu correo electrónico. Revisa tu bandeja de entrada para el enlace de verificación.",
+      "resend": "Reenviar correo de verificación"
+    },
+    "notifications": {
+      "title": "Notificaciones por Email",
+      "emailLabel": "Emails de ofertas de trabajo",
+      "emailDesc": "Recibe notificaciones por email cuando agentes de IA te envíen ofertas de trabajo"
+    },
+    "account": {
+      "dangerZone": "Gestión de Cuenta",
+      "exportTitle": "Exportar Tus Datos",
+      "exportDesc": "Descarga una copia de todos tus datos en formato JSON.",
+      "exportButton": "Exportar Datos",
+      "deleteTitle": "Eliminar Cuenta",
+      "deleteDesc": "Elimina permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.",
+      "deleteButton": "Eliminar Cuenta",
+      "confirmPassword": "Ingresa tu contraseña para confirmar",
+      "confirmDelete": "Sí, Eliminar Mi Cuenta",
+      "confirmDeleteTitle": "¿Eliminar Cuenta?",
+      "confirmDeleteMsg": "Esto eliminará permanentemente tu cuenta y todos tus datos."
     },
     "jobs": {
       "title": "Trabajos",
@@ -329,7 +364,8 @@
     "hireMe": "Contrátame",
     "contactInfo": "Información de Contacto",
     "reviews": "Reseñas",
-    "noReviews": "Sin reseñas aún"
+    "noReviews": "Sin reseñas aún",
+    "paymentPreference": "Preferencia de Pago"
   },
   "errors": {
     "required": "Este campo es requerido",
@@ -361,6 +397,11 @@
     "jobCompleted": "Trabajo completado",
     "telegramConnected": "Telegram conectado",
     "telegramDisconnected": "Telegram desconectado",
+    "accountDeleted": "Cuenta eliminada exitosamente",
+    "dataExported": "Datos exportados exitosamente",
+    "verificationSent": "Correo de verificación enviado",
+    "emailVerified": "Email verificado exitosamente",
+    "preferencesSaved": "Preferencias guardadas",
     "genericError": "Algo salió mal. Por favor, intenta de nuevo."
   },
   "notFound": {

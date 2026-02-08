@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { analytics } from '../../lib/analytics';
 import { api } from '../../lib/api';
@@ -102,6 +103,15 @@ export default function ShareReferralSection({
             )}
           </button>
         </div>
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-white/20">
+        <Link
+          to="/badge"
+          className="text-sm text-blue-100 hover:text-white underline"
+        >
+          Get embed badge
+        </Link>
       </div>
 
       {referrals.length > 0 && (

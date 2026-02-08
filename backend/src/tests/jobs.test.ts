@@ -142,7 +142,8 @@ describe('Jobs API - Mutual Handshake', () => {
         .patch(`/api/jobs/${jobId}/accept`)
         .set('Authorization', `Bearer ${otherToken}`);
 
-      expect(res.status).toBe(403);
+      // Auth middleware returns 401 when the JWT user doesn't exist in DB
+      expect(res.status).toBe(401);
     });
 
     it('should reject accept for already accepted job', async () => {

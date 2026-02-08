@@ -110,7 +110,7 @@ async function getHuman(id: string): Promise<Human> {
 
 const server = new Server(
   {
-    name: 'humans-mcp-server',
+    name: 'humanpages',
     version: '1.0.0',
   },
   {
@@ -598,7 +598,7 @@ Thank you for your feedback. This helps build the human's reputation.`,
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Humans MCP Server running on stdio');
+  console.error('Human Pages MCP Server running on stdio');
 }
 
 main().catch(console.error);

@@ -62,13 +62,20 @@ router.get('/google', async (req, res) => {
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
   try {
-    const { code, state, referrerId } = req.body;
+    const { code, state, referrerId, termsAccepted } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code required' });
     }
 
-    if (!state || !(await consumeOAuthState(state))) {
+    // Only consume state when we're actually going to complete the flow
+    // First, verify the state is valid without consuming it
+    const stateRecord = await prisma.oAuthState.findUnique({ where: { token: state } });
+    if (!stateRecord || stateRecord.expiresAt <= new Date()) {
+      // Clean up expired state if it exists
+      if (stateRecord) {
+        await prisma.oAuthState.delete({ where: { token: state } }).catch(() => {});
+      }
       return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 
@@ -103,7 +110,8 @@ router.post('/google/callback', async (req, res) => {
       human = await prisma.human.findUnique({ where: { email } });
 
       if (human) {
-        // Link Google to existing account
+        // Link Google to existing account - consume state
+        await consumeOAuthState(state);
         human = await prisma.human.update({
           where: { id: human.id },
           data: {
@@ -112,6 +120,14 @@ router.post('/google/callback', async (req, res) => {
           },
         });
       } else {
+        // New user - require terms acceptance before creating account
+        if (!termsAccepted) {
+          return res.json({ requiresTerms: true, provider: 'google' });
+        }
+
+        // Consume state now that terms are accepted
+        await consumeOAuthState(state);
+
         // Validate referrer if provided
         let validReferrerId: string | undefined;
         if (referrerId) {
@@ -128,10 +144,15 @@ router.post('/google/callback', async (req, res) => {
             avatarUrl: picture,
             contactEmail: email,
             referredBy: validReferrerId,
+            termsAcceptedAt: new Date(),
+            emailVerified: true, // OAuth email is verified by provider
           },
         });
         isNew = true;
       }
+    } else {
+      // Existing user by Google ID - consume state
+      await consumeOAuthState(state);
     }
 
     const token = generateToken(human.id);
@@ -163,13 +184,18 @@ router.get('/github', async (req, res) => {
 // GitHub OAuth - callback handler
 router.post('/github/callback', async (req, res) => {
   try {
-    const { code, state, referrerId } = req.body;
+    const { code, state, referrerId, termsAccepted } = req.body;
 
     if (!code) {
       return res.status(400).json({ error: 'Authorization code required' });
     }
 
-    if (!state || !(await consumeOAuthState(state))) {
+    // Verify state without consuming it yet
+    const stateRecord = await prisma.oAuthState.findUnique({ where: { token: state } });
+    if (!stateRecord || stateRecord.expiresAt <= new Date()) {
+      if (stateRecord) {
+        await prisma.oAuthState.delete({ where: { token: state } }).catch(() => {});
+      }
       return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 
@@ -233,7 +259,8 @@ router.post('/github/callback', async (req, res) => {
       human = await prisma.human.findUnique({ where: { email: primaryEmail } });
 
       if (human) {
-        // Link GitHub to existing account
+        // Link GitHub to existing account - consume state
+        await consumeOAuthState(state);
         human = await prisma.human.update({
           where: { id: human.id },
           data: {
@@ -242,6 +269,14 @@ router.post('/github/callback', async (req, res) => {
           },
         });
       } else {
+        // New user - require terms acceptance
+        if (!termsAccepted) {
+          return res.json({ requiresTerms: true, provider: 'github' });
+        }
+
+        // Consume state now that terms are accepted
+        await consumeOAuthState(state);
+
         // Validate referrer if provided
         let validReferrerId: string | undefined;
         if (referrerId) {
@@ -258,10 +293,15 @@ router.post('/github/callback', async (req, res) => {
             avatarUrl,
             contactEmail: primaryEmail,
             referredBy: validReferrerId,
+            termsAcceptedAt: new Date(),
+            emailVerified: true, // OAuth email is verified by provider
           },
         });
         isNew = true;
       }
+    } else {
+      // Existing user by GitHub ID - consume state
+      await consumeOAuthState(state);
     }
 
     const token = generateToken(human.id);

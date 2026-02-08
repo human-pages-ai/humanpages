@@ -31,6 +31,8 @@ export interface AuthResponse {
   human: Profile;
   token: string;
   isNew?: boolean;
+  requiresTerms?: boolean;
+  provider?: string;
 }
 
 export interface PublicHuman {
@@ -66,7 +68,7 @@ export interface ReviewsResponse {
 
 export const api = {
   // Auth
-  signup: (data: { email: string; password: string; name: string; referrerId?: string }) =>
+  signup: (data: { email: string; password: string; name: string; referrerId?: string; termsAccepted: boolean }) =>
     request<AuthResponse>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -82,10 +84,10 @@ export const api = {
   getOAuthUrl: (provider: 'google' | 'github') =>
     request<{ url: string; state: string }>(`/oauth/${provider}`),
 
-  oauthCallback: (provider: 'google' | 'github', code: string, state: string, referrerId?: string) =>
+  oauthCallback: (provider: 'google' | 'github', code: string, state: string, referrerId?: string, termsAccepted?: boolean) =>
     request<AuthResponse>(`/oauth/${provider}/callback`, {
       method: 'POST',
-      body: JSON.stringify({ code, state, referrerId }),
+      body: JSON.stringify({ code, state, referrerId, termsAccepted }),
     }),
 
   // Password Reset
@@ -165,6 +167,19 @@ export const api = {
 
   getMyReviews: (humanId: string) =>
     request<ReviewsResponse>(`/jobs/human/${humanId}/reviews`),
+
+  // Account management
+  deleteAccount: (password?: string) =>
+    request<{ message: string }>('/humans/me', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    }),
+
+  exportData: () =>
+    request<Record<string, unknown>>('/humans/me/export'),
+
+  resendVerification: () =>
+    request<{ message: string }>('/auth/resend-verification', { method: 'POST' }),
 
   // Telegram
   getTelegramStatus: () =>

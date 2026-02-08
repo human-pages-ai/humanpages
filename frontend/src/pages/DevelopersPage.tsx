@@ -37,9 +37,9 @@ function CodeBlock({ code }: { code: string }) {
 
 const MCP_CONFIG = `{
   "mcpServers": {
-    "human-pages": {
+    "humanpages": {
       "command": "npx",
-      "args": ["-y", "@anthropic/humans-mcp"],
+      "args": ["-y", "humanpages"],
       "env": {
         "API_BASE_URL": "https://api.humanpages.ai"
       }
@@ -47,7 +47,7 @@ const MCP_CONFIG = `{
   }
 }`;
 
-const CLAUDE_CODE_INSTALL = `claude mcp add human-pages -- npx -y @anthropic/humans-mcp`;
+const CLAUDE_CODE_INSTALL = `claude mcp add humanpages -- npx -y humanpages`;
 
 const SEARCH_EXAMPLE = `// Search for photographers in NYC
 const results = await mcp.callTool("search_humans", {
@@ -110,6 +110,22 @@ export default function DevelopersPage() {
         description="Integrate Human Pages into your AI agent. Install the MCP server or use the REST API to search humans by skill and location."
         canonical="https://humanpages.ai/dev"
         path="/dev"
+      />
+      <SEO
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Human Pages MCP Server",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Cross-platform",
+          "description": "MCP server for AI agents to search and hire humans for real-world tasks",
+          "url": "https://humanpages.ai/dev",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }}
       />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">

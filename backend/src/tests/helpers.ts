@@ -18,6 +18,7 @@ export async function cleanDatabase(): Promise<void> {
   await prisma.wallet.deleteMany();
   await prisma.human.deleteMany();
   await prisma.passwordReset.deleteMany();
+  await prisma.oAuthState.deleteMany();
 }
 
 /**
@@ -34,7 +35,7 @@ export async function createTestUser(overrides?: {
 
   const response = await request(app)
     .post('/api/auth/signup')
-    .send({ email, password, name });
+    .send({ email, password, name, termsAccepted: true });
 
   if (response.status !== 201) {
     throw new Error(`Failed to create test user: ${JSON.stringify(response.body)}`);

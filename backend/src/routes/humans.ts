@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
@@ -53,6 +54,7 @@ const updateProfileSchema = z.object({
   // Economics
   minRateUsdc: z.number().min(0).optional().nullable(),
   rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
+  paymentPreference: z.enum(['ESCROW', 'UPFRONT', 'BOTH']).optional(),
 
   // Offer filters (anti-spam)
   minOfferPrice: z.number().min(0).optional().nullable(),
@@ -62,6 +64,9 @@ const updateProfileSchema = z.object({
   contactEmail: z.string().email().optional().nullable(),
   telegram: z.string().optional().nullable(),
   signal: z.string().optional().nullable(),
+
+  // Notification preferences
+  emailNotifications: z.boolean().optional(),
 
   // Social profiles
   linkedinUrl: z.string().url().refine(
@@ -130,8 +135,8 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
       where: { referredBy: human.id },
     });
 
-    const { passwordHash, ...profile } = human;
-    res.json({ ...profile, reputation, referralCount });
+    const { passwordHash, emailVerificationToken, ...profile } = human;
+    res.json({ ...profile, reputation, referralCount, hasPassword: !!passwordHash });
   } catch (error) {
     logger.error({ err: error }, 'Get profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -189,13 +194,77 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     });
 
     const reputation = await getReputationStats(human.id);
-    const { passwordHash, ...profile } = human;
-    res.json({ ...profile, reputation });
+    const { passwordHash, emailVerificationToken, ...profile } = human;
+    res.json({ ...profile, reputation, hasPassword: !!passwordHash });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
     logger.error({ err: error }, 'Update profile error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete account
+router.delete('/me', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({ where: { id: req.userId } });
+    if (!human) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // If user has a password, require password confirmation
+    if (human.passwordHash) {
+      const { password } = req.body || {};
+      if (!password) {
+        return res.status(400).json({ error: 'Password required to delete account' });
+      }
+      const validPassword = await bcrypt.compare(password, human.passwordHash);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Incorrect password' });
+      }
+    }
+
+    // Delete user (cascades to wallets, services, jobs, reviews)
+    await prisma.$transaction([
+      prisma.passwordReset.deleteMany({ where: { email: human.email } }),
+      prisma.human.delete({ where: { id: human.id } }),
+    ]);
+
+    logger.info({ userId: human.id }, 'Account deleted');
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    logger.error({ err: error }, 'Delete account error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Export user data
+router.get('/me/export', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.userId },
+      include: {
+        wallets: true,
+        services: true,
+        jobs: { include: { review: true } },
+        reviews: true,
+      },
+    });
+
+    if (!human) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Strip sensitive fields
+    const { passwordHash, emailVerificationToken, tokenInvalidatedAt, ...exportData } = human;
+
+    res.json({
+      exportedAt: new Date().toISOString(),
+      ...exportData,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Export data error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -278,6 +347,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         isAvailable: true,
         minRateUsdc: true,
         rateType: true,
+        paymentPreference: true,
         contactEmail: true,
         telegram: true,
         signal: true,
@@ -379,6 +449,7 @@ router.get('/:id', async (req, res) => {
         isAvailable: true,
         minRateUsdc: true,
         rateType: true,
+        paymentPreference: true,
         contactEmail: true,
         telegram: true,
         signal: true,
@@ -430,6 +501,7 @@ router.get('/u/:username', async (req, res) => {
         isAvailable: true,
         minRateUsdc: true,
         rateType: true,
+        paymentPreference: true,
         contactEmail: true,
         telegram: true,
         linkedinUrl: true,

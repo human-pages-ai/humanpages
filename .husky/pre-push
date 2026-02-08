@@ -1,0 +1,17 @@
+#!/bin/sh
+
+echo "=== Pre-push checks ==="
+
+echo "[1/4] TypeScript: backend"
+cd backend && npx tsc --noEmit || exit 1
+
+echo "[2/4] TypeScript: frontend"
+cd ../frontend && npx tsc --noEmit || exit 1
+
+echo "[3/4] TypeScript: mcp-server"
+cd ../mcp-server && npx tsc --noEmit || exit 1
+
+echo "[4/4] Backend tests"
+cd ../backend && npm test || exit 1
+
+echo "=== All checks passed ==="

@@ -10,9 +10,11 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev:mcp": "cd mcp-server && npm run dev",
     "test": "cd backend && npm test",
-    "test:watch": "cd backend && npm run test:watch"
+    "test:watch": "cd backend && npm run test:watch",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7"
   }
 }

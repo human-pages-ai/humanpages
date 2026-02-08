@@ -130,7 +130,13 @@
     "passwordMismatch": "Mật khẩu không khớp",
     "invalidToken": "Token đặt lại không hợp lệ hoặc đã hết hạn",
     "backToLogin": "Quay lại đăng nhập",
-    "completingSignIn": "Đang hoàn tất đăng nhập..."
+    "completingSignIn": "Đang hoàn tất đăng nhập...",
+    "agreeToTerms": "Tôi đồng ý với",
+    "termsOfUse": "Điều khoản Sử dụng",
+    "privacyPolicy": "Chính sách Bảo mật",
+    "acceptTermsTitle": "Chấp nhận Điều khoản để Tiếp tục",
+    "acceptTermsDesc": "Trước khi tạo tài khoản, vui lòng xem xét và chấp nhận các điều khoản của chúng tôi.",
+    "continueSignUp": "Tiếp tục Đăng ký"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -147,6 +153,13 @@
       "hidden": "Bạn ẩn khỏi tìm kiếm",
       "available": "Có sẵn",
       "unavailable": "Không có sẵn"
+    },
+    "paymentPreference": {
+      "title": "Hình thức thanh toán",
+      "subtitle": "Cho đại lý biết bạn muốn được thanh toán như thế nào",
+      "upfront": "Thanh toán trước",
+      "escrow": "Ký quỹ",
+      "both": "Linh hoạt (Đều được)"
     },
     "telegram": {
       "title": "Thông báo Telegram",
@@ -268,6 +281,28 @@
       "statusActive": "Hoạt động",
       "statusInactive": "Không hoạt động"
     },
+    "emailVerification": {
+      "banner": "Vui lòng xác minh địa chỉ email của bạn. Kiểm tra hộp thư đến để tìm liên kết xác minh.",
+      "resend": "Gửi lại email xác minh"
+    },
+    "notifications": {
+      "title": "Thông báo Email",
+      "emailLabel": "Email mời làm việc",
+      "emailDesc": "Nhận thông báo qua email khi các AI agent gửi cho bạn lời mời làm việc"
+    },
+    "account": {
+      "dangerZone": "Quản lý Tài khoản",
+      "exportTitle": "Xuất Dữ liệu",
+      "exportDesc": "Tải xuống bản sao tất cả dữ liệu của bạn ở định dạng JSON.",
+      "exportButton": "Xuất Dữ liệu",
+      "deleteTitle": "Xóa Tài khoản",
+      "deleteDesc": "Xóa vĩnh viễn tài khoản và tất cả dữ liệu liên quan. Hành động này không thể hoàn tác.",
+      "deleteButton": "Xóa Tài khoản",
+      "confirmPassword": "Nhập mật khẩu để xác nhận",
+      "confirmDelete": "Có, Xóa Tài khoản",
+      "confirmDeleteTitle": "Xóa Tài khoản?",
+      "confirmDeleteMsg": "Điều này sẽ xóa vĩnh viễn tài khoản và tất cả dữ liệu của bạn."
+    },
     "yourReferrals": "Giới thiệu của bạn",
     "moreReferrals": "+{{count}} nữa"
   },
@@ -329,7 +364,8 @@
     "hireMe": "Thuê tôi",
     "contactInfo": "Thông tin liên hệ",
     "reviews": "Đánh giá",
-    "noReviews": "Chưa có đánh giá"
+    "noReviews": "Chưa có đánh giá",
+    "paymentPreference": "Hình thức thanh toán"
   },
   "errors": {
     "required": "Trường này là bắt buộc",
@@ -361,6 +397,11 @@
     "jobCompleted": "Đã hoàn thành công việc",
     "telegramConnected": "Đã kết nối Telegram",
     "telegramDisconnected": "Đã ngắt kết nối Telegram",
+    "accountDeleted": "Đã xóa tài khoản thành công",
+    "dataExported": "Đã xuất dữ liệu thành công",
+    "verificationSent": "Đã gửi email xác minh",
+    "emailVerified": "Đã xác minh email thành công",
+    "preferencesSaved": "Đã lưu tùy chọn",
     "genericError": "Đã xảy ra lỗi. Vui lòng thử lại."
   },
   "notFound": {
