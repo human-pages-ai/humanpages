@@ -203,7 +203,7 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     res.json({ ...profile, reputation, hasPassword: !!passwordHash });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Update profile error');
     res.status(500).json({ error: 'Internal server error' });

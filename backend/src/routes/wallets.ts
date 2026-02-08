@@ -43,7 +43,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     res.status(201).json(wallet);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     if ((error as any).code === 'P2002') {
       return res.status(400).json({ error: 'This wallet address is already added for this network' });

@@ -21,7 +21,6 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
-    loginWithGithub: vi.fn(),
   }),
 }));
 

@@ -17,24 +17,20 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
-    loginWithGithub: vi.fn(),
   }),
 }));
 
 describe('LandingPage', () => {
   it('renders hero title', () => {
-    const { container } = renderWithProviders(<LandingPage />);
-    // Title is split across <br/> so check the h1 contains the title key
-    const h1 = container.querySelector('h1');
-    expect(h1?.textContent).toContain('landing.hero.title');
+    renderWithProviders(<LandingPage />);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1).toHaveTextContent('landing.hero.title');
   });
 
   it('renders signup CTA link', () => {
     renderWithProviders(<LandingPage />);
-    const ctaLinks = screen.getAllByRole('link').filter(
-      (link) => link.getAttribute('href') === '/signup'
-    );
-    expect(ctaLinks.length).toBeGreaterThan(0);
+    const ctaLinks = screen.getAllByRole('link', { name: /landing\.hero\.cta/i });
+    expect(ctaLinks[0]).toHaveAttribute('href', '/signup');
   });
 
   it('renders tasks section', () => {

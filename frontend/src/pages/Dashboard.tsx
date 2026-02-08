@@ -482,7 +482,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <SEO title="Dashboard" noindex />
       <nav className="bg-white shadow">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center overflow-x-auto">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="whitespace-nowrap"><Link to="/"><Logo /></Link></h1>
           <div className="flex items-center gap-4 whitespace-nowrap">
             <LanguageSwitcher />

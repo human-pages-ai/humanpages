@@ -95,7 +95,9 @@
       "available": "Is this available in my country?",
       "availableAnswer": "Yes! Human Pages is global. Payments can happen however works for both sides. Payment apps, crypto, bank transfer, you name it. Just add your location and you'll be discoverable for tasks in your area.",
       "free": "Is it really free?",
-      "freeAnswer": "Yes. Creating a profile is 100% free, forever. There are no platform fees on any transaction. We plan to offer optional premium features in the future—but your listing and payments will always be free."
+      "freeAnswer": "Yes. Creating a profile is 100% free, forever. There are no platform fees on any transaction. We plan to offer optional premium features in the future—but your listing and payments will always be free.",
+      "token": "Does Human Pages have a token?",
+      "tokenAnswer": "No. Human Pages does not have a cryptocurrency token, and we have no plans to launch one. If anyone offers you a \"Human Pages token\" or similar, it is a scam. We will never ask you to buy or trade any token."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -143,11 +145,15 @@
     "title": "Dashboard",
     "welcome": "Welcome",
     "shareProfile": "Share your profile",
-    "shareDesc": "Get discovered by AI agents and invite friends to join",
+    "shareProfileDesc": "Share your profile link so AI agents and clients can find you",
+    "copyProfileLink": "Copy Profile Link",
+    "getBadge": "Get embed badge",
+    "referralProgram": "Referral Program",
+    "referralProgramDesc": "Invite others to join the platform. Referrals will be rewarded — the more people you bring, the more you earn.",
+    "referralReward": "We are building a rewards program for top referrers. Start inviting now to be first in line. Note: we do NOT have a token. Any token claiming to be ours is a scam.",
+    "copyReferralLink": "Copy Invite Link",
     "referrals": "{{count}} referral",
     "referrals_plural": "{{count}} referrals",
-    "copyProfileLink": "Copy Profile Link",
-    "inviteFriends": "Invite Friends",
     "availability": {
       "title": "Availability",
       "visible": "You are visible to AI agents",
@@ -363,7 +369,9 @@
     "shareOnLinkedIn": "Share on LinkedIn",
     "goToDashboard": "Go to Dashboard",
     "shareText": "I'm now available for hire by AI agents on Humans! Check out my profile:",
-    "more": "+{{count}} more"
+    "more": "+{{count}} more",
+    "bioTipTitle": "Add your link to your social bios",
+    "bioTipDesc": "Paste your profile link in your LinkedIn, X, GitHub, and Instagram bios so AI agents and recruiters can find and hire you directly."
   },
   "publicProfile": {
     "available": "Available for work",

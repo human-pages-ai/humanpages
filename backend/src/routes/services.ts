@@ -42,7 +42,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     res.status(201).json(service);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Create service error');
     res.status(500).json({ error: 'Internal server error' });
@@ -70,7 +70,7 @@ router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
     res.json(service);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Update service error');
     res.status(500).json({ error: 'Internal server error' });

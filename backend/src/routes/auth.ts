@@ -99,7 +99,7 @@ router.post('/signup', authRateLimiter, async (req, res) => {
     res.status(201).json({ human, token });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Signup error');
     res.status(500).json({ error: 'Internal server error' });
@@ -133,7 +133,7 @@ router.post('/login', authRateLimiter, async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Login error');
     res.status(500).json({ error: 'Internal server error' });
@@ -180,7 +180,7 @@ router.post('/forgot-password', authRateLimiter, async (req, res) => {
     res.json({ message: 'If an account exists, a reset link has been sent' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Forgot password error');
     res.status(500).json({ error: 'Internal server error' });
@@ -233,7 +233,7 @@ router.post('/reset-password', authRateLimiter, async (req, res) => {
     res.json({ message: 'Password has been reset successfully' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Reset password error');
     res.status(500).json({ error: 'Internal server error' });

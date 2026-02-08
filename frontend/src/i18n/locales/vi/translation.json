@@ -94,7 +94,9 @@
       "available": "Dịch vụ có sẵn ở nước tôi không?",
       "availableAnswer": "Có! Human Pages là toàn cầu. Thanh toán crypto hoạt động xuyên biên giới mà không cần ngân hàng. Chỉ cần thêm vị trí và bạn sẽ được tìm thấy cho các công việc trong khu vực.",
       "free": "Có thực sự miễn phí không?",
-      "freeAnswer": "Có. Tạo hồ sơ 100% miễn phí, mãi mãi. Không có phí nền tảng trên bất kỳ giao dịch nào. Chúng tôi dự định cung cấp các tính năng cao cấp tùy chọn trong tương lai—nhưng hồ sơ và thanh toán của bạn sẽ luôn miễn phí."
+      "freeAnswer": "Có. Tạo hồ sơ 100% miễn phí, mãi mãi. Không có phí nền tảng trên bất kỳ giao dịch nào. Chúng tôi dự định cung cấp các tính năng cao cấp tùy chọn trong tương lai—nhưng hồ sơ và thanh toán của bạn sẽ luôn miễn phí.",
+      "token": "Human Pages có token không?",
+      "tokenAnswer": "Không. Human Pages không có token tiền điện tử và chúng tôi không có kế hoạch phát hành. Nếu ai đó mời bạn mua \"token Human Pages\" hoặc tương tự, đó là lừa đảo. Chúng tôi sẽ không bao giờ yêu cầu bạn mua hoặc giao dịch bất kỳ token nào."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -142,11 +144,15 @@
     "title": "Bảng điều khiển",
     "welcome": "Chào mừng",
     "shareProfile": "Chia sẻ hồ sơ",
-    "shareDesc": "Được AI agent khám phá và mời bạn bè tham gia",
+    "shareProfileDesc": "Chia sẻ liên kết hồ sơ để AI agent và khách hàng có thể tìm thấy bạn",
+    "getBadge": "Lấy huy hiệu",
     "referrals": "{{count}} giới thiệu",
     "referrals_plural": "{{count}} giới thiệu",
     "copyProfileLink": "Sao chép liên kết hồ sơ",
-    "inviteFriends": "Mời bạn bè",
+    "referralProgram": "Chương trình giới thiệu",
+    "referralProgramDesc": "Mời người khác tham gia nền tảng. Giới thiệu sẽ được thưởng — bạn mời càng nhiều, bạn kiếm càng nhiều.",
+    "referralReward": "Chúng tôi đang xây dựng chương trình thưởng cho người giới thiệu hàng đầu. Hãy bắt đầu mời ngay. Lưu ý: chúng tôi KHÔNG có token. Bất kỳ token nào tuyên bố là của chúng tôi đều là lừa đảo.",
+    "copyReferralLink": "Sao chép liên kết mời",
     "availability": {
       "title": "Khả dụng",
       "visible": "Bạn hiển thị với AI agent",
@@ -354,7 +360,9 @@
     "shareOnLinkedIn": "Chia sẻ trên LinkedIn",
     "goToDashboard": "Đến bảng điều khiển",
     "shareText": "Tôi hiện có sẵn để được AI agent thuê trên Humans! Xem hồ sơ của tôi:",
-    "more": "+{{count}} nữa"
+    "more": "+{{count}} nữa",
+    "bioTipTitle": "Thêm liên kết vào tiểu sử mạng xã hội",
+    "bioTipDesc": "Dán liên kết hồ sơ của bạn vào tiểu sử LinkedIn, X, GitHub và Instagram để các AI agent và nhà tuyển dụng có thể tìm và thuê bạn trực tiếp."
   },
   "publicProfile": {
     "available": "Sẵn sàng làm việc",

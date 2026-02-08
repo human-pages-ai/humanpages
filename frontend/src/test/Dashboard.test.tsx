@@ -76,7 +76,7 @@ describe('Dashboard', () => {
     });
 
     // Should display user name in nav
-    expect(screen.getAllByText('Test User').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Test User')[0]).toBeInTheDocument();
   });
 
   it('renders jobs section', async () => {
@@ -96,7 +96,7 @@ describe('Dashboard', () => {
     });
 
     // Jobs section should be present
-    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThan(0);
+    expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
   });
 
   it('renders wallets section', async () => {
@@ -106,8 +106,8 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    // Wallets section should be present
-    expect(screen.getAllByText('dashboard.wallets.title').length).toBeGreaterThan(0);
+    // Wallets section should be present (title may appear in completeness widget too)
+    expect(screen.getAllByText('dashboard.wallets.title')[0]).toBeInTheDocument();
   });
 
   it('renders services section', async () => {
@@ -117,8 +117,8 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    // Services section should be present
-    expect(screen.getAllByText('dashboard.services.title').length).toBeGreaterThan(0);
+    // Services section should be present (title may appear in completeness widget too)
+    expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
   });
 
   it('shows empty states when no data', async () => {
@@ -136,9 +136,9 @@ describe('Dashboard', () => {
     });
 
     // Should render sections even with empty data
-    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('dashboard.wallets.title').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('dashboard.services.title').length).toBeGreaterThan(0);
+    expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
+    expect(screen.getAllByText('dashboard.wallets.title')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
   });
 
   it('displays error state when profile fails to load', async () => {
@@ -220,7 +220,7 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('dashboard.telegram.title').length).toBeGreaterThan(0);
+    expect(screen.getByText('dashboard.telegram.title')).toBeInTheDocument();
   });
 
   it('renders job stats with review data', async () => {
@@ -236,7 +236,7 @@ describe('Dashboard', () => {
     });
 
     // Jobs section renders stats inline
-    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThan(0);
+    expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
   });
 
   it('renders share/referral section', async () => {
@@ -246,6 +246,6 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('dashboard.shareProfile').length).toBeGreaterThan(0);
+    expect(screen.getByText('dashboard.shareProfile')).toBeInTheDocument();
   });
 });

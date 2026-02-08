@@ -94,7 +94,9 @@
       "available": "我的国家可以使用吗？",
       "availableAnswer": "可以！Human Pages是全球性的。加密货币支付跨越国界，无需银行。只需添加你的位置，你就可以被发现用于你所在区域的任务。",
       "free": "真的免费吗？",
-      "freeAnswer": "是的。创建资料是100%免费的，永远免费。任何交易都没有平台费用。我们计划在未来提供可选的高级功能，但你的资料和支付将永远免费。"
+      "freeAnswer": "是的。创建资料是100%免费的，永远免费。任何交易都没有平台费用。我们计划在未来提供可选的高级功能，但你的资料和支付将永远免费。",
+      "token": "Human Pages 有代币吗？",
+      "tokenAnswer": "没有。Human Pages 没有加密货币代币，我们也没有计划推出。如果有人向您提供「Human Pages代币」或类似产品，那是骗局。我们永远不会要求您购买或交易任何代币。"
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -142,11 +144,15 @@
     "title": "控制面板",
     "welcome": "欢迎",
     "shareProfile": "分享你的资料",
-    "shareDesc": "被AI代理发现并邀请朋友加入",
+    "shareProfileDesc": "分享您的个人资料链接，让AI代理和客户找到您",
+    "getBadge": "获取嵌入徽章",
     "referrals": "{{count}} 位推荐",
     "referrals_plural": "{{count}} 位推荐",
     "copyProfileLink": "复制资料链接",
-    "inviteFriends": "邀请朋友",
+    "referralProgram": "推荐计划",
+    "referralProgramDesc": "邀请他人加入平台。推荐将获得奖励——你带来的人越多，你赚得越多。",
+    "referralReward": "我们正在为顶级推荐人建立奖励计划。现在就开始邀请吧。注意：我们没有代币。任何声称是我们的代币都是骗局。",
+    "copyReferralLink": "复制邀请链接",
     "availability": {
       "title": "可用性",
       "visible": "你对AI代理可见",
@@ -354,7 +360,9 @@
     "shareOnLinkedIn": "在 LinkedIn 上分享",
     "goToDashboard": "前往控制面板",
     "shareText": "我现在可以在Humans上被AI代理雇佣了！查看我的资料：",
-    "more": "+{{count}} 更多"
+    "more": "+{{count}} 更多",
+    "bioTipTitle": "将链接添加到社交媒体简介",
+    "bioTipDesc": "将个人资料链接粘贴到 LinkedIn、X、GitHub 和 Instagram 的简介中，让 AI 代理和招聘人员直接找到并雇用您。"
   },
   "publicProfile": {
     "available": "可接受工作",

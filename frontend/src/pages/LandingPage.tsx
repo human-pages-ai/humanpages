@@ -60,6 +60,7 @@ export default function LandingPage() {
     { q: t('landing.faq.howPaid'), a: t('landing.faq.howPaidAnswer') },
     { q: t('landing.faq.available'), a: t('landing.faq.availableAnswer') },
     { q: t('landing.faq.free'), a: t('landing.faq.freeAnswer') },
+    { q: t('landing.faq.token'), a: t('landing.faq.tokenAnswer') },
   ];
 
   return (

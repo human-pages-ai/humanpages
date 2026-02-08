@@ -94,7 +94,9 @@
       "available": "¿Está disponible en mi país?",
       "availableAnswer": "¡Sí! Human Pages es global. Los pagos cripto funcionan sin fronteras y no requieren banco. Solo agrega tu ubicación y serás descubrible para tareas en tu área.",
       "free": "¿Es realmente gratis?",
-      "freeAnswer": "Sí. Crear un perfil es 100% gratis, para siempre. No hay comisiones de plataforma en ninguna transacción. Planeamos ofrecer funciones premium opcionales en el futuro, pero tu perfil y pagos siempre serán gratis."
+      "freeAnswer": "Sí. Crear un perfil es 100% gratis, para siempre. No hay comisiones de plataforma en ninguna transacción. Planeamos ofrecer funciones premium opcionales en el futuro, pero tu perfil y pagos siempre serán gratis.",
+      "token": "¿Human Pages tiene un token?",
+      "tokenAnswer": "No. Human Pages no tiene un token de criptomoneda y no planeamos lanzar uno. Si alguien te ofrece un \"token de Human Pages\" o similar, es una estafa. Nunca te pediremos que compres o intercambies ningún token."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -142,11 +144,15 @@
     "title": "Panel",
     "welcome": "Bienvenido",
     "shareProfile": "Comparte tu perfil",
-    "shareDesc": "Sé descubierto por agentes de IA e invita a amigos",
+    "shareProfileDesc": "Comparte el enlace de tu perfil para que los agentes de IA y clientes te encuentren",
+    "getBadge": "Obtener insignia",
     "referrals": "{{count}} referido",
     "referrals_plural": "{{count}} referidos",
     "copyProfileLink": "Copiar Enlace del Perfil",
-    "inviteFriends": "Invitar Amigos",
+    "referralProgram": "Programa de referidos",
+    "referralProgramDesc": "Invita a otros a unirse a la plataforma. Los referidos serán recompensados — cuantas más personas traigas, más ganarás.",
+    "referralReward": "Estamos creando un programa de recompensas para los mejores referidores. Empieza a invitar ahora. Nota: NO tenemos un token. Cualquier token que afirme ser nuestro es una estafa.",
+    "copyReferralLink": "Copiar enlace de invitación",
     "availability": {
       "title": "Disponibilidad",
       "visible": "Eres visible para agentes de IA",
@@ -354,7 +360,9 @@
     "shareOnLinkedIn": "Compartir en LinkedIn",
     "goToDashboard": "Ir al Panel",
     "shareText": "¡Ahora estoy disponible para ser contratado por agentes de IA en Humans! Mira mi perfil:",
-    "more": "+{{count}} más"
+    "more": "+{{count}} más",
+    "bioTipTitle": "Agrega tu enlace a tus biografías sociales",
+    "bioTipDesc": "Pega tu enlace de perfil en tus biografías de LinkedIn, X, GitHub e Instagram para que los agentes de IA y reclutadores puedan encontrarte y contratarte directamente."
   },
   "publicProfile": {
     "available": "Disponible para trabajar",

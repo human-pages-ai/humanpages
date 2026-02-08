@@ -94,7 +94,9 @@
       "available": "Available ba ito sa bansa ko?",
       "availableAnswer": "Oo! Ang Human Pages ay global. Ang crypto payments ay gumagana sa buong mundo nang walang kailangang bangko. Idagdag lang ang iyong lokasyon at mahahanap ka para sa mga gawain sa iyong lugar.",
       "free": "Talaga bang libre?",
-      "freeAnswer": "Oo. Ang paggawa ng profile ay 100% libre, habambuhay. Walang platform fees sa anumang transaksyon. Nagpaplano kaming mag-alok ng optional premium features sa hinaharap—pero ang iyong listing at payments ay libre palagi."
+      "freeAnswer": "Oo. Ang paggawa ng profile ay 100% libre, habambuhay. Walang platform fees sa anumang transaksyon. Nagpaplano kaming mag-alok ng optional premium features sa hinaharap—pero ang iyong listing at payments ay libre palagi.",
+      "token": "May token ba ang Human Pages?",
+      "tokenAnswer": "Wala. Ang Human Pages ay walang cryptocurrency token at wala kaming planong mag-launch ng isa. Kung may mag-alok sa iyo ng \"Human Pages token\" o katulad, ito ay isang scam. Hindi namin kailanman hihilingin sa iyo na bumili o mag-trade ng anumang token."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -142,11 +144,15 @@
     "title": "Dashboard",
     "welcome": "Welcome",
     "shareProfile": "Ibahagi ang iyong profile",
-    "shareDesc": "Madiskubre ng mga AI agent at mag-imbita ng mga kaibigan",
+    "shareProfileDesc": "Ibahagi ang iyong profile link para mahanap ka ng mga AI agent at kliyente",
+    "getBadge": "Kumuha ng badge",
     "referrals": "{{count}} referral",
     "referrals_plural": "{{count}} referrals",
     "copyProfileLink": "Kopyahin ang Profile Link",
-    "inviteFriends": "Mag-imbita ng Kaibigan",
+    "referralProgram": "Programa ng Referral",
+    "referralProgramDesc": "Mag-imbita ng iba na sumali sa platform. Ang mga referral ay gagantimpalaan — mas maraming tao ang iyong dalhin, mas marami kang kikitain.",
+    "referralReward": "Gumagawa kami ng programa ng gantimpala para sa mga nangungunang nag-refer. Mag-imbita na ngayon. Paalala: WALA kaming token. Anumang token na nag-aangking sa amin ay isang scam.",
+    "copyReferralLink": "Kopyahin ang invite link",
     "availability": {
       "title": "Availability",
       "visible": "Nakikita ka ng mga AI agent",
@@ -354,7 +360,9 @@
     "shareOnLinkedIn": "I-share sa LinkedIn",
     "goToDashboard": "Pumunta sa Dashboard",
     "shareText": "Available na ako para ma-hire ng mga AI agent sa Humans! Tingnan ang profile ko:",
-    "more": "+{{count}} pa"
+    "more": "+{{count}} pa",
+    "bioTipTitle": "Idagdag ang iyong link sa iyong mga social bio",
+    "bioTipDesc": "I-paste ang iyong profile link sa iyong LinkedIn, X, GitHub, at Instagram bio para mahanap ka at ma-hire ka ng mga AI agent at recruiter."
   },
   "publicProfile": {
     "available": "Available para sa trabaho",

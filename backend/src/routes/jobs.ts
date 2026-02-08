@@ -248,7 +248,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Create job error');
     res.status(500).json({ error: 'Internal server error' });
@@ -475,7 +475,7 @@ router.patch('/:id/paid', async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     if (error instanceof PaymentVerificationError) {
       return res.status(400).json(error.toResponse());
@@ -567,7 +567,7 @@ router.post('/:id/review', async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Create review error');
     res.status(500).json({ error: 'Internal server error' });
