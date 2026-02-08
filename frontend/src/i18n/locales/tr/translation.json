@@ -270,6 +270,8 @@
       "youtube": "YouTube",
       "website": "Web Sitesi",
       "saveProfile": "Profili Kaydet",
+      "hideContact": "İletişim bilgilerini herkese açık profilden gizle",
+      "hideContactHelp": "Etkinleştirildiğinde, e-postanız, Telegram, WhatsApp ve ödeme yöntemleriniz ziyaretçilere görünmez.",
       "saving": "Kaydediliyor..."
     },
     "wallets": {

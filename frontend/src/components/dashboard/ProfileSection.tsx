@@ -17,6 +17,7 @@ interface Props {
     telegram: string;
     whatsapp: string;
     paymentMethods: string;
+    hideContact: boolean;
     username?: string;
     linkedinUrl: string;
     twitterUrl: string;
@@ -221,6 +222,19 @@ export default function ProfileSection({
             <h3 className="text-sm font-medium text-gray-900 mb-3">
               {t('dashboard.profile.howToReachYou')}
             </h3>
+            <label className="flex items-start gap-2 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={profileForm.hideContact}
+                onChange={(e) => setProfileForm({ ...profileForm, hideContact: e.target.checked })}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm">
+                <span className="font-medium text-gray-900">{t('dashboard.profile.hideContact')}</span>
+                <br />
+                <span className="text-gray-500 text-xs">{t('dashboard.profile.hideContactHelp')}</span>
+              </span>
+            </label>
             <div className="space-y-4">
               <div>
                 <label htmlFor="profile-contact-email" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.contactEmail')}</label>

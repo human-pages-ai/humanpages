@@ -256,6 +256,8 @@
       "howToReachYou": "How to reach you",
       "howToPayYou": "How to pay you",
       "saveProfile": "Save Profile",
+      "hideContact": "Hide contact info from public profile",
+      "hideContactHelp": "When enabled, your email, Telegram, WhatsApp, and payment methods won't be visible to visitors.",
       "saving": "Saving..."
     },
     "wallets": {

@@ -270,6 +270,8 @@
       "youtube": "YouTube",
       "website": "Website",
       "saveProfile": "I-save ang Profile",
+      "hideContact": "Itago ang contact info sa public profile",
+      "hideContactHelp": "Kapag naka-enable, ang iyong email, Telegram, WhatsApp, at payment methods ay hindi makikita ng mga bisita.",
       "saving": "Nagse-save..."
     },
     "wallets": {

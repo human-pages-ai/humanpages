@@ -248,6 +248,8 @@
       "youtube": "YouTube",
       "website": "เว็บไซต์",
       "saveProfile": "บันทึกโปรไฟล์",
+      "hideContact": "ซ่อนข้อมูลติดต่อจากโปรไฟล์สาธารณะ",
+      "hideContactHelp": "เมื่อเปิดใช้งาน อีเมล, Telegram, WhatsApp และวิธีการชำระเงินของคุณจะไม่แสดงให้ผู้เยี่ยมชมเห็น",
       "saving": "กำลังบันทึก..."
     },
     "wallets": {

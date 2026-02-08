@@ -270,6 +270,8 @@
       "youtube": "YouTube",
       "website": "Sitio Web",
       "saveProfile": "Guardar Perfil",
+      "hideContact": "Ocultar información de contacto del perfil público",
+      "hideContactHelp": "Cuando está activado, tu email, Telegram, WhatsApp y métodos de pago no serán visibles para los visitantes.",
       "saving": "Guardando..."
     },
     "wallets": {

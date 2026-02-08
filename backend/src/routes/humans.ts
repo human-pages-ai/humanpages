@@ -70,6 +70,9 @@ const updateProfileSchema = z.object({
   // Payment methods
   paymentMethods: z.string().optional().nullable(),
 
+  // Privacy
+  hideContact: z.boolean().optional(),
+
   // Notification preferences
   emailNotifications: z.boolean().optional(),
 
@@ -113,6 +116,16 @@ async function getReputationStats(humanId: string) {
     avgRating: Math.round(avgRating * 10) / 10,
     reviewCount: reviews.length,
   };
+}
+
+// Strip contact fields from public responses when user has hideContact enabled
+function filterHiddenContact(human: any) {
+  if (!human.hideContact) {
+    const { hideContact, ...rest } = human;
+    return rest;
+  }
+  const { contactEmail, telegram, whatsapp, signal, paymentMethods, hideContact, ...rest } = human;
+  return rest;
 }
 
 // Get current user profile
@@ -358,6 +371,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         whatsapp: true,
         signal: true,
         paymentMethods: true,
+        hideContact: true,
         linkedinUrl: true,
         twitterUrl: true,
         githubUrl: true,
@@ -419,8 +433,8 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       ])
     );
 
-    // Attach stats to each human
-    const humansWithReputation = humans.map((h) => ({
+    // Attach stats to each human and filter hidden contact info
+    const humansWithReputation = humans.map((h) => filterHiddenContact({
       ...h,
       reputation: {
         jobsCompleted: jobCountMap.get(h.id) || 0,
@@ -470,6 +484,7 @@ router.get('/:id', async (req, res) => {
         whatsapp: true,
         signal: true,
         paymentMethods: true,
+        hideContact: true,
         linkedinUrl: true,
         twitterUrl: true,
         githubUrl: true,
@@ -497,7 +512,7 @@ router.get('/:id', async (req, res) => {
     trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id });
 
     const reputation = await getReputationStats(human.id);
-    res.json({ ...human, reputation });
+    res.json(filterHiddenContact({ ...human, reputation }));
   } catch (error) {
     logger.error({ err: error }, 'Get human error');
     res.status(500).json({ error: 'Internal server error' });
@@ -526,7 +541,9 @@ router.get('/u/:username', async (req, res) => {
         contactEmail: true,
         telegram: true,
         whatsapp: true,
+        signal: true,
         paymentMethods: true,
+        hideContact: true,
         linkedinUrl: true,
         twitterUrl: true,
         githubUrl: true,
@@ -550,7 +567,7 @@ router.get('/u/:username', async (req, res) => {
     }
 
     const reputation = await getReputationStats(human.id);
-    res.json({ ...human, reputation });
+    res.json(filterHiddenContact({ ...human, reputation }));
   } catch (error) {
     logger.error({ err: error }, 'Get human by username error');
     res.status(500).json({ error: 'Internal server error' });

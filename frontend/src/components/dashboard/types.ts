@@ -30,6 +30,7 @@ export interface Profile {
   telegram?: string;
   whatsapp?: string;
   paymentMethods?: string;
+  hideContact?: boolean;
   isAvailable: boolean;
   linkedinUrl?: string;
   twitterUrl?: string;

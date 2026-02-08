@@ -63,6 +63,9 @@ model Human {
   // ===== PAYMENT METHODS =====
   paymentMethods  String?  // Free-text: PayPal, Venmo, Wise links, etc.
 
+  // ===== PRIVACY =====
+  hideContact     Boolean  @default(false) // Hide contact info from public profile
+
   // ===== ACTIVITY & REPUTATION (System Generated) =====
   lastActiveAt  DateTime @default(now()) // For deprioritizing ghosts
   createdAt     DateTime @default(now())

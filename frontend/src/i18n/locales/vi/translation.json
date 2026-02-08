@@ -248,6 +248,8 @@
       "youtube": "YouTube",
       "website": "Website",
       "saveProfile": "Lưu hồ sơ",
+      "hideContact": "Ẩn thông tin liên hệ khỏi hồ sơ công khai",
+      "hideContactHelp": "Khi bật, email, Telegram, WhatsApp và phương thức thanh toán của bạn sẽ không hiển thị với người truy cập.",
       "saving": "Đang lưu..."
     },
     "wallets": {

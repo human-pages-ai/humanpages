@@ -270,6 +270,8 @@
       "youtube": "YouTube",
       "website": "网站",
       "saveProfile": "保存资料",
+      "hideContact": "在公开资料中隐藏联系方式",
+      "hideContactHelp": "启用后，您的邮箱、Telegram、WhatsApp 和付款方式将不会对访客可见。",
       "saving": "保存中..."
     },
     "wallets": {
