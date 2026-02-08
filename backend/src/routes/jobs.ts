@@ -16,6 +16,7 @@ import {
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
+import { isAllowedUrl, fireWebhook } from '../lib/webhook.js';
 
 const router = Router();
 
@@ -51,6 +52,9 @@ const createJobSchema = z.object({
   // Agent location for distance filtering
   agentLat: z.number().min(-90).max(90).optional(),
   agentLng: z.number().min(-180).max(180).optional(),
+  // Webhook callback
+  callbackUrl: z.string().url().optional(),
+  callbackSecret: z.string().min(16).max(256).optional(),
 });
 
 // Schema for marking job as paid
@@ -92,6 +96,14 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 router.post('/', ipRateLimiter, async (req, res) => {
   try {
     const data = createJobSchema.parse(req.body);
+
+    // SSRF prevention: validate callback URL points to public endpoint
+    if (data.callbackUrl && !(await isAllowedUrl(data.callbackUrl))) {
+      return res.status(400).json({
+        error: 'Invalid callback URL',
+        message: 'Callback URL must be a public HTTP(S) endpoint',
+      });
+    }
 
     // Rate limiting: count offers from this agent in the last hour
     const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
@@ -195,6 +207,8 @@ router.post('/', ipRateLimiter, async (req, res) => {
         description: data.description,
         category: data.category,
         priceUsdc: new Decimal(data.priceUsdc),
+        callbackUrl: data.callbackUrl,
+        callbackSecret: data.callbackSecret,
         status: 'PENDING',
       },
     });
@@ -272,7 +286,9 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    res.json(job);
+    // Strip callbackSecret from response to prevent leaking
+    const { callbackSecret, ...safeJob } = job;
+    res.json(safeJob);
   } catch (error) {
     logger.error({ err: error }, 'Get job error');
     res.status(500).json({ error: 'Internal server error' });
@@ -331,6 +347,34 @@ router.patch('/:id/accept', authenticateToken, async (req: AuthRequest, res) => 
       },
     });
 
+    // Fire webhook with contact info on acceptance
+    if (job.callbackUrl) {
+      const human = await prisma.human.findUnique({
+        where: { id: job.humanId },
+        select: {
+          name: true,
+          contactEmail: true,
+          email: true,
+          telegram: true,
+          whatsapp: true,
+          signal: true,
+        },
+      });
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.accepted',
+        {
+          humanName: human?.name,
+          contact: {
+            email: human?.contactEmail || human?.email || null,
+            telegram: human?.telegram || null,
+            whatsapp: human?.whatsapp || null,
+            signal: human?.signal || null,
+          },
+        },
+      );
+    }
+
     res.json({
       id: updated.id,
       status: updated.status,
@@ -365,6 +409,14 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
       where: { id: job.id },
       data: { status: 'REJECTED' },
     });
+
+    // Fire webhook on rejection
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.rejected',
+      );
+    }
 
     res.json({
       id: updated.id,
@@ -452,6 +504,22 @@ router.patch('/:id/paid', async (req, res) => {
       },
     });
 
+    // Fire webhook on payment
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.paid',
+        {
+          payment: {
+            txHash: verification.txHash,
+            network: verification.network,
+            token: verification.token,
+            amount: verification.amount,
+          },
+        },
+      );
+    }
+
     // Track payment received in PostHog
     trackServerEvent(job.humanId, 'payment_received', {
       jobId: job.id,
@@ -511,6 +579,14 @@ router.patch('/:id/complete', authenticateToken, async (req: AuthRequest, res) =
         completedAt: new Date(),
       },
     });
+
+    // Fire webhook on completion
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.completed',
+      );
+    }
 
     res.json({
       id: updated.id,

@@ -60,6 +60,7 @@ interface Job {
   createdAt: string;
   acceptedAt?: string;
   completedAt?: string;
+  callbackUrl?: string;
   human: { id: string; name: string };
   review?: { id: string; rating: number; comment?: string };
 }
@@ -226,6 +227,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           agent_lng: {
             type: 'number',
             description: 'Agent longitude for distance filtering. Required if human has maxOfferDistance set.',
+          },
+          callback_url: {
+            type: 'string',
+            description: 'Webhook URL to receive job status updates (ACCEPTED, REJECTED, PAID, COMPLETED). Must be a public HTTP(S) endpoint.',
+          },
+          callback_secret: {
+            type: 'string',
+            description: 'Secret for HMAC-SHA256 signature verification (min 16 chars). The signature is sent in X-HumanPages-Signature header.',
           },
         },
         required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id'],
@@ -426,6 +435,8 @@ ${servicesInfo || 'No services listed'}`;
           description: args?.description,
           category: args?.category,
           priceUsdc: args?.price_usdc,
+          callbackUrl: args?.callback_url,
+          callbackSecret: args?.callback_secret,
         }),
       });
 
@@ -436,6 +447,10 @@ ${servicesInfo || 'No services listed'}`;
 
       const job = await res.json() as Job;
       const human = await getHuman(args?.human_id as string);
+
+      const webhookNote = args?.callback_url
+        ? `\n\n🔔 **Webhook configured.** Status updates will be sent to your callback URL. On acceptance, the human's contact info will be included in the webhook payload.`
+        : `\n\nUse \`get_job_status\` with job_id "${job.id}" to check if they've accepted.`;
 
       return {
         content: [
@@ -448,8 +463,7 @@ ${servicesInfo || 'No services listed'}`;
 **Human:** ${human.name}
 **Price:** $${args?.price_usdc} USDC
 
-⏳ **Next Step:** Wait for ${human.name} to accept the offer.
-Use \`get_job_status\` with job_id "${job.id}" to check if they've accepted.
+⏳ **Next Step:** Wait for ${human.name} to accept the offer.${webhookNote}
 
 Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to record the transaction.`,
           },
@@ -481,7 +495,9 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
           nextStep = 'Waiting for the human to accept or reject.';
           break;
         case 'ACCEPTED':
-          nextStep = `Human accepted! Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`;
+          nextStep = job.callbackUrl
+            ? `Human accepted! Contact info was sent to your webhook. Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`
+            : `Human accepted! Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`;
           break;
         case 'REJECTED':
           nextStep = 'The human rejected this offer. Consider adjusting your offer or finding another human.';

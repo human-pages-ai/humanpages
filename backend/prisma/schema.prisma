@@ -140,6 +140,10 @@ model Job {
   paymentAmount   Decimal?  @db.Decimal(18, 6) // Actual amount received
   paidAt          DateTime?
 
+  // Webhook callback (optional, provided by agent)
+  callbackUrl     String?   // URL to POST status updates to
+  callbackSecret  String?   // HMAC-SHA256 secret for signing payloads
+
   status          JobStatus @default(PENDING)
 
   // Timestamps
