@@ -143,7 +143,7 @@ function AppRoutes() {
       <Route path="/blog/mcp-protocol-ai-agents" element={<McpProtocol />} />
 
       {/* Language-prefixed routes for SEO */}
-      <Route path="/:lang" element={<LangWrapper><LandingPage /></LangWrapper>} />
+      <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
       <Route path="/:lang/dev" element={<LangWrapper><DevelopersPage /></LangWrapper>} />
       <Route path="/:lang/humans/:id" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/signup" element={<LangWrapper><PublicRoute><Signup /></PublicRoute></LangWrapper>} />
