@@ -15,6 +15,7 @@ import {
 } from '../lib/blockchain/index.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -199,6 +200,13 @@ router.post('/', ipRateLimiter, async (req, res) => {
     });
 
     const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`;
+
+    // Track job offer creation in PostHog
+    trackServerEvent(data.agentId, 'job_offer_sent', {
+      humanId: data.humanId,
+      priceUsdc: data.priceUsdc,
+      category: data.category,
+    });
 
     // Send email notification (async, don't block response)
     const notifyEmail = human.contactEmail || human.email;
@@ -442,6 +450,13 @@ router.patch('/:id/paid', async (req, res) => {
         paymentAmount: new Decimal(verification.amount),
         paidAt: new Date(),
       },
+    });
+
+    // Track payment received in PostHog
+    trackServerEvent(job.humanId, 'payment_received', {
+      jobId: job.id,
+      amount: verification.amount,
+      network: verification.network,
     });
 
     res.json({

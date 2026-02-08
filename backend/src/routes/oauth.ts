@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -149,6 +150,9 @@ router.post('/google/callback', async (req, res) => {
           },
         });
         isNew = true;
+
+        // Track OAuth signup in PostHog
+        trackServerEvent(human.id, 'user_signed_up_server', { method: 'google' });
       }
     } else {
       // Existing user by Google ID - consume state
@@ -298,6 +302,9 @@ router.post('/github/callback', async (req, res) => {
           },
         });
         isNew = true;
+
+        // Track OAuth signup in PostHog
+        trackServerEvent(human.id, 'user_signed_up_server', { method: 'github' });
       }
     } else {
       // Existing user by GitHub ID - consume state

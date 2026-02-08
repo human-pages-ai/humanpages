@@ -8,6 +8,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../lib/email.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -77,6 +78,9 @@ router.post('/signup', authRateLimiter, async (req, res) => {
       },
       select: { id: true, email: true, name: true },
     });
+
+    // Track signup in PostHog
+    trackServerEvent(human.id, 'user_signed_up_server', { method: 'email' });
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 

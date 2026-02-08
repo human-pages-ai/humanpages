@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '../lib/api';
+import { posthog } from '../lib/posthog';
 
 interface User {
   id: string;
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { human, token } = await api.login({ email, password });
     localStorage.setItem('token', token);
     setUser(human);
+    posthog.identify(human.id);
   };
 
   const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true) => {
@@ -47,11 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('referrer_id'); // Clean up after use
     localStorage.setItem('token', token);
     setUser(human);
+    posthog.identify(human.id);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    posthog.reset();
   };
 
   const loginWithGoogle = async () => {

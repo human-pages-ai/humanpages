@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { analytics } from '../../lib/analytics';
+import { posthog } from '../../lib/posthog';
 import { api } from '../../lib/api';
 import { Profile } from './types';
 
@@ -54,6 +55,7 @@ export default function ShareReferralSection({
               navigator.clipboard.writeText(url);
               setCopiedProfile(true);
               analytics.track('profile_share_copy');
+              posthog.capture('profile_link_copied');
               setTimeout(() => setCopiedProfile(false), 2000);
             }}
             aria-label={copiedProfile ? t('common.copied') : t('dashboard.copyProfileLink')}
@@ -81,6 +83,7 @@ export default function ShareReferralSection({
               navigator.clipboard.writeText(url);
               setCopiedReferral(true);
               analytics.track('referral_link_copy');
+              posthog.capture('referral_link_copied');
               setTimeout(() => setCopiedReferral(false), 2000);
             }}
             aria-label={copiedReferral ? t('common.copied') : t('dashboard.inviteFriends')}

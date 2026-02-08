@@ -1,5 +1,5 @@
-// Simple analytics tracking
-// In production, replace with your analytics provider (Mixpanel, Amplitude, PostHog, etc.)
+// Analytics tracking with PostHog integration
+import { posthog } from './posthog';
 
 type EventName =
   | 'page_view'
@@ -26,6 +26,9 @@ class Analytics {
   identify(userId: string) {
     this.userId = userId;
     console.log('[Analytics] Identified user:', userId);
+
+    // Identify user in PostHog
+    posthog.identify(userId);
   }
 
   track(event: EventName, properties?: EventProperties) {
@@ -39,8 +42,8 @@ class Analytics {
     // Log to console in development
     console.log('[Analytics]', event, properties || {});
 
-    // In production, send to your analytics backend
-    // Example: fetch('/api/analytics', { method: 'POST', body: JSON.stringify(payload) });
+    // Track in PostHog
+    posthog.capture(event, properties);
 
     // Store in localStorage for debugging
     try {
@@ -52,6 +55,13 @@ class Analytics {
     } catch (e) {
       // Ignore storage errors
     }
+  }
+
+  reset() {
+    this.userId = null;
+
+    // Reset PostHog user
+    posthog.reset();
   }
 
   // Helper to get stored events (for debugging)

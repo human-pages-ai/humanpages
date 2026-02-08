@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
+import { posthog } from '../lib/posthog';
 import ProfileCompleteness from '../components/ProfileCompleteness';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
@@ -176,6 +177,7 @@ export default function Dashboard() {
           clearInterval(pollInterval);
           setTelegramStatus(status);
           setTelegramLinkUrl(null);
+          posthog.capture('telegram_connected');
         }
       }, 3000);
       setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
@@ -207,6 +209,7 @@ export default function Dashboard() {
   const acceptJob = async (jobId: string) => {
     try {
       await api.acceptJob(jobId);
+      posthog.capture('job_accepted', { jobId });
       toast.success(t('toast.jobAccepted'));
       await loadJobs();
     } catch (error: any) {
@@ -223,6 +226,7 @@ export default function Dashboard() {
         setConfirmDialog(d => ({ ...d, open: false }));
         try {
           await api.rejectJob(jobId);
+          posthog.capture('job_rejected', { jobId });
           toast.success(t('toast.jobRejected'));
           await loadJobs();
         } catch (error: any) {
@@ -235,6 +239,7 @@ export default function Dashboard() {
   const completeJob = async (jobId: string) => {
     try {
       await api.completeJob(jobId);
+      posthog.capture('job_completed', { jobId });
       toast.success(t('toast.jobCompleted'));
       await loadJobs();
       await loadProfile();
@@ -248,6 +253,7 @@ export default function Dashboard() {
     setSaving(true);
     try {
       const updated = await api.updateProfile({ isAvailable: !profile.isAvailable });
+      posthog.capture('availability_toggled', { isAvailable: updated.isAvailable });
       setProfile(updated);
     } catch (error) {
       console.error('Failed to update availability:', error);
@@ -289,6 +295,7 @@ export default function Dashboard() {
         youtubeUrl: profileForm.youtubeUrl || null,
         websiteUrl: profileForm.websiteUrl || null,
       });
+      posthog.capture('profile_updated');
       setProfile(updated);
       setEditingProfile(false);
       toast.success(t('toast.profileSaved'));
@@ -321,6 +328,7 @@ export default function Dashboard() {
     setSaving(true);
     try {
       await api.addWallet(walletForm);
+      posthog.capture('wallet_added', { network: walletForm.network });
       await loadProfile();
       setWalletForm({ network: 'ethereum', address: '', label: '' });
       setShowWalletForm(false);
@@ -354,6 +362,7 @@ export default function Dashboard() {
     setSaving(true);
     try {
       await api.createService(serviceForm);
+      posthog.capture('service_added');
       await loadProfile();
       setServiceForm({ title: '', description: '', category: '', priceRange: '' });
       setShowServiceForm(false);

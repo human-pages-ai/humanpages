@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -422,6 +423,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       },
     }));
 
+    // Track search in PostHog
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
+    trackServerEvent(ip, 'humans_searched', {
+      skill,
+      location,
+      resultCount: humansWithReputation.length,
+    });
+
     res.json(humansWithReputation);
   } catch (error) {
     logger.error({ err: error }, 'Search error');
@@ -474,6 +483,10 @@ router.get('/:id', async (req, res) => {
     if (!human) {
       return res.status(404).json({ error: 'Human not found' });
     }
+
+    // Track profile view in PostHog
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
+    trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id });
 
     const reputation = await getReputationStats(human.id);
     res.json({ ...human, reputation });

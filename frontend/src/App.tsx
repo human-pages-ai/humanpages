@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
+import { posthog } from './lib/posthog';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
@@ -64,7 +65,19 @@ function HomeRoute() {
   return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 }
 
+function usePageView() {
+  const location = useLocation();
+  useEffect(() => {
+    posthog.capture('$pageview', {
+      $current_url: window.location.href,
+      path: location.pathname,
+    });
+  }, [location.pathname]);
+}
+
 function AppRoutes() {
+  usePageView();
+
   return (
     <Routes>
       <Route path="/" element={<HomeRoute />} />

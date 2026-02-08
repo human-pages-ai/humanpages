@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
+import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 
 const SKILL_SUGGESTIONS = [
@@ -79,6 +80,7 @@ export default function Onboarding() {
 
       await api.updateProfile(updates);
       analytics.track('onboarding_step_1', { contactMethod });
+      posthog.capture('onboarding_step_completed', { step: 1, contactMethod });
       setStep(2);
     } catch (error) {
       console.error('Failed to save contact:', error);
@@ -94,6 +96,7 @@ export default function Onboarding() {
     try {
       await api.updateProfile({ location, skills });
       analytics.track('onboarding_step_2', { skillCount: skills.length });
+      posthog.capture('onboarding_step_completed', { step: 2, skillCount: skills.length });
       setStep(3);
     } catch (error) {
       console.error('Failed to save skills/location:', error);
@@ -111,6 +114,7 @@ export default function Onboarding() {
 
       await api.updateProfile(updates);
       analytics.track('onboarding_step_3');
+      posthog.capture('onboarding_step_completed', { step: 3 });
       completeOnboarding();
     } catch (error) {
       console.error('Failed to save rate:', error);
@@ -121,6 +125,7 @@ export default function Onboarding() {
 
   const completeOnboarding = () => {
     analytics.track('onboarding_complete');
+    posthog.capture('onboarding_completed');
     navigate('/welcome');
   };
 
