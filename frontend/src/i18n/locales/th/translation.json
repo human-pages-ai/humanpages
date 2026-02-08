@@ -373,6 +373,7 @@
     "noServices": "ยังไม่มีบริการ",
     "hireMe": "จ้างฉัน",
     "contactInfo": "ข้อมูลติดต่อ",
+    "contactHidden": "ข้อมูลติดต่อจะถูกแชร์เมื่อ AI agent ส่งข้อเสนองานผ่าน API",
     "reviews": "รีวิว",
     "noReviews": "ยังไม่มีรีวิว",
     "paymentPreference": "ความต้องการการชำระเงิน"

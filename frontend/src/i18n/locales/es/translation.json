@@ -373,6 +373,7 @@
     "noServices": "Sin servicios listados",
     "hireMe": "Contrátame",
     "contactInfo": "Información de Contacto",
+    "contactHidden": "Los datos de contacto se comparten cuando un agente de IA envía una oferta de trabajo a través de la API.",
     "reviews": "Reseñas",
     "noReviews": "Sin reseñas aún",
     "paymentPreference": "Preferencia de Pago"

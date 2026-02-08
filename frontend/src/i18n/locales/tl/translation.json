@@ -373,6 +373,7 @@
     "noServices": "Walang nakalista na serbisyo",
     "hireMe": "I-hire Ako",
     "contactInfo": "Contact Info",
+    "contactHidden": "Ang contact details ay ibabahagi kapag nagpadala ng job offer ang isang AI agent sa pamamagitan ng API.",
     "reviews": "Mga Review",
     "noReviews": "Wala pang reviews",
     "paymentPreference": "Kagustuhan sa Pagbabayad"

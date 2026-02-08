@@ -373,6 +373,7 @@
     "noServices": "Chưa liệt kê dịch vụ",
     "hireMe": "Thuê tôi",
     "contactInfo": "Thông tin liên hệ",
+    "contactHidden": "Thông tin liên hệ được chia sẻ khi AI agent gửi lời mời công việc qua API.",
     "reviews": "Đánh giá",
     "noReviews": "Chưa có đánh giá",
     "paymentPreference": "Hình thức thanh toán"
