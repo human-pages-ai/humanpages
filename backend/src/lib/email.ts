@@ -1,21 +1,13 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import jwt from 'jsonwebtoken';
 import { getTranslator } from '../i18n/index.js';
 import { logger } from './logger.js';
 
-// Configure transporter based on environment
-// In production, use a real SMTP service (SendGrid, SES, Resend, etc.)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Configure Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@humans.page';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'hello@humanpages.ai';
+const FROM_NAME = process.env.FROM_NAME || 'HumanPages';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 export function generateUnsubscribeUrl(humanId: string): string {
@@ -36,21 +28,16 @@ interface JobOfferEmailData {
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
-  // Skip if no email configured
-  if (!process.env.SMTP_USER) {
-    logger.info({ jobTitle: data.jobTitle }, 'SMTP not configured, skipping email');
+  // Skip if Resend API key not configured
+  if (!process.env.RESEND_API_KEY) {
+    logger.info({ jobTitle: data.jobTitle }, 'Resend API key not configured, skipping email');
     return false;
   }
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
 
-  try {
-    const info = await transporter.sendMail({
-      from: `"Humans" <${FROM_EMAIL}>`,
-      to: data.humanEmail,
-      subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
-      text: `
+  const textContent = `
 ${t('email.jobOffer.greeting', { name: data.humanName })}
 
 ${t('email.jobOffer.newOffer')}
@@ -69,9 +56,11 @@ ${FRONTEND_URL}/dashboard
 ---
 ${t('email.jobOffer.footer')}
 
+
 To unsubscribe from email notifications: ${unsubscribeUrl}
-      `.trim(),
-      html: `
+  `.trim();
+
+  const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -112,13 +101,26 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
   </div>
 </body>
 </html>
-      `.trim(),
+  `.trim();
+
+  try {
+    const { data: response, error } = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [data.humanEmail],
+      subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
+      text: textContent,
+      html: htmlContent,
     });
 
-    logger.info({ messageId: info.messageId }, 'Job offer email sent');
+    if (error) {
+      logger.error({ err: error }, 'Email failed to send via Resend');
+      return false;
+    }
+
+    logger.info({ messageId: response?.id }, 'Job offer email sent via Resend');
     return true;
   } catch (error) {
-    logger.error({ err: error }, 'Email failed to send');
+    logger.error({ err: error }, 'Email failed to send via Resend');
     return false;
   }
 }
@@ -190,18 +192,13 @@ Human Pages - Get hired for real-world tasks
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
-  // Skip if no email configured
-  if (!process.env.SMTP_USER) {
-    logger.info({ email }, 'SMTP not configured, skipping password reset email');
+  // Skip if Resend API key not configured
+  if (!process.env.RESEND_API_KEY) {
+    logger.info({ email }, 'Resend API key not configured, skipping password reset email');
     return false;
   }
 
-  try {
-    const info = await transporter.sendMail({
-      from: `"Humans" <${FROM_EMAIL}>`,
-      to: email,
-      subject: 'Reset your password - Human Pages',
-      text: `
+  const textContent = `
 You requested to reset your password for Human Pages.
 
 Click the link below to reset your password:
@@ -213,8 +210,9 @@ If you did not request a password reset, please ignore this email.
 
 ---
 Human Pages - Decentralized freelancing on blockchain
-      `.trim(),
-      html: `
+  `.trim();
+
+  const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -245,30 +243,37 @@ Human Pages - Decentralized freelancing on blockchain
   </div>
 </body>
 </html>
-      `.trim(),
+  `.trim();
+
+  try {
+    const { data: response, error } = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [email],
+      subject: 'Reset your password - Human Pages',
+      text: textContent,
+      html: htmlContent,
     });
 
-    logger.info({ messageId: info.messageId }, 'Password reset email sent');
+    if (error) {
+      logger.error({ err: error }, 'Password reset email failed to send via Resend');
+      return false;
+    }
+
+    logger.info({ messageId: response?.id }, 'Password reset email sent via Resend');
     return true;
   } catch (error) {
-    logger.error({ err: error }, 'Password reset email failed to send');
+    logger.error({ err: error }, 'Password reset email failed to send via Resend');
     return false;
   }
 }
 
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
-  if (!process.env.SMTP_USER) {
-    logger.info('SMTP not configured - email notifications disabled');
+  if (!process.env.RESEND_API_KEY) {
+    logger.info('Resend API key not configured - email notifications disabled');
     return false;
   }
 
-  try {
-    await transporter.verify();
-    logger.info('SMTP connection verified');
-    return true;
-  } catch (error) {
-    logger.error({ err: error }, 'SMTP verification failed');
-    return false;
-  }
+  logger.info('Resend API key configured');
+  return true;
 }
