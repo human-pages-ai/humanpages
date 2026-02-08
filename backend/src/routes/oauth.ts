@@ -60,12 +60,16 @@ router.get('/google', async (req, res) => {
   res.json({ url: authorizeUrl, state });
 });
 
+// Cache Google profile info between the requiresTerms round-trip.
+// Key: OAuth state token → Google profile. Entries expire with the state (10 min).
+const pendingOAuthProfiles = new Map<string, { googleId: string; email: string; name: string; picture?: string }>();
+
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
   try {
     const { code, state, referrerId, termsAccepted } = req.body;
 
-    if (!code) {
+    if (!code && !termsAccepted) {
       return res.status(400).json({ error: 'Authorization code required' });
     }
 
@@ -77,29 +81,45 @@ router.post('/google/callback', async (req, res) => {
       if (stateRecord) {
         await prisma.oAuthState.delete({ where: { token: state } }).catch(() => {});
       }
+      pendingOAuthProfiles.delete(state);
       return res.status(403).json({ error: 'Invalid or expired OAuth state' });
     }
 
-    // Exchange code for tokens
-    const { tokens } = await googleClient.getToken(code);
-    const idToken = tokens.id_token;
+    // Resolve Google profile: either from cache (terms retry) or by exchanging the code
+    let googleId: string;
+    let email: string;
+    let name: string;
+    let picture: string | undefined;
 
-    if (!idToken) {
-      return res.status(400).json({ error: 'Failed to get ID token' });
+    const cached = pendingOAuthProfiles.get(state);
+    if (cached) {
+      // Second call after termsAccepted — code was already exchanged
+      ({ googleId, email, name, picture } = cached);
+    } else {
+      // First call — exchange the authorization code for tokens
+      const { tokens } = await googleClient.getToken(code);
+      const idToken = tokens.id_token;
+
+      if (!idToken) {
+        return res.status(400).json({ error: 'Failed to get ID token' });
+      }
+
+      // Verify and decode the ID token
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        return res.status(400).json({ error: 'Invalid token payload' });
+      }
+
+      googleId = payload.sub!;
+      email = payload.email;
+      name = payload.name || email.split('@')[0];
+      picture = payload.picture;
     }
-
-    // Verify and decode the ID token
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      return res.status(400).json({ error: 'Invalid token payload' });
-    }
-
-    const { sub: googleId, email, name, picture } = payload;
 
     // Account linking logic:
     // 1. Check if user exists by Google ID
@@ -113,6 +133,7 @@ router.post('/google/callback', async (req, res) => {
       if (human) {
         // Link Google to existing account - consume state
         await consumeOAuthState(state);
+        pendingOAuthProfiles.delete(state);
         human = await prisma.human.update({
           where: { id: human.id },
           data: {
@@ -123,11 +144,14 @@ router.post('/google/callback', async (req, res) => {
       } else {
         // New user - require terms acceptance before creating account
         if (!termsAccepted) {
+          // Cache the profile so we don't need the code again
+          pendingOAuthProfiles.set(state, { googleId, email, name, picture });
           return res.json({ requiresTerms: true, provider: 'google' });
         }
 
         // Consume state now that terms are accepted
         await consumeOAuthState(state);
+        pendingOAuthProfiles.delete(state);
 
         // Validate referrer if provided
         let validReferrerId: string | undefined;
@@ -140,7 +164,7 @@ router.post('/google/callback', async (req, res) => {
         human = await prisma.human.create({
           data: {
             email,
-            name: name || email.split('@')[0],
+            name,
             googleId,
             avatarUrl: picture,
             contactEmail: email,
@@ -157,6 +181,7 @@ router.post('/google/callback', async (req, res) => {
     } else {
       // Existing user by Google ID - consume state
       await consumeOAuthState(state);
+      pendingOAuthProfiles.delete(state);
     }
 
     const token = generateToken(human.id);
