@@ -32,17 +32,19 @@ interface Profile {
 
 interface ProfileCompletenessProps {
   profile: Profile;
-  onEditProfile?: () => void;
+  onEditProfile?: (field?: string) => void;
+  onAddService?: () => void;
 }
 
 interface CompletionItem {
   labelKey: string;
   complete: boolean;
   weight: number;
-  action?: string;
+  actionType: 'editProfile' | 'addService';
+  fieldId?: string; // DOM id to scroll to
 }
 
-export default function ProfileCompleteness({ profile, onEditProfile }: ProfileCompletenessProps) {
+export default function ProfileCompleteness({ profile, onEditProfile, onAddService }: ProfileCompletenessProps) {
   const { t } = useTranslation();
 
   const items: CompletionItem[] = [
@@ -50,37 +52,42 @@ export default function ProfileCompleteness({ profile, onEditProfile }: ProfileC
       labelKey: 'name',
       complete: Boolean(profile.name && profile.name.trim().length > 0),
       weight: 15,
-      action: 'Edit Profile',
+      actionType: 'editProfile',
+      fieldId: 'profile-name',
     },
     {
       labelKey: 'bio',
       complete: Boolean(profile.bio && profile.bio.length >= 50),
       weight: 20,
-      action: 'Edit Profile',
+      actionType: 'editProfile',
+      fieldId: 'profile-bio',
     },
     {
       labelKey: 'location',
       complete: Boolean(profile.location && profile.location.trim().length > 0),
       weight: 15,
-      action: 'Edit Profile',
+      actionType: 'editProfile',
+      fieldId: 'profile-location',
     },
     {
       labelKey: 'contactEmail',
       complete: Boolean(profile.contactEmail && profile.contactEmail.trim().length > 0),
       weight: 15,
-      action: 'Edit Profile',
+      actionType: 'editProfile',
+      fieldId: 'profile-contact-email',
     },
     {
       labelKey: 'skills',
       complete: profile.skills && profile.skills.length > 0,
       weight: 20,
-      action: 'Edit Profile',
+      actionType: 'editProfile',
+      fieldId: 'profile-skills',
     },
     {
       labelKey: 'services',
       complete: profile.services?.some(s => s.isActive) ?? false,
       weight: 15,
-      action: 'Add Service',
+      actionType: 'addService',
     },
   ];
 
@@ -101,6 +108,14 @@ export default function ProfileCompleteness({ profile, onEditProfile }: ProfileC
   const percentage = Math.round((completedWeight / totalWeight) * 100);
 
   const missingItems = items.filter(item => !item.complete);
+
+  const handleItemClick = (item: CompletionItem) => {
+    if (item.actionType === 'addService') {
+      onAddService?.();
+    } else if (item.actionType === 'editProfile') {
+      onEditProfile?.(item.fieldId);
+    }
+  };
 
   if (percentage === 100) {
     return (
@@ -140,14 +155,12 @@ export default function ProfileCompleteness({ profile, onEditProfile }: ProfileC
                   </svg>
                   {getLabel(item.labelKey)}
                 </span>
-                {item.action === 'Edit Profile' && onEditProfile && (
-                  <button
-                    onClick={onEditProfile}
-                    className="text-indigo-600 hover:text-indigo-500 text-xs"
-                  >
-                    {t('common.add')}
-                  </button>
-                )}
+                <button
+                  onClick={() => handleItemClick(item)}
+                  className="text-indigo-600 hover:text-indigo-500 text-xs"
+                >
+                  {t('common.add')}
+                </button>
               </li>
             ))}
           </ul>

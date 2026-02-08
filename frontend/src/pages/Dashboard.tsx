@@ -520,7 +520,23 @@ export default function Dashboard() {
           </div>
         )}
 
-        <ProfileCompleteness profile={profile} onEditProfile={() => setEditingProfile(true)} />
+        <ProfileCompleteness
+          profile={profile}
+          onEditProfile={(fieldId) => {
+            setEditingProfile(true);
+            if (fieldId) {
+              // Wait for the edit form to render, then scroll to and focus the field
+              setTimeout(() => {
+                const el = document.getElementById(fieldId);
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  el.focus();
+                }
+              }, 100);
+            }
+          }}
+          onAddService={() => setShowServiceForm(true)}
+        />
 
         <ShareReferralSection
           profile={profile}
