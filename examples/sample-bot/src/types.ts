@@ -17,6 +17,10 @@ export interface Human {
   telegram: string | null;
   whatsapp: string | null;
   signal: string | null;
+  wallets: {
+    address: string;
+    network: string;
+  }[];
   reputation: {
     jobsCompleted: number;
     avgRating: number | null;

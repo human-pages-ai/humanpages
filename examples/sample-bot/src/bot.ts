@@ -11,6 +11,7 @@ import {
 import { waitForEvent, waitForEventWithMessages } from './webhook.js';
 import { generateReply, getResponderName } from './responder.js';
 import { notify, isOwnerNotifyConfigured } from './notify.js';
+import { isPaymentConfigured, loadWalletAccount, getUsdcBalance, sendUsdc } from './pay.js';
 
 /**
  * Main bot lifecycle — demonstrates how an AI agent hires a real human
@@ -136,28 +137,66 @@ export async function runBot(humanId: string): Promise<void> {
   // ── Step 7: Record payment ──
   console.log('\nStep 7: Recording payment...');
 
-  // In a real bot, you would:
-  //   1. Look up the human's wallet address from the search results or acceptance payload
-  //   2. Use ethers.js or viem to send USDC on-chain (Ethereum, Polygon, Arbitrum, etc.)
-  //   3. Wait for confirmation
-  //   4. Pass the real tx hash to this endpoint
-  //
-  // For this demo, we use a placeholder. The platform will attempt on-chain
-  // verification, which will fail — in production, use a real tx hash.
-  const demoTxHash = '0x' + '0'.repeat(64);
+  if (isPaymentConfigured()) {
+    // Real on-chain USDC payment
+    try {
+      const account = await loadWalletAccount();
+      console.log(`  Wallet loaded: ${account.address}`);
 
-  try {
-    const paid = await markJobPaid(job.id, {
-      paymentTxHash: demoTxHash,
-      paymentNetwork: 'ethereum',
-      paymentToken: 'USDC',
-      paymentAmount: config.jobPriceUsdc,
-    });
-    console.log(`  Payment recorded: ${paid.status}`);
-  } catch (err) {
-    console.log(`  Payment recording failed (expected with demo tx): ${(err as Error).message}`);
-    console.log('  In production, send real USDC and pass the confirmed tx hash.');
-    console.log('  Continuing to demonstrate remaining steps...');
+      const network = config.paymentNetwork;
+      const balance = await getUsdcBalance(account, network);
+      console.log(`  USDC balance on ${network}: ${balance}`);
+
+      if (parseFloat(balance) < config.jobPriceUsdc) {
+        throw new Error(
+          `Insufficient USDC balance: ${balance} < ${config.jobPriceUsdc}. `
+          + `Fund your wallet on ${network}.`,
+        );
+      }
+
+      // Re-fetch human profile for wallet addresses
+      const human = await getHuman(candidate.id);
+      const wallet = human.wallets?.find((w) => w.network === network);
+      if (!wallet) {
+        throw new Error(
+          `Human has no wallet on ${network}. `
+          + `Ask them to add a ${network} wallet on their profile.`,
+        );
+      }
+
+      console.log(`  Sending $${config.jobPriceUsdc} USDC to ${wallet.address} on ${network}...`);
+      const txHash = await sendUsdc(account, wallet.address, config.jobPriceUsdc, network);
+      console.log(`  Confirmed: ${txHash}`);
+
+      const paid = await markJobPaid(job.id, {
+        paymentTxHash: txHash,
+        paymentNetwork: network,
+        paymentToken: 'USDC',
+        paymentAmount: config.jobPriceUsdc,
+      });
+      console.log(`  Payment recorded: ${paid.status}`);
+    } catch (err) {
+      console.log(`  Payment failed: ${(err as Error).message}`);
+      console.log('  Continuing to demonstrate remaining steps...');
+    }
+  } else {
+    // Demo mode — no wallet configured
+    console.log('  [DEMO MODE] No wallet configured — using placeholder tx hash.');
+    console.log('  To enable real payments, set WALLET_PRIVATE_KEY or run: npm run generate-keystore');
+    const demoTxHash = '0x' + '0'.repeat(64);
+
+    try {
+      const paid = await markJobPaid(job.id, {
+        paymentTxHash: demoTxHash,
+        paymentNetwork: 'ethereum',
+        paymentToken: 'USDC',
+        paymentAmount: config.jobPriceUsdc,
+      });
+      console.log(`  Payment recorded: ${paid.status}`);
+    } catch (err) {
+      console.log(`  Payment recording failed (expected with demo tx): ${(err as Error).message}`);
+      console.log('  Continuing to demonstrate remaining steps...');
+    }
   }
 
   // ── Step 8: Wait for completion (while responding to messages) ──

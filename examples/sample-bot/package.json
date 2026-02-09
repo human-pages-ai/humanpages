@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "generate-keystore": "tsx scripts/generate-keystore.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "viem": "^2.45.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

@@ -68,7 +68,7 @@ Register → Offer → Message → Wait for acceptance → Pay → Wait for comp
 
 4. **Wait for acceptance** — Polls `GET /api/jobs/:id` every 5 seconds. While waiting, the bot also polls for new messages and replies to them, so the human can ask questions before accepting.
 
-5. **Pay** — `PATCH /api/jobs/:id/paid` records the on-chain USDC payment. (Demo uses a placeholder tx hash; see comments in `bot.ts` for the real payment flow.)
+5. **Pay** — If a wallet is configured, sends real USDC on-chain via `pay.ts` and calls `PATCH /api/jobs/:id/paid` with the confirmed tx hash. Without a wallet, uses a placeholder (demo mode).
 
 6. **Wait for completion** — Continues polling status and replying to messages while the human works.
 
@@ -96,6 +96,65 @@ All configuration is via environment variables (see `.env.example`):
 | `WEBHOOK_SECRET` | Shared secret for HMAC-SHA256 signature verification |
 | `ERRAND_DESCRIPTION` | What the human needs to do in the physical world |
 | `JOB_PRICE_USDC` | Price offered in USDC |
+| `WALLET_PRIVATE_KEY` | Wallet private key for USDC payments (optional) |
+| `PAYMENT_NETWORK` | Blockchain network for payments (default: `base-sepolia`) |
+
+## Payment
+
+The bot can send real USDC on-chain to pay humans. Without a wallet configured, it runs in demo mode with a placeholder transaction.
+
+### Testnet Setup (Recommended First Step)
+
+1. **Get a wallet** — any Ethereum wallet (MetaMask, etc.). Export the private key.
+2. **Get testnet ETH** — visit [Base Sepolia Faucet](https://www.alchemy.com/faucets/base-sepolia) for gas.
+3. **Get testnet USDC** — visit [Circle Faucet](https://faucet.circle.com) → select Base Sepolia.
+4. **Configure** — add to `.env`:
+   ```bash
+   WALLET_PRIVATE_KEY=0x...
+   PAYMENT_NETWORK=base-sepolia
+   ```
+
+### Key Security Options
+
+**Option 1: Environment variable** (simple, fine for testnet)
+```bash
+WALLET_PRIVATE_KEY=0xYourPrivateKeyHere
+```
+
+**Option 2: Encrypted keystore** (recommended for mainnet)
+```bash
+npm run generate-keystore
+# Prompts for private key + password → writes keystore.json
+# At startup the bot prompts for password — key never on disk in plaintext
+```
+
+**Option 3: 1Password CLI** (if you use 1Password)
+```bash
+# Store the key in 1Password, then:
+op run --env-file=.env -- npx tsx src/index.ts <humanId>
+# 1Password injects secrets at runtime
+```
+
+### Switching to Mainnet
+
+Change `PAYMENT_NETWORK` to the desired network and fund your wallet with real USDC + gas:
+
+| Network | `PAYMENT_NETWORK` value |
+|---------|------------------------|
+| Base | `base` |
+| Ethereum | `ethereum` |
+| Polygon | `polygon` |
+| Arbitrum | `arbitrum` |
+| Base Sepolia (testnet) | `base-sepolia` |
+
+### How It Works
+
+When a wallet is configured, Step 7 of the bot lifecycle:
+1. Loads your wallet (keystore or env var)
+2. Checks your USDC balance on the payment network
+3. Looks up the human's wallet address for that network
+4. Sends an ERC-20 USDC `transfer()` on-chain
+5. Waits for confirmation and reports the real tx hash to the platform
 
 ## Project Structure
 
@@ -104,11 +163,14 @@ src/
 ├── config.ts      — Environment variable loading and validation
 ├── types.ts       — TypeScript interfaces for API responses and webhooks
 ├── api.ts         — Human Pages API client (fetch + retry with backoff)
+├── pay.ts         — On-chain USDC payment (viem + keystore/env wallet)
 ├── responder.ts   — LLM reply generation (any provider or keyword fallback)
 ├── notify.ts      — Owner Telegram notifications
 ├── webhook.ts     — Webhook server + polling fallback for status & messages
 ├── bot.ts         — Main orchestration logic (the lifecycle above)
 └── index.ts       — Entry point
+scripts/
+└── generate-keystore.ts — Encrypt a private key into keystore.json
 ```
 
 ## Connecting an LLM
@@ -222,7 +284,7 @@ To build your own:
 1. Fork this example
 2. Change the errand description and price
 3. Customize the system prompt in `LLM_SYSTEM_PROMPT` (or modify `responder.ts`)
-4. Add real payment logic using ethers.js or viem
+4. Configure payment (see [Payment](#payment) above)
 5. Deploy with a webhook URL for real-time events
 
 ## Scripts
@@ -232,3 +294,4 @@ To build your own:
 | `npm run dev` | Run with tsx (TypeScript, no build step) |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm start` | Run compiled JavaScript from `dist/` |
+| `npm run generate-keystore` | Encrypt a private key into `keystore.json` |

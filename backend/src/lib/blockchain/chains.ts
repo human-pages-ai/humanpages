@@ -1,5 +1,5 @@
 import { createPublicClient, http, fallback, type Chain, type PublicClient } from 'viem';
-import { mainnet, base, polygon, arbitrum } from 'viem/chains';
+import { mainnet, base, polygon, arbitrum, baseSepolia } from 'viem/chains';
 
 // Supported stablecoin tokens
 export type SupportedToken = 'USDC' | 'USDT' | 'DAI';
@@ -25,6 +25,7 @@ export const TOKEN_CONFIGS: Record<SupportedToken, TokenConfig> = {
       base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
       polygon: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
       arbitrum: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+      'base-sepolia': '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
     },
   },
   USDT: {
@@ -105,6 +106,14 @@ const CHAIN_CONFIGS: Record<string, ChainConfig> = {
       'https://arb1.arbitrum.io/rpc',
       'https://arbitrum.llamarpc.com',
       'https://arbitrum-one.publicnode.com',
+    ],
+  },
+  'base-sepolia': {
+    chain: baseSepolia,
+    confirmations: 2,
+    rpcEnvVar: 'BASE_SEPOLIA_RPC_URL',
+    defaultRpcs: [
+      'https://sepolia.base.org',
     ],
   },
 };

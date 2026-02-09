@@ -53,6 +53,10 @@ export const config = {
   ownerTelegramBotToken: process.env.OWNER_TELEGRAM_BOT_TOKEN || '',
   ownerTelegramChatId: process.env.OWNER_TELEGRAM_CHAT_ID || '',
 
+  // Payment (optional — enables real on-chain USDC transfers)
+  walletPrivateKey: process.env.WALLET_PRIVATE_KEY || '',
+  paymentNetwork: optional('PAYMENT_NETWORK', 'base-sepolia'),
+
   // Errand params
   errandDescription: optional(
     'ERRAND_DESCRIPTION',
