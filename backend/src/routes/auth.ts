@@ -48,7 +48,23 @@ const authRateLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
-router.post('/signup', authRateLimiter, async (req, res) => {
+// Global signup throttle: max 100 signups per minute across ALL IPs
+// Prevents distributed bot attacks using proxy rotation
+const globalSignupThrottle = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: {
+    error: 'Too many signups',
+    message: 'The service is experiencing high signup volume. Please try again in a minute.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: () => 'global', // Single shared bucket for all IPs
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) => {
   try {
     const { email, password, name, referrerId, termsAccepted } = signupSchema.parse(req.body);
 
@@ -84,17 +100,25 @@ router.post('/signup', authRateLimiter, async (req, res) => {
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    // Send verification email (async, don't block signup)
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    prisma.human.update({
-      where: { id: human.id },
-      data: { emailVerificationToken: verificationToken },
-    }).then(() => {
-      const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
-      sendVerificationEmail(email, verifyUrl).catch((err) =>
-        logger.error({ err }, 'Failed to send verification email')
-      );
-    }).catch((err) => logger.error({ err }, 'Failed to save verification token'));
+    // In non-production, auto-verify email for easier testing
+    if (process.env.NODE_ENV !== 'production') {
+      await prisma.human.update({
+        where: { id: human.id },
+        data: { emailVerified: true },
+      });
+    } else {
+      // Send verification email (async, don't block signup)
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      prisma.human.update({
+        where: { id: human.id },
+        data: { emailVerificationToken: verificationToken },
+      }).then(() => {
+        const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
+        sendVerificationEmail(email, verifyUrl).catch((err) =>
+          logger.error({ err }, 'Failed to send verification email')
+        );
+      }).catch((err) => logger.error({ err }, 'Failed to save verification token'));
+    }
 
     res.status(201).json({ human, token });
   } catch (error) {

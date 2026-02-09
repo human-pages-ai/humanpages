@@ -48,7 +48,8 @@ const mockPublicProfile = {
       title: 'Web Development',
       description: 'Full-stack web development services',
       category: 'Development',
-      priceRange: '$50-100/hr',
+      priceMin: 50,
+      priceUnit: 'HOURLY',
     },
   ],
 };
@@ -127,7 +128,7 @@ describe('PublicProfile', () => {
     expect(screen.getByText('Web Development')).toBeInTheDocument();
     expect(screen.getByText('Full-stack web development services')).toBeInTheDocument();
     expect(screen.getByText('Development')).toBeInTheDocument();
-    expect(screen.getByText('$50-100/hr')).toBeInTheDocument();
+    expect(screen.getByText('$50/hr')).toBeInTheDocument();
   });
 
   it('shows contact information', async () => {

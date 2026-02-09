@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
 
 const router = Router();
@@ -10,7 +10,8 @@ const serviceSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   category: z.string().min(1),
-  priceRange: z.string().optional(),
+  priceMin: z.number().min(0).optional().nullable(),
+  priceUnit: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -28,7 +29,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Create a new service
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const data = serviceSchema.parse(req.body);
 
@@ -50,7 +51,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Update a service
-router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/:id', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const updates = serviceSchema.partial().parse(req.body);
 
@@ -78,7 +79,7 @@ router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Delete a service
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const existing = await prisma.service.findFirst({
       where: { id: req.params.id, humanId: req.userId },

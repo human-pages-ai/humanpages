@@ -30,7 +30,7 @@ export default function TermsOfUse() {
       <main className="py-12 md:py-16 px-4">
         <article className="max-w-3xl mx-auto prose prose-slate">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Terms of Use</h1>
-          <p className="text-slate-500 mb-8">Last updated: February 7, 2026</p>
+          <p className="text-slate-500 mb-8">Last updated: February 8, 2026</p>
 
           <p>
             Welcome to Human Pages. By using our platform at humanpages.ai, you agree to these
@@ -124,12 +124,20 @@ export default function TermsOfUse() {
           <p>You agree not to:</p>
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
             <li>Provide false or misleading information on your profile.</li>
-            <li>Use the platform for illegal activities.</li>
+            <li><strong>Impersonate</strong> any person, business, or entity, or falsely claim an affiliation with any person or organization.</li>
+            <li>Create accounts using fake identities, stolen credentials, or another person's information without their consent.</li>
+            <li>Use the platform for any <strong>illegal, fraudulent, or deceptive</strong> activity, including but not limited to scams, phishing, money laundering, or identity theft.</li>
             <li>Send spam, fraudulent, or abusive job offers.</li>
-            <li>Attempt to hack, disrupt, or exploit the service.</li>
+            <li>Create multiple accounts to circumvent rate limits, bans, or other restrictions.</li>
+            <li>Use automated tools, bots, or scripts to create accounts or interact with the platform without our prior written consent.</li>
+            <li>Attempt to hack, disrupt, or exploit the service, including denial-of-service attacks or unauthorized access to other users' accounts.</li>
             <li>Scrape or harvest user data for unauthorized purposes.</li>
-            <li>Impersonate other users or entities.</li>
+            <li>Misrepresent your skills, qualifications, location, or availability.</li>
           </ul>
+          <p className="mt-2">
+            Violation of these rules may result in immediate account termination, reporting to
+            law enforcement, and any other remedies available under applicable law.
+          </p>
 
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">9. Limitation of Liability</h2>
           <p>

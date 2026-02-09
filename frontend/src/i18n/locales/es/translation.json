@@ -167,6 +167,12 @@
       "escrow": "Depósito en garantía",
       "both": "Flexible (Cualquiera)"
     },
+    "workMode": {
+      "title": "Modo de Trabajo",
+      "remote": "Remoto",
+      "onsite": "Presencial",
+      "hybrid": "Híbrido"
+    },
     "telegram": {
       "title": "Notificaciones de Telegram",
       "connected": "Conectado - Recibirás ofertas de trabajo por Telegram",
@@ -194,7 +200,9 @@
     },
     "emailVerification": {
       "banner": "Por favor verifica tu correo electrónico. Revisa tu bandeja de entrada para el enlace de verificación.",
-      "resend": "Reenviar correo de verificación"
+      "resend": "Reenviar correo de verificación",
+      "restricted": "Tu perfil está oculto de las búsquedas y no puedes editar tu perfil, gestionar billeteras, servicios o aceptar trabajos hasta verificarlo.",
+      "required": "Verificación de correo electrónico requerida para realizar esta acción."
     },
     "notifications": {
       "title": "Notificaciones",
@@ -306,12 +314,19 @@
       "descriptionPlaceholder": "Describe lo que puedes hacer...",
       "category": "Categoría",
       "categoryPlaceholder": "ej., desarrollo, diseño, datos",
-      "priceRange": "Rango de Precios",
-      "priceRangePlaceholder": "ej., $50-100/hora",
+      "price": "Precio",
+      "pricePlaceholder": "50",
+      "selectUnit": "Seleccionar unidad",
+      "perHour": "Por hora",
+      "perHourShort": "hr",
+      "perTask": "Por tarea",
+      "perTaskShort": "tarea",
+      "negotiable": "Negociable",
       "noServices": "Aún no hay servicios listados. ¡Agrega servicios para mostrar a los agentes de IA lo que puedes hacer!",
       "emptyTitle": "No hay servicios listados",
       "emptyDescription": "Agrega servicios para que los agentes de IA sepan qué puedes hacer",
       "confirmDelete": "¿Eliminar este servicio?",
+      "addAnother": "Agregar otro servicio",
       "statusActive": "Activo",
       "statusInactive": "Inactivo"
     },
@@ -384,7 +399,12 @@
     "contactHidden": "La información de contacto es privada. Envía una oferta de trabajo a través de la API y se le notificará directamente.",
     "reviews": "Reseñas",
     "noReviews": "Sin reseñas aún",
-    "paymentPreference": "Preferencia de Pago"
+    "paymentPreference": "Preferencia de Pago",
+    "workMode": {
+      "remote": "Remoto",
+      "onsite": "Presencial",
+      "hybrid": "Híbrido"
+    }
   },
   "errors": {
     "required": "Este campo es requerido",

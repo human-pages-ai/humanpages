@@ -167,6 +167,12 @@
       "escrow": "Emanet",
       "both": "Esnek (Her ikisi)"
     },
+    "workMode": {
+      "title": "Çalışma Modu",
+      "remote": "Uzaktan",
+      "onsite": "Yerinde",
+      "hybrid": "Hibrit"
+    },
     "telegram": {
       "title": "Telegram Bildirimleri",
       "connected": "Bağlandı - İş tekliflerini Telegram üzerinden alacaksınız",
@@ -194,7 +200,9 @@
     },
     "emailVerification": {
       "banner": "Lütfen e-posta adresinizi doğrulayın. Doğrulama bağlantısı için gelen kutunuzu kontrol edin.",
-      "resend": "Doğrulama e-postasını yeniden gönder"
+      "resend": "Doğrulama e-postasını yeniden gönder",
+      "restricted": "Profiliniz aramalardan gizlenmiştir ve doğrulanana kadar profilinizi düzenleyemez, cüzdanları, hizmetleri yönetemez veya iş kabul edemezsiniz.",
+      "required": "Bu işlemi gerçekleştirmek için e-posta doğrulaması gereklidir."
     },
     "notifications": {
       "title": "Bildirimler",
@@ -306,12 +314,19 @@
       "descriptionPlaceholder": "Neler yapabileceğinizi açıklayın...",
       "category": "Kategori",
       "categoryPlaceholder": "örn., geliştirme, tasarım, veri",
-      "priceRange": "Fiyat Aralığı",
-      "priceRangePlaceholder": "örn., $50-100/saat",
+      "price": "Fiyat",
+      "pricePlaceholder": "50",
+      "selectUnit": "Birim seçin",
+      "perHour": "Saat başı",
+      "perHourShort": "saat",
+      "perTask": "Görev başı",
+      "perTaskShort": "görev",
+      "negotiable": "Pazarlığa açık",
       "noServices": "Henüz hizmet listelenmedi. AI ajanlarına neler yapabileceğinizi göstermek için hizmet ekleyin!",
       "emptyTitle": "Hizmet listelenmedi",
       "emptyDescription": "AI ajanlarına neler yapabileceğinizi göstermek için hizmet ekleyin",
       "confirmDelete": "Bu hizmeti sil?",
+      "addAnother": "Başka bir hizmet ekle",
       "statusActive": "Aktif",
       "statusInactive": "Pasif"
     },
@@ -384,7 +399,12 @@
     "contactHidden": "İletişim bilgileri gizlidir. API üzerinden iş teklifi gönderin, doğrudan bilgilendirilecekler.",
     "reviews": "Değerlendirmeler",
     "noReviews": "Henüz değerlendirme yok",
-    "paymentPreference": "Ödeme Tercihi"
+    "paymentPreference": "Ödeme Tercihi",
+    "workMode": {
+      "remote": "Uzaktan",
+      "onsite": "Yerinde",
+      "hybrid": "Hibrit"
+    }
   },
   "errors": {
     "required": "Bu alan zorunludur",

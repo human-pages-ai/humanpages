@@ -53,13 +53,14 @@ export default function Dashboard() {
     instagramUrl: '',
     youtubeUrl: '',
     websiteUrl: '',
+    workMode: null as 'REMOTE' | 'ONSITE' | 'HYBRID' | null,
   });
 
   const [showWalletForm, setShowWalletForm] = useState(false);
   const [walletForm, setWalletForm] = useState({ network: 'ethereum', address: '', label: '' });
 
   const [showServiceForm, setShowServiceForm] = useState(false);
-  const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceRange: '' });
+  const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceMin: '', priceUnit: '' });
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
@@ -134,6 +135,7 @@ export default function Dashboard() {
         instagramUrl: data.instagramUrl || '',
         youtubeUrl: data.youtubeUrl || '',
         websiteUrl: data.websiteUrl || '',
+        workMode: data.workMode || null,
       });
       setFiltersForm({
         minOfferPrice: data.minOfferPrice?.toString() || '',
@@ -309,6 +311,7 @@ export default function Dashboard() {
         instagramUrl: profileForm.instagramUrl || null,
         youtubeUrl: profileForm.youtubeUrl || null,
         websiteUrl: profileForm.websiteUrl || null,
+        workMode: profileForm.workMode || null,
       });
       posthog.capture('profile_updated');
       setProfile(updated);
@@ -376,10 +379,16 @@ export default function Dashboard() {
   const addService = async () => {
     setSaving(true);
     try {
-      await api.createService(serviceForm);
+      await api.createService({
+        title: serviceForm.title,
+        description: serviceForm.description,
+        category: serviceForm.category,
+        priceMin: serviceForm.priceMin ? parseFloat(serviceForm.priceMin) : null,
+        priceUnit: serviceForm.priceUnit || null,
+      });
       posthog.capture('service_added');
       await loadProfile();
-      setServiceForm({ title: '', description: '', category: '', priceRange: '' });
+      setServiceForm({ title: '', description: '', category: '', priceMin: '', priceUnit: '' });
       setShowServiceForm(false);
       toast.success(t('toast.serviceAdded'));
     } catch (error: any) {
@@ -509,14 +518,19 @@ export default function Dashboard() {
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         {/* Email verification banner */}
         {profile.emailVerified === false && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
-            <p className="text-sm text-yellow-800">{t('dashboard.emailVerification.banner')}</p>
-            <button
-              onClick={resendVerification}
-              className="ml-4 text-sm font-medium text-yellow-800 hover:text-yellow-900 underline whitespace-nowrap"
-            >
-              {t('dashboard.emailVerification.resend')}
-            </button>
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-yellow-800">{t('dashboard.emailVerification.banner')}</p>
+                <p className="text-xs text-yellow-700 mt-1">{t('dashboard.emailVerification.restricted')}</p>
+              </div>
+              <button
+                onClick={resendVerification}
+                className="ml-4 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 px-3 py-1.5 rounded whitespace-nowrap"
+              >
+                {t('dashboard.emailVerification.resend')}
+              </button>
+            </div>
           </div>
         )}
 
@@ -535,7 +549,12 @@ export default function Dashboard() {
               }, 100);
             }
           }}
-          onAddService={() => setShowServiceForm(true)}
+          onAddService={() => {
+            setShowServiceForm(true);
+            setTimeout(() => {
+              document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }}
         />
 
         <ShareReferralSection

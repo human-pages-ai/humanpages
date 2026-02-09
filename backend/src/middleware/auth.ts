@@ -6,6 +6,27 @@ export interface AuthRequest extends Request {
   userId?: string;
 }
 
+export async function requireEmailVerified(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const user = await prisma.human.findUnique({
+      where: { id: req.userId },
+      select: { emailVerified: true },
+    });
+
+    if (!user || !user.emailVerified) {
+      return res.status(403).json({
+        error: 'Email verification required',
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Please verify your email address before performing this action.',
+      });
+    }
+
+    next();
+  } catch {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];

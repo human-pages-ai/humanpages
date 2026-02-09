@@ -167,6 +167,12 @@
       "escrow": "Escrow",
       "both": "Flexible (Alinman)"
     },
+    "workMode": {
+      "title": "Mode ng Trabaho",
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    },
     "telegram": {
       "title": "Telegram Notifications",
       "connected": "Nakakonekta - Makakatanggap ka ng job offers sa Telegram",
@@ -180,7 +186,9 @@
     },
     "emailVerification": {
       "banner": "Pakiverify ang iyong email address. Tingnan ang iyong inbox para sa verification link.",
-      "resend": "Ipadala muli ang verification email"
+      "resend": "Ipadala muli ang verification email",
+      "restricted": "Nakatago ang iyong profile sa mga paghahanap at hindi ka maaaring mag-edit ng profile, pamahalaan ang mga wallet, serbisyo, o tumanggap ng mga trabaho hanggang ma-verify.",
+      "required": "Kinakailangan ang pag-verify ng email upang isagawa ang aksyon na ito."
     },
     "notifications": {
       "title": "Mga Notipikasyon",
@@ -306,12 +314,19 @@
       "descriptionPlaceholder": "Ilarawan kung ano ang kaya mong gawin...",
       "category": "Kategorya",
       "categoryPlaceholder": "hal., development, design, data",
-      "priceRange": "Price Range",
-      "priceRangePlaceholder": "hal., $50-100/oras",
+      "price": "Presyo",
+      "pricePlaceholder": "50",
+      "selectUnit": "Pumili ng unit",
+      "perHour": "Bawat oras",
+      "perHourShort": "oras",
+      "perTask": "Bawat task",
+      "perTaskShort": "task",
+      "negotiable": "Negotiable",
       "noServices": "Wala pang nakalista na services. Magdagdag ng services para ipakita sa mga AI agent kung ano ang kaya mong gawin!",
       "emptyTitle": "Walang nakalista na services",
       "emptyDescription": "Magdagdag ng services para malaman ng mga AI agent kung ano ang kaya mong gawin",
       "confirmDelete": "Tanggalin ang serbisyong ito?",
+      "addAnother": "Magdagdag ng isa pang serbisyo",
       "statusActive": "Active",
       "statusInactive": "Inactive"
     },
@@ -384,7 +399,12 @@
     "contactHidden": "Ang contact info ay pribado. Magpadala ng job offer sa pamamagitan ng API at maabisuhan sila nang direkta.",
     "reviews": "Mga Review",
     "noReviews": "Wala pang reviews",
-    "paymentPreference": "Kagustuhan sa Pagbabayad"
+    "paymentPreference": "Kagustuhan sa Pagbabayad",
+    "workMode": {
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    }
   },
   "errors": {
     "required": "Kinakailangan ang field na ito",

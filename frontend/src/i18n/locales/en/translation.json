@@ -168,6 +168,12 @@
       "escrow": "Escrow",
       "both": "Flexible (Either)"
     },
+    "workMode": {
+      "title": "Work Mode",
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    },
     "telegram": {
       "title": "Telegram Notifications",
       "connected": "Connected - You'll receive job offers via Telegram",
@@ -288,18 +294,27 @@
       "descriptionPlaceholder": "Describe what you can do...",
       "category": "Category",
       "categoryPlaceholder": "e.g., development, design, data",
-      "priceRange": "Price Range",
-      "priceRangePlaceholder": "e.g., $50-100/hour",
+      "price": "Price",
+      "pricePlaceholder": "50",
+      "selectUnit": "Select unit",
+      "perHour": "Per hour",
+      "perHourShort": "hr",
+      "perTask": "Per task",
+      "perTaskShort": "task",
+      "negotiable": "Negotiable",
       "noServices": "No services listed yet. Add services to show AI agents what you can do!",
       "emptyTitle": "No services listed",
       "emptyDescription": "Add services to let AI agents know what you can do",
       "confirmDelete": "Delete this service?",
+      "addAnother": "Add another service",
       "statusActive": "Active",
       "statusInactive": "Inactive"
     },
     "emailVerification": {
       "banner": "Please verify your email address. Check your inbox for a verification link.",
-      "resend": "Resend verification email"
+      "restricted": "Your profile is hidden from search and you cannot edit your profile, manage wallets, services, or accept jobs until verified.",
+      "resend": "Resend verification email",
+      "required": "Email verification required to perform this action."
     },
     "notifications": {
       "title": "Notifications",
@@ -400,7 +415,12 @@
     "contactHidden": "Contact info is private. Send a job offer via the API and they'll be notified directly.",
     "reviews": "Reviews",
     "noReviews": "No reviews yet",
-    "paymentPreference": "Payment Preference"
+    "paymentPreference": "Payment Preference",
+    "workMode": {
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    }
   },
   "errors": {
     "required": "This field is required",

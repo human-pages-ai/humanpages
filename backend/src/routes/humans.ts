@@ -3,7 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
@@ -56,6 +56,7 @@ const updateProfileSchema = z.object({
   minRateUsdc: z.number().min(0).optional().nullable(),
   rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
   paymentPreference: z.enum(['ESCROW', 'UPFRONT', 'BOTH']).optional(),
+  workMode: z.enum(['REMOTE', 'ONSITE', 'HYBRID']).nullable().optional(),
 
   // Offer filters (anti-spam)
   minOfferPrice: z.number().min(0).optional().nullable(),
@@ -187,7 +188,7 @@ router.get('/me/referrals', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 // Update current user profile
-router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/me', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const updates = updateProfileSchema.parse(req.body);
 
@@ -304,11 +305,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       minRate,
       maxRate,
       available,
+      workMode,
       limit = '20',
       offset = '0',
     } = req.query;
 
-    const where: any = {};
+    const where: any = {
+      emailVerified: true,
+    };
 
     // Filter by skill
     if (skill) {
@@ -333,6 +337,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     // Filter by availability
     if (available === 'true') {
       where.isAvailable = true;
+    }
+
+    // Filter by work mode
+    if (workMode) {
+      where.workMode = workMode as string;
     }
 
     // Filter by rate range
@@ -368,6 +377,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         minRateUsdc: true,
         rateType: true,
         paymentPreference: true,
+        workMode: true,
         contactEmail: true,
         telegram: true,
         whatsapp: true,
@@ -387,7 +397,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         },
         services: {
           where: { isActive: true },
-          select: { title: true, description: true, category: true, priceRange: true },
+          select: { title: true, description: true, category: true, priceMin: true, priceUnit: true },
         },
       },
     });
@@ -463,8 +473,8 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 // Get specific human by ID (public)
 router.get('/:id', async (req, res) => {
   try {
-    const human = await prisma.human.findUnique({
-      where: { id: req.params.id },
+    const human = await prisma.human.findFirst({
+      where: { id: req.params.id, emailVerified: true },
       select: {
         id: true,
         name: true,
@@ -481,6 +491,7 @@ router.get('/:id', async (req, res) => {
         minRateUsdc: true,
         rateType: true,
         paymentPreference: true,
+        workMode: true,
         contactEmail: true,
         telegram: true,
         whatsapp: true,
@@ -500,7 +511,7 @@ router.get('/:id', async (req, res) => {
         },
         services: {
           where: { isActive: true },
-          select: { title: true, description: true, category: true, priceRange: true },
+          select: { title: true, description: true, category: true, priceMin: true, priceUnit: true },
         },
       },
     });
@@ -524,8 +535,8 @@ router.get('/:id', async (req, res) => {
 // Get human by username (public)
 router.get('/u/:username', async (req, res) => {
   try {
-    const human = await prisma.human.findUnique({
-      where: { username: req.params.username },
+    const human = await prisma.human.findFirst({
+      where: { username: req.params.username, emailVerified: true },
       select: {
         id: true,
         name: true,
@@ -540,6 +551,7 @@ router.get('/u/:username', async (req, res) => {
         minRateUsdc: true,
         rateType: true,
         paymentPreference: true,
+        workMode: true,
         contactEmail: true,
         telegram: true,
         whatsapp: true,
@@ -559,7 +571,7 @@ router.get('/u/:username', async (req, res) => {
         },
         services: {
           where: { isActive: true },
-          select: { title: true, description: true, category: true, priceRange: true },
+          select: { title: true, description: true, category: true, priceMin: true, priceUnit: true },
         },
       },
     });

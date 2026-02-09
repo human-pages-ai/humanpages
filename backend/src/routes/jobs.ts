@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { sendJobOfferEmail } from '../lib/email.js';
 import { sendJobOfferTelegram } from '../lib/telegram.js';
 import {
@@ -122,7 +122,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
       });
     }
 
-    // Verify human exists and get contact info + filter settings
+    // Verify human exists, is email-verified, and get contact info + filter settings
     const human = await prisma.human.findUnique({
       where: { id: data.humanId },
       select: {
@@ -130,6 +130,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         name: true,
         contactEmail: true,
         email: true,
+        emailVerified: true,
         telegramChatId: true,
         preferredLanguage: true,
         emailNotifications: true,
@@ -144,6 +145,13 @@ router.post('/', ipRateLimiter, async (req, res) => {
 
     if (!human) {
       return res.status(404).json({ error: 'Human not found' });
+    }
+
+    if (!human.emailVerified) {
+      return res.status(400).json({
+        error: 'Human not available',
+        message: 'This human has not verified their email and cannot receive job offers.',
+      });
     }
 
     // Check offer filters
@@ -321,7 +329,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Human accepts a job offer
-router.patch('/:id/accept', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
@@ -554,7 +562,7 @@ router.patch('/:id/paid', async (req, res) => {
 });
 
 // Human marks job as completed
-router.patch('/:id/complete', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },

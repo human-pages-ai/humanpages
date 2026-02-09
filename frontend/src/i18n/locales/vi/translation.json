@@ -167,6 +167,12 @@
       "escrow": "Ký quỹ",
       "both": "Linh hoạt (Đều được)"
     },
+    "workMode": {
+      "title": "Chế độ làm việc",
+      "remote": "Từ xa",
+      "onsite": "Tại chỗ",
+      "hybrid": "Kết hợp"
+    },
     "telegram": {
       "title": "Thông báo Telegram",
       "connected": "Đã kết nối - Bạn sẽ nhận offer công việc qua Telegram",
@@ -280,18 +286,27 @@
       "descriptionPlaceholder": "Mô tả những gì bạn có thể làm...",
       "category": "Danh mục",
       "categoryPlaceholder": "VD: phát triển, thiết kế, dữ liệu",
-      "priceRange": "Khoảng giá",
-      "priceRangePlaceholder": "VD: $50-100/giờ",
+      "price": "Giá",
+      "pricePlaceholder": "50",
+      "selectUnit": "Chọn đơn vị",
+      "perHour": "Mỗi giờ",
+      "perHourShort": "giờ",
+      "perTask": "Mỗi công việc",
+      "perTaskShort": "việc",
+      "negotiable": "Thương lượng",
       "noServices": "Chưa có dịch vụ nào. Thêm dịch vụ để cho AI agent thấy bạn có thể làm gì!",
       "emptyTitle": "Chưa có dịch vụ nào",
       "emptyDescription": "Thêm dịch vụ để cho AI agent biết bạn có thể làm gì",
       "confirmDelete": "Xóa dịch vụ này?",
+      "addAnother": "Thêm dịch vụ khác",
       "statusActive": "Hoạt động",
       "statusInactive": "Không hoạt động"
     },
     "emailVerification": {
       "banner": "Vui lòng xác minh địa chỉ email của bạn. Kiểm tra hộp thư đến để tìm liên kết xác minh.",
-      "resend": "Gửi lại email xác minh"
+      "resend": "Gửi lại email xác minh",
+      "restricted": "Hồ sơ của bạn bị ẩn khỏi tìm kiếm và bạn không thể chỉnh sửa hồ sơ, quản lý ví, dịch vụ hoặc nhận việc cho đến khi được xác minh.",
+      "required": "Cần xác minh email để thực hiện hành động này."
     },
     "notifications": {
       "title": "Thông báo",
@@ -384,7 +399,12 @@
     "contactHidden": "Thông tin liên hệ là riêng tư. Gửi lời mời công việc qua API và họ sẽ được thông báo trực tiếp.",
     "reviews": "Đánh giá",
     "noReviews": "Chưa có đánh giá",
-    "paymentPreference": "Hình thức thanh toán"
+    "paymentPreference": "Hình thức thanh toán",
+    "workMode": {
+      "remote": "Từ xa",
+      "onsite": "Tại chỗ",
+      "hybrid": "Kết hợp"
+    }
   },
   "errors": {
     "required": "Trường này là bắt buộc",

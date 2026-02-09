@@ -20,6 +20,30 @@ vi.mock('../lib/analytics', () => ({
   },
 }));
 
+// Mock PhoneInput to behave like a simple input
+vi.mock('../components/PhoneInput', () => ({
+  default: ({ id, value, onChange }: { id: string; value: string; onChange: (val: string) => void }) => (
+    <input
+      id={id}
+      value={value}
+      onChange={(e: any) => onChange(e.target.value)}
+      placeholder="onboarding.step1.whatsappPlaceholder"
+    />
+  ),
+}));
+
+// Mock LocationAutocomplete to behave like a simple input
+vi.mock('../components/LocationAutocomplete', () => ({
+  default: ({ id, value, onChange, placeholder }: any) => (
+    <input
+      id={id}
+      value={value}
+      onChange={(e: any) => onChange(e.target.value)}
+      placeholder={placeholder}
+    />
+  ),
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

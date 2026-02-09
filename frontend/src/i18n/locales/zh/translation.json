@@ -167,6 +167,12 @@
       "escrow": "托管付款",
       "both": "灵活（均可）"
     },
+    "workMode": {
+      "title": "工作模式",
+      "remote": "远程",
+      "onsite": "现场",
+      "hybrid": "混合"
+    },
     "telegram": {
       "title": "Telegram通知",
       "connected": "已连接 - 你将通过Telegram收到工作邀约",
@@ -194,7 +200,9 @@
     },
     "emailVerification": {
       "banner": "请验证您的电子邮件地址。检查您的收件箱中的验证链接。",
-      "resend": "重新发送验证邮件"
+      "resend": "重新发送验证邮件",
+      "restricted": "您的个人资料已从搜索中隐藏，在验证之前您无法编辑个人资料、管理钱包、服务或接受工作。",
+      "required": "需要验证电子邮件才能执行此操作。"
     },
     "notifications": {
       "title": "通知",
@@ -306,12 +314,19 @@
       "descriptionPlaceholder": "描述你能做什么...",
       "category": "类别",
       "categoryPlaceholder": "例如：开发、设计、数据",
-      "priceRange": "价格范围",
-      "priceRangePlaceholder": "例如：$50-100/小时",
+      "price": "价格",
+      "pricePlaceholder": "50",
+      "selectUnit": "选择单位",
+      "perHour": "每小时",
+      "perHourShort": "时",
+      "perTask": "每项任务",
+      "perTaskShort": "任务",
+      "negotiable": "可协商",
       "noServices": "还没有列出服务。添加服务来向AI代理展示你能做什么！",
       "emptyTitle": "没有列出服务",
       "emptyDescription": "添加服务让AI代理了解你能做什么",
       "confirmDelete": "删除这个服务？",
+      "addAnother": "添加另一个服务",
       "statusActive": "活跃",
       "statusInactive": "停用"
     },
@@ -384,7 +399,12 @@
     "contactHidden": "联系方式为私密信息。通过 API 发送工作邀约，对方将直接收到通知。",
     "reviews": "评价",
     "noReviews": "暂无评价",
-    "paymentPreference": "付款偏好"
+    "paymentPreference": "付款偏好",
+    "workMode": {
+      "remote": "远程",
+      "onsite": "现场",
+      "hybrid": "混合"
+    }
   },
   "errors": {
     "required": "此字段为必填",

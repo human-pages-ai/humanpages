@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { SUPPORTED_NETWORKS } from '../lib/blockchain/chains.js';
 import { logger } from '../lib/logger.js';
 
@@ -27,7 +27,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Add a new wallet
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const { network, address, label } = addWalletSchema.parse(req.body);
 
@@ -54,7 +54,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Delete a wallet
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const wallet = await prisma.wallet.findFirst({
       where: { id: req.params.id, humanId: req.userId },
