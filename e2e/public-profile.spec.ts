@@ -61,9 +61,17 @@ test.describe('Public Profile', () => {
     await page.goto(`/humans/${profile.id}`);
     await page.waitForSelector('h1', { timeout: 10_000 });
 
-    const jsonLd = await page.locator('script[type="application/ld+json"]').textContent();
-    expect(jsonLd).toBeTruthy();
-    const data = JSON.parse(jsonLd!);
+    const scripts = await page.locator('script[type="application/ld+json"]').all();
+    let data: any;
+    for (const script of scripts) {
+      const text = await script.textContent();
+      const parsed = JSON.parse(text!);
+      if (parsed['@type'] === 'Person') {
+        data = parsed;
+        break;
+      }
+    }
+    expect(data).toBeTruthy();
     expect(data['@type']).toBe('Person');
     expect(data.name).toBe('E2E User');
     expect(data.knowsAbout).toContain('coding');
