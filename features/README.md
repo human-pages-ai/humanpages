@@ -7,7 +7,13 @@ Planned features for post-launch implementation.
 | Feature | Priority | Status | Doc |
 |---------|----------|--------|-----|
 | Burnable Escrow | High | Planned | [burnable-escrow.md](./burnable-escrow.md) |
+| Agent Identity & Reputation | High | Planned | [agent-identity.md](./agent-identity.md) |
+| Mutual Rating System | High | Planned | [mutual-ratings.md](./mutual-ratings.md) |
 | Internationalization (i18n) | Medium | Planned | [internationalization.md](./internationalization.md) |
+| Response Time & Activity Tracking | Medium | Planned | [response-tracking.md](./response-tracking.md) |
+| Human Verification & Credibility | Medium | Planned | [human-verification.md](./human-verification.md) |
+| Transparency & Audit Trail | Medium | Planned | [transparency-audit.md](./transparency-audit.md) |
+| Graduated Trust & Repeat Relationships | Medium | Planned | [graduated-trust.md](./graduated-trust.md) |
 
 ## How to Add a Feature
 

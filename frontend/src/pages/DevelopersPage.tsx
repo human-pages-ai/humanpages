@@ -73,7 +73,7 @@ Response:
       { "network": "ethereum", "address": "0x..." }
     ],
     "services": [
-      { "title": "Event Photography", "priceRange": "$200-500" }
+      { "title": "Event Photography", "priceMin": 200, "priceUnit": "FLAT_TASK" }
     ]
   }
 ]`;

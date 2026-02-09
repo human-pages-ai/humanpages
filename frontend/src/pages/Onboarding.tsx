@@ -46,6 +46,7 @@ export default function Onboarding() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [minRate, setMinRate] = useState('');
   const [rateType, setRateType] = useState<'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE'>('NEGOTIABLE');
+  const [workMode, setWorkMode] = useState<'REMOTE' | 'ONSITE' | 'HYBRID' | null>(null);
   const [step1Error, setStep1Error] = useState('');
   const [step2Error, setStep2Error] = useState('');
 
@@ -75,6 +76,7 @@ export default function Onboarding() {
       if (data.languages?.length) setLanguages(data.languages);
       if (data.minRateUsdc) setMinRate(data.minRateUsdc.toString());
       if (data.rateType) setRateType(data.rateType);
+      if (data.workMode) setWorkMode(data.workMode);
     } catch (error) {
       console.error('Failed to load profile:', error);
       navigate('/login');
@@ -100,11 +102,12 @@ export default function Onboarding() {
     setStep1Error('');
     setLoading(true);
     try {
-      const updates = contactMethod === 'email'
+      const updates: any = contactMethod === 'email'
         ? { contactEmail: contactValue }
         : contactMethod === 'whatsapp'
         ? { whatsapp: contactValue.replace(/[\s\-()]/g, '') }
         : { telegram: contactValue };
+      if (workMode) updates.workMode = workMode;
 
       await api.updateProfile(updates);
       analytics.track('onboarding_step_1', { contactMethod });
@@ -289,6 +292,29 @@ export default function Onboarding() {
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               )}
+
+              {/* Work Mode */}
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  {t('dashboard.workMode.title')}
+                </label>
+                <div className="flex gap-2">
+                  {(['REMOTE', 'ONSITE', 'HYBRID'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setWorkMode(workMode === mode ? null : mode)}
+                      className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-colors ${
+                        workMode === mode
+                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      {t(`dashboard.workMode.${mode.toLowerCase()}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {step1Error && (
                 <p className="mt-3 text-sm text-red-600">{step1Error}</p>

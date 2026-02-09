@@ -50,7 +50,8 @@ describe('Services API', () => {
           title: 'Logo Design',
           description: 'Professional logo design services',
           category: 'design',
-          priceRange: '$100-500',
+          priceMin: 100,
+          priceUnit: 'FLAT_TASK',
         });
 
       expect(response.status).toBe(201);
@@ -58,11 +59,12 @@ describe('Services API', () => {
       expect(response.body.title).toBe('Logo Design');
       expect(response.body.description).toBe('Professional logo design services');
       expect(response.body.category).toBe('design');
-      expect(response.body.priceRange).toBe('$100-500');
+      expect(response.body.priceMin).toBe('100');
+      expect(response.body.priceUnit).toBe('FLAT_TASK');
       expect(response.body.isActive).toBe(true);
     });
 
-    it('should create service without priceRange', async () => {
+    it('should create service without price fields', async () => {
       const response = await authRequest(user.token)
         .post('/api/services')
         .send({
@@ -72,7 +74,8 @@ describe('Services API', () => {
         });
 
       expect(response.status).toBe(201);
-      expect(response.body.priceRange).toBeNull();
+      expect(response.body.priceMin).toBeNull();
+      expect(response.body.priceUnit).toBeNull();
     });
 
     it('should reject empty title', async () => {
@@ -173,13 +176,14 @@ describe('Services API', () => {
       expect(response2.body.isActive).toBe(true);
     });
 
-    it('should update priceRange', async () => {
+    it('should update price fields', async () => {
       const response = await authRequest(user.token)
         .patch(`/api/services/${serviceId}`)
-        .send({ priceRange: '$50-100/hour' });
+        .send({ priceMin: 50, priceUnit: 'HOURLY' });
 
       expect(response.status).toBe(200);
-      expect(response.body.priceRange).toBe('$50-100/hour');
+      expect(response.body.priceMin).toBe('50');
+      expect(response.body.priceUnit).toBe('HOURLY');
     });
 
     it('should not update another user service', async () => {

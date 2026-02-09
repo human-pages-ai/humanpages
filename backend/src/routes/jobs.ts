@@ -4,6 +4,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
+import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { sendJobOfferEmail } from '../lib/email.js';
 import { sendJobOfferTelegram } from '../lib/telegram.js';
 import {
@@ -87,15 +88,15 @@ const reviewSchema = z.object({
   comment: z.string().optional(),
 });
 
-// Rate limit: 5 offers per hour per agent
-const RATE_LIMIT_OFFERS = 5;
+// Rate limit: 20 offers per hour per registered agent
+const RATE_LIMIT_OFFERS = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-// Create a job offer (public endpoint for agents)
-// Double rate limiting: IP-based (20/hr) + agentId-based (5/hr)
-router.post('/', ipRateLimiter, async (req, res) => {
+// Create a job offer (requires registered agent with API key)
+router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest, res) => {
   try {
     const data = createJobSchema.parse(req.body);
+    const agent = req.agent!;
 
     // SSRF prevention: validate callback URL points to public endpoint
     if (data.callbackUrl && !(await isAllowedUrl(data.callbackUrl))) {
@@ -105,11 +106,11 @@ router.post('/', ipRateLimiter, async (req, res) => {
       });
     }
 
-    // Rate limiting: count offers from this agent in the last hour
+    // Rate limiting: count offers from this registered agent in the last hour
     const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
     const recentOfferCount = await prisma.job.count({
       where: {
-        agentId: data.agentId,
+        registeredAgentId: agent.id,
         createdAt: { gte: oneHourAgo },
       },
     });
@@ -117,7 +118,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
     if (recentOfferCount >= RATE_LIMIT_OFFERS) {
       return res.status(429).json({
         error: 'Rate limit exceeded',
-        message: `Agents are limited to ${RATE_LIMIT_OFFERS} offers per hour`,
+        message: `Registered agents are limited to ${RATE_LIMIT_OFFERS} offers per hour`,
         retryAfter: '1 hour',
       });
     }
@@ -210,7 +211,8 @@ router.post('/', ipRateLimiter, async (req, res) => {
       data: {
         humanId: data.humanId,
         agentId: data.agentId,
-        agentName: data.agentName,
+        agentName: data.agentName || agent.name,
+        registeredAgentId: agent.id,
         title: data.title,
         description: data.description,
         category: data.category,
@@ -223,11 +225,14 @@ router.post('/', ipRateLimiter, async (req, res) => {
 
     const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`;
 
+    const displayName = data.agentName || agent.name;
+
     // Track job offer creation in PostHog
     trackServerEvent(data.agentId, 'job_offer_sent', {
       humanId: data.humanId,
       priceUsdc: data.priceUsdc,
       category: data.category,
+      registeredAgentId: agent.id,
     });
 
     // Send email notification (async, don't block response)
@@ -240,7 +245,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         jobTitle: data.title,
         jobDescription: data.description,
         priceUsdc: data.priceUsdc,
-        agentName: data.agentName,
+        agentName: displayName,
         category: data.category,
         language: human.preferredLanguage,
       }).catch((err) => logger.error({ err }, 'Email notification failed'));
@@ -254,7 +259,7 @@ router.post('/', ipRateLimiter, async (req, res) => {
         jobTitle: data.title,
         jobDescription: data.description,
         priceUsdc: data.priceUsdc,
-        agentName: data.agentName,
+        agentName: displayName,
         dashboardUrl,
       }).catch((err) => logger.error({ err }, 'Telegram notification failed'));
     }
@@ -287,6 +292,9 @@ router.get('/:id', async (req, res) => {
           select: { id: true, name: true },
         },
         review: true,
+        registeredAgent: {
+          select: { id: true, name: true, description: true, websiteUrl: true, domainVerified: true },
+        },
       },
     });
 
@@ -318,6 +326,9 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
       orderBy: { createdAt: 'desc' },
       include: {
         review: true,
+        registeredAgent: {
+          select: { id: true, name: true, description: true, websiteUrl: true, domainVerified: true },
+        },
       },
     });
 
