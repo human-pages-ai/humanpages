@@ -335,7 +335,7 @@ router.post('/me/verify-humanity', authenticateToken, requireEmailVerified, veri
     }
 
     const gitcoinRes = await fetch(
-      `https://api.scorer.gitcoin.co/v2/stamps/${walletAddress}/score`,
+      `https://api.passport.xyz/v2/stamps/${scorerId}/score/${walletAddress}`,
       {
         headers: {
           'X-API-KEY': apiKey,
@@ -349,13 +349,10 @@ router.post('/me/verify-humanity', authenticateToken, requireEmailVerified, veri
       return res.status(502).json({ error: 'Failed to verify with Gitcoin Passport' });
     }
 
-    const gitcoinData = await gitcoinRes.json() as { score?: string; status?: string };
-    if (gitcoinData.status !== 'DONE') {
-      return res.status(202).json({
-        error: 'Score not ready yet',
-        message: 'Your Gitcoin Passport score is still being calculated. Try again in a moment.',
-        status: gitcoinData.status,
-      });
+    const gitcoinData = await gitcoinRes.json() as { score?: string; status?: string; error?: string | null };
+    if (gitcoinData.error) {
+      logger.error({ error: gitcoinData.error }, 'Gitcoin Passport score error');
+      return res.status(502).json({ error: 'Gitcoin Passport returned an error' });
     }
 
     const score = parseFloat(gitcoinData.score || '0');

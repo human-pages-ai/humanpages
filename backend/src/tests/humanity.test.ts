@@ -31,10 +31,10 @@ describe('Humanity Verification', () => {
       // Mock fetch for Gitcoin Passport API
       const originalFetch = global.fetch;
       global.fetch = vi.fn((url: any, opts?: any) => {
-        if (typeof url === 'string' && url.includes('scorer.gitcoin.co')) {
+        if (typeof url === 'string' && url.includes('passport.xyz')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({ score: '32.5', status: 'DONE' }),
+            json: () => Promise.resolve({ score: '32.5', error: null }),
           } as Response);
         }
         return originalFetch(url, opts);
@@ -79,10 +79,10 @@ describe('Humanity Verification', () => {
 
       const originalFetch = global.fetch;
       global.fetch = vi.fn((url: any, opts?: any) => {
-        if (typeof url === 'string' && url.includes('scorer.gitcoin.co')) {
+        if (typeof url === 'string' && url.includes('passport.xyz')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({ score: '12.0', status: 'DONE' }),
+            json: () => Promise.resolve({ score: '12.0', error: null }),
           } as Response);
         }
         return originalFetch(url, opts);
@@ -168,10 +168,10 @@ describe('Humanity Verification', () => {
       // Test gold tier
       const originalFetch = global.fetch;
       global.fetch = vi.fn((url: any, opts?: any) => {
-        if (typeof url === 'string' && url.includes('scorer.gitcoin.co')) {
+        if (typeof url === 'string' && url.includes('passport.xyz')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({ score: '55.0', status: 'DONE' }),
+            json: () => Promise.resolve({ score: '55.0', error: null }),
           } as Response);
         }
         return originalFetch(url, opts);
@@ -210,10 +210,10 @@ describe('Humanity Verification', () => {
 
       const originalFetch = global.fetch;
       global.fetch = vi.fn((url: any, opts?: any) => {
-        if (typeof url === 'string' && url.includes('scorer.gitcoin.co')) {
+        if (typeof url === 'string' && url.includes('passport.xyz')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({ score: '45.0', status: 'DONE' }),
+            json: () => Promise.resolve({ score: '45.0', error: null }),
           } as Response);
         }
         return originalFetch(url, opts);
