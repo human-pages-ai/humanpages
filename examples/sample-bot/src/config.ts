@@ -31,6 +31,11 @@ export const config = {
   webhookUrl: process.env.WEBHOOK_URL || '',
   webhookSecret: process.env.WEBHOOK_SECRET || '',
 
+  // LLM (optional — enables smart replies instead of keyword matching)
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+  llmModel: optional('LLM_MODEL', 'claude-sonnet-4-5-20250929'),
+  llmSystemPrompt: process.env.LLM_SYSTEM_PROMPT || '',
+
   // Errand params
   errandDescription: optional(
     'ERRAND_DESCRIPTION',

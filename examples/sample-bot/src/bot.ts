@@ -3,20 +3,24 @@ import {
   registerAgent,
   getHuman,
   createJob,
+  sendMessage,
+  getMessages,
   markJobPaid,
   reviewJob,
 } from './api.js';
-import { waitForEvent } from './webhook.js';
+import { waitForEvent, waitForEventWithMessages } from './webhook.js';
+import { generateReply, getResponderName } from './responder.js';
 
 /**
  * Main bot lifecycle — demonstrates how an AI agent hires a real human
  * for a physical-world task it cannot do on its own:
  *
- *   Register → Fetch human → Offer → Wait → Pay → Wait → Review
+ *   Register → Fetch human → Offer → Message → Wait → Pay → Wait → Review
  */
 export async function runBot(humanId: string): Promise<void> {
   console.log('\n=== Local Errand Bot ===');
-  console.log('Bridging AI to the physical world via Human Pages\n');
+  console.log('Bridging AI to the physical world via Human Pages');
+  console.log(`Responder: ${getResponderName()}\n`);
 
   // ── Step 1: Register (if needed) ──
   let agentId: string;
@@ -59,11 +63,45 @@ export async function runBot(humanId: string): Promise<void> {
   console.log(`  Job created: ${job.id} (status: ${job.status})`);
   console.log(`  Price: $${config.jobPriceUsdc} USDC`);
 
-  // ── Step 4: Wait for acceptance ──
-  console.log('\nStep 4: Waiting for human to accept the errand...');
-  console.log('  (The human will receive an email/Telegram notification)');
+  // ── Step 4: Send an intro message ──
+  console.log('\nStep 4: Sending intro message...');
+  const knownIds = new Set<string>();
+  try {
+    const intro = await sendMessage(
+      job.id,
+      `Hi ${candidate.name}! I'm an AI agent looking for help with a local errand. `
+      + `The task: ${config.errandDescription} `
+      + `Let me know if you have any questions before accepting!`,
+    );
+    knownIds.add(intro.id);
+    console.log(`  Message sent (id: ${intro.id})`);
+  } catch (err) {
+    console.log(`  Could not send message: ${(err as Error).message}`);
+  }
 
-  const accepted = await waitForEvent(job.id, 'job.accepted', 600_000);
+  // ── Step 5: Wait for acceptance (while responding to messages) ──
+  console.log('\nStep 5: Waiting for human to accept the errand...');
+  console.log('  (The human will receive an email/Telegram notification)');
+  console.log('  (Bot will reply to messages while waiting)');
+
+  const accepted = await waitForEventWithMessages(
+    job.id,
+    'job.accepted',
+    knownIds,
+    async (msg) => {
+      console.log(`  [${msg.senderName}]: ${msg.content}`);
+      const reply = await generateReply(msg, config.errandDescription);
+      try {
+        const sent = await sendMessage(job.id, reply);
+        knownIds.add(sent.id);
+        console.log(`  [Bot]: ${reply}`);
+      } catch (err) {
+        console.log(`  [Bot] Failed to reply: ${(err as Error).message}`);
+      }
+    },
+    600_000,
+  );
+
   console.log(`  Errand accepted by ${accepted.data.humanName ?? accepted.data.humanId}!`);
 
   if (accepted.data.contact) {
@@ -75,8 +113,23 @@ export async function runBot(humanId: string): Promise<void> {
     if (c.signal) console.log(`    Signal: ${c.signal}`);
   }
 
-  // ── Step 5: Record payment ──
-  console.log('\nStep 5: Recording payment...');
+  // ── Step 6: Send coordination message ──
+  console.log('\nStep 6: Sending coordination details...');
+  try {
+    const coordMsg = await sendMessage(
+      job.id,
+      'Great, you accepted! Here are the details:\n'
+      + `Task: ${config.errandDescription}\n`
+      + 'I\'ll record the payment now so you can get started.',
+    );
+    knownIds.add(coordMsg.id);
+    console.log('  [Bot]: Sent coordination details.');
+  } catch (err) {
+    console.log(`  Could not send message: ${(err as Error).message}`);
+  }
+
+  // ── Step 7: Record payment ──
+  console.log('\nStep 7: Recording payment...');
 
   // In a real bot, you would:
   //   1. Look up the human's wallet address from the search results or acceptance payload
@@ -102,15 +155,33 @@ export async function runBot(humanId: string): Promise<void> {
     console.log('  Continuing to demonstrate remaining steps...');
   }
 
-  // ── Step 6: Wait for completion ──
-  console.log('\nStep 6: Waiting for human to complete the errand...');
+  // ── Step 8: Wait for completion (while responding to messages) ──
+  console.log('\nStep 8: Waiting for human to complete the errand...');
+  console.log('  (The human can message you while working)');
 
   try {
-    const completed = await waitForEvent(job.id, 'job.completed', 600_000);
+    const completed = await waitForEventWithMessages(
+      job.id,
+      'job.completed',
+      knownIds,
+      async (msg) => {
+        console.log(`  [${msg.senderName}]: ${msg.content}`);
+        const reply = await generateReply(msg, config.errandDescription);
+        try {
+          const sent = await sendMessage(job.id, reply);
+          knownIds.add(sent.id);
+          console.log(`  [Bot]: ${reply}`);
+        } catch (err) {
+          console.log(`  [Bot] Failed to reply: ${(err as Error).message}`);
+        }
+      },
+      600_000,
+    );
+
     console.log(`  Errand completed! (status: ${completed.status})`);
 
-    // ── Step 7: Leave a review ──
-    console.log('\nStep 7: Leaving a review...');
+    // ── Step 9: Leave a review ──
+    console.log('\nStep 9: Leaving a review...');
     const review = await reviewJob(job.id, {
       rating: 5,
       comment: 'Package delivered on time, great communication. Would hire again!',
