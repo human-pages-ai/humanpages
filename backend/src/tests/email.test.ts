@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import jwt from 'jsonwebtoken';
 
-// Use vi.hoisted so the mock function is available when vi.mock factory runs (hoisted above imports)
-const { mockSend } = vi.hoisted(() => ({
-  mockSend: vi.fn(),
-}));
+// Use vi.hoisted so the mock functions are available when vi.mock factory runs (hoisted above imports)
+const { mockSend, mockSendMail, mockCreateTransport } = vi.hoisted(() => {
+  const mockSendMail = vi.fn();
+  return {
+    mockSend: vi.fn(),
+    mockSendMail,
+    mockCreateTransport: vi.fn(() => ({ sendMail: mockSendMail })),
+  };
+});
 
 vi.mock('resend', () => ({
   Resend: class {
@@ -12,10 +17,15 @@ vi.mock('resend', () => ({
   },
 }));
 
+vi.mock('nodemailer', () => ({
+  default: { createTransport: mockCreateTransport },
+}));
+
 // Import after mocking
 import {
   generateUnsubscribeUrl,
   sendJobOfferEmail,
+  sendVerificationEmail,
   sendPasswordResetEmail,
   verifyEmailConfig,
 } from '../lib/email.js';
@@ -80,17 +90,20 @@ describe('Email Service', () => {
       expect(callArgs.html).toContain('Fix my website');
     });
 
-    it('should skip when API key is not configured', async () => {
+    it('should skip when no email provider is configured', async () => {
       delete process.env.RESEND_API_KEY;
+      delete process.env.SES_SMTP_USER;
 
       const result = await sendJobOfferEmail(jobOfferData);
 
       expect(result).toBe(false);
       expect(mockSend).not.toHaveBeenCalled();
+      expect(mockSendMail).not.toHaveBeenCalled();
     });
 
-    it('should return false on Resend error', async () => {
+    it('should return false on Resend error when no SES fallback', async () => {
       process.env.RESEND_API_KEY = 'test-resend-key';
+      delete process.env.SES_SMTP_USER;
       mockSend.mockResolvedValueOnce({
         data: null,
         error: { message: 'Invalid API key', name: 'validation_error' },
@@ -118,8 +131,9 @@ describe('Email Service', () => {
       expect(callArgs.html).toContain('http://localhost:3000/reset?token=abc');
     });
 
-    it('should skip when API key is not configured', async () => {
+    it('should skip when no email provider is configured', async () => {
       delete process.env.RESEND_API_KEY;
+      delete process.env.SES_SMTP_USER;
 
       const result = await sendPasswordResetEmail('user@example.com', 'http://example.com/reset');
 
@@ -128,17 +142,132 @@ describe('Email Service', () => {
     });
   });
 
-  describe('verifyEmailConfig', () => {
-    it('should return true when API key is set', async () => {
+  describe('SES fallback', () => {
+    const jobOfferData = {
+      humanName: 'Test User',
+      humanEmail: 'test@example.com',
+      humanId: 'user-123',
+      jobTitle: 'Fix my website',
+      jobDescription: 'Need help with CSS bugs',
+      priceUsdc: 50,
+      language: 'en',
+    };
+
+    it('should fall back to SES when Resend fails', async () => {
       process.env.RESEND_API_KEY = 'test-resend-key';
+      process.env.SES_SMTP_USER = 'ses-user';
+      process.env.SES_SMTP_PASS = 'ses-pass';
+
+      mockSend.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Rate limited', name: 'rate_limit_error' },
+      });
+      mockSendMail.mockResolvedValueOnce({ messageId: 'ses-msg-123' });
+
+      const result = await sendJobOfferEmail(jobOfferData);
+
+      expect(result).toBe(true);
+      expect(mockSend).toHaveBeenCalledOnce();
+      expect(mockSendMail).toHaveBeenCalledOnce();
+
+      const sesArgs = mockSendMail.mock.calls[0][0];
+      expect(sesArgs.to).toBe('test@example.com');
+      expect(sesArgs.subject).toBeDefined();
+    });
+
+    it('should fall back to SES when Resend throws', async () => {
+      process.env.RESEND_API_KEY = 'test-resend-key';
+      process.env.SES_SMTP_USER = 'ses-user';
+      process.env.SES_SMTP_PASS = 'ses-pass';
+
+      mockSend.mockRejectedValueOnce(new Error('Network error'));
+      mockSendMail.mockResolvedValueOnce({ messageId: 'ses-msg-456' });
+
+      const result = await sendVerificationEmail('user@example.com', 'http://localhost:3000/verify?token=abc');
+
+      expect(result).toBe(true);
+      expect(mockSend).toHaveBeenCalledOnce();
+      expect(mockSendMail).toHaveBeenCalledOnce();
+    });
+
+    it('should return false when both Resend and SES fail', async () => {
+      process.env.RESEND_API_KEY = 'test-resend-key';
+      process.env.SES_SMTP_USER = 'ses-user';
+      process.env.SES_SMTP_PASS = 'ses-pass';
+
+      mockSend.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Server error', name: 'server_error' },
+      });
+      mockSendMail.mockRejectedValueOnce(new Error('SMTP connection refused'));
+
+      const result = await sendPasswordResetEmail('user@example.com', 'http://example.com/reset');
+
+      expect(result).toBe(false);
+      expect(mockSend).toHaveBeenCalledOnce();
+      expect(mockSendMail).toHaveBeenCalledOnce();
+    });
+
+    it('should send via SES when only SES is configured', async () => {
+      delete process.env.RESEND_API_KEY;
+      process.env.SES_SMTP_USER = 'ses-user';
+      process.env.SES_SMTP_PASS = 'ses-pass';
+
+      mockSendMail.mockResolvedValueOnce({ messageId: 'ses-msg-789' });
+
+      const result = await sendJobOfferEmail(jobOfferData);
+
+      expect(result).toBe(true);
+      expect(mockSend).not.toHaveBeenCalled();
+      expect(mockSendMail).toHaveBeenCalledOnce();
+    });
+
+    it('should return false when neither provider is configured', async () => {
+      delete process.env.RESEND_API_KEY;
+      delete process.env.SES_SMTP_USER;
+      delete process.env.SES_SMTP_PASS;
+
+      const result = await sendVerificationEmail('user@example.com', 'http://example.com/verify');
+
+      expect(result).toBe(false);
+      expect(mockSend).not.toHaveBeenCalled();
+      expect(mockSendMail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyEmailConfig', () => {
+    it('should return true when both providers are configured', async () => {
+      process.env.RESEND_API_KEY = 'test-resend-key';
+      process.env.SES_SMTP_USER = 'ses-user';
+      process.env.SES_SMTP_PASS = 'ses-pass';
 
       const result = await verifyEmailConfig();
 
       expect(result).toBe(true);
     });
 
-    it('should return false when API key is not set', async () => {
+    it('should return true when only Resend is configured', async () => {
+      process.env.RESEND_API_KEY = 'test-resend-key';
+      delete process.env.SES_SMTP_USER;
+
+      const result = await verifyEmailConfig();
+
+      expect(result).toBe(true);
+    });
+
+    it('should return true when only SES is configured', async () => {
       delete process.env.RESEND_API_KEY;
+      process.env.SES_SMTP_USER = 'ses-user';
+      process.env.SES_SMTP_PASS = 'ses-pass';
+
+      const result = await verifyEmailConfig();
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when no provider is configured', async () => {
+      delete process.env.RESEND_API_KEY;
+      delete process.env.SES_SMTP_USER;
 
       const result = await verifyEmailConfig();
 

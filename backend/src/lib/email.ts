@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 import jwt from 'jsonwebtoken';
 import { getTranslator } from '../i18n/index.js';
 import { logger } from './logger.js';
@@ -12,6 +14,26 @@ function getResend(): Resend {
   return _resend;
 }
 
+// Lazy-initialize SES SMTP transport via nodemailer
+let _sesTransport: Transporter | null = null;
+function getSesTransport(): Transporter | null {
+  if (!process.env.SES_SMTP_USER || !process.env.SES_SMTP_PASS) {
+    return null;
+  }
+  if (!_sesTransport) {
+    _sesTransport = nodemailer.createTransport({
+      host: process.env.SES_SMTP_HOST || 'email-smtp.ap-southeast-2.amazonaws.com',
+      port: Number(process.env.SES_SMTP_PORT) || 465,
+      secure: true,
+      auth: {
+        user: process.env.SES_SMTP_USER,
+        pass: process.env.SES_SMTP_PASS,
+      },
+    });
+  }
+  return _sesTransport;
+}
+
 const FROM_EMAIL = process.env.FROM_EMAIL || 'hello@humanpages.ai';
 const FROM_NAME = process.env.FROM_NAME || 'HumanPages';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -19,6 +41,58 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 export function generateUnsubscribeUrl(humanId: string): string {
   const token = jwt.sign({ userId: humanId, action: 'unsubscribe' }, process.env.JWT_SECRET!, { expiresIn: '365d' });
   return `${FRONTEND_URL}/api/auth/unsubscribe?token=${token}`;
+}
+
+interface SendEmailParams {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
+async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<boolean> {
+  const from = `${FROM_NAME} <${FROM_EMAIL}>`;
+
+  // Try Resend first
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const { data: response, error } = await getResend().emails.send({
+        from,
+        to: [to],
+        subject,
+        text,
+        html,
+      });
+
+      if (!error) {
+        logger.info({ messageId: response?.id, provider: 'resend' }, 'Email sent');
+        return true;
+      }
+
+      logger.warn({ err: error, provider: 'resend' }, 'Resend failed, attempting SES fallback');
+    } catch (error) {
+      logger.warn({ err: error, provider: 'resend' }, 'Resend failed, attempting SES fallback');
+    }
+  }
+
+  // Fallback to SES
+  const sesTransport = getSesTransport();
+  if (sesTransport) {
+    try {
+      const info = await sesTransport.sendMail({ from, to, subject, text, html });
+      logger.info({ messageId: info.messageId, provider: 'ses' }, 'Email sent');
+      return true;
+    } catch (error) {
+      logger.error({ err: error, provider: 'ses' }, 'SES fallback also failed');
+      return false;
+    }
+  }
+
+  // Neither provider available or both failed
+  if (!process.env.RESEND_API_KEY) {
+    logger.info('No email provider configured, skipping email');
+  }
+  return false;
 }
 
 interface JobOfferEmailData {
@@ -34,9 +108,8 @@ interface JobOfferEmailData {
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
-  // Skip if Resend API key not configured
-  if (!process.env.RESEND_API_KEY) {
-    logger.info({ jobTitle: data.jobTitle }, 'Resend API key not configured, skipping email');
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping email');
     return false;
   }
 
@@ -109,31 +182,17 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  try {
-    const { data: response, error } = await getResend().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: [data.humanEmail],
-      subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
-      text: textContent,
-      html: htmlContent,
-    });
-
-    if (error) {
-      logger.error({ err: error }, 'Email failed to send via Resend');
-      return false;
-    }
-
-    logger.info({ messageId: response?.id }, 'Job offer email sent via Resend');
-    return true;
-  } catch (error) {
-    logger.error({ err: error }, 'Email failed to send via Resend');
-    return false;
-  }
+  return sendEmail({
+    to: data.humanEmail,
+    subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
+    text: textContent,
+    html: htmlContent,
+  });
 }
 
 export async function sendVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
-    logger.info({ email }, 'Resend API key not configured, skipping verification email');
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info({ email }, 'No email provider configured, skipping verification email');
     return false;
   }
 
@@ -184,32 +243,17 @@ Human Pages - Get hired for real-world tasks
 </html>
   `.trim();
 
-  try {
-    const { data: response, error } = await getResend().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: [email],
-      subject: 'Verify your email - Human Pages',
-      text: textContent,
-      html: htmlContent,
-    });
-
-    if (error) {
-      logger.error({ err: error }, 'Verification email failed to send via Resend');
-      return false;
-    }
-
-    logger.info({ messageId: response?.id }, 'Verification email sent via Resend');
-    return true;
-  } catch (error) {
-    logger.error({ err: error }, 'Verification email failed to send via Resend');
-    return false;
-  }
+  return sendEmail({
+    to: email,
+    subject: 'Verify your email - Human Pages',
+    text: textContent,
+    html: htmlContent,
+  });
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
-  // Skip if Resend API key not configured
-  if (!process.env.RESEND_API_KEY) {
-    logger.info({ email }, 'Resend API key not configured, skipping password reset email');
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info({ email }, 'No email provider configured, skipping password reset email');
     return false;
   }
 
@@ -260,35 +304,29 @@ Human Pages - Decentralized freelancing on blockchain
 </html>
   `.trim();
 
-  try {
-    const { data: response, error } = await getResend().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: [email],
-      subject: 'Reset your password - Human Pages',
-      text: textContent,
-      html: htmlContent,
-    });
-
-    if (error) {
-      logger.error({ err: error }, 'Password reset email failed to send via Resend');
-      return false;
-    }
-
-    logger.info({ messageId: response?.id }, 'Password reset email sent via Resend');
-    return true;
-  } catch (error) {
-    logger.error({ err: error }, 'Password reset email failed to send via Resend');
-    return false;
-  }
+  return sendEmail({
+    to: email,
+    subject: 'Reset your password - Human Pages',
+    text: textContent,
+    html: htmlContent,
+  });
 }
 
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
-    logger.info('Resend API key not configured - email notifications disabled');
+  const hasResend = !!process.env.RESEND_API_KEY;
+  const hasSes = !!process.env.SES_SMTP_USER && !!process.env.SES_SMTP_PASS;
+
+  if (hasResend && hasSes) {
+    logger.info('Email providers configured: Resend (primary) + SES (fallback)');
+  } else if (hasResend) {
+    logger.info('Email provider configured: Resend');
+  } else if (hasSes) {
+    logger.info('Email provider configured: SES only');
+  } else {
+    logger.info('No email provider configured - email notifications disabled');
     return false;
   }
 
-  logger.info('Resend API key configured');
   return true;
 }
