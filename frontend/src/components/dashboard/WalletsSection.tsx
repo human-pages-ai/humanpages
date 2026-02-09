@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { Wallet } from './types';
 
-type Step = 'idle' | 'connecting' | 'connected' | 'signing';
+type Step = 'idle' | 'form' | 'busy';
 
 interface Props {
   wallets: Wallet[];
@@ -21,59 +21,57 @@ export default function WalletsSection({
   const { t } = useTranslation();
 
   const [step, setStep] = useState<Step>('idle');
-  const [address, setAddress] = useState('');
   const [network, setNetwork] = useState('ethereum');
   const [label, setLabel] = useState('');
   const [error, setError] = useState('');
+  const [busyMessage, setBusyMessage] = useState('');
 
   const hasWalletExtension = typeof window !== 'undefined' && !!window.ethereum;
 
   const resetState = () => {
     setStep('idle');
-    setAddress('');
     setNetwork('ethereum');
     setLabel('');
     setError('');
+    setBusyMessage('');
   };
 
-  const connectWallet = async () => {
+  const connectAndVerify = async () => {
     if (!window.ethereum) return;
-    setStep('connecting');
     setError('');
+
+    // Step 1: Connect wallet
+    setBusyMessage(t('dashboard.wallets.connecting'));
+    setStep('busy');
+    let address: string;
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
-      if (accounts.length > 0) {
-        setAddress(accounts[0]);
-        setStep('connected');
-      } else {
+      if (accounts.length === 0) {
         setError(t('dashboard.wallets.connectionFailed'));
-        setStep('idle');
+        setStep('form');
+        return;
       }
+      address = accounts[0];
     } catch (err: any) {
       if (err?.code === 4001) {
         setError(t('dashboard.wallets.connectionRejected'));
       } else {
         setError(t('dashboard.wallets.connectionFailed'));
       }
-      setStep('idle');
+      setStep('form');
+      return;
     }
-  };
 
-  const verifyAndAdd = async () => {
-    if (!window.ethereum || !address) return;
-    setStep('signing');
-    setError('');
+    // Step 2: Sign to verify ownership
+    setBusyMessage(t('dashboard.wallets.signing'));
     try {
-      // 1. Get nonce from backend
       const { nonce, message } = await api.getWalletNonce(address);
 
-      // 2. Ask wallet to sign the challenge
       const signature = await window.ethereum.request({
         method: 'personal_sign',
         params: [message, address],
       }) as string;
 
-      // 3. Submit to backend
       await onAddWallet({
         network,
         address,
@@ -86,11 +84,10 @@ export default function WalletsSection({
     } catch (err: any) {
       if (err?.code === 4001) {
         setError(t('dashboard.wallets.signatureRejected'));
-        setStep('connected');
       } else {
         setError(err?.message || t('dashboard.wallets.verificationFailed'));
-        setStep('connected');
       }
+      setStep('form');
     }
   };
 
@@ -108,47 +105,10 @@ export default function WalletsSection({
       );
     }
 
-    if (step === 'idle') {
-      return (
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-3">{t('dashboard.wallets.connectDescription')}</p>
-          <button
-            onClick={connectWallet}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >
-            {t('dashboard.wallets.connectWallet')}
-          </button>
-        </div>
-      );
-    }
-
-    if (step === 'connecting') {
-      return (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-2">
-          <svg className="animate-spin h-4 w-4 text-indigo-600" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <span className="text-sm text-gray-700">{t('dashboard.wallets.connecting')}</span>
-        </div>
-      );
-    }
-
-    if (step === 'connected') {
+    if (step === 'form') {
       return (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-gray-500">{t('dashboard.wallets.connectedAs')}</span>
-              <p className="text-sm font-mono text-gray-800 truncate max-w-xs">{address}</p>
-            </div>
-            <button
-              onClick={resetState}
-              className="text-sm text-indigo-600 hover:text-indigo-500"
-            >
-              {t('dashboard.wallets.changeWallet')}
-            </button>
-          </div>
+          <p className="text-sm text-gray-600">{t('dashboard.wallets.connectDescription')}</p>
           <div>
             <label htmlFor="wallet-network" className="block text-sm font-medium text-gray-700">{t('dashboard.wallets.selectNetwork')}</label>
             <select
@@ -177,26 +137,30 @@ export default function WalletsSection({
             />
           </div>
           <button
-            onClick={verifyAndAdd}
+            onClick={connectAndVerify}
             disabled={saving}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
           >
-            {t('dashboard.wallets.verifyAndAdd')}
+            {t('dashboard.wallets.connectAndVerify')}
           </button>
+          <p className="text-xs text-gray-400 text-center">{t('dashboard.wallets.connectHint')}</p>
         </div>
       );
     }
 
-    // signing
-    return (
-      <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-2">
-        <svg className="animate-spin h-4 w-4 text-indigo-600" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-        <span className="text-sm text-gray-700">{t('dashboard.wallets.signing')}</span>
-      </div>
-    );
+    if (step === 'busy') {
+      return (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-2">
+          <svg className="animate-spin h-4 w-4 text-indigo-600" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm text-gray-700">{busyMessage}</span>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -233,10 +197,10 @@ export default function WalletsSection({
             </div>
             {hasWalletExtension ? (
               <button
-                onClick={connectWallet}
+                onClick={() => setStep('form')}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
               >
-                {t('dashboard.wallets.connectWallet')}
+                {t('dashboard.wallets.addWallet')}
               </button>
             ) : (
               <div className="text-xs text-gray-400">
@@ -271,7 +235,7 @@ export default function WalletsSection({
           )}
           {wallets.length > 0 && step === 'idle' && (
             <button
-              onClick={connectWallet}
+              onClick={() => setStep('form')}
               className="mt-4 text-indigo-600 hover:text-indigo-500 text-sm"
             >
               {t('dashboard.wallets.addWallet')}

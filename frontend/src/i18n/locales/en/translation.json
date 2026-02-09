@@ -283,6 +283,8 @@
       "connectWallet": "Connect Wallet",
       "connectDescription": "Connect your browser wallet to verify ownership and add it to your profile.",
       "verifyAndAdd": "Verify & Add",
+      "connectAndVerify": "Connect Wallet & Verify",
+      "connectHint": "Your wallet will open twice: once to connect, once to sign.",
       "signing": "Please sign the message in your wallet...",
       "connecting": "Connecting to wallet...",
       "connectedAs": "Connected as",

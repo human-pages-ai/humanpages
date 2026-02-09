@@ -275,6 +275,8 @@
       "connectWallet": "Kết nối ví",
       "connectDescription": "Kết nối ví trình duyệt để xác minh quyền sở hữu và thêm vào hồ sơ của bạn.",
       "verifyAndAdd": "Xác minh và thêm",
+      "connectAndVerify": "Kết nối ví và xác minh",
+      "connectHint": "Ví của bạn sẽ mở hai lần: một lần để kết nối, một lần để ký.",
       "signing": "Vui lòng ký tin nhắn trong ví của bạn...",
       "connecting": "Đang kết nối ví...",
       "connectedAs": "Đã kết nối với",

@@ -303,6 +303,8 @@
       "connectWallet": "Cüzdanı Bağla",
       "connectDescription": "Sahipliği doğrulamak ve profilinize eklemek için tarayıcı cüzdanınızı bağlayın.",
       "verifyAndAdd": "Doğrula ve Ekle",
+      "connectAndVerify": "Cüzdanı Bağla ve Doğrula",
+      "connectHint": "Cüzdanınız iki kez açılacak: bir kez bağlanmak, bir kez imzalamak için.",
       "signing": "Lütfen cüzdanınızda mesajı imzalayın...",
       "connecting": "Cüzdana bağlanıyor...",
       "connectedAs": "Bağlandı:",

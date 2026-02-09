@@ -303,6 +303,8 @@
       "connectWallet": "Ikonekta ang Wallet",
       "connectDescription": "Ikonekta ang wallet ng iyong browser upang ma-verify ang pagmamay-ari at idagdag ito sa iyong profile.",
       "verifyAndAdd": "I-verify at Idagdag",
+      "connectAndVerify": "Ikonekta ang Wallet at I-verify",
+      "connectHint": "Magbubukas ang iyong wallet nang dalawang beses: isang beses para kumonekta, isang beses para mag-sign.",
       "signing": "Paki-sign ang mensahe sa iyong wallet...",
       "connecting": "Kumokonekta sa wallet...",
       "connectedAs": "Nakakonekta bilang",

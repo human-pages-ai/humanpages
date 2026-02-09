@@ -303,6 +303,8 @@
       "connectWallet": "Conectar billetera",
       "connectDescription": "Conecta tu billetera del navegador para verificar la propiedad y agregarla a tu perfil.",
       "verifyAndAdd": "Verificar y agregar",
+      "connectAndVerify": "Conectar billetera y verificar",
+      "connectHint": "Tu billetera se abrirá dos veces: una para conectar, otra para firmar.",
       "signing": "Por favor firma el mensaje en tu billetera...",
       "connecting": "Conectando a la billetera...",
       "connectedAs": "Conectado como",
