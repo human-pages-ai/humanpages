@@ -25,6 +25,7 @@ const registerLimiter = rateLimit({
     return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
   },
   validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 const registerSchema = z.object({

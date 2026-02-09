@@ -41,6 +41,7 @@ const ipRateLimiter = rateLimit({
   },
   // Disable validation - we handle proxied IPs correctly
   validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 // Schema for creating a job offer (called by agents)
@@ -708,6 +709,7 @@ const messageRateLimiter = rateLimit({
     return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
   },
   validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 // Schema for sending a message

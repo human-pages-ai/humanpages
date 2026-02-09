@@ -30,6 +30,7 @@ const verifyHumanityLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req: AuthRequest) => req.userId || 'unknown',
   validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 const searchRateLimiter = rateLimit({
@@ -46,6 +47,7 @@ const searchRateLimiter = rateLimit({
       || req.ip || 'unknown';
   },
   validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 const updateProfileSchema = z.object({
