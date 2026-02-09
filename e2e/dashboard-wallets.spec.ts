@@ -33,16 +33,13 @@ async function mockEthereum(page: import('@playwright/test').Page) {
   `);
 }
 
-/** Helper: connect wallet, pick network/label, sign, and wait for wallet to appear */
+/** Helper: open the add-wallet form, pick network/label, connect + sign, and wait for wallet to appear */
 async function connectAndAddWallet(
   page: import('@playwright/test').Page,
   opts: { network: string; label: string },
 ) {
-  // Click "Connect Wallet"
-  await page.getByRole('button', { name: /Connect Wallet/i }).click();
-
-  // Should show connected address
-  await expect(page.locator(`text=${testAccount.address.slice(0, 10)}`)).toBeVisible({ timeout: 5_000 });
+  // Click "Add Wallet" to open the form
+  await page.getByRole('button', { name: /Add Wallet/i }).click();
 
   // Select network and fill label
   await page.locator('#wallet-network').selectOption(opts.network);
@@ -57,8 +54,8 @@ async function connectAndAddWallet(
     await route.fulfill({ response });
   });
 
-  // Click "Verify & Add"
-  await page.getByRole('button', { name: /Verify & Add/i }).click();
+  // Click "Connect Wallet & Verify" (combined connect + sign flow)
+  await page.getByRole('button', { name: /Connect Wallet & Verify/i }).click();
 
   // Wait for the nonce request to complete
   await page.waitForResponse('**/api/wallets/nonce');
@@ -83,9 +80,9 @@ test.describe('Dashboard – Wallets', () => {
 
     await connectAndAddWallet(page, { network: 'ethereum', label: 'Main Wallet' });
 
-    // Verify wallet details appear
-    await expect(page.locator(`text=${testAccount.address.slice(0, 10)}`)).toBeVisible();
+    // Verify wallet details appear in the list
     await expect(page.locator('text=Main Wallet')).toBeVisible();
+    await expect(page.getByLabel(/wallet address/i).first()).toBeVisible();
   });
 
   test('delete wallet', async ({ page }) => {
