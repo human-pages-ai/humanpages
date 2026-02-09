@@ -32,11 +32,26 @@ export const config = {
   webhookSecret: process.env.WEBHOOK_SECRET || '',
 
   // LLM (optional — enables smart replies instead of keyword matching)
-  // Priority: OLLAMA_URL > ANTHROPIC_API_KEY > keyword fallback
-  ollamaUrl: process.env.OLLAMA_URL || '',
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
-  llmModel: optional('LLM_MODEL', process.env.OLLAMA_URL ? 'llama3' : 'claude-sonnet-4-5-20250929'),
+  //
+  // Works with any OpenAI-compatible API:
+  //   Ollama, LM Studio, OpenRouter, Cloudflare Workers AI, Google Gemini,
+  //   Together, Groq, Fireworks, vLLM, etc.
+  //
+  // Also supports Anthropic's native API (different format, auto-detected).
+  //
+  // No LLM_BASE_URL and no ANTHROPIC_API_KEY → keyword fallback.
+  llmBaseUrl: process.env.LLM_BASE_URL || '',
+  llmApiKey: process.env.LLM_API_KEY || '',
+  llmModel: optional('LLM_MODEL', 'llama3'),
   llmSystemPrompt: process.env.LLM_SYSTEM_PROMPT || '',
+
+  // Telegram notifications to the bot owner (optional)
+  // When set, the bot pings you on Telegram for key events:
+  //   - Job accepted / rejected / completed
+  //   - LLM errors (so you know replies fell back to keywords)
+  //   - Human messages the LLM couldn't handle
+  ownerTelegramBotToken: process.env.OWNER_TELEGRAM_BOT_TOKEN || '',
+  ownerTelegramChatId: process.env.OWNER_TELEGRAM_CHAT_ID || '',
 
   // Errand params
   errandDescription: optional(

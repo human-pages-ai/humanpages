@@ -1,23 +1,28 @@
 import { config } from './config.js';
+import { notify } from './notify.js';
 import type { Message } from './types.js';
 
 /**
  * Responder — generates replies to human messages.
  *
- * Three modes (auto-detected from environment):
+ * Two LLM modes + keyword fallback:
  *
- *   1. Local LLM   — set OLLAMA_URL (e.g. http://localhost:11434)
- *   2. Claude API   — set ANTHROPIC_API_KEY
- *   3. No LLM       — keyword fallback, zero dependencies
+ *   1. OpenAI-compatible API — set LLM_BASE_URL (+ LLM_API_KEY if needed)
+ *      Works with: Ollama, LM Studio, OpenRouter, Cloudflare Workers AI,
+ *      Google Gemini, Together, Groq, Fireworks, vLLM, and more.
  *
- * Priority: OLLAMA_URL > ANTHROPIC_API_KEY > keyword fallback.
+ *   2. Anthropic native API — set LLM_BASE_URL=https://api.anthropic.com
+ *      (auto-detected from URL; uses Anthropic's message format)
+ *
+ *   3. No LLM — keyword fallback, zero dependencies
+ *
  * All modes fall back to keywords on error so the bot never crashes.
  */
 
 // ── Conversation history for LLM context ──
 
 interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -25,12 +30,8 @@ const conversationHistory: ChatMessage[] = [];
 
 // ── Public API ──
 
-type Mode = 'ollama' | 'claude' | 'keyword';
-
-function getMode(): Mode {
-  if (config.ollamaUrl) return 'ollama';
-  if (config.anthropicApiKey) return 'claude';
-  return 'keyword';
+function isAnthropic(): boolean {
+  return config.llmBaseUrl.includes('anthropic.com');
 }
 
 /**
@@ -41,18 +42,20 @@ export async function generateReply(
   msg: Message,
   jobDescription: string,
 ): Promise<string> {
-  const mode = getMode();
-  if (mode === 'ollama') return callOllama(msg, jobDescription);
-  if (mode === 'claude') return callClaude(msg, jobDescription);
-  return keywordFallback(msg, jobDescription);
+  if (!config.llmBaseUrl) return keywordFallback(msg, jobDescription);
+  if (isAnthropic()) return callAnthropic(msg, jobDescription);
+  return callOpenAICompat(msg, jobDescription);
 }
 
 /** Returns which responder is active (for logging). */
 export function getResponderName(): string {
-  const mode = getMode();
-  if (mode === 'ollama') return `Ollama (${config.llmModel}) at ${config.ollamaUrl}`;
-  if (mode === 'claude') return `Claude (${config.llmModel})`;
-  return 'keyword fallback (set OLLAMA_URL or ANTHROPIC_API_KEY for smart replies)';
+  if (!config.llmBaseUrl) {
+    return 'keyword fallback (set LLM_BASE_URL for smart replies)';
+  }
+  if (isAnthropic()) {
+    return `Anthropic (${config.llmModel})`;
+  }
+  return `${config.llmModel} via ${config.llmBaseUrl}`;
 }
 
 // ── Shared ──
@@ -70,9 +73,9 @@ Answer the human's questions about this job honestly. If you don't know specific
 If the human seems ready, encourage them to click "Accept" in the dashboard.`;
 }
 
-// ── Ollama / OpenAI-compatible responder ──
+// ── OpenAI-compatible responder (works with most providers) ──
 
-async function callOllama(msg: Message, jobDescription: string): Promise<string> {
+async function callOpenAICompat(msg: Message, jobDescription: string): Promise<string> {
   conversationHistory.push({ role: 'user', content: msg.content });
 
   const systemPrompt = getSystemPrompt(jobDescription);
@@ -83,19 +86,35 @@ async function callOllama(msg: Message, jobDescription: string): Promise<string>
       { role: 'system', content: systemPrompt },
       ...conversationHistory,
     ],
+    max_tokens: 300,
     stream: false,
   };
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (config.llmApiKey) {
+    headers['Authorization'] = `Bearer ${config.llmApiKey}`;
+  }
+
+  // Normalize the base URL — append /v1/chat/completions if it looks like a bare host
+  let url = config.llmBaseUrl;
+  if (!url.includes('/chat/completions')) {
+    url = url.replace(/\/+$/, '') + '/v1/chat/completions';
+  }
+
   try {
-    const res = await fetch(`${config.ollamaUrl}/v1/chat/completions`, {
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     });
 
     if (!res.ok) {
       const err = await res.text().catch(() => '');
-      console.log(`  [LLM] Ollama error: ${res.status} ${err.slice(0, 200)}`);
+      const errorMsg = `${res.status} ${err.slice(0, 200)}`;
+      console.log(`  [LLM] Error: ${errorMsg}`);
+      notify.llmError(config.llmBaseUrl, errorMsg);
       conversationHistory.pop();
       return keywordFallback(msg, jobDescription);
     }
@@ -113,15 +132,17 @@ async function callOllama(msg: Message, jobDescription: string): Promise<string>
     conversationHistory.push({ role: 'assistant', content: reply });
     return reply;
   } catch (err) {
-    console.log(`  [LLM] Ollama connection error: ${(err as Error).message}`);
+    const errorMsg = (err as Error).message;
+    console.log(`  [LLM] Connection error: ${errorMsg}`);
+    notify.llmError(config.llmBaseUrl, errorMsg);
     conversationHistory.pop();
     return keywordFallback(msg, jobDescription);
   }
 }
 
-// ── Claude responder ──
+// ── Anthropic native API (different request/response format) ──
 
-async function callClaude(msg: Message, jobDescription: string): Promise<string> {
+async function callAnthropic(msg: Message, jobDescription: string): Promise<string> {
   conversationHistory.push({ role: 'user', content: msg.content });
 
   const systemPrompt = getSystemPrompt(jobDescription);
@@ -138,7 +159,7 @@ async function callClaude(msg: Message, jobDescription: string): Promise<string>
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': config.anthropicApiKey!,
+        'x-api-key': config.llmApiKey,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify(body),
@@ -146,7 +167,9 @@ async function callClaude(msg: Message, jobDescription: string): Promise<string>
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      console.log(`  [LLM] Claude API error: ${res.status} ${(err as any).error?.message || res.statusText}`);
+      const errorMsg = `${res.status} ${(err as any).error?.message || res.statusText}`;
+      console.log(`  [LLM] Anthropic error: ${errorMsg}`);
+      notify.llmError('Anthropic', errorMsg);
       conversationHistory.pop();
       return keywordFallback(msg, jobDescription);
     }
@@ -159,7 +182,9 @@ async function callClaude(msg: Message, jobDescription: string): Promise<string>
     conversationHistory.push({ role: 'assistant', content: reply });
     return reply;
   } catch (err) {
-    console.log(`  [LLM] Claude connection error: ${(err as Error).message}`);
+    const errorMsg = (err as Error).message;
+    console.log(`  [LLM] Anthropic connection error: ${errorMsg}`);
+    notify.llmError('Anthropic', errorMsg);
     conversationHistory.pop();
     return keywordFallback(msg, jobDescription);
   }

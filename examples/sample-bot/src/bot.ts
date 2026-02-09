@@ -10,6 +10,7 @@ import {
 } from './api.js';
 import { waitForEvent, waitForEventWithMessages } from './webhook.js';
 import { generateReply, getResponderName } from './responder.js';
+import { notify, isOwnerNotifyConfigured } from './notify.js';
 
 /**
  * Main bot lifecycle — demonstrates how an AI agent hires a real human
@@ -20,7 +21,8 @@ import { generateReply, getResponderName } from './responder.js';
 export async function runBot(humanId: string): Promise<void> {
   console.log('\n=== Local Errand Bot ===');
   console.log('Bridging AI to the physical world via Human Pages');
-  console.log(`Responder: ${getResponderName()}\n`);
+  console.log(`Responder: ${getResponderName()}`);
+  console.log(`Owner notifications: ${isOwnerNotifyConfigured() ? 'Telegram' : 'off'}\n`);
 
   // ── Step 1: Register (if needed) ──
   let agentId: string;
@@ -62,6 +64,7 @@ export async function runBot(humanId: string): Promise<void> {
 
   console.log(`  Job created: ${job.id} (status: ${job.status})`);
   console.log(`  Price: $${config.jobPriceUsdc} USDC`);
+  notify.jobCreated(job.id, candidate.name, config.jobPriceUsdc);
 
   // ── Step 4: Send an intro message ──
   console.log('\nStep 4: Sending intro message...');
@@ -90,6 +93,7 @@ export async function runBot(humanId: string): Promise<void> {
     knownIds,
     async (msg) => {
       console.log(`  [${msg.senderName}]: ${msg.content}`);
+      notify.humanMessage(job.id, msg.senderName, msg.content);
       const reply = await generateReply(msg, config.errandDescription);
       try {
         const sent = await sendMessage(job.id, reply);
@@ -103,6 +107,7 @@ export async function runBot(humanId: string): Promise<void> {
   );
 
   console.log(`  Errand accepted by ${accepted.data.humanName ?? accepted.data.humanId}!`);
+  notify.jobAccepted(job.id, accepted.data.humanName ?? accepted.data.humanId);
 
   if (accepted.data.contact) {
     const c = accepted.data.contact;
@@ -166,6 +171,7 @@ export async function runBot(humanId: string): Promise<void> {
       knownIds,
       async (msg) => {
         console.log(`  [${msg.senderName}]: ${msg.content}`);
+        notify.humanMessage(job.id, msg.senderName, msg.content);
         const reply = await generateReply(msg, config.errandDescription);
         try {
           const sent = await sendMessage(job.id, reply);
@@ -179,6 +185,7 @@ export async function runBot(humanId: string): Promise<void> {
     );
 
     console.log(`  Errand completed! (status: ${completed.status})`);
+    notify.jobCompleted(job.id, accepted.data.humanName ?? accepted.data.humanId);
 
     // ── Step 9: Leave a review ──
     console.log('\nStep 9: Leaving a review...');

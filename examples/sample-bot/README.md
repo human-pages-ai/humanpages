@@ -9,7 +9,6 @@ AI can write code, analyze data, and generate text — but it can't pick up a pa
 ## Prerequisites
 
 - Node.js 18+ (for built-in `fetch`)
-- A running Human Pages instance (local or remote)
 
 ## Quick Start
 
@@ -29,15 +28,24 @@ That's it — no webhook server, no tunnel, no extra infrastructure. The bot pol
 
 ### Adding Smart Replies
 
-By default the bot uses simple keyword matching for replies. To enable AI-powered conversation, pick one:
+By default the bot uses simple keyword matching. To enable AI-powered conversation, add any LLM:
 
 ```bash
-# Option A: Local model (Ollama — free, private, no API key needed)
-OLLAMA_URL=http://localhost:11434
+# Local model (free — Ollama, LM Studio, etc.)
+LLM_BASE_URL=http://localhost:11434
 LLM_MODEL=llama3
 
-# Option B: Claude API
-ANTHROPIC_API_KEY=sk-ant-...
+# — or any cloud provider with a free tier —
+
+# OpenRouter (free models available)
+LLM_BASE_URL=https://openrouter.ai/api
+LLM_API_KEY=sk-or-...
+LLM_MODEL=google/gemma-2-9b-it:free
+
+# Google Gemini (free tier)
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_API_KEY=AIza...
+LLM_MODEL=gemini-2.0-flash
 ```
 
 See [Connecting an LLM](#connecting-an-llm) for all options.
@@ -77,10 +85,12 @@ All configuration is via environment variables (see `.env.example`):
 | `API_URL` | Human Pages API base URL |
 | `AGENT_API_KEY` | Saved API key (leave blank to auto-register) |
 | `AGENT_NAME` | Bot name for registration |
-| `OLLAMA_URL` | Ollama / OpenAI-compatible endpoint (e.g. `http://localhost:11434`) |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude (alternative to Ollama) |
-| `LLM_MODEL` | Model name (default: `llama3` for Ollama, `claude-sonnet-4-5-20250929` for Claude) |
-| `LLM_SYSTEM_PROMPT` | Custom system prompt for the LLM (optional) |
+| `LLM_BASE_URL` | Any OpenAI-compatible endpoint (see below) |
+| `LLM_API_KEY` | API key for the LLM provider (if required) |
+| `LLM_MODEL` | Model name (e.g. `llama3`, `gemini-2.0-flash`) |
+| `LLM_SYSTEM_PROMPT` | Custom system prompt (optional) |
+| `OWNER_TELEGRAM_BOT_TOKEN` | Telegram bot token for owner alerts (optional) |
+| `OWNER_TELEGRAM_CHAT_ID` | Your Telegram chat ID for alerts (optional) |
 | `WEBHOOK_PORT` | Port for the webhook server (default: 4000) |
 | `WEBHOOK_URL` | Public URL the platform uses to reach webhooks (optional) |
 | `WEBHOOK_SECRET` | Shared secret for HMAC-SHA256 signature verification |
@@ -94,7 +104,8 @@ src/
 ├── config.ts      — Environment variable loading and validation
 ├── types.ts       — TypeScript interfaces for API responses and webhooks
 ├── api.ts         — Human Pages API client (fetch + retry with backoff)
-├── responder.ts   — Reply generation (Claude or keyword fallback)
+├── responder.ts   — LLM reply generation (any provider or keyword fallback)
+├── notify.ts      — Owner Telegram notifications
 ├── webhook.ts     — Webhook server + polling fallback for status & messages
 ├── bot.ts         — Main orchestration logic (the lifecycle above)
 └── index.ts       — Entry point
@@ -102,72 +113,69 @@ src/
 
 ## Connecting an LLM
 
-The bot supports three reply modes, auto-detected from environment variables:
+The bot uses the **OpenAI chat completions format** (`/v1/chat/completions`), which is the de facto standard supported by virtually every LLM provider. Just set `LLM_BASE_URL` and optionally `LLM_API_KEY`:
 
-| Mode | Config | Cost | Latency | Quality |
-|------|--------|------|---------|---------|
-| **No LLM** | (default) | Free | Instant | Basic keyword matching |
-| **Local model** | `OLLAMA_URL` | Free | ~1-5s | Good (depends on model) |
-| **Claude API** | `ANTHROPIC_API_KEY` | ~$0.001/reply | ~1-2s | Best |
+### Local Models (free, private)
 
-Priority: `OLLAMA_URL` > `ANTHROPIC_API_KEY` > keyword fallback.
+| Provider | LLM_BASE_URL | LLM_MODEL |
+|----------|-------------|-----------|
+| [Ollama](https://ollama.com) | `http://localhost:11434` | `llama3` |
+| [LM Studio](https://lmstudio.ai) | `http://localhost:1234` | (auto) |
+| [vLLM](https://github.com/vllm-project/vllm) | `http://localhost:8000` | your-model |
+| [LocalAI](https://localai.io) | `http://localhost:8080` | your-model |
 
-### Option A: Ollama (local, free, private)
+No `LLM_API_KEY` needed for local models.
 
-Install [Ollama](https://ollama.com), pull a model, and point the bot at it:
+### Cloud Providers (free tiers available)
 
-```bash
-# Install Ollama and pull a model
-ollama pull llama3
+| Provider | LLM_BASE_URL | LLM_API_KEY | LLM_MODEL |
+|----------|-------------|-------------|-----------|
+| [OpenRouter](https://openrouter.ai) | `https://openrouter.ai/api` | `sk-or-...` | `google/gemma-2-9b-it:free` |
+| [Google Gemini](https://ai.google.dev) | `https://generativelanguage.googleapis.com/v1beta/openai` | `AIza...` | `gemini-2.0-flash` |
+| [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) | `https://api.cloudflare.com/client/v4/accounts/{id}/ai` | CF token | `@cf/meta/llama-3-8b-instruct` |
+| [Groq](https://groq.com) | `https://api.groq.com/openai` | `gsk_...` | `llama-3.3-70b-versatile` |
+| [Together](https://together.ai) | `https://api.together.xyz` | `tok_...` | `meta-llama/Llama-3-8b-chat-hf` |
+| [Fireworks](https://fireworks.ai) | `https://api.fireworks.ai/inference` | `fw_...` | `accounts/fireworks/models/llama-v3-8b-instruct` |
 
-# In .env
-OLLAMA_URL=http://localhost:11434
-LLM_MODEL=llama3
-```
+### Anthropic (native API)
 
-This also works with **LM Studio**, **vLLM**, **LocalAI**, or any OpenAI-compatible endpoint — just change the URL:
-
-```bash
-# LM Studio
-OLLAMA_URL=http://localhost:1234
-
-# vLLM
-OLLAMA_URL=http://localhost:8000
-```
-
-### Option B: Claude API
-
-Get an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys):
+Anthropic uses a different request format, which is auto-detected from the URL:
 
 ```bash
-# In .env
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Optional: pick a model (default: claude-sonnet-4-5-20250929)
-LLM_MODEL=claude-haiku-4-5-20251001
+LLM_BASE_URL=https://api.anthropic.com
+LLM_API_KEY=sk-ant-...
+LLM_MODEL=claude-sonnet-4-5-20250929
 ```
-
-### Option C: No LLM (demo mode)
-
-Leave both `OLLAMA_URL` and `ANTHROPIC_API_KEY` blank. The bot uses keyword matching — good enough to demonstrate the API flow without any external dependencies.
 
 ### Custom System Prompt
 
-Override the built-in prompt for any mode:
+Override the built-in prompt for any provider:
 
 ```bash
 LLM_SYSTEM_PROMPT="You are a delivery coordinator. Be brief and professional. Never reveal you are an AI."
 ```
 
-### Using Other Providers
+## Owner Notifications (Telegram)
 
-The reply logic lives in `src/responder.ts` and exports one function:
+Optionally receive Telegram alerts when the bot needs attention:
 
-```ts
-async function generateReply(msg: Message, jobDescription: string): Promise<string>
-```
+- Job accepted / rejected / completed
+- Human sends a message (with content preview)
+- LLM errors (so you know replies fell back to keywords)
 
-The Ollama integration uses the OpenAI-compatible `/v1/chat/completions` format, so any provider with that interface works out of the box. For providers with a different API (Gemini, Cohere, etc.), add a new function following the same pattern as `callOllama` or `callClaude`.
+### Setup
+
+1. **Create a Telegram bot**: Message [@BotFather](https://t.me/BotFather), send `/newbot`, follow the prompts. Copy the token.
+
+2. **Get your chat ID**: Message [@userinfobot](https://t.me/userinfobot) — it replies with your chat ID.
+
+3. **Add to `.env`**:
+   ```bash
+   OWNER_TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+   OWNER_TELEGRAM_CHAT_ID=123456789
+   ```
+
+4. **Start your bot**: Message your new bot once on Telegram (required before it can send you messages).
 
 ## Key Patterns
 
