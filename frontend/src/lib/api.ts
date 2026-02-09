@@ -1,4 +1,4 @@
-import type { Profile, Wallet, Service, Job, ReviewStats } from '../components/dashboard/types';
+import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats } from '../components/dashboard/types';
 
 const API_BASE = '/api';
 
@@ -168,6 +168,18 @@ export const api = {
   // Jobs
   getJobs: (status?: string) =>
     request<Job[]>(`/jobs${status ? `?status=${status}` : ''}`),
+
+  getJob: (id: string) =>
+    request<Job>(`/jobs/${id}`),
+
+  getJobMessages: (id: string) =>
+    request<JobMessage[]>(`/jobs/${id}/messages`),
+
+  sendJobMessage: (id: string, content: string) =>
+    request<JobMessage>(`/jobs/${id}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
 
   acceptJob: (id: string) =>
     request<Job>(`/jobs/${id}/accept`, { method: 'PATCH' }),

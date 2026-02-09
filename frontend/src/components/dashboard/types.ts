@@ -88,6 +88,18 @@ export interface Job {
     rating: number;
     comment?: string;
   };
+  _count?: {
+    messages: number;
+  };
+}
+
+export interface JobMessage {
+  id: string;
+  jobId: string;
+  senderType: 'human' | 'agent';
+  senderName: string;
+  content: string;
+  createdAt: string;
 }
 
 export interface ReviewStats {
