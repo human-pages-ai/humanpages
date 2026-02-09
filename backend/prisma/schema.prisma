@@ -14,6 +14,13 @@ enum RateType {
   NEGOTIABLE
 }
 
+// Work arrangement preference
+enum WorkMode {
+  REMOTE
+  ONSITE
+  HYBRID
+}
+
 // Payment preference for deals
 enum PaymentPreference {
   ESCROW    // Willing to use escrow
@@ -47,6 +54,7 @@ model Human {
   // ===== ECONOMICS (Deal Terms) =====
   minRateUsdc      Decimal? @db.Decimal(18, 6) // Minimum rate filter
   rateType         RateType @default(NEGOTIABLE)
+  workMode         WorkMode?
   paymentPreference PaymentPreference @default(BOTH) // Escrow vs upfront
 
   // ===== OFFER FILTERS (Anti-Spam) =====
@@ -88,6 +96,12 @@ model Human {
   telegramNotifications  Boolean    @default(true)
   whatsappNotifications  Boolean    @default(true)
 
+  // Proof of humanity (Gitcoin Passport)
+  humanityVerified       Boolean   @default(false)
+  humanityProvider       String?                    // "gitcoin_passport"
+  humanityScore          Float?                     // 0-100 score
+  humanityVerifiedAt     DateTime?
+
   // Social profiles for trust verification
   linkedinUrl   String?
   twitterUrl    String?
@@ -122,11 +136,34 @@ enum JobStatus {
   DISPUTED   // Payment dispute
 }
 
+model Agent {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?   @db.VarChar(500)
+  websiteUrl        String?
+  contactEmail      String?
+  apiKeyHash        String                    // bcrypt hash of full API key
+  apiKeyPrefix      String    @unique         // first 8 chars for lookup
+  domainVerified    Boolean   @default(false)
+  verificationToken String?                   // token for domain verification
+  verifiedAt        DateTime?
+  lastActiveAt      DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  jobs              Job[]
+
+  @@index([lastActiveAt])
+}
+
 model Job {
   id              String    @id @default(cuid())
   humanId         String
   agentId         String    // Identifier for the AI agent/requester
   agentName       String?   // Display name for the agent
+
+  // Registered agent (optional FK)
+  registeredAgentId String?
+  registeredAgent   Agent?  @relation(fields: [registeredAgentId], references: [id])
 
   // Job details
   title           String
@@ -159,6 +196,7 @@ model Job {
 
   @@index([humanId, status])
   @@index([agentId])
+  @@index([registeredAgentId])
   @@index([status])
   @@index([createdAt])
   @@index([humanId, status, createdAt])
@@ -199,17 +237,18 @@ model Wallet {
 }
 
 model Service {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   humanId     String
   title       String
   description String
   category    String
-  priceRange  String?  // e.g., "$50-100", "Negotiable"
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  priceMin    Decimal?  @db.Decimal(10, 2)
+  priceUnit   RateType?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  human       Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  human       Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
 }
 
 model OAuthState {
