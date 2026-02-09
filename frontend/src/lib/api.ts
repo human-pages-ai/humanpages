@@ -130,13 +130,13 @@ export const api = {
   // Services
   getServices: () => request<Service[]>('/services'),
 
-  createService: (data: { title: string; description: string; category: string; priceRange?: string }) =>
+  createService: (data: { title: string; description: string; category: string; priceRange?: string; priceMin?: number | null; priceUnit?: string | null }) =>
     request<Service>('/services', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  updateService: (id: string, data: Partial<Pick<Service, 'title' | 'description' | 'category' | 'priceRange' | 'isActive'>>) =>
+  updateService: (id: string, data: Partial<Pick<Service, 'title' | 'description' | 'category' | 'priceRange' | 'priceMin' | 'priceUnit' | 'isActive'>>) =>
     request<Service>(`/services/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),

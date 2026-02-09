@@ -12,7 +12,8 @@ interface Service {
   title: string;
   description: string;
   category: string;
-  priceRange?: string;
+  priceMin?: string | number | null;
+  priceUnit?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE' | null;
   isActive: boolean;
 }
 

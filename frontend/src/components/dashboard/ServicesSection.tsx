@@ -1,12 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import { Service } from './types';
 
+function formatPrice(priceMin?: string | number | null, priceUnit?: string | null, t?: (key: string) => string): string | null {
+  if (!priceMin && priceUnit !== 'NEGOTIABLE') return null;
+  if (priceUnit === 'NEGOTIABLE') return t?.('dashboard.services.negotiable') || 'Negotiable';
+  if (!priceMin) return null;
+  if (priceUnit === 'HOURLY') return `$${priceMin}/${t?.('dashboard.services.perHourShort') || 'hr'}`;
+  if (priceUnit === 'FLAT_TASK') return `$${priceMin}/${t?.('dashboard.services.perTaskShort') || 'task'}`;
+  return `$${priceMin}`;
+}
+
 interface Props {
   services: Service[];
   showServiceForm: boolean;
   setShowServiceForm: (v: boolean) => void;
-  serviceForm: { title: string; description: string; category: string; priceRange: string };
-  setServiceForm: (v: { title: string; description: string; category: string; priceRange: string }) => void;
+  serviceForm: { title: string; description: string; category: string; priceMin: string; priceUnit: string };
+  setServiceForm: (v: { title: string; description: string; category: string; priceMin: string; priceUnit: string }) => void;
   saving: boolean;
   onAddService: () => void;
   onToggleServiceActive: (service: Service) => void;
@@ -27,7 +36,7 @@ export default function ServicesSection({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+    <div id="services-section" className="bg-white rounded-lg shadow p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{t('dashboard.services.title')}</h2>
         <button
@@ -74,17 +83,35 @@ export default function ServicesSection({
             />
           </div>
           <div>
-            <label htmlFor="service-price-range" className="block text-sm font-medium text-gray-700">
-              {t('dashboard.services.priceRange')} ({t('common.optional')})
+            <label className="block text-sm font-medium text-gray-700">
+              {t('dashboard.services.price')} ({t('common.optional')})
             </label>
-            <input
-              id="service-price-range"
-              type="text"
-              value={serviceForm.priceRange}
-              onChange={(e) => setServiceForm({ ...serviceForm, priceRange: e.target.value })}
-              placeholder={t('dashboard.services.priceRangePlaceholder')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
+            <div className="mt-1 flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <input
+                  id="service-price-min"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={serviceForm.priceMin}
+                  onChange={(e) => setServiceForm({ ...serviceForm, priceMin: e.target.value })}
+                  placeholder={t('dashboard.services.pricePlaceholder')}
+                  className="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <select
+                id="service-price-unit"
+                value={serviceForm.priceUnit}
+                onChange={(e) => setServiceForm({ ...serviceForm, priceUnit: e.target.value })}
+                className="block w-40 px-3 py-2 border border-gray-300 rounded-md bg-white"
+              >
+                <option value="">{t('dashboard.services.selectUnit')}</option>
+                <option value="HOURLY">{t('dashboard.services.perHour')}</option>
+                <option value="FLAT_TASK">{t('dashboard.services.perTask')}</option>
+                <option value="NEGOTIABLE">{t('dashboard.services.negotiable')}</option>
+              </select>
+            </div>
           </div>
           <button
             onClick={onAddService}
@@ -124,9 +151,9 @@ export default function ServicesSection({
                   <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                   <div className="flex gap-2 mt-2">
                     <span className="text-xs bg-gray-200 px-2 py-1 rounded">{service.category}</span>
-                    {service.priceRange && (
+                    {formatPrice(service.priceMin, service.priceUnit, t) && (
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                        {service.priceRange}
+                        {formatPrice(service.priceMin, service.priceUnit, t)}
                       </span>
                     )}
                   </div>
@@ -151,6 +178,14 @@ export default function ServicesSection({
               </div>
             </div>
           ))}
+          {!showServiceForm && (
+            <button
+              onClick={() => setShowServiceForm(true)}
+              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+            >
+              + {t('dashboard.services.addAnother')}
+            </button>
+          )}
         </div>
       )}
     </div>

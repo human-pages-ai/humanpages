@@ -11,6 +11,8 @@ export interface Service {
   description: string;
   category: string;
   priceRange?: string;
+  priceMin?: string | null;
+  priceUnit?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE' | null;
   isActive: boolean;
 }
 
@@ -46,6 +48,7 @@ export interface Profile {
   minRateUsdc?: number;
   rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
   paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
+  workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
   preferredLanguage?: string;
   hasPassword?: boolean;
   emailVerified?: boolean;
@@ -54,10 +57,19 @@ export interface Profile {
   whatsappNotifications?: boolean;
 }
 
+export interface AgentProfile {
+  id: string;
+  name: string;
+  description?: string;
+  websiteUrl?: string;
+  domainVerified: boolean;
+}
+
 export interface Job {
   id: string;
   agentId: string;
   agentName?: string;
+  registeredAgent?: AgentProfile;
   title: string;
   description: string;
   category?: string;
