@@ -19,7 +19,8 @@
     "@playwright/test": "^1.58.2",
     "concurrently": "^8.2.2",
     "husky": "^9.1.7",
-    "prisma": "^7.3.0"
+    "prisma": "^7.3.0",
+    "viem": "^2.45.2"
   },
   "dependencies": {
     "@prisma/client": "^7.3.0",

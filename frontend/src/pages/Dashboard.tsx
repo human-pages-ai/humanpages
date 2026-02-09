@@ -58,9 +58,6 @@ export default function Dashboard() {
     workMode: null as 'REMOTE' | 'ONSITE' | 'HYBRID' | null,
   });
 
-  const [showWalletForm, setShowWalletForm] = useState(false);
-  const [walletForm, setWalletForm] = useState({ network: 'ethereum', address: '', label: '' });
-
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: 'USD' });
 
@@ -310,17 +307,16 @@ export default function Dashboard() {
     }
   };
 
-  const addWallet = async () => {
+  const addWallet = async (data: { network: string; address: string; label?: string; signature: string; nonce: string }) => {
     setSaving(true);
     try {
-      await api.addWallet(walletForm);
-      posthog.capture('wallet_added', { network: walletForm.network });
+      await api.addWallet(data);
+      posthog.capture('wallet_added', { network: data.network });
       await loadProfile();
-      setWalletForm({ network: 'ethereum', address: '', label: '' });
-      setShowWalletForm(false);
       toast.success(t('toast.walletAdded'));
     } catch (error: any) {
       toast.error(error.message);
+      throw error;
     } finally {
       setSaving(false);
     }
@@ -599,10 +595,6 @@ export default function Dashboard() {
 
         <WalletsSection
           wallets={profile.wallets}
-          showWalletForm={showWalletForm}
-          setShowWalletForm={setShowWalletForm}
-          walletForm={walletForm}
-          setWalletForm={setWalletForm}
           saving={saving}
           onAddWallet={addWallet}
           onDeleteWallet={deleteWallet}

@@ -118,7 +118,13 @@ export const api = {
   // Wallets
   getWallets: () => request<Wallet[]>('/wallets'),
 
-  addWallet: (data: { network: string; address: string; label?: string }) =>
+  getWalletNonce: (address: string) =>
+    request<{ nonce: string; message: string }>('/wallets/nonce', {
+      method: 'POST',
+      body: JSON.stringify({ address }),
+    }),
+
+  addWallet: (data: { network: string; address: string; label?: string; signature: string; nonce: string }) =>
     request<Wallet>('/wallets', {
       method: 'POST',
       body: JSON.stringify(data),

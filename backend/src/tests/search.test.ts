@@ -138,10 +138,10 @@ describe('Search API', () => {
     });
 
     it('should include wallets in results', async () => {
-      // Add wallet to Alice
-      await authRequest(alice.token)
-        .post('/api/wallets')
-        .send({ network: 'ethereum', address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' });
+      // Add wallet to Alice directly in DB (search test, not wallet verification test)
+      await prisma.wallet.create({
+        data: { humanId: alice.id, network: 'ethereum', address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+      });
 
       const response = await request(app).get('/api/humans/search?skill=react&available=true');
 
