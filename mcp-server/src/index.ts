@@ -32,6 +32,10 @@ interface Human {
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;
+  humanityVerified?: boolean;
+  humanityScore?: number;
+  humanityProvider?: string;
+  humanityVerifiedAt?: string;
   lastActiveAt?: string;
   createdAt?: string;
   reputation?: {
@@ -40,7 +44,32 @@ interface Human {
     reviewCount: number;
   };
   wallets: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
-  services: { title: string; description: string; category: string; priceRange?: string }[];
+  services: { title: string; description: string; category: string; priceMin?: string; priceUnit?: string }[];
+}
+
+interface AgentProfile {
+  id: string;
+  name: string;
+  description?: string;
+  websiteUrl?: string;
+  contactEmail?: string;
+  domainVerified: boolean;
+  verifiedAt?: string;
+  lastActiveAt?: string;
+  createdAt?: string;
+  reputation?: {
+    totalJobs: number;
+    completedJobs: number;
+    paidJobs: number;
+    avgPaymentSpeedHours: number | null;
+  };
+}
+
+interface RegisterAgentResponse {
+  agent: AgentProfile;
+  apiKey: string;
+  verificationToken: string;
+  message: string;
 }
 
 interface Job {
@@ -63,6 +92,7 @@ interface Job {
   callbackUrl?: string;
   human: { id: string; name: string };
   review?: { id: string; rating: number; comment?: string };
+  registeredAgent?: { id: string; name: string; description?: string; websiteUrl?: string; domainVerified: boolean };
 }
 
 interface ApiError {
@@ -80,6 +110,8 @@ interface SearchParams {
   radius?: number;
   max_rate?: number;
   available_only?: boolean;
+  work_mode?: string;
+  verified?: string;
 }
 
 async function searchHumans(params: SearchParams): Promise<Human[]> {
@@ -93,6 +125,8 @@ async function searchHumans(params: SearchParams): Promise<Human[]> {
   if (params.radius) query.set('radius', params.radius.toString());
   if (params.max_rate) query.set('maxRate', params.max_rate.toString());
   if (params.available_only) query.set('available', 'true');
+  if (params.work_mode) query.set('workMode', params.work_mode);
+  if (params.verified) query.set('verified', params.verified);
 
   const res = await fetch(`${API_BASE}/api/humans/search?${query}`);
   if (!res.ok) {
@@ -167,6 +201,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: 'Only return humans who are currently available (default: true)',
             default: true,
           },
+          work_mode: {
+            type: 'string',
+            enum: ['REMOTE', 'ONSITE', 'HYBRID'],
+            description: 'Filter by work mode preference (REMOTE, ONSITE, or HYBRID)',
+          },
+          verified: {
+            type: 'string',
+            enum: ['humanity'],
+            description: 'Filter by verification status. Use "humanity" to only return humans who have verified their identity via Gitcoin Passport (score >= 20).',
+          },
         },
       },
     },
@@ -186,9 +230,75 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'register_agent',
+      description:
+        'Register as an agent on Human Pages. Returns an API key that you MUST save and use for all subsequent job creation calls. The API key cannot be retrieved later.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Display name for your agent (e.g., "Acme AI Assistant")',
+          },
+          description: {
+            type: 'string',
+            description: 'Brief description of what your agent does (max 500 chars)',
+          },
+          website_url: {
+            type: 'string',
+            description: 'Your website URL (can be verified later for a trust badge)',
+          },
+          contact_email: {
+            type: 'string',
+            description: 'Contact email for the agent operator',
+          },
+        },
+        required: ['name'],
+      },
+    },
+    {
+      name: 'get_agent_profile',
+      description:
+        'Get a registered agent\'s public profile including reputation stats (total jobs, completed jobs, payment speed).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_id: {
+            type: 'string',
+            description: 'The registered agent ID',
+          },
+        },
+        required: ['agent_id'],
+      },
+    },
+    {
+      name: 'verify_agent_domain',
+      description:
+        'Verify domain ownership for a registered agent. The agent must have a websiteUrl set. Supports two methods: "well-known" (place a file at /.well-known/humanpages-verify.txt) or "dns" (add a TXT record at _humanpages.yourdomain.com).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_id: {
+            type: 'string',
+            description: 'The registered agent ID',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'The agent API key (starts with hp_)',
+          },
+          method: {
+            type: 'string',
+            enum: ['well-known', 'dns'],
+            description: 'Verification method: "well-known" or "dns"',
+          },
+        },
+        required: ['agent_id', 'agent_key', 'method'],
+      },
+    },
+    {
       name: 'create_job_offer',
       description:
-        'Create a job offer for a human. The human must ACCEPT the offer before you can proceed with payment. RATE LIMIT: 5 offers per hour per agent_id. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code (PRICE_TOO_LOW, BELOW_MIN_RATE, TOO_FAR, LOCATION_REQUIRED). The error will tell you exactly what the human requires.',
+        'Create a job offer for a human. Requires a registered agent API key (from register_agent). The human must ACCEPT the offer before you can proceed with payment. RATE LIMIT: 20 offers per hour per registered agent. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -214,11 +324,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           agent_id: {
             type: 'string',
-            description: 'Your unique agent identifier',
+            description: 'Your unique agent identifier (any string)',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_). Required.',
           },
           agent_name: {
             type: 'string',
-            description: 'Display name for your agent (optional)',
+            description: 'Display name override (defaults to registered agent name)',
           },
           agent_lat: {
             type: 'number',
@@ -237,7 +351,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: 'Secret for HMAC-SHA256 signature verification (min 16 chars). The signature is sent in X-HumanPages-Signature header.',
           },
         },
-        required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id'],
+        required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id', 'agent_key'],
       },
     },
     {
@@ -283,6 +397,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'check_humanity_status',
+      description:
+        'Check the humanity verification status for a specific human. Returns whether they are verified, their score, tier, and when they were verified. This is read-only.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          human_id: {
+            type: 'string',
+            description: 'The ID of the human to check',
+          },
+        },
+        required: ['human_id'],
+      },
+    },
+    {
       name: 'leave_review',
       description:
         'Leave a review for a COMPLETED job. Reviews are only allowed after the human marks the job as complete.',
@@ -323,6 +452,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         radius: args?.radius as number | undefined,
         max_rate: args?.max_rate as number | undefined,
         available_only: args?.available_only !== false,
+        work_mode: args?.work_mode as string | undefined,
+        verified: args?.verified as string | undefined,
       });
 
       if (humans.length === 0) {
@@ -341,8 +472,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           const rep = h.reputation;
           const rating = rep && rep.avgRating > 0 ? `${rep.avgRating}★ (${rep.reviewCount} reviews)` : 'No reviews';
 
+          const humanityStatus = h.humanityVerified
+            ? `🛡️ Verified Human (score: ${h.humanityScore})`
+            : h.humanityScore ? `🛡️ Partially verified (score: ${h.humanityScore})` : '🛡️ Not verified';
+
           return `- **${h.name}**${h.username ? ` (@${h.username})` : ''} [${h.location || 'Location not specified'}]
   ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${h.minRateUsdc ? `$${h.minRateUsdc}+` : 'Rate negotiable'} | ${rating}
+  ${humanityStatus}
   Skills: ${h.skills.join(', ') || 'None listed'}
   Equipment: ${h.equipment.join(', ') || 'None listed'}
   Languages: ${h.languages.join(', ') || 'Not specified'}
@@ -366,7 +502,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         .join('\n');
 
       const servicesInfo = human.services
-        .map((s) => `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${s.priceRange || 'Negotiable'}`)
+        .map((s) => {
+          let price = 'Negotiable';
+          if (s.priceUnit === 'NEGOTIABLE') price = 'Negotiable';
+          else if (s.priceMin) {
+            price = s.priceUnit === 'HOURLY' ? `$${s.priceMin}/hr` : s.priceUnit === 'FLAT_TASK' ? `$${s.priceMin}/task` : `$${s.priceMin}`;
+          }
+          return `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${price}`;
+        })
         .join('\n\n');
 
       const socialLinks = [
@@ -381,8 +524,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const rep = human.reputation;
       const rating = rep && rep.avgRating > 0 ? `${rep.avgRating}★ (${rep.reviewCount} reviews)` : 'No reviews yet';
 
+      const humanityTier = human.humanityScore
+        ? (human.humanityScore >= 40 ? 'Gold' : human.humanityScore >= 20 ? 'Silver' : 'Bronze')
+        : 'Not verified';
+
       const details = `# ${human.name}${human.username ? ` (@${human.username})` : ''}
 ${human.isAvailable ? '✅ Available' : '❌ Not Available'}
+
+## Humanity Verification
+- **Status:** ${human.humanityVerified ? '🛡️ Verified' : '❌ Not Verified'}
+- **Score:** ${human.humanityScore ?? 'N/A'}
+- **Tier:** ${humanityTier}
+- **Provider:** ${human.humanityProvider || 'N/A'}
+- **Verified At:** ${human.humanityVerifiedAt || 'N/A'}
 
 ## Reputation
 - Jobs completed: ${rep?.jobsCompleted || 0}
@@ -423,10 +577,121 @@ ${servicesInfo || 'No services listed'}`;
       };
     }
 
-    if (name === 'create_job_offer') {
-      const res = await fetch(`${API_BASE}/api/jobs`, {
+    if (name === 'register_agent') {
+      const res = await fetch(`${API_BASE}/api/agents/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: args?.name,
+          description: args?.description,
+          websiteUrl: args?.website_url,
+          contactEmail: args?.contact_email,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as RegisterAgentResponse;
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Agent Registered!**
+
+**Agent ID:** ${result.agent.id}
+**Name:** ${result.agent.name}
+**API Key:** \`${result.apiKey}\`
+
+**IMPORTANT:** Save your API key now — it cannot be retrieved later.
+Pass it as \`agent_key\` when using \`create_job_offer\`.
+
+**Domain Verification Token:** \`${result.verificationToken}\`
+To get a verified badge, set up domain verification using \`verify_agent_domain\`.`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'get_agent_profile') {
+      const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}`);
+      if (!res.ok) {
+        throw new Error(`Agent not found: ${args?.agent_id}`);
+      }
+
+      const agent = await res.json() as AgentProfile;
+      const rep = agent.reputation;
+
+      const details = `# ${agent.name}${agent.domainVerified ? ' ✅ Verified' : ''}
+
+## Profile
+- **Description:** ${agent.description || 'No description'}
+- **Website:** ${agent.websiteUrl || 'Not set'}
+- **Contact:** ${agent.contactEmail || 'Not provided'}
+- **Domain Verified:** ${agent.domainVerified ? `Yes (${agent.verifiedAt})` : 'No'}
+- **Registered:** ${agent.createdAt}
+- **Last Active:** ${agent.lastActiveAt}
+
+## Reputation
+- **Total Jobs:** ${rep?.totalJobs || 0}
+- **Completed Jobs:** ${rep?.completedJobs || 0}
+- **Paid Jobs:** ${rep?.paidJobs || 0}
+- **Avg Payment Speed:** ${rep?.avgPaymentSpeedHours != null ? `${rep.avgPaymentSpeedHours} hours` : 'N/A'}`;
+
+      return {
+        content: [{ type: 'text', text: details }],
+      };
+    }
+
+    if (name === 'verify_agent_domain') {
+      const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/verify-domain`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': args?.agent_key as string,
+        },
+        body: JSON.stringify({
+          method: args?.method,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { message?: string };
+        throw new Error(error.message || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { domainVerified: boolean; domain: string; message: string };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Domain Verified!**
+
+**Domain:** ${result.domain}
+**Status:** Verified
+
+Your agent profile now shows a verified badge. Humans will see this when reviewing your job offers.`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'create_job_offer') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required. Register first with register_agent to get an API key.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
         body: JSON.stringify({
           humanId: args?.human_id,
           agentId: args?.agent_id,
@@ -512,6 +777,12 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
           break;
       }
 
+      const agentInfo = job.registeredAgent
+        ? `**Agent:** ${job.registeredAgent.name}${job.registeredAgent.domainVerified ? ' ✅ Verified' : ''}`
+        : job.agentName
+          ? `**Agent:** ${job.agentName}`
+          : '';
+
       return {
         content: [
           {
@@ -523,7 +794,7 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
 **Title:** ${job.title}
 **Price:** $${job.priceUsdc} USDC
 **Human:** ${job.human.name}
-
+${agentInfo ? agentInfo + '\n' : ''}
 **Next Step:** ${nextStep}`,
           },
         ],
@@ -562,6 +833,35 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
 
 The human can now begin work. They will mark the job as complete when finished.
 After completion, you can leave a review using \`leave_review\`.`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'check_humanity_status') {
+      const human = await getHuman(args?.human_id as string);
+      const tier = human.humanityScore
+        ? (human.humanityScore >= 40 ? 'Gold' : human.humanityScore >= 20 ? 'Silver' : 'Bronze')
+        : 'None';
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Humanity Verification Status**
+
+**Human:** ${human.name}${human.username ? ` (@${human.username})` : ''}
+**Verified:** ${human.humanityVerified ? '✅ Yes' : '❌ No'}
+**Score:** ${human.humanityScore ?? 'Not checked'}
+**Tier:** ${tier}
+**Provider:** ${human.humanityProvider || 'N/A'}
+**Last Verified:** ${human.humanityVerifiedAt || 'Never'}
+
+${human.humanityVerified
+  ? 'This human has verified their identity through Gitcoin Passport.'
+  : human.humanityScore
+    ? 'This human has checked their score but does not meet the verification threshold (20+).'
+    : 'This human has not yet verified their identity.'}`,
           },
         ],
       };

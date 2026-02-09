@@ -145,6 +145,19 @@ export const api = {
   deleteService: (id: string) =>
     request<void>(`/services/${id}`, { method: 'DELETE' }),
 
+  // Humanity verification
+  verifyHumanity: (walletAddress: string) =>
+    request<{
+      humanityVerified: boolean;
+      humanityScore: number;
+      humanityProvider: string;
+      humanityTier: string;
+      humanityVerifiedAt: string;
+    }>('/humans/me/verify-humanity', {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress }),
+    }),
+
   // Referrals
   getReferrals: () =>
     request<{ count: number; referrals: Array<{ id: string; name: string; createdAt: string }> }>('/humans/me/referrals'),

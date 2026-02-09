@@ -18,7 +18,17 @@ interface Service {
   title: string;
   description: string;
   category: string;
-  priceRange?: string;
+  priceMin?: number;
+  priceUnit?: string;
+}
+
+function formatPrice(priceMin?: number, priceUnit?: string): string | null {
+  if (!priceMin && priceUnit !== 'NEGOTIABLE') return null;
+  if (priceUnit === 'NEGOTIABLE') return 'Negotiable';
+  if (!priceMin) return null;
+  if (priceUnit === 'HOURLY') return `$${priceMin}/hr`;
+  if (priceUnit === 'FLAT_TASK') return `$${priceMin}/task`;
+  return `$${priceMin}`;
 }
 
 interface PublicHuman {
@@ -39,8 +49,42 @@ interface PublicHuman {
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;
+  humanityVerified?: boolean;
+  humanityScore?: number;
+  humanityProvider?: string;
+  humanityVerifiedAt?: string;
   wallets: Wallet[];
   services: Service[];
+}
+
+function getHumanityTier(score?: number): string {
+  if (!score || score < 1) return 'none';
+  if (score < 20) return 'bronze';
+  if (score < 40) return 'silver';
+  return 'gold';
+}
+
+function HumanityBadge({ profile }: { profile: PublicHuman }) {
+  const tier = getHumanityTier(profile.humanityScore ?? undefined);
+  if (tier === 'none') return null;
+
+  const styles: Record<string, { bg: string; text: string; label: string }> = {
+    bronze: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Human (Bronze)' },
+    silver: { bg: 'bg-gray-200', text: 'text-gray-700', label: 'Verified Human' },
+    gold: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Verified Human (Gold)' },
+  };
+
+  const style = styles[tier];
+  if (!style) return null;
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1 ${style.bg} ${style.text}`}>
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      {style.label}
+    </span>
+  );
 }
 
 export default function PublicProfile() {
@@ -137,7 +181,7 @@ export default function PublicProfile() {
                 "description": s.description,
                 ...(s.category && { "category": s.category }),
               },
-              ...(s.priceRange && { "priceSpecification": { "@type": "PriceSpecification", "price": s.priceRange } }),
+              ...(formatPrice(s.priceMin, s.priceUnit) && { "priceSpecification": { "@type": "PriceSpecification", "price": formatPrice(s.priceMin, s.priceUnit) } }),
             }))
           })
         }}
@@ -174,7 +218,8 @@ export default function PublicProfile() {
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <HumanityBadge profile={profile} />
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
                     profile.isAvailable
@@ -255,9 +300,9 @@ export default function PublicProfile() {
                           <h3 className="font-medium text-gray-900">{service.title}</h3>
                           <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                         </div>
-                        {service.priceRange && (
+                        {formatPrice(service.priceMin, service.priceUnit) && (
                           <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
-                            {service.priceRange}
+                            {formatPrice(service.priceMin, service.priceUnit)}
                           </span>
                         )}
                       </div>

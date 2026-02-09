@@ -18,6 +18,19 @@ const isUrlFromDomain = (url: string, domains: string[]) => {
   } catch { return false; }
 };
 
+const verifyHumanityLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: {
+    error: 'Too many verification attempts',
+    message: 'Verification rate limit: 5 requests per hour. Try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => req.userId || 'unknown',
+  validate: false,
+});
+
 const searchRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
@@ -290,6 +303,90 @@ router.get('/me/export', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// Helper: compute humanity tier from score
+function getHumanityTier(score: number | null | undefined): string {
+  if (!score || score < 1) return 'none';
+  if (score < 20) return 'bronze';
+  if (score < 40) return 'silver';
+  return 'gold';
+}
+
+// Verify humanity via Gitcoin Passport
+router.post('/me/verify-humanity', authenticateToken, requireEmailVerified, verifyHumanityLimiter, async (req: AuthRequest, res) => {
+  try {
+    const schema = z.object({
+      walletAddress: z.string().min(1),
+    });
+    const { walletAddress } = schema.parse(req.body);
+
+    // Verify user owns this wallet
+    const wallet = await prisma.wallet.findFirst({
+      where: { humanId: req.userId!, address: walletAddress },
+    });
+    if (!wallet) {
+      return res.status(400).json({ error: 'Wallet address not found on your profile' });
+    }
+
+    // Call Gitcoin Passport Scorer API
+    const apiKey = process.env.GITCOIN_SCORER_API_KEY;
+    const scorerId = process.env.GITCOIN_SCORER_ID;
+    if (!apiKey || !scorerId) {
+      return res.status(503).json({ error: 'Humanity verification service not configured' });
+    }
+
+    const gitcoinRes = await fetch(
+      `https://api.passport.xyz/v2/stamps/${scorerId}/score/${walletAddress}`,
+      {
+        headers: {
+          'X-API-KEY': apiKey,
+        },
+      }
+    );
+
+    if (!gitcoinRes.ok) {
+      const errText = await gitcoinRes.text().catch(() => 'Unknown error');
+      logger.error({ status: gitcoinRes.status, body: errText }, 'Gitcoin Passport API error');
+      return res.status(502).json({ error: 'Failed to verify with Gitcoin Passport' });
+    }
+
+    const gitcoinData = await gitcoinRes.json() as { score?: string; status?: string; error?: string | null };
+    if (gitcoinData.error) {
+      logger.error({ error: gitcoinData.error }, 'Gitcoin Passport score error');
+      return res.status(502).json({ error: 'Gitcoin Passport returned an error' });
+    }
+
+    const score = parseFloat(gitcoinData.score || '0');
+    const humanityVerified = score >= 20;
+    const tier = getHumanityTier(score);
+
+    const updated = await prisma.human.update({
+      where: { id: req.userId },
+      data: {
+        humanityScore: score,
+        humanityProvider: 'gitcoin_passport',
+        humanityVerifiedAt: new Date(),
+        humanityVerified,
+      },
+    });
+
+    logger.info({ userId: req.userId, score, tier, verified: humanityVerified }, 'Humanity verification completed');
+
+    res.json({
+      humanityVerified: updated.humanityVerified,
+      humanityScore: updated.humanityScore,
+      humanityProvider: updated.humanityProvider,
+      humanityTier: tier,
+      humanityVerifiedAt: updated.humanityVerifiedAt,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Verify humanity error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Search humans (public endpoint for AI agents)
 // Supports: skill, equipment, language, location (text), lat/lng + radius, minRate, maxRate
 router.get('/search', searchRateLimiter, async (req, res) => {
@@ -306,6 +403,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       maxRate,
       available,
       workMode,
+      verified,
       limit = '20',
       offset = '0',
     } = req.query;
@@ -313,6 +411,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     const where: any = {
       emailVerified: true,
     };
+
+    // Filter by humanity verification
+    if (verified === 'humanity') {
+      where.humanityVerified = true;
+    }
 
     // Filter by skill
     if (skill) {
@@ -390,6 +493,10 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         instagramUrl: true,
         youtubeUrl: true,
         websiteUrl: true,
+        humanityVerified: true,
+        humanityScore: true,
+        humanityProvider: true,
+        humanityVerifiedAt: true,
         lastActiveAt: true,
         createdAt: true,
         wallets: {
@@ -504,6 +611,10 @@ router.get('/:id', async (req, res) => {
         instagramUrl: true,
         youtubeUrl: true,
         websiteUrl: true,
+        humanityVerified: true,
+        humanityScore: true,
+        humanityProvider: true,
+        humanityVerifiedAt: true,
         lastActiveAt: true,
         createdAt: true,
         wallets: {
@@ -564,6 +675,10 @@ router.get('/u/:username', async (req, res) => {
         instagramUrl: true,
         youtubeUrl: true,
         websiteUrl: true,
+        humanityVerified: true,
+        humanityScore: true,
+        humanityProvider: true,
+        humanityVerifiedAt: true,
         lastActiveAt: true,
         createdAt: true,
         wallets: {

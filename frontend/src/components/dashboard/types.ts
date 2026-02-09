@@ -50,6 +50,10 @@ export interface Profile {
   paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
   preferredLanguage?: string;
+  humanityVerified?: boolean;
+  humanityScore?: number;
+  humanityProvider?: string;
+  humanityVerifiedAt?: string;
   hasPassword?: boolean;
   emailVerified?: boolean;
   emailNotifications?: boolean;
