@@ -10,6 +10,8 @@ export interface Human {
   skills: string[];
   isAvailable: boolean;
   minRateUsdc: number | null;
+  rateCurrency: string | null;
+  minRateUsdEstimate: number | null;
   rateType: string | null;
   contactEmail: string | null;
   telegram: string | null;
@@ -51,13 +53,36 @@ export interface ReviewResponse {
   message: string;
 }
 
+export interface Job {
+  id: string;
+  status: string;
+  title: string;
+  description: string;
+  priceUsdc: string;
+  humanId: string;
+  human?: { id: string; name: string };
+}
+
+// ── Message types ──
+
+export interface Message {
+  id: string;
+  jobId: string;
+  senderType: 'human' | 'agent';
+  senderId: string;
+  senderName: string;
+  content: string;
+  createdAt: string;
+}
+
 // ── Webhook payload types ──
 
 export type WebhookEvent =
   | 'job.accepted'
   | 'job.rejected'
   | 'job.paid'
-  | 'job.completed';
+  | 'job.completed'
+  | 'job.message';
 
 export interface WebhookPayload {
   event: WebhookEvent;
@@ -75,6 +100,13 @@ export interface WebhookPayload {
       telegram?: string;
       whatsapp?: string;
       signal?: string;
+    };
+    message?: {
+      id: string;
+      senderType: string;
+      senderName: string;
+      content: string;
+      createdAt: string;
     };
   };
 }

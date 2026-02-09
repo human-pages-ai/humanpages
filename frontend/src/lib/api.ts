@@ -130,7 +130,7 @@ export const api = {
   // Services
   getServices: () => request<Service[]>('/services'),
 
-  createService: (data: { title: string; description: string; category: string; priceRange?: string; priceMin?: number | null; priceUnit?: string | null }) =>
+  createService: (data: { title: string; description: string; category: string; priceRange?: string; priceMin?: number | null; priceCurrency?: string; priceUnit?: string | null }) =>
     request<Service>('/services', {
       method: 'POST',
       body: JSON.stringify(data),

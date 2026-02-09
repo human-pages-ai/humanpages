@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
+import { SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 
 const router = Router();
 
@@ -11,6 +12,10 @@ const serviceSchema = z.object({
   description: z.string().min(1),
   category: z.string().min(1),
   priceMin: z.number().min(0).optional().nullable(),
+  priceCurrency: z.string().refine(
+    (c) => SUPPORTED_CURRENCIES.includes(c as any),
+    `Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}`
+  ).optional(),
   priceUnit: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional().nullable(),
   isActive: z.boolean().optional(),
 });

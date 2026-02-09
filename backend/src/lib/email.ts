@@ -220,6 +220,121 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
   });
 }
 
+interface JobMessageEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  agentName: string;
+  messageContent: string;
+  jobTitle: string;
+  jobDetailUrl: string;
+  language?: string;
+}
+
+export async function sendJobMessageEmail(data: JobMessageEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping message email');
+    return false;
+  }
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+
+  // Truncate long messages for email preview
+  const preview = data.messageContent.length > 300
+    ? data.messageContent.slice(0, 300) + '...'
+    : data.messageContent;
+
+  const textContent = `
+${t('email.jobOffer.greeting', { name: data.humanName })}
+
+${data.agentName} sent you a message on "${data.jobTitle}":
+
+"${preview}"
+
+View the conversation and reply:
+${data.jobDetailUrl}
+
+---
+${t('email.jobOffer.footer')}
+
+To unsubscribe from email notifications: ${unsubscribeUrl}
+  `.trim();
+
+  const escapedPreview = preview.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const escapedAgent = data.agentName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; }
+    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
+    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
+    .content p { color: #374151; }
+    .message-card { background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb; border-left: 4px solid #4F46E5; }
+    .message-card .sender { color: #4F46E5; font-weight: 600; margin-bottom: 8px; }
+    .message-card .text { color: #374151; white-space: pre-wrap; }
+    .footer { text-align: center; padding: 20px; }
+    .footer p { color: #6b7280; font-size: 14px; }
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #1a1a2e !important; color: #e5e7eb !important; }
+      .content { background-color: #1e1e3a !important; border-color: #374151 !important; }
+      .content p { color: #d1d5db !important; }
+      .message-card { background-color: #2a2a4a !important; border-color: #4b5563 !important; }
+      .message-card .sender { color: #818cf8 !important; }
+      .message-card .text { color: #d1d5db !important; }
+      .footer p { color: #9ca3af !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>New message on "${data.jobTitle}"</h1>
+    </div>
+    <div class="content">
+      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+      <p>${escapedAgent} sent you a message:</p>
+
+      <div class="message-card">
+        <p class="sender">${escapedAgent}</p>
+        <p class="text">${escapedPreview}</p>
+      </div>
+
+      <!--[if mso]>
+      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${data.jobDetailUrl}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="14%" fillcolor="#4F46E5">
+        <w:anchorlock/>
+        <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:bold;">View &amp; Reply</center>
+      </v:roundrect>
+      <![endif]-->
+      <!--[if !mso]><!-->
+      <a href="${data.jobDetailUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;text-align:center;mso-hide:all;">View &amp; Reply</a>
+      <!--<![endif]-->
+    </div>
+    <div class="footer">
+      <p>${t('email.jobOffer.footer')}</p>
+      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `New message from ${data.agentName} on "${data.jobTitle}"`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 export async function sendVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
   if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
     logger.info({ email }, 'No email provider configured, skipping verification email');

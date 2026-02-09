@@ -6,8 +6,8 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.js';
-import { sendJobOfferEmail } from '../lib/email.js';
-import { sendJobOfferTelegram } from '../lib/telegram.js';
+import { sendJobOfferEmail, sendJobMessageEmail } from '../lib/email.js';
+import { sendJobOfferTelegram, sendTelegramMessage } from '../lib/telegram.js';
 import {
   verifyUsdcPayment,
   PaymentVerificationError,
@@ -19,6 +19,7 @@ import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl, fireWebhook } from '../lib/webhook.js';
+import { convertToUsd } from '../lib/exchangeRates.js';
 
 const router = Router();
 
@@ -141,6 +142,7 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
         minOfferPrice: true,
         maxOfferDistance: true,
         minRateUsdc: true,
+        rateCurrency: true,
         locationLat: true,
         locationLng: true,
       },
@@ -166,26 +168,39 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
     }
 
     // Check offer filters
-    // 1. Minimum price filter
-    if (human.minOfferPrice && data.priceUsdc < human.minOfferPrice.toNumber()) {
-      return res.status(400).json({
-        error: 'Offer filtered',
-        code: 'PRICE_TOO_LOW',
-        message: `This human requires a minimum offer of $${human.minOfferPrice} USDC. Your offer of $${data.priceUsdc} was automatically filtered to their spam folder.`,
-        minPrice: human.minOfferPrice.toNumber(),
-        yourPrice: data.priceUsdc,
-      });
+    const currency = human.rateCurrency || 'USD';
+    const isNonUsd = currency !== 'USD';
+
+    // 1. Minimum price filter (convert local currency min to USD for comparison)
+    if (human.minOfferPrice) {
+      const minPriceLocal = human.minOfferPrice.toNumber();
+      const minPriceUsd = await convertToUsd(minPriceLocal, currency);
+      if (data.priceUsdc < minPriceUsd) {
+        const localNote = isNonUsd ? ` (${currency} ${minPriceLocal} ~$${Math.round(minPriceUsd)} USD)` : '';
+        return res.status(400).json({
+          error: 'Offer filtered',
+          code: 'PRICE_TOO_LOW',
+          message: `This human requires a minimum offer of $${Math.round(minPriceUsd)} USDC${localNote}. Your offer of $${data.priceUsdc} was automatically filtered.`,
+          minPrice: minPriceUsd,
+          yourPrice: data.priceUsdc,
+        });
+      }
     }
 
-    // 2. Minimum rate filter (if human has set it and offer seems too low relative to rate)
-    if (human.minRateUsdc && data.priceUsdc < human.minRateUsdc.toNumber()) {
-      return res.status(400).json({
-        error: 'Offer filtered',
-        code: 'BELOW_MIN_RATE',
-        message: `This human's minimum rate is $${human.minRateUsdc} USDC. Your offer of $${data.priceUsdc} was automatically filtered to their spam folder.`,
-        minRate: human.minRateUsdc.toNumber(),
-        yourPrice: data.priceUsdc,
-      });
+    // 2. Minimum rate filter (convert local currency rate to USD for comparison)
+    if (human.minRateUsdc) {
+      const minRateLocal = human.minRateUsdc.toNumber();
+      const minRateUsd = await convertToUsd(minRateLocal, currency);
+      if (data.priceUsdc < minRateUsd) {
+        const localNote = isNonUsd ? ` (${currency} ${minRateLocal} ~$${Math.round(minRateUsd)} USD)` : '';
+        return res.status(400).json({
+          error: 'Offer filtered',
+          code: 'BELOW_MIN_RATE',
+          message: `This human's minimum rate is $${Math.round(minRateUsd)} USDC${localNote}. Your offer of $${data.priceUsdc} was automatically filtered.`,
+          minRate: minRateUsd,
+          yourPrice: data.priceUsdc,
+        });
+      }
     }
 
     // 3. Distance filter (if human has location and max distance set)
@@ -752,6 +767,50 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, async (req:
           },
         },
       );
+    }
+
+    // If sender is agent, notify the human via email/Telegram
+    if (req.senderType === 'agent') {
+      const human = await prisma.human.findUnique({
+        where: { id: job.humanId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contactEmail: true,
+          emailVerified: true,
+          emailNotifications: true,
+          telegramChatId: true,
+          preferredLanguage: true,
+        },
+      });
+
+      if (human) {
+        const jobDetailUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/jobs/${job.id}`;
+        const notifyEmail = human.contactEmail || human.email;
+
+        if (notifyEmail && human.emailNotifications) {
+          sendJobMessageEmail({
+            humanName: human.name,
+            humanEmail: notifyEmail,
+            humanId: human.id,
+            agentName: req.senderName!,
+            messageContent: data.content,
+            jobTitle: job.title,
+            jobDetailUrl,
+            language: human.preferredLanguage ?? undefined,
+          }).catch((err) => logger.error({ err }, 'Agent message email notification failed'));
+        }
+
+        if (human.telegramChatId) {
+          const preview = data.content.length > 200 ? data.content.slice(0, 200) + '...' : data.content;
+          sendTelegramMessage({
+            chatId: human.telegramChatId,
+            text: `<b>New message from ${req.senderName!.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</b>\n\nOn: ${job.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}\n\n"${preview.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"\n\n<a href="${jobDetailUrl}">View &amp; Reply</a>`,
+            parseMode: 'HTML',
+          }).catch((err) => logger.error({ err }, 'Agent message Telegram notification failed'));
+        }
+      }
     }
 
     res.status(201).json(message);

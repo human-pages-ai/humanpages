@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { Profile } from './types';
+import { SUPPORTED_CURRENCIES, getCurrencySymbol, formatCurrencyAmount } from '../../lib/currencies';
 
 interface Props {
   profile: Profile;
   editingFilters: boolean;
   setEditingFilters: (v: boolean) => void;
-  filtersForm: { minOfferPrice: string; maxOfferDistance: string; minRateUsdc: string };
-  setFiltersForm: (v: { minOfferPrice: string; maxOfferDistance: string; minRateUsdc: string }) => void;
+  filtersForm: { minOfferPrice: string; maxOfferDistance: string; minRateUsdc: string; rateCurrency: string };
+  setFiltersForm: (v: { minOfferPrice: string; maxOfferDistance: string; minRateUsdc: string; rateCurrency: string }) => void;
   saving: boolean;
   onSaveFilters: () => void;
 }
@@ -40,33 +41,55 @@ export default function OfferFiltersSection({
       {editingFilters ? (
         <div className="space-y-4">
           <div>
-            <label htmlFor="filter-min-price" className="block text-sm font-medium text-gray-700">{t('dashboard.filters.minPrice')}</label>
-            <p className="text-xs text-gray-500 mb-1">{t('dashboard.filters.minPriceDesc')}</p>
-            <input
-              id="filter-min-price"
-              type="number"
-              min="0"
-              step="1"
-              value={filtersForm.minOfferPrice}
-              onChange={(e) => setFiltersForm({ ...filtersForm, minOfferPrice: e.target.value })}
-              placeholder="e.g., 50"
+            <label htmlFor="filter-currency" className="block text-sm font-medium text-gray-700">{t('currency.label')}</label>
+            <select
+              id="filter-currency"
+              value={filtersForm.rateCurrency}
+              onChange={(e) => setFiltersForm({ ...filtersForm, rateCurrency: e.target.value })}
               className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md"
-            />
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.symbol} {c.code} - {c.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
-            <label htmlFor="filter-min-rate" className="block text-sm font-medium text-gray-700">{t('dashboard.filters.minRate')}</label>
+            <label htmlFor="filter-min-price" className="block text-sm font-medium text-gray-700">{t('dashboard.filters.minPrice', { currency: filtersForm.rateCurrency })}</label>
+            <p className="text-xs text-gray-500 mb-1">{t('dashboard.filters.minPriceDesc')}</p>
+            <div className="relative max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{getCurrencySymbol(filtersForm.rateCurrency)}</span>
+              <input
+                id="filter-min-price"
+                type="number"
+                min="0"
+                step="1"
+                value={filtersForm.minOfferPrice}
+                onChange={(e) => setFiltersForm({ ...filtersForm, minOfferPrice: e.target.value })}
+                placeholder="e.g., 50"
+                className="mt-1 block w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="filter-min-rate" className="block text-sm font-medium text-gray-700">{t('dashboard.filters.minRate', { currency: filtersForm.rateCurrency })}</label>
             <p className="text-xs text-gray-500 mb-1">{t('dashboard.filters.minRateDesc')}</p>
-            <input
-              id="filter-min-rate"
-              type="number"
-              min="0"
-              step="1"
-              value={filtersForm.minRateUsdc}
-              onChange={(e) => setFiltersForm({ ...filtersForm, minRateUsdc: e.target.value })}
-              placeholder="e.g., 25"
-              className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md"
-            />
+            <div className="relative max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{getCurrencySymbol(filtersForm.rateCurrency)}</span>
+              <input
+                id="filter-min-rate"
+                type="number"
+                min="0"
+                step="1"
+                value={filtersForm.minRateUsdc}
+                onChange={(e) => setFiltersForm({ ...filtersForm, minRateUsdc: e.target.value })}
+                placeholder="e.g., 25"
+                className="mt-1 block w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
           </div>
 
           <div>
@@ -104,13 +127,13 @@ export default function OfferFiltersSection({
               {profile?.minOfferPrice && (
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Minimum offer: <strong>${profile.minOfferPrice} USDC</strong></span>
+                  <span>Minimum offer: <strong>{formatCurrencyAmount(profile.minOfferPrice, profile.rateCurrency || 'USD', null, profile.rateCurrency !== 'USD' ? profile.minRateUsdEstimate : null)}</strong></span>
                 </div>
               )}
               {profile?.minRateUsdc && (
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Minimum rate: <strong>${profile.minRateUsdc}/hr</strong></span>
+                  <span>Minimum rate: <strong>{formatCurrencyAmount(profile.minRateUsdc, profile.rateCurrency || 'USD', 'HOURLY', profile.minRateUsdEstimate)}</strong></span>
                 </div>
               )}
               {profile?.maxOfferDistance && (

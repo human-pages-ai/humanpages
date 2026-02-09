@@ -1,6 +1,8 @@
 import { config } from './config.js';
 import type {
   Human,
+  Job,
+  Message,
   RegisterResponse,
   CreateJobResponse,
   PaidJobResponse,
@@ -107,6 +109,10 @@ export async function getHuman(humanId: string): Promise<Human> {
   return request<Human>(`/api/humans/${humanId}`);
 }
 
+export async function getJob(jobId: string): Promise<Job> {
+  return request<Job>(`/api/jobs/${jobId}`);
+}
+
 export async function createJob(params: {
   humanId: string;
   agentId: string;
@@ -145,4 +151,15 @@ export async function reviewJob(
     method: 'POST',
     body: review,
   });
+}
+
+export async function sendMessage(jobId: string, content: string): Promise<Message> {
+  return request<Message>(`/api/jobs/${jobId}/messages`, {
+    method: 'POST',
+    body: { content },
+  });
+}
+
+export async function getMessages(jobId: string): Promise<Message[]> {
+  return request<Message[]>(`/api/jobs/${jobId}/messages`);
 }

@@ -1,7 +1,124 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 import express from 'express';
 import { config } from './config.js';
-import type { WebhookEvent, WebhookPayload } from './types.js';
+import { getJob, getMessages } from './api.js';
+import type { Message, WebhookEvent, WebhookPayload } from './types.js';
+
+// ── Status polling (fallback when no webhook URL) ──
+
+const EVENT_TO_STATUS: Record<string, string> = {
+  'job.accepted': 'ACCEPTED',
+  'job.rejected': 'REJECTED',
+  'job.paid': 'PAID',
+  'job.completed': 'COMPLETED',
+};
+
+const POLL_INTERVAL_MS = 5_000;
+
+async function pollForStatus(
+  jobId: string,
+  event: WebhookEvent,
+  timeoutMs: number,
+): Promise<WebhookPayload> {
+  const targetStatus = EVENT_TO_STATUS[event];
+  if (!targetStatus) throw new Error(`Cannot poll for event: ${event}`);
+
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const job = await getJob(jobId);
+
+    if (job.status === targetStatus) {
+      return {
+        event,
+        jobId,
+        status: job.status,
+        timestamp: new Date().toISOString(),
+        data: {
+          title: job.title,
+          description: job.description,
+          priceUsdc: job.priceUsdc,
+          humanId: job.humanId,
+          humanName: job.human?.name,
+        },
+      };
+    }
+
+    // If waiting for acceptance but job was rejected, fail fast
+    if (event === 'job.accepted' && job.status === 'REJECTED') {
+      throw new Error('Job was rejected by the human');
+    }
+
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+  }
+
+  throw new Error(`Timed out waiting for ${event} on job ${jobId}`);
+}
+
+/**
+ * Wait for a status change while also monitoring messages.
+ *
+ * Each poll cycle checks both the job status AND the messages endpoint.
+ * When a new human message arrives, `onMessage` is called so the bot can reply
+ * without blocking the status wait.
+ *
+ * Returns when the target status is reached (same as waitForEvent).
+ */
+export async function waitForEventWithMessages(
+  jobId: string,
+  event: WebhookEvent,
+  knownMessageIds: Set<string>,
+  onMessage: (msg: Message) => Promise<void>,
+  timeoutMs = 300_000,
+): Promise<WebhookPayload> {
+  const targetStatus = EVENT_TO_STATUS[event];
+  if (!targetStatus) throw new Error(`Cannot poll for event: ${event}`);
+
+  console.log(`  (Polling for ${event} + messages every ${POLL_INTERVAL_MS / 1000}s)`);
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    // Check status
+    const job = await getJob(jobId);
+
+    if (job.status === targetStatus) {
+      return {
+        event,
+        jobId,
+        status: job.status,
+        timestamp: new Date().toISOString(),
+        data: {
+          title: job.title,
+          description: job.description,
+          priceUsdc: job.priceUsdc,
+          humanId: job.humanId,
+          humanName: job.human?.name,
+        },
+      };
+    }
+
+    if (event === 'job.accepted' && job.status === 'REJECTED') {
+      throw new Error('Job was rejected by the human');
+    }
+
+    // Check for new messages
+    try {
+      const msgs = await getMessages(jobId);
+      for (const msg of msgs) {
+        if (msg.senderType === 'human' && !knownMessageIds.has(msg.id)) {
+          knownMessageIds.add(msg.id);
+          await onMessage(msg);
+        }
+      }
+    } catch {
+      // Silently retry on transient errors
+    }
+
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+  }
+
+  throw new Error(`Timed out waiting for ${event} on job ${jobId}`);
+}
 
 // ── Signature verification ──
 
@@ -30,7 +147,11 @@ const bufferedEvents = new Map<EventKey, WebhookPayload>();
 
 /**
  * Wait for a specific webhook event for a given job.
- * Returns a Promise that resolves when the event arrives (or rejects on timeout).
+ *
+ * When a WEBHOOK_URL is configured, listens for real-time webhook delivery.
+ * Otherwise, falls back to polling GET /api/jobs/:id every 5 seconds —
+ * so the bot works out of the box with zero infrastructure.
+ *
  * Events that arrive before waitForEvent is called are buffered so they aren't lost.
  */
 export function waitForEvent(
@@ -38,6 +159,12 @@ export function waitForEvent(
   event: WebhookEvent,
   timeoutMs = 300_000, // 5 minutes default
 ): Promise<WebhookPayload> {
+  // No webhook server → poll the API instead
+  if (!config.webhookUrl) {
+    console.log(`  (No webhook configured — polling for ${event} every ${POLL_INTERVAL_MS / 1000}s)`);
+    return pollForStatus(jobId, event, timeoutMs);
+  }
+
   const key: EventKey = `${jobId}:${event}`;
 
   // Check buffer first — the event may have arrived before we started waiting
