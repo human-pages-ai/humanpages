@@ -161,6 +161,15 @@
       "available": "Available",
       "unavailable": "Hindi Available"
     },
+    "workStatus": {
+      "title": "Status ng Trabaho",
+      "activeDesc": "Nakikita ka ng mga ahente at tumatanggap ng alok ng trabaho",
+      "pausedDesc": "Nakatago ka sa mga paghahanap at hindi ka makakatanggap ng mga alok",
+      "active": "Aktibo",
+      "paused": "Naka-pause",
+      "notifyVia": "Abisuhan ako sa pamamagitan ng",
+      "enableToNotify": "I-on ang availability para i-configure ang mga notification"
+    },
     "paymentPreference": {
       "title": "Kagustuhan sa Pagbabayad",
       "subtitle": "Sabihin sa mga ahente kung paano mo gustong mabayaran",
@@ -421,7 +430,13 @@
     "created": "Ginawa",
     "accepted": "Tinanggap",
     "paid": "Binayaran",
-    "completed": "Natapos"
+    "completed": "Natapos",
+    "agentReputation": "Reputasyon ng Ahente",
+    "totalJobs": "Kabuuang Trabaho",
+    "completionRate": "Nakumpleto",
+    "paymentRate": "Nabayaran",
+    "avgPaySpeed": "Average na Bilis ng Bayad",
+    "memberSince": "Miyembro mula {{date}}"
   },
   "errors": {
     "required": "Kinakailangan ang field na ito",

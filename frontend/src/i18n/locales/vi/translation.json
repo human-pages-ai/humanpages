@@ -161,6 +161,15 @@
       "available": "Có sẵn",
       "unavailable": "Không có sẵn"
     },
+    "workStatus": {
+      "title": "Trạng Thái Công Việc",
+      "activeDesc": "Bạn hiển thị với các đại lý và đang nhận lời mời làm việc",
+      "pausedDesc": "Bạn ẩn khỏi tìm kiếm và sẽ không nhận lời mời làm việc",
+      "active": "Hoạt động",
+      "paused": "Tạm dừng",
+      "notifyVia": "Thông báo qua",
+      "enableToNotify": "Bật trạng thái sẵn sàng để cấu hình thông báo"
+    },
     "paymentPreference": {
       "title": "Hình thức thanh toán",
       "subtitle": "Cho đại lý biết bạn muốn được thanh toán như thế nào",
@@ -421,7 +430,13 @@
     "created": "Đã tạo",
     "accepted": "Đã chấp nhận",
     "paid": "Đã thanh toán",
-    "completed": "Đã hoàn thành"
+    "completed": "Đã hoàn thành",
+    "agentReputation": "Danh Tiếng Đại Lý",
+    "totalJobs": "Tổng Số Công Việc",
+    "completionRate": "Hoàn Thành",
+    "paymentRate": "Đã Trả",
+    "avgPaySpeed": "Tốc Độ Trả Trung Bình",
+    "memberSince": "Thành viên từ {{date}}"
   },
   "errors": {
     "required": "Trường này là bắt buộc",

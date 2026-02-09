@@ -161,6 +161,15 @@
       "available": "Disponible",
       "unavailable": "No Disponible"
     },
+    "workStatus": {
+      "title": "Estado de Trabajo",
+      "activeDesc": "Eres visible para agentes y aceptas ofertas de trabajo",
+      "pausedDesc": "Estás oculto de búsquedas y no recibirás ofertas de trabajo",
+      "active": "Activo",
+      "paused": "Pausado",
+      "notifyVia": "Notificarme por",
+      "enableToNotify": "Activa la disponibilidad para configurar notificaciones"
+    },
     "paymentPreference": {
       "title": "Preferencia de Pago",
       "subtitle": "Indica a los agentes cómo prefieres recibir el pago",
@@ -421,7 +430,13 @@
     "created": "Creado",
     "accepted": "Aceptado",
     "paid": "Pagado",
-    "completed": "Completado"
+    "completed": "Completado",
+    "agentReputation": "Reputación del Agente",
+    "totalJobs": "Trabajos Totales",
+    "completionRate": "Completados",
+    "paymentRate": "Pagados",
+    "avgPaySpeed": "Velocidad de Pago Promedio",
+    "memberSince": "Miembro desde {{date}}"
   },
   "errors": {
     "required": "Este campo es requerido",

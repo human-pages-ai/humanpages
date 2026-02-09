@@ -140,43 +140,72 @@ ${t('email.jobOffer.footer')}
 To unsubscribe from email notifications: ${unsubscribeUrl}
   `.trim();
 
+  const jobUrl = data.jobDetailUrl || `${FRONTEND_URL}/dashboard`;
+
   const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    :root { color-scheme: light dark; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
-    .job-card { background: white; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb; }
-    .price { font-size: 24px; font-weight: bold; color: #059669; }
-    .btn { display: inline-block; background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 16px; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+    .header { background-color: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; }
+    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
+    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
+    .content p { color: #374151; }
+    .job-card { background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb; }
+    .job-card h2 { margin-top: 0; color: #111827; }
+    .job-card .meta { color: #6b7280; margin: 4px 0; }
+    .job-card .desc { color: #374151; }
+    .price { font-size: 28px; font-weight: bold; color: #059669; margin: 8px 0; }
+    .footer { text-align: center; padding: 20px; }
+    .footer p { color: #6b7280; font-size: 14px; }
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #1a1a2e !important; color: #e5e7eb !important; }
+      .content { background-color: #1e1e3a !important; border-color: #374151 !important; }
+      .content p { color: #d1d5db !important; }
+      .job-card { background-color: #2a2a4a !important; border-color: #4b5563 !important; }
+      .job-card h2 { color: #f3f4f6 !important; }
+      .job-card .meta { color: #9ca3af !important; }
+      .job-card .desc { color: #d1d5db !important; }
+      .price { color: #34d399 !important; }
+      .footer p { color: #9ca3af !important; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0;">${t('email.common.newJobOffer')}</h1>
+      <h1>${t('email.common.newJobOffer')}</h1>
     </div>
     <div class="content">
       <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
       <p>${t('email.jobOffer.newOffer')}</p>
 
       <div class="job-card">
-        <h2 style="margin-top: 0;">${data.jobTitle}</h2>
-        ${data.category ? `<p style="color: #6b7280; margin: 4px 0;"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
-        ${data.agentName ? `<p style="color: #6b7280; margin: 4px 0;"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
+        <h2>${data.jobTitle}</h2>
+        ${data.category ? `<p class="meta"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
+        ${data.agentName ? `<p class="meta"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
         <p class="price">$${data.priceUsdc} USDC</p>
-        <p style="color: #374151;">${data.jobDescription}</p>
+        <p class="desc">${data.jobDescription}</p>
       </div>
 
-      <a href="${data.jobDetailUrl || `${FRONTEND_URL}/dashboard`}" class="btn">${t('email.jobOffer.viewOffer')}</a>
+      <!--[if mso]>
+      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${jobUrl}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="14%" fillcolor="#4F46E5">
+        <w:anchorlock/>
+        <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:bold;">${t('email.jobOffer.viewOffer')}</center>
+      </v:roundrect>
+      <![endif]-->
+      <!--[if !mso]><!-->
+      <a href="${jobUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;text-align:center;mso-hide:all;">${t('email.jobOffer.viewOffer')}</a>
+      <!--<![endif]-->
     </div>
     <div class="footer">
       <p>${t('email.jobOffer.footer')}</p>
-      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px;">Unsubscribe from email notifications</a></p>
+      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
     </div>
   </div>
 </body>

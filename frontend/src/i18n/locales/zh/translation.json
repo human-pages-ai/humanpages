@@ -161,6 +161,15 @@
       "available": "可接单",
       "unavailable": "暂不接单"
     },
+    "workStatus": {
+      "title": "工作状态",
+      "activeDesc": "您对代理可见，正在接受工作邀请",
+      "pausedDesc": "您在搜索中不可见，不会收到工作邀请",
+      "active": "活跃",
+      "paused": "暂停",
+      "notifyVia": "通知方式",
+      "enableToNotify": "开启可用状态以配置通知"
+    },
     "paymentPreference": {
       "title": "付款偏好",
       "subtitle": "告诉代理您希望如何接收工作报酬",
@@ -421,7 +430,13 @@
     "created": "创建时间",
     "accepted": "接受时间",
     "paid": "付款时间",
-    "completed": "完成时间"
+    "completed": "完成时间",
+    "agentReputation": "代理信誉",
+    "totalJobs": "总工作数",
+    "completionRate": "已完成",
+    "paymentRate": "已付款",
+    "avgPaySpeed": "平均付款速度",
+    "memberSince": "会员自 {{date}}"
   },
   "errors": {
     "required": "此字段为必填",

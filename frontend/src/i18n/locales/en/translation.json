@@ -162,6 +162,15 @@
       "available": "Available",
       "unavailable": "Unavailable"
     },
+    "workStatus": {
+      "title": "Work Status",
+      "activeDesc": "You're visible to agents and accepting job offers",
+      "pausedDesc": "You're hidden from searches and won't receive job offers",
+      "active": "Active",
+      "paused": "Paused",
+      "notifyVia": "Notify me via",
+      "enableToNotify": "Turn on availability to configure notifications"
+    },
     "paymentPreference": {
       "title": "Payment Preference",
       "subtitle": "Tell agents how you prefer to be paid for jobs",
@@ -437,7 +446,13 @@
     "created": "Created",
     "accepted": "Accepted",
     "paid": "Paid",
-    "completed": "Completed"
+    "completed": "Completed",
+    "agentReputation": "Agent Reputation",
+    "totalJobs": "Total Jobs",
+    "completionRate": "Completed",
+    "paymentRate": "Paid",
+    "avgPaySpeed": "Avg Pay Speed",
+    "memberSince": "Member since {{date}}"
   },
   "errors": {
     "required": "This field is required",

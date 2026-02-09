@@ -165,6 +165,23 @@ export const api = {
   // Public profiles
   getHumanById: (id: string) => request<PublicHuman>(`/humans/${id}`),
 
+  // Agents
+  getAgent: (id: string) =>
+    request<{
+      id: string;
+      name: string;
+      description?: string;
+      websiteUrl?: string;
+      domainVerified: boolean;
+      createdAt: string;
+      reputation: {
+        totalJobs: number;
+        completedJobs: number;
+        paidJobs: number;
+        avgPaymentSpeedHours: number | null;
+      };
+    }>(`/agents/${id}`),
+
   // Jobs
   getJobs: (status?: string) =>
     request<Job[]>(`/jobs${status ? `?status=${status}` : ''}`),

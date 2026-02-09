@@ -12,8 +12,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { Profile, Job, ReviewStats, Service } from '../components/dashboard/types';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
-import NotificationPreferencesSection from '../components/dashboard/NotificationPreferencesSection';
-import AvailabilitySection from '../components/dashboard/AvailabilitySection';
+import WorkStatusSection from '../components/dashboard/WorkStatusSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
@@ -546,12 +545,16 @@ export default function Dashboard() {
           setCopiedReferral={setCopiedReferral}
         />
 
-        <AvailabilitySection
+        <WorkStatusSection
           isAvailable={profile.isAvailable}
           paymentPreference={profile.paymentPreference || 'BOTH'}
+          emailNotifications={profile.emailNotifications !== false}
+          telegramNotifications={profile.telegramNotifications !== false}
+          whatsappNotifications={profile.whatsappNotifications !== false}
           saving={saving}
-          onToggle={toggleAvailability}
+          onToggleAvailability={toggleAvailability}
           onPaymentPreferenceChange={changePaymentPreference}
+          onToggleNotification={toggleNotification}
         />
 
         <JobsSection
@@ -572,13 +575,6 @@ export default function Dashboard() {
           onDisconnect={disconnectTelegram}
         />
 
-        <NotificationPreferencesSection
-          emailNotifications={profile.emailNotifications !== false}
-          telegramNotifications={profile.telegramNotifications !== false}
-          whatsappNotifications={profile.whatsappNotifications !== false}
-          saving={saving}
-          onToggle={toggleNotification}
-        />
 
         <OfferFiltersSection
           profile={profile}

@@ -9,11 +9,29 @@ import { Job, JobMessage } from '../components/dashboard/types';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SEO from '../components/SEO';
 
+interface AgentReputation {
+  totalJobs: number;
+  completedJobs: number;
+  paidJobs: number;
+  avgPaymentSpeedHours: number | null;
+}
+
+interface AgentInfo {
+  id: string;
+  name: string;
+  description?: string;
+  websiteUrl?: string;
+  domainVerified: boolean;
+  createdAt: string;
+  reputation: AgentReputation;
+}
+
 export default function JobDetail() {
   const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
+  const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null);
   const [messages, setMessages] = useState<JobMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
@@ -32,6 +50,15 @@ export default function JobDetail() {
       loadMessages();
     }
   }, [id]);
+
+  // Fetch agent reputation once we have the job
+  useEffect(() => {
+    if (job?.registeredAgent?.id) {
+      api.getAgent(job.registeredAgent.id)
+        .then(setAgentInfo)
+        .catch(() => {}); // Silent — reputation is supplementary
+    }
+  }, [job?.registeredAgent?.id]);
 
   // Poll for new messages every 5s
   useEffect(() => {
@@ -153,6 +180,8 @@ export default function JobDetail() {
     );
   }
 
+  const rep = agentInfo?.reputation;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO title={job.title} noindex />
@@ -213,6 +242,42 @@ export default function JobDetail() {
               <p className="text-xs text-gray-500">USDC</p>
             </div>
           </div>
+
+          {/* Agent reputation card */}
+          {rep && (
+            <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('jobDetail.agentReputation')}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-gray-900">{rep.totalJobs}</p>
+                  <p className="text-xs text-gray-500">{t('jobDetail.totalJobs')}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-gray-900">
+                    {rep.totalJobs > 0 ? Math.round((rep.completedJobs / rep.totalJobs) * 100) : 0}%
+                  </p>
+                  <p className="text-xs text-gray-500">{t('jobDetail.completionRate')}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-gray-900">
+                    {rep.totalJobs > 0 ? Math.round((rep.paidJobs / rep.totalJobs) * 100) : 0}%
+                  </p>
+                  <p className="text-xs text-gray-500">{t('jobDetail.paymentRate')}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-gray-900">
+                    {rep.avgPaymentSpeedHours != null ? `${rep.avgPaymentSpeedHours}h` : '--'}
+                  </p>
+                  <p className="text-xs text-gray-500">{t('jobDetail.avgPaySpeed')}</p>
+                </div>
+              </div>
+              {agentInfo?.createdAt && (
+                <p className="text-xs text-gray-400 mt-3 text-center">
+                  {t('jobDetail.memberSince', { date: new Date(agentInfo.createdAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short' }) })}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Category */}
           {job.category && (

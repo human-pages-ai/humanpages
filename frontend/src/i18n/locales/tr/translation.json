@@ -161,6 +161,15 @@
       "available": "Uygun",
       "unavailable": "Uygun Değil"
     },
+    "workStatus": {
+      "title": "Çalışma Durumu",
+      "activeDesc": "Ajanlara görünürsünüz ve iş tekliflerini kabul ediyorsunuz",
+      "pausedDesc": "Aramalardan gizlisiniz ve iş teklifi almayacaksınız",
+      "active": "Aktif",
+      "paused": "Duraklatıldı",
+      "notifyVia": "Bildirim yöntemi",
+      "enableToNotify": "Bildirimleri yapılandırmak için uygunluğu açın"
+    },
     "paymentPreference": {
       "title": "Ödeme Tercihi",
       "subtitle": "Ajanlara nasıl ödeme almak istediğinizi bildirin",
@@ -421,7 +430,13 @@
     "created": "Oluşturuldu",
     "accepted": "Kabul edildi",
     "paid": "Ödendi",
-    "completed": "Tamamlandı"
+    "completed": "Tamamlandı",
+    "agentReputation": "Ajan İtibarı",
+    "totalJobs": "Toplam İş",
+    "completionRate": "Tamamlandı",
+    "paymentRate": "Ödendi",
+    "avgPaySpeed": "Ort. Ödeme Hızı",
+    "memberSince": "{{date}} tarihinden beri üye"
   },
   "errors": {
     "required": "Bu alan zorunludur",
