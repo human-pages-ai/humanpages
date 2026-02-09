@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -11,9 +12,12 @@ async function main() {
 
   console.log('Seeding database...');
 
-  // Clear existing data
+  // Clear existing data (order respects FK constraints)
+  await prisma.review.deleteMany();
+  await prisma.job.deleteMany();
   await prisma.service.deleteMany();
   await prisma.wallet.deleteMany();
+  await prisma.agent.deleteMany();
   await prisma.human.deleteMany();
 
   // Create humans
@@ -30,6 +34,10 @@ async function main() {
       contactEmail: 'alice@example.com',
       telegram: '@alice_dev',
       isAvailable: true,
+      humanityVerified: true,
+      humanityProvider: 'gitcoin_passport',
+      humanityScore: 32,
+      humanityVerifiedAt: new Date('2026-02-01T12:00:00Z'),
       wallets: {
         create: [
           { network: 'ethereum', address: '0x1234567890abcdef1234567890abcdef12345678', label: 'Main' },
@@ -42,13 +50,15 @@ async function main() {
             title: 'Website Development',
             description: 'I can build responsive websites using React and modern CSS frameworks.',
             category: 'development',
-            priceRange: '$500-2000',
+            priceMin: 500,
+            priceUnit: 'FLAT_TASK' as const,
           },
           {
             title: 'Code Review',
             description: 'Professional code review with detailed feedback and suggestions.',
             category: 'development',
-            priceRange: '$50-100/hour',
+            priceMin: 50,
+            priceUnit: 'HOURLY' as const,
           },
         ],
       },
@@ -78,7 +88,8 @@ async function main() {
             title: 'Data Analysis',
             description: 'Comprehensive data analysis with visualizations and actionable insights.',
             category: 'data',
-            priceRange: '$100-200/hour',
+            priceMin: 100,
+            priceUnit: 'HOURLY' as const,
           },
         ],
       },
@@ -107,7 +118,8 @@ async function main() {
             title: 'UI/UX Design',
             description: 'Complete UI/UX design from wireframes to high-fidelity prototypes.',
             category: 'design',
-            priceRange: '$1000-5000',
+            priceMin: 1000,
+            priceUnit: 'FLAT_TASK' as const,
           },
         ],
       },
@@ -115,6 +127,60 @@ async function main() {
   });
 
   console.log('Created humans:', { alice: alice.id, bob: bob.id, carol: carol.id });
+
+  // Create a sample registered agent
+  const agentApiKey = `hp_${crypto.randomBytes(24).toString('hex')}`;
+  const agentApiKeyHash = await bcrypt.hash(agentApiKey, 12);
+
+  const sampleAgent = await prisma.agent.create({
+    data: {
+      name: 'Acme AI Assistant',
+      description: 'An AI assistant that hires humans for real-world tasks like photography, research, and deliveries.',
+      websiteUrl: 'https://acme.example.com',
+      contactEmail: 'ops@acme.example.com',
+      apiKeyHash: agentApiKeyHash,
+      apiKeyPrefix: agentApiKey.substring(0, 8),
+      domainVerified: true,
+      verifiedAt: new Date(),
+      verificationToken: crypto.randomBytes(32).toString('hex'),
+    },
+  });
+
+  // Create sample jobs from the registered agent
+  await prisma.job.createMany({
+    data: [
+      {
+        humanId: alice.id,
+        agentId: 'acme-ai',
+        agentName: 'Acme AI Assistant',
+        registeredAgentId: sampleAgent.id,
+        title: 'Build a landing page',
+        description: 'Create a responsive landing page for our new product launch.',
+        category: 'development',
+        priceUsdc: 250,
+        status: 'COMPLETED',
+        acceptedAt: new Date('2026-01-15T10:00:00Z'),
+        paidAt: new Date('2026-01-15T12:00:00Z'),
+        completedAt: new Date('2026-01-18T16:00:00Z'),
+      },
+      {
+        humanId: bob.id,
+        agentId: 'acme-ai',
+        agentName: 'Acme AI Assistant',
+        registeredAgentId: sampleAgent.id,
+        title: 'Analyze customer survey data',
+        description: 'Process and visualize results from our Q4 customer satisfaction survey.',
+        category: 'data',
+        priceUsdc: 150,
+        status: 'PAID',
+        acceptedAt: new Date('2026-02-01T09:00:00Z'),
+        paidAt: new Date('2026-02-01T10:30:00Z'),
+      },
+    ],
+  });
+
+  console.log('Created agent:', { agent: sampleAgent.id, name: sampleAgent.name });
+  console.log('Agent API key (dev only):', agentApiKey);
   console.log('Database seeded successfully!');
 }
 

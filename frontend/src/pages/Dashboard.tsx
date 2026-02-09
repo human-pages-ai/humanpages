@@ -20,6 +20,7 @@ import ProfileSection from '../components/dashboard/ProfileSection';
 import WalletsSection from '../components/dashboard/WalletsSection';
 import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
+import HumanitySection from '../components/dashboard/HumanitySection';
 import SEO from '../components/SEO';
 
 export default function Dashboard() {
@@ -556,6 +557,8 @@ export default function Dashboard() {
             }, 100);
           }}
         />
+
+        <HumanitySection profile={profile} onVerified={loadProfile} />
 
         <ShareReferralSection
           profile={profile}
