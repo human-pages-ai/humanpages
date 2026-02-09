@@ -53,12 +53,21 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-        Proof of Humanity
-      </h2>
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          Verified Human Badge
+        </h2>
+        {!isVerified && (
+          <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Optional</span>
+        )}
+      </div>
+      {!isVerified && (
+        <p className="text-sm text-gray-500 mb-4">Stand out to AI agents by proving you're a real person. This is a confidence boost, not a requirement.</p>
+      )}
+      {isVerified && <div className="mb-4" />}
 
       {isVerified && tier !== 'none' ? (
         <div className="space-y-4">
@@ -116,11 +125,11 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Prove you're a real human by verifying with{' '}
+            Verify with{' '}
             <a href="https://passport.gitcoin.co" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-500 underline">
               Gitcoin Passport
-            </a>.
-            Collect stamps (social accounts, ENS, etc.) to build your score, then verify here.
+            </a>
+            {' '}to earn a verified badge on your profile. Collect stamps (social accounts, ENS, etc.) to build your score.
           </p>
           <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
             <p className="font-medium text-gray-700">How it works:</p>
@@ -129,9 +138,18 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
             <p>3. Come back and click "Check My Score"</p>
           </div>
           {!hasWallets ? (
-            <p className="text-sm text-amber-600">
-              Add a wallet to your profile first to verify.
-            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+              <p className="text-sm text-amber-700">
+                You need a crypto wallet to verify. Add one in the Wallets section above first.
+              </p>
+              <p className="text-xs text-amber-600">
+                Don't have a wallet?{' '}
+                <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="underline font-medium">MetaMask</a>
+                {' '}and{' '}
+                <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="underline font-medium">Coinbase Wallet</a>
+                {' '}are popular free options to get started.
+              </p>
+            </div>
           ) : (
             <button
               onClick={handleVerify}

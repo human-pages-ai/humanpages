@@ -86,14 +86,14 @@ export default function WalletsSection({
       )}
 
       {wallets.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-8">
           <div className="flex flex-col items-center gap-4">
-            <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
             <div>
               <p className="text-lg font-medium text-gray-900 mb-1">{t('dashboard.wallets.emptyTitle')}</p>
-              <p className="text-sm text-gray-500 mb-4">{t('dashboard.wallets.emptyDescription')}</p>
+              <p className="text-sm text-gray-500 mb-2">{t('dashboard.wallets.emptyDescription')}</p>
             </div>
             <button
               onClick={() => setShowWalletForm(true)}
@@ -101,6 +101,13 @@ export default function WalletsSection({
             >
               {t('dashboard.wallets.addWallet')}
             </button>
+            <div className="mt-2 text-xs text-gray-400">
+              Don't have a wallet?{' '}
+              <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">MetaMask</a>
+              {' '}and{' '}
+              <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">Coinbase Wallet</a>
+              {' '}are popular free options.
+            </div>
           </div>
         </div>
       ) : (

@@ -372,13 +372,22 @@ export default function ProfileSection({
             </div>
           </div>
 
-          <button
-            onClick={onSaveProfile}
-            disabled={saving}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {saving ? t('dashboard.profile.saving') : t('dashboard.profile.saveProfile')}
-          </button>
+          {/* Sticky save bar */}
+          <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white border-t border-gray-200 flex items-center justify-between">
+            <button
+              onClick={() => setEditingProfile(false)}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              onClick={onSaveProfile}
+              disabled={saving}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 font-medium"
+            >
+              {saving ? t('dashboard.profile.saving') : t('dashboard.profile.saveProfile')}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-2 text-sm">

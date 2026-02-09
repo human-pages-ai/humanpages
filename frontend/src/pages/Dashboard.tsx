@@ -558,7 +558,27 @@ export default function Dashboard() {
           }}
         />
 
-        <HumanitySection profile={profile} onVerified={loadProfile} />
+        <ProfileSection
+          profile={profile}
+          editingProfile={editingProfile}
+          setEditingProfile={setEditingProfile}
+          profileForm={profileForm}
+          setProfileForm={setProfileForm}
+          saving={saving}
+          onSaveProfile={saveProfile}
+        />
+
+        <ServicesSection
+          services={profile.services}
+          showServiceForm={showServiceForm}
+          setShowServiceForm={setShowServiceForm}
+          serviceForm={serviceForm}
+          setServiceForm={setServiceForm}
+          saving={saving}
+          onAddService={addService}
+          onToggleServiceActive={toggleServiceActive}
+          onDeleteService={deleteService}
+        />
 
         <ShareReferralSection
           profile={profile}
@@ -566,6 +586,27 @@ export default function Dashboard() {
           setCopiedProfile={setCopiedProfile}
           copiedReferral={copiedReferral}
           setCopiedReferral={setCopiedReferral}
+        />
+
+        <AvailabilitySection
+          isAvailable={profile.isAvailable}
+          paymentPreference={profile.paymentPreference || 'BOTH'}
+          saving={saving}
+          onToggle={toggleAvailability}
+          onPaymentPreferenceChange={changePaymentPreference}
+        />
+
+        <JobsSection
+          jobs={jobs}
+          jobsLoading={jobsLoading}
+          jobFilter={jobFilter}
+          setJobFilter={setJobFilter}
+          reviewStats={reviewStats}
+          onAcceptJob={acceptJob}
+          onRejectJob={rejectJob}
+          onCompleteJob={completeJob}
+          profileId={profile.id}
+          profileUsername={profile.username}
         />
 
         <TelegramSection
@@ -584,14 +625,6 @@ export default function Dashboard() {
           onToggle={toggleNotification}
         />
 
-        <AvailabilitySection
-          isAvailable={profile.isAvailable}
-          paymentPreference={profile.paymentPreference || 'BOTH'}
-          saving={saving}
-          onToggle={toggleAvailability}
-          onPaymentPreferenceChange={changePaymentPreference}
-        />
-
         <OfferFiltersSection
           profile={profile}
           editingFilters={editingFilters}
@@ -600,29 +633,6 @@ export default function Dashboard() {
           setFiltersForm={setFiltersForm}
           saving={saving}
           onSaveFilters={saveFilters}
-        />
-
-        <JobsSection
-          jobs={jobs}
-          jobsLoading={jobsLoading}
-          jobFilter={jobFilter}
-          setJobFilter={setJobFilter}
-          reviewStats={reviewStats}
-          onAcceptJob={acceptJob}
-          onRejectJob={rejectJob}
-          onCompleteJob={completeJob}
-          profileId={profile.id}
-          profileUsername={profile.username}
-        />
-
-        <ProfileSection
-          profile={profile}
-          editingProfile={editingProfile}
-          setEditingProfile={setEditingProfile}
-          profileForm={profileForm}
-          setProfileForm={setProfileForm}
-          saving={saving}
-          onSaveProfile={saveProfile}
         />
 
         <WalletsSection
@@ -636,17 +646,7 @@ export default function Dashboard() {
           onDeleteWallet={deleteWallet}
         />
 
-        <ServicesSection
-          services={profile.services}
-          showServiceForm={showServiceForm}
-          setShowServiceForm={setShowServiceForm}
-          serviceForm={serviceForm}
-          setServiceForm={setServiceForm}
-          saving={saving}
-          onAddService={addService}
-          onToggleServiceActive={toggleServiceActive}
-          onDeleteService={deleteService}
-        />
+        <HumanitySection profile={profile} onVerified={loadProfile} />
 
         <AccountSection
           profile={profile}
