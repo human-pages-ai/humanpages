@@ -48,6 +48,7 @@ describe('Jobs API - Mutual Handshake', () => {
         passwordHash,
         name: 'Job Test Human',
         contactEmail: 'job-test@example.com',
+        emailVerified: true,
         wallets: {
           create: {
             network: 'ethereum',

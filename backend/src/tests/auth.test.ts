@@ -286,6 +286,11 @@ describe('Auth API', () => {
   describe('POST /api/auth/resend-verification', () => {
     it('should send verification email for unverified user', async () => {
       const user = await createTestUser({ email: 'unverified@example.com' });
+      // In test mode signup auto-verifies, so undo it for this test
+      await prisma.human.update({
+        where: { id: user.id },
+        data: { emailVerified: false },
+      });
 
       const res = await authRequest(user.token).post('/api/auth/resend-verification');
       expect(res.status).toBe(200);
