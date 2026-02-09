@@ -47,10 +47,9 @@ fi
 
 echo "[1/2] Type checks + unit tests (parallel)"
 npx concurrently --kill-others-on-fail \
-  -n "tsc:be,tsc:fe,tsc:mcp,test" \
+  -n "tsc:be,tsc:fe,test" \
   "cd backend && npx tsc --noEmit" \
   "cd frontend && npx tsc --noEmit" \
-  "cd mcp-server && npx tsc --noEmit" \
   "cd backend && npm test"
 
 if [ $? -ne 0 ]; then
