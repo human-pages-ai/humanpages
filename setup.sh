@@ -42,12 +42,6 @@ cd frontend
 npm install
 cd ..
 
-# Install MCP server dependencies
-echo "📦 Installing MCP server dependencies..."
-cd mcp-server
-npm install
-cd ..
-
 echo ""
 echo "✅ Setup complete!"
 echo ""

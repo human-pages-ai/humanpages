@@ -41,7 +41,6 @@ All accounts use password: `password123`
 ```
 ├── backend/          # Express API with Prisma ORM
 ├── frontend/         # React + Vite + TailwindCSS
-├── mcp-server/       # MCP Server for AI agent discovery
 ├── docker/           # Docker Compose for PostgreSQL
 └── setup.sh          # One-command setup script
 ```
@@ -69,24 +68,7 @@ All accounts use password: `password123`
 - `PATCH /api/jobs/:id` - Update job (auth required)
 - `DELETE /api/jobs/:id` - Delete job (auth required)
 
-## MCP Server Tools
+## Related Repos
 
-The MCP server exposes these tools for AI agents:
-
-- **search_humans** - Search for available humans by skill/location
-- **get_human** - Get detailed info about a specific human
-
-### Using with Claude Desktop
-
-Add to your Claude Desktop config:
-
-```json
-{
-  "mcpServers": {
-    "humans": {
-      "command": "node",
-      "args": ["path/to/humans/mcp-server/dist/index.js"]
-    }
-  }
-}
-```
+- [MCP Server](https://github.com/human-pages-ai/humanpages) — AI agent integration via `npx -y humanpages`
+- [Examples](https://github.com/human-pages-ai/examples) — Sample bots and integrations

@@ -23,7 +23,7 @@ User -> Cloudflare (DNS + SSL) -> Nginx (443) -> Frontend (static) / Backend (po
   frontend/
     dist/             # Built frontend assets
   deploy.sh           # One-command deploy script
-  mcp-server/         # Published to npm as "humanpages"
+
 ```
 
 ## Initial Setup
