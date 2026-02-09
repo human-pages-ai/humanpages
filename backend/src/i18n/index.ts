@@ -6,7 +6,7 @@ const en = {
     jobOffer: {
       subject: "New job offer: {{jobTitle}}",
       greeting: "Hi {{name}},",
-      newOffer: "You have a new job offer on Humans!",
+      newOffer: "You have a new job offer on Human Pages!",
       title: "Title",
       category: "Category",
       from: "From",
@@ -14,7 +14,7 @@ const en = {
       description: "Description",
       viewOffer: "View Offer",
       loginToView: "Log in to accept or reject this offer",
-      footer: "Humans - The AI-to-Human Marketplace"
+      footer: "Human Pages - Get hired for real-world tasks"
     },
     common: { newJobOffer: "New Job Offer" }
   }
@@ -25,7 +25,7 @@ const es = {
     jobOffer: {
       subject: "Nueva oferta de trabajo: {{jobTitle}}",
       greeting: "Hola {{name}},",
-      newOffer: "¡Tienes una nueva oferta de trabajo en Humans!",
+      newOffer: "¡Tienes una nueva oferta de trabajo en Human Pages!",
       title: "Título",
       category: "Categoría",
       from: "De",
@@ -33,7 +33,7 @@ const es = {
       description: "Descripción",
       viewOffer: "Ver Oferta",
       loginToView: "Inicia sesión para aceptar o rechazar esta oferta",
-      footer: "Humans - El Mercado de IA a Humanos"
+      footer: "Human Pages - Encuentra trabajo en el mundo real"
     },
     common: { newJobOffer: "Nueva Oferta de Trabajo" }
   }
@@ -44,7 +44,7 @@ const zh = {
     jobOffer: {
       subject: "新工作邀约：{{jobTitle}}",
       greeting: "{{name}}，你好，",
-      newOffer: "你在Humans上收到了新的工作邀约！",
+      newOffer: "你在Human Pages上收到了新的工作邀约！",
       title: "标题",
       category: "类别",
       from: "来自",
@@ -52,7 +52,7 @@ const zh = {
       description: "描述",
       viewOffer: "查看邀约",
       loginToView: "登录以接受或拒绝此邀约",
-      footer: "Humans - AI到人类的市场"
+      footer: "Human Pages - 接受真实世界的工作任务"
     },
     common: { newJobOffer: "新工作邀约" }
   }
@@ -63,7 +63,7 @@ const tl = {
     jobOffer: {
       subject: "Bagong job offer: {{jobTitle}}",
       greeting: "Hi {{name}},",
-      newOffer: "May bagong job offer ka sa Humans!",
+      newOffer: "May bagong job offer ka sa Human Pages!",
       title: "Titulo",
       category: "Kategorya",
       from: "Mula sa",
@@ -71,7 +71,7 @@ const tl = {
       description: "Deskripsyon",
       viewOffer: "Tingnan ang Offer",
       loginToView: "Mag-log in para tanggapin o tanggihan ang offer na ito",
-      footer: "Humans - Ang AI-to-Human Marketplace"
+      footer: "Human Pages - Mag-apply sa mga tunay na trabaho"
     },
     common: { newJobOffer: "Bagong Job Offer" }
   }
@@ -82,7 +82,7 @@ const hi = {
     jobOffer: {
       subject: "नया जॉब ऑफर: {{jobTitle}}",
       greeting: "नमस्ते {{name}},",
-      newOffer: "आपको Humans पर एक नया जॉब ऑफर मिला है!",
+      newOffer: "आपको Human Pages पर एक नया जॉब ऑफर मिला है!",
       title: "शीर्षक",
       category: "श्रेणी",
       from: "से",
@@ -90,7 +90,7 @@ const hi = {
       description: "विवरण",
       viewOffer: "ऑफर देखें",
       loginToView: "इस ऑफर को स्वीकार या अस्वीकार करने के लिए लॉग इन करें",
-      footer: "Humans - AI से मानव मार्केटप्लेस"
+      footer: "Human Pages - वास्तविक कार्यों के लिए नियुक्त हों"
     },
     common: { newJobOffer: "नया जॉब ऑफर" }
   }
@@ -101,7 +101,7 @@ const vi = {
     jobOffer: {
       subject: "Offer công việc mới: {{jobTitle}}",
       greeting: "Xin chào {{name}},",
-      newOffer: "Bạn có offer công việc mới trên Humans!",
+      newOffer: "Bạn có offer công việc mới trên Human Pages!",
       title: "Tiêu đề",
       category: "Danh mục",
       from: "Từ",
@@ -109,7 +109,7 @@ const vi = {
       description: "Mô tả",
       viewOffer: "Xem Offer",
       loginToView: "Đăng nhập để chấp nhận hoặc từ chối offer này",
-      footer: "Humans - Thị trường AI-tới-Con người"
+      footer: "Human Pages - Nhận việc làm thực tế"
     },
     common: { newJobOffer: "Offer Công Việc Mới" }
   }
@@ -120,7 +120,7 @@ const tr = {
     jobOffer: {
       subject: "Yeni iş teklifi: {{jobTitle}}",
       greeting: "Merhaba {{name}},",
-      newOffer: "Humans'da yeni bir iş teklifiniz var!",
+      newOffer: "Human Pages'da yeni bir iş teklifiniz var!",
       title: "Başlık",
       category: "Kategori",
       from: "Gönderen",
@@ -128,7 +128,7 @@ const tr = {
       description: "Açıklama",
       viewOffer: "Teklifi Görüntüle",
       loginToView: "Bu teklifi kabul etmek veya reddetmek için giriş yapın",
-      footer: "Humans - AI'dan İnsana Pazar Yeri"
+      footer: "Human Pages - Gerçek dünya işleri için işe alının"
     },
     common: { newJobOffer: "Yeni İş Teklifi" }
   }
@@ -139,7 +139,7 @@ const th = {
     jobOffer: {
       subject: "ข้อเสนองานใหม่: {{jobTitle}}",
       greeting: "สวัสดี {{name}},",
-      newOffer: "คุณมีข้อเสนองานใหม่บน Humans!",
+      newOffer: "คุณมีข้อเสนองานใหม่บน Human Pages!",
       title: "ชื่อ",
       category: "หมวดหมู่",
       from: "จาก",
@@ -147,7 +147,7 @@ const th = {
       description: "รายละเอียด",
       viewOffer: "ดูข้อเสนอ",
       loginToView: "เข้าสู่ระบบเพื่อยอมรับหรือปฏิเสธข้อเสนอนี้",
-      footer: "Humans - ตลาด AI สู่มนุษย์"
+      footer: "Human Pages - รับจ้างงานจริงในโลกจริง"
     },
     common: { newJobOffer: "ข้อเสนองานใหม่" }
   }

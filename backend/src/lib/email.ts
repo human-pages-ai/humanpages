@@ -268,7 +268,7 @@ This link will expire in 1 hour.
 If you did not request a password reset, please ignore this email.
 
 ---
-Human Pages - Decentralized freelancing on blockchain
+Human Pages - Get hired for real-world tasks
   `.trim();
 
   const htmlContent = `
@@ -297,7 +297,7 @@ Human Pages - Decentralized freelancing on blockchain
       <p style="color: #6b7280; font-size: 14px;">If you did not request a password reset, please ignore this email.</p>
     </div>
     <div class="footer">
-      <p>Human Pages - Decentralized freelancing on blockchain</p>
+      <p>Human Pages - Get hired for real-world tasks</p>
     </div>
   </div>
 </body>
