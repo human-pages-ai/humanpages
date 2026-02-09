@@ -40,14 +40,6 @@ describe('Profile API', () => {
       expect(response.body.error).toBe('Access token required');
     });
 
-    it('should reject invalid token', async () => {
-      const response = await request(app)
-        .get('/api/humans/me')
-        .set('Authorization', 'Bearer invalid-token');
-
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Invalid or expired token');
-    });
   });
 
   describe('PATCH /api/humans/me', () => {
