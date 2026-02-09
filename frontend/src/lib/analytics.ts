@@ -22,12 +22,20 @@ interface EventProperties {
 
 class Analytics {
   private userId: string | null = null;
+  private optedOut: boolean = false;
+
+  setOptOut(optedOut: boolean) {
+    this.optedOut = optedOut;
+    if (optedOut) {
+      posthog.reset();
+    }
+  }
 
   identify(userId: string) {
     this.userId = userId;
-    console.log('[Analytics] Identified user:', userId);
+    if (this.optedOut) return;
 
-    // Identify user in PostHog
+    console.log('[Analytics] Identified user:', userId);
     posthog.identify(userId);
   }
 
@@ -39,11 +47,11 @@ class Analytics {
       ...properties,
     };
 
-    // Log to console in development
     console.log('[Analytics]', event, properties || {});
 
-    // Track in PostHog
-    posthog.capture(event, properties);
+    if (!this.optedOut) {
+      posthog.capture(event, properties);
+    }
 
     // Store in localStorage for debugging
     try {
@@ -59,8 +67,6 @@ class Analytics {
 
   reset() {
     this.userId = null;
-
-    // Reset PostHog user
     posthog.reset();
   }
 

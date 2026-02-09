@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '../lib/api';
 import { posthog } from '../lib/posthog';
+import { analytics } from '../lib/analytics';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  analyticsOptOut?: boolean;
 }
 
 interface AuthContextType {
@@ -27,7 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('token');
     if (token) {
       api.getProfile()
-        .then((profile) => setUser({ id: profile.id, email: profile.email, name: profile.name }))
+        .then((profile) => {
+          setUser({ id: profile.id, email: profile.email, name: profile.name, analyticsOptOut: profile.analyticsOptOut });
+          analytics.setOptOut(!!profile.analyticsOptOut);
+          if (!profile.analyticsOptOut) {
+            posthog.identify(profile.id);
+          }
+        })
         .catch(() => localStorage.removeItem('token'))
         .finally(() => setLoading(false));
     } else {
@@ -39,7 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { human, token } = await api.login({ email, password });
     localStorage.setItem('token', token);
     setUser(human);
-    posthog.identify(human.id);
+    analytics.setOptOut(!!human.analyticsOptOut);
+    if (!human.analyticsOptOut) {
+      posthog.identify(human.id);
+    }
   };
 
   const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true) => {
@@ -48,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('referrer_id'); // Clean up after use
     localStorage.setItem('token', token);
     setUser(human);
+    // New signups default to analytics enabled
     posthog.identify(human.id);
   };
 

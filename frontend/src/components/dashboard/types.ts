@@ -64,6 +64,7 @@ export interface Profile {
   emailNotifications?: boolean;
   telegramNotifications?: boolean;
   whatsappNotifications?: boolean;
+  analyticsOptOut?: boolean;
 }
 
 export interface AgentProfile {

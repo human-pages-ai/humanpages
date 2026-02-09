@@ -101,6 +101,9 @@ const updateProfileSchema = z.object({
   telegramNotifications: z.boolean().optional(),
   whatsappNotifications: z.boolean().optional(),
 
+  // Analytics opt-out (GDPR)
+  analyticsOptOut: z.boolean().optional(),
+
   // Social profiles
   linkedinUrl: z.string().url().refine(
     (url) => isUrlFromDomain(url, ['linkedin.com']),

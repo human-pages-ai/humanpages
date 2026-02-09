@@ -1,22 +1,40 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Profile } from './types';
+import { api } from '../../lib/api';
+import { analytics } from '../../lib/analytics';
 
 interface Props {
   profile: Profile;
   onDeleteAccount: (password?: string) => void;
   onExportData: () => void;
+  onProfileUpdate: (profile: Profile) => void;
   saving: boolean;
 }
 
-export default function AccountSection({ profile, onDeleteAccount, onExportData, saving }: Props) {
+export default function AccountSection({ profile, onDeleteAccount, onExportData, onProfileUpdate, saving }: Props) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
+  const [togglingAnalytics, setTogglingAnalytics] = useState(false);
 
   const handleDelete = () => {
     onDeleteAccount(profile.hasPassword ? deletePassword : undefined);
+  };
+
+  const toggleAnalyticsOptOut = async () => {
+    setTogglingAnalytics(true);
+    try {
+      const newValue = !profile.analyticsOptOut;
+      const updated = await api.updateProfile({ analyticsOptOut: newValue });
+      analytics.setOptOut(newValue);
+      onProfileUpdate(updated);
+    } catch {
+      // Ignore errors
+    } finally {
+      setTogglingAnalytics(false);
+    }
   };
 
   return (
@@ -36,6 +54,31 @@ export default function AccountSection({ profile, onDeleteAccount, onExportData,
 
       {expanded && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
+          {/* Analytics Opt-Out */}
+          <div className="p-4 border border-gray-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-gray-900">{t('dashboard.account.analyticsTitle', 'Usage Analytics')}</h3>
+                <p className="text-sm text-gray-600 mt-1">{t('dashboard.account.analyticsDesc', 'Help us improve by sharing anonymous usage data. We use PostHog with no cookies and memory-only storage. You can opt out at any time.')}</p>
+              </div>
+              <button
+                onClick={toggleAnalyticsOptOut}
+                disabled={togglingAnalytics}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                  !profile.analyticsOptOut ? 'bg-blue-600' : 'bg-gray-200'
+                }`}
+                role="switch"
+                aria-checked={!profile.analyticsOptOut}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    !profile.analyticsOptOut ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Export Data */}
           <div className="p-4 border border-gray-200 rounded-lg">
             <h3 className="font-medium text-gray-900">{t('dashboard.account.exportTitle')}</h3>

@@ -606,6 +606,7 @@ export default function Dashboard() {
           profile={profile}
           onDeleteAccount={deleteAccount}
           onExportData={exportData}
+          onProfileUpdate={setProfile}
           saving={saving}
         />
       </main>

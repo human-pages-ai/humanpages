@@ -99,6 +99,7 @@ model Human {
   emailNotifications     Boolean    @default(true)
   telegramNotifications  Boolean    @default(true)
   whatsappNotifications  Boolean    @default(true)
+  analyticsOptOut        Boolean    @default(false) // GDPR: user can opt out of analytics tracking
 
   // Proof of humanity (Gitcoin Passport)
   humanityVerified       Boolean   @default(false)
