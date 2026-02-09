@@ -107,17 +107,16 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
         data: { emailVerified: true },
       });
     } else {
-      // Send verification email (async, don't block signup)
+      // Send verification email
       const verificationToken = crypto.randomBytes(32).toString('hex');
-      prisma.human.update({
+      await prisma.human.update({
         where: { id: human.id },
         data: { emailVerificationToken: verificationToken },
-      }).then(() => {
-        const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
-        sendVerificationEmail(email, verifyUrl).catch((err) =>
-          logger.error({ err }, 'Failed to send verification email')
-        );
-      }).catch((err) => logger.error({ err }, 'Failed to save verification token'));
+      });
+      const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
+      sendVerificationEmail(email, verifyUrl).catch((err) =>
+        logger.error({ err }, 'Failed to send verification email')
+      );
     }
 
     res.status(201).json({ human, token });

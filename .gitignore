@@ -17,3 +17,5 @@ Thumbs.db
 
 # Dev artifacts
 logo-tests/
+test-results/
+.claude/
