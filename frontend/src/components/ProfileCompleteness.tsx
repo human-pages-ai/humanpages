@@ -58,7 +58,7 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
     },
     {
       labelKey: 'bio',
-      complete: Boolean(profile.bio && profile.bio.length >= 50),
+      complete: Boolean(profile.bio && profile.bio.trim().length > 0),
       weight: 20,
       actionType: 'editProfile',
       fieldId: 'profile-bio',
