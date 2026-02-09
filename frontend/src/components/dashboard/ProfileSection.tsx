@@ -390,70 +390,172 @@ export default function ProfileSection({
           </div>
         </div>
       ) : (
-        <div className="space-y-2 text-sm">
-          <p><span className="font-medium">{t('common.name')}:</span> {profile.name}</p>
-          <p><span className="font-medium">{t('dashboard.profile.username')}:</span> {profile.username ? `@${profile.username}` : t('common.notSet')}</p>
-          <p><span className="font-medium">{t('dashboard.profile.bio')}:</span> {profile.bio || t('common.notSet')}</p>
-          <p><span className="font-medium">{t('dashboard.profile.location')}:</span> {profile.location || t('common.notSet')}</p>
-          <p><span className="font-medium">{t('dashboard.profile.skills')}:</span> {profile.skills?.join(', ') || t('common.none')}</p>
-          {profile.equipment && profile.equipment.length > 0 && (
-            <p><span className="font-medium">{t('dashboard.profile.equipment')}:</span> {profile.equipment.join(', ')}</p>
-          )}
-          {profile.languages && profile.languages.length > 0 && (
-            <p><span className="font-medium">{t('dashboard.profile.languages')}:</span> {profile.languages.join(', ')}</p>
-          )}
-          <p><span className="font-medium">{t('dashboard.profile.contactEmail')}:</span> {profile.contactEmail || t('common.notSet')}</p>
-          <p><span className="font-medium">{t('dashboard.profile.telegramHandle')}:</span> {profile.telegram || t('common.notSet')}</p>
-          <p><span className="font-medium">{t('dashboard.profile.whatsapp')}:</span> {profile.whatsapp || t('common.notSet')}</p>
-          {profile.paymentMethods && (
-            <p><span className="font-medium">{t('dashboard.profile.paymentMethods')}:</span> {profile.paymentMethods}</p>
-          )}
+        (() => {
+          const hasSocial = profile.linkedinUrl || profile.twitterUrl || profile.githubUrl ||
+            profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl;
 
-          {(profile.linkedinUrl || profile.twitterUrl || profile.githubUrl ||
-            profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl) && (
-            <div className="pt-3 mt-3 border-t border-gray-200">
-              <p className="font-medium mb-2">{t('dashboard.profile.socialProfiles')}:</p>
-              <div className="flex flex-wrap gap-2">
-                {profile.linkedinUrl && (
-                  <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
-                    {t('dashboard.profile.linkedin')}
-                  </a>
-                )}
-                {profile.twitterUrl && (
-                  <a href={profile.twitterUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs hover:bg-sky-200">
-                    {t('dashboard.profile.twitter')}
-                  </a>
-                )}
-                {profile.githubUrl && (
-                  <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
-                    {t('dashboard.profile.github')}
-                  </a>
-                )}
-                {profile.instagramUrl && (
-                  <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200">
-                    {t('dashboard.profile.instagram')}
-                  </a>
-                )}
-                {profile.youtubeUrl && (
-                  <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
-                    {t('dashboard.profile.youtube')}
-                  </a>
-                )}
-                {profile.websiteUrl && (
-                  <a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200">
-                    {t('dashboard.profile.website')}
-                  </a>
-                )}
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* About Card */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  {t('dashboard.profile.bio')}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">{t('common.name')}:</span>{' '}
+                    <span className="text-gray-900">{profile.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t('dashboard.profile.username')}:</span>{' '}
+                    {profile.username
+                      ? <span className="text-gray-900">@{profile.username}</span>
+                      : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t('dashboard.profile.bio')}:</span>{' '}
+                    {profile.bio
+                      ? <span className="text-gray-900">{profile.bio}</span>
+                      : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t('dashboard.profile.location')}:</span>{' '}
+                    {profile.location
+                      ? <span className="text-gray-900">{profile.location}</span>
+                      : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
+                  </div>
+                </div>
               </div>
+
+              {/* Contact Card */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  {t('dashboard.profile.howToReachYou')}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">{t('dashboard.profile.contactEmail')}:</span>{' '}
+                    {profile.contactEmail
+                      ? <span className="text-gray-900">{profile.contactEmail}</span>
+                      : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t('dashboard.profile.telegramHandle')}:</span>{' '}
+                    {profile.telegram
+                      ? <span className="text-gray-900">{profile.telegram}</span>
+                      : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t('dashboard.profile.whatsapp')}:</span>{' '}
+                    {profile.whatsapp
+                      ? <span className="text-gray-900">{profile.whatsapp}</span>
+                      : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
+                  </div>
+                  {profile.paymentMethods && (
+                    <div>
+                      <span className="text-gray-500">{t('dashboard.profile.paymentMethods')}:</span>{' '}
+                      <span className="text-gray-900">{profile.paymentMethods}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Skills & Equipment Card */}
+              <div className={`bg-gray-50 rounded-lg p-4${!hasSocial ? ' md:col-span-2' : ''}`}>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  {t('dashboard.profile.skills')} & {t('dashboard.profile.equipment')}
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 text-xs">{t('dashboard.profile.skills')}</span>
+                    {profile.skills && profile.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {profile.skills.map((skill) => (
+                          <span key={skill} className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 italic mt-1">{t('common.none')}</p>
+                    )}
+                  </div>
+                  {profile.equipment && profile.equipment.length > 0 && (
+                    <div>
+                      <span className="text-gray-500 text-xs">{t('dashboard.profile.equipment')}</span>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {profile.equipment.map((item) => (
+                          <span key={item} className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-xs">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profile.languages && profile.languages.length > 0 && (
+                    <div>
+                      <span className="text-gray-500 text-xs">{t('dashboard.profile.languages')}</span>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {profile.languages.map((lang) => (
+                          <span key={lang} className="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs">
+                            {lang}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Social Card */}
+              {hasSocial && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    {t('dashboard.profile.socialProfiles')}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.linkedinUrl && (
+                      <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
+                        {t('dashboard.profile.linkedin')}
+                      </a>
+                    )}
+                    {profile.twitterUrl && (
+                      <a href={profile.twitterUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs hover:bg-sky-200">
+                        {t('dashboard.profile.twitter')}
+                      </a>
+                    )}
+                    {profile.githubUrl && (
+                      <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300">
+                        {t('dashboard.profile.github')}
+                      </a>
+                    )}
+                    {profile.instagramUrl && (
+                      <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200">
+                        {t('dashboard.profile.instagram')}
+                      </a>
+                    )}
+                    {profile.youtubeUrl && (
+                      <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
+                        {t('dashboard.profile.youtube')}
+                      </a>
+                    )}
+                    {profile.websiteUrl && (
+                      <a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200">
+                        {t('dashboard.profile.website')}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()
       )}
     </div>
   );
