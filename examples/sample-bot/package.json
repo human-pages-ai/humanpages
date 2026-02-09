@@ -1,7 +1,7 @@
 {
   "name": "human-pages-sample-bot",
   "version": "1.0.0",
-  "description": "Sample Translation Bot for Human Pages — demonstrates the full REST API lifecycle",
+  "description": "Sample Errand Bot for Human Pages — demonstrates hiring humans via the REST API",
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",

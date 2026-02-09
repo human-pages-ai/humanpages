@@ -29,14 +29,18 @@ That's it — no webhook server, no tunnel, no extra infrastructure. The bot pol
 
 ### Adding Smart Replies
 
-By default the bot uses simple keyword matching for replies. To enable AI-powered conversation, add an Anthropic API key:
+By default the bot uses simple keyword matching for replies. To enable AI-powered conversation, pick one:
 
 ```bash
-# In .env
+# Option A: Local model (Ollama — free, private, no API key needed)
+OLLAMA_URL=http://localhost:11434
+LLM_MODEL=llama3
+
+# Option B: Claude API
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-The bot will use Claude to generate context-aware replies. See [Connecting an LLM](#connecting-an-llm) for more options.
+See [Connecting an LLM](#connecting-an-llm) for all options.
 
 ## What It Does
 
@@ -73,8 +77,9 @@ All configuration is via environment variables (see `.env.example`):
 | `API_URL` | Human Pages API base URL |
 | `AGENT_API_KEY` | Saved API key (leave blank to auto-register) |
 | `AGENT_NAME` | Bot name for registration |
-| `ANTHROPIC_API_KEY` | Anthropic API key for smart replies (optional) |
-| `LLM_MODEL` | Claude model to use (default: `claude-sonnet-4-5-20250929`) |
+| `OLLAMA_URL` | Ollama / OpenAI-compatible endpoint (e.g. `http://localhost:11434`) |
+| `ANTHROPIC_API_KEY` | Anthropic API key for Claude (alternative to Ollama) |
+| `LLM_MODEL` | Model name (default: `llama3` for Ollama, `claude-sonnet-4-5-20250929` for Claude) |
 | `LLM_SYSTEM_PROMPT` | Custom system prompt for the LLM (optional) |
 | `WEBHOOK_PORT` | Port for the webhook server (default: 4000) |
 | `WEBHOOK_URL` | Public URL the platform uses to reach webhooks (optional) |
@@ -97,70 +102,72 @@ src/
 
 ## Connecting an LLM
 
-The bot's reply logic lives in `src/responder.ts`. It exports one function:
+The bot supports three reply modes, auto-detected from environment variables:
+
+| Mode | Config | Cost | Latency | Quality |
+|------|--------|------|---------|---------|
+| **No LLM** | (default) | Free | Instant | Basic keyword matching |
+| **Local model** | `OLLAMA_URL` | Free | ~1-5s | Good (depends on model) |
+| **Claude API** | `ANTHROPIC_API_KEY` | ~$0.001/reply | ~1-2s | Best |
+
+Priority: `OLLAMA_URL` > `ANTHROPIC_API_KEY` > keyword fallback.
+
+### Option A: Ollama (local, free, private)
+
+Install [Ollama](https://ollama.com), pull a model, and point the bot at it:
+
+```bash
+# Install Ollama and pull a model
+ollama pull llama3
+
+# In .env
+OLLAMA_URL=http://localhost:11434
+LLM_MODEL=llama3
+```
+
+This also works with **LM Studio**, **vLLM**, **LocalAI**, or any OpenAI-compatible endpoint — just change the URL:
+
+```bash
+# LM Studio
+OLLAMA_URL=http://localhost:1234
+
+# vLLM
+OLLAMA_URL=http://localhost:8000
+```
+
+### Option B: Claude API
+
+Get an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys):
+
+```bash
+# In .env
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Optional: pick a model (default: claude-sonnet-4-5-20250929)
+LLM_MODEL=claude-haiku-4-5-20251001
+```
+
+### Option C: No LLM (demo mode)
+
+Leave both `OLLAMA_URL` and `ANTHROPIC_API_KEY` blank. The bot uses keyword matching — good enough to demonstrate the API flow without any external dependencies.
+
+### Custom System Prompt
+
+Override the built-in prompt for any mode:
+
+```bash
+LLM_SYSTEM_PROMPT="You are a delivery coordinator. Be brief and professional. Never reveal you are an AI."
+```
+
+### Using Other Providers
+
+The reply logic lives in `src/responder.ts` and exports one function:
 
 ```ts
 async function generateReply(msg: Message, jobDescription: string): Promise<string>
 ```
 
-### Claude (built-in)
-
-Set `ANTHROPIC_API_KEY` in `.env` and you're done. The bot sends conversation history to Claude with a system prompt that includes the job details. Customize behavior with:
-
-```bash
-# Use a different model
-LLM_MODEL=claude-haiku-4-5-20251001
-
-# Override the system prompt entirely
-LLM_SYSTEM_PROMPT="You are a delivery coordinator. Be brief and professional."
-```
-
-### OpenAI / Other Providers
-
-Replace the `callClaude` function in `responder.ts`. The interface is the same — take a message, return a reply string:
-
-```ts
-// Example: OpenAI
-async function callOpenAI(msg: Message, jobDescription: string): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: `You coordinate errands. Job: ${jobDescription}` },
-        ...conversationHistory,
-        { role: 'user', content: msg.content },
-      ],
-      max_tokens: 300,
-    }),
-  });
-  const data = await res.json();
-  return data.choices[0].message.content;
-}
-```
-
-### Local Models (Ollama, LM Studio, etc.)
-
-Point to your local endpoint — most expose an OpenAI-compatible API:
-
-```ts
-// Example: Ollama
-const res = await fetch('http://localhost:11434/v1/chat/completions', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    model: 'llama3',
-    messages: [
-      { role: 'system', content: `You coordinate errands. Job: ${jobDescription}` },
-      { role: 'user', content: msg.content },
-    ],
-  }),
-});
-```
+The Ollama integration uses the OpenAI-compatible `/v1/chat/completions` format, so any provider with that interface works out of the box. For providers with a different API (Gemini, Cohere, etc.), add a new function following the same pattern as `callOllama` or `callClaude`.
 
 ## Key Patterns
 

@@ -32,8 +32,10 @@ export const config = {
   webhookSecret: process.env.WEBHOOK_SECRET || '',
 
   // LLM (optional — enables smart replies instead of keyword matching)
+  // Priority: OLLAMA_URL > ANTHROPIC_API_KEY > keyword fallback
+  ollamaUrl: process.env.OLLAMA_URL || '',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
-  llmModel: optional('LLM_MODEL', 'claude-sonnet-4-5-20250929'),
+  llmModel: optional('LLM_MODEL', process.env.OLLAMA_URL ? 'llama3' : 'claude-sonnet-4-5-20250929'),
   llmSystemPrompt: process.env.LLM_SYSTEM_PROMPT || '',
 
   // Errand params

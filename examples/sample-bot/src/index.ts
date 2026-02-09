@@ -13,7 +13,7 @@ async function main() {
   if (config.webhookUrl) {
     await startWebhookServer();
   } else {
-    console.log('No WEBHOOK_URL configured — running without webhooks (job offer only)');
+    console.log('No WEBHOOK_URL configured — using polling mode');
   }
 
   try {
