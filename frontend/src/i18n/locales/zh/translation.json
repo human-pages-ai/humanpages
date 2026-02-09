@@ -35,7 +35,8 @@
     "login": "登录",
     "signup": "注册",
     "logout": "退出",
-    "startProfile": "创建个人资料"
+    "startProfile": "创建个人资料",
+    "blog": "博客"
   },
   "landing": {
     "hero": {

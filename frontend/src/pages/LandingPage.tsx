@@ -112,6 +112,9 @@ export default function LandingPage() {
             <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700 hidden sm:inline">
               {t('nav.developers')}
             </Link>
+            <Link to="/blog" className="text-sm text-slate-500 hover:text-slate-700 hidden sm:inline">
+              {t('nav.blog')}
+            </Link>
             <LanguageSwitcher />
             <Link
               to="/signup"
@@ -277,6 +280,7 @@ export default function LandingPage() {
             <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
             <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
             <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
+            <Link to="/blog" className="text-slate-500 hover:text-slate-700">{t('nav.blog')}</Link>
             <a href="https://facebook.com/humanpages" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
           </div>
         </div>

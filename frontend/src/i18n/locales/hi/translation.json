@@ -35,7 +35,8 @@
     "login": "लॉग इन",
     "signup": "साइन अप",
     "logout": "लॉग आउट",
-    "startProfile": "अपनी प्रोफ़ाइल शुरू करें"
+    "startProfile": "अपनी प्रोफ़ाइल शुरू करें",
+    "blog": "ब्लॉग"
   },
   "landing": {
     "hero": {

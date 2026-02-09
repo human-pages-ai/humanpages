@@ -35,7 +35,8 @@
     "login": "Giriş Yap",
     "signup": "Kayıt Ol",
     "logout": "Çıkış Yap",
-    "startProfile": "Profilinizi oluşturun"
+    "startProfile": "Profilinizi oluşturun",
+    "blog": "Blog"
   },
   "landing": {
     "hero": {

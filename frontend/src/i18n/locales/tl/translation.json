@@ -35,7 +35,8 @@
     "login": "Mag-login",
     "signup": "Mag-sign Up",
     "logout": "Mag-logout",
-    "startProfile": "Simulan ang iyong profile"
+    "startProfile": "Simulan ang iyong profile",
+    "blog": "Blog"
   },
   "landing": {
     "hero": {

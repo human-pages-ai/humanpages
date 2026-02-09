@@ -35,7 +35,8 @@
     "login": "Iniciar Sesión",
     "signup": "Registrarse",
     "logout": "Cerrar Sesión",
-    "startProfile": "Crear tu perfil"
+    "startProfile": "Crear tu perfil",
+    "blog": "Blog"
   },
   "landing": {
     "hero": {

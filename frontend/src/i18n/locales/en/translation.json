@@ -36,7 +36,8 @@
     "login": "Log In",
     "signup": "Sign Up",
     "logout": "Logout",
-    "startProfile": "Start your profile"
+    "startProfile": "Start your profile",
+    "blog": "Blog"
   },
   "landing": {
     "hero": {

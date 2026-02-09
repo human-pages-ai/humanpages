@@ -35,7 +35,8 @@
     "login": "Đăng nhập",
     "signup": "Đăng ký",
     "logout": "Đăng xuất",
-    "startProfile": "Tạo hồ sơ của bạn"
+    "startProfile": "Tạo hồ sơ của bạn",
+    "blog": "Blog"
   },
   "landing": {
     "hero": {
