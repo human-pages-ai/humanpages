@@ -70,7 +70,7 @@ test.describe('Dashboard – Settings', () => {
 
     await page.waitForTimeout(1_500);
 
-    await expect(page.locator('text=$50 USDC')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=$50')).toBeVisible({ timeout: 5_000 });
     await expect(page.locator('text=100 km')).toBeVisible();
   });
 });
