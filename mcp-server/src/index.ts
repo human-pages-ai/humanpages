@@ -15,6 +15,8 @@ interface Human {
   bio?: string;
   avatarUrl?: string;
   location?: string;
+  neighborhood?: string;
+  locationGranularity?: string;
   locationLat?: number;
   locationLng?: number;
   skills: string[];
@@ -22,6 +24,8 @@ interface Human {
   languages: string[];
   isAvailable: boolean;
   minRateUsdc?: string;
+  rateCurrency?: string;
+  minRateUsdEstimate?: string;
   rateType?: string;
   contactEmail?: string;
   telegram?: string;
@@ -44,7 +48,7 @@ interface Human {
     reviewCount: number;
   };
   wallets: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
-  services: { title: string; description: string; category: string; priceMin?: string; priceUnit?: string }[];
+  services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
 }
 
 interface AgentProfile {
@@ -178,7 +182,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           location: {
             type: 'string',
-            description: 'Filter by location name (partial match, e.g., "San Francisco")',
+            description: 'Filter by location name or neighborhood (partial match, e.g., "San Francisco" or "Mission District")',
           },
           lat: {
             type: 'number',
@@ -194,7 +198,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           max_rate: {
             type: 'number',
-            description: 'Maximum hourly rate in USDC (filters by minRateUsdc)',
+            description: 'Maximum hourly rate in USD. Humans who set rates in other currencies are auto-converted to USD for comparison.',
           },
           available_only: {
             type: 'boolean',
@@ -476,8 +480,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             ? `🛡️ Verified Human (score: ${h.humanityScore})`
             : h.humanityScore ? `🛡️ Partially verified (score: ${h.humanityScore})` : '🛡️ Not verified';
 
-          return `- **${h.name}**${h.username ? ` (@${h.username})` : ''} [${h.location || 'Location not specified'}]
-  ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${h.minRateUsdc ? `$${h.minRateUsdc}+` : 'Rate negotiable'} | ${rating}
+          const rateDisplay = h.minRateUsdc
+            ? (h.rateCurrency && h.rateCurrency !== 'USD'
+              ? `${h.rateCurrency} ${h.minRateUsdc}+ (~$${h.minRateUsdEstimate || '?'} USD)`
+              : `$${h.minRateUsdc}+`)
+            : 'Rate negotiable';
+
+          const displayLocation = h.locationGranularity === 'neighborhood' && h.neighborhood && h.location
+            ? `${h.neighborhood}, ${h.location}`
+            : h.location || 'Location not specified';
+
+          return `- **${h.name}**${h.username ? ` (@${h.username})` : ''} [${displayLocation}]
+  ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}
   ${humanityStatus}
   Skills: ${h.skills.join(', ') || 'None listed'}
   Equipment: ${h.equipment.join(', ') || 'None listed'}
@@ -504,9 +518,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const servicesInfo = human.services
         .map((s) => {
           let price = 'Negotiable';
+          const cur = s.priceCurrency || 'USD';
           if (s.priceUnit === 'NEGOTIABLE') price = 'Negotiable';
           else if (s.priceMin) {
-            price = s.priceUnit === 'HOURLY' ? `$${s.priceMin}/hr` : s.priceUnit === 'FLAT_TASK' ? `$${s.priceMin}/task` : `$${s.priceMin}`;
+            const sym = cur === 'USD' ? '$' : cur + ' ';
+            price = s.priceUnit === 'HOURLY' ? `${sym}${s.priceMin}/hr` : s.priceUnit === 'FLAT_TASK' ? `${sym}${s.priceMin}/task` : `${sym}${s.priceMin}`;
           }
           return `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${price}`;
         })
@@ -546,7 +562,9 @@ ${human.isAvailable ? '✅ Available' : '❌ Not Available'}
 ${human.bio || 'No bio provided'}
 
 ## Location
-${human.location || 'Not specified'}
+${human.locationGranularity === 'neighborhood' && human.neighborhood && human.location
+  ? `${human.neighborhood}, ${human.location}`
+  : human.location || 'Not specified'}
 
 ## Capabilities
 - **Skills:** ${human.skills.join(', ') || 'None listed'}
@@ -554,7 +572,8 @@ ${human.location || 'Not specified'}
 - **Languages:** ${human.languages.join(', ') || 'Not specified'}
 
 ## Economics
-- **Minimum Rate:** ${human.minRateUsdc ? `$${human.minRateUsdc} USDC` : 'Negotiable'}
+- **Minimum Rate:** ${human.minRateUsdc ? (human.rateCurrency && human.rateCurrency !== 'USD' ? `${human.rateCurrency} ${human.minRateUsdc} (~$${human.minRateUsdEstimate || '?'} USD)` : `$${human.minRateUsdc} USD`) : 'Negotiable'}
+- **Rate Currency:** ${human.rateCurrency || 'USD'}
 - **Rate Type:** ${human.rateType || 'NEGOTIABLE'}
 
 ## Contact

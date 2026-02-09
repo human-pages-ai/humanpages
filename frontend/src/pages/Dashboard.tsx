@@ -36,6 +36,8 @@ export default function Dashboard() {
     name: '',
     bio: '',
     location: '',
+    neighborhood: '',
+    locationGranularity: 'city' as 'city' | 'neighborhood',
     locationLat: undefined as number | undefined,
     locationLng: undefined as number | undefined,
     skills: '',
@@ -60,7 +62,7 @@ export default function Dashboard() {
   const [walletForm, setWalletForm] = useState({ network: 'ethereum', address: '', label: '' });
 
   const [showServiceForm, setShowServiceForm] = useState(false);
-  const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceMin: '', priceUnit: '' });
+  const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: 'USD' });
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
@@ -83,6 +85,7 @@ export default function Dashboard() {
     minOfferPrice: '',
     maxOfferDistance: '',
     minRateUsdc: '',
+    rateCurrency: 'USD',
   });
 
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -118,6 +121,8 @@ export default function Dashboard() {
         name: data.name || '',
         bio: data.bio || '',
         location: data.location || '',
+        neighborhood: data.neighborhood || '',
+        locationGranularity: data.locationGranularity || 'city',
         locationLat: data.locationLat,
         locationLng: data.locationLng,
         skills: data.skills?.join(', ') || '',
@@ -141,7 +146,9 @@ export default function Dashboard() {
         minOfferPrice: data.minOfferPrice?.toString() || '',
         maxOfferDistance: data.maxOfferDistance?.toString() || '',
         minRateUsdc: data.minRateUsdc?.toString() || '',
+        rateCurrency: data.rateCurrency || 'USD',
       });
+      setServiceForm((prev) => ({ ...prev, priceCurrency: data.rateCurrency || 'USD' }));
       if (data.id) {
         try {
           const reviewData = await api.getMyReviews(data.id);
@@ -252,6 +259,8 @@ export default function Dashboard() {
         name: profileForm.name,
         bio: profileForm.bio || null,
         location: profileForm.location || null,
+        neighborhood: profileForm.neighborhood || null,
+        locationGranularity: profileForm.locationGranularity,
         locationLat: profileForm.locationLat ?? null,
         locationLng: profileForm.locationLng ?? null,
         skills: profileForm.skills.split(',').map(s => s.trim()).filter(Boolean),
@@ -289,6 +298,7 @@ export default function Dashboard() {
         minOfferPrice: filtersForm.minOfferPrice ? parseFloat(filtersForm.minOfferPrice) : null,
         maxOfferDistance: filtersForm.maxOfferDistance ? parseInt(filtersForm.maxOfferDistance) : null,
         minRateUsdc: filtersForm.minRateUsdc ? parseFloat(filtersForm.minRateUsdc) : null,
+        rateCurrency: filtersForm.rateCurrency,
       });
       setProfile(updated);
       setEditingFilters(false);
@@ -342,11 +352,12 @@ export default function Dashboard() {
         description: serviceForm.description,
         category: serviceForm.category,
         priceMin: serviceForm.priceMin ? parseFloat(serviceForm.priceMin) : null,
+        priceCurrency: serviceForm.priceCurrency,
         priceUnit: serviceForm.priceUnit || null,
       });
       posthog.capture('service_added');
       await loadProfile();
-      setServiceForm({ title: '', description: '', category: '', priceMin: '', priceUnit: '' });
+      setServiceForm({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: profile?.rateCurrency || 'USD' });
       setShowServiceForm(false);
       toast.success(t('toast.serviceAdded'));
     } catch (error: any) {

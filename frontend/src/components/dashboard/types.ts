@@ -12,6 +12,7 @@ export interface Service {
   category: string;
   priceRange?: string;
   priceMin?: string | null;
+  priceCurrency?: string;
   priceUnit?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE' | null;
   isActive: boolean;
 }
@@ -23,6 +24,8 @@ export interface Profile {
   username?: string;
   bio?: string;
   location?: string;
+  neighborhood?: string;
+  locationGranularity?: 'city' | 'neighborhood';
   locationLat?: number;
   locationLng?: number;
   skills: string[];
@@ -46,6 +49,8 @@ export interface Profile {
   minOfferPrice?: number;
   maxOfferDistance?: number;
   minRateUsdc?: number;
+  rateCurrency?: string;
+  minRateUsdEstimate?: number;
   rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
   paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;

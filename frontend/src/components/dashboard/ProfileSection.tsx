@@ -12,6 +12,8 @@ interface Props {
     name: string;
     bio: string;
     location: string;
+    neighborhood: string;
+    locationGranularity: 'city' | 'neighborhood';
     locationLat?: number;
     locationLng?: number;
     skills: string;
@@ -161,16 +163,36 @@ export default function ProfileSection({
             <label htmlFor="profile-location" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.location')}</label>
             <LocationAutocomplete
               id="profile-location"
-              value={profileForm.location}
-              onChange={(loc, lat, lng) => {
+              value={profileForm.neighborhood && profileForm.location
+                ? `${profileForm.neighborhood}, ${profileForm.location}`
+                : profileForm.location}
+              onChange={(loc, lat, lng, neighborhood) => {
                 setProfileForm({
                   ...profileForm,
                   location: loc,
+                  neighborhood: neighborhood || '',
                   ...(lat != null && lng != null ? { locationLat: lat, locationLng: lng } : {}),
                 });
               }}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
+            {profileForm.neighborhood && (
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profileForm.locationGranularity === 'neighborhood'}
+                  onChange={(e) => setProfileForm({
+                    ...profileForm,
+                    locationGranularity: e.target.checked ? 'neighborhood' : 'city',
+                  })}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-gray-700">
+                  {t('dashboard.profile.showNeighborhood')}
+                  <span className="text-gray-500 text-xs ml-1">({profileForm.neighborhood})</span>
+                </span>
+              </label>
+            )}
           </div>
           <div>
             <label htmlFor="profile-skills" className="block text-sm font-medium text-gray-700">
@@ -421,7 +443,11 @@ export default function ProfileSection({
                   <div>
                     <span className="text-gray-500">{t('dashboard.profile.location')}:</span>{' '}
                     {profile.location
-                      ? <span className="text-gray-900">{profile.location}</span>
+                      ? <span className="text-gray-900">
+                          {profile.locationGranularity === 'neighborhood' && profile.neighborhood
+                            ? `${profile.neighborhood}, ${profile.location}`
+                            : profile.location}
+                        </span>
                       : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
                   </div>
                 </div>

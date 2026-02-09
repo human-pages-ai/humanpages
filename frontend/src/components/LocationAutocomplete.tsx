@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface LocationResult {
   display: string;
+  city: string;
+  neighborhood?: string;
   lat: number;
   lng: number;
 }
@@ -9,7 +11,7 @@ interface LocationResult {
 interface LocationAutocompleteProps {
   id: string;
   value: string;
-  onChange: (location: string, lat?: number, lng?: number) => void;
+  onChange: (location: string, lat?: number, lng?: number, neighborhood?: string) => void;
   placeholder?: string;
   className?: string;
 }
@@ -56,9 +58,8 @@ export default function LocationAutocomplete({
         q,
         format: 'json',
         addressdetails: '1',
-        limit: '5',
+        limit: '8',
         'accept-language': 'en',
-        featuretype: 'city',
       });
 
       const res = await fetch(
@@ -71,15 +72,27 @@ export default function LocationAutocomplete({
 
       const locations: LocationResult[] = data
         .filter((r: any) => r.type === 'city' || r.type === 'town' || r.type === 'village' ||
-          r.type === 'administrative' || r.type === 'municipality' || r.class === 'place' || r.class === 'boundary')
+          r.type === 'administrative' || r.type === 'municipality' || r.class === 'place' || r.class === 'boundary' ||
+          r.type === 'suburb' || r.type === 'neighbourhood' || r.type === 'quarter')
         .map((r: any) => {
           const addr = r.address || {};
           const city = addr.city || addr.town || addr.village || addr.municipality || '';
           const state = addr.state || '';
           const country = addr.country || '';
-          const parts = [city, state, country].filter(Boolean);
+          const neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || '';
+
+          // Build city-level location string
+          const cityParts = [city, state, country].filter(Boolean);
+          const cityDisplay = cityParts.length > 0 ? cityParts.join(', ') : r.display_name.split(',').slice(0, 3).join(',').trim();
+
+          // Build display string with neighborhood if available
+          const displayParts = [neighborhood, city, state, country].filter(Boolean);
+          const display = displayParts.length > 0 ? displayParts.join(', ') : r.display_name.split(',').slice(0, 3).join(',').trim();
+
           return {
-            display: parts.length > 0 ? parts.join(', ') : r.display_name.split(',').slice(0, 3).join(',').trim(),
+            display,
+            city: cityDisplay,
+            neighborhood: neighborhood || undefined,
             lat: parseFloat(r.lat),
             lng: parseFloat(r.lon),
           };
@@ -111,7 +124,8 @@ export default function LocationAutocomplete({
     setQuery(result.display);
     setOpen(false);
     setResults([]);
-    onChange(result.display, result.lat, result.lng);
+    // Store city-level as location, pass neighborhood separately
+    onChange(result.city, result.lat, result.lng, result.neighborhood);
   };
 
   return (

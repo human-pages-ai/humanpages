@@ -198,9 +198,9 @@
       "title": "邀约过滤器",
       "subtitle": "自动过滤低质量邀约",
       "configure": "配置",
-      "minPrice": "最低报价（USDC）",
+      "minPrice": "最低报价（{{currency}}）",
       "minPriceDesc": "低于此金额的邀约将被自动拒绝",
-      "minRate": "最低时薪（USDC）",
+      "minRate": "最低时薪（{{currency}}）",
       "minRateDesc": "拒绝不符合你预期的代理邀约",
       "maxDistance": "最大距离（公里）",
       "maxDistanceDesc": "只接受此距离内代理的邀约",
@@ -292,6 +292,7 @@
       "youtube": "YouTube",
       "website": "网站",
       "saveProfile": "保存资料",
+      "showNeighborhood": "在我的公开资料中显示社区",
       "hideContact": "在公开资料中隐藏联系方式",
       "hideContactHelp": "启用后，您的邮箱、Telegram、WhatsApp 和付款方式将不会对访客可见。",
       "saving": "保存中..."
@@ -342,6 +343,11 @@
     },
     "yourReferrals": "你的推荐",
     "moreReferrals": "+{{count}} 更多"
+  },
+  "currency": {
+    "label": "货币",
+    "selectCurrency": "选择货币",
+    "usdEstimate": "~${{amount}} USD"
   },
   "onboarding": {
     "title": "完善你的资料",

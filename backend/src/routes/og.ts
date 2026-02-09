@@ -65,6 +65,8 @@ router.get('/:id', async (req, res) => {
         name: true,
         bio: true,
         location: true,
+        neighborhood: true,
+        locationGranularity: true,
         skills: true,
         isAvailable: true,
       },
@@ -74,10 +76,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).send('Not found');
     }
 
+    const displayLocation = human.locationGranularity === 'neighborhood' && human.neighborhood && human.location
+      ? `${human.neighborhood}, ${human.location}`
+      : human.location || '';
+
     const svg = generateOGSvg(
       human.name,
       human.bio || '',
-      human.location || '',
+      displayLocation,
       human.skills,
       human.isAvailable
     );

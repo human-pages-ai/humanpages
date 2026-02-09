@@ -199,9 +199,9 @@
       "title": "Offer Filters",
       "subtitle": "Auto-filter low-quality offers to your spam folder",
       "configure": "Configure",
-      "minPrice": "Minimum Offer Price (USD)",
+      "minPrice": "Minimum Offer Price ({{currency}})",
       "minPriceDesc": "Offers below this amount will be automatically rejected",
-      "minRate": "Minimum Hourly Rate (USD)",
+      "minRate": "Minimum Hourly Rate ({{currency}})",
       "minRateDesc": "Reject offers from agents that don't meet your rate expectations",
       "maxDistance": "Maximum Distance (km)",
       "maxDistanceDesc": "Only accept offers from agents within this distance (requires location)",
@@ -272,6 +272,7 @@
       "howToReachYou": "How to reach you",
       "howToPayYou": "How to pay you",
       "saveProfile": "Save Profile",
+      "showNeighborhood": "Show neighborhood on my public profile",
       "hideContact": "Hide contact info from public profile",
       "hideContactHelp": "When enabled, your email, Telegram, WhatsApp, and payment methods won't be visible to visitors.",
       "saving": "Saving..."
@@ -453,6 +454,11 @@
     "paymentRate": "Paid",
     "avgPaySpeed": "Avg Pay Speed",
     "memberSince": "Member since {{date}}"
+  },
+  "currency": {
+    "label": "Currency",
+    "selectCurrency": "Select currency",
+    "usdEstimate": "~${{amount}} USD"
   },
   "errors": {
     "required": "This field is required",

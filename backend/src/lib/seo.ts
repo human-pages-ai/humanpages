@@ -50,15 +50,19 @@ export async function getProfileMetaHtml(humanId: string, lang?: string): Promis
   try {
     const human = await prisma.human.findUnique({
       where: { id: humanId },
-      select: { name: true, bio: true, location: true, skills: true, isAvailable: true },
+      select: { name: true, bio: true, location: true, neighborhood: true, locationGranularity: true, skills: true, isAvailable: true },
     });
 
     if (!human) return null;
 
+    const displayLocation = human.locationGranularity === 'neighborhood' && human.neighborhood && human.location
+      ? `${human.neighborhood}, ${human.location}`
+      : human.location;
+
     const title = escapeHtml(`${human.name} | Human Pages`);
     const description = escapeHtml(
       human.bio
-        || `${human.name} on Human Pages${human.location ? ` in ${human.location}` : ''}${human.skills.length > 0 ? ` - ${human.skills.slice(0, 3).join(', ')}` : ''}`
+        || `${human.name} on Human Pages${displayLocation ? ` in ${displayLocation}` : ''}${human.skills.length > 0 ? ` - ${human.skills.slice(0, 3).join(', ')}` : ''}`
     );
     const ogImage = `${SITE_URL}/api/og/${humanId}`;
     const unprefixedPath = `/humans/${humanId}`;
@@ -88,7 +92,11 @@ export async function getProfileMetaHtml(humanId: string, lang?: string): Promis
       "name": human.name,
       "description": human.bio || undefined,
       "url": canonicalUrl,
-      ...(human.location && { "address": { "@type": "PostalAddress", "addressLocality": human.location } }),
+      ...(human.location && { "address": {
+        "@type": "PostalAddress",
+        "addressLocality": human.location,
+        ...(human.locationGranularity === 'neighborhood' && human.neighborhood && { "addressRegion": human.neighborhood }),
+      } }),
       ...(human.skills.length > 0 && { "knowsAbout": human.skills }),
     })}</script>`;
 

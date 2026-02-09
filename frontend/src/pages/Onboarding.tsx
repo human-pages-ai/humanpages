@@ -7,6 +7,7 @@ import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import PhoneInput from '../components/PhoneInput';
 import LocationAutocomplete from '../components/LocationAutocomplete';
+import { SUPPORTED_CURRENCIES, getCurrencySymbol } from '../lib/currencies';
 
 const SKILL_SUGGESTIONS = [
   'Local Photography', 'Phone Calls', 'In-Person Verification',
@@ -38,6 +39,7 @@ export default function Onboarding() {
   const [contactMethod, setContactMethod] = useState<'email' | 'whatsapp' | 'telegram'>('email');
   const [contactValue, setContactValue] = useState('');
   const [location, setLocation] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
   const [locationLat, setLocationLat] = useState<number | undefined>();
   const [locationLng, setLocationLng] = useState<number | undefined>();
   const [skills, setSkills] = useState<string[]>([]);
@@ -45,6 +47,7 @@ export default function Onboarding() {
   const [equipment, setEquipment] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [minRate, setMinRate] = useState('');
+  const [rateCurrency, setRateCurrency] = useState('USD');
   const [rateType, setRateType] = useState<'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE'>('NEGOTIABLE');
   const [workMode, setWorkMode] = useState<'REMOTE' | 'ONSITE' | 'HYBRID' | null>(null);
   const [step1Error, setStep1Error] = useState('');
@@ -71,10 +74,12 @@ export default function Onboarding() {
         setContactValue(data.telegram);
       }
       if (data.location) setLocation(data.location);
+      if (data.neighborhood) setNeighborhood(data.neighborhood);
       if (data.skills?.length) setSkills(data.skills);
       if (data.equipment?.length) setEquipment(data.equipment);
       if (data.languages?.length) setLanguages(data.languages);
       if (data.minRateUsdc) setMinRate(data.minRateUsdc.toString());
+      if (data.rateCurrency) setRateCurrency(data.rateCurrency);
       if (data.rateType) setRateType(data.rateType);
       if (data.workMode) setWorkMode(data.workMode);
     } catch (error) {
@@ -140,6 +145,7 @@ export default function Onboarding() {
     try {
       await api.updateProfile({
         location,
+        ...(neighborhood ? { neighborhood } : {}),
         ...(locationLat != null && locationLng != null ? { locationLat, locationLng } : {}),
         skills,
       });
@@ -157,7 +163,7 @@ export default function Onboarding() {
   const handleStep3 = async () => {
     setLoading(true);
     try {
-      const updates: any = { equipment, languages };
+      const updates: any = { equipment, languages, rateCurrency };
       if (minRate) updates.minRateUsdc = parseFloat(minRate);
       updates.rateType = rateType;
 
@@ -348,8 +354,9 @@ export default function Onboarding() {
                 <LocationAutocomplete
                   id="location-input"
                   value={location}
-                  onChange={(loc, lat, lng) => {
+                  onChange={(loc, lat, lng, nbhd) => {
                     setLocation(loc);
+                    if (nbhd) setNeighborhood(nbhd);
                     if (lat != null && lng != null) {
                       setLocationLat(lat);
                       setLocationLng(lng);
@@ -438,6 +445,25 @@ export default function Onboarding() {
                 {t('onboarding.step3.subtitle')}
               </p>
 
+              {/* Currency */}
+              <div className="mb-4">
+                <label htmlFor="rate-currency" className="block text-sm font-medium text-slate-700 mb-2">
+                  {t('currency.label')}
+                </label>
+                <select
+                  id="rate-currency"
+                  value={rateCurrency}
+                  onChange={(e) => setRateCurrency(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {SUPPORTED_CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.symbol} {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Rate */}
               <div className="mb-6">
                 <label htmlFor="min-rate" className="block text-sm font-medium text-slate-700 mb-2">
@@ -445,7 +471,7 @@ export default function Onboarding() {
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">{getCurrencySymbol(rateCurrency)}</span>
                     <input
                       id="min-rate"
                       type="number"

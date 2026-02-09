@@ -7,6 +7,7 @@ import { authenticateToken, requireEmailVerified, AuthRequest } from '../middlew
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
+import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 
 const router = Router();
 
@@ -55,6 +56,8 @@ const updateProfileSchema = z.object({
 
   // Location
   location: z.string().optional().nullable(),
+  neighborhood: z.string().max(200).optional().nullable(),
+  locationGranularity: z.enum(['city', 'neighborhood']).optional(),
   locationLat: z.number().min(-90).max(90).optional().nullable(),
   locationLng: z.number().min(-180).max(180).optional().nullable(),
 
@@ -67,6 +70,10 @@ const updateProfileSchema = z.object({
 
   // Economics
   minRateUsdc: z.number().min(0).optional().nullable(),
+  rateCurrency: z.string().refine(
+    (c) => SUPPORTED_CURRENCIES.includes(c as any),
+    `Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}`
+  ).optional(),
   rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
   paymentPreference: z.enum(['ESCROW', 'UPFRONT', 'BOTH']).optional(),
   workMode: z.enum(['REMOTE', 'ONSITE', 'HYBRID']).nullable().optional(),
@@ -218,12 +225,27 @@ router.patch('/me', authenticateToken, requireEmailVerified, async (req: AuthReq
       }
     }
 
+    // Compute minRateUsdEstimate if rate or currency changed
+    const dataToSave: any = { ...updates, lastActiveAt: new Date() };
+    const rateChanged = updates.minRateUsdc !== undefined || updates.rateCurrency !== undefined;
+    if (rateChanged) {
+      // Need current human to get the other value if only one changed
+      const current = await prisma.human.findUnique({
+        where: { id: req.userId },
+        select: { minRateUsdc: true, rateCurrency: true },
+      });
+      const rate = updates.minRateUsdc !== undefined ? updates.minRateUsdc : current?.minRateUsdc?.toNumber() ?? null;
+      const currency = updates.rateCurrency || current?.rateCurrency || 'USD';
+      if (rate != null) {
+        dataToSave.minRateUsdEstimate = await convertToUsd(rate, currency);
+      } else {
+        dataToSave.minRateUsdEstimate = null;
+      }
+    }
+
     const human = await prisma.human.update({
       where: { id: req.userId },
-      data: {
-        ...updates,
-        lastActiveAt: new Date(),
-      },
+      data: dataToSave,
       include: { wallets: true, services: true },
     });
 
@@ -432,9 +454,12 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.languages = { has: language as string };
     }
 
-    // Filter by location text
+    // Filter by location text (search both city and neighborhood)
     if (location) {
-      where.location = { contains: location as string, mode: 'insensitive' };
+      where.OR = [
+        { location: { contains: location as string, mode: 'insensitive' } },
+        { neighborhood: { contains: location as string, mode: 'insensitive' } },
+      ];
     }
 
     // Filter by availability
@@ -447,13 +472,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.workMode = workMode as string;
     }
 
-    // Filter by rate range
+    // Filter by rate range (search params are in USD, compare against USD estimate)
     if (minRate) {
-      where.minRateUsdc = { gte: parseFloat(minRate as string) };
+      where.minRateUsdEstimate = { gte: parseFloat(minRate as string) };
     }
     if (maxRate) {
-      where.minRateUsdc = {
-        ...where.minRateUsdc,
+      where.minRateUsdEstimate = {
+        ...where.minRateUsdEstimate,
         lte: parseFloat(maxRate as string),
       };
     }
@@ -471,6 +496,8 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         bio: true,
         avatarUrl: true,
         location: true,
+        neighborhood: true,
+        locationGranularity: true,
         locationLat: true,
         locationLng: true,
         skills: true,
@@ -478,6 +505,8 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         languages: true,
         isAvailable: true,
         minRateUsdc: true,
+        rateCurrency: true,
+        minRateUsdEstimate: true,
         rateType: true,
         paymentPreference: true,
         workMode: true,
@@ -504,7 +533,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         },
         services: {
           where: { isActive: true },
-          select: { title: true, description: true, category: true, priceMin: true, priceUnit: true },
+          select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
         },
       },
     });
@@ -552,15 +581,18 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       ])
     );
 
-    // Attach stats to each human and filter hidden contact info
-    const humansWithReputation = humans.map((h) => filterHiddenContact({
-      ...h,
-      reputation: {
-        jobsCompleted: jobCountMap.get(h.id) || 0,
-        avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
-        reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
-      },
-    }));
+    // Attach stats to each human, strip coords, and filter hidden contact info
+    const humansWithReputation = humans.map((h) => {
+      const { locationLat, locationLng, ...rest } = h;
+      return filterHiddenContact({
+        ...rest,
+        reputation: {
+          jobsCompleted: jobCountMap.get(h.id) || 0,
+          avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
+          reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
+        },
+      });
+    });
 
     // Track search in PostHog
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
@@ -589,13 +621,15 @@ router.get('/:id', async (req, res) => {
         bio: true,
         avatarUrl: true,
         location: true,
-        locationLat: true,
-        locationLng: true,
+        neighborhood: true,
+        locationGranularity: true,
         skills: true,
         equipment: true,
         languages: true,
         isAvailable: true,
         minRateUsdc: true,
+        rateCurrency: true,
+        minRateUsdEstimate: true,
         rateType: true,
         paymentPreference: true,
         workMode: true,
@@ -622,7 +656,7 @@ router.get('/:id', async (req, res) => {
         },
         services: {
           where: { isActive: true },
-          select: { title: true, description: true, category: true, priceMin: true, priceUnit: true },
+          select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
         },
       },
     });
@@ -655,11 +689,15 @@ router.get('/u/:username', async (req, res) => {
         bio: true,
         avatarUrl: true,
         location: true,
+        neighborhood: true,
+        locationGranularity: true,
         skills: true,
         equipment: true,
         languages: true,
         isAvailable: true,
         minRateUsdc: true,
+        rateCurrency: true,
+        minRateUsdEstimate: true,
         rateType: true,
         paymentPreference: true,
         workMode: true,
@@ -686,7 +724,7 @@ router.get('/u/:username', async (req, res) => {
         },
         services: {
           where: { isActive: true },
-          select: { title: true, description: true, category: true, priceMin: true, priceUnit: true },
+          select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
         },
       },
     });

@@ -14,21 +14,25 @@ interface Wallet {
   label?: string;
 }
 
+import { getCurrencySymbol } from '../lib/currencies';
+
 interface Service {
   title: string;
   description: string;
   category: string;
   priceMin?: number;
+  priceCurrency?: string;
   priceUnit?: string;
 }
 
-function formatPrice(priceMin?: number, priceUnit?: string): string | null {
+function formatPrice(priceMin?: number, priceUnit?: string, priceCurrency?: string): string | null {
   if (!priceMin && priceUnit !== 'NEGOTIABLE') return null;
   if (priceUnit === 'NEGOTIABLE') return 'Negotiable';
   if (!priceMin) return null;
-  if (priceUnit === 'HOURLY') return `$${priceMin}/hr`;
-  if (priceUnit === 'FLAT_TASK') return `$${priceMin}/task`;
-  return `$${priceMin}`;
+  const sym = getCurrencySymbol(priceCurrency || 'USD');
+  if (priceUnit === 'HOURLY') return `${sym}${priceMin}/hr`;
+  if (priceUnit === 'FLAT_TASK') return `${sym}${priceMin}/task`;
+  return `${sym}${priceMin}`;
 }
 
 interface PublicHuman {
@@ -36,6 +40,8 @@ interface PublicHuman {
   name: string;
   bio?: string;
   location?: string;
+  neighborhood?: string;
+  locationGranularity?: 'city' | 'neighborhood';
   skills: string[];
   contactEmail?: string;
   telegram?: string;
@@ -62,6 +68,14 @@ function getHumanityTier(score?: number): string {
   if (score < 20) return 'bronze';
   if (score < 40) return 'silver';
   return 'gold';
+}
+
+function getDisplayLocation(profile: PublicHuman): string | undefined {
+  if (!profile.location) return undefined;
+  if (profile.locationGranularity === 'neighborhood' && profile.neighborhood) {
+    return `${profile.neighborhood}, ${profile.location}`;
+  }
+  return profile.location;
 }
 
 function HumanityBadge({ profile }: { profile: PublicHuman }) {
@@ -170,7 +184,11 @@ export default function PublicProfile() {
           "name": profile.name,
           "description": profile.bio,
           "url": `https://humanpages.ai/humans/${id}`,
-          ...(profile.location && { "address": { "@type": "PostalAddress", "addressLocality": profile.location } }),
+          ...(profile.location && { "address": {
+            "@type": "PostalAddress",
+            "addressLocality": profile.location,
+            ...(profile.locationGranularity === 'neighborhood' && profile.neighborhood && { "addressRegion": profile.neighborhood }),
+          } }),
           ...(profile.skills.length > 0 && { "knowsAbout": profile.skills }),
           ...(profile.services.length > 0 && {
             "makesOffer": profile.services.map(s => ({
@@ -181,7 +199,7 @@ export default function PublicProfile() {
                 "description": s.description,
                 ...(s.category && { "category": s.category }),
               },
-              ...(formatPrice(s.priceMin, s.priceUnit) && { "priceSpecification": { "@type": "PriceSpecification", "price": formatPrice(s.priceMin, s.priceUnit) } }),
+              ...(formatPrice(s.priceMin, s.priceUnit, s.priceCurrency) && { "priceSpecification": { "@type": "PriceSpecification", "price": formatPrice(s.priceMin, s.priceUnit, s.priceCurrency) } }),
             }))
           })
         }}
@@ -208,13 +226,13 @@ export default function PublicProfile() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-white">{profile.name}</h1>
-                {profile.location && (
+                {getDisplayLocation(profile) && (
                   <p className="text-indigo-200 mt-1 flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {profile.location}
+                    {getDisplayLocation(profile)}
                   </p>
                 )}
               </div>
@@ -300,9 +318,9 @@ export default function PublicProfile() {
                           <h3 className="font-medium text-gray-900">{service.title}</h3>
                           <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                         </div>
-                        {formatPrice(service.priceMin, service.priceUnit) && (
+                        {formatPrice(service.priceMin, service.priceUnit, service.priceCurrency) && (
                           <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
-                            {formatPrice(service.priceMin, service.priceUnit)}
+                            {formatPrice(service.priceMin, service.priceUnit, service.priceCurrency)}
                           </span>
                         )}
                       </div>

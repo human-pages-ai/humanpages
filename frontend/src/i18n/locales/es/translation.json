@@ -198,9 +198,9 @@
       "title": "Filtros de Ofertas",
       "subtitle": "Filtra automáticamente ofertas de baja calidad",
       "configure": "Configurar",
-      "minPrice": "Precio Mínimo de Oferta (USDC)",
+      "minPrice": "Precio Mínimo de Oferta ({{currency}})",
       "minPriceDesc": "Las ofertas por debajo de esta cantidad serán rechazadas automáticamente",
-      "minRate": "Tarifa Mínima por Hora (USDC)",
+      "minRate": "Tarifa Mínima por Hora ({{currency}})",
       "minRateDesc": "Rechaza ofertas de agentes que no cumplan con tus expectativas",
       "maxDistance": "Distancia Máxima (km)",
       "maxDistanceDesc": "Solo acepta ofertas de agentes dentro de esta distancia",
@@ -292,6 +292,7 @@
       "youtube": "YouTube",
       "website": "Sitio Web",
       "saveProfile": "Guardar Perfil",
+      "showNeighborhood": "Mostrar barrio en mi perfil público",
       "hideContact": "Ocultar información de contacto del perfil público",
       "hideContactHelp": "Cuando está activado, tu email, Telegram, WhatsApp y métodos de pago no serán visibles para los visitantes.",
       "saving": "Guardando..."
@@ -342,6 +343,11 @@
     },
     "yourReferrals": "Tus referidos",
     "moreReferrals": "+{{count}} más"
+  },
+  "currency": {
+    "label": "Moneda",
+    "selectCurrency": "Seleccionar moneda",
+    "usdEstimate": "~${{amount}} USD"
   },
   "onboarding": {
     "title": "Completa Tu Perfil",
