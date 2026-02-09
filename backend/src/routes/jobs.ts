@@ -133,6 +133,7 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
         contactEmail: true,
         email: true,
         emailVerified: true,
+        isAvailable: true,
         telegramChatId: true,
         preferredLanguage: true,
         emailNotifications: true,
@@ -153,6 +154,14 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
       return res.status(400).json({
         error: 'Human not available',
         message: 'This human has not verified their email and cannot receive job offers.',
+      });
+    }
+
+    if (!human.isAvailable) {
+      return res.status(400).json({
+        error: 'Human not available',
+        code: 'UNAVAILABLE',
+        message: 'This human is not currently accepting job offers.',
       });
     }
 
@@ -249,6 +258,7 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
         agentName: displayName,
         category: data.category,
         language: human.preferredLanguage,
+        jobDetailUrl,
       }).catch((err) => logger.error({ err }, 'Email notification failed'));
     }
 

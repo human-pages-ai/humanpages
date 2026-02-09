@@ -172,15 +172,6 @@ export const api = {
   getJob: (id: string) =>
     request<Job>(`/jobs/${id}`),
 
-  getJobMessages: (id: string) =>
-    request<JobMessage[]>(`/jobs/${id}/messages`),
-
-  sendJobMessage: (id: string, content: string) =>
-    request<JobMessage>(`/jobs/${id}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ content }),
-    }),
-
   acceptJob: (id: string) =>
     request<Job>(`/jobs/${id}/accept`, { method: 'PATCH' }),
 
@@ -189,6 +180,15 @@ export const api = {
 
   completeJob: (id: string) =>
     request<Job>(`/jobs/${id}/complete`, { method: 'PATCH' }),
+
+  getJobMessages: (jobId: string) =>
+    request<JobMessage[]>(`/jobs/${jobId}/messages`),
+
+  sendJobMessage: (jobId: string, content: string) =>
+    request<JobMessage>(`/jobs/${jobId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
 
   getMyReviews: (humanId: string) =>
     request<ReviewsResponse>(`/jobs/human/${humanId}/reviews`),

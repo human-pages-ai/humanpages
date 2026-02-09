@@ -105,6 +105,7 @@ interface JobOfferEmailData {
   agentName?: string;
   category?: string;
   language?: string;
+  jobDetailUrl?: string;
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
@@ -130,7 +131,7 @@ ${t('email.jobOffer.description')}:
 ${data.jobDescription}
 
 ${t('email.jobOffer.loginToView')}:
-${FRONTEND_URL}/dashboard
+${data.jobDetailUrl || `${FRONTEND_URL}/dashboard`}
 
 ---
 ${t('email.jobOffer.footer')}
@@ -171,7 +172,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
         <p style="color: #374151;">${data.jobDescription}</p>
       </div>
 
-      <a href="${FRONTEND_URL}/dashboard" class="btn">${t('email.jobOffer.viewOffer')}</a>
+      <a href="${data.jobDetailUrl || `${FRONTEND_URL}/dashboard`}" class="btn">${t('email.jobOffer.viewOffer')}</a>
     </div>
     <div class="footer">
       <p>${t('email.jobOffer.footer')}</p>

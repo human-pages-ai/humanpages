@@ -69,6 +69,16 @@ export interface AgentProfile {
   domainVerified: boolean;
 }
 
+export interface JobMessage {
+  id: string;
+  jobId: string;
+  senderType: 'human' | 'agent';
+  senderId: string;
+  senderName: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface Job {
   id: string;
   agentId: string;
@@ -88,18 +98,7 @@ export interface Job {
     rating: number;
     comment?: string;
   };
-  _count?: {
-    messages: number;
-  };
-}
-
-export interface JobMessage {
-  id: string;
-  jobId: string;
-  senderType: 'human' | 'agent';
-  senderName: string;
-  content: string;
-  createdAt: string;
+  _count?: { messages: number };
 }
 
 export interface ReviewStats {
