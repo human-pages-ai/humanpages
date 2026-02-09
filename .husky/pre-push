@@ -2,16 +2,114 @@
 
 echo "=== Pre-push checks ==="
 
-echo "[1/4] TypeScript: backend"
+# Get the repo root (husky runs from repo root)
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# ------------------------------------------------------------------
+# Guard: refuse to run E2E in production
+# ------------------------------------------------------------------
+if [ "$NODE_ENV" = "production" ]; then
+  echo "ERROR: NODE_ENV=production. Refusing to run E2E tests against production."
+  exit 1
+fi
+
+echo "[1/5] TypeScript: backend"
 cd backend && npx tsc --noEmit || exit 1
 
-echo "[2/4] TypeScript: frontend"
+echo "[2/5] TypeScript: frontend"
 cd ../frontend && npx tsc --noEmit || exit 1
 
-echo "[3/4] TypeScript: mcp-server"
+echo "[3/5] TypeScript: mcp-server"
 cd ../mcp-server && npx tsc --noEmit || exit 1
 
-echo "[4/4] Backend tests"
+echo "[4/5] Backend tests"
 cd ../backend && npm test || exit 1
+
+cd "$REPO_ROOT"
+
+# ------------------------------------------------------------------
+# E2E tests – start dev servers if needed, then run Playwright
+# ------------------------------------------------------------------
+echo "[5/5] E2E tests"
+
+STARTED_SERVERS=0
+
+kill_port() {
+  local pid
+  pid=$(lsof -ti :"$1" -sTCP:LISTEN 2>/dev/null)
+  if [ -n "$pid" ]; then
+    kill $pid 2>/dev/null
+    sleep 1
+  fi
+}
+
+wait_for_server() {
+  local url="$1"
+  local label="$2"
+  local attempts=0
+  local max_attempts=60  # 60 seconds
+
+  while [ $attempts -lt $max_attempts ]; do
+    if curl -sf "$url" >/dev/null 2>&1; then
+      echo "  $label is ready"
+      return 0
+    fi
+    attempts=$((attempts + 1))
+    sleep 1
+  done
+
+  echo "  ERROR: $label failed to start after ${max_attempts}s"
+  return 1
+}
+
+# Check if both servers are already running AND healthy
+if curl -sf http://localhost:3001/health >/dev/null 2>&1 && curl -sf http://localhost:3000 >/dev/null 2>&1; then
+  echo "  Dev servers already running and healthy"
+else
+  echo "  Starting dev servers..."
+  STARTED_SERVERS=1
+
+  # Kill any stale processes on our ports
+  kill_port 3000
+  kill_port 3001
+
+  npm run dev >/tmp/human-pages-e2e-servers.log 2>&1 &
+  DEV_PID=$!
+
+  # Wait for both servers to be ready
+  if ! wait_for_server "http://localhost:3001/health" "Backend (:3001)"; then
+    echo "  Server logs:"
+    tail -20 /tmp/human-pages-e2e-servers.log
+    kill $DEV_PID 2>/dev/null; pkill -P $DEV_PID 2>/dev/null
+    wait $DEV_PID 2>/dev/null
+    exit 1
+  fi
+
+  if ! wait_for_server "http://localhost:3000" "Frontend (:3000)"; then
+    echo "  Server logs:"
+    tail -20 /tmp/human-pages-e2e-servers.log
+    kill $DEV_PID 2>/dev/null; pkill -P $DEV_PID 2>/dev/null
+    wait $DEV_PID 2>/dev/null
+    exit 1
+  fi
+fi
+
+# Run E2E tests
+npx playwright test --config e2e/playwright.config.ts
+E2E_EXIT=$?
+
+# Clean up: stop servers only if we started them (kill children too)
+if [ $STARTED_SERVERS -eq 1 ]; then
+  echo "  Stopping dev servers..."
+  pkill -P $DEV_PID 2>/dev/null
+  kill $DEV_PID 2>/dev/null
+  wait $DEV_PID 2>/dev/null
+fi
+
+if [ $E2E_EXIT -ne 0 ]; then
+  echo "  E2E tests failed"
+  exit 1
+fi
 
 echo "=== All checks passed ==="
