@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
@@ -17,13 +16,6 @@ function buildHreflangLinks(baseUrl: string, pagePath: string): string {
 
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    // Get all humans for profile pages
-    const humans = await prisma.human.findMany({
-      select: { id: true, username: true, lastActiveAt: true },
-      orderBy: { lastActiveAt: 'desc' },
-      take: 50000, // sitemap limit
-    });
-
     const baseUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
 
     // Pages that get hreflang alternates
@@ -77,34 +69,6 @@ router.get('/sitemap.xml', async (req, res) => {
       xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
       xml += `    <priority>${page.priority}</priority>\n`;
       xml += '  </url>\n';
-    }
-
-    // Profile pages — English (unprefixed) with hreflang
-    for (const human of humans) {
-      const lastmod = human.lastActiveAt ? human.lastActiveAt.toISOString().split('T')[0] : '';
-      const pagePath = `/humans/${human.id}`;
-      xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}${pagePath}</loc>\n`;
-      if (lastmod) xml += `    <lastmod>${lastmod}</lastmod>\n`;
-      xml += '    <changefreq>weekly</changefreq>\n';
-      xml += '    <priority>0.6</priority>\n';
-      xml += buildHreflangLinks(baseUrl, pagePath);
-      xml += '  </url>\n';
-    }
-
-    // Profile pages — each non-English language version
-    for (const lang of SUPPORTED_LANGS) {
-      for (const human of humans) {
-        const lastmod = human.lastActiveAt ? human.lastActiveAt.toISOString().split('T')[0] : '';
-        const pagePath = `/humans/${human.id}`;
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/${lang}${pagePath}</loc>\n`;
-        if (lastmod) xml += `    <lastmod>${lastmod}</lastmod>\n`;
-        xml += '    <changefreq>weekly</changefreq>\n';
-        xml += '    <priority>0.6</priority>\n';
-        xml += buildHreflangLinks(baseUrl, pagePath);
-        xml += '  </url>\n';
-      }
     }
 
     xml += '</urlset>';

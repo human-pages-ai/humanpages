@@ -65,14 +65,11 @@ describe('SEO Endpoints', () => {
       expect(res.text).toContain('<changefreq>monthly</changefreq>');
     });
 
-    it('should include profile pages for humans in database', async () => {
+    it('should not include profile pages', async () => {
       const res = await request(app).get('/sitemap.xml');
 
       expect(res.status).toBe(200);
-      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      expect(res.text).toContain(`<loc>${baseUrl}/humans/${user.id}</loc>`);
-      expect(res.text).toContain('<changefreq>weekly</changefreq>');
-      expect(res.text).toContain('<priority>0.6</priority>');
+      expect(res.text).not.toContain('/humans/');
     });
 
     it('should return proper XML structure with url elements', async () => {
@@ -84,29 +81,13 @@ describe('SEO Endpoints', () => {
       const urlCount = (res.text.match(/<url>/g) || []).length;
       const closingUrlCount = (res.text.match(/<\/url>/g) || []).length;
 
-      // Should have at least 5 URLs (4 static + 1 profile)
-      expect(urlCount).toBeGreaterThanOrEqual(5);
+      // Should have static pages only (9 localized × 8 langs + 9 English + 1 non-localized = 82)
+      expect(urlCount).toBeGreaterThanOrEqual(10);
       expect(urlCount).toBe(closingUrlCount);
 
       // Each url should have loc
       const locCount = (res.text.match(/<loc>/g) || []).length;
       expect(locCount).toBe(urlCount);
-    });
-
-    it('should include lastmod for profiles with lastActiveAt', async () => {
-      const res = await request(app).get('/sitemap.xml');
-
-      expect(res.status).toBe(200);
-
-      // Profile pages should have lastmod tags
-      const profileUrlSection = res.text.substring(
-        res.text.indexOf(`/humans/${user.id}`),
-        res.text.indexOf('</url>', res.text.indexOf(`/humans/${user.id}`))
-      );
-
-      expect(profileUrlSection).toContain('<lastmod>');
-      // Check date format YYYY-MM-DD
-      expect(profileUrlSection).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
     });
 
     it('should set cache headers', async () => {
