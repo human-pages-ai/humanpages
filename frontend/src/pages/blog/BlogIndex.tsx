@@ -16,6 +16,13 @@ export default function BlogIndex() {
 
   const articles: Article[] = [
     {
+      title: 'How to Build a Free AI Agent That Posts on Moltbook',
+      slug: 'free-moltbook-agent',
+      date: 'February 9, 2026',
+      excerpt: 'A step-by-step guide to building an AI agent that posts on Moltbook using free LLMs and free hosting — no credit card required.',
+      readingTime: '7 min',
+    },
+    {
       title: 'How AI Agents Are Hiring Humans for Real-World Tasks',
       slug: 'ai-agents-hiring-humans',
       date: 'February 8, 2026',
