@@ -52,6 +52,7 @@ app.use('/api/telegram', telegramRoutes);
 
 // SEO routes
 app.use(sitemapRoutes);
+app.use('/api', sitemapRoutes);
 app.use('/api/og', ogRoutes);
 app.use('/api/badge', badgeRoutes);
 

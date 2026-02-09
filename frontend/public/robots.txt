@@ -5,4 +5,4 @@ Disallow: /onboarding
 Disallow: /welcome
 Disallow: /auth/
 
-Sitemap: https://humanpages.ai/sitemap.xml
+Sitemap: https://humanpages.ai/api/sitemap.xml
