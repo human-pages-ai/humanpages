@@ -422,6 +422,22 @@
       "hybrid": "Hybrid"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "Back to Dashboard",
+    "description": "Description",
+    "messages": "Messages",
+    "noMessages": "No messages yet. Send a message to ask questions about this job.",
+    "messagePlaceholder": "Type a message...",
+    "send": "Send",
+    "you": "You",
+    "verified": "Verified",
+    "confirmReject": "Reject this job offer?",
+    "confirmRejectMessage": "This action cannot be undone. The agent will be notified.",
+    "created": "Created",
+    "accepted": "Accepted",
+    "paid": "Paid",
+    "completed": "Completed"
+  },
   "errors": {
     "required": "This field is required",
     "invalidEmail": "Invalid email address",

@@ -406,6 +406,22 @@
       "hybrid": "Kết hợp"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "Quay lại Bảng điều khiển",
+    "description": "Mô tả",
+    "messages": "Tin nhắn",
+    "noMessages": "Chưa có tin nhắn nào. Gửi tin nhắn để hỏi về công việc này.",
+    "messagePlaceholder": "Nhập tin nhắn...",
+    "send": "Gửi",
+    "you": "Bạn",
+    "verified": "Đã xác minh",
+    "confirmReject": "Từ chối lời mời công việc này?",
+    "confirmRejectMessage": "Hành động này không thể hoàn tác. Đại lý sẽ được thông báo.",
+    "created": "Đã tạo",
+    "accepted": "Đã chấp nhận",
+    "paid": "Đã thanh toán",
+    "completed": "Đã hoàn thành"
+  },
   "errors": {
     "required": "Trường này là bắt buộc",
     "invalidEmail": "Địa chỉ email không hợp lệ",

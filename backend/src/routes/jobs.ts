@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
+import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.js';
 import { sendJobOfferEmail } from '../lib/email.js';
 import { sendJobOfferTelegram } from '../lib/telegram.js';
 import {
@@ -223,7 +224,7 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
       },
     });
 
-    const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`;
+    const jobDetailUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/jobs/${job.id}`;
 
     const displayName = data.agentName || agent.name;
 
@@ -260,7 +261,7 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
         jobDescription: data.description,
         priceUsdc: data.priceUsdc,
         agentName: displayName,
-        dashboardUrl,
+        dashboardUrl: jobDetailUrl,
       }).catch((err) => logger.error({ err }, 'Telegram notification failed'));
     }
 
@@ -295,6 +296,7 @@ router.get('/:id', async (req, res) => {
         registeredAgent: {
           select: { id: true, name: true, description: true, websiteUrl: true, domainVerified: true },
         },
+        _count: { select: { messages: true } },
       },
     });
 
@@ -329,6 +331,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
         registeredAgent: {
           select: { id: true, name: true, description: true, websiteUrl: true, domainVerified: true },
         },
+        _count: { select: { messages: true } },
       },
     });
 
@@ -665,6 +668,119 @@ router.post('/:id/review', async (req, res) => {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Create review error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Message rate limiter: 10 messages per minute
+const messageRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Too many messages. Limit: 10 per minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+  },
+  validate: false,
+});
+
+// Schema for sending a message
+const messageSchema = z.object({
+  content: z.string().min(1).max(2000),
+});
+
+// Send a message on a job
+router.post('/:id/messages', messageRateLimiter, authenticateEither, async (req: EitherAuthRequest, res) => {
+  try {
+    const data = messageSchema.parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Auth check: human must own the job, or agent must have created it
+    if (req.senderType === 'human' && job.humanId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.senderType === 'agent' && job.registeredAgentId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Status check: only allow on non-terminal statuses
+    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAID'];
+    if (!allowedStatuses.includes(job.status)) {
+      return res.status(400).json({ error: `Cannot send messages on ${job.status} jobs` });
+    }
+
+    const message = await prisma.jobMessage.create({
+      data: {
+        jobId: job.id,
+        senderType: req.senderType!,
+        senderId: req.senderId!,
+        senderName: req.senderName!,
+        content: data.content,
+      },
+    });
+
+    // If sender is human, fire job.message webhook so agent can auto-reply
+    if (req.senderType === 'human' && job.callbackUrl) {
+      fireWebhook(
+        { ...job, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.message',
+        {
+          message: {
+            id: message.id,
+            senderType: message.senderType,
+            senderName: message.senderName,
+            content: message.content,
+            createdAt: message.createdAt.toISOString(),
+          },
+        },
+      );
+    }
+
+    res.status(201).json(message);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Send message error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get messages for a job
+router.get('/:id/messages', authenticateEither, async (req: EitherAuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Auth check: human must own the job, or agent must have created it
+    if (req.senderType === 'human' && job.humanId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.senderType === 'agent' && job.registeredAgentId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const messages = await prisma.jobMessage.findMany({
+      where: { jobId: job.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json(messages);
+  } catch (error) {
+    logger.error({ err: error }, 'Get messages error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -406,6 +406,22 @@
       "hybrid": "Hybrid"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "Bumalik sa Dashboard",
+    "description": "Paglalarawan",
+    "messages": "Mga Mensahe",
+    "noMessages": "Wala pang mga mensahe. Magpadala ng mensahe para magtanong tungkol sa trabahong ito.",
+    "messagePlaceholder": "Mag-type ng mensahe...",
+    "send": "Ipadala",
+    "you": "Ikaw",
+    "verified": "Na-verify",
+    "confirmReject": "Tanggihan ang alok na trabaho?",
+    "confirmRejectMessage": "Hindi na mababawi ang aksyong ito. Aabisuhan ang ahente.",
+    "created": "Ginawa",
+    "accepted": "Tinanggap",
+    "paid": "Binayaran",
+    "completed": "Natapos"
+  },
   "errors": {
     "required": "Kinakailangan ang field na ito",
     "invalidEmail": "Invalid na email address",

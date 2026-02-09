@@ -193,6 +193,7 @@ model Job {
 
   human           Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
   review          Review?
+  messages        JobMessage[]
 
   @@index([humanId, status])
   @@index([agentId])
@@ -249,6 +250,19 @@ model Service {
   updatedAt   DateTime  @updatedAt
 
   human       Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
+}
+
+model JobMessage {
+  id         String   @id @default(cuid())
+  jobId      String
+  senderType String   // "human" or "agent"
+  senderId   String   // human.id or agent.id
+  senderName String   // snapshot at write time
+  content    String   @db.VarChar(2000)
+  createdAt  DateTime @default(now())
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, createdAt])
 }
 
 model OAuthState {

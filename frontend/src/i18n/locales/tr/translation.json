@@ -406,6 +406,22 @@
       "hybrid": "Hibrit"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "Panele Dön",
+    "description": "Açıklama",
+    "messages": "Mesajlar",
+    "noMessages": "Henüz mesaj yok. Bu iş hakkında soru sormak için mesaj gönderin.",
+    "messagePlaceholder": "Mesaj yazın...",
+    "send": "Gönder",
+    "you": "Siz",
+    "verified": "Doğrulanmış",
+    "confirmReject": "Bu iş teklifini reddet?",
+    "confirmRejectMessage": "Bu işlem geri alınamaz. Ajans bilgilendirilecektir.",
+    "created": "Oluşturuldu",
+    "accepted": "Kabul edildi",
+    "paid": "Ödendi",
+    "completed": "Tamamlandı"
+  },
   "errors": {
     "required": "Bu alan zorunludur",
     "invalidEmail": "Geçersiz e-posta adresi",

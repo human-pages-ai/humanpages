@@ -406,6 +406,22 @@
       "hybrid": "Híbrido"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "Volver al Panel",
+    "description": "Descripción",
+    "messages": "Mensajes",
+    "noMessages": "Aún no hay mensajes. Envía un mensaje para hacer preguntas sobre este trabajo.",
+    "messagePlaceholder": "Escribe un mensaje...",
+    "send": "Enviar",
+    "you": "Tú",
+    "verified": "Verificado",
+    "confirmReject": "¿Rechazar esta oferta de trabajo?",
+    "confirmRejectMessage": "Esta acción no se puede deshacer. El agente será notificado.",
+    "created": "Creado",
+    "accepted": "Aceptado",
+    "paid": "Pagado",
+    "completed": "Completado"
+  },
   "errors": {
     "required": "Este campo es requerido",
     "invalidEmail": "Dirección de email inválida",

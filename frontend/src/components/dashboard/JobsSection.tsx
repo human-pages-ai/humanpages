@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Job, ReviewStats } from './types';
 
@@ -8,9 +9,6 @@ interface Props {
   jobFilter: 'all' | 'pending' | 'active' | 'completed';
   setJobFilter: (v: 'all' | 'pending' | 'active' | 'completed') => void;
   reviewStats: ReviewStats | null;
-  onAcceptJob: (id: string) => void;
-  onRejectJob: (id: string) => void;
-  onCompleteJob: (id: string) => void;
   profileId: string;
   profileUsername?: string;
 }
@@ -21,9 +19,6 @@ export default function JobsSection({
   jobFilter,
   setJobFilter,
   reviewStats,
-  onAcceptJob,
-  onRejectJob,
-  onCompleteJob,
   profileId,
   profileUsername,
 }: Props) {
@@ -146,97 +141,44 @@ export default function JobsSection({
 
         return (
         <>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {paginatedJobs.map((job) => (
-            <div key={job.id} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium">{job.title}</h3>
-                    <span role="status" className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(job.status)}`}>
-                      {t(`dashboard.jobs.status.${job.status}`)}
+            <Link
+              key={job.id}
+              to={`/jobs/${job.id}`}
+              className="block border border-gray-200 rounded-lg p-3 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <h3 className="font-medium truncate">{job.title}</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${getStatusBadge(job.status)}`}>
+                    {t(`dashboard.jobs.status.${job.status}`)}
+                  </span>
+                  {(job._count?.messages ?? 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-500 shrink-0">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      {job._count!.messages}
                     </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">{job.description}</p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                    <span className="font-medium text-green-600">${job.priceUsdc} USDC</span>
-                    {job.registeredAgent ? (
-                      <span className="flex items-center gap-1.5">
-                        <span>{t('dashboard.jobs.from')}: {job.registeredAgent.name}</span>
-                        {job.registeredAgent.domainVerified && (
-                          <span
-                            className="inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full"
-                            title={job.registeredAgent.websiteUrl ? new URL(job.registeredAgent.websiteUrl).hostname : 'Verified'}
-                          >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Verified
-                          </span>
-                        )}
-                        {job.registeredAgent.websiteUrl && (
-                          <a
-                            href={job.registeredAgent.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-800 text-xs"
-                          >
-                            {new URL(job.registeredAgent.websiteUrl).hostname}
-                          </a>
-                        )}
-                      </span>
-                    ) : job.agentName ? (
-                      <span>{t('dashboard.jobs.from')}: {job.agentName}</span>
-                    ) : null}
-                    {job.category && <span className="bg-gray-100 px-2 py-0.5 rounded">{job.category}</span>}
-                    <span>{new Date(job.createdAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                  </div>
-
-                  {job.review && (
-                    <div className="mt-3 p-3 bg-purple-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <span className="text-yellow-500" aria-hidden="true">{'★'.repeat(job.review.rating)}{'☆'.repeat(5 - job.review.rating)}</span>
-                        <span className="sr-only">Rated {job.review.rating} out of 5 stars</span>
-                        <span className="text-sm text-gray-600">{t('dashboard.jobs.reviewReceived')}</span>
-                      </div>
-                      {job.review.comment && (
-                        <p className="text-sm text-gray-700 mt-1">"{job.review.comment}"</p>
-                      )}
-                    </div>
                   )}
                 </div>
-
-                <div className="flex gap-2 ml-4">
-                  {job.status === 'PENDING' && (
-                    <>
-                      <button
-                        onClick={() => onAcceptJob(job.id)}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
-                      >
-                        {t('dashboard.jobs.accept')}
-                      </button>
-                      <button
-                        onClick={() => onRejectJob(job.id)}
-                        className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300"
-                      >
-                        {t('dashboard.jobs.reject')}
-                      </button>
-                    </>
-                  )}
-                  {job.status === 'PAID' && (
-                    <button
-                      onClick={() => onCompleteJob(job.id)}
-                      className="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
-                    >
-                      {t('dashboard.jobs.markComplete')}
-                    </button>
-                  )}
-                  {job.status === 'ACCEPTED' && (
-                    <span className="text-sm text-blue-600">{t('dashboard.jobs.awaitingPayment')}</span>
-                  )}
+                <div className="flex items-center gap-3 ml-3 shrink-0">
+                  <span className="font-medium text-green-600 text-sm">${job.priceUsdc}</span>
+                  {job.registeredAgent ? (
+                    <span className="text-xs text-gray-500 hidden sm:inline">{job.registeredAgent.name}</span>
+                  ) : job.agentName ? (
+                    <span className="text-xs text-gray-500 hidden sm:inline">{job.agentName}</span>
+                  ) : null}
+                  <span className="text-xs text-gray-400 hidden sm:inline">
+                    {new Date(job.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
         {totalPages > 1 && (

@@ -406,6 +406,22 @@
       "hybrid": "हाइब्रिड"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "डैशबोर्ड पर वापस",
+    "description": "विवरण",
+    "messages": "संदेश",
+    "noMessages": "अभी तक कोई संदेश नहीं। इस काम के बारे में सवाल पूछने के लिए संदेश भेजें।",
+    "messagePlaceholder": "संदेश टाइप करें...",
+    "send": "भेजें",
+    "you": "आप",
+    "verified": "सत्यापित",
+    "confirmReject": "इस नौकरी की पेशकश को अस्वीकार करें?",
+    "confirmRejectMessage": "यह क्रिया पूर्ववत नहीं की जा सकती। एजेंट को सूचित किया जाएगा।",
+    "created": "बनाया गया",
+    "accepted": "स्वीकार किया",
+    "paid": "भुगतान किया",
+    "completed": "पूरा हुआ"
+  },
   "errors": {
     "required": "यह फील्ड आवश्यक है",
     "invalidEmail": "अमान्य ईमेल एड्रेस",

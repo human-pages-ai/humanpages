@@ -219,48 +219,6 @@ export default function Dashboard() {
     });
   };
 
-  const acceptJob = async (jobId: string) => {
-    try {
-      await api.acceptJob(jobId);
-      posthog.capture('job_accepted', { jobId });
-      toast.success(t('toast.jobAccepted'));
-      await loadJobs();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const rejectJob = async (jobId: string) => {
-    setConfirmDialog({
-      open: true,
-      title: t('dashboard.jobs.confirmReject'),
-      message: t('dashboard.jobs.confirmReject'),
-      onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, open: false }));
-        try {
-          await api.rejectJob(jobId);
-          posthog.capture('job_rejected', { jobId });
-          toast.success(t('toast.jobRejected'));
-          await loadJobs();
-        } catch (error: any) {
-          toast.error(error.message);
-        }
-      },
-    });
-  };
-
-  const completeJob = async (jobId: string) => {
-    try {
-      await api.completeJob(jobId);
-      posthog.capture('job_completed', { jobId });
-      toast.success(t('toast.jobCompleted'));
-      await loadJobs();
-      await loadProfile();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
   const toggleAvailability = async () => {
     if (!profile) return;
     setSaving(true);
@@ -602,9 +560,6 @@ export default function Dashboard() {
           jobFilter={jobFilter}
           setJobFilter={setJobFilter}
           reviewStats={reviewStats}
-          onAcceptJob={acceptJob}
-          onRejectJob={rejectJob}
-          onCompleteJob={completeJob}
           profileId={profile.id}
           profileUsername={profile.username}
         />

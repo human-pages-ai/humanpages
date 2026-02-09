@@ -406,6 +406,22 @@
       "hybrid": "混合"
     }
   },
+  "jobDetail": {
+    "backToDashboard": "返回面板",
+    "description": "描述",
+    "messages": "消息",
+    "noMessages": "暂无消息。发送消息以询问有关此工作的问题。",
+    "messagePlaceholder": "输入消息...",
+    "send": "发送",
+    "you": "你",
+    "verified": "已验证",
+    "confirmReject": "拒绝此工作邀约？",
+    "confirmRejectMessage": "此操作无法撤消。代理将收到通知。",
+    "created": "创建时间",
+    "accepted": "接受时间",
+    "paid": "付款时间",
+    "completed": "完成时间"
+  },
   "errors": {
     "required": "此字段为必填",
     "invalidEmail": "无效的邮箱地址",
