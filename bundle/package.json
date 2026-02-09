@@ -1,0 +1,10 @@
+{
+  "name": "humanpages-bundle",
+  "version": "1.0.0",
+  "description": "Human Pages MCP Server Bundle",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

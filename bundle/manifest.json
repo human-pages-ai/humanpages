@@ -1,0 +1,12 @@
+{
+  "name": "humans",
+  "displayName": "Humans Marketplace",
+  "description": "Search and hire humans for real-world tasks. Find people by skills and location, view their profiles, and record job assignments.",
+  "version": "1.0.0",
+  "publisher": "humans-ai",
+  "command": "node",
+  "args": ["index.js"],
+  "env": {
+    "HUMANS_API_URL": "https://api.humans.example.com"
+  }
+}

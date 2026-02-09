@@ -1,0 +1,51 @@
+{
+  "name": "humanpages",
+  "version": "1.0.0",
+  "description": "MCP Server for AI agents to discover and hire humans for real-world tasks via humanpages.ai",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "humanpages": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && node -e \"const fs=require('fs');const f='dist/index.js';const c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)\"",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build",
+    "build:bundle": "cd bundle && npm install && cd .. && zip -r humans.mcpb bundle/*"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "agents",
+    "humans",
+    "humanpages",
+    "marketplace",
+    "tasks",
+    "hire",
+    "freelance"
+  ],
+  "author": "Human Pages",
+  "license": "MIT",
+  "homepage": "https://humanpages.ai/dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/humanpages/humanpages"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^16.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.18"
+  }
+}
