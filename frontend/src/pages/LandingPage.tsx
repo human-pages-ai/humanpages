@@ -4,6 +4,8 @@ import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
+import Footer from '../components/Footer';
+import { SOCIAL_URLS } from '../lib/social';
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -73,7 +75,7 @@ export default function LandingPage() {
           "name": "Human Pages",
           "url": "https://humanpages.ai",
           "description": "AI-to-Human marketplace connecting AI agents with real people for real-world tasks",
-          "sameAs": []
+          "sameAs": [...SOCIAL_URLS]
         }}
       />
       <SEO
@@ -272,19 +274,7 @@ export default function LandingPage() {
       </section>
       </main>
 
-      {/* Footer */}
-      <footer className="py-8 bg-white border-t border-slate-200 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
-          <div className="flex gap-6 text-sm">
-            <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
-            <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
-            <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <Link to="/blog" className="text-slate-500 hover:text-slate-700">{t('nav.blog')}</Link>
-            <a href="https://facebook.com/humanpages" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Sticky Mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 md:hidden">

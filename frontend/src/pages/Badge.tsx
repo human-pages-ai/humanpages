@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import Link from '../components/LocalizedLink';
 import { useAuth } from '../hooks/useAuth';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
+import Footer from '../components/Footer';
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -41,7 +42,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
 }
 
 export default function Badge() {
-  const { t } = useTranslation();
+
   const { user } = useAuth();
 
   const userId = user?.id || 'your-id';
@@ -162,17 +163,7 @@ export default function Badge() {
         )}
       </main>
 
-      <footer className="py-8 bg-white border-t border-slate-200 px-4 mt-12">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
-          <div className="flex gap-6 text-sm">
-            <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
-            <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
-            <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <a href="https://facebook.com/humanpages" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
-          </div>
-        </div>
-      </footer>
+      <Footer className="mt-12" />
     </div>
   );
 }

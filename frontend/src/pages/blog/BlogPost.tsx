@@ -1,7 +1,8 @@
-import { useTranslation } from 'react-i18next';
+
 import Link from '../../components/LocalizedLink';
 import Logo from '../../components/Logo';
 import SEO from '../../components/SEO';
+import Footer from '../../components/Footer';
 
 interface BlogPostProps {
   title: string;
@@ -13,7 +14,7 @@ interface BlogPostProps {
 }
 
 export default function BlogPost({ title, date, readingTime, description, slug, children }: BlogPostProps) {
-  const { t } = useTranslation();
+
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -75,17 +76,7 @@ export default function BlogPost({ title, date, readingTime, description, slug, 
         </div>
       </main>
 
-      <footer className="py-8 bg-white border-t border-slate-200 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
-          <div className="flex gap-6 text-sm">
-            <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
-            <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
-            <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
-            <a href="https://facebook.com/humanpages" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-700">{t('landing.footer.contact')}</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
