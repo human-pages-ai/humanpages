@@ -14,6 +14,7 @@ export default defineConfig({
     exclude: ['dist/**', 'node_modules/**'],
     env: {
       DATABASE_URL: `postgresql://humans:humans_secret@localhost:5432/${dbName}?schema=public`,
+      DIRECT_DATABASE_URL: `postgresql://humans:humans_secret@localhost:5432/${dbName}?schema=public`,
       TEST_DB_NAME: dbName,
       JWT_SECRET: 'test-jwt-secret-for-testing-only',
       PORT: '3002',
