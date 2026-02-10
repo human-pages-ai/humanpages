@@ -5,6 +5,7 @@ git pull
 
 cd backend
 npm ci
+echo "=== Running migrations ==="
 npx prisma migrate deploy
 npm run build
 
