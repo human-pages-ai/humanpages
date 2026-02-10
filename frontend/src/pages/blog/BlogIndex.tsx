@@ -17,6 +17,13 @@ export default function BlogIndex() {
 
   const articles: Article[] = [
     {
+      title: 'I Built a Full AI Agent for $0. Here\'s the Catch.',
+      slug: 'zero-dollar-ai-agent',
+      date: 'February 10, 2026',
+      excerpt: 'A complete guide to running your own AI agent with free compute, free LLMs, and free hosting. There\'s one wrinkle — and a workaround.',
+      readingTime: '8 min',
+    },
+    {
       title: 'How to Build a Free AI Agent That Posts on Moltbook',
       slug: 'free-moltbook-agent',
       date: 'February 9, 2026',

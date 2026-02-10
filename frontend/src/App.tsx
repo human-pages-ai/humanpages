@@ -30,6 +30,7 @@ const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHi
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
 const McpProtocol = lazy(() => import('./pages/blog/articles/McpProtocol'));
 const FreeMoltbookAgent = lazy(() => import('./pages/blog/articles/FreeMoltbookAgent'));
+const ZeroDollarAgent = lazy(() => import('./pages/blog/articles/ZeroDollarAgent'));
 
 function LoadingSpinner() {
   const { t } = useTranslation();
@@ -163,6 +164,7 @@ function AppRoutes() {
       <Route path="/blog/getting-paid-usdc-freelancers" element={<GettingPaidUsdc />} />
       <Route path="/blog/mcp-protocol-ai-agents" element={<McpProtocol />} />
       <Route path="/blog/free-moltbook-agent" element={<FreeMoltbookAgent />} />
+      <Route path="/blog/zero-dollar-ai-agent" element={<ZeroDollarAgent />} />
 
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
@@ -174,6 +176,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/getting-paid-usdc-freelancers" element={<LangWrapper><GettingPaidUsdc /></LangWrapper>} />
       <Route path="/:lang/blog/mcp-protocol-ai-agents" element={<LangWrapper><McpProtocol /></LangWrapper>} />
       <Route path="/:lang/blog/free-moltbook-agent" element={<LangWrapper><FreeMoltbookAgent /></LangWrapper>} />
+      <Route path="/:lang/blog/zero-dollar-ai-agent" element={<LangWrapper><ZeroDollarAgent /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
 
