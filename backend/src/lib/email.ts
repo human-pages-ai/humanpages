@@ -481,33 +481,85 @@ Human Pages - Get hired for real-world tasks
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
-    .btn { display: inline-block; background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 16px; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Verify your email</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1 style="margin: 0;">Verify Your Email</h1>
-    </div>
-    <div class="content">
-      <p>Welcome to Human Pages!</p>
-      <p>Please verify your email address by clicking the button below:</p>
-      <a href="${verifyUrl}" class="btn">Verify Email</a>
-      <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">This link will expire in 24 hours.</p>
-      <p style="color: #6b7280; font-size: 14px;">If you did not create an account, please ignore this email.</p>
-    </div>
-    <div class="footer">
-      <p>Human Pages - Get hired for real-world tasks</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width: 480px; width: 100%; background-color: #ffffff; border-radius: 12px; border: 1px solid #e4e4e7; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #18181b; line-height: 1.4;">Verify your email address</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #3f3f46;">Welcome to Human Pages! Please confirm your email address by clicking the button below.</p>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${verifyUrl}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#18181b" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Verify email address</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${verifyUrl}" target="_blank" style="display: inline-block; background-color: #18181b; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 8px; line-height: 1.5; mso-hide: all;">Verify email address</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Fallback URL -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #a1a1aa;">Or copy and paste this link into your browser:</p>
+              <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #4F46E5; word-break: break-all;"><a href="${verifyUrl}" style="color: #4F46E5; text-decoration: underline;">${verifyUrl}</a></p>
+            </td>
+          </tr>
+          <!-- Expiry notice -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #a1a1aa;">This link will expire in 24 hours.</p>
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">If you didn't create an account on Human Pages, you can safely ignore this email.</p>
+              <p style="margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">Human Pages — Get hired for real-world tasks</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();

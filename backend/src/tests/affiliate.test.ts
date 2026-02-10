@@ -39,18 +39,16 @@ describe('Affiliate / Partner Program API', () => {
       expect(res.body.affiliate).toBeDefined();
       expect(res.body.affiliate.code).toBe('testcode123');
       expect(res.body.affiliate.status).toBe('APPROVED');
-      expect(res.body.affiliate.commissionRate).toBe(2);
+      expect(res.body.affiliate.creditsPerReferral).toBe(10);
       expect(res.body.affiliate.totalClicks).toBe(0);
       expect(res.body.affiliate.totalSignups).toBe(0);
       expect(res.body.affiliate.qualifiedSignups).toBe(0);
-      expect(res.body.affiliate.totalEarnings).toBe(0);
-      expect(res.body.affiliate.totalPaid).toBe(0);
-      expect(res.body.affiliate.pendingEarnings).toBe(0);
+      expect(res.body.affiliate.totalCredits).toBe(0);
+      expect(res.body.affiliate.creditsRedeemed).toBe(0);
+      expect(res.body.affiliate.availableCredits).toBe(0);
       expect(res.body.milestones).toHaveLength(3);
       expect(res.body.referrals).toHaveLength(0);
-      expect(res.body.payouts).toHaveLength(0);
-      expect(res.body.config.minPayoutAmount).toBe(25);
-      expect(res.body.config.payoutHoldDays).toBe(30);
+      expect(res.body.creditLedger).toHaveLength(0);
     });
   });
 
@@ -71,7 +69,7 @@ describe('Affiliate / Partner Program API', () => {
       expect(res.status).toBe(201);
       expect(res.body.affiliate.code).toBe('alice123');
       expect(res.body.affiliate.status).toBe('APPROVED');
-      expect(res.body.affiliate.commissionRate).toBe(2);
+      expect(res.body.affiliate.creditsPerReferral).toBe(10);
 
       // Verify in database
       const affiliate = await prisma.affiliate.findUnique({
@@ -352,131 +350,14 @@ describe('Affiliate / Partner Program API', () => {
         where: { referredHumanId: newUserId },
       });
       expect(referral!.qualified).toBe(true);
-      expect(referral!.commissionAmount!.toNumber()).toBe(2);
+      expect(referral!.creditsAwarded).toBe(10);
 
-      // Check affiliate earnings updated
+      // Check affiliate credits updated
       const affiliate = await prisma.affiliate.findUnique({
         where: { humanId: affiliateUser.id },
       });
       expect(affiliate!.qualifiedSignups).toBe(1);
-      expect(affiliate!.totalEarnings.toNumber()).toBe(2);
-    });
-  });
-
-  // ===== POST /api/affiliate/request-payout =====
-  describe('POST /api/affiliate/request-payout', () => {
-    it('should reject payout when not an affiliate', async () => {
-      const user = await createTestUser();
-
-      const res = await authRequest(user.token)
-        .post('/api/affiliate/request-payout');
-
-      expect(res.status).toBe(403);
-    });
-
-    it('should reject payout when below minimum', async () => {
-      const user = await createTestUser();
-      await authRequest(user.token)
-        .post('/api/affiliate/apply')
-        .send({ code: 'lowbal' });
-
-      // Add a wallet
-      await prisma.wallet.create({
-        data: {
-          humanId: user.id,
-          network: 'base',
-          address: '0x1234567890123456789012345678901234567890',
-          isPrimary: true,
-        },
-      });
-
-      const res = await authRequest(user.token)
-        .post('/api/affiliate/request-payout');
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toContain('Minimum payout');
-    });
-
-    it('should reject payout when no primary wallet', async () => {
-      const user = await createTestUser();
-      await authRequest(user.token)
-        .post('/api/affiliate/apply')
-        .send({ code: 'nowallet' });
-
-      // Add earnings manually
-      await prisma.affiliate.update({
-        where: { humanId: user.id },
-        data: { totalEarnings: 50 },
-      });
-
-      const res = await authRequest(user.token)
-        .post('/api/affiliate/request-payout');
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toContain('primary wallet');
-    });
-
-    it('should create payout request when eligible', async () => {
-      const user = await createTestUser();
-      await authRequest(user.token)
-        .post('/api/affiliate/apply')
-        .send({ code: 'payout1' });
-
-      // Add a wallet
-      await prisma.wallet.create({
-        data: {
-          humanId: user.id,
-          network: 'base',
-          address: '0xabcdef1234567890abcdef1234567890abcdef12',
-          isPrimary: true,
-        },
-      });
-
-      // Add earnings
-      await prisma.affiliate.update({
-        where: { humanId: user.id },
-        data: { totalEarnings: 50, qualifiedSignups: 25 },
-      });
-
-      const res = await authRequest(user.token)
-        .post('/api/affiliate/request-payout');
-
-      expect(res.status).toBe(201);
-      expect(res.body.payout.amount).toBe(50);
-      expect(res.body.payout.status).toBe('PENDING');
-      expect(res.body.payout.eligibleAt).toBeDefined();
-    });
-
-    it('should reject duplicate pending payout', async () => {
-      const user = await createTestUser();
-      await authRequest(user.token)
-        .post('/api/affiliate/apply')
-        .send({ code: 'dupepo' });
-
-      await prisma.wallet.create({
-        data: {
-          humanId: user.id,
-          network: 'base',
-          address: '0x1111111111111111111111111111111111111111',
-          isPrimary: true,
-        },
-      });
-
-      await prisma.affiliate.update({
-        where: { humanId: user.id },
-        data: { totalEarnings: 100 },
-      });
-
-      // First payout
-      const res1 = await authRequest(user.token)
-        .post('/api/affiliate/request-payout');
-      expect(res1.status).toBe(201);
-
-      // Second payout should fail
-      const res2 = await authRequest(user.token)
-        .post('/api/affiliate/request-payout');
-      expect(res2.status).toBe(400);
-      expect(res2.body.error).toContain('already have a pending');
+      expect(affiliate!.totalCredits).toBe(10);
     });
   });
 
@@ -579,15 +460,15 @@ describe('Affiliate / Partner Program API', () => {
       // Qualify once
       await qualifyAffiliateReferral(referredUser.id);
 
-      // Get current earnings
+      // Get current credits
       let affiliate = await prisma.affiliate.findUnique({ where: { humanId: affiliateUser.id } });
-      const earningsAfterFirst = affiliate!.totalEarnings.toNumber();
+      const creditsAfterFirst = affiliate!.totalCredits;
 
       // Qualify again — should not double-count
       await qualifyAffiliateReferral(referredUser.id);
 
       affiliate = await prisma.affiliate.findUnique({ where: { humanId: affiliateUser.id } });
-      expect(affiliate!.totalEarnings.toNumber()).toBe(earningsAfterFirst);
+      expect(affiliate!.totalCredits).toBe(creditsAfterFirst);
       expect(affiliate!.qualifiedSignups).toBe(1);
     });
   });
@@ -602,10 +483,10 @@ describe('Affiliate / Partner Program API', () => {
         .post('/api/affiliate/apply')
         .send({ code: 'mile1' });
 
-      // Simulate 9 qualified referrals
+      // Simulate 9 qualified referrals (9 * 10 credits = 90 credits)
       await prisma.affiliate.update({
         where: { humanId: affiliateUser.id },
-        data: { qualifiedSignups: 9, totalEarnings: 18 },
+        data: { qualifiedSignups: 9, totalCredits: 90 },
       });
 
       // Create the 10th referral
@@ -615,17 +496,77 @@ describe('Affiliate / Partner Program API', () => {
       // Qualify it — should trigger tier 1 bonus
       await qualifyAffiliateReferral(user10.id);
 
-      // Check for bonus payout
-      const payouts = await prisma.affiliatePayout.findMany({
+      // Check for bonus in credit ledger
+      const credits = await prisma.affiliateCredit.findMany({
         where: {
           affiliate: { humanId: affiliateUser.id },
           type: 'bonus_tier1',
         },
       });
 
-      expect(payouts).toHaveLength(1);
-      expect(payouts[0].amount.toNumber()).toBe(25);
-      expect(payouts[0].description).toContain('10 qualified');
+      expect(credits).toHaveLength(1);
+      expect(credits[0].credits).toBe(50);
+      expect(credits[0].description).toContain('10 qualified');
+    });
+
+    it('should not double-award milestone bonus', async () => {
+      const { recordAffiliateReferral, qualifyAffiliateReferral } = await import('../routes/affiliate.js');
+
+      const affiliateUser = await createTestUser({ email: 'milestone2@test.com' });
+      await authRequest(affiliateUser.token)
+        .post('/api/affiliate/apply')
+        .send({ code: 'mile2' });
+
+      // Set to exactly at tier 1 threshold
+      await prisma.affiliate.update({
+        where: { humanId: affiliateUser.id },
+        data: { qualifiedSignups: 9, totalCredits: 90 },
+      });
+
+      // Create and qualify the 10th referral
+      const user10 = await createTestUser({ email: 'ref10b@test.com' });
+      await recordAffiliateReferral(affiliateUser.id, user10.id);
+      await qualifyAffiliateReferral(user10.id);
+
+      // Get credits after first bonus
+      let affiliate = await prisma.affiliate.findUnique({ where: { humanId: affiliateUser.id } });
+      const creditsAfterBonus = affiliate!.totalCredits;
+
+      // The bonus should be: 90 (existing) + 10 (referral) + 50 (bonus) = 150
+      expect(creditsAfterBonus).toBe(150);
+
+      // Verify only one bonus_tier1 entry exists
+      const bonusEntries = await prisma.affiliateCredit.findMany({
+        where: {
+          affiliate: { humanId: affiliateUser.id },
+          type: 'bonus_tier1',
+        },
+      });
+      expect(bonusEntries).toHaveLength(1);
+    });
+
+    it('should track credits in credit ledger', async () => {
+      const { recordAffiliateReferral, qualifyAffiliateReferral } = await import('../routes/affiliate.js');
+
+      const affiliateUser = await createTestUser({ email: 'ledger@test.com' });
+      await authRequest(affiliateUser.token)
+        .post('/api/affiliate/apply')
+        .send({ code: 'ledger1' });
+
+      // Create and qualify a referral
+      const referredUser = await createTestUser({ email: 'ledgerref@test.com' });
+      await recordAffiliateReferral(affiliateUser.id, referredUser.id);
+      await qualifyAffiliateReferral(referredUser.id);
+
+      // Check credit ledger
+      const creditEntries = await prisma.affiliateCredit.findMany({
+        where: { affiliate: { humanId: affiliateUser.id } },
+      });
+
+      expect(creditEntries).toHaveLength(1);
+      expect(creditEntries[0].credits).toBe(10);
+      expect(creditEntries[0].type).toBe('referral');
+      expect(creditEntries[0].description).toContain('Referral qualified');
     });
   });
 });

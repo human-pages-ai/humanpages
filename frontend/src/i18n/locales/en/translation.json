@@ -58,7 +58,7 @@
       "step2Title": "Get matched",
       "step2Desc": "AI agents search the directory and send you job offers with a description and price.",
       "step3Title": "Get paid",
-      "step3Desc": "Accept the offer, do the work, get paid directly to your PayPal, bank, or wallet. We never touch your money."
+      "step3Desc": "Accept the offer, do the work, get paid directly by the AI agent. We never touch your money."
     },
     "tasks": {
       "title": "What you can offer",
@@ -81,21 +81,21 @@
       "findWork": "Let the work find you",
       "findWorkDesc": "Create your listing once. When someone needs your skills in your area, they'll reach out directly. Expand your income without chasing clients.",
       "keepEarnings": "Keep 100% of your earnings",
-      "keepEarningsDesc": "We don't take a cut. You negotiate terms and get paid straight to your PayPal, bank, or wallet. Every dollar is yours.",
+      "keepEarningsDesc": "We don't take a cut. You negotiate terms and get paid directly by the AI agent. Every dollar is yours.",
       "oneProfile": "One profile, every AI agent",
-      "oneProfileDesc": "You don't need accounts on ten different platforms. Any AI agent can find you through a single listing. Easy extra income on the side."
+      "oneProfileDesc": "You don't need accounts on ten different platforms. Any AI agent can find you through a single listing. Turn your skills into income."
     },
     "cta": {
       "ready": "Get listed before everyone else",
       "createListing": "Early profiles get found first. Set yours up in about 30 seconds.",
-      "startGetting": "Turn your skills into extra income",
+      "startGetting": "Turn your skills into income",
       "letOpportunities": "List your skills now. When tasks match, you'll be the first to know. It's free — always."
     },
     "trust": {
       "title": "You're in control",
       "dataPrivacy": "Always free to use. No hidden costs, no fees on your earnings.",
       "visibility": "You control visibility. Go invisible anytime.",
-      "contact": "You choose how to be contacted and paid. PayPal, bank, crypto — whatever works for you."
+      "contact": "You choose how to be contacted and paid. Get paid directly by the AI agent."
     },
     "faq": {
       "title": "Questions & answers",
@@ -104,9 +104,9 @@
       "howHired": "How do I get hired?",
       "howHiredAnswer": "Create your profile with your skills, location, and rates — it takes about 30 seconds. AI agents will find you and send job offers with a description and price. You review each offer and accept or decline, then get paid however you prefer.",
       "howPaid": "How do I get paid?",
-      "howPaidAnswer": "You decide. Add your PayPal, Venmo, Wise, bank details, or a crypto wallet — whatever works for you. You and the client work it out directly. We never touch your money.",
+      "howPaidAnswer": "The AI agent pays you directly once the work is done. You and the agent agree on the payment method. We never touch your money.",
       "available": "Is this available in my country?",
-      "availableAnswer": "Yes! Human Pages is global. Payments can happen however works for both sides. Payment apps, crypto, bank transfer, you name it. Just add your location and you'll be discoverable for tasks in your area.",
+      "availableAnswer": "Yes! Human Pages is global. You and the AI agent agree on how to get paid — whatever works for both sides. Just add your location and you'll be discoverable for tasks in your area.",
       "free": "Is it really free?",
       "freeAnswer": "Yes. Your listing is always free, and we never take a cut of your earnings. We may offer optional premium features down the road, but using the platform, getting found, and getting paid will always be free."
     },
@@ -123,7 +123,7 @@
     "signInTo": "Sign in to your account",
     "signUp": "Sign up",
     "createAccount": "Create your account",
-    "signupSubtitle": "Takes ~30 seconds. Always free — turn your skills into extra income.",
+    "signupSubtitle": "Takes ~30 seconds. Always free — turn your skills into income.",
     "signingIn": "Signing in...",
     "creatingAccount": "Creating account...",
     "forgotPassword": "Forgot password?",

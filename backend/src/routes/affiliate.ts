@@ -10,15 +10,13 @@ const router = Router();
 
 // ===== CONFIG =====
 const AFFILIATE_CONFIG = {
-  defaultCommission: 2.00,     // $ per qualified signup
+  creditsPerReferral: 10,      // Credits per qualified signup
   bonusTier1Threshold: 10,     // 10 qualified referrals
-  bonusTier1Amount: 25.00,
+  bonusTier1Credits: 50,
   bonusTier2Threshold: 50,     // 50 qualified referrals
-  bonusTier2Amount: 150.00,
+  bonusTier2Credits: 200,
   bonusTier3Threshold: 100,    // 100 qualified referrals
-  bonusTier3Amount: 500.00,
-  payoutHoldDays: 30,          // 30-day hold before payout
-  minPayoutAmount: 25.00,      // Minimum payout threshold
+  bonusTier3Credits: 500,
   maxReferralsPerIpPerDay: 5,  // Anti-fraud
 };
 
@@ -45,11 +43,6 @@ const applySchema = z.object({
   audience: z.string().max(200).optional(),
 });
 
-// Generate a short code from username or name
-function generateDefaultCode(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) + Math.random().toString(36).slice(2, 6);
-}
-
 // ===== ROUTES =====
 
 // GET /api/affiliate/me — Get current user's affiliate status & dashboard
@@ -63,8 +56,8 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
             id: true,
             qualified: true,
             qualifiedAt: true,
-            commissionAmount: true,
-            commissionPaid: true,
+            creditsAwarded: true,
+            creditsClaimed: true,
             createdAt: true,
             referredHuman: {
               select: { id: true, name: true, createdAt: true },
@@ -73,7 +66,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
           orderBy: { createdAt: 'desc' },
           take: 50,
         },
-        payouts: {
+        creditLedger: {
           orderBy: { createdAt: 'desc' },
           take: 20,
         },
@@ -86,12 +79,12 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
 
     // Compute milestone progress
     const milestones = [
-      { threshold: AFFILIATE_CONFIG.bonusTier1Threshold, bonus: affiliate.bonusTier1.toNumber(), label: 'Tier 1' },
-      { threshold: AFFILIATE_CONFIG.bonusTier2Threshold, bonus: affiliate.bonusTier2.toNumber(), label: 'Tier 2' },
-      { threshold: AFFILIATE_CONFIG.bonusTier3Threshold, bonus: affiliate.bonusTier3.toNumber(), label: 'Tier 3' },
+      { threshold: AFFILIATE_CONFIG.bonusTier1Threshold, bonus: affiliate.bonusTier1, label: 'Tier 1' },
+      { threshold: AFFILIATE_CONFIG.bonusTier2Threshold, bonus: affiliate.bonusTier2, label: 'Tier 2' },
+      { threshold: AFFILIATE_CONFIG.bonusTier3Threshold, bonus: affiliate.bonusTier3, label: 'Tier 3' },
     ];
 
-    const pendingEarnings = affiliate.totalEarnings.toNumber() - affiliate.totalPaid.toNumber();
+    const availableCredits = affiliate.totalCredits - affiliate.creditsRedeemed;
 
     res.json({
       enrolled: true,
@@ -99,13 +92,13 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
         id: affiliate.id,
         status: affiliate.status,
         code: affiliate.code,
-        commissionRate: affiliate.commissionRate.toNumber(),
+        creditsPerReferral: affiliate.creditsPerReferral,
         totalClicks: affiliate.totalClicks,
         totalSignups: affiliate.totalSignups,
         qualifiedSignups: affiliate.qualifiedSignups,
-        totalEarnings: affiliate.totalEarnings.toNumber(),
-        totalPaid: affiliate.totalPaid.toNumber(),
-        pendingEarnings,
+        totalCredits: affiliate.totalCredits,
+        creditsRedeemed: affiliate.creditsRedeemed,
+        availableCredits,
         approvedAt: affiliate.approvedAt,
         rejectedReason: affiliate.rejectedReason,
         suspendedReason: affiliate.suspendedReason,
@@ -121,23 +114,16 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
         name: r.referredHuman.name,
         qualified: r.qualified,
         qualifiedAt: r.qualifiedAt,
-        commissionAmount: r.commissionAmount?.toNumber() || 0,
+        creditsAwarded: r.creditsAwarded,
         createdAt: r.createdAt,
       })),
-      payouts: affiliate.payouts.map((p) => ({
-        id: p.id,
-        amount: p.amount.toNumber(),
-        status: p.status,
-        type: p.type,
-        description: p.description,
-        eligibleAt: p.eligibleAt,
-        paidAt: p.paidAt,
-        createdAt: p.createdAt,
+      creditLedger: affiliate.creditLedger.map((c) => ({
+        id: c.id,
+        credits: c.credits,
+        type: c.type,
+        description: c.description,
+        createdAt: c.createdAt,
       })),
-      config: {
-        minPayoutAmount: AFFILIATE_CONFIG.minPayoutAmount,
-        payoutHoldDays: AFFILIATE_CONFIG.payoutHoldDays,
-      },
     });
   } catch (error) {
     logger.error({ err: error }, 'Get affiliate dashboard error');
@@ -180,10 +166,10 @@ router.post('/apply', authenticateToken, requireEmailVerified, affiliateRateLimi
         audience: audience || null,
         status: 'APPROVED',
         approvedAt: new Date(),
-        commissionRate: AFFILIATE_CONFIG.defaultCommission,
-        bonusTier1: AFFILIATE_CONFIG.bonusTier1Amount,
-        bonusTier2: AFFILIATE_CONFIG.bonusTier2Amount,
-        bonusTier3: AFFILIATE_CONFIG.bonusTier3Amount,
+        creditsPerReferral: AFFILIATE_CONFIG.creditsPerReferral,
+        bonusTier1: AFFILIATE_CONFIG.bonusTier1Credits,
+        bonusTier2: AFFILIATE_CONFIG.bonusTier2Credits,
+        bonusTier3: AFFILIATE_CONFIG.bonusTier3Credits,
       },
     });
 
@@ -196,7 +182,7 @@ router.post('/apply', authenticateToken, requireEmailVerified, affiliateRateLimi
         id: affiliate.id,
         status: affiliate.status,
         code: affiliate.code,
-        commissionRate: affiliate.commissionRate.toNumber(),
+        creditsPerReferral: affiliate.creditsPerReferral,
       },
     });
   } catch (error) {
@@ -254,75 +240,6 @@ router.get('/resolve/:code', async (req, res) => {
   }
 });
 
-// POST /api/affiliate/request-payout — Request a payout
-router.post('/request-payout', authenticateToken, requireEmailVerified, affiliateRateLimiter, async (req: AuthRequest, res) => {
-  try {
-    const affiliate = await prisma.affiliate.findUnique({
-      where: { humanId: req.userId! },
-    });
-
-    if (!affiliate || affiliate.status !== 'APPROVED') {
-      return res.status(403).json({ error: 'Not an active affiliate' });
-    }
-
-    const pendingEarnings = affiliate.totalEarnings.toNumber() - affiliate.totalPaid.toNumber();
-    if (pendingEarnings < AFFILIATE_CONFIG.minPayoutAmount) {
-      return res.status(400).json({
-        error: `Minimum payout is $${AFFILIATE_CONFIG.minPayoutAmount}. Current balance: $${pendingEarnings.toFixed(2)}`,
-      });
-    }
-
-    // Check if there's already a pending/processing payout
-    const activePayout = await prisma.affiliatePayout.findFirst({
-      where: {
-        affiliateId: affiliate.id,
-        status: { in: ['PENDING', 'PROCESSING'] },
-      },
-    });
-    if (activePayout) {
-      return res.status(400).json({ error: 'You already have a pending payout request' });
-    }
-
-    // Check the user has a wallet for payout
-    const wallet = await prisma.wallet.findFirst({
-      where: { humanId: req.userId!, isPrimary: true },
-    });
-    if (!wallet) {
-      return res.status(400).json({ error: 'Please set a primary wallet for payouts' });
-    }
-
-    const eligibleAt = new Date(Date.now() + AFFILIATE_CONFIG.payoutHoldDays * 24 * 60 * 60 * 1000);
-
-    const payout = await prisma.affiliatePayout.create({
-      data: {
-        affiliateId: affiliate.id,
-        amount: pendingEarnings,
-        type: 'commission',
-        description: `Payout of $${pendingEarnings.toFixed(2)} for ${affiliate.qualifiedSignups} qualified referrals`,
-        walletAddress: wallet.address,
-        network: wallet.network,
-        eligibleAt,
-      },
-    });
-
-    logger.info({ affiliateId: affiliate.id, amount: pendingEarnings, payoutId: payout.id }, 'Payout requested');
-    trackServerEvent(req.userId!, 'affiliate_payout_requested', { amount: pendingEarnings }, req);
-
-    res.status(201).json({
-      message: 'Payout request submitted',
-      payout: {
-        id: payout.id,
-        amount: payout.amount.toNumber(),
-        status: payout.status,
-        eligibleAt: payout.eligibleAt,
-      },
-    });
-  } catch (error) {
-    logger.error({ err: error }, 'Request payout error');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // GET /api/affiliate/leaderboard — Public leaderboard (top affiliates)
 router.get('/leaderboard', async (req, res) => {
   try {
@@ -333,6 +250,7 @@ router.get('/leaderboard', async (req, res) => {
       select: {
         code: true,
         qualifiedSignups: true,
+        totalCredits: true,
         createdAt: true,
         human: {
           select: { name: true, username: true, avatarUrl: true },
@@ -348,6 +266,7 @@ router.get('/leaderboard', async (req, res) => {
         username: a.human.username,
         avatarUrl: a.human.avatarUrl,
         referrals: a.qualifiedSignups,
+        totalCredits: a.totalCredits,
         joinedAt: a.createdAt,
       }))
     );
@@ -428,15 +347,25 @@ export async function qualifyAffiliateReferral(humanId: string): Promise<void> {
 
     if (!referral || referral.qualified) return;
 
-    const commissionAmount = referral.affiliate.commissionRate.toNumber();
+    const creditsEarned = referral.affiliate.creditsPerReferral;
 
-    // Mark as qualified and assign commission
+    // Mark as qualified and assign credits
     await prisma.affiliateReferral.update({
       where: { id: referral.id },
       data: {
         qualified: true,
         qualifiedAt: new Date(),
-        commissionAmount,
+        creditsAwarded: creditsEarned,
+      },
+    });
+
+    // Log the credit entry
+    await prisma.affiliateCredit.create({
+      data: {
+        affiliateId: referral.affiliate.id,
+        credits: creditsEarned,
+        type: 'referral',
+        description: `Referral qualified`,
       },
     });
 
@@ -445,51 +374,49 @@ export async function qualifyAffiliateReferral(humanId: string): Promise<void> {
       where: { id: referral.affiliate.id },
       data: {
         qualifiedSignups: { increment: 1 },
-        totalEarnings: { increment: commissionAmount },
+        totalCredits: { increment: creditsEarned },
       },
     });
 
     // Check milestone bonuses
     const qualifiedCount = updatedAffiliate.qualifiedSignups;
     const milestones = [
-      { threshold: AFFILIATE_CONFIG.bonusTier1Threshold, type: 'bonus_tier1', amount: updatedAffiliate.bonusTier1.toNumber() },
-      { threshold: AFFILIATE_CONFIG.bonusTier2Threshold, type: 'bonus_tier2', amount: updatedAffiliate.bonusTier2.toNumber() },
-      { threshold: AFFILIATE_CONFIG.bonusTier3Threshold, type: 'bonus_tier3', amount: updatedAffiliate.bonusTier3.toNumber() },
+      { threshold: AFFILIATE_CONFIG.bonusTier1Threshold, type: 'bonus_tier1', credits: updatedAffiliate.bonusTier1 },
+      { threshold: AFFILIATE_CONFIG.bonusTier2Threshold, type: 'bonus_tier2', credits: updatedAffiliate.bonusTier2 },
+      { threshold: AFFILIATE_CONFIG.bonusTier3Threshold, type: 'bonus_tier3', credits: updatedAffiliate.bonusTier3 },
     ];
 
     for (const milestone of milestones) {
       // Exact threshold match = just crossed that milestone
       if (qualifiedCount === milestone.threshold) {
         // Check if bonus already awarded
-        const existingBonus = await prisma.affiliatePayout.findFirst({
+        const existingBonus = await prisma.affiliateCredit.findFirst({
           where: { affiliateId: referral.affiliate.id, type: milestone.type },
         });
         if (!existingBonus) {
-          const eligibleAt = new Date(Date.now() + AFFILIATE_CONFIG.payoutHoldDays * 24 * 60 * 60 * 1000);
-          await prisma.affiliatePayout.create({
+          await prisma.affiliateCredit.create({
             data: {
               affiliateId: referral.affiliate.id,
-              amount: milestone.amount,
+              credits: milestone.credits,
               type: milestone.type,
               description: `Milestone bonus: ${milestone.threshold} qualified referrals`,
-              eligibleAt,
             },
           });
 
           await prisma.affiliate.update({
             where: { id: referral.affiliate.id },
-            data: { totalEarnings: { increment: milestone.amount } },
+            data: { totalCredits: { increment: milestone.credits } },
           });
 
           logger.info(
-            { affiliateId: referral.affiliate.id, milestone: milestone.type, amount: milestone.amount },
+            { affiliateId: referral.affiliate.id, milestone: milestone.type, credits: milestone.credits },
             'Milestone bonus awarded'
           );
         }
       }
     }
 
-    logger.info({ affiliateId: referral.affiliate.id, humanId, commissionAmount }, 'Affiliate referral qualified');
+    logger.info({ affiliateId: referral.affiliate.id, humanId, creditsEarned }, 'Affiliate referral qualified');
   } catch (error) {
     logger.error({ err: error }, 'Qualify affiliate referral error');
   }

@@ -16,8 +16,6 @@ export default function AffiliateSection({ profileUsername }: Props) {
   const [applying, setApplying] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [requestingPayout, setRequestingPayout] = useState(false);
-  const [payoutMessage, setPayoutMessage] = useState('');
   const [applyForm, setApplyForm] = useState({
     code: profileUsername || '',
     promotionMethod: '',
@@ -35,7 +33,6 @@ export default function AffiliateSection({ profileUsername }: Props) {
       const resp = await api.getAffiliateDashboard();
       setData(resp);
     } catch {
-      // Not enrolled
       setData({ enrolled: false });
     } finally {
       setLoading(false);
@@ -63,21 +60,6 @@ export default function AffiliateSection({ profileUsername }: Props) {
     }
   };
 
-  const handleRequestPayout = async () => {
-    setRequestingPayout(true);
-    setPayoutMessage('');
-    try {
-      const result = await api.requestAffiliatePayout();
-      setPayoutMessage(result.message);
-      posthog.capture('affiliate_payout_requested');
-      await loadAffiliate();
-    } catch (error: any) {
-      setPayoutMessage(error.message || 'Payout request failed');
-    } finally {
-      setRequestingPayout(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow border border-slate-200 p-6">
@@ -101,7 +83,7 @@ export default function AffiliateSection({ profileUsername }: Props) {
             <h2 className="text-lg font-semibold">Partner Program</h2>
           </div>
           <p className="text-emerald-100 text-sm mb-1">
-            Earn $2 for every person you refer who completes their profile.
+            Earn credits for every person you refer who completes their profile.
           </p>
           <p className="text-emerald-200 text-xs">
             Single-tier, no recruitment bonuses. Earn on product usage only.
@@ -112,15 +94,15 @@ export default function AffiliateSection({ profileUsername }: Props) {
           <div className="p-4 sm:p-6">
             <div className="grid grid-cols-3 gap-4 mb-4 text-center">
               <div className="bg-slate-50 rounded-lg p-3">
-                <div className="text-lg font-bold text-emerald-600">$2</div>
-                <div className="text-xs text-slate-500">per signup</div>
+                <div className="text-lg font-bold text-emerald-600">10</div>
+                <div className="text-xs text-slate-500">credits / signup</div>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
-                <div className="text-lg font-bold text-emerald-600">$25</div>
+                <div className="text-lg font-bold text-emerald-600">+50</div>
                 <div className="text-xs text-slate-500">at 10 referrals</div>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
-                <div className="text-lg font-bold text-emerald-600">$500</div>
+                <div className="text-lg font-bold text-emerald-600">+500</div>
                 <div className="text-xs text-slate-500">at 100 referrals</div>
               </div>
             </div>
@@ -200,7 +182,7 @@ export default function AffiliateSection({ profileUsername }: Props) {
     );
   }
 
-  const { affiliate, milestones, referrals, payouts, config } = data;
+  const { affiliate, milestones, referrals, creditLedger } = data;
   if (!affiliate) return null;
 
   const affiliateUrl = `${window.location.origin}/signup?partner=${affiliate.code}`;
@@ -246,7 +228,7 @@ export default function AffiliateSection({ profileUsername }: Props) {
               <h2 className="text-lg font-semibold">Partner Dashboard</h2>
             </div>
             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-              ${affiliate.commissionRate}/signup
+              {affiliate.creditsPerReferral} credits/signup
             </span>
           </div>
 
@@ -265,8 +247,8 @@ export default function AffiliateSection({ profileUsername }: Props) {
               <div className="text-xs text-emerald-100">Qualified</div>
             </div>
             <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold">${affiliate.totalEarnings.toFixed(2)}</div>
-              <div className="text-xs text-emerald-100">Total Earned</div>
+              <div className="text-2xl font-bold">{affiliate.totalCredits}</div>
+              <div className="text-xs text-emerald-100">Credits Earned</div>
             </div>
           </div>
         </div>
@@ -294,38 +276,17 @@ export default function AffiliateSection({ profileUsername }: Props) {
             </div>
           </div>
 
-          {/* Earnings summary */}
+          {/* Credits summary */}
           <div className="flex items-center justify-between py-3 border-t border-slate-100">
             <div>
-              <div className="text-sm text-slate-500">Pending earnings</div>
-              <div className="text-lg font-bold text-slate-900">${affiliate.pendingEarnings.toFixed(2)}</div>
+              <div className="text-sm text-slate-500">Available credits</div>
+              <div className="text-lg font-bold text-slate-900">{affiliate.availableCredits}</div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-slate-500">Total paid</div>
-              <div className="text-lg font-bold text-emerald-600">${affiliate.totalPaid.toFixed(2)}</div>
+              <div className="text-sm text-slate-500">Total earned</div>
+              <div className="text-lg font-bold text-emerald-600">{affiliate.totalCredits}</div>
             </div>
           </div>
-
-          {/* Payout button */}
-          {affiliate.pendingEarnings >= (config?.minPayoutAmount || 25) && (
-            <button
-              onClick={handleRequestPayout}
-              disabled={requestingPayout}
-              className="w-full px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
-            >
-              {requestingPayout ? 'Processing...' : `Request Payout ($${affiliate.pendingEarnings.toFixed(2)})`}
-            </button>
-          )}
-          {payoutMessage && (
-            <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-              {payoutMessage}
-            </div>
-          )}
-          {affiliate.pendingEarnings > 0 && affiliate.pendingEarnings < (config?.minPayoutAmount || 25) && (
-            <p className="text-xs text-slate-500">
-              Minimum payout: ${config?.minPayoutAmount || 25}. Keep referring to reach the threshold!
-            </p>
-          )}
         </div>
       </div>
 
@@ -348,7 +309,7 @@ export default function AffiliateSection({ profileUsername }: Props) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-slate-700">
-                      {m.threshold} referrals — ${m.bonus} bonus
+                      {m.threshold} referrals &mdash; {m.bonus} bonus credits
                     </span>
                     <span className="text-xs text-slate-500">
                       {affiliate.qualifiedSignups}/{m.threshold}
@@ -380,7 +341,7 @@ export default function AffiliateSection({ profileUsername }: Props) {
                 </div>
                 <div className="flex items-center gap-3">
                   {r.qualified && (
-                    <span className="text-xs font-medium text-emerald-600">+${r.commissionAmount.toFixed(2)}</span>
+                    <span className="text-xs font-medium text-emerald-600">+{r.creditsAwarded} credits</span>
                   )}
                   {!r.qualified && (
                     <span className="text-xs text-slate-400">Pending profile</span>
@@ -395,29 +356,27 @@ export default function AffiliateSection({ profileUsername }: Props) {
         </div>
       )}
 
-      {/* Payout history */}
-      {payouts && payouts.length > 0 && (
+      {/* Credit history */}
+      {creditLedger && creditLedger.length > 0 && (
         <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Payout History</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Credit History</h3>
           <div className="space-y-2">
-            {payouts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+            {creditLedger.map((c) => (
+              <div key={c.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                 <div>
-                  <span className="text-sm text-slate-700">${p.amount.toFixed(2)}</span>
-                  {p.description && <span className="text-xs text-slate-400 ml-2">{p.description}</span>}
+                  <span className="text-sm text-slate-700">+{c.credits} credits</span>
+                  {c.description && <span className="text-xs text-slate-400 ml-2">{c.description}</span>}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    p.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                    p.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700' :
-                    p.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                    p.status === 'ELIGIBLE' ? 'bg-amber-100 text-amber-700' :
+                    c.type === 'referral' ? 'bg-emerald-100 text-emerald-700' :
+                    c.type.startsWith('bonus') ? 'bg-amber-100 text-amber-700' :
                     'bg-slate-100 text-slate-600'
                   }`}>
-                    {p.status}
+                    {c.type === 'referral' ? 'Referral' : 'Bonus'}
                   </span>
                   <span className="text-xs text-slate-400">
-                    {new Date(p.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
+                    {new Date(c.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
               </div>
