@@ -75,10 +75,11 @@ export async function fetchGeoLanguage(timeoutMs = 1500): Promise<string | null>
 }
 
 /**
- * Resolve the initial language to use.
- * Priority: user's explicit choice → cached IP result → fresh IP fetch → null (let i18next decide)
+ * Synchronously resolve the initial language from local storage.
+ * Returns the language immediately if available (user choice or IP cache).
+ * Returns null if a network fetch is needed.
  */
-export async function resolveInitialLanguage(): Promise<string | null> {
+export function resolveInitialLanguageSync(): string | null {
   // 1. User explicitly picked a language — always respect it
   const userChoice = getUserLanguageChoice();
   if (userChoice) return userChoice;
@@ -86,6 +87,17 @@ export async function resolveInitialLanguage(): Promise<string | null> {
   // 2. Cached IP-based result (instant, no network)
   const cached = getCachedIpLanguage();
   if (cached) return cached;
+
+  return null;
+}
+
+/**
+ * Resolve the initial language to use.
+ * Priority: user's explicit choice → cached IP result → fresh IP fetch → null (let i18next decide)
+ */
+export async function resolveInitialLanguage(): Promise<string | null> {
+  const sync = resolveInitialLanguageSync();
+  if (sync) return sync;
 
   // 3. Fetch from backend (races against timeout for fast first load)
   return fetchGeoLanguage();

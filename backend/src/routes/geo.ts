@@ -89,8 +89,10 @@ interface IpApiResponse {
   country?: string;
 }
 
-// Simple in-memory cache to avoid hammering ip-api.com
-const cache = new Map<string, { language: string; timestamp: number }>();
+// Cache IP → country code (not final language) to avoid hammering ip-api.com.
+// We cache the country, not the language, so Accept-Language disambiguation
+// for multilingual countries (e.g., Canada) always uses the current request's header.
+const ipCountryCache = new Map<string, { countryCode: string; timestamp: number }>();
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
@@ -110,46 +112,60 @@ router.get('/language', async (req: Request, res: Response) => {
       return res.json({ language: fromHeader || 'en', source: 'accept-language' });
     }
 
-    // Check cache
-    const cached = cache.get(clientIp);
+    // Resolve country code — from cache or ip-api.com
+    let countryCode: string | null = null;
+    let source = 'ip';
+
+    const cached = ipCountryCache.get(clientIp);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return res.json({ language: cached.language, source: 'cache' });
+      countryCode = cached.countryCode;
+      source = 'cache';
+    } else {
+      // Call ip-api.com (free tier: 45 req/min, no key needed)
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+
+      const response = await fetch(
+        `http://ip-api.com/json/${clientIp}?fields=status,countryCode,country`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const fromHeader = getPreferredFromAcceptLanguage(req.headers['accept-language']);
+        return res.json({ language: fromHeader || 'en', source: 'accept-language' });
+      }
+
+      const data = await response.json() as IpApiResponse;
+
+      if (data.status !== 'success' || !data.countryCode) {
+        const fromHeader = getPreferredFromAcceptLanguage(req.headers['accept-language']);
+        return res.json({ language: fromHeader || 'en', source: 'accept-language' });
+      }
+
+      countryCode = data.countryCode.toUpperCase();
+
+      // Cache the country code (not language) so multilingual resolution stays fresh
+      ipCountryCache.set(clientIp, { countryCode, timestamp: Date.now() });
+
+      // Clean old cache entries periodically (keep max 10k entries)
+      if (ipCountryCache.size > 10000) {
+        const now = Date.now();
+        for (const [key, value] of ipCountryCache) {
+          if (now - value.timestamp > CACHE_TTL) ipCountryCache.delete(key);
+        }
+      }
     }
 
-    // Call ip-api.com (free tier: 45 req/min, no key needed)
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(
-      `http://ip-api.com/json/${clientIp}?fields=status,countryCode,country`,
-      { signal: controller.signal }
-    );
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const fromHeader = getPreferredFromAcceptLanguage(req.headers['accept-language']);
-      return res.json({ language: fromHeader || 'en', source: 'accept-language' });
-    }
-
-    const data = await response.json() as IpApiResponse;
-
-    if (data.status !== 'success' || !data.countryCode) {
-      const fromHeader = getPreferredFromAcceptLanguage(req.headers['accept-language']);
-      return res.json({ language: fromHeader || 'en', source: 'accept-language' });
-    }
-
-    const countryCode = data.countryCode.toUpperCase();
+    // Resolve language from country code + Accept-Language
     let language: string;
 
-    // Check if this is a multilingual country
     if (MULTILINGUAL_COUNTRIES[countryCode]) {
       const acceptLangPref = getPreferredFromAcceptLanguage(req.headers['accept-language']);
       const options = MULTILINGUAL_COUNTRIES[countryCode];
-      // If their browser preference matches one of the country's languages, use it
       if (acceptLangPref && options.includes(acceptLangPref)) {
         language = acceptLangPref;
       } else {
-        // Default to the first option for that country
         language = options[0];
       }
     } else {
@@ -161,18 +177,7 @@ router.get('/language', async (req: Request, res: Response) => {
       language = 'en';
     }
 
-    // Cache the result
-    cache.set(clientIp, { language, timestamp: Date.now() });
-
-    // Clean old cache entries periodically (keep max 10k entries)
-    if (cache.size > 10000) {
-      const now = Date.now();
-      for (const [key, value] of cache) {
-        if (now - value.timestamp > CACHE_TTL) cache.delete(key);
-      }
-    }
-
-    return res.json({ language, country: countryCode, source: 'ip' });
+    return res.json({ language, country: countryCode, source });
   } catch (error) {
     // On any error, gracefully fall back to Accept-Language
     const fromHeader = getPreferredFromAcceptLanguage(req.headers['accept-language']);

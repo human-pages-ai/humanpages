@@ -21,6 +21,7 @@ import {
   getUserLanguageChoice,
   getCachedIpLanguage,
   fetchGeoLanguage,
+  resolveInitialLanguageSync,
   resolveInitialLanguage,
 } from '../i18n/ipLanguageDetector';
 
@@ -139,6 +140,29 @@ describe('ipLanguageDetector', () => {
       });
       const result = await fetchGeoLanguage();
       expect(result).toBeNull();
+    });
+  });
+
+  describe('resolveInitialLanguageSync', () => {
+    it('should return user choice first', () => {
+      localStorageStore[USER_CHOICE_KEY] = 'fr';
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'es',
+        timestamp: Date.now(),
+      });
+      expect(resolveInitialLanguageSync()).toBe('fr');
+    });
+
+    it('should return cached IP language when no user choice', () => {
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'pt',
+        timestamp: Date.now(),
+      });
+      expect(resolveInitialLanguageSync()).toBe('pt');
+    });
+
+    it('should return null when nothing is cached', () => {
+      expect(resolveInitialLanguageSync()).toBeNull();
     });
   });
 

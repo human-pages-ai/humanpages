@@ -34,55 +34,79 @@ const supportedCodes: string[] = supportedLanguages.map(l => l.code);
 /**
  * Initialize i18next with an optional pre-resolved language from IP geolocation.
  * If geoLanguage is provided and valid, it's used as the initial language
- * (skipping detection). Otherwise, falls back to path → navigator → htmlTag.
+ * (LanguageDetector is NOT attached so nothing can override it).
+ * Otherwise, falls back to LanguageDetector: path → navigator → htmlTag.
  *
  * Safe to call multiple times — only the first call takes effect.
  */
 export function initI18n(geoLanguage?: string | null) {
-  if (i18n.isInitialized) return;
+  if (i18n.isInitialized) {
+    // Already initialized (e.g., HMR or module re-import).
+    // If geo language differs from current, switch to it.
+    if (geoLanguage && supportedCodes.includes(geoLanguage) && i18n.language !== geoLanguage) {
+      i18n.changeLanguage(geoLanguage);
+    }
+    return;
+  }
 
   // Only use geoLanguage if it's one of our supported languages
   const lng = geoLanguage && supportedCodes.includes(geoLanguage) ? geoLanguage : undefined;
 
-  i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-      ...(lng ? { lng } : {}), // If we have a geo language, set it explicitly (skips detection)
+  // When we have a definitive language from geo/user-choice, skip LanguageDetector entirely.
+  // LanguageDetector can override the explicit `lng` option during init, so we only attach it
+  // as a fallback when no geo language is available.
+  const instance = i18n.use(initReactI18next);
+  if (!lng) {
+    instance.use(LanguageDetector);
+  }
 
-      resources: {
-        en: { translation: en },
-        es: { translation: es },
-        fr: { translation: fr },
-        pt: { translation: pt },
-        zh: { translation: zh },
-        tl: { translation: tl },
-        hi: { translation: hi },
-        vi: { translation: vi },
-        tr: { translation: tr },
-        th: { translation: th },
-      },
-      fallbackLng: 'en',
-      supportedLngs: supportedCodes,
+  instance.init({
+    ...(lng ? { lng } : {}),
 
-      detection: {
-        // Only used when lng is not set above.
-        // path: URL prefix (e.g., /es/blog) for SEO pages
-        // navigator: browser's Accept-Language
-        // htmlTag: <html lang="..."> fallback
-        order: ['path', 'navigator', 'htmlTag'],
-        lookupFromPathIndex: 0,
-        caches: [],  // Don't auto-cache; IP detector & language picker handle persistence
-      },
+    resources: {
+      en: { translation: en },
+      es: { translation: es },
+      fr: { translation: fr },
+      pt: { translation: pt },
+      zh: { translation: zh },
+      tl: { translation: tl },
+      hi: { translation: hi },
+      vi: { translation: vi },
+      tr: { translation: tr },
+      th: { translation: th },
+    },
+    fallbackLng: 'en',
+    supportedLngs: supportedCodes,
 
-      interpolation: {
-        escapeValue: false, // React already escapes
-      },
+    detection: {
+      // Only used when LanguageDetector is attached (no geo language).
+      // path: URL prefix (e.g., /es/blog) for SEO pages
+      // navigator: browser's Accept-Language
+      // htmlTag: <html lang="..."> fallback
+      order: ['path', 'navigator', 'htmlTag'],
+      lookupFromPathIndex: 0,
+      caches: [],  // Don't auto-cache; IP detector & language picker handle persistence
+    },
 
-      react: {
-        useSuspense: false,
-      },
-    });
+    interpolation: {
+      escapeValue: false, // React already escapes
+    },
+
+    react: {
+      useSuspense: false,
+    },
+  });
+
+  // Keep <html lang> in sync with the current i18n language.
+  // When LanguageDetector is skipped (geo language provided), the htmlTag
+  // cacher isn't active, so we must set it ourselves.
+  const syncHtmlLang = (lang: string) => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = lang;
+    }
+  };
+  syncHtmlLang(i18n.language);
+  i18n.on('languageChanged', syncHtmlLang);
 }
 
 export default i18n;
