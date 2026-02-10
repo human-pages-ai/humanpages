@@ -20,7 +20,8 @@ import WalletsSection from '../components/dashboard/WalletsSection';
 import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
-import LinkedInSection from '../components/dashboard/LinkedInSection';
+// TODO: Unhide once LinkedIn redirect URIs are configured
+// import LinkedInSection from '../components/dashboard/LinkedInSection';
 import SEO from '../components/SEO';
 
 export default function Dashboard() {
@@ -607,7 +608,8 @@ export default function Dashboard() {
           onDeleteWallet={deleteWallet}
         />
 
-        <LinkedInSection profile={profile} onProfileUpdate={setProfile} />
+        {/* TODO: Unhide once LinkedIn redirect URIs are configured */}
+        {/* <LinkedInSection profile={profile} onProfileUpdate={setProfile} /> */}
 
         <HumanitySection profile={profile} onVerified={loadProfile} />
 
