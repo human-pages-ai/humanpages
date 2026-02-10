@@ -16,10 +16,13 @@ test.describe('Dashboard – Services', () => {
     await page.locator('#service-price-min').fill('50');
     await page.locator('#service-price-unit').selectOption('HOURLY');
 
-    // Submit - find the button inside the form area (bg-gray-50)
-    await servicesSection.locator('button', { hasText: 'Add Service' }).last().click();
+    // Wait for submit button to be enabled (React state must catch up with fill())
+    const submitBtn = servicesSection.locator('button', { hasText: 'Add Service' }).last();
+    await expect(submitBtn).toBeEnabled({ timeout: 3000 });
+    await submitBtn.click();
 
-    await expect(servicesSection).toContainText('Web Development');
+    // Wait for service card to appear (form closes, card renders)
+    await expect(servicesSection.locator('h3', { hasText: 'Web Development' })).toBeVisible({ timeout: 5000 });
     await expect(servicesSection).toContainText('$50/hr');
   });
 
