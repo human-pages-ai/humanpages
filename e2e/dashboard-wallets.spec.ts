@@ -77,6 +77,7 @@ test.describe('Dashboard – Wallets', () => {
   test('add wallet via connect + sign flow', async ({ page }) => {
     await mockEthereum(page);
     await signupAndGoToDashboard(page);
+    await page.getByRole('tab', { name: /payment/i }).click();
 
     await connectAndAddWallet(page, { network: 'ethereum', label: 'Main Wallet' });
 
@@ -88,6 +89,7 @@ test.describe('Dashboard – Wallets', () => {
   test('delete wallet', async ({ page }) => {
     await mockEthereum(page);
     await signupAndGoToDashboard(page);
+    await page.getByRole('tab', { name: /payment/i }).click();
 
     await connectAndAddWallet(page, { network: 'polygon', label: 'Delete Me' });
 
@@ -104,6 +106,7 @@ test.describe('Dashboard – Wallets', () => {
   test('shows install wallet message when no extension', async ({ page }) => {
     // Don't mock window.ethereum — it won't exist
     await signupAndGoToDashboard(page);
+    await page.getByRole('tab', { name: /payment/i }).click();
 
     // Should show MetaMask and Coinbase Wallet links in the empty wallet state
     await expect(page.locator('a[href*="metamask.io"]').first()).toBeVisible();

@@ -128,9 +128,9 @@ export async function goToDashboard(page: Page, token: string) {
   await page.goto('/');
   await page.evaluate((t) => localStorage.setItem('token', t), token);
   await page.goto('/dashboard');
-  // Wait for the profile to load — the "Profile" heading only renders
-  // after the auth check succeeds and the profile API call returns.
-  await page.getByRole('heading', { name: 'Profile', exact: true }).waitFor({ timeout: 45_000 });
+  // Wait for the StatusHeader availability button — it renders only after
+  // the auth check succeeds and the profile API call returns.
+  await page.locator('button').filter({ hasText: /^(Active|Paused)$/ }).waitFor({ timeout: 30_000 });
 }
 
 /**
