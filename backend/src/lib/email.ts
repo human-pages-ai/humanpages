@@ -154,71 +154,115 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
+  <title>${t('email.common.newJobOffer')}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
   <style>
     :root { color-scheme: light dark; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; }
-    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
-    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
-    .content p { color: #374151; }
-    .job-card { background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb; }
-    .job-card h2 { margin-top: 0; color: #111827; }
-    .job-card .meta { color: #6b7280; margin: 4px 0; }
-    .job-card .desc { color: #374151; }
-    .price { font-size: 28px; font-weight: bold; color: #059669; margin: 8px 0; }
-    .footer { text-align: center; padding: 20px; }
-    .footer p { color: #6b7280; font-size: 14px; }
     @media (prefers-color-scheme: dark) {
-      body { background-color: #1a1a2e !important; color: #e5e7eb !important; }
-      .content { background-color: #1e1e3a !important; border-color: #374151 !important; }
-      .content p { color: #d1d5db !important; }
-      .job-card { background-color: #2a2a4a !important; border-color: #4b5563 !important; }
-      .job-card h2 { color: #f3f4f6 !important; }
-      .job-card .meta { color: #9ca3af !important; }
-      .job-card .desc { color: #d1d5db !important; }
-      .price { color: #34d399 !important; }
-      .footer p { color: #9ca3af !important; }
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+      .email-job-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+      .email-job-title { color: #f0f0f5 !important; }
+      .email-job-meta { color: #9ca3af !important; }
+      .email-job-desc { color: #c8c8d8 !important; }
+      .email-price { color: #34d399 !important; }
     }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+    [data-ogsc] .email-job-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-job-title { color: #f0f0f5 !important; }
+    [data-ogsc] .email-job-meta { color: #9ca3af !important; }
+    [data-ogsc] .email-job-desc { color: #c8c8d8 !important; }
+    [data-ogsc] .email-price { color: #34d399 !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>${t('email.common.newJobOffer')}</h1>
-    </div>
-    <div class="content">
-      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
-      <p>${t('email.jobOffer.newOffer')}</p>
-
-      <div class="job-card">
-        <h2>${data.jobTitle}</h2>
-        ${data.category ? `<p class="meta"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
-        ${data.agentName ? `<p class="meta"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
-        <p class="price">$${data.priceUsdc} USDC</p>
-        <p class="desc">${data.jobDescription}</p>
-      </div>
-
-      <!--[if mso]>
-      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${jobUrl}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="14%" fillcolor="#4F46E5">
-        <w:anchorlock/>
-        <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:bold;">${t('email.jobOffer.viewOffer')}</center>
-      </v:roundrect>
-      <![endif]-->
-      <!--[if !mso]><!-->
-      <a href="${jobUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;text-align:center;mso-hide:all;">${t('email.jobOffer.viewOffer')}</a>
-      <!--<![endif]-->
-    </div>
-    <div class="footer">
-      <p>${t('email.jobOffer.footer')}</p>
-      ${reportUrl ? `<p style="margin-top: 8px;"><a href="${reportUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Report this agent</a></p>` : ''}
-      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">${t('email.common.newJobOffer')}</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">${t('email.jobOffer.newOffer')}</p>
+            </td>
+          </tr>
+          <!-- Job Card -->
+          <tr>
+            <td style="padding: 0 40px 16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-job-card" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 class="email-job-title" style="margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #1e1e2f;">${data.jobTitle}</h2>
+                    ${data.category ? `<p class="email-job-meta" style="margin: 4px 0; font-size: 14px; color: #6b7280;"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
+                    ${data.agentName ? `<p class="email-job-meta" style="margin: 4px 0; font-size: 14px; color: #6b7280;"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
+                    <p class="email-price" style="font-size: 28px; font-weight: bold; color: #059669; margin: 12px 0 8px;">$${data.priceUsdc} USDC</p>
+                    <p class="email-job-desc" style="margin: 0; font-size: 14px; line-height: 1.5; color: #44445a;">${data.jobDescription}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${jobUrl}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#4F46E5" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">${t('email.jobOffer.viewOffer')}</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${jobUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #4F46E5;">${t('email.jobOffer.viewOffer')}</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+              ${reportUrl ? `<p style="margin: 8px 0 0;"><a href="${reportUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Report this agent</a></p>` : ''}
+              <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();
@@ -267,71 +311,117 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
+  <title>Updated Offer</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
   <style>
     :root { color-scheme: light dark; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #F59E0B; padding: 24px; border-radius: 8px 8px 0 0; }
-    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
-    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
-    .content p { color: #374151; }
-    .job-card { background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb; }
-    .job-card h2 { margin-top: 0; color: #111827; }
-    .job-card .meta { color: #6b7280; margin: 4px 0; }
-    .job-card .desc { color: #374151; }
-    .price { font-size: 28px; font-weight: bold; color: #059669; margin: 8px 0; }
-    .updated-badge { display: inline-block; background-color: #FEF3C7; color: #92400E; font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; margin-left: 8px; }
-    .footer { text-align: center; padding: 20px; }
-    .footer p { color: #6b7280; font-size: 14px; }
     @media (prefers-color-scheme: dark) {
-      body { background-color: #1a1a2e !important; color: #e5e7eb !important; }
-      .content { background-color: #1e1e3a !important; border-color: #374151 !important; }
-      .content p { color: #d1d5db !important; }
-      .job-card { background-color: #2a2a4a !important; border-color: #4b5563 !important; }
-      .job-card h2 { color: #f3f4f6 !important; }
-      .job-card .meta { color: #9ca3af !important; }
-      .job-card .desc { color: #d1d5db !important; }
-      .price { color: #34d399 !important; }
-      .footer p { color: #9ca3af !important; }
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #f59e0b !important; border-color: #f59e0b !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+      .email-job-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+      .email-job-title { color: #f0f0f5 !important; }
+      .email-job-meta { color: #9ca3af !important; }
+      .email-job-desc { color: #c8c8d8 !important; }
+      .email-price { color: #34d399 !important; }
+      .email-badge { background-color: #78350f !important; color: #fde68a !important; }
     }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #f59e0b !important; border-color: #f59e0b !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+    [data-ogsc] .email-job-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-job-title { color: #f0f0f5 !important; }
+    [data-ogsc] .email-job-meta { color: #9ca3af !important; }
+    [data-ogsc] .email-job-desc { color: #c8c8d8 !important; }
+    [data-ogsc] .email-price { color: #34d399 !important; }
+    [data-ogsc] .email-badge { background-color: #78350f !important; color: #fde68a !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Updated Offer</h1>
-    </div>
-    <div class="content">
-      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
-      <p>An existing offer has been updated by ${data.agentName || 'an agent'}. Please review the updated details:</p>
-
-      <div class="job-card">
-        <h2>${data.jobTitle} <span class="updated-badge">Updated</span></h2>
-        ${data.category ? `<p class="meta"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
-        ${data.agentName ? `<p class="meta"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
-        <p class="price">$${data.priceUsdc} USDC</p>
-        <p class="desc">${data.jobDescription}</p>
-      </div>
-
-      <!--[if mso]>
-      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${jobUrl}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="14%" fillcolor="#F59E0B">
-        <w:anchorlock/>
-        <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:bold;">${t('email.jobOffer.viewOffer')}</center>
-      </v:roundrect>
-      <![endif]-->
-      <!--[if !mso]><!-->
-      <a href="${jobUrl}" style="display:inline-block;background-color:#F59E0B;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;text-align:center;mso-hide:all;">${t('email.jobOffer.viewOffer')}</a>
-      <!--<![endif]-->
-    </div>
-    <div class="footer">
-      <p>${t('email.jobOffer.footer')}</p>
-      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">Updated Offer</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">An existing offer has been updated by ${data.agentName || 'an agent'}. Please review the updated details:</p>
+            </td>
+          </tr>
+          <!-- Job Card -->
+          <tr>
+            <td style="padding: 0 40px 16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-job-card" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 class="email-job-title" style="margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #1e1e2f; display: inline;">${data.jobTitle}</h2>
+                    <span class="email-badge" style="display: inline-block; background-color: #FEF3C7; color: #92400E; font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; margin-left: 8px; vertical-align: middle;">Updated</span>
+                    ${data.category ? `<p class="email-job-meta" style="margin: 8px 0 4px; font-size: 14px; color: #6b7280;"><strong>${t('email.jobOffer.category')}:</strong> ${data.category}</p>` : ''}
+                    ${data.agentName ? `<p class="email-job-meta" style="margin: 4px 0; font-size: 14px; color: #6b7280;"><strong>${t('email.jobOffer.from')}:</strong> ${data.agentName}</p>` : ''}
+                    <p class="email-price" style="font-size: 28px; font-weight: bold; color: #059669; margin: 12px 0 8px;">$${data.priceUsdc} USDC</p>
+                    <p class="email-job-desc" style="margin: 0; font-size: 14px; line-height: 1.5; color: #44445a;">${data.jobDescription}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${jobUrl}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#F59E0B" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">${t('email.jobOffer.viewOffer')}</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${jobUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #F59E0B; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #F59E0B;">${t('email.jobOffer.viewOffer')}</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+              <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();
@@ -390,63 +480,107 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
+  <title>New message on "${data.jobTitle}"</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
   <style>
     :root { color-scheme: light dark; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; }
-    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
-    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
-    .content p { color: #374151; }
-    .message-card { background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb; border-left: 4px solid #4F46E5; }
-    .message-card .sender { color: #4F46E5; font-weight: 600; margin-bottom: 8px; }
-    .message-card .text { color: #374151; white-space: pre-wrap; }
-    .footer { text-align: center; padding: 20px; }
-    .footer p { color: #6b7280; font-size: 14px; }
     @media (prefers-color-scheme: dark) {
-      body { background-color: #1a1a2e !important; color: #e5e7eb !important; }
-      .content { background-color: #1e1e3a !important; border-color: #374151 !important; }
-      .content p { color: #d1d5db !important; }
-      .message-card { background-color: #2a2a4a !important; border-color: #4b5563 !important; }
-      .message-card .sender { color: #818cf8 !important; }
-      .message-card .text { color: #d1d5db !important; }
-      .footer p { color: #9ca3af !important; }
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+      .email-msg-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; border-left-color: #6366f1 !important; }
+      .email-msg-sender { color: #818cf8 !important; }
+      .email-msg-text { color: #c8c8d8 !important; }
     }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+    [data-ogsc] .email-msg-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; border-left-color: #6366f1 !important; }
+    [data-ogsc] .email-msg-sender { color: #818cf8 !important; }
+    [data-ogsc] .email-msg-text { color: #c8c8d8 !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>New message on "${data.jobTitle}"</h1>
-    </div>
-    <div class="content">
-      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
-      <p>${escapedAgent} sent you a message:</p>
-
-      <div class="message-card">
-        <p class="sender">${escapedAgent}</p>
-        <p class="text">${escapedPreview}</p>
-      </div>
-
-      <!--[if mso]>
-      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${data.jobDetailUrl}" style="height:44px;v-text-anchor:middle;width:200px;" arcsize="14%" fillcolor="#4F46E5">
-        <w:anchorlock/>
-        <center style="color:#ffffff;font-family:sans-serif;font-size:14px;font-weight:bold;">View &amp; Reply</center>
-      </v:roundrect>
-      <![endif]-->
-      <!--[if !mso]><!-->
-      <a href="${data.jobDetailUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;text-align:center;mso-hide:all;">View &amp; Reply</a>
-      <!--<![endif]-->
-    </div>
-    <div class="footer">
-      <p>${t('email.jobOffer.footer')}</p>
-      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">New message on "${data.jobTitle}"</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">${escapedAgent} sent you a message:</p>
+            </td>
+          </tr>
+          <!-- Message Card -->
+          <tr>
+            <td style="padding: 0 40px 16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-msg-card" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea; border-left: 4px solid #4F46E5;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p class="email-msg-sender" style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #4F46E5;">${escapedAgent}</p>
+                    <p class="email-msg-text" style="margin: 0; font-size: 14px; line-height: 1.6; color: #44445a; white-space: pre-wrap;">${escapedPreview}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${data.jobDetailUrl}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#4F46E5" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">View &amp; Reply</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${data.jobDetailUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #4F46E5;">View &amp; Reply</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+              <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();
@@ -481,12 +615,12 @@ Human Pages - Get hired for real-world tasks
 
   const htmlContent = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Verify your email</title>
   <!--[if mso]>
   <noscript>
@@ -497,63 +631,86 @@ Human Pages - Get hired for real-world tasks
     </xml>
   </noscript>
   <![endif]-->
+  <style>
+    :root { color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+    }
+    /* Gmail dark mode */
+    u ~ div .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5;">
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
     <tr>
       <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width: 480px; width: 100%; background-color: #ffffff; border-radius: 12px; border: 1px solid #e4e4e7; overflow: hidden;">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 480px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
           <!-- Header -->
           <tr>
             <td align="center" style="padding: 32px 40px 24px;">
-              <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #18181b; line-height: 1.4;">Verify your email address</h1>
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">Verify your email address</h1>
             </td>
           </tr>
           <!-- Body -->
           <tr>
             <td style="padding: 0 40px;">
-              <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #3f3f46;">Welcome to Human Pages! Please confirm your email address by clicking the button below.</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">Welcome to Human Pages! Please confirm your email address by clicking the button below.</p>
             </td>
           </tr>
           <!-- CTA Button -->
           <tr>
             <td align="center" style="padding: 8px 40px 24px;">
               <!--[if mso]>
-              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${verifyUrl}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fill="t">
-                <v:fill type="tile" color="#18181b" />
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="\${verifyUrl}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#4F46E5" />
                 <w:anchorlock/>
                 <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Verify email address</center>
               </v:roundrect>
               <![endif]-->
               <!--[if !mso]><!-->
-              <a href="${verifyUrl}" target="_blank" style="display: inline-block; background-color: #18181b; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 8px; line-height: 1.5; mso-hide: all;">Verify email address</a>
+              <a href="${verifyUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #4F46E5;">Verify email address</a>
               <!--<![endif]-->
             </td>
           </tr>
           <!-- Fallback URL -->
           <tr>
             <td style="padding: 0 40px 24px;">
-              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #a1a1aa;">Or copy and paste this link into your browser:</p>
-              <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #4F46E5; word-break: break-all;"><a href="${verifyUrl}" style="color: #4F46E5; text-decoration: underline;">${verifyUrl}</a></p>
+              <p class="email-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: #8b8ba0;">Or copy and paste this link into your browser:</p>
+              <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.5; word-break: break-all;"><a href="${verifyUrl}" class="email-link" style="color: #4F46E5; text-decoration: underline;">${verifyUrl}</a></p>
             </td>
           </tr>
           <!-- Expiry notice -->
           <tr>
             <td style="padding: 0 40px 24px;">
-              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #a1a1aa;">This link will expire in 24 hours.</p>
+              <p class="email-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: #8b8ba0;">This link will expire in 24 hours.</p>
             </td>
           </tr>
           <!-- Divider -->
           <tr>
             <td style="padding: 0 40px;">
-              <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 0;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="padding: 24px 40px 32px;">
-              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">If you didn't create an account on Human Pages, you can safely ignore this email.</p>
-              <p style="margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">Human Pages — Get hired for real-world tasks</p>
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">If you didn't create an account on Human Pages, you can safely ignore this email.</p>
+              <p class="email-muted" style="margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">Human Pages — Get hired for real-world tasks</p>
             </td>
           </tr>
         </table>
@@ -594,33 +751,101 @@ Human Pages - Get hired for real-world tasks
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Reset your password</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
-    .btn { display: inline-block; background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 16px; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+    :root { color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+    }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1 style="margin: 0;">Reset Your Password</h1>
-    </div>
-    <div class="content">
-      <p>You requested to reset your password for Human Pages.</p>
-      <p>Click the button below to reset your password:</p>
-      <a href="${resetUrl}" class="btn">Reset Password</a>
-      <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">This link will expire in 1 hour.</p>
-      <p style="color: #6b7280; font-size: 14px;">If you did not request a password reset, please ignore this email.</p>
-    </div>
-    <div class="footer">
-      <p>Human Pages - Get hired for real-world tasks</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 480px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">Reset your password</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">You requested to reset your password for Human Pages.</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">Click the button below to set a new password:</p>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="\${resetUrl}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#4F46E5" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Reset password</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${resetUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #4F46E5;">Reset password</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Fallback URL -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p class="email-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: #8b8ba0;">Or copy and paste this link into your browser:</p>
+              <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.5; word-break: break-all;"><a href="${resetUrl}" class="email-link" style="color: #4F46E5; text-decoration: underline;">${resetUrl}</a></p>
+            </td>
+          </tr>
+          <!-- Expiry notice -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p class="email-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: #8b8ba0;">This link will expire in 1 hour.</p>
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">If you didn't request a password reset, you can safely ignore this email.</p>
+              <p class="email-muted" style="margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">Human Pages — Get hired for real-world tasks</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();
@@ -684,51 +909,137 @@ To unsubscribe: ${unsubscribeUrl}
   for (const n of data.notifications) {
     if (n.type === 'job_offer') {
       htmlCards += `
-        <div style="background:#fff;padding:16px;border-radius:8px;margin:8px 0;border:1px solid #e5e7eb;">
-          <strong>${n.payload.jobTitle}</strong>
-          ${n.payload.agentName ? `<br><span style="color:#6b7280;">From: ${n.payload.agentName}</span>` : ''}
-          <br><span style="color:#059669;font-weight:bold;font-size:18px;">$${n.payload.priceUsdc} USDC</span>
-        </div>`;
+              <tr>
+                <td style="padding: 0 0 8px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-digest-card" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea;">
+                    <tr>
+                      <td style="padding: 16px;">
+                        <strong class="email-job-title" style="color: #1e1e2f;">${n.payload.jobTitle}</strong>
+                        ${n.payload.agentName ? `<br><span class="email-job-meta" style="color: #6b7280; font-size: 13px;">From: ${n.payload.agentName}</span>` : ''}
+                        <br><span class="email-price" style="color: #059669; font-weight: bold; font-size: 18px;">$${n.payload.priceUsdc} USDC</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>`;
     } else if (n.type === 'job_message') {
       htmlCards += `
-        <div style="background:#fff;padding:16px;border-radius:8px;margin:8px 0;border:1px solid #e5e7eb;border-left:4px solid #4F46E5;">
-          <strong>Message from ${n.payload.agentName}</strong>
-          <br><span style="color:#6b7280;">On: ${n.payload.jobTitle}</span>
-        </div>`;
+              <tr>
+                <td style="padding: 0 0 8px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-digest-card" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea; border-left: 4px solid #4F46E5;">
+                    <tr>
+                      <td style="padding: 16px;">
+                        <strong class="email-job-title" style="color: #1e1e2f;">Message from ${n.payload.agentName}</strong>
+                        <br><span class="email-job-meta" style="color: #6b7280; font-size: 13px;">On: ${n.payload.jobTitle}</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>`;
     }
   }
 
   const htmlContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>${count} new notification${count !== 1 ? 's' : ''}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; }
-    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
-    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
-    .footer { text-align: center; padding: 20px; }
-    .footer p { color: #6b7280; font-size: 14px; }
+    :root { color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+      .email-digest-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+      .email-job-title { color: #f0f0f5 !important; }
+      .email-job-meta { color: #9ca3af !important; }
+      .email-price { color: #34d399 !important; }
+    }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+    [data-ogsc] .email-digest-card { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-job-title { color: #f0f0f5 !important; }
+    [data-ogsc] .email-job-meta { color: #9ca3af !important; }
+    [data-ogsc] .email-price { color: #34d399 !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>You have ${count} new notification${count !== 1 ? 's' : ''}</h1>
-    </div>
-    <div class="content">
-      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
-      ${jobOffers.length > 0 ? `<p><strong>${jobOffers.length} new job offer${jobOffers.length !== 1 ? 's' : ''}</strong></p>` : ''}
-      ${messages.length > 0 ? `<p><strong>${messages.length} new message${messages.length !== 1 ? 's' : ''}</strong></p>` : ''}
-      ${htmlCards}
-      <a href="${FRONTEND_URL}/dashboard" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;">View Dashboard</a>
-    </div>
-    <div class="footer">
-      <p>${t('email.jobOffer.footer')}</p>
-      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">You have ${count} new notification${count !== 1 ? 's' : ''}</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+              ${jobOffers.length > 0 ? `<p class="email-body" style="margin: 0 0 4px; font-size: 15px; line-height: 1.6; color: #44445a;"><strong>${jobOffers.length} new job offer${jobOffers.length !== 1 ? 's' : ''}</strong></p>` : ''}
+              ${messages.length > 0 ? `<p class="email-body" style="margin: 0 0 4px; font-size: 15px; line-height: 1.6; color: #44445a;"><strong>${messages.length} new message${messages.length !== 1 ? 's' : ''}</strong></p>` : ''}
+            </td>
+          </tr>
+          <!-- Notification Cards -->
+          <tr>
+            <td style="padding: 12px 40px 16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                ${htmlCards}
+              </table>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${FRONTEND_URL}/dashboard" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#4F46E5" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">View Dashboard</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${FRONTEND_URL}/dashboard" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #4F46E5;">View Dashboard</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+              <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim();
