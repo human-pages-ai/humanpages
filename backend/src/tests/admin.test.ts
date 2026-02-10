@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
 import { prisma } from '../lib/prisma.js';
-import { createTestUser, createActiveTestAgent, cleanDatabase, authRequest } from './helpers.js';
+import { createTestUser, createActiveTestAgent, authRequest } from './helpers.js';
 
 // Mock email module
 vi.mock('../lib/email.js', () => ({
@@ -11,11 +11,24 @@ vi.mock('../lib/email.js', () => ({
   sendJobOfferEmail: vi.fn(() => Promise.resolve()),
 }));
 
+// Local cleanup that only touches tables this test uses (avoids pre-existing AffiliatePayout issue)
+async function cleanAdminTestData() {
+  await prisma.agentReport.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.jobMessage.deleteMany();
+  await prisma.job.deleteMany();
+  await prisma.vouch.deleteMany();
+  await prisma.service.deleteMany();
+  await prisma.wallet.deleteMany();
+  await prisma.agent.deleteMany();
+  await prisma.human.deleteMany();
+}
+
 let adminUser: { id: string; email: string; name: string; token: string };
 let regularUser: { id: string; email: string; name: string; token: string };
 
 beforeEach(async () => {
-  await cleanDatabase();
+  await cleanAdminTestData();
 
   // Create admin user with email matching ADMIN_EMAILS env var
   const adminEmail = 'admin-test@example.com';
