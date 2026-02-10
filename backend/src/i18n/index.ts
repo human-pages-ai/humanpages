@@ -153,7 +153,45 @@ const th = {
   }
 };
 
-export const supportedLanguages = ['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'] as const;
+const fr = {
+  email: {
+    jobOffer: {
+      subject: "Nouvelle offre d'emploi : {{jobTitle}}",
+      greeting: "Bonjour {{name}},",
+      newOffer: "Vous avez une nouvelle offre d'emploi sur Human Pages !",
+      title: "Titre",
+      category: "Catégorie",
+      from: "De",
+      price: "Prix",
+      description: "Description",
+      viewOffer: "Voir l'offre",
+      loginToView: "Connectez-vous pour accepter ou refuser cette offre",
+      footer: "Human Pages - Soyez embauché pour des tâches concrètes"
+    },
+    common: { newJobOffer: "Nouvelle offre d'emploi" }
+  }
+};
+
+const pt = {
+  email: {
+    jobOffer: {
+      subject: "Nova oferta de trabalho: {{jobTitle}}",
+      greeting: "Olá {{name}},",
+      newOffer: "Você tem uma nova oferta de trabalho no Human Pages!",
+      title: "Título",
+      category: "Categoria",
+      from: "De",
+      price: "Preço",
+      description: "Descrição",
+      viewOffer: "Ver Oferta",
+      loginToView: "Entre para aceitar ou recusar esta oferta",
+      footer: "Human Pages - Seja contratado para tarefas do mundo real"
+    },
+    common: { newJobOffer: "Nova Oferta de Trabalho" }
+  }
+};
+
+export const supportedLanguages = ['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'] as const;
 export type SupportedLanguage = typeof supportedLanguages[number];
 
 i18next.init({
@@ -169,6 +207,8 @@ i18next.init({
     vi: { translation: vi },
     tr: { translation: tr },
     th: { translation: th },
+    fr: { translation: fr },
+    pt: { translation: pt },
   },
   interpolation: {
     escapeValue: false,

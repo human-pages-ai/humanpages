@@ -3,8 +3,8 @@ import { t, getTranslator, supportedLanguages } from '../i18n/index.js';
 
 describe('i18n', () => {
   describe('supportedLanguages', () => {
-    it('should have 8 supported languages', () => {
-      expect(supportedLanguages).toHaveLength(8);
+    it('should have 10 supported languages', () => {
+      expect(supportedLanguages).toHaveLength(10);
       expect(supportedLanguages).toContain('en');
       expect(supportedLanguages).toContain('es');
       expect(supportedLanguages).toContain('zh');
@@ -13,6 +13,8 @@ describe('i18n', () => {
       expect(supportedLanguages).toContain('vi');
       expect(supportedLanguages).toContain('tr');
       expect(supportedLanguages).toContain('th');
+      expect(supportedLanguages).toContain('fr');
+      expect(supportedLanguages).toContain('pt');
     });
   });
 
@@ -88,7 +90,7 @@ describe('i18n', () => {
     });
 
     it('should fallback to English for unsupported language', () => {
-      const translator = getTranslator('fr'); // French not supported
+      const translator = getTranslator('ja'); // Japanese not supported
       expect(translator('email.jobOffer.title')).toBe('Title');
     });
 

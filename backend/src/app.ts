@@ -15,6 +15,7 @@ import telegramRoutes from './routes/telegram.js';
 import sitemapRoutes from './routes/sitemap.js';
 import ogRoutes from './routes/og.js';
 import badgeRoutes from './routes/badge.js';
+import geoRoutes from './routes/geo.js';
 import { getProfileMetaHtml, getBlogMetaHtml } from './lib/seo.js';
 
 const app = express();
@@ -50,6 +51,9 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 
+// Geo detection
+app.use('/api/geo', geoRoutes);
+
 // SEO routes
 app.use(sitemapRoutes);
 app.use('/api', sitemapRoutes);
@@ -62,8 +66,8 @@ const frontendDistPath = path.join(process.cwd(), '../frontend/dist');
 // Try to serve static files from the frontend build
 app.use(express.static(frontendDistPath, { index: false }));
 
-// Blog posts: inject dynamic meta tags for social sharing / SEO
-const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
+// Blog posts & Profile pages: inject dynamic meta tags for social sharing / SEO
+const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'];
 
 app.get('/:lang/blog/:slug', (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
