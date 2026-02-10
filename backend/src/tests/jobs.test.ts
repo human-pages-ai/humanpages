@@ -424,7 +424,7 @@ describe('Jobs API - Mutual Handshake', () => {
   });
 
   describe('Rate Limiting - Anti-Spam', () => {
-    it('should enforce registered agent rate limit (20/hr)', async () => {
+    it('should enforce tier-based daily offer rate limit', async () => {
       // Just verify the rate limit info comes back correctly
       const res = await request(app)
         .post('/api/jobs')

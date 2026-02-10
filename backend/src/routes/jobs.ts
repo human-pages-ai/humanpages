@@ -25,15 +25,15 @@ import { convertToUsd } from '../lib/exchangeRates.js';
 
 const router = Router();
 
-// IP-based rate limiting: 20 offers per hour per IP
+// IP-based rate limiting: 30 offers per day per IP
 // Defense in depth against agentId spoofing
 const ipRateLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20, // 20 requests per IP per hour
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 30, // 30 requests per IP per day (above PRO tier to allow multiple agents per IP)
   message: {
     error: 'Too many requests from this IP',
-    message: 'IP rate limit: 20 offers per hour. Try again later.',
-    retryAfter: '1 hour',
+    message: 'IP rate limit: 30 offers per day. Try again later.',
+    retryAfter: '24 hours',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -106,9 +106,9 @@ const reviewSchema = z.object({
   comment: z.string().optional(),
 });
 
-// Rate limit: 20 offers per hour per registered agent
-const RATE_LIMIT_OFFERS = 20;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+// Tier-based daily offer limits. Accepted jobs don't count toward the limit.
+const TIER_OFFER_LIMITS: Record<string, number> = { BASIC: 5, PRO: 15 };
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Create a job offer (requires registered + activated agent)
 router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
@@ -124,20 +124,24 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
       });
     }
 
-    // Rate limiting: count offers from this registered agent in the last hour
-    const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+    // Tier-based daily rate limit — accepted jobs don't count
+    const tierLimit = TIER_OFFER_LIMITS[agent.activationTier] || TIER_OFFER_LIMITS.BASIC;
+    const oneDayAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
     const recentOfferCount = await prisma.job.count({
       where: {
         registeredAgentId: agent.id,
-        createdAt: { gte: oneHourAgo },
+        createdAt: { gte: oneDayAgo },
+        status: { notIn: ['ACCEPTED', 'COMPLETED', 'PAID'] },
       },
     });
 
-    if (recentOfferCount >= RATE_LIMIT_OFFERS) {
+    if (recentOfferCount >= tierLimit) {
       return res.status(429).json({
         error: 'Rate limit exceeded',
-        message: `Registered agents are limited to ${RATE_LIMIT_OFFERS} offers per hour`,
-        retryAfter: '1 hour',
+        message: `Your ${agent.activationTier} tier allows ${tierLimit} job offers per day. Accepted offers don't count toward this limit.`,
+        tier: agent.activationTier,
+        limit: tierLimit,
+        retryAfter: '24 hours',
       });
     }
 
@@ -313,8 +317,9 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
       status: job.status,
       message: 'Job offer created. Waiting for human to accept.',
       rateLimit: {
-        remaining: RATE_LIMIT_OFFERS - recentOfferCount - 1,
-        resetIn: '1 hour',
+        remaining: tierLimit - recentOfferCount - 1,
+        resetIn: '24 hours',
+        tier: agent.activationTier,
       },
     });
   } catch (error) {

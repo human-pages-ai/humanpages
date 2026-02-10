@@ -13,11 +13,10 @@ import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 
 const router = Router();
 
-// Tier-based rate limits for profile views
+// Tier-based rate limits for profile views (per day)
 const TIER_PROFILE_LIMITS: Record<string, number> = {
-  BASIC: 30,
-  PRO: 100,
-  WHALE: 300,
+  BASIC: 20,
+  PRO: 50,
 };
 
 // Public select fields (no contact info, no wallets)
@@ -637,10 +636,10 @@ router.get('/search', searchRateLimiter, async (req, res) => {
   }
 });
 
-// Get full profile with contact info (active agents only, tier-based rate limit)
+// Get full profile with contact info (active agents only, tier-based rate limit per day)
 const profileViewLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 300, // max tier limit; actual enforcement below
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 50, // max tier limit; actual enforcement below
   message: { error: 'Profile view rate limit exceeded' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -653,17 +652,14 @@ router.get('/:id/profile', profileViewLimiter, authenticateAgent, requireActiveA
   try {
     const agent = req.agent!;
 
-    // Check tier-specific rate limit
+    // Check tier-specific daily rate limit
     const tierLimit = TIER_PROFILE_LIMITS[agent.activationTier] || TIER_PROFILE_LIMITS.BASIC;
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    // Use a simple in-memory approach: we count via a header from express-rate-limit
-    // The profileViewLimiter already tracks the count, but we check tier here
     const remaining = parseInt(res.getHeader('X-RateLimit-Remaining') as string || '999');
-    const used = 300 - remaining;
+    const used = 50 - remaining;
     if (used > tierLimit) {
       return res.status(429).json({
         error: 'Profile view rate limit exceeded',
-        message: `Your ${agent.activationTier} tier allows ${tierLimit} profile views per hour.`,
+        message: `Your ${agent.activationTier} tier allows ${tierLimit} profile views per day.`,
         tier: agent.activationTier,
         limit: tierLimit,
       });

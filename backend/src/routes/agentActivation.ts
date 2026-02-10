@@ -9,14 +9,13 @@ import { logger } from '../lib/logger.js';
 const router = Router();
 
 // Tier definitions based on follower count
+// Limits are per-day. Accepted jobs do NOT count toward the offer limit.
 const TIER_CONFIG = {
-  BASIC: { minFollowers: 0, durationDays: 30, jobOffers: 10, profileViews: 30 },
-  PRO: { minFollowers: 1000, durationDays: 60, jobOffers: 30, profileViews: 100 },
-  WHALE: { minFollowers: 10000, durationDays: 90, jobOffers: 60, profileViews: 300 },
+  BASIC: { minFollowers: 0, durationDays: 30, jobOffersPerDay: 5, profileViewsPerDay: 20 },
+  PRO: { minFollowers: 1000, durationDays: 60, jobOffersPerDay: 15, profileViewsPerDay: 50 },
 };
 
 function determineTier(followerCount: number | null): keyof typeof TIER_CONFIG {
-  if (followerCount && followerCount >= TIER_CONFIG.WHALE.minFollowers) return 'WHALE';
   if (followerCount && followerCount >= TIER_CONFIG.PRO.minFollowers) return 'PRO';
   return 'BASIC';
 }
@@ -26,7 +25,7 @@ function getTierDuration(tier: keyof typeof TIER_CONFIG): number {
 }
 
 // Supported platforms — all require phone verification, hard to mass-create
-type SocialPlatform = 'twitter' | 'linkedin' | 'tiktok' | 'youtube';
+type SocialPlatform = 'twitter' | 'linkedin' | 'tiktok' | 'youtube' | 'facebook' | 'instagram' | 'telegram' | 'moltbook';
 
 function detectPlatform(url: string): SocialPlatform | null {
   try {
@@ -42,6 +41,18 @@ function detectPlatform(url: string): SocialPlatform | null {
     }
     if (hostname === 'youtube.com' || hostname === 'youtu.be' || hostname.endsWith('.youtube.com')) {
       return 'youtube';
+    }
+    if (hostname === 'facebook.com' || hostname === 'www.facebook.com' || hostname === 'fb.com' || hostname.endsWith('.facebook.com')) {
+      return 'facebook';
+    }
+    if (hostname === 'instagram.com' || hostname === 'www.instagram.com' || hostname.endsWith('.instagram.com')) {
+      return 'instagram';
+    }
+    if (hostname === 't.me' || hostname === 'telegram.me') {
+      return 'telegram';
+    }
+    if (hostname === 'moltbook.com' || hostname === 'www.moltbook.com') {
+      return 'moltbook';
     }
   } catch {
     // invalid URL
@@ -91,11 +102,16 @@ router.post('/social', authenticateAgent, async (req: AgentAuthRequest, res) => 
       expiresAt: expiresAt.toISOString(),
       requirements: 'Post MUST contain: (1) a link to humanpages.ai, (2) your unique code. Posts missing either will be rejected.',
       suggestedPost: `Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      platforms: ['twitter', 'linkedin', 'tiktok', 'youtube', 'facebook', 'instagram', 'telegram', 'moltbook'],
       instructions: {
         twitter: `Tweet something that includes https://humanpages.ai and your code ${code}. Example: "Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}"`,
         linkedin: `Create a post that includes a link to https://humanpages.ai and your code ${code}. Say something nice about us!`,
         tiktok: `Post a TikTok video with a caption that includes https://humanpages.ai and your code ${code}.`,
         youtube: `Upload a YouTube video with a title that includes https://humanpages.ai and your code ${code}.`,
+        facebook: `Create a public Facebook post that includes https://humanpages.ai and your code ${code}.`,
+        instagram: `Create a public Instagram post with a caption that includes @HumanPagesAI and your code ${code}.`,
+        telegram: `Post in a public Telegram channel/group that includes https://humanpages.ai and your code ${code}.`,
+        moltbook: `Create a public Moltbook post that includes https://humanpages.ai and your code ${code}.`,
       },
     });
   } catch (error) {
@@ -150,7 +166,7 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
     if (!platform) {
       return res.status(400).json({
         error: 'Unsupported platform',
-        message: 'URL must be from Twitter/X, LinkedIn, TikTok, or YouTube.',
+        message: 'URL must be from Twitter/X, LinkedIn, TikTok, YouTube, Facebook, Instagram, Telegram, or Moltbook.',
       });
     }
 
@@ -160,9 +176,10 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
     let followerCount: number | null = null;
 
     // Check if content mentions humanpages (link or @mention)
+    // Based on official Linktree: https://linktr.ee/HumanPagesAI
     const checkMentionsUs = (content: string): boolean => {
       const lower = content.toLowerCase();
-      return lower.includes('humanpages.ai') || lower.includes('humanpages.io') || lower.includes('@humanpages');
+      return lower.includes('humanpages.ai') || lower.includes('@humanpages') || lower.includes('humanpagesai');
     };
 
     if (platform === 'twitter') {
@@ -256,7 +273,123 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
             verified = true;
             mentionsUs = checkMentionsUs(content);
           }
-          // YouTube oEmbed doesn't expose subscriber counts
+        }
+      } catch (err: any) {
+        logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
+      }
+    } else if (platform === 'facebook') {
+      // Meta oEmbed — requires META_APP_ACCESS_TOKEN env var
+      const metaToken = process.env.META_APP_ACCESS_TOKEN;
+      if (!metaToken) {
+        return res.status(503).json({
+          error: 'Facebook verification not configured',
+          message: 'Facebook verification is not available at this time. Please use another platform.',
+        });
+      }
+      try {
+        const oembedUrl = `https://graph.facebook.com/oembed_post?url=${encodeURIComponent(postUrl)}&access_token=${metaToken}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const resp = await fetch(oembedUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (resp.ok) {
+          const data = await resp.json() as { html?: string };
+          const content = data.html || '';
+          if (content.includes(code)) {
+            verified = true;
+            mentionsUs = checkMentionsUs(content);
+          }
+        }
+      } catch (err: any) {
+        logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
+      }
+    } else if (platform === 'instagram') {
+      // Meta oEmbed — requires META_APP_ACCESS_TOKEN env var
+      const metaToken = process.env.META_APP_ACCESS_TOKEN;
+      if (!metaToken) {
+        return res.status(503).json({
+          error: 'Instagram verification not configured',
+          message: 'Instagram verification is not available at this time. Please use another platform.',
+        });
+      }
+      try {
+        const oembedUrl = `https://graph.facebook.com/instagram_oembed?url=${encodeURIComponent(postUrl)}&access_token=${metaToken}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const resp = await fetch(oembedUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (resp.ok) {
+          const data = await resp.json() as { html?: string };
+          const content = data.html || '';
+          if (content.includes(code)) {
+            verified = true;
+            mentionsUs = checkMentionsUs(content);
+          }
+        }
+      } catch (err: any) {
+        logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
+      }
+    } else if (platform === 'telegram') {
+      // Fetch Telegram embed HTML from public channel/group post
+      try {
+        // t.me URLs: t.me/{channel}/{msgId} → fetch embed version
+        const embedUrl = `${postUrl}?embed=1&mode=tme`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const resp = await fetch(embedUrl, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'HumanPages/1.0' },
+        });
+        clearTimeout(timeout);
+
+        if (resp.ok) {
+          const html = await resp.text();
+          if (html.includes(code)) {
+            verified = true;
+            mentionsUs = checkMentionsUs(html);
+          }
+        }
+      } catch (err: any) {
+        logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
+      }
+    } else if (platform === 'moltbook') {
+      // Fetch post from Moltbook public API
+      try {
+        const url = new URL(postUrl);
+        const parts = url.pathname.split('/').filter(Boolean);
+        // Extract post ID from URL: moltbook.com/post/{id} or moltbook.com/submolts/{name}/posts/{id}
+        let postId: string | null = null;
+        if (parts.length >= 2 && parts[0] === 'post') {
+          postId = parts[1];
+        } else if (parts.length >= 4 && parts[0] === 'submolts' && parts[2] === 'posts') {
+          postId = parts[3];
+        } else {
+          // Try last segment as post ID
+          postId = parts[parts.length - 1];
+        }
+
+        if (postId) {
+          const apiUrl = `https://www.moltbook.com/api/v1/posts/${postId}`;
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+          const resp = await fetch(apiUrl, {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'HumanPages/1.0' },
+          });
+          clearTimeout(timeout);
+
+          if (resp.ok) {
+            const data = await resp.json() as { success?: boolean; post?: { title?: string; content?: string } };
+            if (data.success && data.post) {
+              const content = `${data.post.title || ''} ${data.post.content || ''}`;
+              if (content.includes(code)) {
+                verified = true;
+                mentionsUs = checkMentionsUs(content);
+              }
+            }
+          }
         }
       } catch (err: any) {
         logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
@@ -273,7 +406,7 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
     if (!mentionsUs) {
       return res.status(400).json({
         error: 'Missing humanpages mention',
-        message: 'Your post must include a link to humanpages.ai (or humanpages.io or @humanpages). Please update your post and try again.',
+        message: 'Your post must include a link to humanpages.ai or mention @HumanPagesAI. Please update your post and try again.',
       });
     }
 

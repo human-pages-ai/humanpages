@@ -293,7 +293,7 @@ describe('Agent Identity & Reputation', () => {
   });
 
   describe('Rate limiting for registered agents', () => {
-    it('should allow up to 20 jobs per hour for registered agents', async () => {
+    it('should allow up to 5 jobs per day for BASIC tier agents', async () => {
       const agent = await createActiveTestAgent();
       const user = await createTestUserWithProfile({ emailVerified: true });
 
@@ -310,7 +310,8 @@ describe('Agent Identity & Reputation', () => {
         });
 
       expect(res.status).toBe(201);
-      expect(res.body.rateLimit.remaining).toBe(19); // 20 - 1
+      expect(res.body.rateLimit.remaining).toBe(4); // BASIC tier: 5 - 1
+      expect(res.body.rateLimit.tier).toBe('BASIC');
     });
   });
 });

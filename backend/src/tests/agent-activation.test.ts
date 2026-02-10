@@ -35,6 +35,13 @@ describe('Agent Activation', () => {
       expect(res.body.instructions.linkedin).toContain(res.body.code);
       expect(res.body.instructions.tiktok).toContain(res.body.code);
       expect(res.body.instructions.youtube).toContain(res.body.code);
+      expect(res.body.instructions.facebook).toContain(res.body.code);
+      expect(res.body.instructions.instagram).toContain(res.body.code);
+      expect(res.body.instructions.telegram).toContain(res.body.code);
+      expect(res.body.instructions.moltbook).toContain(res.body.code);
+      expect(res.body.platforms).toEqual(
+        expect.arrayContaining(['twitter', 'linkedin', 'tiktok', 'youtube', 'facebook', 'instagram', 'telegram', 'moltbook'])
+      );
       expect(res.body.requirements).toContain('humanpages.ai');
       expect(res.body.suggestedPost).toContain('humanpages.ai');
       expect(res.body.suggestedPost).toContain(res.body.code);
@@ -118,7 +125,7 @@ describe('Agent Activation', () => {
       const res = await request(app)
         .post('/api/agents/activate/social/verify')
         .set('X-Agent-Key', agent.apiKey)
-        .send({ postUrl: 'https://facebook.com/post/123' });
+        .send({ postUrl: 'https://reddit.com/r/test/comments/123' });
 
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('Unsupported platform');
@@ -141,6 +148,56 @@ describe('Agent Activation', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('Unsupported platform');
+    });
+
+    it('should return 503 for Facebook if META_APP_ACCESS_TOKEN not set', async () => {
+      const agent = await createTestAgent();
+      await prisma.agent.update({
+        where: { id: agent.id },
+        data: {
+          socialVerificationCode: 'HP-12345678',
+          socialCodeExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+
+      const orig = process.env.META_APP_ACCESS_TOKEN;
+      delete process.env.META_APP_ACCESS_TOKEN;
+      try {
+        const res = await request(app)
+          .post('/api/agents/activate/social/verify')
+          .set('X-Agent-Key', agent.apiKey)
+          .send({ postUrl: 'https://www.facebook.com/HumanPagesAI/posts/123' });
+
+        expect(res.status).toBe(503);
+        expect(res.body.error).toContain('Facebook verification not configured');
+      } finally {
+        if (orig) process.env.META_APP_ACCESS_TOKEN = orig;
+      }
+    });
+
+    it('should return 503 for Instagram if META_APP_ACCESS_TOKEN not set', async () => {
+      const agent = await createTestAgent();
+      await prisma.agent.update({
+        where: { id: agent.id },
+        data: {
+          socialVerificationCode: 'HP-12345678',
+          socialCodeExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+
+      const orig = process.env.META_APP_ACCESS_TOKEN;
+      delete process.env.META_APP_ACCESS_TOKEN;
+      try {
+        const res = await request(app)
+          .post('/api/agents/activate/social/verify')
+          .set('X-Agent-Key', agent.apiKey)
+          .send({ postUrl: 'https://www.instagram.com/p/ABC123/' });
+
+        expect(res.status).toBe(503);
+        expect(res.body.error).toContain('Instagram verification not configured');
+      } finally {
+        if (orig) process.env.META_APP_ACCESS_TOKEN = orig;
+      }
     });
 
     it('should reject invalid URL', async () => {
@@ -204,8 +261,8 @@ describe('Agent Activation', () => {
       expect(res.body.status).toBe('ACTIVE');
       expect(res.body.tier).toBe('PRO');
       expect(res.body.limits).toBeDefined();
-      expect(res.body.limits.jobOffers).toBe(30);
-      expect(res.body.limits.profileViews).toBe(100);
+      expect(res.body.limits.jobOffersPerDay).toBe(15);
+      expect(res.body.limits.profileViewsPerDay).toBe(50);
     });
 
     it('should return EXPIRED for agent with expired activation', async () => {
