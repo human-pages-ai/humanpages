@@ -20,18 +20,6 @@ vi.mock('../lib/analytics', () => ({
   },
 }));
 
-// Mock PhoneInput to behave like a simple input
-vi.mock('../components/PhoneInput', () => ({
-  default: ({ id, value, onChange }: { id: string; value: string; onChange: (val: string) => void }) => (
-    <input
-      id={id}
-      value={value}
-      onChange={(e: any) => onChange(e.target.value)}
-      placeholder="onboarding.step1.whatsappPlaceholder"
-    />
-  ),
-}));
-
 // Mock LocationAutocomplete to behave like a simple input
 vi.mock('../components/LocationAutocomplete', () => ({
   default: ({ id, value, onChange, placeholder }: any) => (
@@ -54,19 +42,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Helper to advance to step 2
-async function goToStep2() {
-  await waitFor(() => {
-    expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-  });
-  const input = screen.getByPlaceholderText('onboarding.step1.emailPlaceholder');
-  fireEvent.change(input, { target: { value: 'contact@example.com' } });
-  fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
-  await waitFor(() => {
-    expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
-  });
-}
-
 describe('Onboarding', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
@@ -80,58 +55,24 @@ describe('Onboarding', () => {
     vi.mocked(api.updateProfile).mockResolvedValue({} as any);
   });
 
-  it('renders step 1 (contact method)', async () => {
+  it('renders single-step with skills and location', async () => {
     renderWithProviders(<Onboarding />);
 
-    await waitFor(() => {
-      expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('button', { name: 'onboarding.step1.email' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'onboarding.step1.telegram' })).toBeInTheDocument();
-  });
-
-  it('can type in contact value', async () => {
-    renderWithProviders(<Onboarding />);
-
-    await waitFor(() => {
-      expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-    });
-
-    const input = screen.getByPlaceholderText('onboarding.step1.emailPlaceholder');
-    fireEvent.change(input, { target: { value: 'contact@example.com' } });
-
-    expect(input).toHaveValue('contact@example.com');
-  });
-
-  it('progresses to step 2 on submit', async () => {
-    renderWithProviders(<Onboarding />);
-
-    await waitFor(() => {
-      expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-    });
-
-    // Fill in contact value
-    const input = screen.getByPlaceholderText('onboarding.step1.emailPlaceholder');
-    fireEvent.change(input, { target: { value: 'contact@example.com' } });
-
-    // Submit step 1
-    const continueButton = screen.getByRole('button', { name: /onboarding.continue/i });
-    fireEvent.click(continueButton);
-
-    // Wait for step 2
     await waitFor(() => {
       expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
     });
 
-    expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith({ contactEmail: 'contact@example.com' });
+    expect(screen.getByPlaceholderText('onboarding.step2.locationPlaceholder')).toBeInTheDocument();
+    expect(screen.getByText('Local Photography')).toBeInTheDocument();
   });
 
-  it('step 2 shows skill selection with updated suggestions', async () => {
+  it('shows skill selection with suggestions', async () => {
     renderWithProviders(<Onboarding />);
-    await goToStep2();
 
-    // Check new skill buttons exist
+    await waitFor(() => {
+      expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+    });
+
     expect(screen.getByText('Local Photography')).toBeInTheDocument();
     expect(screen.getByText('Phone Calls')).toBeInTheDocument();
     expect(screen.getByText('Package Pickup & Delivery')).toBeInTheDocument();
@@ -139,18 +80,16 @@ describe('Onboarding', () => {
     expect(screen.getByText('Grocery Shopping')).toBeInTheDocument();
   });
 
-  it('can select skills in step 2', async () => {
+  it('can select skills', async () => {
     renderWithProviders(<Onboarding />);
-    await goToStep2();
 
-    // Check that skill buttons are available
+    await waitFor(() => {
+      expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+    });
+
     const skillButton = screen.getByRole('button', { name: 'Local Photography' });
-    expect(skillButton).toBeInTheDocument();
-
-    // Click a skill button
     fireEvent.click(skillButton);
 
-    // Skills should be selected (button class changes)
     expect(skillButton.className).toContain('bg-blue-600');
   });
 
@@ -158,21 +97,22 @@ describe('Onboarding', () => {
     renderWithProviders(<Onboarding />);
 
     await waitFor(() => {
-      expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
+      expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
     });
 
-    // Click skip to dashboard button
     const skipButton = screen.getByText('onboarding.skipToDashboard');
     fireEvent.click(skipButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('can add custom skill in step 2', async () => {
+  it('can add custom skill', async () => {
     renderWithProviders(<Onboarding />);
-    await goToStep2();
 
-    // Add a custom skill
+    await waitFor(() => {
+      expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+    });
+
     const customSkillInput = screen.getByPlaceholderText('onboarding.step2.addCustomSkill');
     fireEvent.change(customSkillInput, {
       target: { value: 'custom-skill' },
@@ -181,97 +121,22 @@ describe('Onboarding', () => {
     const addButton = screen.getByRole('button', { name: 'onboarding.step2.add' });
     fireEvent.click(addButton);
 
-    // The custom skill should appear in the selected list
     expect(screen.getByText(/custom-skill/i)).toBeInTheDocument();
   });
 
-  describe('WhatsApp validation', () => {
-    it('shows error for invalid WhatsApp number', async () => {
+  describe('Validation', () => {
+    it('shows error when location is missing', async () => {
       renderWithProviders(<Onboarding />);
 
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-      });
-
-      // Select WhatsApp
-      fireEvent.click(screen.getByRole('button', { name: 'onboarding.step1.whatsapp' }));
-
-      // Enter invalid number
-      const input = screen.getByPlaceholderText('onboarding.step1.whatsappPlaceholder');
-      fireEvent.change(input, { target: { value: '12345' } });
-
-      // Try to continue
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
-
-      // Should show error
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step1.errorWhatsapp')).toBeInTheDocument();
-      });
-
-      // Should NOT advance to step 2
-      expect(screen.queryByText('onboarding.step2.title')).not.toBeInTheDocument();
-    });
-
-    it('accepts valid WhatsApp number with country code', async () => {
-      renderWithProviders(<Onboarding />);
-
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-      });
-
-      // Select WhatsApp
-      fireEvent.click(screen.getByRole('button', { name: 'onboarding.step1.whatsapp' }));
-
-      // Enter valid number
-      const input = screen.getByPlaceholderText('onboarding.step1.whatsappPlaceholder');
-      fireEvent.change(input, { target: { value: '+14155551234' } });
-
-      // Submit
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
-
-      // Should advance to step 2
       await waitFor(() => {
         expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
       });
 
-      expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith({ whatsapp: '+14155551234' });
-    });
-
-    it('clears error when switching contact method', async () => {
-      renderWithProviders(<Onboarding />);
-
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step1.title')).toBeInTheDocument();
-      });
-
-      // Select WhatsApp and enter invalid number
-      fireEvent.click(screen.getByRole('button', { name: 'onboarding.step1.whatsapp' }));
-      const input = screen.getByPlaceholderText('onboarding.step1.whatsappPlaceholder');
-      fireEvent.change(input, { target: { value: 'bad' } });
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
-
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step1.errorWhatsapp')).toBeInTheDocument();
-      });
-
-      // Switch to email - error should clear
-      fireEvent.click(screen.getByRole('button', { name: 'onboarding.step1.email' }));
-      expect(screen.queryByText('onboarding.step1.errorWhatsapp')).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Step 2 validation', () => {
-    it('shows error when location is missing', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToStep2();
-
       // Select a skill but don't fill location
       fireEvent.click(screen.getByRole('button', { name: 'Pet Care' }));
 
-      // Try to continue
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
+      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
-      // Should show location error
       await waitFor(() => {
         expect(screen.getByText('onboarding.step2.errorLocation')).toBeInTheDocument();
       });
@@ -279,16 +144,17 @@ describe('Onboarding', () => {
 
     it('shows error when no skills selected', async () => {
       renderWithProviders(<Onboarding />);
-      await goToStep2();
+
+      await waitFor(() => {
+        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+      });
 
       // Fill location but don't select skills
       const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
       fireEvent.change(locationInput, { target: { value: 'New York' } });
 
-      // Try to continue
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
+      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
-      // Should show skills error
       await waitFor(() => {
         expect(screen.getByText('onboarding.step2.errorSkills')).toBeInTheDocument();
       });
@@ -296,34 +162,33 @@ describe('Onboarding', () => {
 
     it('shows combined error when both are missing', async () => {
       renderWithProviders(<Onboarding />);
-      await goToStep2();
 
-      // Try to continue without filling anything
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
+      await waitFor(() => {
+        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+      });
 
-      // Should show combined error
+      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
+
       await waitFor(() => {
         expect(screen.getByText('onboarding.step2.errorBoth')).toBeInTheDocument();
       });
     });
 
-    it('proceeds to step 3 when both location and skills are filled', async () => {
+    it('completes and navigates to dashboard when both filled', async () => {
       renderWithProviders(<Onboarding />);
-      await goToStep2();
 
-      // Fill location
+      await waitFor(() => {
+        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+      });
+
       const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
       fireEvent.change(locationInput, { target: { value: 'New York' } });
-
-      // Select a skill
       fireEvent.click(screen.getByRole('button', { name: 'Pet Care' }));
 
-      // Continue
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
+      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
-      // Should advance to step 3
       await waitFor(() => {
-        expect(screen.getByText('onboarding.step3.title')).toBeInTheDocument();
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
       });
 
       expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith({
@@ -332,29 +197,24 @@ describe('Onboarding', () => {
       });
     });
 
-    it('shows error when API call fails in step 2', async () => {
-      vi.mocked(api.updateProfile)
-        .mockResolvedValueOnce({} as any) // step 1 succeeds
-        .mockRejectedValueOnce(new Error('Network error')); // step 2 fails
+    it('shows error when API call fails', async () => {
+      vi.mocked(api.updateProfile).mockRejectedValueOnce(new Error('Network error'));
 
       renderWithProviders(<Onboarding />);
-      await goToStep2();
 
-      // Fill both fields
+      await waitFor(() => {
+        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+      });
+
       const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
       fireEvent.change(locationInput, { target: { value: 'New York' } });
       fireEvent.click(screen.getByRole('button', { name: 'Pet Care' }));
 
-      // Try to continue
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.continue/i }));
+      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
-      // Should show generic error
       await waitFor(() => {
         expect(screen.getByText('common.error')).toBeInTheDocument();
       });
-
-      // Should NOT advance to step 3
-      expect(screen.queryByText('onboarding.step3.title')).not.toBeInTheDocument();
     });
   });
 });
