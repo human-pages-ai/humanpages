@@ -39,7 +39,7 @@ export default function ServicesSection({
   const { t } = useTranslation();
 
   return (
-    <div id="services-section" className="bg-white rounded-lg shadow p-4 sm:p-6">
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{t('dashboard.services.title')}</h2>
         <button

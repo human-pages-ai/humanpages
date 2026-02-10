@@ -6,6 +6,22 @@ test.describe('Onboarding', () => {
     const email = uniqueEmail();
     const token = await signupViaAPI({ name: 'Onboard Full', email, password: 'TestPass123!' });
 
+    // Mock Nominatim geocoding so location selection works offline
+    await page.route('**/nominatim.openstreetmap.org/**', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{
+          display_name: 'New York, New York, United States',
+          lat: '40.7128',
+          lon: '-74.0060',
+          type: 'city',
+          class: 'place',
+          address: { city: 'New York', state: 'New York', country: 'United States' },
+        }]),
+      });
+    });
+
     // Inject token and go to onboarding
     await page.goto('/');
     await page.evaluate((t) => localStorage.setItem('token', t), token);
@@ -14,7 +30,9 @@ test.describe('Onboarding', () => {
 
     // Single step: location + skills
     await page.waitForSelector('#location-input', { timeout: 5_000 });
-    await page.locator('#location-input').fill('New York, NY');
+    await page.locator('#location-input').fill('New York');
+    // Wait for and click the dropdown result
+    await page.locator('ul button', { hasText: 'New York' }).first().click({ timeout: 5_000 });
     await page.getByRole('button', { name: 'Local Photography' }).click();
     await page.getByRole('button', { name: 'Complete Profile' }).click();
 

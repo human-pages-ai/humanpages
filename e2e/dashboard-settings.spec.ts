@@ -61,6 +61,8 @@ test.describe('Dashboard – Settings', () => {
   test('offer filters – set min price and max distance', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
+    // Expand the "Integrations" collapsible section that contains offer filters
+    await page.getByText('Integrations').click();
     await page.getByRole('button', { name: 'Configure' }).click();
 
     await page.locator('#filter-min-price').fill('50');
