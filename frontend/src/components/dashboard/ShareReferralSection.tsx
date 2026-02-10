@@ -27,7 +27,7 @@ export default function ShareReferralSection({
   const [copiedReferral, setCopiedReferral] = useState(false);
 
   const profileUrl = `${window.location.origin}/humans/${profile.username || profile.id}`;
-  const referralUrl = `${window.location.origin}/signup?ref=${profile.id}`;
+  const referralUrl = `${window.location.origin}/signup?ref=${profile.referralCode}`;
   const rp = profile.referralProgram;
   const tier = rp ? getCurrentTier(rp.qualifiedSignups) : null;
 
@@ -109,6 +109,7 @@ export default function ShareReferralSection({
               <div className="bg-white/10 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold">{rp.qualifiedSignups}</div>
                 <div className="text-xs text-emerald-100">{t('dashboard.referralQualified')}</div>
+                <div className="text-xs text-emerald-200/60 mt-0.5">{t('dashboard.referralQualifiedHint')}</div>
               </div>
               <div className="bg-white/10 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold">{rp.totalCredits}</div>

@@ -60,9 +60,70 @@ describe('Referral Program API', () => {
     });
   });
 
+  // ===== Referral code generation =====
+  describe('Referral code generation', () => {
+    it('should auto-generate a referralCode when a user signs up', async () => {
+      const user = await createTestUser({ email: 'code-gen@test.com' });
+
+      const human = await prisma.human.findUnique({ where: { id: user.id } });
+      expect(human!.referralCode).toBeDefined();
+      expect(human!.referralCode.length).toBe(8);
+      expect(human!.referralCode).not.toBe('');
+    });
+
+    it('should generate unique referralCodes for different users', async () => {
+      const user1 = await createTestUser({ email: 'code1@test.com' });
+      const user2 = await createTestUser({ email: 'code2@test.com' });
+
+      const h1 = await prisma.human.findUnique({ where: { id: user1.id } });
+      const h2 = await prisma.human.findUnique({ where: { id: user2.id } });
+
+      expect(h1!.referralCode).not.toBe(h2!.referralCode);
+    });
+
+    it('should return referralCode in profile response', async () => {
+      const user = await createTestUser({ email: 'code-profile@test.com' });
+      const res = await authRequest(user.token).get('/api/humans/me');
+
+      expect(res.status).toBe(200);
+      expect(res.body.referralCode).toBeDefined();
+      expect(res.body.referralCode.length).toBe(8);
+    });
+  });
+
   // ===== Referral recording via signup =====
   describe('Referral recording via signup', () => {
-    it('should record referral when signup uses referrer ID', async () => {
+    it('should record referral when signup uses referralCode', async () => {
+      const referrer = await createTestUser({ email: 'referrer@test.com', name: 'Referrer' });
+      const referrerHuman = await prisma.human.findUnique({ where: { id: referrer.id } });
+
+      const signupRes = await request(app)
+        .post('/api/auth/signup')
+        .send({
+          email: 'newuser-code@test.com',
+          password: 'password123',
+          name: 'New User Code',
+          referrerId: referrerHuman!.referralCode,
+          termsAccepted: true,
+          captchaToken: 'test-token',
+        });
+
+      expect(signupRes.status).toBe(201);
+
+      // Wait for async referral recording
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const affiliate = await prisma.affiliate.findUnique({
+        where: { humanId: referrer.id },
+        include: { referrals: true },
+      });
+
+      expect(affiliate).not.toBeNull();
+      expect(affiliate!.totalSignups).toBe(1);
+      expect(affiliate!.referrals[0].referredHumanId).toBe(signupRes.body.human.id);
+    });
+
+    it('should record referral when signup uses legacy referrer ID', async () => {
       const referrer = await createTestUser({ email: 'referrer@test.com', name: 'Referrer' });
 
       const signupRes = await request(app)

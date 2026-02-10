@@ -19,6 +19,7 @@ export interface Service {
 
 export interface Profile {
   id: string;
+  referralCode: string;
   name: string;
   email: string;
   username?: string;

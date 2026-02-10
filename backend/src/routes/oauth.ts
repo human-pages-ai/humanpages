@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { generateReferralCode } from '../lib/referralCode.js';
 
 const router = Router();
 
@@ -175,11 +176,12 @@ router.post('/google/callback', async (req, res) => {
         await consumeOAuthState(state);
         pendingOAuthProfiles.delete(state);
 
-        // Validate referrer if provided
+        // Validate referrer if provided (accepts referralCode or legacy id)
         let validReferrerId: string | undefined;
         if (referrerId) {
-          const referrer = await prisma.human.findUnique({ where: { id: referrerId } });
-          if (referrer) validReferrerId = referrerId;
+          const referrer = await prisma.human.findUnique({ where: { referralCode: referrerId } })
+            ?? await prisma.human.findUnique({ where: { id: referrerId } });
+          if (referrer) validReferrerId = referrer.id;
         }
 
         // 3. Create new user (no password needed for OAuth-only)
@@ -191,6 +193,7 @@ router.post('/google/callback', async (req, res) => {
             avatarUrl: picture,
             contactEmail: email,
             referredBy: validReferrerId,
+            referralCode: generateReferralCode(),
             termsAcceptedAt: new Date(),
             emailVerified: true, // OAuth email is verified by provider
           },
@@ -369,8 +372,9 @@ router.post('/linkedin/callback', async (req, res) => {
 
         let validReferrerId: string | undefined;
         if (referrerId) {
-          const referrer = await prisma.human.findUnique({ where: { id: referrerId } });
-          if (referrer) validReferrerId = referrerId;
+          const referrer = await prisma.human.findUnique({ where: { referralCode: referrerId } })
+            ?? await prisma.human.findUnique({ where: { id: referrerId } });
+          if (referrer) validReferrerId = referrer.id;
         }
 
         human = await prisma.human.create({
@@ -381,6 +385,7 @@ router.post('/linkedin/callback', async (req, res) => {
             avatarUrl: profile.picture,
             contactEmail: profile.email,
             referredBy: validReferrerId,
+            referralCode: generateReferralCode(),
             termsAcceptedAt: new Date(),
             emailVerified: true,
           },

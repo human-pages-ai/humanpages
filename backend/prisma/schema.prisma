@@ -132,6 +132,7 @@ model Human {
   githubUsername     String?  // GitHub username for display
 
   // Referral tracking
+  referralCode  String   @unique @default("") // Short code for referral links (auto-generated)
   referredBy    String?  // ID of the human who referred this user
 
   // Token invalidation for logout-all

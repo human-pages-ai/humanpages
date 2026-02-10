@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { generateReferralCode } from './lib/referralCode.js';
 
 const prisma = new PrismaClient();
 
@@ -28,6 +29,7 @@ async function main() {
       email: 'alice@example.com',
       passwordHash,
       name: 'Alice Smith',
+      referralCode: generateReferralCode(),
       bio: 'Full-stack developer with 5 years of experience. I specialize in React and Node.js.',
       location: 'San Francisco, CA',
       skills: ['javascript', 'react', 'nodejs', 'typescript'],
@@ -70,6 +72,7 @@ async function main() {
       email: 'bob@example.com',
       passwordHash,
       name: 'Bob Johnson',
+      referralCode: generateReferralCode(),
       bio: 'Data scientist and ML engineer. I help businesses make sense of their data.',
       location: 'New York, NY',
       skills: ['python', 'machine-learning', 'data-analysis', 'sql'],
@@ -101,6 +104,7 @@ async function main() {
       email: 'carol@example.com',
       passwordHash,
       name: 'Carol Williams',
+      referralCode: generateReferralCode(),
       bio: 'UX/UI designer with a passion for creating intuitive user experiences.',
       location: 'Austin, TX',
       skills: ['design', 'figma', 'ux-research', 'prototyping'],

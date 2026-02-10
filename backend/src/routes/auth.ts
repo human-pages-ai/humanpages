@@ -10,6 +10,7 @@ import { sendPasswordResetEmail, sendVerificationEmail } from '../lib/email.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { recordAffiliateReferral } from './affiliate.js';
+import { generateReferralCode } from '../lib/referralCode.js';
 
 const router = Router();
 
@@ -100,12 +101,13 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // Validate referrer exists if provided
+    // Validate referrer exists if provided (accepts referralCode or legacy id)
     let validReferrerId: string | undefined;
     if (referrerId) {
-      const referrer = await prisma.human.findUnique({ where: { id: referrerId } });
+      const referrer = await prisma.human.findUnique({ where: { referralCode: referrerId } })
+        ?? await prisma.human.findUnique({ where: { id: referrerId } });
       if (referrer) {
-        validReferrerId = referrerId;
+        validReferrerId = referrer.id;
       }
     }
 
@@ -117,6 +119,7 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
         name,
         contactEmail: email,
         referredBy: validReferrerId,
+        referralCode: generateReferralCode(),
         termsAcceptedAt: new Date(),
       },
       select: { id: true, email: true, name: true },
