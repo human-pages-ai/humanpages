@@ -35,13 +35,19 @@ describe('Agent Activation', () => {
       expect(res.body.instructions.linkedin).toContain(res.body.code);
       expect(res.body.instructions.tiktok).toContain(res.body.code);
       expect(res.body.instructions.youtube).toContain(res.body.code);
-      expect(res.body.instructions.facebook).toContain(res.body.code);
-      expect(res.body.instructions.instagram).toContain(res.body.code);
       expect(res.body.instructions.telegram).toContain(res.body.code);
       expect(res.body.instructions.moltbook).toContain(res.body.code);
+      // Always-available platforms
       expect(res.body.platforms).toEqual(
-        expect.arrayContaining(['twitter', 'linkedin', 'tiktok', 'youtube', 'facebook', 'instagram', 'telegram', 'moltbook'])
+        expect.arrayContaining(['twitter', 'linkedin', 'tiktok', 'youtube', 'telegram', 'moltbook'])
       );
+      // Facebook/Instagram only offered when META_APP_ACCESS_TOKEN is set
+      if (!process.env.META_APP_ACCESS_TOKEN) {
+        expect(res.body.platforms).not.toContain('facebook');
+        expect(res.body.platforms).not.toContain('instagram');
+        expect(res.body.instructions.facebook).toBeUndefined();
+        expect(res.body.instructions.instagram).toBeUndefined();
+      }
       expect(res.body.requirements).toContain('humanpages.ai');
       expect(res.body.suggestedPost).toContain('humanpages.ai');
       expect(res.body.suggestedPost).toContain(res.body.code);
@@ -292,7 +298,7 @@ describe('Agent Activation', () => {
       const origAddr = process.env.AGENT_ACTIVATION_DEPOSIT_ADDRESS;
       const origFee = process.env.AGENT_ACTIVATION_FEE_USD;
       process.env.AGENT_ACTIVATION_DEPOSIT_ADDRESS = '0x' + '1'.repeat(40);
-      process.env.AGENT_ACTIVATION_FEE_USD = '10';
+      process.env.AGENT_ACTIVATION_FEE_USD = '5';
 
       try {
         const res = await request(app)
@@ -301,7 +307,7 @@ describe('Agent Activation', () => {
 
         expect(res.status).toBe(200);
         expect(res.body.depositAddress).toBe('0x' + '1'.repeat(40));
-        expect(res.body.amount).toBe(10);
+        expect(res.body.amount).toBe(5);
         expect(res.body.acceptedTokens).toContain('USDC');
         expect(res.body.acceptedNetworks).toContain('ethereum');
         expect(res.body.tier).toBe('PRO');
@@ -357,7 +363,7 @@ describe('Agent Activation', () => {
         txHash: VALID_TX_HASH,
         network: 'ethereum',
         token: 'USDC',
-        amount: 10,
+        amount: 5,
       });
 
       const res = await request(app)
@@ -389,7 +395,7 @@ describe('Agent Activation', () => {
         txHash: VALID_TX_HASH,
         network: 'ethereum',
         token: 'USDC',
-        amount: 10,
+        amount: 5,
       });
 
       await request(app)

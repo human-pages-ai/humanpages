@@ -97,22 +97,29 @@ router.post('/social', authenticateAgent, async (req: AgentAuthRequest, res) => 
       },
     });
 
+    const hasMetaToken = !!process.env.META_APP_ACCESS_TOKEN;
+    const platforms: string[] = ['twitter', 'linkedin', 'tiktok', 'youtube', 'telegram', 'moltbook'];
+    const instructions: Record<string, string> = {
+      twitter: `Tweet something that includes https://humanpages.ai and your code ${code}. Example: "Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}"`,
+      linkedin: `Create a post that includes a link to https://humanpages.ai and your code ${code}. Say something nice about us!`,
+      tiktok: `Post a TikTok video with a caption that includes https://humanpages.ai and your code ${code}.`,
+      youtube: `Upload a YouTube video with a title that includes https://humanpages.ai and your code ${code}.`,
+      telegram: `Post in a public Telegram channel/group that includes https://humanpages.ai and your code ${code}.`,
+      moltbook: `Create a public Moltbook post that includes https://humanpages.ai and your code ${code}.`,
+    };
+    if (hasMetaToken) {
+      platforms.push('facebook', 'instagram');
+      instructions.facebook = `Create a public Facebook post that includes https://humanpages.ai and your code ${code}.`;
+      instructions.instagram = `Create a public Instagram post with a caption that includes @HumanPagesAI and your code ${code}.`;
+    }
+
     res.json({
       code,
       expiresAt: expiresAt.toISOString(),
       requirements: 'Post MUST contain: (1) a link to humanpages.ai, (2) your unique code. Posts missing either will be rejected.',
       suggestedPost: `Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}`,
-      platforms: ['twitter', 'linkedin', 'tiktok', 'youtube', 'facebook', 'instagram', 'telegram', 'moltbook'],
-      instructions: {
-        twitter: `Tweet something that includes https://humanpages.ai and your code ${code}. Example: "Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}"`,
-        linkedin: `Create a post that includes a link to https://humanpages.ai and your code ${code}. Say something nice about us!`,
-        tiktok: `Post a TikTok video with a caption that includes https://humanpages.ai and your code ${code}.`,
-        youtube: `Upload a YouTube video with a title that includes https://humanpages.ai and your code ${code}.`,
-        facebook: `Create a public Facebook post that includes https://humanpages.ai and your code ${code}.`,
-        instagram: `Create a public Instagram post with a caption that includes @HumanPagesAI and your code ${code}.`,
-        telegram: `Post in a public Telegram channel/group that includes https://humanpages.ai and your code ${code}.`,
-        moltbook: `Create a public Moltbook post that includes https://humanpages.ai and your code ${code}.`,
-      },
+      platforms,
+      instructions,
     });
   } catch (error) {
     logger.error({ err: error }, 'Request social verification code error');
@@ -506,7 +513,7 @@ router.post('/payment', authenticateAgent, async (req: AgentAuthRequest, res) =>
       return res.status(403).json({ error: 'Agent is banned' });
     }
 
-    const feeUsd = parseFloat(process.env.AGENT_ACTIVATION_FEE_USD || '10');
+    const feeUsd = parseFloat(process.env.AGENT_ACTIVATION_FEE_USD || '5');
     const depositAddress = process.env.AGENT_ACTIVATION_DEPOSIT_ADDRESS;
 
     if (!depositAddress) {
