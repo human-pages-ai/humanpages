@@ -291,7 +291,7 @@ export const api = {
     request<AffiliateResponse>('/affiliate/me'),
 
   applyAffiliate: (data: { code: string; promotionMethod?: string; website?: string; audience?: string }) =>
-    request<{ message: string; affiliate: { id: string; status: string; code: string; commissionRate: number } }>('/affiliate/apply', {
+    request<{ message: string; affiliate: { id: string; status: string; code: string; creditsPerReferral: number } }>('/affiliate/apply', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -305,13 +305,8 @@ export const api = {
   resolveAffiliateCode: (code: string) =>
     request<{ referrerId: string; affiliateId: string }>(`/affiliate/resolve/${encodeURIComponent(code)}`),
 
-  requestAffiliatePayout: () =>
-    request<{ message: string; payout: { id: string; amount: number; status: string; eligibleAt: string } }>('/affiliate/request-payout', {
-      method: 'POST',
-    }),
-
   getAffiliateLeaderboard: () =>
-    request<Array<{ rank: number; code: string; name: string; username?: string; avatarUrl?: string; referrals: number; joinedAt: string }>>('/affiliate/leaderboard'),
+    request<Array<{ rank: number; code: string; name: string; username?: string; avatarUrl?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
 
   // Admin
   checkAdmin: () =>
@@ -361,13 +356,13 @@ export interface AffiliateData {
   id: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   code: string;
-  commissionRate: number;
+  creditsPerReferral: number;
   totalClicks: number;
   totalSignups: number;
   qualifiedSignups: number;
-  totalEarnings: number;
-  totalPaid: number;
-  pendingEarnings: number;
+  totalCredits: number;
+  creditsRedeemed: number;
+  availableCredits: number;
   approvedAt?: string;
   rejectedReason?: string;
   suspendedReason?: string;
@@ -387,18 +382,15 @@ export interface AffiliateReferralItem {
   name: string;
   qualified: boolean;
   qualifiedAt?: string;
-  commissionAmount: number;
+  creditsAwarded: number;
   createdAt: string;
 }
 
-export interface AffiliatePayoutItem {
+export interface AffiliateCreditItem {
   id: string;
-  amount: number;
-  status: 'PENDING' | 'ELIGIBLE' | 'PROCESSING' | 'PAID' | 'FAILED';
+  credits: number;
   type: string;
   description?: string;
-  eligibleAt: string;
-  paidAt?: string;
   createdAt: string;
 }
 
@@ -407,9 +399,5 @@ export interface AffiliateResponse {
   affiliate?: AffiliateData;
   milestones?: AffiliateMilestone[];
   referrals?: AffiliateReferralItem[];
-  payouts?: AffiliatePayoutItem[];
-  config?: {
-    minPayoutAmount: number;
-    payoutHoldDays: number;
-  };
+  creditLedger?: AffiliateCreditItem[];
 }
