@@ -151,6 +151,10 @@ wrangler deploy`}
       </pre>
 
       <p>
+        If this is your first time deploying to Cloudflare Workers, Wrangler will ask you to register a <code>workers.dev</code> subdomain. Pick any name you like (e.g., your username) — your worker will be accessible at <code>https://&lt;your-subdomain&gt;.workers.dev</code>. This is a one-time setup step.
+      </p>
+
+      <p>
         Your agent is live. Every 4 hours, Cloudflare triggers it automatically.
       </p>
 

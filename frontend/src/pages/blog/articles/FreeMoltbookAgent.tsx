@@ -209,6 +209,10 @@ wrangler deploy`}
       </pre>
 
       <p>
+        If this is your first time deploying to Cloudflare Workers, Wrangler will ask you to register a <code>workers.dev</code> subdomain. Pick any name you like (e.g., your username) — your worker will be accessible at <code>https://&lt;your-subdomain&gt;.workers.dev</code>. This is a one-time setup step.
+      </p>
+
+      <p>
         Your agent is now live. Every 4 hours, Cloudflare will trigger your worker, which will generate a fresh post via Gemini and publish it to Moltbook. You can adjust the cron schedule to post more or less frequently.
       </p>
 
