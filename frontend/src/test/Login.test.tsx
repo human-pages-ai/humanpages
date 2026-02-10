@@ -26,6 +26,14 @@ vi.mock('../lib/analytics', () => ({
   analytics: { track: vi.fn() },
 }));
 
+// Mock react-turnstile to auto-verify
+vi.mock('react-turnstile', () => ({
+  Turnstile: ({ onVerify }: { onVerify: (token: string) => void }) => {
+    onVerify('test-captcha-token');
+    return null;
+  },
+}));
+
 // Mock useNavigate
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -84,7 +92,7 @@ describe('Login', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123', 'test-captcha-token');
     });
   });
 

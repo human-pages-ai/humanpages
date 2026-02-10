@@ -56,10 +56,13 @@ export interface Profile {
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
   preferredLanguage?: string;
   linkedinVerified?: boolean;
+  githubVerified?: boolean;
+  githubUsername?: string;
   humanityVerified?: boolean;
   humanityScore?: number;
   humanityProvider?: string;
   humanityVerifiedAt?: string;
+  trustScore?: TrustScoreData;
   hasPassword?: boolean;
   emailVerified?: boolean;
   emailNotifications?: boolean;
@@ -115,4 +118,50 @@ export interface ReviewStats {
   totalReviews: number;
   averageRating: number;
   completedJobs: number;
+}
+
+export interface TrustScoreData {
+  score: number;
+  level: 'new' | 'basic' | 'verified' | 'trusted';
+  signals?: {
+    identity: {
+      emailVerified: boolean;
+      hasGoogle: boolean;
+      hasLinkedin: boolean;
+      linkedinVerified: boolean;
+      humanityVerified: boolean;
+      humanityScore: number | null;
+      hasGithub: boolean;
+    };
+    reputation: {
+      jobsCompleted: number;
+      completionRate: number;
+      avgRating: number;
+      reviewCount: number;
+      disputeCount: number;
+    };
+    social: {
+      vouchCount: number;
+      socialProfilesLinked: number;
+    };
+    activity: {
+      accountAgeDays: number;
+      daysSinceLastActive: number;
+      profileCompleteness: number;
+    };
+  };
+  breakdown?: {
+    identity: number;
+    reputation: number;
+    social: number;
+    activity: number;
+  };
+}
+
+export interface Vouch {
+  id: string;
+  comment?: string;
+  createdAt: string;
+  voucher: { id: string; name: string; username?: string };
+  vouchee: { id: string; name: string; username?: string };
 }

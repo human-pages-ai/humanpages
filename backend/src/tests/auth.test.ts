@@ -29,6 +29,7 @@ describe('Auth API', () => {
           password: 'password123',
           name: 'New User',
           termsAccepted: true,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(201);
@@ -62,6 +63,7 @@ describe('Auth API', () => {
           password: 'password123',
           name: 'Another User',
           termsAccepted: true,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(400);
@@ -76,6 +78,7 @@ describe('Auth API', () => {
           password: 'password123',
           name: 'Test User',
           termsAccepted: true,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(400);
@@ -90,6 +93,7 @@ describe('Auth API', () => {
           password: '12345',
           name: 'Test User',
           termsAccepted: true,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(400);
@@ -104,6 +108,7 @@ describe('Auth API', () => {
           password: 'password123',
           name: '',
           termsAccepted: true,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(400);
@@ -120,6 +125,7 @@ describe('Auth API', () => {
         .send({
           email: 'login@example.com',
           password: 'mypassword',
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(200);
@@ -134,6 +140,7 @@ describe('Auth API', () => {
         .send({
           email: 'nonexistent@example.com',
           password: 'password123',
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(401);
@@ -148,6 +155,7 @@ describe('Auth API', () => {
         .send({
           email: 'wrongpw@example.com',
           password: 'wrongpassword',
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(401);
@@ -160,6 +168,7 @@ describe('Auth API', () => {
         .send({
           email: 'not-an-email',
           password: 'password123',
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(400);
@@ -181,6 +190,7 @@ describe('Auth API', () => {
         .send({
           email: 'oauthonly@example.com',
           password: 'anypassword',
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(401);

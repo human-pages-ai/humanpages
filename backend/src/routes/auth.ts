@@ -14,16 +14,37 @@ const router = Router();
 
 const signupSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6).max(72),
+  password: z.string().min(8).max(72),
   name: z.string().min(1),
   referrerId: z.string().optional(),
   termsAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the Terms of Use and Privacy Policy' }) }),
+  captchaToken: z.string().min(1),
 });
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
+  captchaToken: z.string().min(1),
 });
+
+async function verifyCaptcha(token: string): Promise<boolean> {
+  if (process.env.NODE_ENV === 'test') return true;
+
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) {
+    logger.warn('TURNSTILE_SECRET_KEY not set, skipping captcha verification');
+    return true;
+  }
+
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ secret, response: token }),
+  });
+
+  const data = await res.json() as { success: boolean };
+  return data.success;
+}
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),
@@ -31,7 +52,7 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(6).max(72),
+  password: z.string().min(8).max(72),
 });
 
 // Rate limit auth endpoints: 10 requests per 15 minutes per IP
@@ -66,7 +87,12 @@ const globalSignupThrottle = rateLimit({
 
 router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) => {
   try {
-    const { email, password, name, referrerId, termsAccepted } = signupSchema.parse(req.body);
+    const { email, password, name, referrerId, termsAccepted, captchaToken } = signupSchema.parse(req.body);
+
+    const captchaValid = await verifyCaptcha(captchaToken);
+    if (!captchaValid) {
+      return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+    }
 
     const existingUser = await prisma.human.findUnique({ where: { email } });
     if (existingUser) {
@@ -131,7 +157,12 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
 
 router.post('/login', authRateLimiter, async (req, res) => {
   try {
-    const { email, password } = loginSchema.parse(req.body);
+    const { email, password, captchaToken } = loginSchema.parse(req.body);
+
+    const captchaValid = await verifyCaptcha(captchaToken);
+    if (!captchaValid) {
+      return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+    }
 
     const human = await prisma.human.findUnique({ where: { email } });
     if (!human) {

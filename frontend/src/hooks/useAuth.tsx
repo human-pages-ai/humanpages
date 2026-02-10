@@ -13,8 +13,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string, termsAccepted: boolean) => Promise<void>;
+  login: (email: string, password: string, captchaToken: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, termsAccepted: boolean, captchaToken: string) => Promise<void>;
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
   loginWithLinkedIn: () => Promise<void>;
@@ -44,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const { human, token } = await api.login({ email, password });
+  const login = async (email: string, password: string, captchaToken: string) => {
+    const { human, token } = await api.login({ email, password, captchaToken });
     localStorage.setItem('token', token);
     setUser(human);
     analytics.setOptOut(!!human.analyticsOptOut);
@@ -54,9 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true) => {
+  const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true, captchaToken: string) => {
     const referrerId = localStorage.getItem('referrer_id') || undefined;
-    const { human, token } = await api.signup({ email, password, name, referrerId, termsAccepted });
+    const { human, token } = await api.signup({ email, password, name, referrerId, termsAccepted, captchaToken });
     localStorage.removeItem('referrer_id'); // Clean up after use
     localStorage.setItem('token', token);
     setUser(human);

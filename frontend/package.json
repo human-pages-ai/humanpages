@@ -19,7 +19,8 @@
     "react-helmet-async": "^2.0.5",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.5.4",
-    "react-router-dom": "^6.22.0"
+    "react-router-dom": "^6.22.0",
+    "react-turnstile": "^1.1.4"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",

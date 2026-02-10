@@ -400,7 +400,24 @@
       "confirmDeleteMsg": "This will permanently delete your account and all your data."
     },
     "yourReferrals": "Your referrals",
-    "moreReferrals": "+{{count}} more"
+    "moreReferrals": "+{{count}} more",
+    "vouches": {
+      "title": "Vouches",
+      "subtitle": "People in the network who vouch for you",
+      "received": "Vouched by",
+      "given": "Your vouches",
+      "vouchFor": "Vouch for someone",
+      "revoke": "Revoke",
+      "noVouchesReceived": "No one has vouched for you yet. As you build trust in the network, other members can vouch for you.",
+      "noVouchesGiven": "You haven't vouched for anyone yet.",
+      "vouchPlaceholder": "Username or ID",
+      "commentPlaceholder": "Short note (optional)",
+      "commentExample": "e.g. Worked together, reliable person",
+      "vouchLimit": "{{count}} of {{max}} vouches used",
+      "vouchButton": "Vouch",
+      "vouchSuccess": "Vouch submitted",
+      "revokeSuccess": "Vouch revoked"
+    }
   },
   "onboarding": {
     "title": "Complete Your Profile",
@@ -435,6 +452,7 @@
       "add": "Add",
       "selected": "Selected",
       "errorLocation": "Please enter your location",
+      "errorLocationSelect": "Please select a location from the dropdown",
       "errorSkills": "Please select at least one skill",
       "errorBoth": "Please enter your location and select at least one skill"
     },
@@ -477,6 +495,8 @@
     "reviews": "Reviews",
     "noReviews": "No reviews yet",
     "paymentPreference": "Payment Preference",
+    "vouchedBy": "Vouched by",
+    "showAllVouches": "+{{count}} more",
     "workMode": {
       "remote": "Remote",
       "onsite": "On-site",
@@ -521,6 +541,18 @@
     "unauthorized": "Please log in to continue",
     "notFound": "Not found",
     "serverError": "Server error. Please try again later."
+  },
+  "passwordStrength": {
+    "minLength": "At least 8 characters",
+    "uppercase": "One uppercase letter",
+    "lowercase": "One lowercase letter",
+    "number": "One number",
+    "special": "One special character",
+    "veryWeak": "Very weak",
+    "weak": "Weak",
+    "fair": "Fair",
+    "strong": "Strong",
+    "veryStrong": "Very strong"
   },
   "errorBoundary": {
     "title": "Something went wrong",

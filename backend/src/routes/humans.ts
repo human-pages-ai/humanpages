@@ -41,6 +41,8 @@ const publicHumanSelect = {
   paymentPreference: true,
   workMode: true,
   linkedinVerified: true,
+  githubVerified: true,
+  githubUsername: true,
   humanityVerified: true,
   humanityScore: true,
   humanityProvider: true,
@@ -927,6 +929,25 @@ router.post('/me/disconnect-linkedin', authenticateToken, async (req: AuthReques
     res.json({ message: 'LinkedIn disconnected' });
   } catch (error) {
     logger.error({ err: error }, 'Disconnect LinkedIn error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Disconnect GitHub (keeps githubUrl, clears githubId + githubVerified + githubUsername)
+router.post('/me/disconnect-github', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    await prisma.human.update({
+      where: { id: req.userId },
+      data: {
+        githubId: null,
+        githubVerified: false,
+        githubUsername: null,
+      },
+    });
+
+    res.json({ message: 'GitHub disconnected' });
+  } catch (error) {
+    logger.error({ err: error }, 'Disconnect GitHub error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -107,14 +107,14 @@ describe('Password Reset API', () => {
       // Verify can login with new password
       const loginResponse = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'test@example.com', password: 'newpassword123' });
+        .send({ email: 'test@example.com', password: 'newpassword123', captchaToken: 'test-token' });
 
       expect(loginResponse.status).toBe(200);
 
       // Verify cannot login with old password
       const oldLoginResponse = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'test@example.com', password: 'oldpassword' });
+        .send({ email: 'test@example.com', password: 'oldpassword', captchaToken: 'test-token' });
 
       expect(oldLoginResponse.status).toBe(401);
     });

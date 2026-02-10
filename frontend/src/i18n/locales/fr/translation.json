@@ -400,6 +400,7 @@
       "add": "Ajouter",
       "selected": "Sélectionnées",
       "errorLocation": "Veuillez entrer votre localisation",
+      "errorLocationSelect": "Veuillez sélectionner une localisation dans la liste",
       "errorSkills": "Veuillez sélectionner au moins une compétence",
       "errorBoth": "Veuillez entrer votre localisation et sélectionner au moins une compétence"
     },
@@ -483,6 +484,18 @@
     "unauthorized": "Veuillez vous connecter pour continuer",
     "notFound": "Non trouvé",
     "serverError": "Erreur du serveur. Veuillez réessayer plus tard."
+  },
+  "passwordStrength": {
+    "minLength": "Au moins 8 caractères",
+    "uppercase": "Une lettre majuscule",
+    "lowercase": "Une lettre minuscule",
+    "number": "Un chiffre",
+    "special": "Un caractère spécial",
+    "veryWeak": "Très faible",
+    "weak": "Faible",
+    "fair": "Moyen",
+    "strong": "Fort",
+    "veryStrong": "Très fort"
   },
   "errorBoundary": {
     "title": "Une erreur est survenue",

@@ -1,4 +1,4 @@
-import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats } from '../components/dashboard/types';
+import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch } from '../components/dashboard/types';
 
 const API_BASE = '/api';
 
@@ -53,6 +53,12 @@ export interface PublicHuman {
   websiteUrl?: string;
   wallets: Array<{ network: string; address: string; label?: string }>;
   services: Array<{ title: string; description: string; category: string; priceRange?: string }>;
+  vouches?: Array<{
+    id: string;
+    comment?: string;
+    createdAt: string;
+    voucher: { id: string; name: string; username?: string };
+  }>;
 }
 
 export interface ReviewsResponse {
@@ -69,13 +75,13 @@ export interface ReviewsResponse {
 
 export const api = {
   // Auth
-  signup: (data: { email: string; password: string; name: string; referrerId?: string; termsAccepted: boolean }) =>
+  signup: (data: { email: string; password: string; name: string; referrerId?: string; termsAccepted: boolean; captchaToken: string }) =>
     request<AuthResponse>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  login: (data: { email: string; password: string }) =>
+  login: (data: { email: string; password: string; captchaToken: string }) =>
     request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -178,9 +184,35 @@ export const api = {
   disconnectLinkedin: () =>
     request<{ message: string }>('/humans/me/disconnect-linkedin', { method: 'POST' }),
 
+  // GitHub verification
+  getGitHubVerifyUrl: () =>
+    request<{ url: string; state: string }>('/oauth/github/verify'),
+
+  githubVerifyCallback: (code: string, state: string) =>
+    request<{ githubVerified: boolean; githubUsername: string }>('/oauth/github/verify/callback', {
+      method: 'POST',
+      body: JSON.stringify({ code, state }),
+    }),
+
+  disconnectGithub: () =>
+    request<{ message: string }>('/humans/me/disconnect-github', { method: 'POST' }),
+
   // Referrals
   getReferrals: () =>
     request<{ count: number; referrals: Array<{ id: string; name: string; createdAt: string }> }>('/humans/me/referrals'),
+
+  // Vouches
+  getMyVouches: () =>
+    request<{ given: Vouch[]; received: Vouch[] }>('/humans/me/vouches'),
+
+  createVouch: (data: { username: string; comment?: string }) =>
+    request<Vouch>('/humans/me/vouch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  revokeVouch: (voucheeId: string) =>
+    request<{ message: string }>(`/humans/me/vouch/${voucheeId}`, { method: 'DELETE' }),
 
   // Public profiles
   getHumanById: (id: string) => request<PublicHuman>(`/humans/${id}`),

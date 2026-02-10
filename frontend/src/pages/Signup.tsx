@@ -1,12 +1,16 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Turnstile } from 'react-turnstile';
 import Link from '../components/LocalizedLink';
 import { useAuth } from '../hooks/useAuth';
 import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // test key fallback
 
 export default function Signup() {
   const { t } = useTranslation();
@@ -17,6 +21,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState('');
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -36,7 +41,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await signup(email, password, name, termsAccepted);
+      await signup(email, password, name, termsAccepted, captchaToken);
       analytics.track('signup_complete', { method: 'email' });
       navigate('/onboarding');
     } catch (err: any) {
@@ -114,11 +119,12 @@ export default function Signup() {
                 id="password"
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
+              <PasswordStrengthIndicator password={password} />
             </div>
           </div>
           <div className="flex items-start">
@@ -140,9 +146,14 @@ export default function Signup() {
               </Link>
             </label>
           </div>
+          <Turnstile
+            sitekey={TURNSTILE_SITE_KEY}
+            onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken('')}
+          />
           <button
             type="submit"
-            disabled={loading || !termsAccepted}
+            disabled={loading || !termsAccepted || !captchaToken}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
 {loading ? (

@@ -495,6 +495,18 @@
     "notFound": "未找到",
     "serverError": "服务器错误，请稍后重试。"
   },
+  "passwordStrength": {
+    "minLength": "至少8个字符",
+    "uppercase": "一个大写字母",
+    "lowercase": "一个小写字母",
+    "number": "一个数字",
+    "special": "一个特殊字符",
+    "veryWeak": "非常弱",
+    "weak": "弱",
+    "fair": "一般",
+    "strong": "强",
+    "veryStrong": "非常强"
+  },
   "errorBoundary": {
     "title": "出了点问题",
     "message": "发生了意外错误。请尝试刷新页面。",

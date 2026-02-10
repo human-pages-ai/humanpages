@@ -400,6 +400,7 @@
       "add": "Adicionar",
       "selected": "Selecionadas",
       "errorLocation": "Por favor, insira sua localização",
+      "errorLocationSelect": "Por favor, selecione uma localização da lista",
       "errorSkills": "Por favor, selecione pelo menos uma habilidade",
       "errorBoth": "Por favor, insira sua localização e selecione pelo menos uma habilidade"
     },
@@ -483,6 +484,18 @@
     "unauthorized": "Por favor, entre para continuar",
     "notFound": "Não encontrado",
     "serverError": "Erro no servidor. Tente novamente mais tarde."
+  },
+  "passwordStrength": {
+    "minLength": "Pelo menos 8 caracteres",
+    "uppercase": "Uma letra maiúscula",
+    "lowercase": "Uma letra minúscula",
+    "number": "Um número",
+    "special": "Um caractere especial",
+    "veryWeak": "Muito fraca",
+    "weak": "Fraca",
+    "fair": "Regular",
+    "strong": "Forte",
+    "veryStrong": "Muito forte"
   },
   "errorBoundary": {
     "title": "Algo deu errado",

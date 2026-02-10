@@ -490,6 +490,18 @@
     "notFound": "नहीं मिला",
     "serverError": "सर्वर एरर। कृपया बाद में प्रयास करें।"
   },
+  "passwordStrength": {
+    "minLength": "कम से कम 8 अक्षर",
+    "uppercase": "एक बड़ा अक्षर",
+    "lowercase": "एक छोटा अक्षर",
+    "number": "एक अंक",
+    "special": "एक विशेष अक्षर",
+    "veryWeak": "बहुत कमज़ोर",
+    "weak": "कमज़ोर",
+    "fair": "ठीक",
+    "strong": "मज़बूत",
+    "veryStrong": "बहुत मज़बूत"
+  },
   "errorBoundary": {
     "title": "कुछ गलत हो गया",
     "message": "एक अप्रत्याशित त्रुटि हुई। कृपया पेज रीफ्रेश करें।",

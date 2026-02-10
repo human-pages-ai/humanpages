@@ -462,4 +462,124 @@ router.post('/linkedin/verify/callback', authenticateToken, async (req: AuthRequ
   }
 });
 
+// =========================================================================
+// GitHub OAuth — Credibility Verification (not login — verify only)
+// =========================================================================
+
+function getGitHubRedirectUri(): string {
+  const base = process.env.FRONTEND_URL || 'http://localhost:3000';
+  return `${base}/auth/github-verify/callback`;
+}
+
+function buildGitHubAuthUrl(state: string): string {
+  const params = new URLSearchParams({
+    client_id: process.env.GITHUB_CLIENT_ID || '',
+    redirect_uri: getGitHubRedirectUri(),
+    state,
+    scope: 'read:user',
+  });
+  return `https://github.com/login/oauth/authorize?${params}`;
+}
+
+// GitHub Verification - get auth URL (requires login)
+router.get('/github/verify', authenticateToken, async (req: AuthRequest, res) => {
+  const state = await generateOAuthState();
+  const url = buildGitHubAuthUrl(state);
+  res.json({ url, state });
+});
+
+// GitHub Verification - callback (requires login)
+router.post('/github/verify/callback', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { code, state } = req.body;
+
+    if (!code || !state) {
+      return res.status(400).json({ error: 'Code and state required' });
+    }
+
+    const validState = await consumeOAuthState(state);
+    if (!validState) {
+      return res.status(403).json({ error: 'Invalid or expired OAuth state' });
+    }
+
+    // Exchange code for access token
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: getGitHubRedirectUri(),
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      logger.error({ status: tokenRes.status }, 'GitHub token exchange failed');
+      throw new Error('Failed to exchange GitHub authorization code');
+    }
+
+    const tokenData = (await tokenRes.json()) as { access_token?: string; error?: string };
+    if (tokenData.error || !tokenData.access_token) {
+      logger.error({ error: tokenData.error }, 'GitHub token error');
+      throw new Error('GitHub token exchange returned error');
+    }
+
+    // Fetch user profile
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        Accept: 'application/vnd.github+json',
+      },
+    });
+
+    if (!userRes.ok) {
+      throw new Error('Failed to fetch GitHub user info');
+    }
+
+    const githubUser = (await userRes.json()) as {
+      id: number;
+      login: string;
+      name?: string;
+      avatar_url?: string;
+    };
+
+    const githubId = String(githubUser.id);
+
+    // Check if this GitHub ID is already linked to another user
+    const existingUser = await prisma.human.findUnique({ where: { githubId } });
+    if (existingUser && existingUser.id !== req.userId) {
+      return res.status(409).json({ error: 'This GitHub account is already linked to another user' });
+    }
+
+    // Update current user
+    const currentUser = await prisma.human.findUnique({
+      where: { id: req.userId },
+      select: { githubUrl: true },
+    });
+
+    await prisma.human.update({
+      where: { id: req.userId },
+      data: {
+        githubId,
+        githubVerified: true,
+        githubUsername: githubUser.login,
+        ...(currentUser && !currentUser.githubUrl
+          ? { githubUrl: `https://github.com/${githubUser.login}` }
+          : {}),
+      },
+    });
+
+    logger.info({ userId: req.userId, githubUsername: githubUser.login }, 'GitHub credibility verified');
+
+    res.json({ githubVerified: true, githubUsername: githubUser.login });
+  } catch (error) {
+    logger.error({ err: error }, 'GitHub verify error');
+    res.status(500).json({ error: 'GitHub verification failed' });
+  }
+});
+
 export default router;

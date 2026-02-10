@@ -490,6 +490,18 @@
     "notFound": "Bulunamadı",
     "serverError": "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
   },
+  "passwordStrength": {
+    "minLength": "En az 8 karakter",
+    "uppercase": "Bir büyük harf",
+    "lowercase": "Bir küçük harf",
+    "number": "Bir rakam",
+    "special": "Bir özel karakter",
+    "veryWeak": "Çok zayıf",
+    "weak": "Zayıf",
+    "fair": "Orta",
+    "strong": "Güçlü",
+    "veryStrong": "Çok güçlü"
+  },
   "errorBoundary": {
     "title": "Bir şeyler ters gitti",
     "message": "Beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyin.",

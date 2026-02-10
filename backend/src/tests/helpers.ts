@@ -111,7 +111,7 @@ export async function createTestUser(overrides?: {
 
   const response = await request(app)
     .post('/api/auth/signup')
-    .send({ email, password, name, termsAccepted: true });
+    .send({ email, password, name, termsAccepted: true, captchaToken: 'test-token' });
 
   if (response.status !== 201) {
     throw new Error(`Failed to create test user: ${JSON.stringify(response.body)}`);
@@ -131,7 +131,7 @@ export async function createTestUser(overrides?: {
 export async function loginUser(email: string, password: string): Promise<string> {
   const response = await request(app)
     .post('/api/auth/login')
-    .send({ email, password });
+    .send({ email, password, captchaToken: 'test-token' });
 
   if (response.status !== 200) {
     throw new Error(`Failed to login: ${JSON.stringify(response.body)}`);

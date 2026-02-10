@@ -7,6 +7,8 @@ import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
+import TrustBadge from '../components/TrustBadge';
+import type { TrustScoreData } from '../components/dashboard/types';
 
 interface Wallet {
   network: string;
@@ -35,6 +37,13 @@ function formatPrice(priceMin?: number, priceUnit?: string, priceCurrency?: stri
   return `${sym}${priceMin}`;
 }
 
+interface PublicVouch {
+  id: string;
+  comment?: string;
+  createdAt: string;
+  voucher: { id: string; name: string; username?: string };
+}
+
 interface PublicHuman {
   id: string;
   name: string;
@@ -56,12 +65,21 @@ interface PublicHuman {
   youtubeUrl?: string;
   websiteUrl?: string;
   linkedinVerified?: boolean;
+  githubVerified?: boolean;
+  githubUsername?: string;
   humanityVerified?: boolean;
   humanityScore?: number;
   humanityProvider?: string;
   humanityVerifiedAt?: string;
+  trustScore?: TrustScoreData;
+  reputation?: {
+    avgRating: number;
+    reviewCount: number;
+    jobsCompleted: number;
+  };
   wallets?: Wallet[];
   services: Service[];
+  vouches?: PublicVouch[];
 }
 
 function getHumanityTier(score?: number): string {
@@ -102,13 +120,27 @@ function HumanityBadge({ profile }: { profile: PublicHuman }) {
   );
 }
 
+function VouchBadge({ vouches }: { vouches?: PublicVouch[] }) {
+  if (!vouches || vouches.length === 0) return null;
+
+  return (
+    <span className="px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1 bg-emerald-100 text-emerald-700">
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      Vouched by {vouches.length}
+    </span>
+  );
+}
+
 export default function PublicProfile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [profile, setProfile] = useState<PublicHuman | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showAllVouches, setShowAllVouches] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -238,7 +270,6 @@ export default function PublicProfile() {
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <HumanityBadge profile={profile} />
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
                     profile.isAvailable
@@ -253,11 +284,58 @@ export default function PublicProfile() {
           </div>
 
           <div className="p-6 space-y-6">
+            {/* Trust Badge — primary trust signal */}
+            <TrustBadge
+              trustScore={profile.trustScore}
+              linkedinVerified={profile.linkedinVerified}
+              githubVerified={profile.githubVerified}
+              githubUsername={profile.githubUsername}
+              humanityVerified={profile.humanityVerified}
+              humanityScore={profile.humanityScore}
+              reputation={profile.reputation}
+              vouchCount={profile.vouches?.length}
+            />
+
             {/* Bio */}
             {profile.bio && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.profile.bio')}</h2>
                 <p className="text-gray-600">{profile.bio}</p>
+              </div>
+            )}
+
+            {/* Vouched by */}
+            {profile.vouches && profile.vouches.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('publicProfile.vouchedBy')}</h2>
+                <div className="space-y-2">
+                  {(showAllVouches ? profile.vouches : profile.vouches.slice(0, 3)).map((v) => (
+                    <div key={v.id} className="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg">
+                      <div className="shrink-0 w-7 h-7 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-medium">
+                        {v.voucher.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 text-sm">{v.voucher.name}</span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(v.createdAt).toLocaleDateString(i18n.language, { month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                        {v.comment && (
+                          <p className="text-sm text-gray-600 mt-0.5">{v.comment}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {profile.vouches.length > 3 && !showAllVouches && (
+                    <button
+                      onClick={() => setShowAllVouches(true)}
+                      className="text-sm text-emerald-700 hover:text-emerald-800 font-medium"
+                    >
+                      {t('publicProfile.showAllVouches', { count: profile.vouches.length - 3 })}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 

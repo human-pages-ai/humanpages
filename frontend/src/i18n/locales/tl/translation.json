@@ -490,6 +490,18 @@
     "notFound": "Hindi nahanap",
     "serverError": "Server error. Pakisubukang muli mamaya."
   },
+  "passwordStrength": {
+    "minLength": "Hindi bababa sa 8 character",
+    "uppercase": "Isang malaking titik",
+    "lowercase": "Isang maliit na titik",
+    "number": "Isang numero",
+    "special": "Isang espesyal na character",
+    "veryWeak": "Napakahina",
+    "weak": "Mahina",
+    "fair": "Katamtaman",
+    "strong": "Malakas",
+    "veryStrong": "Napakalakas"
+  },
   "errorBoundary": {
     "title": "May nangyaring mali",
     "message": "Nagkaroon ng hindi inaasahang error. Subukang i-refresh ang pahina.",

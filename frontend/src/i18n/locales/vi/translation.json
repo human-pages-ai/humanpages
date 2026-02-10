@@ -490,6 +490,18 @@
     "notFound": "Không tìm thấy",
     "serverError": "Lỗi máy chủ. Vui lòng thử lại sau."
   },
+  "passwordStrength": {
+    "minLength": "Ít nhất 8 ký tự",
+    "uppercase": "Một chữ cái viết hoa",
+    "lowercase": "Một chữ cái viết thường",
+    "number": "Một chữ số",
+    "special": "Một ký tự đặc biệt",
+    "veryWeak": "Rất yếu",
+    "weak": "Yếu",
+    "fair": "Trung bình",
+    "strong": "Mạnh",
+    "veryStrong": "Rất mạnh"
+  },
   "errorBoundary": {
     "title": "Đã xảy ra lỗi",
     "message": "Đã xảy ra lỗi không mong muốn. Vui lòng thử tải lại trang.",

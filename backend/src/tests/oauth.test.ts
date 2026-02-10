@@ -126,6 +126,7 @@ describe('OAuth API', () => {
           password: 'password123',
           name: 'Existing User',
           termsAccepted: true,
+          captchaToken: 'test-token',
         });
 
       // Login with Google using same email

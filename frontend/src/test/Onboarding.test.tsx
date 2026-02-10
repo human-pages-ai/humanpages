@@ -20,15 +20,23 @@ vi.mock('../lib/analytics', () => ({
   },
 }));
 
-// Mock LocationAutocomplete to behave like a simple input
+// Mock LocationAutocomplete — typing calls onChange(text), selecting calls onChange(text, lat, lng, nbhd)
 vi.mock('../components/LocationAutocomplete', () => ({
   default: ({ id, value, onChange, placeholder }: any) => (
-    <input
-      id={id}
-      value={value}
-      onChange={(e: any) => onChange(e.target.value)}
-      placeholder={placeholder}
-    />
+    <div>
+      <input
+        id={id}
+        value={value}
+        onChange={(e: any) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      <button
+        data-testid="select-location"
+        onClick={() => onChange('New York, NY, United States', 40.7, -74.0, '')}
+      >
+        Select Location
+      </button>
+    </div>
   ),
 }));
 
@@ -149,9 +157,8 @@ describe('Onboarding', () => {
         expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
       });
 
-      // Fill location but don't select skills
-      const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
-      fireEvent.change(locationInput, { target: { value: 'New York' } });
+      // Select a location from dropdown but don't select skills
+      fireEvent.click(screen.getByTestId('select-location'));
 
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
@@ -181,8 +188,8 @@ describe('Onboarding', () => {
         expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
       });
 
-      const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
-      fireEvent.change(locationInput, { target: { value: 'New York' } });
+      // Select a location from the dropdown (provides lat/lng)
+      fireEvent.click(screen.getByTestId('select-location'));
       fireEvent.click(screen.getByRole('button', { name: 'Pet Care' }));
 
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
@@ -192,9 +199,31 @@ describe('Onboarding', () => {
       });
 
       expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith({
-        location: 'New York',
+        location: 'New York, NY, United States',
+        locationLat: 40.7,
+        locationLng: -74.0,
         skills: ['Pet Care'],
       });
+    });
+
+    it('shows error when location is typed but not selected from dropdown', async () => {
+      renderWithProviders(<Onboarding />);
+
+      await waitFor(() => {
+        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+      });
+
+      // Type a location without selecting from the dropdown
+      const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
+      fireEvent.change(locationInput, { target: { value: 'manila' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Pet Care' }));
+
+      // Button should be disabled
+      const submitButton = screen.getByRole('button', { name: /onboarding.completeProfile/i });
+      expect(submitButton).toBeDisabled();
+
+      // Hint text should be visible
+      expect(screen.getByText('onboarding.step2.errorLocationSelect')).toBeInTheDocument();
     });
 
     it('shows error when API call fails', async () => {
@@ -206,8 +235,7 @@ describe('Onboarding', () => {
         expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
       });
 
-      const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
-      fireEvent.change(locationInput, { target: { value: 'New York' } });
+      fireEvent.click(screen.getByTestId('select-location'));
       fireEvent.click(screen.getByRole('button', { name: 'Pet Care' }));
 
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));

@@ -42,12 +42,16 @@ export default function Onboarding() {
       // Pre-fill if already set
       if (data.location) setLocation(data.location);
       if (data.neighborhood) setNeighborhood(data.neighborhood);
+      if (data.locationLat != null) setLocationLat(data.locationLat);
+      if (data.locationLng != null) setLocationLng(data.locationLng);
       if (data.skills?.length) setSkills(data.skills);
     } catch (error) {
       console.error('Failed to load profile:', error);
       navigate('/login');
     }
   };
+
+  const locationChosen = locationLat != null && locationLng != null;
 
   const handleSubmit = async () => {
     if (!location.trim() && skills.length === 0) {
@@ -56,6 +60,10 @@ export default function Onboarding() {
     }
     if (!location.trim()) {
       setError(t('onboarding.step2.errorLocation'));
+      return;
+    }
+    if (location.trim() && !locationChosen) {
+      setError(t('onboarding.step2.errorLocationSelect'));
       return;
     }
     if (skills.length === 0) {
@@ -126,15 +134,25 @@ export default function Onboarding() {
                 value={location}
                 onChange={(loc, lat, lng, nbhd) => {
                   setLocation(loc);
-                  if (nbhd) setNeighborhood(nbhd);
                   if (lat != null && lng != null) {
                     setLocationLat(lat);
                     setLocationLng(lng);
+                    setNeighborhood(nbhd || '');
+                  } else {
+                    // User is typing freely — clear previous selection
+                    setLocationLat(undefined);
+                    setLocationLng(undefined);
+                    setNeighborhood('');
                   }
                 }}
                 placeholder={t('onboarding.step2.locationPlaceholder')}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              {location.trim() && !locationChosen && (
+                <p className="mt-1 text-sm text-amber-600">
+                  {t('onboarding.step2.errorLocationSelect')}
+                </p>
+              )}
             </div>
 
             {/* Skills */}
@@ -197,7 +215,7 @@ export default function Onboarding() {
 
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || (!!location.trim() && !locationChosen)}
               className="w-full mt-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? t('onboarding.saving') : t('onboarding.completeProfile')}

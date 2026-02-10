@@ -6,6 +6,7 @@ import { api } from '../lib/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -48,7 +49,7 @@ export default function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(t('errors.passwordTooShort'));
       return;
     }
@@ -147,11 +148,12 @@ export default function ResetPassword() {
                 id="password"
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
+              <PasswordStrengthIndicator password={password} />
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
@@ -161,7 +163,7 @@ export default function ResetPassword() {
                 id="confirmPassword"
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"

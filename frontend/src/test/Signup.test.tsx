@@ -11,6 +11,14 @@ vi.mock('../lib/analytics', () => ({
   },
 }));
 
+// Mock react-turnstile to auto-verify
+vi.mock('react-turnstile', () => ({
+  Turnstile: ({ onVerify }: { onVerify: (token: string) => void }) => {
+    onVerify('test-captcha-token');
+    return null;
+  },
+}));
+
 // Create shared mock functions
 const mockSignup = vi.fn();
 const mockNavigate = vi.fn();
@@ -89,7 +97,7 @@ describe('Signup', () => {
     await user.click(screen.getByRole('button', { name: /auth.signUp/i }));
 
     await waitFor(() => {
-      expect(mockSignup).toHaveBeenCalledWith('test@example.com', 'password123', 'Test User', true);
+      expect(mockSignup).toHaveBeenCalledWith('test@example.com', 'password123', 'Test User', true, 'test-captcha-token');
     });
   });
 
