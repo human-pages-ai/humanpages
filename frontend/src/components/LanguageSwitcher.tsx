@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supportedLanguages, SupportedLanguage } from '../i18n';
+import { setUserLanguageChoice } from '../i18n/ipLanguageDetector';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 
@@ -56,6 +57,7 @@ export default function LanguageSwitcher() {
   }, []);
 
   const handleLanguageChange = (code: SupportedLanguage) => {
+    setUserLanguageChoice(code); // Prevent IP detection from overriding manual choice
     i18n.changeLanguage(code);
     setIsOpen(false);
 

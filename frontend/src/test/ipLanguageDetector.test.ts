@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// We need to test the detector module directly, so we unmock react-i18next
-// (the global setup mocks it, but this test doesn't use React)
-vi.unmock('react-i18next');
-
 // Mock fetch before importing the module
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -20,9 +16,16 @@ const mockLocalStorage = {
 };
 Object.defineProperty(window, 'localStorage', { value: mockLocalStorage, writable: true });
 
-import ipLanguageDetector from '../i18n/ipLanguageDetector';
+import {
+  setUserLanguageChoice,
+  getUserLanguageChoice,
+  getCachedIpLanguage,
+  fetchGeoLanguage,
+  resolveInitialLanguage,
+} from '../i18n/ipLanguageDetector';
 
 const CACHE_KEY = 'i18next_ip_lang';
+const USER_CHOICE_KEY = 'i18next_user_choice';
 
 describe('ipLanguageDetector', () => {
   beforeEach(() => {
@@ -35,132 +38,149 @@ describe('ipLanguageDetector', () => {
     vi.restoreAllMocks();
   });
 
-  it('should have name "ipGeo"', () => {
-    expect(ipLanguageDetector.name).toBe('ipGeo');
-  });
-
-  it('should return undefined when no cache exists', () => {
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBeUndefined();
-  });
-
-  it('should return cached language when cache is fresh', () => {
-    const cached = JSON.stringify({
-      language: 'es',
-      timestamp: Date.now(),
-    });
-    localStorageStore[CACHE_KEY] = cached;
-
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBe('es');
-  });
-
-  it('should return undefined when cache is expired', () => {
-    const cached = JSON.stringify({
-      language: 'es',
-      timestamp: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
-    });
-    localStorageStore[CACHE_KEY] = cached;
-
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBeUndefined();
-  });
-
-  it('should return undefined when cache is corrupted', () => {
-    localStorageStore[CACHE_KEY] = 'invalid-json';
-
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBeUndefined();
-  });
-
-  it('should fire background fetch when no cache exists', () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ language: 'fr' }),
+  describe('getCachedIpLanguage', () => {
+    it('should return null when no cache exists', () => {
+      expect(getCachedIpLanguage()).toBeNull();
     });
 
-    ipLanguageDetector.lookup!({});
-
-    // fetch should be called asynchronously
-    expect(mockFetch).toHaveBeenCalledWith('/api/geo/language', expect.objectContaining({
-      signal: expect.any(AbortSignal),
-    }));
-  });
-
-  it('should cache result from background fetch', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ language: 'pt' }),
+    it('should return cached language when cache is fresh', () => {
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'es',
+        timestamp: Date.now(),
+      });
+      expect(getCachedIpLanguage()).toBe('es');
     });
 
-    ipLanguageDetector.lookup!({});
-
-    // Wait for the async fetch to complete
-    await vi.waitFor(() => {
-      expect(mockLocalStorage.setItem).toHaveBeenCalled();
+    it('should return null when cache is expired', () => {
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'es',
+        timestamp: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
+      });
+      expect(getCachedIpLanguage()).toBeNull();
     });
 
-    const setItemCall = mockLocalStorage.setItem.mock.calls.find(
-      (call: string[]) => call[0] === CACHE_KEY
-    );
-    expect(setItemCall).toBeDefined();
-    const cached = JSON.parse(setItemCall![1]);
-    expect(cached.language).toBe('pt');
-    expect(cached.timestamp).toBeGreaterThan(0);
-  });
-
-  it('should not crash when fetch fails', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-    // Should not throw
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBeUndefined();
-
-    // Wait a tick for the rejected promise to settle
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // localStorage should NOT have been updated
-    expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
-  });
-
-  it('should not crash when fetch returns non-OK', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
+    it('should return null when cache is corrupted', () => {
+      localStorageStore[CACHE_KEY] = 'invalid-json';
+      expect(getCachedIpLanguage()).toBeNull();
     });
 
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBeUndefined();
-
-    await new Promise(resolve => setTimeout(resolve, 50));
-    expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
-  });
-
-  it('should return cached French for French-Canadian user', () => {
-    const cached = JSON.stringify({
-      language: 'fr',
-      timestamp: Date.now(),
+    it('should return cached French for French-Canadian user', () => {
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'fr',
+        timestamp: Date.now(),
+      });
+      expect(getCachedIpLanguage()).toBe('fr');
     });
-    localStorageStore[CACHE_KEY] = cached;
 
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBe('fr');
-  });
-
-  it('should return cached Portuguese for Brazilian user', () => {
-    const cached = JSON.stringify({
-      language: 'pt',
-      timestamp: Date.now(),
+    it('should return cached Portuguese for Brazilian user', () => {
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'pt',
+        timestamp: Date.now(),
+      });
+      expect(getCachedIpLanguage()).toBe('pt');
     });
-    localStorageStore[CACHE_KEY] = cached;
-
-    const result = ipLanguageDetector.lookup!({});
-    expect(result).toBe('pt');
   });
 
-  it('cacheUserLanguage should be a no-op', () => {
-    // Should not throw and should not set anything
-    ipLanguageDetector.cacheUserLanguage!('es', {});
-    expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
+  describe('user choice', () => {
+    it('setUserLanguageChoice should save to localStorage', () => {
+      setUserLanguageChoice('zh');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(USER_CHOICE_KEY, 'zh');
+    });
+
+    it('getUserLanguageChoice should return saved choice', () => {
+      localStorageStore[USER_CHOICE_KEY] = 'fr';
+      expect(getUserLanguageChoice()).toBe('fr');
+    });
+
+    it('getUserLanguageChoice should return null when no choice set', () => {
+      expect(getUserLanguageChoice()).toBeNull();
+    });
+  });
+
+  describe('fetchGeoLanguage', () => {
+    it('should fetch from /api/geo/language and cache result', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ language: 'es' }),
+      });
+
+      const result = await fetchGeoLanguage();
+      expect(result).toBe('es');
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/geo/language', expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }));
+
+      // Should have cached the result
+      const setItemCall = mockLocalStorage.setItem.mock.calls.find(
+        (call: string[]) => call[0] === CACHE_KEY
+      );
+      expect(setItemCall).toBeDefined();
+      const cached = JSON.parse(setItemCall![1]);
+      expect(cached.language).toBe('es');
+    });
+
+    it('should return null on fetch error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      const result = await fetchGeoLanguage();
+      expect(result).toBeNull();
+    });
+
+    it('should return null on non-OK response', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+      const result = await fetchGeoLanguage();
+      expect(result).toBeNull();
+    });
+
+    it('should return null when response has no language', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ error: 'no data' }),
+      });
+      const result = await fetchGeoLanguage();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('resolveInitialLanguage', () => {
+    it('should return user choice first, without fetching', async () => {
+      localStorageStore[USER_CHOICE_KEY] = 'fr';
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'es',
+        timestamp: Date.now(),
+      });
+
+      const result = await resolveInitialLanguage();
+      expect(result).toBe('fr');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('should return cached IP language without fetching', async () => {
+      localStorageStore[CACHE_KEY] = JSON.stringify({
+        language: 'pt',
+        timestamp: Date.now(),
+      });
+
+      const result = await resolveInitialLanguage();
+      expect(result).toBe('pt');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('should fetch when no cache or user choice exists', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ language: 'vi' }),
+      });
+
+      const result = await resolveInitialLanguage();
+      expect(result).toBe('vi');
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it('should return null when fetch fails and no cache', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      const result = await resolveInitialLanguage();
+      expect(result).toBeNull();
+    });
   });
 });
