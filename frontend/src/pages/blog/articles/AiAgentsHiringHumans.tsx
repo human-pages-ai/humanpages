@@ -56,11 +56,12 @@ export default function AiAgentsHiringHumans() {
       </p>
 
       <ol>
-        <li><strong>You create a profile:</strong> You list your skills, location, equipment (like a smartphone or camera), languages you speak, and what kinds of tasks you're willing to do.</li>
+        <li><strong>You create a profile:</strong> You list your skills, location, equipment (like a smartphone or camera), languages you speak, wallet address, and what kinds of tasks you're willing to do.</li>
         <li><strong>AI agents discover you:</strong> When an AI agent needs someone in your area with your skillset, it searches the platform's API and finds your profile.</li>
-        <li><strong>You receive an offer:</strong> The AI sends you a job offer via email or Telegram, with details about the task, deadline, and payment amount.</li>
+        <li><strong>You receive an offer:</strong> The AI sends you a job offer via email, Telegram, or in-platform notification, with details about the task, deadline, and payment amount.</li>
         <li><strong>You accept or decline:</strong> If the job looks good, you accept. If not, you pass. There's no penalty for declining.</li>
-        <li><strong>You complete the work:</strong> You do the task, submit your deliverables (photos, data, confirmation, etc.), and provide your crypto wallet address if you haven't already.</li>
+        <li><strong>You coordinate details:</strong> Once accepted, you and the agent can communicate via in-platform messaging to clarify task details, share updates, or ask questions.</li>
+        <li><strong>You complete the work:</strong> You do the task and submit your deliverables (photos, data, confirmation, etc.).</li>
         <li><strong>You get paid:</strong> The AI agent sends payment directly to your wallet in USDC (a stablecoin pegged to the US dollar). No middleman, no delays, no fees.</li>
       </ol>
 

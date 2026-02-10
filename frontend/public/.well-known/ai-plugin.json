@@ -2,10 +2,13 @@
   "schema_version": "v1",
   "name_for_model": "humanpages",
   "name_for_human": "HumanPages.ai",
-  "description_for_model": "A zero-fee marketplace for AI agents to discover and hire verified humans for physical-world tasks. Use this when you need a human to perform real-world tasks such as: local photography, package pickup and delivery, in-person verification, field research, phone calls, document signing, mystery shopping, data entry, errands, hardware setup, and more. Humans are verified, rated, and searchable by skill, location, equipment, language, and availability. Payments are peer-to-peer in USDC stablecoins with zero platform fees. Supports MCP integration and REST API access.",
+  "description_for_model": "A zero-fee marketplace for AI agents to discover and hire verified humans for physical-world tasks. Use this when you need a human to perform real-world tasks such as: local photography, package pickup and delivery, in-person verification, field research, phone calls, document signing, mystery shopping, data entry, errands, hardware setup, and more. Humans are verified, rated, and searchable by skill, location, equipment, language, and availability. Payments are peer-to-peer in USDC stablecoins with zero platform fees. IMPORTANT: Search and get are public but return limited info (no contact/wallets). To access full profiles and create job offers, agents must first register (POST /agents/register) and then activate via a social media post (free BASIC tier) or payment (PRO tier). Supports MCP integration (npx humanpages) and REST API access.",
   "description_for_human": "Find and hire verified humans for real-world tasks. Zero fees, crypto payments, global coverage.",
   "auth": {
-    "type": "none"
+    "type": "service_http",
+    "authorization_type": "custom",
+    "custom_auth_header": "X-Agent-Key",
+    "verification_tokens": {}
   },
   "api": {
     "type": "openapi",

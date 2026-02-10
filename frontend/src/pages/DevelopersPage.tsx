@@ -57,7 +57,7 @@ const results = await mcp.callTool("search_humans", {
   available_only: true
 });
 
-// Returns: name, contact, wallet addresses, services`;
+// Returns: public profiles with skills, location, rates, reputation`;
 
 const REST_SEARCH = `GET /api/humans/search?skill=photography&location=NYC&available=true
 
@@ -68,20 +68,33 @@ Response:
     "name": "Jane Doe",
     "location": "New York, NY",
     "skills": ["photography", "videography"],
-    "contactEmail": "jane@example.com",
-    "telegram": "@janedoe",
-    "wallets": [
-      { "network": "ethereum", "address": "0x..." }
-    ],
+    "isAvailable": true,
+    "minRateUsdc": 50,
     "services": [
-      { "title": "Event Photography", "priceMin": 200, "priceUnit": "FLAT_TASK" }
-    ]
+      { "title": "Event Photography", "price": 200, "category": "photography" }
+    ],
+    "reputation": { "averageRating": 4.8, "completedJobs": 12 }
   }
 ]`;
 
 const REST_GET_HUMAN = `GET /api/humans/:id
 
-Response:
+Response (public — no contact info or wallets):
+{
+  "id": "abc123",
+  "name": "Jane Doe",
+  "bio": "Professional photographer with 10 years experience",
+  "location": "New York, NY",
+  "skills": ["photography", "videography", "editing"],
+  "isAvailable": true,
+  "services": [...],
+  "reputation": { "averageRating": 4.8, "completedJobs": 12 }
+}`;
+
+const REST_GET_PROFILE = `GET /api/humans/:id/profile
+X-Agent-Key: your-api-key
+
+Response (full profile — requires activated agent):
 {
   "id": "abc123",
   "name": "Jane Doe",
@@ -90,10 +103,11 @@ Response:
   "skills": ["photography", "videography", "editing"],
   "contactEmail": "jane@example.com",
   "telegram": "@janedoe",
-  "isAvailable": true,
-  "linkedinUrl": "https://linkedin.com/in/janedoe",
-  "wallets": [...],
-  "services": [...]
+  "wallets": [
+    { "network": "ethereum", "address": "0x..." }
+  ],
+  "services": [...],
+  "reputation": { "averageRating": 4.8, "completedJobs": 12 }
 }`;
 
 export default function DevelopersPage() {
@@ -235,12 +249,42 @@ export default function DevelopersPage() {
             </div>
 
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.recordTitle')}</h3>
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.profileTitle')}</h3>
               <p className="text-slate-600 mt-1">
-                {t('dev.tools.recordDesc')}
+                {t('dev.tools.profileDesc')}
               </p>
               <div className="mt-2 text-sm text-slate-500">
-                <span className="font-medium">{t('dev.tools.recordParams')}</span> human_id, task_description, task_category, agreed_price
+                <span className="font-medium">{t('dev.tools.profileParams')}</span> id (required), X-Agent-Key header
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.registerTitle')}</h3>
+              <p className="text-slate-600 mt-1">
+                {t('dev.tools.registerDesc')}
+              </p>
+              <div className="mt-2 text-sm text-slate-500">
+                <span className="font-medium">{t('dev.tools.registerParams')}</span> name, contact_email
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.activateTitle')}</h3>
+              <p className="text-slate-600 mt-1">
+                {t('dev.tools.activateDesc')}
+              </p>
+              <div className="mt-2 text-sm text-slate-500">
+                <span className="font-medium">{t('dev.tools.activateParams')}</span> agent_id
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h3 className="font-mono text-blue-600 font-semibold">{t('dev.tools.createJobTitle')}</h3>
+              <p className="text-slate-600 mt-1">
+                {t('dev.tools.createJobDesc')}
+              </p>
+              <div className="mt-2 text-sm text-slate-500">
+                <span className="font-medium">{t('dev.tools.createJobParams')}</span> human_id, title, description, price_usdc
               </div>
             </div>
           </div>
@@ -281,6 +325,11 @@ export default function DevelopersPage() {
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.getTitle')}</h3>
                 <CodeBlock code={REST_GET_HUMAN} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.profileTitle')}</h3>
+                <CodeBlock code={REST_GET_PROFILE} />
               </div>
 
               <p className="text-sm text-slate-500">

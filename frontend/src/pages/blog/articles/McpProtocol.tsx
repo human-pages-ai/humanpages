@@ -48,10 +48,12 @@ export default function McpProtocol() {
 
       <ol>
         <li><strong>Connect to a Human Pages MCP server</strong> that exposes tools for finding humans.</li>
+        <li><strong>Register and activate</strong> to get an API key and unlock full profile access.</li>
         <li><strong>Search for available people</strong> in the right location with the right skills (e.g., photography equipment, availability).</li>
-        <li><strong>Retrieve detailed profiles</strong> to evaluate fit.</li>
-        <li><strong>Record a job offer</strong> with task details, payment amount, and contact info.</li>
-        <li><strong>Confirm the job was created</strong> and notify the human via email or Telegram.</li>
+        <li><strong>Retrieve full profiles</strong> including contact info and wallet addresses to evaluate fit.</li>
+        <li><strong>Create a job offer</strong> with task details and payment amount. The human is notified and can accept or reject.</li>
+        <li><strong>Communicate via in-platform messaging</strong> to coordinate task details.</li>
+        <li><strong>Submit payment</strong> after the work is completed, directly to the human's wallet.</li>
       </ol>
 
       <p>
@@ -61,7 +63,7 @@ export default function McpProtocol() {
       <h2>The Human Pages MCP Server</h2>
 
       <p>
-        The <Link to="/dev" className="text-blue-600 hover:text-blue-700 font-medium">Human Pages MCP server</Link> provides three core tools:
+        The <Link to="/dev" className="text-blue-600 hover:text-blue-700 font-medium">Human Pages MCP server</Link> provides 16 tools covering the full hiring lifecycle — from discovery through payment. Here are the key ones:
       </p>
 
       <h3>1. search_humans</h3>
@@ -78,17 +80,17 @@ export default function McpProtocol() {
       </pre>
 
       <p>
-        The tool returns a list of matching profiles, including key details like available services, pricing, and contact preferences.
+        The tool returns a list of matching public profiles, including available services, pricing, and reputation stats. Contact info and wallets are not included in search results — those require an activated agent.
       </p>
 
-      <h3>2. get_human</h3>
+      <h3>2. get_human / get_human_profile</h3>
       <p>
-        Once an agent identifies a potential match, it can retrieve the full profile using this tool. The response includes everything the agent needs to evaluate fit and contact the person—bio, skills, equipment, wallet addresses, and notification settings.
+        Once an agent identifies a potential match, it can retrieve the public profile using <code>get_human</code>, or get the full profile (including contact info, social links, and wallet addresses) using <code>get_human_profile</code>. The full profile endpoint requires an activated agent API key.
       </p>
 
-      <h3>3. record_job</h3>
+      <h3>3. create_job_offer</h3>
       <p>
-        When the agent is ready to make an offer, it uses this tool to create a job record. The job includes:
+        When the agent is ready to make an offer, it uses this tool to create a job offer. The offer includes:
       </p>
 
       <ul>
@@ -96,11 +98,25 @@ export default function McpProtocol() {
         <li>The deadline</li>
         <li>The payment amount in USDC</li>
         <li>The network to use for payment (Ethereum, Base, Polygon, or Arbitrum)</li>
-        <li>Contact info for the hiring agent or human operator</li>
       </ul>
 
       <p>
-        As soon as the job is recorded, the platform sends a notification to the person via their preferred channel (email or Telegram). The human can then review the offer and decide whether to accept.
+        As soon as the job offer is created, the platform sends a notification to the person via their preferred channel (email, Telegram, or in-platform). The human can then review the offer and decide whether to accept. Once accepted, both parties can communicate via in-platform messaging to coordinate details.
+      </p>
+
+      <h2>Agent Registration and Activation</h2>
+
+      <p>
+        Before an agent can access full profiles or create job offers, it needs to register and activate. Registration is free and gives the agent an API key. Activation can be done in two ways:
+      </p>
+
+      <ul>
+        <li><strong>BASIC tier (free):</strong> The agent requests an activation code and includes it in a public social media post about Human Pages. Once verified, the agent gets BASIC access with 5 job offers/day.</li>
+        <li><strong>PRO tier (paid):</strong> The agent makes a one-time USDC payment for higher rate limits — 15 job offers/day and more profile lookups.</li>
+      </ul>
+
+      <p>
+        Public search and basic profile viewing remain free and don't require activation. Activation is only needed for accessing contact info, wallets, and creating job offers.
       </p>
 
       <h2>Installing the MCP Server</h2>
@@ -116,9 +132,9 @@ export default function McpProtocol() {
       <pre>
 {`{
   "mcpServers": {
-    "human-pages": {
+    "humanpages": {
       "command": "npx",
-      "args": ["-y", "@human-pages/mcp-server"]
+      "args": ["-y", "humanpages"]
     }
   }
 }`}

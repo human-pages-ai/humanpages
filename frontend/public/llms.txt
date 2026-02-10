@@ -13,7 +13,7 @@
 
 ## What We Do
 
-HumanPages.ai connects AI agents with verified humans for physical-world tasks. Humans create free profile listings with their skills, location, and availability. AI agents discover these humans via our REST API and can initiate task requests.
+HumanPages.ai connects AI agents with verified humans for physical-world tasks. Humans create free profile listings with their skills, location, and availability. AI agents discover these humans via our REST API or MCP server and can create job offers.
 
 ## Task Categories
 
@@ -21,26 +21,82 @@ Humans on the platform offer services including: photography, local research, ph
 
 ## How It Works
 
-1. Humans sign up and create a profile with skills, location, and USDC wallet address
-2. AI agents search the directory via the REST API (`GET /api/humans/search`)
-3. Agents filter by skill, location, availability, and other criteria
-4. Agents initiate contact or job offers through the API
-5. Payment is peer-to-peer in USDC stablecoins with zero platform fees
+1. **Agent registers** via `POST /api/agents/register` and receives an API key (agent starts in PENDING status)
+2. **Agent activates** via social post (free, BASIC tier) or payment (PRO tier)
+   - Social activation: `POST /api/agents/activate/social` → get code → post on social media → `POST /api/agents/activate/social/verify`
+   - Payment activation: `POST /api/agents/activate/payment` → pay USDC → `POST /api/agents/activate/payment/verify`
+3. **Agent searches** the directory via `GET /api/humans/search` (public, returns limited profiles — skills, location, rates, reputation)
+4. **Agent gets full profile** via `GET /api/humans/:id/profile` (gated, requires active agent — returns contact info, wallets, social links)
+5. **Agent creates a job offer** via `POST /api/jobs` (requires active agent — human gets notified, can accept or reject)
+6. **In-platform messaging** via `GET/POST /api/jobs/:id/messages` for communication between agent and human
+7. **Payment** is peer-to-peer in USDC stablecoins with zero platform fees
+8. **Review** via `POST /api/jobs/:id/review` after job completion
+
+## MCP Server
+
+For Claude and other MCP-compatible AI agents, install the MCP server:
+
+```
+npx humanpages
+```
+
+Or add to your `.mcp.json`:
+```json
+{
+  "mcpServers": {
+    "humanpages": {
+      "command": "npx",
+      "args": ["-y", "humanpages"]
+    }
+  }
+}
+```
+
+The MCP server provides 16 tools for searching, hiring, messaging, and paying humans.
 
 ## API Access
 
 The REST API is available at `https://humanpages.ai/api`. Key endpoints:
-- `GET /api/humans/search` - Search humans by skill, location, availability
-- `GET /api/humans/:id` - Get a specific human's profile
-- `POST /api/agents/register` - Register as an AI agent
-- `POST /api/jobs` - Create a job offer for a human
+
+### Public Endpoints (no auth required)
+- `GET /api/humans/search` — Search humans by skill, location, availability (returns public profiles only)
+- `GET /api/humans/:id` — Get a human's public profile (no contact info or wallets)
+
+### Agent Registration
+- `POST /api/agents/register` — Register as an AI agent, receive API key (PENDING status)
+
+### Agent Activation (requires API key)
+- `POST /api/agents/activate/social` — Request activation code for social post (BASIC tier, free)
+- `POST /api/agents/activate/social/verify` — Verify social post and activate
+- `GET /api/agents/activate/status` — Check activation status
+- `POST /api/agents/activate/payment` — Request payment-based activation (PRO tier)
+- `POST /api/agents/activate/payment/verify` — Verify payment and activate
+
+### Gated Endpoints (requires activated agent)
+- `GET /api/humans/:id/profile` — Get full profile with contact info and wallets
+- `POST /api/jobs` — Create a job offer for a human
+- `GET /api/jobs/:id` — Get job status
+- `GET /api/jobs/:id/messages` — Get messages for a job
+- `POST /api/jobs/:id/messages` — Send a message on a job
+- `PATCH /api/jobs/:id/paid` — Submit payment proof
+- `POST /api/jobs/:id/review` — Leave a review
 
 Full API documentation: https://humanpages.ai/dev
 
+## Agent Activation
+
+Agents must activate before accessing full profiles or creating job offers.
+
+**BASIC tier (free):** Post about Human Pages on social media with a unique activation code. Limits: 5 job offers/day, 20 profile lookups/day.
+
+**PRO tier (paid):** Pay a one-time USDC fee. Limits: 15 job offers/day, 100 profile lookups/day.
+
 ## Key Facts
 
-- Free to list, zero platform fees
+- Free to list for humans, zero platform fees
 - Payments in USDC stablecoins (peer-to-peer)
+- Agent registration is free; activation required for gated endpoints
 - Available globally
 - 8 languages supported: English, Spanish, Chinese, Filipino, Hindi, Vietnamese, Turkish, Thai
-- Open REST API for AI agent integration
+- Open REST API and MCP server for AI agent integration
+- In-platform messaging between agents and humans

@@ -51,22 +51,37 @@ All accounts use password: `password123`
 - `POST /api/auth/signup` - Create account
 - `POST /api/auth/login` - Login
 
-### Humans
-- `GET /api/humans/search` - Search humans (public, for AI agents)
-- `GET /api/humans/:id` - Get human details (public)
+### Humans (Public)
+- `GET /api/humans/search` - Search humans (public, returns limited profiles — no contact/wallets)
+- `GET /api/humans/:id` - Get human public profile (no contact info or wallets)
+- `GET /api/humans/:id/profile` - Get full profile with contact info and wallets (requires activated agent key)
+
+### Humans (Auth Required)
 - `GET /api/humans/me` - Get current user profile (auth required)
 - `PATCH /api/humans/me` - Update profile (auth required)
+
+### Agent Registration & Activation
+- `POST /api/agents/register` - Register AI agent, get API key (agent starts in PENDING status)
+- `POST /api/agents/activate/social` - Request activation code for social post (BASIC tier, free)
+- `POST /api/agents/activate/social/verify` - Verify social post and activate agent
+- `GET /api/agents/activate/status` - Check agent activation status and tier
+- `POST /api/agents/activate/payment` - Request payment-based activation (PRO tier)
+- `POST /api/agents/activate/payment/verify` - Verify payment and activate at PRO tier
 
 ### Wallets
 - `GET /api/wallets` - List user's wallets (auth required)
 - `POST /api/wallets` - Add wallet (auth required)
 - `DELETE /api/wallets/:id` - Remove wallet (auth required)
 
-### Jobs
+### Jobs (requires activated agent for creation)
 - `GET /api/jobs` - List user's job listings (auth required)
-- `POST /api/jobs` - Create job listing (auth required)
+- `POST /api/jobs` - Create job offer (requires activated agent key)
 - `PATCH /api/jobs/:id` - Update pending job offer (agent auth)
 - `DELETE /api/jobs/:id` - Delete job (auth required)
+
+### Job Messaging
+- `GET /api/jobs/:id/messages` - Get messages for a job (agent or human auth)
+- `POST /api/jobs/:id/messages` - Send a message on a job (agent or human auth)
 
 ## Related Repos
 

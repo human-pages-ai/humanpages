@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HumanPages.ai API",
-    "description": "REST API for AI agents to discover, hire, and pay verified humans for physical-world tasks. Zero platform fees, peer-to-peer USDC payments, global coverage.",
-    "version": "1.0.0",
+    "description": "REST API for AI agents to discover, hire, and pay verified humans for physical-world tasks. Agents must register and activate before accessing full profiles or creating job offers. Zero platform fees, peer-to-peer USDC payments, global coverage.",
+    "version": "1.1.0",
     "contact": {
       "name": "HumanPages.ai",
       "url": "https://humanpages.ai/dev",
@@ -22,7 +22,7 @@
       "get": {
         "operationId": "searchHumans",
         "summary": "Search for available humans by skill, location, and other criteria",
-        "description": "Public endpoint. Search the directory of verified humans. Filter by skill tags, GPS location with radius, equipment, language, rate range, availability, and work mode. Returns matching profiles with reputation stats. Rate limit: 30 requests/minute.",
+        "description": "Public endpoint. Search the directory of verified humans. Filter by skill tags, GPS location with radius, equipment, language, rate range, availability, and work mode. Returns matching public profiles (no contact info or wallets — use /humans/{id}/profile for full details). Rate limit: 30 requests/minute.",
         "parameters": [
           {
             "name": "skill",
@@ -99,12 +99,12 @@
         ],
         "responses": {
           "200": {
-            "description": "Array of matching human profiles",
+            "description": "Array of matching public human profiles (limited info — no contact or wallets)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/HumanProfile" }
+                  "items": { "$ref": "#/components/schemas/HumanPublicProfile" }
                 }
               }
             }
@@ -115,8 +115,8 @@
     "/humans/{id}": {
       "get": {
         "operationId": "getHuman",
-        "summary": "Get a specific human's full profile",
-        "description": "Public endpoint. Returns detailed profile including skills, location, wallets, services, and reputation stats.",
+        "summary": "Get a specific human's public profile",
+        "description": "Public endpoint. Returns public profile with skills, location, services, and reputation stats. Does not include contact info or wallets. Use /humans/{id}/profile for full details (requires active agent).",
         "parameters": [
           {
             "name": "id",
@@ -128,12 +128,48 @@
         ],
         "responses": {
           "200": {
-            "description": "Full human profile",
+            "description": "Public human profile (no contact info or wallets)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/HumanProfile" }
+                "schema": { "$ref": "#/components/schemas/HumanPublicProfile" }
               }
             }
+          },
+          "404": {
+            "description": "Human not found"
+          }
+        }
+      }
+    },
+    "/humans/{id}/profile": {
+      "get": {
+        "operationId": "getHumanProfile",
+        "summary": "Get a human's full profile including contact info and wallets",
+        "description": "Gated endpoint. Returns the complete profile including contact email, Telegram, WhatsApp, social links, and wallet addresses. Requires an activated agent API key in X-Agent-Key header.",
+        "security": [{ "agentApiKey": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Human profile ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full human profile with contact info and wallets",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HumanFullProfile" }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid agent API key"
+          },
+          "403": {
+            "description": "Agent not activated. Complete activation first via /agents/activate/social or /agents/activate/payment."
           },
           "404": {
             "description": "Human not found"
@@ -144,8 +180,8 @@
     "/agents/register": {
       "post": {
         "operationId": "registerAgent",
-        "summary": "Register as an AI agent to create job offers",
-        "description": "Register your AI agent to get an API key. The API key is required for creating job offers. Rate limit: 5 registrations/hour per IP.",
+        "summary": "Register as an AI agent",
+        "description": "Register your AI agent to get an API key. The agent starts in PENDING status. You must activate (via social post or payment) before you can access full profiles or create job offers. Rate limit: 5 registrations/hour per IP.",
         "requestBody": {
           "required": true,
           "content": {
@@ -177,7 +213,7 @@
         },
         "responses": {
           "201": {
-            "description": "Agent registered successfully. Returns API key (save it — shown only once).",
+            "description": "Agent registered with PENDING status. Save the API key — it is only shown once. You must activate before using gated endpoints.",
             "content": {
               "application/json": {
                 "schema": {
@@ -196,11 +232,200 @@
         }
       }
     },
+    "/agents/activate/social": {
+      "post": {
+        "operationId": "requestActivationCode",
+        "summary": "Request an activation code for social-post activation (BASIC tier)",
+        "description": "Request a unique activation code to include in a public social media post about Human Pages. This is the free activation path (BASIC tier). Requires agent API key.",
+        "security": [{ "agentApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["agentId"],
+                "properties": {
+                  "agentId": {
+                    "type": "string",
+                    "description": "Your registered agent ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Activation code generated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActivationCode" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/activate/social/verify": {
+      "post": {
+        "operationId": "verifySocialActivation",
+        "summary": "Verify social post and activate agent (BASIC tier)",
+        "description": "Submit the URL of your public social media post containing the activation code. The system verifies the post exists and contains the code, then activates the agent at BASIC tier.",
+        "security": [{ "agentApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["agentId", "postUrl"],
+                "properties": {
+                  "agentId": {
+                    "type": "string",
+                    "description": "Your registered agent ID"
+                  },
+                  "postUrl": {
+                    "type": "string",
+                    "description": "URL of the public social media post containing the activation code"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent activated at BASIC tier",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActivationStatus" }
+              }
+            }
+          },
+          "400": {
+            "description": "Post not found or activation code not present in post"
+          }
+        }
+      }
+    },
+    "/agents/activate/status": {
+      "get": {
+        "operationId": "getActivationStatus",
+        "summary": "Check agent activation status",
+        "description": "Returns the current activation status and tier for the agent. Requires agent API key.",
+        "security": [{ "agentApiKey": [] }],
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "query",
+            "required": true,
+            "description": "Your registered agent ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current activation status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActivationStatus" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/activate/payment": {
+      "post": {
+        "operationId": "requestPaymentActivation",
+        "summary": "Request payment-based activation (PRO tier)",
+        "description": "Initiate a paid activation to unlock PRO tier with higher rate limits. Returns a payment address and amount.",
+        "security": [{ "agentApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["agentId"],
+                "properties": {
+                  "agentId": {
+                    "type": "string",
+                    "description": "Your registered agent ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment details for PRO activation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentAddress": { "type": "string", "description": "USDC wallet address to send payment to" },
+                    "amountUsdc": { "type": "number", "description": "Amount in USDC required" },
+                    "network": { "type": "string", "description": "Blockchain network for payment" },
+                    "expiresAt": { "type": "string", "format": "date-time", "description": "Payment deadline" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/activate/payment/verify": {
+      "post": {
+        "operationId": "verifyPaymentActivation",
+        "summary": "Verify payment and activate agent at PRO tier",
+        "description": "Submit the transaction hash for your activation payment. The system verifies the on-chain payment and activates the agent at PRO tier.",
+        "security": [{ "agentApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["agentId", "txHash"],
+                "properties": {
+                  "agentId": {
+                    "type": "string",
+                    "description": "Your registered agent ID"
+                  },
+                  "txHash": {
+                    "type": "string",
+                    "description": "On-chain transaction hash of the activation payment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent activated at PRO tier",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActivationStatus" }
+              }
+            }
+          },
+          "400": {
+            "description": "Payment not found or insufficient amount"
+          }
+        }
+      }
+    },
     "/jobs": {
       "post": {
         "operationId": "createJob",
         "summary": "Create a job offer for a human",
-        "description": "Send a job offer to a specific human. Requires agent API key in X-Agent-Key header. The human will be notified and can accept or reject. Rate limit: 20 offers/hour per agent.",
+        "description": "Send a job offer to a specific human. Requires an activated agent API key in X-Agent-Key header. The human will be notified and can accept or reject. Rate limits: BASIC tier: 5 offers/day, PRO tier: 15 offers/day.",
         "security": [{ "agentApiKey": [] }],
         "requestBody": {
           "required": true,
@@ -265,6 +490,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Agent not activated. Complete activation first."
           }
         }
       }
@@ -273,7 +501,8 @@
       "get": {
         "operationId": "getJob",
         "summary": "Get job status and details",
-        "description": "Check the current status of a job offer. Public endpoint.",
+        "description": "Check the current status of a job offer. Requires agent API key.",
+        "security": [{ "agentApiKey": [] }],
         "parameters": [
           {
             "name": "id",
@@ -289,6 +518,78 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/messages": {
+      "get": {
+        "operationId": "getJobMessages",
+        "summary": "Get messages for a job",
+        "description": "Retrieve the message history for a job. Used for in-platform communication between agent and human. Requires agent API key.",
+        "security": [{ "agentApiKey": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Job ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of messages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Message" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "sendJobMessage",
+        "summary": "Send a message on a job",
+        "description": "Send a message to the human (or agent) on a job thread. Used for in-platform communication. Requires agent API key.",
+        "security": [{ "agentApiKey": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Job ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "Message text"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Message" }
               }
             }
           }
@@ -394,12 +695,13 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-Agent-Key",
-        "description": "Agent API key obtained from POST /agents/register"
+        "description": "Agent API key obtained from POST /agents/register. Must be activated for gated endpoints."
       }
     },
     "schemas": {
-      "HumanProfile": {
+      "HumanPublicProfile": {
         "type": "object",
+        "description": "Public profile returned by search and get endpoints. Does not include contact info or wallets.",
         "properties": {
           "id": { "type": "string" },
           "name": { "type": "string" },
@@ -416,17 +718,6 @@
           "isAvailable": { "type": "boolean" },
           "humanityVerified": { "type": "boolean" },
           "humanityScore": { "type": "number" },
-          "wallets": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "network": { "type": "string" },
-                "chain": { "type": "string" },
-                "address": { "type": "string" }
-              }
-            }
-          },
           "services": {
             "type": "array",
             "items": {
@@ -449,6 +740,37 @@
           }
         }
       },
+      "HumanFullProfile": {
+        "type": "object",
+        "description": "Full profile returned by the gated /humans/{id}/profile endpoint. Includes all public fields plus contact info and wallets. Requires an activated agent.",
+        "allOf": [
+          { "$ref": "#/components/schemas/HumanPublicProfile" },
+          {
+            "type": "object",
+            "properties": {
+              "contactEmail": { "type": "string" },
+              "telegram": { "type": "string" },
+              "whatsapp": { "type": "string" },
+              "linkedinUrl": { "type": "string" },
+              "twitterUrl": { "type": "string" },
+              "githubUrl": { "type": "string" },
+              "instagramUrl": { "type": "string" },
+              "websiteUrl": { "type": "string" },
+              "wallets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "network": { "type": "string" },
+                    "chain": { "type": "string" },
+                    "address": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
       "Agent": {
         "type": "object",
         "properties": {
@@ -456,7 +778,32 @@
           "name": { "type": "string" },
           "description": { "type": "string" },
           "website": { "type": "string" },
+          "status": { "type": "string", "enum": ["PENDING", "BASIC", "PRO"], "description": "Agent activation status. PENDING = registered but not activated. BASIC = free tier (social activation). PRO = paid tier." },
           "domainVerified": { "type": "boolean" }
+        }
+      },
+      "ActivationStatus": {
+        "type": "object",
+        "properties": {
+          "agentId": { "type": "string" },
+          "status": { "type": "string", "enum": ["PENDING", "BASIC", "PRO"] },
+          "tier": { "type": "string", "enum": ["BASIC", "PRO"] },
+          "activatedAt": { "type": "string", "format": "date-time" },
+          "rateLimits": {
+            "type": "object",
+            "properties": {
+              "jobOffersPerDay": { "type": "integer", "description": "BASIC: 5/day, PRO: 15/day" },
+              "profileAccessPerDay": { "type": "integer", "description": "BASIC: 20/day, PRO: 100/day" }
+            }
+          }
+        }
+      },
+      "ActivationCode": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "description": "Unique activation code to include in your social media post" },
+          "expiresAt": { "type": "string", "format": "date-time", "description": "Code expiration time" },
+          "instructions": { "type": "string", "description": "Instructions for creating the social post" }
         }
       },
       "Job": {
@@ -475,6 +822,16 @@
           "agentId": { "type": "string" },
           "paymentTxHash": { "type": "string" },
           "paymentNetwork": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "jobId": { "type": "string" },
+          "senderType": { "type": "string", "enum": ["AGENT", "HUMAN"], "description": "Who sent the message" },
+          "content": { "type": "string" },
           "createdAt": { "type": "string", "format": "date-time" }
         }
       }
