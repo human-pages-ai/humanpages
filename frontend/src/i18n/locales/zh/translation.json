@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "控制面板",
+    "settings": "Settings",
     "welcome": "欢迎",
     "shareProfile": "分享你的资料",
     "shareProfileDesc": "分享您的个人资料链接，让AI代理和客户找到您",

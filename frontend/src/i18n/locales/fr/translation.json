@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
+    "settings": "Settings",
     "welcome": "Bienvenue",
     "shareProfile": "Partagez votre profil",
     "shareProfileDesc": "Partagez le lien de votre profil pour que les agents IA et les clients vous trouvent",

@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển",
+    "settings": "Settings",
     "welcome": "Chào mừng",
     "shareProfile": "Chia sẻ hồ sơ",
     "shareProfileDesc": "Chia sẻ liên kết hồ sơ để AI agent và khách hàng có thể tìm thấy bạn",

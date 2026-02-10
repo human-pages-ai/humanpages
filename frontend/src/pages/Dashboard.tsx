@@ -5,11 +5,12 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import { posthog } from '../lib/posthog';
-import ProfileCompleteness from '../components/ProfileCompleteness';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Profile, Job, ReviewStats, Service } from '../components/dashboard/types';
+import StatusHeader from '../components/dashboard/StatusHeader';
+import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
 import WorkStatusSection from '../components/dashboard/WorkStatusSection';
@@ -24,8 +25,9 @@ import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
 // TODO: Unhide once LinkedIn redirect URIs are configured
 // import LinkedInSection from '../components/dashboard/LinkedInSection';
-import CollapsibleSection from '../components/dashboard/CollapsibleSection';
 import SEO from '../components/SEO';
+
+const VALID_TABS: DashboardTab[] = ['jobs', 'profile', 'payments', 'settings'];
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -35,6 +37,20 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Tab state — driven by URL search param
+  const tabParam = searchParams.get('tab') as DashboardTab | null;
+  const activeTab: DashboardTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'jobs';
+
+  const setActiveTab = (tab: DashboardTab) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (tab === 'jobs') {
+      newParams.delete('tab');
+    } else {
+      newParams.set('tab', tab);
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -493,6 +509,8 @@ export default function Dashboard() {
     return <div className="min-h-screen flex items-center justify-center">{t('common.error')}</div>;
   }
 
+  const pendingJobCount = jobs.filter(j => j.status === 'PENDING').length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO title="Dashboard" noindex />
@@ -509,7 +527,7 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
         {/* Email verification banner */}
         {profile.emailVerified === false && (
           <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
@@ -528,194 +546,155 @@ export default function Dashboard() {
           </div>
         )}
 
-        <ProfileCompleteness
+        {/* Status header — always visible */}
+        <StatusHeader
           profile={profile}
-          onEditProfile={(fieldId) => {
-            setEditingProfile(true);
-            if (fieldId) {
-              setTimeout(() => {
-                const el = document.getElementById(fieldId);
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  el.focus();
-                }
-              }, 100);
-            }
-          }}
-          onAddService={() => {
-            setShowServiceForm(true);
-            setTimeout(() => {
-              document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }}
-          onScrollToWallets={() => {
-            setTimeout(() => {
-              document.getElementById('payment-setup-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }}
-        />
-
-        {/* Profile - always visible */}
-        <ProfileSection
-          profile={profile}
-          editingProfile={editingProfile}
-          setEditingProfile={setEditingProfile}
-          hasWallet={profile.wallets.length > 0}
-          onScrollToWallets={() => {
-            setTimeout(() => {
-              document.getElementById('payment-setup-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }}
-          profileForm={profileForm}
-          setProfileForm={setProfileForm}
+          jobs={jobs}
+          reviewStats={reviewStats}
           saving={saving}
-          onSaveProfile={saveProfile}
+          onToggleAvailability={toggleAvailability}
         />
 
-        {/* Services & Work */}
-        <CollapsibleSection
-          title="Services & Work"
-          subtitle={`${profile.services.length} ${profile.services.length === 1 ? 'service' : 'services'} · ${profile.isAvailable ? t('dashboard.workStatus.active') : t('dashboard.workStatus.paused')}`}
-          defaultOpen
-          id="services-section"
-        >
-          <ServicesSection
-            services={profile.services}
-            showServiceForm={showServiceForm}
-            setShowServiceForm={setShowServiceForm}
-            serviceForm={serviceForm}
-            setServiceForm={setServiceForm}
-            saving={saving}
-            onAddService={addService}
-            onToggleServiceActive={toggleServiceActive}
-            onDeleteService={deleteService}
-          />
-          <WorkStatusSection
-            isAvailable={profile.isAvailable}
-            paymentPreference={profile.paymentPreference || 'BOTH'}
-            emailNotifications={profile.emailNotifications !== false}
-            telegramNotifications={profile.telegramNotifications !== false}
-            whatsappNotifications={profile.whatsappNotifications !== false}
-            emailDigestMode={profile.emailDigestMode || 'REALTIME'}
-            saving={saving}
-            onToggleAvailability={toggleAvailability}
-            onPaymentPreferenceChange={changePaymentPreference}
-            onToggleNotification={toggleNotification}
-            onEmailDigestModeChange={changeEmailDigestMode}
-          />
-        </CollapsibleSection>
-
-        {/* Payment Setup */}
-        <CollapsibleSection
-          title="Payment"
-          subtitle={profile.wallets.length > 0 ? `${profile.wallets.length} ${profile.wallets.length === 1 ? 'wallet' : 'wallets'} connected` : t('dashboard.wallets.emptyDescription')}
-          defaultOpen
-          id="payment-setup-section"
-          badge={profile.wallets.length > 0 ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              {profile.wallets.length}
-            </span>
-          ) : undefined}
-        >
-          <WalletsSection
-            wallets={profile.wallets}
-            saving={saving}
-            onAddWallet={addWallet}
-            onDeleteWallet={deleteWallet}
-          />
-        </CollapsibleSection>
-
-        {/* Jobs */}
-        <CollapsibleSection
-          title="Job Offers"
-          subtitle={reviewStats ? t('dashboard.jobs.stats', { completed: reviewStats.completedJobs, reviews: reviewStats.totalReviews }) : undefined}
-          defaultOpen
-          badge={jobs.filter(j => j.status === 'PENDING').length > 0 ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              {jobs.filter(j => j.status === 'PENDING').length} pending
-            </span>
-          ) : undefined}
-        >
-          <JobsSection
-            jobs={jobs}
-            jobsLoading={jobsLoading}
-            jobFilter={jobFilter}
-            setJobFilter={setJobFilter}
-            reviewStats={reviewStats}
-            profileId={profile.id}
-            profileUsername={profile.username}
-          />
-        </CollapsibleSection>
-
-        {/* Sharing & Growth */}
-        <CollapsibleSection
-          title="Sharing & Growth"
-          subtitle={t('dashboard.shareProfileDesc')}
-        >
-          <ShareReferralSection
-            profile={profile}
-            copiedProfile={copiedProfile}
-            setCopiedProfile={setCopiedProfile}
-          />
-          <VouchSection />
-        </CollapsibleSection>
-
-        {/* Integrations & Filters */}
-        <CollapsibleSection
-          title="Integrations"
-          subtitle={telegramStatus?.connected ? t('dashboard.telegram.connected') : t('dashboard.telegram.notConnected')}
-          badge={telegramStatus?.connected ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              Connected
-            </span>
-          ) : undefined}
-        >
-          <TelegramSection
-            telegramStatus={telegramStatus}
-            telegramLinkUrl={telegramLinkUrl}
-            telegramLoading={telegramLoading}
-            onConnect={connectTelegram}
-            onDisconnect={disconnectTelegram}
-          />
-          <OfferFiltersSection
-            profile={profile}
-            editingFilters={editingFilters}
-            setEditingFilters={setEditingFilters}
-            filtersForm={filtersForm}
-            setFiltersForm={setFiltersForm}
-            saving={saving}
-            onSaveFilters={saveFilters}
-          />
-        </CollapsibleSection>
-
-        {/* Trust & Security */}
-        <CollapsibleSection
-          title="Trust & Verification"
-          subtitle={profile.humanityVerified ? 'Verified human' : 'Boost your trust score'}
-          badge={profile.trustScore ? (
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-              profile.trustScore.level === 'trusted' ? 'bg-green-100 text-green-800' :
-              profile.trustScore.level === 'verified' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {profile.trustScore.score}%
-            </span>
-          ) : undefined}
-        >
-          <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
-          {/* TODO: Unhide once LinkedIn redirect URIs are configured */}
-          {/* <LinkedInSection profile={profile} onProfileUpdate={setProfile} /> */}
-          <HumanitySection profile={profile} onVerified={loadProfile} />
-        </CollapsibleSection>
-
-        {/* Account - already has its own collapsible behavior */}
-        <AccountSection
-          profile={profile}
-          onDeleteAccount={deleteAccount}
-          onExportData={exportData}
-          onProfileUpdate={setProfile}
-          saving={saving}
+        {/* Tab navigation */}
+        <DashboardTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          pendingJobCount={pendingJobCount}
         />
+
+        {/* Tab content */}
+        <div className="mt-2">
+          {/* ───── JOBS TAB ───── */}
+          {activeTab === 'jobs' && (
+            <div className="space-y-4">
+              <JobsSection
+                jobs={jobs}
+                jobsLoading={jobsLoading}
+                jobFilter={jobFilter}
+                setJobFilter={setJobFilter}
+                reviewStats={reviewStats}
+                profileId={profile.id}
+                profileUsername={profile.username}
+              />
+            </div>
+          )}
+
+          {/* ───── PROFILE TAB ───── */}
+          {activeTab === 'profile' && (
+            <div className="space-y-6">
+              {/* Two-column layout on desktop */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left: Profile info */}
+                <div>
+                  <ProfileSection
+                    profile={profile}
+                    editingProfile={editingProfile}
+                    setEditingProfile={setEditingProfile}
+                    hasWallet={profile.wallets.length > 0}
+                    onScrollToWallets={() => setActiveTab('payments')}
+                    profileForm={profileForm}
+                    setProfileForm={setProfileForm}
+                    saving={saving}
+                    onSaveProfile={saveProfile}
+                  />
+                </div>
+
+                {/* Right: Services + Work status */}
+                <div className="space-y-6" id="services-section">
+                  <ServicesSection
+                    services={profile.services}
+                    showServiceForm={showServiceForm}
+                    setShowServiceForm={setShowServiceForm}
+                    serviceForm={serviceForm}
+                    setServiceForm={setServiceForm}
+                    saving={saving}
+                    onAddService={addService}
+                    onToggleServiceActive={toggleServiceActive}
+                    onDeleteService={deleteService}
+                  />
+                  <WorkStatusSection
+                    isAvailable={profile.isAvailable}
+                    paymentPreference={profile.paymentPreference || 'BOTH'}
+                    emailNotifications={profile.emailNotifications !== false}
+                    telegramNotifications={profile.telegramNotifications !== false}
+                    whatsappNotifications={profile.whatsappNotifications !== false}
+                    emailDigestMode={profile.emailDigestMode || 'REALTIME'}
+                    saving={saving}
+                    onToggleAvailability={toggleAvailability}
+                    onPaymentPreferenceChange={changePaymentPreference}
+                    onToggleNotification={toggleNotification}
+                    onEmailDigestModeChange={changeEmailDigestMode}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ───── PAYMENTS TAB ───── */}
+          {activeTab === 'payments' && (
+            <div className="space-y-4" id="payment-setup-section">
+              <WalletsSection
+                wallets={profile.wallets}
+                saving={saving}
+                onAddWallet={addWallet}
+                onDeleteWallet={deleteWallet}
+              />
+              <OfferFiltersSection
+                profile={profile}
+                editingFilters={editingFilters}
+                setEditingFilters={setEditingFilters}
+                filtersForm={filtersForm}
+                setFiltersForm={setFiltersForm}
+                saving={saving}
+                onSaveFilters={saveFilters}
+              />
+            </div>
+          )}
+
+          {/* ───── SETTINGS TAB ───── */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {/* Two-column grid for settings cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Trust & Verification */}
+                <div className="space-y-4">
+                  <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
+                  {/* TODO: Unhide once LinkedIn redirect URIs are configured */}
+                  {/* <LinkedInSection profile={profile} onProfileUpdate={setProfile} /> */}
+                  <HumanitySection profile={profile} onVerified={loadProfile} />
+                </div>
+
+                {/* Integrations */}
+                <div className="space-y-4">
+                  <TelegramSection
+                    telegramStatus={telegramStatus}
+                    telegramLinkUrl={telegramLinkUrl}
+                    telegramLoading={telegramLoading}
+                    onConnect={connectTelegram}
+                    onDisconnect={disconnectTelegram}
+                  />
+                </div>
+              </div>
+
+              {/* Sharing & Growth — full width */}
+              <ShareReferralSection
+                profile={profile}
+                copiedProfile={copiedProfile}
+                setCopiedProfile={setCopiedProfile}
+              />
+              <VouchSection />
+
+              {/* Account — full width at bottom */}
+              <AccountSection
+                profile={profile}
+                onDeleteAccount={deleteAccount}
+                onExportData={exportData}
+                onProfileUpdate={setProfile}
+                saving={saving}
+              />
+            </div>
+          )}
+        </div>
       </main>
 
       <ConfirmDialog

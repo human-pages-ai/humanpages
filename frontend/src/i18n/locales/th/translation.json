@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "แดชบอร์ด",
+    "settings": "Settings",
     "welcome": "ยินดีต้อนรับ",
     "shareProfile": "แชร์โปรไฟล์ของคุณ",
     "shareProfileDesc": "แชร์ลิงก์โปรไฟล์ของคุณเพื่อให้ AI agent และลูกค้าค้นหาคุณได้",

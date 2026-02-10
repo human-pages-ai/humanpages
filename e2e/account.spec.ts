@@ -5,6 +5,9 @@ test.describe('Account', () => {
   test('export data triggers download', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
+    // Navigate to Settings tab where Account section lives
+    await page.getByRole('tab', { name: /settings/i }).click();
+
     // Expand the danger zone / account management section
     await page.getByText('Account Management').click();
 
@@ -28,6 +31,9 @@ test.describe('Account', () => {
 
     // Inject token and go to dashboard
     await goToDashboard(page, token);
+
+    // Navigate to Settings tab where Account section lives
+    await page.getByRole('tab', { name: /settings/i }).click();
 
     // Expand account management
     await page.getByText('Account Management').click();

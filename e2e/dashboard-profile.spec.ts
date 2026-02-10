@@ -8,6 +8,9 @@ test.describe('Dashboard – Profile', () => {
   test('edit and save profile fields', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
+    // Navigate to Profile tab
+    await page.getByRole('tab', { name: /profile/i }).click();
+
     // Click the first "Edit" link on the page (profile section Edit)
     const editButtons = page.locator('button:has-text("Edit"), a:has-text("Edit")').filter({ hasText: /^Edit$/ });
     await editButtons.first().click();
@@ -23,8 +26,9 @@ test.describe('Dashboard – Profile', () => {
     // Wait for save to complete (form closes, bio input disappears)
     await expect(page.locator('#profile-bio')).not.toBeVisible({ timeout: SAVE_TIMEOUT });
 
-    // Reload and verify values persisted
+    // Reload and navigate back to Profile tab to verify values persisted
     await page.reload();
+    await page.getByRole('tab', { name: /profile/i }).click();
     await page.getByRole('heading', { name: 'Profile', exact: true }).waitFor({ timeout: SAVE_TIMEOUT });
     await expect(page.locator('text=I am an E2E test user.')).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('text=contact@test.com')).toBeVisible();
@@ -32,6 +36,9 @@ test.describe('Dashboard – Profile', () => {
 
   test('social links – add LinkedIn and GitHub', async ({ page }) => {
     await signupAndGoToDashboard(page);
+
+    // Navigate to Profile tab
+    await page.getByRole('tab', { name: /profile/i }).click();
 
     // Click Edit
     const editButtons = page.locator('button:has-text("Edit"), a:has-text("Edit")').filter({ hasText: /^Edit$/ });
@@ -47,18 +54,19 @@ test.describe('Dashboard – Profile', () => {
     // Wait for save to complete
     await expect(page.locator('#profile-linkedin')).not.toBeVisible({ timeout: SAVE_TIMEOUT });
 
-    // Reload and verify links are saved
+    // Reload and navigate back to Profile tab to verify links are saved
     await page.reload();
+    await page.getByRole('tab', { name: /profile/i }).click();
     await page.getByRole('heading', { name: 'Profile', exact: true }).waitFor({ timeout: SAVE_TIMEOUT });
     // Social links display as anchor text "LinkedIn", "GitHub" in view mode with URLs in href
     await expect(page.locator('a[href="https://linkedin.com/in/e2etest"]')).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('a[href="https://github.com/e2etest"]')).toBeVisible();
   });
 
-  test('profile completeness widget shows on fresh account', async ({ page }) => {
+  test('dashboard loads with status header on fresh account', async ({ page }) => {
     await signupAndGoToDashboard(page);
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 });
-    // Verify the dashboard loaded with the exact Profile section heading
-    await expect(page.getByRole('heading', { name: 'Profile', exact: true })).toBeVisible();
+    // Verify the dashboard loaded — the StatusHeader availability button should be visible
+    await expect(page.locator('button').filter({ hasText: /^(Active|Paused)$/ })).toBeVisible();
   });
 });

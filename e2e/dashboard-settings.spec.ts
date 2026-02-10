@@ -9,6 +9,7 @@ test.describe('Dashboard – Settings', () => {
   test('toggle availability', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
+    // Availability toggle is in the StatusHeader, visible on all tabs
     const toggleBtn = page.locator('button').filter({ hasText: /^(Active|Paused)$/ });
     await toggleBtn.waitFor({ timeout: 10_000 });
     const initialText = await toggleBtn.textContent();
@@ -33,6 +34,9 @@ test.describe('Dashboard – Settings', () => {
   test('change payment preference', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
+    // Payment preference is in the Profile tab > WorkStatusSection
+    await page.getByRole('tab', { name: /profile/i }).click();
+
     await page.getByRole('button', { name: 'Escrow' }).click();
     await expect(page.getByRole('button', { name: 'Escrow' })).toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
 
@@ -42,6 +46,9 @@ test.describe('Dashboard – Settings', () => {
 
   test('notification toggles', async ({ page }) => {
     await signupAndGoToDashboard(page);
+
+    // Notification toggles are in the Profile tab > WorkStatusSection
+    await page.getByRole('tab', { name: /profile/i }).click();
 
     const workStatusCard = page.locator('h2:has-text("Work Status")').locator('..').locator('..').locator('..');
     const switches = workStatusCard.locator('[role="switch"]');
@@ -62,8 +69,9 @@ test.describe('Dashboard – Settings', () => {
   test('offer filters – set min price and max distance', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
-    // Expand the "Integrations" collapsible section that contains offer filters
-    await page.getByText('Integrations').click();
+    // Offer filters are now in the Payments tab
+    await page.getByRole('tab', { name: /payment/i }).click();
+
     await page.getByRole('button', { name: 'Configure' }).click();
 
     await page.locator('#filter-min-price').fill('50');

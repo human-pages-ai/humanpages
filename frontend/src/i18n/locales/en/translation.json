@@ -157,6 +157,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "settings": "Settings",
     "welcome": "Welcome",
     "shareProfile": "Share your profile",
     "shareProfileDesc": "Share your profile link so AI agents and clients can find you",

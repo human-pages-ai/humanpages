@@ -26,10 +26,7 @@ test.describe('Onboarding', () => {
     await page.goto('/');
     await page.evaluate((t) => localStorage.setItem('token', t), token);
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
-
-    // Single step: location + skills
-    await page.waitForSelector('#location-input', { timeout: 5_000 });
+    await page.waitForSelector('#location-input', { timeout: 15_000 });
     await page.locator('#location-input').fill('New York');
     // Wait for and click the dropdown result
     await page.locator('ul button', { hasText: 'New York' }).first().click({ timeout: 5_000 });
@@ -46,7 +43,7 @@ test.describe('Onboarding', () => {
     await page.goto('/');
     await page.evaluate((t) => localStorage.setItem('token', t), token);
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('#location-input', { timeout: 15_000 });
 
     await page.getByText('Skip setup and go to dashboard').click();
     await page.waitForURL('**/dashboard', { timeout: 10_000 });
@@ -59,10 +56,7 @@ test.describe('Onboarding', () => {
     await page.goto('/');
     await page.evaluate((t) => localStorage.setItem('token', t), token);
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
-
-    // Click Complete Profile without filling anything
-    await page.waitForSelector('#location-input', { timeout: 5_000 });
+    await page.waitForSelector('#location-input', { timeout: 15_000 });
     await page.getByRole('button', { name: 'Complete Profile' }).click();
 
     await expect(page.locator('.text-red-600')).toBeVisible({ timeout: 3_000 });
@@ -75,7 +69,7 @@ test.describe('Onboarding', () => {
     await page.goto('/');
     await page.evaluate((t) => localStorage.setItem('token', t), token);
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('#location-input', { timeout: 15_000 });
 
     // Add custom skill directly (no Step 1 to pass through)
     await page.waitForSelector('#custom-skill', { timeout: 5_000 });

@@ -8,15 +8,15 @@ const SAVE_TIMEOUT = 30_000;
 
 /** Find the ServicesSection card and click the "Add Service" button to open the form */
 async function openServiceForm(page: import('@playwright/test').Page) {
-  // The "Services" heading (h2) is inside the ServicesSection card
-  const servicesHeading = page.locator('h2', { hasText: /^Services$/ });
-  await servicesHeading.waitFor({ timeout: 10_000 });
+  // Navigate to the Profile tab where services now live
+  await page.getByRole('tab', { name: /profile/i }).click();
 
-  // Click the "Add Service" button — could be in the header or the empty-state CTA
-  // Use the one nearest the heading (within the same card)
-  const card = servicesHeading.locator('..');  // parent of heading
-  const addBtn = card.locator('button', { hasText: /Add Service/ });
-  await addBtn.first().click();
+  // The services section lives inside the Profile tab (id="services-section")
+  const section = page.locator('#services-section');
+  await section.waitFor({ timeout: 10_000 });
+
+  // Click any "Add Service" button within the section (header toggle or empty-state CTA)
+  await section.getByRole('button', { name: 'Add Service' }).first().click();
 
   // Verify the form opened (title input becomes visible)
   await expect(page.locator('#service-title')).toBeVisible({ timeout: 5_000 });
@@ -109,9 +109,12 @@ test.describe('Dashboard – Services', () => {
     await serviceCard.getByRole('button', { name: 'Delete' }).click();
 
     // Confirm deletion in dialog
-    await page.locator('[role="alertdialog"]').getByRole('button', { name: 'Confirm' }).click();
+    const dialog = page.locator('[role="alertdialog"]');
+    await dialog.waitFor({ timeout: 5_000 });
+    await dialog.getByRole('button', { name: 'Confirm' }).click();
 
-    // Verify service is gone
-    await expect(page.locator('h3', { hasText: 'Temp Service' })).not.toBeVisible({ timeout: SAVE_TIMEOUT });
+    // Verify service is gone (wait for dialog to close and profile to reload)
+    await expect(dialog).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('h3', { hasText: 'Temp Service' })).toHaveCount(0, { timeout: SAVE_TIMEOUT });
   });
 });

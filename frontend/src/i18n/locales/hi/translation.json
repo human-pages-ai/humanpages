@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "डैशबोर्ड",
+    "settings": "Settings",
     "welcome": "स्वागत है",
     "shareProfile": "अपनी प्रोफ़ाइल शेयर करें",
     "shareProfileDesc": "अपनी प्रोफ़ाइल लिंक साझा करें ताकि AI एजेंट और क्लाइंट आपको ढूंढ सकें",

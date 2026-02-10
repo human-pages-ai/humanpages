@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "Painel",
+    "settings": "Settings",
     "welcome": "Bem-vindo",
     "shareProfile": "Compartilhe seu perfil",
     "shareProfileDesc": "Compartilhe o link do seu perfil para que agentes de IA e clientes te encontrem",

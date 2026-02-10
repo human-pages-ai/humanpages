@@ -148,6 +148,7 @@
   },
   "dashboard": {
     "title": "Panel",
+    "settings": "Settings",
     "welcome": "Hoş geldiniz",
     "shareProfile": "Profilinizi paylaşın",
     "shareProfileDesc": "Profil bağlantınızı paylaşın, yapay zeka ajanları ve müşteriler sizi bulsun",
