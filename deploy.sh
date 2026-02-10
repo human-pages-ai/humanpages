@@ -12,9 +12,10 @@ npm run build
 cd ../frontend
 npm ci --include=dev
 # Load only Infisical credentials needed by inject-frontend-env.mjs
-export INFISICAL_CLIENT_ID=$(grep '^INFISICAL_CLIENT_ID=' ../backend/.env | cut -d= -f2- | tr -d '"'"'")
-export INFISICAL_CLIENT_SECRET=$(grep '^INFISICAL_CLIENT_SECRET=' ../backend/.env | cut -d= -f2- | tr -d '"'"'")
-export INFISICAL_PROJECT_ID=$(grep '^INFISICAL_PROJECT_ID=' ../backend/.env | cut -d= -f2- | tr -d '"'"'")
+extract_env() { grep "^$1=" ../backend/.env | cut -d= -f2- | tr -d '"\r\n'"'"; }
+export INFISICAL_CLIENT_ID=$(extract_env INFISICAL_CLIENT_ID)
+export INFISICAL_CLIENT_SECRET=$(extract_env INFISICAL_CLIENT_SECRET)
+export INFISICAL_PROJECT_ID=$(extract_env INFISICAL_PROJECT_ID)
 node ../scripts/inject-frontend-env.mjs
 npm run build
 
