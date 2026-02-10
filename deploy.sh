@@ -10,6 +10,7 @@ npm run build
 
 cd ../frontend
 npm ci
+node ../scripts/inject-frontend-env.mjs
 npm run build
 
 pm2 restart human-pages
