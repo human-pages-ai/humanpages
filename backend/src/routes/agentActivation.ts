@@ -25,8 +25,10 @@ function getTierDuration(tier: keyof typeof TIER_CONFIG): number {
   return TIER_CONFIG[tier].durationDays;
 }
 
-// Detect platform from URL
-function detectPlatform(url: string): 'twitter' | 'linkedin' | 'github' | null {
+// Supported platforms — all require phone verification, hard to mass-create
+type SocialPlatform = 'twitter' | 'linkedin' | 'tiktok' | 'youtube';
+
+function detectPlatform(url: string): SocialPlatform | null {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
     if (hostname === 'twitter.com' || hostname === 'x.com' || hostname.endsWith('.twitter.com') || hostname.endsWith('.x.com')) {
@@ -35,8 +37,11 @@ function detectPlatform(url: string): 'twitter' | 'linkedin' | 'github' | null {
     if (hostname === 'linkedin.com' || hostname.endsWith('.linkedin.com')) {
       return 'linkedin';
     }
-    if (hostname === 'github.com' || hostname.endsWith('.github.com') || hostname === 'gist.github.com') {
-      return 'github';
+    if (hostname === 'tiktok.com' || hostname.endsWith('.tiktok.com')) {
+      return 'tiktok';
+    }
+    if (hostname === 'youtube.com' || hostname === 'youtu.be' || hostname.endsWith('.youtube.com')) {
+      return 'youtube';
     }
   } catch {
     // invalid URL
@@ -84,10 +89,13 @@ router.post('/social', authenticateAgent, async (req: AgentAuthRequest, res) => 
     res.json({
       code,
       expiresAt: expiresAt.toISOString(),
+      requirements: 'Post MUST contain: (1) a link to humanpages.ai, (2) your unique code. Posts missing either will be rejected.',
+      suggestedPost: `Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}`,
       instructions: {
-        twitter: `Tweet: "Activating on @humanpages ${code}" — then submit the tweet URL`,
-        linkedin: `Create a post mentioning humanpages.io with code ${code} — then submit the post URL`,
-        github: `Create a public gist or issue with code ${code} — then submit the URL`,
+        twitter: `Tweet something that includes https://humanpages.ai and your code ${code}. Example: "Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}"`,
+        linkedin: `Create a post that includes a link to https://humanpages.ai and your code ${code}. Say something nice about us!`,
+        tiktok: `Post a TikTok video with a caption that includes https://humanpages.ai and your code ${code}.`,
+        youtube: `Upload a YouTube video with a title that includes https://humanpages.ai and your code ${code}.`,
       },
     });
   } catch (error) {
@@ -142,13 +150,20 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
     if (!platform) {
       return res.status(400).json({
         error: 'Unsupported platform',
-        message: 'URL must be from Twitter/X, LinkedIn, or GitHub.',
+        message: 'URL must be from Twitter/X, LinkedIn, TikTok, or YouTube.',
       });
     }
 
     const code = agent.socialVerificationCode;
     let verified = false;
+    let mentionsUs = false;
     let followerCount: number | null = null;
+
+    // Check if content mentions humanpages (link or @mention)
+    const checkMentionsUs = (content: string): boolean => {
+      const lower = content.toLowerCase();
+      return lower.includes('humanpages.ai') || lower.includes('humanpages.io') || lower.includes('@humanpages');
+    };
 
     if (platform === 'twitter') {
       // Use oEmbed to verify tweet content
@@ -163,6 +178,7 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
           const data = await resp.json() as { html?: string; author_name?: string; author_url?: string };
           if (data.html && data.html.includes(code)) {
             verified = true;
+            mentionsUs = checkMentionsUs(data.html);
           }
 
           // Try to get follower count from profile (best-effort)
@@ -197,73 +213,50 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
           const content = `${data.title || ''} ${data.html || ''}`;
           if (content.includes(code)) {
             verified = true;
+            mentionsUs = checkMentionsUs(content);
           }
         }
       } catch (err: any) {
         logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
       }
-    } else if (platform === 'github') {
-      // Fetch gist or issue content from GitHub API
+    } else if (platform === 'tiktok') {
+      // Use TikTok oEmbed — returns video caption in 'title' field
       try {
-        // Parse GitHub URL
-        const url = new URL(postUrl);
-        const parts = url.pathname.split('/').filter(Boolean);
+        const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(postUrl)}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const resp = await fetch(oembedUrl, { signal: controller.signal });
+        clearTimeout(timeout);
 
-        let contentUrl: string | null = null;
-        let username: string | null = null;
-
-        if (url.hostname === 'gist.github.com' && parts.length >= 2) {
-          // Gist URL: gist.github.com/{user}/{gist_id}
-          username = parts[0];
-          contentUrl = `https://api.github.com/gists/${parts[1]}`;
-        } else if (parts.length >= 4 && parts[2] === 'issues') {
-          // Issue URL: github.com/{owner}/{repo}/issues/{number}
-          username = parts[0];
-          contentUrl = `https://api.github.com/repos/${parts[0]}/${parts[1]}/issues/${parts[3]}`;
+        if (resp.ok) {
+          const data = await resp.json() as { title?: string; html?: string; author_name?: string; author_url?: string };
+          const content = `${data.title || ''} ${data.html || ''}`;
+          if (content.includes(code)) {
+            verified = true;
+            mentionsUs = checkMentionsUs(content);
+          }
+          // TikTok oEmbed doesn't expose follower counts
         }
+      } catch (err: any) {
+        logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
+      }
+    } else if (platform === 'youtube') {
+      // Use YouTube oEmbed — code must be in video title
+      try {
+        const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(postUrl)}&format=json`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const resp = await fetch(oembedUrl, { signal: controller.signal });
+        clearTimeout(timeout);
 
-        if (contentUrl) {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10000);
-          const resp = await fetch(contentUrl, {
-            signal: controller.signal,
-            headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'HumanPages' },
-          });
-          clearTimeout(timeout);
-
-          if (resp.ok) {
-            const data = await resp.json() as any;
-            // For gists: check file content; for issues: check body
-            let content = '';
-            if (data.files) {
-              content = Object.values(data.files).map((f: any) => f.content || '').join('\n');
-            }
-            if (data.body) {
-              content += ` ${data.body}`;
-            }
-            if (data.description) {
-              content += ` ${data.description}`;
-            }
-
-            if (content.includes(code)) {
-              verified = true;
-            }
+        if (resp.ok) {
+          const data = await resp.json() as { title?: string; html?: string; author_name?: string; author_url?: string };
+          const content = `${data.title || ''} ${data.html || ''}`;
+          if (content.includes(code)) {
+            verified = true;
+            mentionsUs = checkMentionsUs(content);
           }
-
-          // Get follower count from GitHub profile
-          if (username) {
-            try {
-              const profileResp = await fetch(`https://api.github.com/users/${username}`, {
-                headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'HumanPages' },
-              });
-              if (profileResp.ok) {
-                const profile = await profileResp.json() as { followers?: number };
-                followerCount = profile.followers ?? null;
-              }
-            } catch {
-              // ignore
-            }
-          }
+          // YouTube oEmbed doesn't expose subscriber counts
         }
       } catch (err: any) {
         logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
@@ -274,6 +267,13 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
       return res.status(400).json({
         error: 'Verification failed',
         message: `Could not find code "${code}" in the ${platform} post at ${postUrl}. Make sure the post is public and contains the exact code.`,
+      });
+    }
+
+    if (!mentionsUs) {
+      return res.status(400).json({
+        error: 'Missing humanpages mention',
+        message: 'Your post must include a link to humanpages.ai (or humanpages.io or @humanpages). Please update your post and try again.',
       });
     }
 

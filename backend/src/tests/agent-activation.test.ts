@@ -33,7 +33,11 @@ describe('Agent Activation', () => {
       expect(res.body.expiresAt).toBeDefined();
       expect(res.body.instructions.twitter).toContain(res.body.code);
       expect(res.body.instructions.linkedin).toContain(res.body.code);
-      expect(res.body.instructions.github).toContain(res.body.code);
+      expect(res.body.instructions.tiktok).toContain(res.body.code);
+      expect(res.body.instructions.youtube).toContain(res.body.code);
+      expect(res.body.requirements).toContain('humanpages.ai');
+      expect(res.body.suggestedPost).toContain('humanpages.ai');
+      expect(res.body.suggestedPost).toContain(res.body.code);
     });
 
     it('should store the code in the database', async () => {
@@ -115,6 +119,25 @@ describe('Agent Activation', () => {
         .post('/api/agents/activate/social/verify')
         .set('X-Agent-Key', agent.apiKey)
         .send({ postUrl: 'https://facebook.com/post/123' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('Unsupported platform');
+    });
+
+    it('should reject GitHub URLs (email-only registration, not phone-gated)', async () => {
+      const agent = await createTestAgent();
+      await prisma.agent.update({
+        where: { id: agent.id },
+        data: {
+          socialVerificationCode: 'HP-12345678',
+          socialCodeExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+
+      const res = await request(app)
+        .post('/api/agents/activate/social/verify')
+        .set('X-Agent-Key', agent.apiKey)
+        .send({ postUrl: 'https://github.com/test/repo/issues/1' });
 
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('Unsupported platform');
