@@ -127,6 +127,8 @@
     "signingIn": "Signing in...",
     "creatingAccount": "Creating account...",
     "forgotPassword": "Forgot password?",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
     "continueWith": "Or continue with",

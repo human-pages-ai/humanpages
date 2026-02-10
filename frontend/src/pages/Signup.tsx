@@ -2,6 +2,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Turnstile } from 'react-turnstile';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import Link from '../components/LocalizedLink';
 import { useAuth } from '../hooks/useAuth';
 import { analytics } from '../lib/analytics';
@@ -22,6 +23,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -117,15 +119,29 @@ export default function Signup() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 {t('common.password')}
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
+              <div className="relative mt-1">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               <PasswordStrengthIndicator password={password} />
             </div>
           </div>

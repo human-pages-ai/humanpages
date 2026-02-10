@@ -118,6 +118,8 @@
     "signingIn": "Giriş yapılıyor...",
     "creatingAccount": "Hesap oluşturuluyor...",
     "forgotPassword": "Şifrenizi mi unuttunuz?",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle",
     "noAccount": "Hesabınız yok mu?",
     "haveAccount": "Zaten hesabınız var mı?",
     "continueWith": "Veya şununla devam edin",

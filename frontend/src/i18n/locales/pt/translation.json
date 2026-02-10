@@ -118,6 +118,8 @@
     "signingIn": "Entrando...",
     "creatingAccount": "Criando conta...",
     "forgotPassword": "Esqueceu a senha?",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
     "noAccount": "Não tem uma conta?",
     "haveAccount": "Já tem uma conta?",
     "continueWith": "Ou continue com",

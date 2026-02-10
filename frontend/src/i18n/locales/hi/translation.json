@@ -118,6 +118,8 @@
     "signingIn": "साइन इन हो रहा है...",
     "creatingAccount": "अकाउंट बन रहा है...",
     "forgotPassword": "पासवर्ड भूल गए?",
+    "showPassword": "पासवर्ड दिखाएं",
+    "hidePassword": "पासवर्ड छुपाएं",
     "noAccount": "अकाउंट नहीं है?",
     "haveAccount": "पहले से अकाउंट है?",
     "continueWith": "या इससे जारी रखें",

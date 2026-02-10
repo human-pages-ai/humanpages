@@ -118,6 +118,8 @@
     "signingIn": "Nagsa-sign in...",
     "creatingAccount": "Gumagawa ng account...",
     "forgotPassword": "Nakalimutan ang password?",
+    "showPassword": "Ipakita ang password",
+    "hidePassword": "Itago ang password",
     "noAccount": "Wala pang account?",
     "haveAccount": "May account na?",
     "continueWith": "O magpatuloy gamit ang",

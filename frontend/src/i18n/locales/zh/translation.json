@@ -118,6 +118,8 @@
     "signingIn": "登录中...",
     "creatingAccount": "创建账户中...",
     "forgotPassword": "忘记密码？",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
     "noAccount": "还没有账户？",
     "haveAccount": "已有账户？",
     "continueWith": "或者使用以下方式继续",

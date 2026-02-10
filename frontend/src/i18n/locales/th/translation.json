@@ -118,6 +118,8 @@
     "signingIn": "กำลังเข้าสู่ระบบ...",
     "creatingAccount": "กำลังสร้างบัญชี...",
     "forgotPassword": "ลืมรหัสผ่าน?",
+    "showPassword": "แสดงรหัสผ่าน",
+    "hidePassword": "ซ่อนรหัสผ่าน",
     "noAccount": "ยังไม่มีบัญชี?",
     "haveAccount": "มีบัญชีแล้ว?",
     "continueWith": "หรือดำเนินการต่อด้วย",

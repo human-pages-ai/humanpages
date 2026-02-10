@@ -118,6 +118,8 @@
     "signingIn": "Đang đăng nhập...",
     "creatingAccount": "Đang tạo tài khoản...",
     "forgotPassword": "Quên mật khẩu?",
+    "showPassword": "Hiển thị mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
     "noAccount": "Chưa có tài khoản?",
     "haveAccount": "Đã có tài khoản?",
     "continueWith": "Hoặc tiếp tục với",

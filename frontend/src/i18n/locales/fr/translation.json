@@ -118,6 +118,8 @@
     "signingIn": "Connexion en cours...",
     "creatingAccount": "Création du compte...",
     "forgotPassword": "Mot de passe oublié ?",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
     "noAccount": "Vous n'avez pas de compte ?",
     "haveAccount": "Vous avez déjà un compte ?",
     "continueWith": "Ou continuez avec",
