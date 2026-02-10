@@ -5,7 +5,8 @@ git pull
 
 cd backend
 npm ci
-npx prisma migrate deploy
+echo "=== Running migrations ==="
+node migrate.js
 npm run build
 
 cd ../frontend

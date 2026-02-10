@@ -12,12 +12,15 @@ vi.mock('../lib/analytics', () => ({
 }));
 
 // Mock react-turnstile to auto-verify
-vi.mock('react-turnstile', () => ({
-  Turnstile: ({ onVerify }: { onVerify: (token: string) => void }) => {
-    onVerify('test-captcha-token');
-    return null;
-  },
-}));
+vi.mock('react-turnstile', async () => {
+  const { useEffect } = await import('react');
+  return {
+    Turnstile: ({ onVerify }: { onVerify: (token: string) => void }) => {
+      useEffect(() => { onVerify('test-captcha-token'); }, []);
+      return null;
+    },
+  };
+});
 
 // Create shared mock functions
 const mockSignup = vi.fn();

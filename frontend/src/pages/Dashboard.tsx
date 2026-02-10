@@ -21,6 +21,8 @@ import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
+import VerificationSection from '../components/dashboard/VerificationSection';
+import AffiliateSection from '../components/dashboard/AffiliateSection';
 // TODO: Unhide once LinkedIn redirect URIs are configured
 // import LinkedInSection from '../components/dashboard/LinkedInSection';
 import SEO from '../components/SEO';
@@ -114,6 +116,12 @@ export default function Dashboard() {
     if (searchParams.get('linkedinVerified') === 'true') {
       toast.success(t('toast.linkedinConnected'));
       searchParams.delete('linkedinVerified');
+      setSearchParams(searchParams, { replace: true });
+      loadProfile();
+    }
+    if (searchParams.get('githubVerified') === 'true') {
+      toast.success('GitHub connected successfully!');
+      searchParams.delete('githubVerified');
       setSearchParams(searchParams, { replace: true });
       loadProfile();
     }
@@ -592,6 +600,10 @@ export default function Dashboard() {
           setCopiedReferral={setCopiedReferral}
         />
 
+        <AffiliateSection
+          profileUsername={profile.username}
+        />
+
         <VouchSection />
 
         <WorkStatusSection
@@ -636,6 +648,8 @@ export default function Dashboard() {
           saving={saving}
           onSaveFilters={saveFilters}
         />
+
+        <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
 
         {/* TODO: Unhide once LinkedIn redirect URIs are configured */}
         {/* <LinkedInSection profile={profile} onProfileUpdate={setProfile} /> */}

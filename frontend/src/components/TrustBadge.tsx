@@ -17,7 +17,7 @@ interface TrustBadgeProps {
   githubVerified?: boolean;
   githubUsername?: string;
   humanityVerified?: boolean;
-  humanityScore?: number;
+  humanityScore?: number; // kept for future use in detailed breakdown
   reputation?: {
     avgRating: number;
     reviewCount: number;
@@ -116,7 +116,7 @@ export default function TrustBadge({
   githubVerified,
   githubUsername,
   humanityVerified,
-  humanityScore,
+  humanityScore: _humanityScore,
   reputation,
   vouchCount,
   compact = false,

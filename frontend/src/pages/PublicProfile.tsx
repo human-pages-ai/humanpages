@@ -82,55 +82,12 @@ interface PublicHuman {
   vouches?: PublicVouch[];
 }
 
-function getHumanityTier(score?: number): string {
-  if (!score || score < 1) return 'none';
-  if (score < 20) return 'bronze';
-  if (score < 40) return 'silver';
-  return 'gold';
-}
-
 function getDisplayLocation(profile: PublicHuman): string | undefined {
   if (!profile.location) return undefined;
   if (profile.locationGranularity === 'neighborhood' && profile.neighborhood) {
     return `${profile.neighborhood}, ${profile.location}`;
   }
   return profile.location;
-}
-
-function HumanityBadge({ profile }: { profile: PublicHuman }) {
-  const tier = getHumanityTier(profile.humanityScore ?? undefined);
-  if (tier === 'none') return null;
-
-  const styles: Record<string, { bg: string; text: string; label: string }> = {
-    bronze: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Human (Bronze)' },
-    silver: { bg: 'bg-gray-200', text: 'text-gray-700', label: 'Verified Human' },
-    gold: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Verified Human (Gold)' },
-  };
-
-  const style = styles[tier];
-  if (!style) return null;
-
-  return (
-    <span className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1 ${style.bg} ${style.text}`}>
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-      {style.label}
-    </span>
-  );
-}
-
-function VouchBadge({ vouches }: { vouches?: PublicVouch[] }) {
-  if (!vouches || vouches.length === 0) return null;
-
-  return (
-    <span className="px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1 bg-emerald-100 text-emerald-700">
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      Vouched by {vouches.length}
-    </span>
-  );
 }
 
 export default function PublicProfile() {

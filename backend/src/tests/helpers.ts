@@ -22,10 +22,15 @@ export interface TestAgent {
  */
 export async function cleanDatabase(): Promise<void> {
   // Delete in order respecting foreign key constraints
+  await prisma.affiliatePayout.deleteMany();
+  await prisma.affiliateReferral.deleteMany();
+  await prisma.affiliate.deleteMany();
   await prisma.pendingNotification.deleteMany();
   await prisma.agentReport.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.jobMessage.deleteMany();
   await prisma.job.deleteMany();
+  await prisma.vouch.deleteMany();
   await prisma.service.deleteMany();
   await prisma.wallet.deleteMany();
   await prisma.agent.deleteMany();

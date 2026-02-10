@@ -284,4 +284,89 @@ export const api = {
 
   unlinkTelegram: () =>
     request<{ message: string }>('/telegram/link', { method: 'DELETE' }),
+
+  // Affiliate / Partner Program
+  getAffiliateDashboard: () =>
+    request<AffiliateResponse>('/affiliate/me'),
+
+  applyAffiliate: (data: { code: string; promotionMethod?: string; website?: string; audience?: string }) =>
+    request<{ message: string; affiliate: { id: string; status: string; code: string; commissionRate: number } }>('/affiliate/apply', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  trackAffiliateClick: (code: string) =>
+    request<{ ok: boolean }>('/affiliate/track-click', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+
+  resolveAffiliateCode: (code: string) =>
+    request<{ referrerId: string; affiliateId: string }>(`/affiliate/resolve/${encodeURIComponent(code)}`),
+
+  requestAffiliatePayout: () =>
+    request<{ message: string; payout: { id: string; amount: number; status: string; eligibleAt: string } }>('/affiliate/request-payout', {
+      method: 'POST',
+    }),
+
+  getAffiliateLeaderboard: () =>
+    request<Array<{ rank: number; code: string; name: string; username?: string; avatarUrl?: string; referrals: number; joinedAt: string }>>('/affiliate/leaderboard'),
 };
+
+// Affiliate types
+export interface AffiliateData {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+  code: string;
+  commissionRate: number;
+  totalClicks: number;
+  totalSignups: number;
+  qualifiedSignups: number;
+  totalEarnings: number;
+  totalPaid: number;
+  pendingEarnings: number;
+  approvedAt?: string;
+  rejectedReason?: string;
+  suspendedReason?: string;
+  createdAt: string;
+}
+
+export interface AffiliateMilestone {
+  threshold: number;
+  bonus: number;
+  label: string;
+  reached: boolean;
+  progress: number;
+}
+
+export interface AffiliateReferralItem {
+  id: string;
+  name: string;
+  qualified: boolean;
+  qualifiedAt?: string;
+  commissionAmount: number;
+  createdAt: string;
+}
+
+export interface AffiliatePayoutItem {
+  id: string;
+  amount: number;
+  status: 'PENDING' | 'ELIGIBLE' | 'PROCESSING' | 'PAID' | 'FAILED';
+  type: string;
+  description?: string;
+  eligibleAt: string;
+  paidAt?: string;
+  createdAt: string;
+}
+
+export interface AffiliateResponse {
+  enrolled: boolean;
+  affiliate?: AffiliateData;
+  milestones?: AffiliateMilestone[];
+  referrals?: AffiliateReferralItem[];
+  payouts?: AffiliatePayoutItem[];
+  config?: {
+    minPayoutAmount: number;
+    payoutHoldDays: number;
+  };
+}

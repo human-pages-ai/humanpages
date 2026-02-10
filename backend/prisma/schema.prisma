@@ -169,6 +169,8 @@ model Human {
   pendingNotifications PendingNotification[]
   vouchesGiven    Vouch[] @relation("VouchesGiven")
   vouchesReceived Vouch[] @relation("VouchesReceived")
+  affiliate       Affiliate?
+  affiliateReferral AffiliateReferral?
 
   // Indexes for fast agent search
   @@index([skills])
@@ -411,4 +413,116 @@ model Vouch {
 
   @@unique([voucherId, voucheeId])
   @@index([voucheeId])
+}
+
+// ===== AFFILIATE / PARTNER PROGRAM =====
+// Single-tier only. Affiliates earn on direct referrals. No sub-affiliates, no MLM.
+
+enum AffiliateStatus {
+  PENDING    // Application submitted, awaiting review
+  APPROVED   // Active affiliate
+  REJECTED   // Application denied
+  SUSPENDED  // Temporarily disabled (fraud, TOS violation)
+}
+
+enum PayoutStatus {
+  PENDING    // Accrued, not yet eligible (within hold period)
+  ELIGIBLE   // Past hold period, ready for payout
+  PROCESSING // Payout initiated
+  PAID       // Payout completed
+  FAILED     // Payout attempt failed
+}
+
+model Affiliate {
+  id              String          @id @default(cuid())
+  humanId         String          @unique  // One affiliate per human
+  status          AffiliateStatus @default(PENDING)
+  code            String          @unique  // Short referral code (e.g., "alice123")
+
+  // Application info
+  promotionMethod String?         @db.VarChar(500) // How they plan to promote
+  website         String?         // Their website/social
+  audience        String?         @db.VarChar(200) // Audience description
+
+  // Commission config (per-affiliate overrides; defaults in app config)
+  commissionRate  Decimal         @default(2.00) @db.Decimal(10, 2) // $ per qualified signup
+  bonusTier1      Decimal         @default(25.00) @db.Decimal(10, 2)  // Bonus at 10 referrals
+  bonusTier2      Decimal         @default(150.00) @db.Decimal(10, 2) // Bonus at 50 referrals
+  bonusTier3      Decimal         @default(500.00) @db.Decimal(10, 2) // Bonus at 100 referrals
+
+  // Stats (denormalized for fast reads)
+  totalClicks     Int             @default(0)
+  totalSignups    Int             @default(0)
+  qualifiedSignups Int            @default(0) // Signups that completed profile
+  totalEarnings   Decimal         @default(0) @db.Decimal(10, 2)
+  totalPaid       Decimal         @default(0) @db.Decimal(10, 2)
+
+  // Admin
+  approvedAt      DateTime?
+  approvedBy      String?         // Admin user ID
+  rejectedReason  String?
+  suspendedAt     DateTime?
+  suspendedReason String?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  human           Human           @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  referrals       AffiliateReferral[]
+  payouts         AffiliatePayout[]
+
+  @@index([status])
+  @@index([code])
+}
+
+model AffiliateReferral {
+  id              String    @id @default(cuid())
+  affiliateId     String
+  referredHumanId String    @unique // Each human can only be referred once
+  qualified       Boolean   @default(false) // True when profile is completed
+  qualifiedAt     DateTime?
+
+  // Fraud detection
+  ipAddress       String?
+  userAgent       String?
+
+  // Commission
+  commissionAmount Decimal? @db.Decimal(10, 2) // Amount earned for this referral
+  commissionPaid   Boolean  @default(false)
+
+  createdAt       DateTime  @default(now())
+
+  affiliate       Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referredHuman   Human     @relation(fields: [referredHumanId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId, qualified])
+  @@index([affiliateId, createdAt])
+}
+
+model AffiliatePayout {
+  id              String       @id @default(cuid())
+  affiliateId     String
+  amount          Decimal      @db.Decimal(10, 2)
+  status          PayoutStatus @default(PENDING)
+  type            String       @default("commission") // "commission" | "bonus_tier1" | "bonus_tier2" | "bonus_tier3"
+  description     String?
+
+  // Payment details
+  walletAddress   String?
+  txHash          String?      @unique
+  network         String?      // e.g., "base", "ethereum"
+  paidAt          DateTime?
+  failedReason    String?
+
+  // Hold period tracking
+  eligibleAt      DateTime     // When this payout becomes eligible (createdAt + 30 days)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  affiliate       Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId, status])
+  @@index([status, eligibleAt])
 }

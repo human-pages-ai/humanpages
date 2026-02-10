@@ -11,6 +11,7 @@ import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 import { computeTrustScore, computeTrustScoresBatch } from '../lib/trustScore.js';
+import { qualifyAffiliateReferral } from './affiliate.js';
 
 const router = Router();
 
@@ -461,6 +462,15 @@ router.patch('/me', authenticateToken, requireEmailVerified, async (req: AuthReq
       getReputationStats(human.id),
       computeTrustScore(human.id),
     ]);
+
+    // Check if profile is now "complete" for affiliate qualification
+    // Qualification criteria: has bio, has skills, email verified
+    if (human.bio && human.skills.length > 0 && human.emailVerified && human.referredBy) {
+      qualifyAffiliateReferral(human.id).catch((err) =>
+        logger.error({ err }, 'Failed to qualify affiliate referral')
+      );
+    }
+
     const { passwordHash, emailVerificationToken, ...profile } = human;
     res.json({ ...profile, reputation, trustScore, hasPassword: !!passwordHash });
   } catch (error) {

@@ -27,11 +27,32 @@ export default function Signup() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Store referral ID if present
+    // Store referral ID if present (direct ref or affiliate partner code)
     const ref = searchParams.get('ref');
     if (ref) {
       localStorage.setItem('referrer_id', ref);
     }
+
+    // Affiliate partner code: resolve to referrer ID
+    const partnerCode = searchParams.get('partner');
+    if (partnerCode) {
+      fetch(`/api/affiliate/resolve/${encodeURIComponent(partnerCode)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.referrerId) {
+            localStorage.setItem('referrer_id', data.referrerId);
+          }
+        })
+        .catch(() => {}); // Silently ignore invalid codes
+
+      // Track the click
+      fetch('/api/affiliate/track-click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: partnerCode }),
+      }).catch(() => {});
+    }
+
     analytics.track('signup_start');
   }, [searchParams]);
 

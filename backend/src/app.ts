@@ -17,6 +17,7 @@ import sitemapRoutes from './routes/sitemap.js';
 import ogRoutes from './routes/og.js';
 import badgeRoutes from './routes/badge.js';
 import geoRoutes from './routes/geo.js';
+import affiliateRoutes from './routes/affiliate.js';
 import { getProfileMetaHtml, getBlogMetaHtml } from './lib/seo.js';
 
 const app = express();
@@ -52,6 +53,7 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/agents/activate', agentActivationRoutes);
 app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api/affiliate', affiliateRoutes);
 
 // Geo detection
 app.use('/api/geo', geoRoutes);

@@ -14,7 +14,9 @@ type EventName =
   | 'profile_share_copy'
   | 'referral_link_copy'
   | 'profile_view'
-  | 'login_success';
+  | 'login_success'
+  | 'affiliate_applied'
+  | 'affiliate_link_copy';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

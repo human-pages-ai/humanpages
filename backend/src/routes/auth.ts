@@ -9,6 +9,7 @@ import { logger } from '../lib/logger.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../lib/email.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { trackServerEvent } from '../lib/posthog.js';
+import { recordAffiliateReferral } from './affiliate.js';
 
 const router = Router();
 
@@ -123,6 +124,15 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
 
     // Track signup in PostHog (pass req for country geolocation)
     trackServerEvent(human.id, 'user_signed_up_server', { method: 'email' }, req);
+
+    // Record affiliate referral if the referrer is an affiliate
+    if (validReferrerId) {
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip;
+      const userAgentStr = req.headers['user-agent'] as string;
+      recordAffiliateReferral(validReferrerId, human.id, clientIp, userAgentStr).catch((err) =>
+        logger.error({ err }, 'Failed to record affiliate referral')
+      );
+    }
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
