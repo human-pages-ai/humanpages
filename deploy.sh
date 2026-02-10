@@ -11,6 +11,8 @@ npm run build
 
 cd ../frontend
 npm ci
+# Load Infisical credentials from backend .env so inject script can fetch secrets
+set -a && source ../backend/.env && set +a
 node ../scripts/inject-frontend-env.mjs
 npm run build
 
