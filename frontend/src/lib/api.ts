@@ -1,4 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch } from '../components/dashboard/types';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, Pagination } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -290,7 +291,7 @@ export const api = {
     request<AffiliateResponse>('/affiliate/me'),
 
   applyAffiliate: (data: { code: string; promotionMethod?: string; website?: string; audience?: string }) =>
-    request<{ message: string; affiliate: { id: string; status: string; code: string; creditsPerReferral: number } }>('/affiliate/apply', {
+    request<{ message: string; affiliate: { id: string; status: string; code: string; commissionRate: number } }>('/affiliate/apply', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -304,8 +305,55 @@ export const api = {
   resolveAffiliateCode: (code: string) =>
     request<{ referrerId: string; affiliateId: string }>(`/affiliate/resolve/${encodeURIComponent(code)}`),
 
+  requestAffiliatePayout: () =>
+    request<{ message: string; payout: { id: string; amount: number; status: string; eligibleAt: string } }>('/affiliate/request-payout', {
+      method: 'POST',
+    }),
+
   getAffiliateLeaderboard: () =>
-    request<Array<{ rank: number; code: string; name: string; username?: string; avatarUrl?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
+    request<Array<{ rank: number; code: string; name: string; username?: string; avatarUrl?: string; referrals: number; joinedAt: string }>>('/affiliate/leaderboard'),
+
+  // Admin
+  checkAdmin: () =>
+    request<{ isAdmin: boolean }>('/admin/me'),
+
+  getAdminStats: () =>
+    request<AdminStats>('/admin/stats'),
+
+  getAdminUsers: (params: { page?: number; limit?: number; search?: string; verified?: string; sort?: string; order?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.verified) query.set('verified', params.verified);
+    if (params.sort) query.set('sort', params.sort);
+    if (params.order) query.set('order', params.order);
+    const qs = query.toString();
+    return request<{ users: AdminUser[]; pagination: Pagination }>(`/admin/users${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminAgents: (params: { page?: number; limit?: number; search?: string; status?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.status) query.set('status', params.status);
+    const qs = query.toString();
+    return request<{ agents: AdminAgent[]; pagination: Pagination }>(`/admin/agents${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminJobs: (params: { page?: number; limit?: number; search?: string; status?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.status) query.set('status', params.status);
+    const qs = query.toString();
+    return request<{ jobs: AdminJob[]; pagination: Pagination }>(`/admin/jobs${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminActivity: (limit?: number) =>
+    request<{ activity: AdminActivity[] }>(`/admin/activity${limit ? `?limit=${limit}` : ''}`),
 };
 
 // Affiliate types
@@ -313,13 +361,13 @@ export interface AffiliateData {
   id: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   code: string;
-  creditsPerReferral: number;
+  commissionRate: number;
   totalClicks: number;
   totalSignups: number;
   qualifiedSignups: number;
-  totalCredits: number;
-  creditsRedeemed: number;
-  availableCredits: number;
+  totalEarnings: number;
+  totalPaid: number;
+  pendingEarnings: number;
   approvedAt?: string;
   rejectedReason?: string;
   suspendedReason?: string;
@@ -339,15 +387,18 @@ export interface AffiliateReferralItem {
   name: string;
   qualified: boolean;
   qualifiedAt?: string;
-  creditsAwarded: number;
+  commissionAmount: number;
   createdAt: string;
 }
 
-export interface AffiliateCreditItem {
+export interface AffiliatePayoutItem {
   id: string;
-  credits: number;
+  amount: number;
+  status: 'PENDING' | 'ELIGIBLE' | 'PROCESSING' | 'PAID' | 'FAILED';
   type: string;
   description?: string;
+  eligibleAt: string;
+  paidAt?: string;
   createdAt: string;
 }
 
@@ -356,5 +407,9 @@ export interface AffiliateResponse {
   affiliate?: AffiliateData;
   milestones?: AffiliateMilestone[];
   referrals?: AffiliateReferralItem[];
-  creditLedger?: AffiliateCreditItem[];
+  payouts?: AffiliatePayoutItem[];
+  config?: {
+    minPayoutAmount: number;
+    payoutHoldDays: number;
+  };
 }

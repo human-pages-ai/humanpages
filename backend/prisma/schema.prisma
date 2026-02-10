@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // Rate type for pricing
@@ -367,6 +368,9 @@ model Service {
   updatedAt       DateTime  @updatedAt
 
   human           Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([humanId])
+  @@index([category])
 }
 
 model JobMessage {
@@ -436,18 +440,18 @@ model Affiliate {
   website         String?         // Their website/social
   audience        String?         @db.VarChar(200) // Audience description
 
-  // Credits config (per-affiliate overrides; defaults in app config)
-  creditsPerReferral Int          @default(10)   // Credits earned per qualified signup
-  bonusTier1      Int             @default(50)   // Bonus credits at 10 referrals
-  bonusTier2      Int             @default(200)  // Bonus credits at 50 referrals
-  bonusTier3      Int             @default(500)  // Bonus credits at 100 referrals
+  // Commission config (per-affiliate overrides; defaults in app config)
+  commissionRate  Decimal         @default(2.00) @db.Decimal(10, 2) // $ per qualified signup
+  bonusTier1      Decimal         @default(25.00) @db.Decimal(10, 2)  // Bonus at 10 referrals
+  bonusTier2      Decimal         @default(150.00) @db.Decimal(10, 2) // Bonus at 50 referrals
+  bonusTier3      Decimal         @default(500.00) @db.Decimal(10, 2) // Bonus at 100 referrals
 
   // Stats (denormalized for fast reads)
   totalClicks     Int             @default(0)
   totalSignups    Int             @default(0)
   qualifiedSignups Int            @default(0) // Signups that completed profile
-  totalCredits    Int             @default(0) // Total credits earned
-  creditsRedeemed Int             @default(0) // Credits already redeemed
+  totalEarnings   Decimal         @default(0) @db.Decimal(10, 2)
+  totalPaid       Decimal         @default(0) @db.Decimal(10, 2)
 
   // Admin
   approvedAt      DateTime?
@@ -462,7 +466,6 @@ model Affiliate {
   // Relations
   human           Human           @relation(fields: [humanId], references: [id], onDelete: Cascade)
   referrals       AffiliateReferral[]
-  creditLedger    AffiliateCredit[]
 
   @@index([status])
   @@index([code])
@@ -479,9 +482,9 @@ model AffiliateReferral {
   ipAddress       String?
   userAgent       String?
 
-  // Credits
-  creditsAwarded  Int      @default(0) // Credits earned for this referral
-  creditsClaimed  Boolean  @default(false)
+  // Commission
+  commissionAmount Decimal? @db.Decimal(10, 2) // Amount earned for this referral
+  commissionPaid   Boolean  @default(false)
 
   createdAt       DateTime  @default(now())
 
@@ -492,17 +495,29 @@ model AffiliateReferral {
   @@index([affiliateId, createdAt])
 }
 
-model AffiliateCredit {
-  id              String   @id @default(cuid())
+model AffiliatePayout {
+  id              String       @id @default(cuid())
   affiliateId     String
-  credits         Int      // Number of credits
-  type            String   @default("referral") // "referral" | "bonus_tier1" | "bonus_tier2" | "bonus_tier3"
+  amount          Decimal      @db.Decimal(10, 2)
+  status          PayoutStatus @default(PENDING)
+  type            String       @default("commission") // "commission" | "bonus_tier1" | "bonus_tier2" | "bonus_tier3"
   description     String?
 
-  createdAt       DateTime @default(now())
+  // Payment details
+  walletAddress   String?
+  txHash          String?      @unique
+  network         String?      // e.g., "base", "ethereum"
+  paidAt          DateTime?
+  failedReason    String?
 
-  affiliate       Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  // Hold period tracking
+  eligibleAt      DateTime     // When this payout becomes eligible (createdAt + 30 days)
 
-  @@index([affiliateId])
-  @@index([affiliateId, type])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  affiliate       Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId, status])
+  @@index([status, eligibleAt])
 }

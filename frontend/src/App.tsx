@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 import LangWrapper from './components/LangWrapper';
 import { posthog } from './lib/posthog';
+import { api } from './lib/api';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
@@ -25,6 +26,12 @@ const Badge = lazy(() => import('./pages/Badge'));
 const JobDetail = lazy(() => import('./pages/JobDetail'));
 const ReportAgent = lazy(() => import('./pages/ReportAgent'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminAgents = lazy(() => import('./pages/admin/AdminAgents'));
+const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
+const AdminActivity = lazy(() => import('./pages/admin/AdminActivity'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -69,6 +76,29 @@ function HomeRoute() {
   }
 
   return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!loading && user) {
+      api.checkAdmin()
+        .then(() => setIsAdmin(true))
+        .catch(() => setIsAdmin(false));
+    }
+  }, [user, loading]);
+
+  if (loading || (user && isAdmin === null)) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user || isAdmin === false) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 function usePageView() {
@@ -179,6 +209,14 @@ function AppRoutes() {
       <Route path="/:lang/blog/zero-dollar-ai-agent" element={<LangWrapper><ZeroDollarAgent /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
+
+      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+        <Route index element={<AdminOverview />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="agents" element={<AdminAgents />} />
+        <Route path="jobs" element={<AdminJobs />} />
+        <Route path="activity" element={<AdminActivity />} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>

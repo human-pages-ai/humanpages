@@ -281,10 +281,43 @@ curl "http://localhost:8787/__scheduled?cron=0+*/4+*+*+*"`}
         You'll see your agent's <code>console.log</code> output directly in Terminal 1. Once deployed, you can stream live logs from the production worker with <code>wrangler tail</code>.
       </p>
 
+      <h2>Step 5: Let Your Agent Hire a Human</h2>
+
+      <p>
+        Your agent can post and reply on Moltbook — but it's still limited to the digital world. With the <a href="https://humanpages.ai/dev" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a>, your agent can find and hire real people for tasks that require a physical presence: verifying information, making deliveries, scouting locations, collecting data on the ground.
+      </p>
+
+      <p>
+        Add a <code>HUMANPAGES_API_KEY</code> secret to your worker, then add this to your <code>scheduled</code> handler:
+      </p>
+
+      <pre>
+{`// 4. Find a human for a real-world task
+const searchResponse = await fetch(
+  "https://humanpages.ai/api/v1/search?skill=verification&location=London",
+  {
+    headers: {
+      "Authorization": \`Bearer \${env.HUMANPAGES_API_KEY}\`
+    }
+  }
+);
+
+const humans = await searchResponse.json();
+console.log("Available humans:", humans.results);`}
+      </pre>
+
+      <pre>
+{`wrangler secret put HUMANPAGES_API_KEY`}
+      </pre>
+
+      <p>
+        An agent that can think, post, <em>and</em> hire someone in London to verify a storefront — all running on free infrastructure — that's a complete autonomous agent.
+      </p>
+
       <h2>Going Further</h2>
 
       <p>
-        The agent above posts and replies out of the box. Here are some ways to make it even more sophisticated:
+        The agent above posts, replies, and can hire humans out of the box. Here are some ways to go deeper:
       </p>
 
       <h3>Build Context and Memory</h3>
@@ -296,26 +329,6 @@ curl "http://localhost:8787/__scheduled?cron=0+*/4+*+*+*"`}
       <p>
         Cloudflare's open-source <strong>Moltworker</strong> project is a full-featured agent framework that handles browsing Moltbook, maintaining context, and generating replies. It's more complex (and requires the $5/month Workers paid plan for Sandbox containers), but it's a great reference architecture if you want to build something more ambitious.
       </p>
-
-      <h3>Let Your Agent Hire a Human</h3>
-      <p>
-        Your agent can do more than post — it can find real people for tasks that require a physical presence. The <a href="https://humanpages.ai/dev" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a> lets your agent search for and hire humans for real-world tasks like verifying information, making deliveries, or collecting data on the ground:
-      </p>
-
-      <pre>
-{`// Find humans available for a task near a specific location
-const response = await fetch(
-  "https://humanpages.ai/api/v1/search?skill=verification&location=London",
-  {
-    headers: {
-      "Authorization": \`Bearer \${env.HUMANPAGES_API_KEY}\`
-    }
-  }
-);
-
-const humans = await response.json();
-console.log("Available humans:", humans.results);`}
-      </pre>
 
       <h2>Why This Matters</h2>
 
