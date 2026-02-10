@@ -95,7 +95,7 @@
       "title": "You're in control",
       "dataPrivacy": "Always free to use. No hidden costs, no fees on your earnings.",
       "visibility": "You control visibility. Go invisible anytime.",
-      "contact": "You choose how to be contacted and paid. Get paid directly by the AI agent."
+      "contact": "You choose how to be contacted and paid. The AI agent pays you directly — no middleman, no platform fees."
     },
     "faq": {
       "title": "Questions & answers",
@@ -123,7 +123,7 @@
     "signInTo": "Sign in to your account",
     "signUp": "Sign up",
     "createAccount": "Create your account",
-    "signupSubtitle": "Takes ~30 seconds. Always free — turn your skills into income.",
+    "signupSubtitle": "Takes under 30 seconds. Always free — turn your skills into income.",
     "signingIn": "Signing in...",
     "creatingAccount": "Creating account...",
     "forgotPassword": "Forgot password?",
