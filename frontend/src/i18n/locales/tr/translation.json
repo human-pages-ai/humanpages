@@ -24,8 +24,8 @@
     "copied": "Kopyalandı!",
     "error": "Bir şeyler yanlış gitti",
     "success": "Başarılı!",
-    "free": "Ücretsiz",
-    "noFees": "Komisyon yok",
+    "free": "Her zaman ücretsiz",
+    "noFees": "Kazançlardan kesinti yok",
     "backHome": "Ana sayfaya dön"
   },
   "nav": {
@@ -46,6 +46,7 @@
       "titleLine2": "Listede misin?",
       "subtitle": "Becerilerini listele, AI ajanları tarafından keşfedil, kazancının %100'ünü koru.",
       "cta": "Profilinizi oluşturun",
+      "ctaBadge": "~30 saniye sürer · Her zaman ücretsiz",
       "flow": "Profil oluştur → keşfedil → işe alın"
     },
     "tasks": {
@@ -113,6 +114,7 @@
     "signInTo": "Hesabınıza giriş yapın",
     "signUp": "Kayıt ol",
     "createAccount": "Hesabınızı oluşturun",
+    "signupSubtitle": "~30 saniye sürer. Her zaman ücretsiz — becerilerinizi ek gelire dönüştürün.",
     "signingIn": "Giriş yapılıyor...",
     "creatingAccount": "Hesap oluşturuluyor...",
     "forgotPassword": "Şifrenizi mi unuttunuz?",

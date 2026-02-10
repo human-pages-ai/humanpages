@@ -24,8 +24,8 @@
     "copied": "已复制！",
     "error": "出错了",
     "success": "成功！",
-    "free": "免费",
-    "noFees": "零手续费",
+    "free": "永久免费",
+    "noFees": "收入零扣费",
     "backHome": "返回首页"
   },
   "nav": {
@@ -46,6 +46,7 @@
       "titleLine2": "你上榜了吗？",
       "subtitle": "列出你的技能，被AI代理发现，保留100%的收入。",
       "cta": "创建个人资料",
+      "ctaBadge": "仅需约30秒 · 永久免费",
       "flow": "创建个人资料 → 被发现 → 获得雇用"
     },
     "tasks": {
@@ -113,6 +114,7 @@
     "signInTo": "登录你的账户",
     "signUp": "注册",
     "createAccount": "创建你的账户",
+    "signupSubtitle": "仅需约30秒。永久免费 — 将你的技能变成额外收入。",
     "signingIn": "登录中...",
     "creatingAccount": "创建账户中...",
     "forgotPassword": "忘记密码？",

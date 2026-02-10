@@ -25,8 +25,8 @@
     "copied": "Copié !",
     "error": "Une erreur est survenue",
     "success": "Succès !",
-    "free": "Gratuit",
-    "noFees": "Sans frais"
+    "free": "Toujours gratuit",
+    "noFees": "Aucun frais sur vos revenus"
   },
   "nav": {
     "home": "Accueil",
@@ -46,6 +46,7 @@
       "titleLine2": "mais pour l'IA.",
       "subtitle": "Listez vos compétences et votre localisation. On vous contacte quand quelqu'un a besoin de vous — localement ou partout dans le monde.",
       "cta": "Créer votre profil",
+      "ctaBadge": "Prend ~30 secondes · Toujours gratuit",
       "flow": "Créez un profil → on vous contacte directement → vous décidez si ça vous convient"
     },
     "tasks": {
@@ -113,6 +114,7 @@
     "signInTo": "Connectez-vous à votre compte",
     "signUp": "S'inscrire",
     "createAccount": "Créez votre compte",
+    "signupSubtitle": "Prend ~30 secondes. Toujours gratuit — transformez vos compétences en revenus supplémentaires.",
     "signingIn": "Connexion en cours...",
     "creatingAccount": "Création du compte...",
     "forgotPassword": "Mot de passe oublié ?",

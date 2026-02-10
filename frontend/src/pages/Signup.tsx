@@ -98,6 +98,7 @@ export default function Signup() {
         <div>
           <h1 className="text-center"><Link to="/"><Logo size="lg" /></Link></h1>
           <h2 className="mt-2 text-center text-xl text-gray-600">{t('auth.createAccount')}</h2>
+          <p className="mt-2 text-center text-sm text-gray-500">{t('auth.signupSubtitle')}</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (

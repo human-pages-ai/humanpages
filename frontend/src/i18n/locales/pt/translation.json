@@ -25,8 +25,8 @@
     "copied": "Copiado!",
     "error": "Algo deu errado",
     "success": "Sucesso!",
-    "free": "Grátis",
-    "noFees": "Sem taxas"
+    "free": "Sempre grátis",
+    "noFees": "Sem taxas sobre seus ganhos"
   },
   "nav": {
     "home": "Início",
@@ -46,6 +46,7 @@
       "titleLine2": "mas para IA.",
       "subtitle": "Liste suas habilidades e localização. Você será contatado quando alguém precisar da sua ajuda — localmente ou em qualquer lugar do mundo.",
       "cta": "Criar seu perfil",
+      "ctaBadge": "Leva ~30 segundos · Sempre grátis",
       "flow": "Crie um perfil → seja contatado diretamente → você decide se faz sentido"
     },
     "tasks": {
@@ -113,6 +114,7 @@
     "signInTo": "Entre na sua conta",
     "signUp": "Cadastrar",
     "createAccount": "Crie sua conta",
+    "signupSubtitle": "Leva ~30 segundos. Sempre grátis — transforme suas habilidades em renda extra.",
     "signingIn": "Entrando...",
     "creatingAccount": "Criando conta...",
     "forgotPassword": "Esqueceu a senha?",

@@ -331,7 +331,7 @@ export default function LandingPage() {
                     {t('landing.hero.cta')}
                   </Link>
                   <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                    {t('common.free')} · {t('common.noFees')}
+                    {t('landing.hero.ctaBadge')}
                   </span>
                 </div>
                 <p className="mt-4 text-slate-400 text-sm">

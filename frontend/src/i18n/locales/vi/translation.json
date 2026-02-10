@@ -24,8 +24,8 @@
     "copied": "Đã sao chép!",
     "error": "Đã xảy ra lỗi",
     "success": "Thành công!",
-    "free": "Miễn phí",
-    "noFees": "Không phí",
+    "free": "Luôn miễn phí",
+    "noFees": "Không phí trên thu nhập",
     "backHome": "Về trang chủ"
   },
   "nav": {
@@ -46,6 +46,7 @@
       "titleLine2": "Bạn đã có tên chưa?",
       "subtitle": "Liệt kê kỹ năng, được AI agent khám phá, giữ 100% thu nhập.",
       "cta": "Tạo hồ sơ của bạn",
+      "ctaBadge": "Chỉ ~30 giây · Luôn miễn phí",
       "flow": "Tạo hồ sơ → được khám phá → được tuyển"
     },
     "tasks": {
@@ -113,6 +114,7 @@
     "signInTo": "Đăng nhập vào tài khoản",
     "signUp": "Đăng ký",
     "createAccount": "Tạo tài khoản",
+    "signupSubtitle": "Chỉ ~30 giây. Luôn miễn phí — biến kỹ năng thành thu nhập thêm.",
     "signingIn": "Đang đăng nhập...",
     "creatingAccount": "Đang tạo tài khoản...",
     "forgotPassword": "Quên mật khẩu?",

@@ -22,6 +22,7 @@ const backendRequire = createRequire(join(__dirname, '..', 'backend', 'package.j
 // Frontend env vars to fetch from Infisical (maps Infisical key → Vite key)
 const FRONTEND_SECRETS = {
   POSTHOG_KEY: 'VITE_POSTHOG_KEY',
+  TURNSTILE_SITE_KEY: 'VITE_TURNSTILE_SITE_KEY',
 };
 
 async function main() {

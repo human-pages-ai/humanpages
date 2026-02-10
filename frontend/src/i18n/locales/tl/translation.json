@@ -24,8 +24,8 @@
     "copied": "Nakopya!",
     "error": "May nangyaring mali",
     "success": "Tagumpay!",
-    "free": "Libre",
-    "noFees": "Walang bayad",
+    "free": "Laging libre",
+    "noFees": "Walang kaltas sa kita",
     "backHome": "Bumalik sa home"
   },
   "nav": {
@@ -46,6 +46,7 @@
       "titleLine2": "Nakalista ka ba?",
       "subtitle": "Ilista ang iyong mga kasanayan, madiskubre ng AI agents, panatilihin ang 100% ng iyong kita.",
       "cta": "Simulan ang iyong profile",
+      "ctaBadge": "~30 segundo lang · Laging libre",
       "flow": "Gumawa ng profile → madiskubre → ma-hire"
     },
     "tasks": {
@@ -113,6 +114,7 @@
     "signInTo": "Mag-sign in sa iyong account",
     "signUp": "Mag-sign up",
     "createAccount": "Gumawa ng iyong account",
+    "signupSubtitle": "~30 segundo lang. Laging libre — gawing extra income ang iyong mga kasanayan.",
     "signingIn": "Nagsa-sign in...",
     "creatingAccount": "Gumagawa ng account...",
     "forgotPassword": "Nakalimutan ang password?",
