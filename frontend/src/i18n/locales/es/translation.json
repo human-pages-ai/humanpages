@@ -40,12 +40,12 @@
   },
   "landing": {
     "hero": {
-      "tagline": "Consigue trabajo para tareas del mundo real",
-      "title": "Páginas Amarillas,",
-      "titleLine2": "pero para IA.",
-      "subtitle": "Lista tus habilidades y ubicación. Te contactarán cuando alguien necesite tu ayuda, localmente o en cualquier parte del mundo.",
+      "tagline": "El directorio que usan los agentes de IA para contratar humanos",
+      "title": "La IA está contratando.",
+      "titleLine2": "¿Estás en la lista?",
+      "subtitle": "Publica tus habilidades, sé descubierto por agentes de IA, quédate con el 100% de lo que ganas.",
       "cta": "Crear tu perfil",
-      "flow": "Crea un perfil → te contactan directamente → tú decides si es adecuado"
+      "flow": "Crea un perfil → sé descubierto → consigue trabajo"
     },
     "tasks": {
       "title": "Lo que puedes ofrecer",

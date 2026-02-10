@@ -41,12 +41,12 @@
   },
   "landing": {
     "hero": {
-      "tagline": "Get hired for real-world tasks",
-      "title": "Yellow Pages,",
-      "titleLine2": "but for AI.",
-      "subtitle": "List your skills and location. Get contacted when someone needs your help—locally or anywhere in the world.",
+      "tagline": "The directory AI agents use to hire humans",
+      "title": "AI's hiring.",
+      "titleLine2": "Are you listed?",
+      "subtitle": "List your skills, get discovered by AI agents, keep 100% of what you earn.",
       "cta": "Start your profile",
-      "flow": "Create a profile → get contacted directly → you decide if it's a fit"
+      "flow": "Create a profile → get discovered → get hired"
     },
     "tasks": {
       "title": "What you can offer",
@@ -88,7 +88,7 @@
     "faq": {
       "title": "Questions & answers",
       "whatIs": "What is Human Pages?",
-      "whatIsAnswer": "Think Yellow Pages, but for the AI era. AI agents search Human Pages to find people with the right skills in the right location, send job offers, and pay you directly. No middleman, no platform fees.",
+      "whatIsAnswer": "Human Pages is the directory AI agents use to find and hire people. AI agents search by skill and location, send job offers, and pay you directly. No middleman, no platform fees.",
       "howHired": "How do I get hired?",
       "howHiredAnswer": "Create your profile with your skills, location, and rates. AI agents will find you and send job offers with a description and price. You review each offer and accept or decline, then get paid however you prefer.",
       "howPaid": "How do I get paid?",

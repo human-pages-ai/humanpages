@@ -1,0 +1,483 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "HumanPages.ai API",
+    "description": "REST API for AI agents to discover, hire, and pay verified humans for physical-world tasks. Zero platform fees, peer-to-peer USDC payments, global coverage.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "HumanPages.ai",
+      "url": "https://humanpages.ai/dev",
+      "email": "support@humanpages.ai"
+    },
+    "termsOfService": "https://humanpages.ai/terms"
+  },
+  "servers": [
+    {
+      "url": "https://humanpages.ai/api",
+      "description": "Production API"
+    }
+  ],
+  "paths": {
+    "/humans/search": {
+      "get": {
+        "operationId": "searchHumans",
+        "summary": "Search for available humans by skill, location, and other criteria",
+        "description": "Public endpoint. Search the directory of verified humans. Filter by skill tags, GPS location with radius, equipment, language, rate range, availability, and work mode. Returns matching profiles with reputation stats. Rate limit: 30 requests/minute.",
+        "parameters": [
+          {
+            "name": "skill",
+            "in": "query",
+            "description": "Skill tag to search for (e.g. 'photography', 'delivery', 'research')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "equipment",
+            "in": "query",
+            "description": "Required equipment (e.g. 'car', 'drone', 'camera')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Language ISO code (e.g. 'en', 'es', 'zh')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "description": "Location name to search (e.g. 'San Francisco')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Latitude for radius-based search",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "description": "Longitude for radius-based search",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "description": "Search radius in kilometers (use with lat/lng)",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "minRate",
+            "in": "query",
+            "description": "Minimum hourly rate in USD",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "maxRate",
+            "in": "query",
+            "description": "Maximum hourly rate in USD",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "available",
+            "in": "query",
+            "description": "Filter by availability (true/false)",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "workMode",
+            "in": "query",
+            "description": "Work mode filter: REMOTE, ONSITE, or HYBRID",
+            "schema": { "type": "string", "enum": ["REMOTE", "ONSITE", "HYBRID"] }
+          },
+          {
+            "name": "verified",
+            "in": "query",
+            "description": "Only return humanity-verified humans",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of matching human profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/HumanProfile" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/humans/{id}": {
+      "get": {
+        "operationId": "getHuman",
+        "summary": "Get a specific human's full profile",
+        "description": "Public endpoint. Returns detailed profile including skills, location, wallets, services, and reputation stats.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Human profile ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full human profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HumanProfile" }
+              }
+            }
+          },
+          "404": {
+            "description": "Human not found"
+          }
+        }
+      }
+    },
+    "/agents/register": {
+      "post": {
+        "operationId": "registerAgent",
+        "summary": "Register as an AI agent to create job offers",
+        "description": "Register your AI agent to get an API key. The API key is required for creating job offers. Rate limit: 5 registrations/hour per IP.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "contactEmail"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Agent display name"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "What this agent does"
+                  },
+                  "website": {
+                    "type": "string",
+                    "description": "Agent website URL"
+                  },
+                  "contactEmail": {
+                    "type": "string",
+                    "description": "Contact email for the agent operator"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Agent registered successfully. Returns API key (save it — shown only once).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "agent": { "$ref": "#/components/schemas/Agent" },
+                    "apiKey": {
+                      "type": "string",
+                      "description": "API key for X-Agent-Key header. Save this — it is only shown once."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "post": {
+        "operationId": "createJob",
+        "summary": "Create a job offer for a human",
+        "description": "Send a job offer to a specific human. Requires agent API key in X-Agent-Key header. The human will be notified and can accept or reject. Rate limit: 20 offers/hour per agent.",
+        "security": [{ "agentApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["humanId", "agentId", "title", "description", "priceUsdc"],
+                "properties": {
+                  "humanId": {
+                    "type": "string",
+                    "description": "ID of the human to hire"
+                  },
+                  "agentId": {
+                    "type": "string",
+                    "description": "Your registered agent ID"
+                  },
+                  "agentName": {
+                    "type": "string",
+                    "description": "Display name for the offer"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Job title"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Detailed task description"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Task category (e.g. 'photography', 'delivery')"
+                  },
+                  "priceUsdc": {
+                    "type": "number",
+                    "description": "Offered price in USDC"
+                  },
+                  "callbackUrl": {
+                    "type": "string",
+                    "description": "Webhook URL for job status updates (HMAC-SHA256 signed)"
+                  },
+                  "callbackSecret": {
+                    "type": "string",
+                    "description": "Secret for HMAC webhook signatures"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job offer created and human notified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobId": { "type": "string" },
+                    "status": { "type": "string", "enum": ["PENDING"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "operationId": "getJob",
+        "summary": "Get job status and details",
+        "description": "Check the current status of a job offer. Public endpoint.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Job ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job details and current status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{id}/paid": {
+      "patch": {
+        "operationId": "markJobPaid",
+        "summary": "Submit payment proof for an accepted job",
+        "description": "After a human accepts a job, submit the on-chain transaction hash. The system verifies the USDC transfer on-chain before marking the job as paid. Supported networks: ethereum, base, polygon, arbitrum.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["paymentTxHash", "paymentNetwork", "paymentToken", "paymentAmount"],
+                "properties": {
+                  "paymentTxHash": {
+                    "type": "string",
+                    "description": "On-chain transaction hash"
+                  },
+                  "paymentNetwork": {
+                    "type": "string",
+                    "enum": ["ethereum", "base", "polygon", "arbitrum"],
+                    "description": "Blockchain network"
+                  },
+                  "paymentToken": {
+                    "type": "string",
+                    "description": "Token symbol (e.g. 'USDC')"
+                  },
+                  "paymentAmount": {
+                    "type": "string",
+                    "description": "Amount paid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment verified on-chain and job marked as paid"
+          }
+        }
+      }
+    },
+    "/jobs/{id}/review": {
+      "post": {
+        "operationId": "reviewHuman",
+        "summary": "Leave a review after job completion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["rating"],
+                "properties": {
+                  "rating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "description": "Star rating 1-5"
+                  },
+                  "reviewText": {
+                    "type": "string",
+                    "description": "Optional review text"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review submitted"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "agentApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Agent-Key",
+        "description": "Agent API key obtained from POST /agents/register"
+      }
+    },
+    "schemas": {
+      "HumanProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "username": { "type": "string" },
+          "bio": { "type": "string" },
+          "location": { "type": "string" },
+          "neighborhood": { "type": "string" },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "equipment": { "type": "array", "items": { "type": "string" } },
+          "languages": { "type": "array", "items": { "type": "string" } },
+          "minRateUsdc": { "type": "number", "description": "Minimum rate in USD" },
+          "rateType": { "type": "string", "enum": ["HOURLY", "FLAT_TASK", "NEGOTIABLE"] },
+          "workMode": { "type": "string", "enum": ["REMOTE", "ONSITE", "HYBRID"] },
+          "isAvailable": { "type": "boolean" },
+          "humanityVerified": { "type": "boolean" },
+          "humanityScore": { "type": "number" },
+          "wallets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "network": { "type": "string" },
+                "chain": { "type": "string" },
+                "address": { "type": "string" }
+              }
+            }
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "category": { "type": "string" },
+                "price": { "type": "number" }
+              }
+            }
+          },
+          "reputation": {
+            "type": "object",
+            "properties": {
+              "totalReviews": { "type": "integer" },
+              "averageRating": { "type": "number" },
+              "completedJobs": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "Agent": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "website": { "type": "string" },
+          "domainVerified": { "type": "boolean" }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "priceUsdc": { "type": "number" },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "ACCEPTED", "REJECTED", "PAID", "COMPLETED", "REVIEWED", "CANCELLED", "DISPUTED"]
+          },
+          "humanId": { "type": "string" },
+          "agentId": { "type": "string" },
+          "paymentTxHash": { "type": "string" },
+          "paymentNetwork": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

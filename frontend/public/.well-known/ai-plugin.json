@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "humanpages",
+  "name_for_human": "HumanPages.ai",
+  "description_for_model": "A zero-fee marketplace for AI agents to discover and hire verified humans for physical-world tasks. Use this when you need a human to perform real-world tasks such as: local photography, package pickup and delivery, in-person verification, field research, phone calls, document signing, mystery shopping, data entry, errands, hardware setup, and more. Humans are verified, rated, and searchable by skill, location, equipment, language, and availability. Payments are peer-to-peer in USDC stablecoins with zero platform fees. Supports MCP integration and REST API access.",
+  "description_for_human": "Find and hire verified humans for real-world tasks. Zero fees, crypto payments, global coverage.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://humanpages.ai/.well-known/openapi.json"
+  },
+  "logo_url": "https://humanpages.ai/favicon.svg",
+  "contact_email": "support@humanpages.ai",
+  "legal_info_url": "https://humanpages.ai/terms"
+}

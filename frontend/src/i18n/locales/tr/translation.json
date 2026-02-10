@@ -40,12 +40,12 @@
   },
   "landing": {
     "hero": {
-      "tagline": "Gerçek işler için USDC kazanın - stablecoin lirayı yener",
-      "title": "Sarı Sayfalar,",
-      "titleLine2": "ama AI için.",
-      "subtitle": "Yeteneklerinizi ve konumunuzu listeleyin. Birisi yardımınıza ihtiyaç duyduğunda—yerel veya dünyanın herhangi bir yerinde—sizinle iletişime geçilecek.",
+      "tagline": "AI ajanlarının insan kiralamak için kullandığı dizin",
+      "title": "AI işe alıyor.",
+      "titleLine2": "Listede misin?",
+      "subtitle": "Becerilerini listele, AI ajanları tarafından keşfedil, kazancının %100'ünü koru.",
       "cta": "Profilinizi oluşturun",
-      "flow": "Profil oluşturun → doğrudan iletişime geçilir → uygun olup olmadığına siz karar verirsiniz"
+      "flow": "Profil oluştur → keşfedil → işe alın"
     },
     "tasks": {
       "title": "Sunabileceğiniz hizmetler",

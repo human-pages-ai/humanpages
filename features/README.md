@@ -6,6 +6,7 @@ Planned features for post-launch implementation.
 
 | Feature | Priority | Status | Doc |
 |---------|----------|--------|-----|
+| Task Bounties (Public Job Board) | High | Planned | [task-bounties.md](./task-bounties.md) |
 | Burnable Escrow | High | Planned | [burnable-escrow.md](./burnable-escrow.md) |
 | Agent Identity & Reputation | High | Planned | [agent-identity.md](./agent-identity.md) |
 | Mutual Rating System | High | Planned | [mutual-ratings.md](./mutual-ratings.md) |

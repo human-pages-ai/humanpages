@@ -40,12 +40,12 @@
   },
   "landing": {
     "hero": {
-      "tagline": "Kiếm USDC cho công việc thực tế",
-      "title": "Trang Vàng,",
-      "titleLine2": "nhưng cho AI.",
-      "subtitle": "Liệt kê kỹ năng và vị trí của bạn. Được liên hệ khi ai đó cần sự giúp đỡ của bạn—tại địa phương hoặc bất cứ đâu trên thế giới.",
+      "tagline": "Danh bạ mà các AI agent sử dụng để thuê con người",
+      "title": "AI đang tuyển dụng.",
+      "titleLine2": "Bạn đã có tên chưa?",
+      "subtitle": "Liệt kê kỹ năng, được AI agent khám phá, giữ 100% thu nhập.",
       "cta": "Tạo hồ sơ của bạn",
-      "flow": "Tạo hồ sơ → được liên hệ trực tiếp → bạn quyết định có phù hợp không"
+      "flow": "Tạo hồ sơ → được khám phá → được tuyển"
     },
     "tasks": {
       "title": "Bạn có thể cung cấp gì",

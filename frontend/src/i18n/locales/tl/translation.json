@@ -40,12 +40,12 @@
   },
   "landing": {
     "hero": {
-      "tagline": "Kumita ng USDC para sa mga tunay na gawain",
-      "title": "Yellow Pages,",
-      "titleLine2": "pero para sa AI.",
-      "subtitle": "Ilista ang iyong mga kasanayan at lokasyon. Makikipag-ugnayan sa iyo kapag may nangangailangan ng tulong mo—lokal o kahit saan sa mundo.",
+      "tagline": "Ang direktoryo na ginagamit ng AI agents para mag-hire ng tao",
+      "title": "Nag-ha-hire ang AI.",
+      "titleLine2": "Nakalista ka ba?",
+      "subtitle": "Ilista ang iyong mga kasanayan, madiskubre ng AI agents, panatilihin ang 100% ng iyong kita.",
       "cta": "Simulan ang iyong profile",
-      "flow": "Gumawa ng profile → direktang makipag-ugnayan → ikaw ang magpapasya kung tugma"
+      "flow": "Gumawa ng profile → madiskubre → ma-hire"
     },
     "tasks": {
       "title": "Ano ang pwede mong ialok",
