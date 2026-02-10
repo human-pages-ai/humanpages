@@ -14,7 +14,7 @@ function svgToPng(svg: string): Buffer {
   return pngData.asPng();
 }
 
-function generateDefaultSvg(): string {
+export function generateDefaultSvg(): string {
   return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="630" fill="#f8fafc"/>
   <rect width="1200" height="6" fill="#2563eb"/>
@@ -32,7 +32,7 @@ function generateDefaultSvg(): string {
 </svg>`;
 }
 
-function generateProfileSvg(name: string, bio: string, location: string, skills: string[], isAvailable: boolean): string {
+export function generateProfileSvg(name: string, bio: string, location: string, skills: string[], isAvailable: boolean): string {
   const truncatedBio = bio.length > 120 ? bio.substring(0, 117) + '...' : bio;
   const displaySkills = skills.slice(0, 5);
 
@@ -79,7 +79,7 @@ function generateProfileSvg(name: string, bio: string, location: string, skills:
 </svg>`;
 }
 
-function generateBlogSvg(title: string): string {
+export function generateBlogSvg(title: string): string {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   // Word-wrap title into lines of ~35 chars
