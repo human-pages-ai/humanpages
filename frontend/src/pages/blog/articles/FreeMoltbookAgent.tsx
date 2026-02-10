@@ -108,10 +108,33 @@ export default function FreeMoltbookAgent() {
         <li>Space your requests — undocumented rate limits exist, and aggressive posting can get your agent throttled.</li>
       </ul>
 
-      <h2>Step 3: Write the Agent Script</h2>
+      <h2>Step 3: Set Up and Deploy to Cloudflare Workers</h2>
 
       <p>
-        Here's a complete Cloudflare Worker that generates a post using Gemini and publishes it to Moltbook. It's about 50 lines of code:
+        Cloudflare Workers has a generous free tier: 100,000 requests per day, with built-in cron triggers for scheduling. Here's the full setup:
+      </p>
+
+      <p>
+        <strong>1. Install Wrangler</strong> (Cloudflare's CLI):
+      </p>
+
+      <pre>
+{`npm install -g wrangler
+wrangler login`}
+      </pre>
+
+      <p>
+        <strong>2. Create a new project:</strong>
+      </p>
+
+      <pre>
+{`mkdir moltbook-agent && cd moltbook-agent
+npm init -y
+mkdir src`}
+      </pre>
+
+      <p>
+        <strong>3. Create <code>src/index.js</code></strong> — this is your agent's entire brain. It generates a post using Gemini and publishes it to Moltbook:
       </p>
 
       <pre>
@@ -159,35 +182,11 @@ export default function FreeMoltbookAgent() {
       </pre>
 
       <p>
-        That's it. The <code>scheduled</code> handler is called automatically by Cloudflare's cron trigger (which we'll set up next). The two environment variables — <code>GEMINI_API_KEY</code> and <code>MOLTBOOK_API_KEY</code> — are stored as secrets in Cloudflare.
-      </p>
-
-      <h2>Step 4: Deploy to Cloudflare Workers</h2>
-
-      <p>
-        Cloudflare Workers has a generous free tier: 100,000 requests per day, with built-in cron triggers for scheduling. Here's how to deploy:
+        The <code>scheduled</code> handler is called automatically by Cloudflare's cron trigger. The two environment variables — <code>GEMINI_API_KEY</code> and <code>MOLTBOOK_API_KEY</code> — are stored as secrets in Cloudflare.
       </p>
 
       <p>
-        <strong>1. Install Wrangler</strong> (Cloudflare's CLI):
-      </p>
-
-      <pre>
-{`npm install -g wrangler
-wrangler login`}
-      </pre>
-
-      <p>
-        <strong>2. Create a new project:</strong>
-      </p>
-
-      <pre>
-{`mkdir moltbook-agent && cd moltbook-agent
-npm init -y`}
-      </pre>
-
-      <p>
-        <strong>3. Create <code>wrangler.toml</code></strong> with a cron trigger:
+        <strong>4. Create <code>wrangler.toml</code></strong> in the project root (next to <code>package.json</code>) with a cron trigger:
       </p>
 
       <pre>
@@ -200,20 +199,13 @@ crons = ["0 */4 * * *"]  # Every 4 hours`}
       </pre>
 
       <p>
-        <strong>4. Add your secrets:</strong>
+        <strong>5. Add your secrets and deploy:</strong>
       </p>
 
       <pre>
 {`wrangler secret put GEMINI_API_KEY
-wrangler secret put MOLTBOOK_API_KEY`}
-      </pre>
-
-      <p>
-        <strong>5. Deploy:</strong>
-      </p>
-
-      <pre>
-{`wrangler deploy`}
+wrangler secret put MOLTBOOK_API_KEY
+wrangler deploy`}
       </pre>
 
       <p>
