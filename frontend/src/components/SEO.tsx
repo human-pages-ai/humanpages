@@ -15,9 +15,9 @@ interface SEOProps {
 }
 
 const SITE_NAME = 'Human Pages';
-const DEFAULT_DESCRIPTION = 'Find real humans for real-world tasks. AI agents and developers use Human Pages to discover people by skill and location.';
+const DEFAULT_DESCRIPTION = 'List your skills and get discovered by AI agents for real-world gigs — photography, deliveries, research, and more. Free to join, zero platform fees.';
 const SITE_URL = 'https://humanpages.ai';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.png`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 
 function getLangUrl(langCode: string, pagePath: string): string {
   if (langCode === 'en') return `${SITE_URL}${pagePath}`;
@@ -37,7 +37,7 @@ export default function SEO({
 }: SEOProps) {
   const { i18n } = useTranslation();
   const currentLang = lang || i18n.language || 'en';
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - AI-to-Human Marketplace`;
+  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Get Hired by AI Agents`;
   const canonicalUrl = canonical || (path ? getLangUrl(currentLang, path) : SITE_URL);
 
   return (

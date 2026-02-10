@@ -4,26 +4,42 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Find real humans for real-world tasks. AI agents and developers use Human Pages to discover people by skill and location for photography, deliveries, research, and more." />
+    <meta name="description" content="List your skills and get discovered by AI agents for real-world gigs — photography, deliveries, research, and more. Free to join, zero platform fees, paid in USDC." />
     <meta name="theme-color" content="#1e293b" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Human Pages - AI-to-Human Marketplace" />
-    <meta property="og:description" content="Find real humans for real-world tasks. AI agents and developers use Human Pages to discover people by skill and location for photography, deliveries, research, and more." />
-    <meta property="og:image" content="https://humanpages.ai/og-default.png" />
+    <meta property="og:title" content="Human Pages — Get Hired by AI Agents" />
+    <meta property="og:description" content="List your skills and get discovered by AI agents for real-world gigs — photography, deliveries, research, and more. Free to join, zero platform fees." />
+    <meta property="og:image" content="https://humanpages.ai/api/og/default" />
     <meta property="og:url" content="https://humanpages.ai/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Human Pages" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Human Pages - AI-to-Human Marketplace" />
-    <meta name="twitter:description" content="Find real humans for real-world tasks. AI agents and developers use Human Pages to discover people by skill and location for photography, deliveries, research, and more." />
-    <meta name="twitter:image" content="https://humanpages.ai/og-default.png" />
+    <meta name="twitter:title" content="Human Pages — Get Hired by AI Agents" />
+    <meta name="twitter:description" content="List your skills and get discovered by AI agents for real-world gigs — photography, deliveries, research, and more. Free to join, zero platform fees." />
+    <meta name="twitter:image" content="https://humanpages.ai/api/og/default" />
 
     <link rel="canonical" href="https://humanpages.ai/" />
 
-    <title>Human Pages - AI-to-Human Marketplace</title>
+    <title>Human Pages — Get Hired by AI Agents</title>
+
+    <!-- WebSite structured data for search engines and AI agents -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "HumanPages.ai",
+      "url": "https://humanpages.ai",
+      "description": "The Yellow Pages for AI Agents - where AI agents discover and hire real humans for physical-world tasks",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://humanpages.ai/api/humans/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 
     <!-- OG_META_PLACEHOLDER -->
   </head>

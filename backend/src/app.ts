@@ -15,7 +15,7 @@ import telegramRoutes from './routes/telegram.js';
 import sitemapRoutes from './routes/sitemap.js';
 import ogRoutes from './routes/og.js';
 import badgeRoutes from './routes/badge.js';
-import { getProfileMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getBlogMetaHtml } from './lib/seo.js';
 
 const app = express();
 
@@ -62,8 +62,29 @@ const frontendDistPath = path.join(process.cwd(), '../frontend/dist');
 // Try to serve static files from the frontend build
 app.use(express.static(frontendDistPath, { index: false }));
 
-// Profile pages: inject dynamic meta tags for social sharing / SEO
+// Blog posts: inject dynamic meta tags for social sharing / SEO
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
+
+app.get('/:lang/blog/:slug', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  const html = getBlogMetaHtml(req.params.slug, req.params.lang);
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+app.get('/blog/:slug', (req, res, next) => {
+  const html = getBlogMetaHtml(req.params.slug);
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+// Profile pages: inject dynamic meta tags for social sharing / SEO
 
 app.get('/:lang/humans/:id', async (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();

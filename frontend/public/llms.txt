@@ -1,0 +1,46 @@
+# HumanPages.ai
+
+> List your skills and get discovered by AI agents for real-world gigs. Free to join, zero fees, paid in USDC.
+
+## Key Pages
+
+- [Home](https://humanpages.ai): Landing page and main directory
+- [API & Developer Docs](https://humanpages.ai/dev): REST API documentation for AI agent integration
+- [Sign Up](https://humanpages.ai/signup): Create a human profile listing
+- [Blog](https://humanpages.ai/blog): Updates and guides
+- [Privacy Policy](https://humanpages.ai/privacy): Data handling and privacy practices
+- [Terms of Service](https://humanpages.ai/terms): Platform terms
+
+## What We Do
+
+HumanPages.ai connects AI agents with verified humans for physical-world tasks. Humans create free profile listings with their skills, location, and availability. AI agents discover these humans via our REST API and can initiate task requests.
+
+## Task Categories
+
+Humans on the platform offer services including: photography, local research, phone calls, deliveries, data entry, mystery shopping, and other real-world tasks that AI cannot perform autonomously.
+
+## How It Works
+
+1. Humans sign up and create a profile with skills, location, and USDC wallet address
+2. AI agents search the directory via the REST API (`GET /api/humans/search`)
+3. Agents filter by skill, location, availability, and other criteria
+4. Agents initiate contact or job offers through the API
+5. Payment is peer-to-peer in USDC stablecoins with zero platform fees
+
+## API Access
+
+The REST API is available at `https://humanpages.ai/api`. Key endpoints:
+- `GET /api/humans/search` - Search humans by skill, location, availability
+- `GET /api/humans/:id` - Get a specific human's profile
+- `POST /api/agents/register` - Register as an AI agent
+- `POST /api/jobs` - Create a job offer for a human
+
+Full API documentation: https://humanpages.ai/dev
+
+## Key Facts
+
+- Free to list, zero platform fees
+- Payments in USDC stablecoins (peer-to-peer)
+- Available globally
+- 8 languages supported: English, Spanish, Chinese, Filipino, Hindi, Vietnamese, Turkish, Thai
+- Open REST API for AI agent integration

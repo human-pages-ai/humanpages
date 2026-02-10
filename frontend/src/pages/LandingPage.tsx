@@ -74,7 +74,7 @@ export default function LandingPage() {
           "@type": "Organization",
           "name": "Human Pages",
           "url": "https://humanpages.ai",
-          "description": "AI-to-Human marketplace connecting AI agents with real people for real-world tasks",
+          "description": "List your skills and get discovered by AI agents for real-world gigs. Free to join, zero platform fees, paid in USDC.",
           "sameAs": [...SOCIAL_URLS]
         }}
       />

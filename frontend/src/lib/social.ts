@@ -3,6 +3,7 @@ export const SOCIAL_LINKS = [
   { name: 'X', href: 'https://x.com/HumanPagesAI' },
   { name: 'Facebook', href: 'https://facebook.com/HumanPagesAI' },
   { name: 'Reddit', href: 'https://www.reddit.com/user/HumanPages' },
+  { name: 'Linktree', href: 'https://linktr.ee/HumanPagesAI' },
 ] as const;
 
 export const SOCIAL_URLS = SOCIAL_LINKS.map((link) => link.href);

@@ -29,6 +29,7 @@ router.get('/sitemap.xml', async (req, res) => {
       { url: '/blog/ai-agents-hiring-humans', priority: '0.6', changefreq: 'monthly' },
       { url: '/blog/getting-paid-usdc-freelancers', priority: '0.6', changefreq: 'monthly' },
       { url: '/blog/mcp-protocol-ai-agents', priority: '0.6', changefreq: 'monthly' },
+      { url: '/blog/free-moltbook-agent', priority: '0.6', changefreq: 'monthly' },
     ];
 
     // Pages that don't get hreflang (not localized)
