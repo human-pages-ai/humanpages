@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -37,6 +37,8 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tab state — driven by URL search param
   const tabParam = searchParams.get('tab') as DashboardTab | null;
@@ -78,6 +80,10 @@ export default function Dashboard() {
     websiteUrl: '',
     workMode: null as 'REMOTE' | 'ONSITE' | 'HYBRID' | null,
   });
+
+  const profileFormRef = useRef(profileForm);
+  profileFormRef.current = profileForm;
+  const initialProfileFormRef = useRef(profileForm);
 
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: 'USD' });
@@ -284,37 +290,40 @@ export default function Dashboard() {
     }
   };
 
+  const buildProfilePayload = (form: typeof profileForm) => ({
+    name: form.name,
+    bio: form.bio || null,
+    location: form.location || null,
+    neighborhood: form.neighborhood || null,
+    locationGranularity: form.locationGranularity,
+    locationLat: form.locationLat ?? null,
+    locationLng: form.locationLng ?? null,
+    skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
+    equipment: form.equipment.length > 0 ? form.equipment : null,
+    languages: form.languages.length > 0 ? form.languages : null,
+    contactEmail: form.contactEmail || null,
+    telegram: form.telegram || null,
+    whatsapp: form.whatsapp || null,
+    paymentMethods: form.paymentMethods || null,
+    hideContact: form.hideContact,
+    username: form.username || null,
+    linkedinUrl: form.linkedinUrl || null,
+    twitterUrl: form.twitterUrl || null,
+    githubUrl: form.githubUrl || null,
+    instagramUrl: form.instagramUrl || null,
+    youtubeUrl: form.youtubeUrl || null,
+    websiteUrl: form.websiteUrl || null,
+    workMode: form.workMode || null,
+  });
+
   const saveProfile = async () => {
     setSaving(true);
     try {
-      const updated = await api.updateProfile({
-        name: profileForm.name,
-        bio: profileForm.bio || null,
-        location: profileForm.location || null,
-        neighborhood: profileForm.neighborhood || null,
-        locationGranularity: profileForm.locationGranularity,
-        locationLat: profileForm.locationLat ?? null,
-        locationLng: profileForm.locationLng ?? null,
-        skills: profileForm.skills.split(',').map(s => s.trim()).filter(Boolean),
-        equipment: profileForm.equipment.length > 0 ? profileForm.equipment : null,
-        languages: profileForm.languages.length > 0 ? profileForm.languages : null,
-        contactEmail: profileForm.contactEmail || null,
-        telegram: profileForm.telegram || null,
-        whatsapp: profileForm.whatsapp || null,
-        paymentMethods: profileForm.paymentMethods || null,
-        hideContact: profileForm.hideContact,
-        username: profileForm.username || null,
-        linkedinUrl: profileForm.linkedinUrl || null,
-        twitterUrl: profileForm.twitterUrl || null,
-        githubUrl: profileForm.githubUrl || null,
-        instagramUrl: profileForm.instagramUrl || null,
-        youtubeUrl: profileForm.youtubeUrl || null,
-        websiteUrl: profileForm.websiteUrl || null,
-        workMode: profileForm.workMode || null,
-      });
+      const updated = await api.updateProfile(buildProfilePayload(profileForm));
       posthog.capture('profile_updated');
       setProfile(updated);
       setEditingProfile(false);
+      initialProfileFormRef.current = profileForm;
       toast.success(t('toast.profileSaved'));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('toast.genericError'));
@@ -322,6 +331,56 @@ export default function Dashboard() {
       setSaving(false);
     }
   };
+
+  // Auto-save profile on form changes (debounced 1.5s)
+  const autoSaveProfile = useCallback(async () => {
+    const form = profileFormRef.current;
+    setAutoSaving(true);
+    try {
+      const updated = await api.updateProfile(buildProfilePayload(form));
+      posthog.capture('profile_updated');
+      setProfile(updated);
+      initialProfileFormRef.current = form;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('toast.genericError'));
+    } finally {
+      setAutoSaving(false);
+    }
+  }, []);
+
+  const scheduleAutoSave = useCallback(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      autoSaveProfile();
+    }, 1500);
+  }, [autoSaveProfile]);
+
+  // Trigger auto-save when profileForm changes while editing
+  useEffect(() => {
+    if (!editingProfile) return;
+    // Skip the initial render when editing starts (form just loaded from profile)
+    if (JSON.stringify(profileFormRef.current) === JSON.stringify(initialProfileFormRef.current)) return;
+    scheduleAutoSave();
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [profileForm, editingProfile, scheduleAutoSave]);
+
+  // When entering edit mode, snapshot the form state
+  useEffect(() => {
+    if (editingProfile) {
+      initialProfileFormRef.current = profileForm;
+    }
+  }, [editingProfile]);
+
+  const checkUsernameAvailability = useCallback(async (username: string): Promise<boolean> => {
+    try {
+      const { available } = await api.checkUsername(username);
+      return available;
+    } catch {
+      return true; // Don't block on network errors
+    }
+  }, []);
 
   const saveFilters = async () => {
     setSaving(true);
@@ -556,6 +615,24 @@ export default function Dashboard() {
           reviewStats={reviewStats}
           saving={saving}
           onToggleAvailability={toggleAvailability}
+          onCompleteProfile={(fieldId) => {
+            setActiveTab('profile');
+            setEditingProfile(true);
+            if (fieldId) {
+              setTimeout(() => {
+                document.getElementById(fieldId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                document.getElementById(fieldId)?.focus();
+              }, 100);
+            }
+          }}
+          onAddService={() => {
+            setActiveTab('profile');
+            setShowServiceForm(true);
+            setTimeout(() => {
+              document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          }}
+          onScrollToWallets={() => setActiveTab('payments')}
         />
 
         {/* Tab navigation */}
@@ -598,7 +675,9 @@ export default function Dashboard() {
                     profileForm={profileForm}
                     setProfileForm={setProfileForm}
                     saving={saving}
+                    autoSaving={autoSaving}
                     onSaveProfile={saveProfile}
+                    onCheckUsername={checkUsernameAvailability}
                   />
                 </div>
 

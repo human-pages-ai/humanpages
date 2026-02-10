@@ -36,7 +36,9 @@ interface Props {
   };
   setProfileForm: (v: any) => void;
   saving: boolean;
+  autoSaving?: boolean;
   onSaveProfile: () => void;
+  onCheckUsername?: (username: string) => Promise<boolean>;
 }
 
 export default function ProfileSection({
@@ -48,11 +50,15 @@ export default function ProfileSection({
   profileForm,
   setProfileForm,
   saving,
+  autoSaving,
   onSaveProfile,
+  onCheckUsername,
 }: Props) {
   const { t } = useTranslation();
 
   const [usernameError, setUsernameError] = React.useState<string>('');
+  const [checkingUsername, setCheckingUsername] = React.useState(false);
+  const usernameCheckTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showNonCrypto, setShowNonCrypto] = React.useState(Boolean(profileForm.paymentMethods));
 
   React.useEffect(() => {
@@ -91,19 +97,34 @@ export default function ProfileSection({
   };
 
   const validateUsername = (username: string) => {
+    if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current);
     if (!username) {
       setUsernameError('');
+      setCheckingUsername(false);
       return true;
     }
     if (username.length < 3 || username.length > 30) {
       setUsernameError(t('dashboard.profile.usernameLength'));
+      setCheckingUsername(false);
       return false;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       setUsernameError(t('dashboard.profile.usernameChars'));
+      setCheckingUsername(false);
       return false;
     }
     setUsernameError('');
+    // Debounced uniqueness check
+    if (onCheckUsername && username !== profile.username) {
+      setCheckingUsername(true);
+      usernameCheckTimer.current = setTimeout(async () => {
+        const available = await onCheckUsername(username);
+        setCheckingUsername(false);
+        if (!available) {
+          setUsernameError(t('dashboard.profile.usernameTaken'));
+        }
+      }, 500);
+    }
     return true;
   };
 
@@ -151,10 +172,13 @@ export default function ProfileSection({
                 placeholder="your_username"
               />
             </div>
-            {usernameError && (
+            {checkingUsername && (
+              <p className="mt-1 text-xs text-gray-400">{t('dashboard.profile.checkingUsername')}</p>
+            )}
+            {usernameError && !checkingUsername && (
               <p className="mt-1 text-sm text-red-600">{usernameError}</p>
             )}
-            {profileForm.username && !usernameError && (
+            {profileForm.username && !usernameError && !checkingUsername && (
               <p className="mt-1 text-xs text-gray-500">
                 {t('dashboard.profile.profileUrl', { username: profileForm.username })}
               </p>
@@ -188,21 +212,24 @@ export default function ProfileSection({
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
             {profileForm.neighborhood && (
-              <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={profileForm.locationGranularity === 'neighborhood'}
-                  onChange={(e) => setProfileForm({
-                    ...profileForm,
-                    locationGranularity: e.target.checked ? 'neighborhood' : 'city',
-                  })}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="text-sm text-gray-700">
-                  {t('dashboard.profile.showNeighborhood')}
-                  <span className="text-gray-500 text-xs ml-1">({profileForm.neighborhood})</span>
-                </span>
-              </label>
+              <>
+                <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={profileForm.locationGranularity === 'neighborhood'}
+                    onChange={(e) => setProfileForm({
+                      ...profileForm,
+                      locationGranularity: e.target.checked ? 'neighborhood' : 'city',
+                    })}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    {t('dashboard.profile.showNeighborhood')}
+                    <span className="text-gray-500 text-xs ml-1">({profileForm.neighborhood})</span>
+                  </span>
+                </label>
+                <p className="text-xs text-gray-400 ml-6">{t('dashboard.profile.neighborhoodHint')}</p>
+              </>
             )}
           </div>
           <div>
@@ -321,6 +348,7 @@ export default function ProfileSection({
             </h3>
             <div className="space-y-3">
               <p className="text-sm text-gray-600">{t('dashboard.profile.defaultPaymentUsdc')}</p>
+              <p className="text-xs text-gray-400">{t('dashboard.profile.usdcHint')}</p>
               {hasWallet ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,21 +472,35 @@ export default function ProfileSection({
             </div>
           </div>
 
-          {/* Sticky save bar */}
+          {/* Sticky bar with auto-save status */}
           <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white border-t border-gray-200 flex items-center justify-between">
             <button
-              onClick={() => setEditingProfile(false)}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                onSaveProfile();
+              }}
+              className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
             >
-              {t('common.cancel')}
+              {t('common.done')}
             </button>
-            <button
-              onClick={onSaveProfile}
-              disabled={saving}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 font-medium"
-            >
-              {saving ? t('dashboard.profile.saving') : t('dashboard.profile.saveProfile')}
-            </button>
+            <div className="flex items-center gap-3">
+              {autoSaving && (
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  {t('dashboard.profile.saving')}
+                </span>
+              )}
+              {!autoSaving && !saving && (
+                <span className="text-xs text-green-500 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {t('dashboard.profile.saved')}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ) : (

@@ -35,6 +35,7 @@ export const mockProfile = {
   websiteUrl: '',
   wallets: [],
   services: [],
+  referralCode: 'TEST123',
   referralCount: 0,
   minOfferPrice: undefined,
   maxOfferDistance: undefined,

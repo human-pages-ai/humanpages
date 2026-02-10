@@ -27,7 +27,8 @@
     "success": "Success!",
     "free": "Always free",
     "noFees": "No fees on earnings",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "done": "Done"
   },
   "nav": {
     "home": "Home",
@@ -158,6 +159,7 @@
   "dashboard": {
     "title": "Dashboard",
     "settings": "Settings",
+    "trustScoreLabel": "Trust score: {{score}}%",
     "welcome": "Welcome",
     "shareProfile": "Share your profile",
     "shareProfileDesc": "Share your profile link so AI agents and clients can find you",
@@ -171,6 +173,7 @@
     "referralYourLink": "Your referral link",
     "referralSignups": "Signups",
     "referralQualified": "Qualified",
+    "referralQualifiedHint": "Completed their profile",
     "referralCreditsEarned": "Credits Earned",
     "referralCreditsPerSignup": "credits / signup",
     "referralBonusAt10": "at 10 referrals",
@@ -206,6 +209,7 @@
     "paymentPreference": {
       "title": "Payment Preference",
       "subtitle": "Tell agents how you prefer to be paid for jobs",
+      "hint": "Upfront: paid before you start. Escrow: held until the job is done.",
       "upfront": "Payment Upfront",
       "escrow": "Escrow",
       "both": "Flexible (Any)",
@@ -319,11 +323,16 @@
       "howToPayYou": "How to pay you",
       "saveProfile": "Save Profile",
       "showNeighborhood": "Show neighborhood on my public profile",
+      "neighborhoodHint": "When off, only your city is visible on your public profile",
       "hideContact": "Hide contact info from public profile",
       "hideContactHelp": "When enabled, your email, Telegram, WhatsApp, and payment methods won't be visible to visitors.",
       "saving": "Saving...",
+      "saved": "Saved",
+      "usernameTaken": "This username is already taken",
+      "checkingUsername": "Checking availability...",
       "paymentInfo": "Payment Info",
       "defaultPaymentUsdc": "Default payment: USDC via your connected wallet",
+      "usdcHint": "USDC is a stablecoin — always worth $1 USD",
       "walletConnected": "Wallet connected",
       "connectWalletPrompt": "Connect a wallet to receive USDC payments",
       "alsoAcceptNonCrypto": "I also accept non-crypto payments",
@@ -338,7 +347,7 @@
       "connectDescription": "Connect your browser wallet to verify ownership and add it to your profile.",
       "verifyAndAdd": "Verify & Add",
       "connectAndVerify": "Connect Wallet & Verify",
-      "connectHint": "Your wallet will open twice: once to connect, once to sign.",
+      "connectHint": "Your wallet will open twice: once to connect, once to sign. No funds are sent.",
       "signing": "Please sign the message in your wallet...",
       "connecting": "Connecting to wallet...",
       "connectedAs": "Connected as",
@@ -556,6 +565,14 @@
     "label": "Currency",
     "selectCurrency": "Select currency",
     "usdEstimate": "~${{amount}} USD"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "Email, LinkedIn, GitHub, humanity verification",
+      "reputationDesc": "Completed jobs, ratings, and reviews",
+      "socialDesc": "Vouches from other verified users",
+      "activityDesc": "Profile completeness and platform usage"
+    }
   },
   "errors": {
     "required": "This field is required",

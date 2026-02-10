@@ -395,6 +395,26 @@ router.delete('/me/vouch/:voucheeId', authenticateToken, async (req: AuthRequest
   }
 });
 
+// Check username availability
+router.get('/me/check-username', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const username = req.query.username as string;
+    if (!username) {
+      return res.json({ available: true });
+    }
+    const existing = await prisma.human.findFirst({
+      where: {
+        username,
+        NOT: { id: req.userId },
+      },
+    });
+    res.json({ available: !existing });
+  } catch (error) {
+    logger.error({ err: error }, 'Check username error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Update current user profile
 router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {

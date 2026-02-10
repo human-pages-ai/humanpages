@@ -123,6 +123,9 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  checkUsername: (username: string) =>
+    request<{ available: boolean }>(`/humans/me/check-username?username=${encodeURIComponent(username)}`),
+
   // Wallets
   getWallets: () => request<Wallet[]>('/wallets'),
 
