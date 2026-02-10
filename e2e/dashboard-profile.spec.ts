@@ -21,9 +21,13 @@ test.describe('Dashboard – Profile', () => {
     await page.locator('#profile-skills').fill('testing, automation');
     await page.locator('#profile-contact-email').fill('contact@test.com');
 
-    await page.getByRole('button', { name: 'Save Profile' }).click();
+    // Wait for auto-save to complete (shows "Saved" indicator)
+    await expect(page.locator('text=Saved')).toBeVisible({ timeout: SAVE_TIMEOUT });
 
-    // Wait for save to complete (form closes, bio input disappears)
+    // Click Done to exit edit mode
+    await page.getByRole('button', { name: 'Done' }).click();
+
+    // Wait for form to close (bio input disappears)
     await expect(page.locator('#profile-bio')).not.toBeVisible({ timeout: SAVE_TIMEOUT });
 
     // Reload and navigate back to Profile tab to verify values persisted
@@ -49,9 +53,13 @@ test.describe('Dashboard – Profile', () => {
     await page.locator('#profile-linkedin').fill('https://linkedin.com/in/e2etest');
     await page.locator('#profile-github').fill('https://github.com/e2etest');
 
-    await page.getByRole('button', { name: 'Save Profile' }).click();
+    // Wait for auto-save to complete
+    await expect(page.locator('text=Saved')).toBeVisible({ timeout: SAVE_TIMEOUT });
 
-    // Wait for save to complete
+    // Click Done to exit edit mode
+    await page.getByRole('button', { name: 'Done' }).click();
+
+    // Wait for form to close
     await expect(page.locator('#profile-linkedin')).not.toBeVisible({ timeout: SAVE_TIMEOUT });
 
     // Reload and navigate back to Profile tab to verify links are saved

@@ -15,6 +15,9 @@ test.describe('Dashboard – Settings', () => {
     const initialText = await toggleBtn.textContent();
     const expectedText = initialText === 'Active' ? 'Paused' : 'Active';
 
+    // Accept the confirm dialog that appears when toggling availability off
+    page.on('dialog', dialog => dialog.accept());
+
     await toggleBtn.click();
 
     // Wait for the API round-trip and React state to update
