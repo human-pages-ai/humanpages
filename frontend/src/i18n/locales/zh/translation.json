@@ -191,7 +191,8 @@
       "active": "活跃",
       "paused": "暂停",
       "notifyVia": "通知方式",
-      "enableToNotify": "开启可用状态以配置通知"
+      "enableToNotify": "开启可用状态以配置通知",
+      "confirmSuspend": "这将暂停您接收工作邀请。您确定吗？"
     },
     "paymentPreference": {
       "title": "付款偏好",

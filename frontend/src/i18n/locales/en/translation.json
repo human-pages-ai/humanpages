@@ -200,7 +200,8 @@
       "active": "Active",
       "paused": "Paused",
       "notifyVia": "Notify me via",
-      "enableToNotify": "Turn on availability to configure notifications"
+      "enableToNotify": "Turn on availability to configure notifications",
+      "confirmSuspend": "This will suspend you from receiving job offers. Are you sure?"
     },
     "paymentPreference": {
       "title": "Payment Preference",

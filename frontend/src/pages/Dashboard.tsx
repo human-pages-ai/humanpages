@@ -256,6 +256,9 @@ export default function Dashboard() {
 
   const toggleAvailability = async () => {
     if (!profile) return;
+    if (profile.isAvailable && !window.confirm(t('dashboard.workStatus.confirmSuspend'))) {
+      return;
+    }
     setSaving(true);
     try {
       const updated = await api.updateProfile({ isAvailable: !profile.isAvailable });

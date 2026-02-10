@@ -191,7 +191,8 @@
       "active": "Hoạt động",
       "paused": "Tạm dừng",
       "notifyVia": "Thông báo qua",
-      "enableToNotify": "Bật trạng thái sẵn sàng để cấu hình thông báo"
+      "enableToNotify": "Bật trạng thái sẵn sàng để cấu hình thông báo",
+      "confirmSuspend": "Điều này sẽ tạm ngưng bạn nhận các lời mời làm việc. Bạn có chắc không?"
     },
     "paymentPreference": {
       "title": "Hình thức thanh toán",

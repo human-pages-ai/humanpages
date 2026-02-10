@@ -191,7 +191,8 @@
       "active": "Actif",
       "paused": "En pause",
       "notifyVia": "Me notifier par",
-      "enableToNotify": "Activez la disponibilité pour configurer les notifications"
+      "enableToNotify": "Activez la disponibilité pour configurer les notifications",
+      "confirmSuspend": "Cela vous suspendra de recevoir des offres d'emploi. Êtes-vous sûr ?"
     },
     "paymentPreference": {
       "title": "Préférence de paiement",

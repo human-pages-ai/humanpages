@@ -191,7 +191,8 @@
       "active": "Aktif",
       "paused": "Duraklatıldı",
       "notifyVia": "Bildirim yöntemi",
-      "enableToNotify": "Bildirimleri yapılandırmak için uygunluğu açın"
+      "enableToNotify": "Bildirimleri yapılandırmak için uygunluğu açın",
+      "confirmSuspend": "Bu sizi iş teklifleri almaktan askıya alacaktır. Emin misiniz?"
     },
     "paymentPreference": {
       "title": "Ödeme Tercihi",

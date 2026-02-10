@@ -191,7 +191,8 @@
       "active": "Aktibo",
       "paused": "Naka-pause",
       "notifyVia": "Abisuhan ako sa pamamagitan ng",
-      "enableToNotify": "I-on ang availability para i-configure ang mga notification"
+      "enableToNotify": "I-on ang availability para i-configure ang mga notification",
+      "confirmSuspend": "Isu-suspend ka nito sa pagtanggap ng mga alok ng trabaho. Sigurado ka ba?"
     },
     "paymentPreference": {
       "title": "Kagustuhan sa Pagbabayad",
