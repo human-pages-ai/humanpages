@@ -39,17 +39,16 @@ test.describe('Landing Page', () => {
 
   test('JSON-LD structured data present', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
-    // Wait for React to hydrate and inject Helmet scripts
-    await expect(page.locator('script[type="application/ld+json"]').first()).toBeAttached({ timeout: 5_000 });
-
-    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
-    expect(scripts.length).toBeGreaterThan(0);
-
-    // Should include Organization and FAQPage schemas
-    const allJsonLd = scripts.join(' ');
-    expect(allJsonLd).toContain('Organization');
-    expect(allJsonLd).toContain('FAQPage');
+    // Wait for React/Helmet to inject all JSON-LD scripts (static + dynamic)
+    await expect(async () => {
+      const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+      expect(scripts.length).toBeGreaterThan(0);
+      const allJsonLd = scripts.join(' ');
+      expect(allJsonLd).toContain('Organization');
+      expect(allJsonLd).toContain('FAQPage');
+    }).toPass({ timeout: 5_000 });
   });
 
   test('footer links navigate correctly', async ({ page }) => {
