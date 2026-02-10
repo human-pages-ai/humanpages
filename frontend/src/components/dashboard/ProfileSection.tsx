@@ -294,7 +294,11 @@ export default function ProfileSection({
                   id="profile-telegram"
                   type="text"
                   value={profileForm.telegram}
-                  onChange={(e) => setProfileForm({ ...profileForm, telegram: e.target.value })}
+                  onChange={(e) => {
+                    let val = e.target.value.trim().replace(/\s/g, '');
+                    if (val && !val.startsWith('@')) val = '@' + val;
+                    setProfileForm({ ...profileForm, telegram: val });
+                  }}
                   placeholder={t('dashboard.profile.telegramPlaceholder')}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />

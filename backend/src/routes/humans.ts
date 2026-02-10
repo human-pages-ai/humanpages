@@ -10,6 +10,7 @@ import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
+import { computeTrustScore, computeTrustScoresBatch } from '../lib/trustScore.js';
 
 const router = Router();
 
@@ -147,7 +148,10 @@ const updateProfileSchema = z.object({
 
   // Communication
   contactEmail: z.string().email().optional().nullable(),
-  telegram: z.string().optional().nullable(),
+  telegram: z.string().regex(
+    /^@[a-zA-Z](?!.*__)[a-zA-Z0-9_]{3,30}[a-zA-Z0-9]$/,
+    'Must be a valid Telegram handle (e.g. @username, 5-32 characters after @, starts with a letter, cannot end with underscore)'
+  ).optional().nullable(),
   whatsapp: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Must be a valid phone number with country code (e.g. +1234567890)').optional().nullable(),
   signal: z.string().optional().nullable(),
 
@@ -238,15 +242,14 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
       data: { lastActiveAt: new Date() },
     });
 
-    const reputation = await getReputationStats(human.id);
-
-    // Get referral count
-    const referralCount = await prisma.human.count({
-      where: { referredBy: human.id },
-    });
+    const [reputation, trustScore, referralCount] = await Promise.all([
+      getReputationStats(human.id),
+      computeTrustScore(human.id),
+      prisma.human.count({ where: { referredBy: human.id } }),
+    ]);
 
     const { passwordHash, emailVerificationToken, ...profile } = human;
-    res.json({ ...profile, reputation, referralCount, hasPassword: !!passwordHash });
+    res.json({ ...profile, reputation, trustScore, referralCount, hasPassword: !!passwordHash });
   } catch (error) {
     logger.error({ err: error }, 'Get profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -272,6 +275,140 @@ router.get('/me/referrals', authenticateToken, async (req: AuthRequest, res) => 
     });
   } catch (error) {
     logger.error({ err: error }, 'Get referrals error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get current user's vouches (given and received)
+router.get('/me/vouches', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const [given, received] = await Promise.all([
+      prisma.vouch.findMany({
+        where: { voucherId: req.userId! },
+        include: { vouchee: { select: { id: true, name: true, username: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.vouch.findMany({
+        where: { voucheeId: req.userId! },
+        include: { voucher: { select: { id: true, name: true, username: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    res.json({ given, received });
+  } catch (error) {
+    logger.error({ err: error }, 'Get vouches error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Vouch rate limiter
+const vouchRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: {
+    error: 'Too many vouch attempts',
+    message: 'Vouch rate limit: 10 requests per hour. Try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => req.userId || 'unknown',
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+// Vouch for another human
+router.post('/me/vouch', authenticateToken, requireEmailVerified, vouchRateLimiter, async (req: AuthRequest, res) => {
+  try {
+    const schema = z.object({
+      username: z.string().min(1),
+      comment: z.string().max(200).optional(),
+    });
+    const { username, comment } = schema.parse(req.body);
+
+    // Find vouchee by username or ID
+    const vouchee = await prisma.human.findFirst({
+      where: {
+        OR: [
+          { username },
+          { id: username },
+        ],
+        emailVerified: true,
+      },
+      select: { id: true, name: true, username: true },
+    });
+
+    if (!vouchee) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (vouchee.id === req.userId) {
+      return res.status(400).json({ error: 'You cannot vouch for yourself' });
+    }
+
+    // Check vouch limit (max 10 given)
+    const givenCount = await prisma.vouch.count({
+      where: { voucherId: req.userId! },
+    });
+    if (givenCount >= 10) {
+      return res.status(400).json({ error: 'You have reached the maximum of 10 vouches' });
+    }
+
+    // Check for existing vouch
+    const existing = await prisma.vouch.findUnique({
+      where: { voucherId_voucheeId: { voucherId: req.userId!, voucheeId: vouchee.id } },
+    });
+    if (existing) {
+      return res.status(400).json({ error: 'You have already vouched for this person' });
+    }
+
+    const vouch = await prisma.vouch.create({
+      data: {
+        voucherId: req.userId!,
+        voucheeId: vouchee.id,
+        comment: comment || null,
+      },
+      include: {
+        voucher: { select: { id: true, name: true, username: true } },
+        vouchee: { select: { id: true, name: true, username: true } },
+      },
+    });
+
+    logger.info({ voucherId: req.userId, voucheeId: vouchee.id }, 'Vouch created');
+    trackServerEvent(req.userId!, 'vouch_created', { voucheeId: vouchee.id }, req);
+
+    res.status(201).json(vouch);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Create vouch error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Revoke a vouch
+router.delete('/me/vouch/:voucheeId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const vouch = await prisma.vouch.findUnique({
+      where: {
+        voucherId_voucheeId: {
+          voucherId: req.userId!,
+          voucheeId: req.params.voucheeId,
+        },
+      },
+    });
+
+    if (!vouch) {
+      return res.status(404).json({ error: 'Vouch not found' });
+    }
+
+    await prisma.vouch.delete({ where: { id: vouch.id } });
+
+    logger.info({ voucherId: req.userId, voucheeId: req.params.voucheeId }, 'Vouch revoked');
+    res.json({ message: 'Vouch revoked' });
+  } catch (error) {
+    logger.error({ err: error }, 'Revoke vouch error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -318,9 +455,12 @@ router.patch('/me', authenticateToken, requireEmailVerified, async (req: AuthReq
       include: { wallets: true, services: true },
     });
 
-    const reputation = await getReputationStats(human.id);
+    const [reputation, trustScore] = await Promise.all([
+      getReputationStats(human.id),
+      computeTrustScore(human.id),
+    ]);
     const { passwordHash, emailVerificationToken, ...profile } = human;
-    res.json({ ...profile, reputation, hasPassword: !!passwordHash });
+    res.json({ ...profile, reputation, trustScore, hasPassword: !!passwordHash });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
@@ -596,6 +736,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       _count: { rating: true },
     });
 
+    // Batch query for vouch counts
+    const vouchCounts = await prisma.vouch.groupBy({
+      by: ['voucheeId'],
+      where: { voucheeId: { in: humanIds } },
+      _count: true,
+    });
+
     // Build lookup maps
     const jobCountMap = new Map(jobCounts.map((jc) => [jc.humanId, jc._count]));
     const reviewStatsMap = new Map(
@@ -607,17 +754,24 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         },
       ])
     );
+    const vouchCountMap = new Map(vouchCounts.map((vc) => [vc.voucheeId, vc._count]));
+
+    // Compute trust scores in batch (4 queries total, not N+1)
+    const trustScores = await computeTrustScoresBatch(humanIds);
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = humans.map((h) => {
       const { locationLat, locationLng, ...rest } = h;
+      const ts = trustScores.get(h.id);
       return {
         ...rest,
+        vouchCount: vouchCountMap.get(h.id) || 0,
         reputation: {
           jobsCompleted: jobCountMap.get(h.id) || 0,
           avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
           reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
         },
+        trustScore: ts ? { score: ts.score, level: ts.level } : { score: 0, level: 'new' as const },
       };
     });
 
@@ -674,8 +828,11 @@ router.get('/:id/profile', profileViewLimiter, authenticateAgent, requireActiveA
       return res.status(404).json({ error: 'Human not found' });
     }
 
-    const reputation = await getReputationStats(human.id);
-    res.json(filterHiddenContact({ ...human, reputation }));
+    const [reputation, trustScore] = await Promise.all([
+      getReputationStats(human.id),
+      computeTrustScore(human.id),
+    ]);
+    res.json(filterHiddenContact({ ...human, reputation, trustScore }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -687,7 +844,18 @@ router.get('/:id', async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
       where: { id: req.params.id, emailVerified: true },
-      select: publicHumanSelect,
+      select: {
+        ...publicHumanSelect,
+        vouchesReceived: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            voucher: { select: { id: true, name: true, username: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!human) {
@@ -698,8 +866,12 @@ router.get('/:id', async (req, res) => {
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
     trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id }, req);
 
-    const reputation = await getReputationStats(human.id);
-    res.json({ ...human, reputation });
+    const [reputation, trustScore] = await Promise.all([
+      getReputationStats(human.id),
+      computeTrustScore(human.id),
+    ]);
+    const { vouchesReceived, ...rest } = human;
+    res.json({ ...rest, reputation, trustScore, vouches: vouchesReceived });
   } catch (error) {
     logger.error({ err: error }, 'Get human error');
     res.status(500).json({ error: 'Internal server error' });
@@ -711,15 +883,30 @@ router.get('/u/:username', async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
       where: { username: req.params.username, emailVerified: true },
-      select: publicHumanSelect,
+      select: {
+        ...publicHumanSelect,
+        vouchesReceived: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            voucher: { select: { id: true, name: true, username: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
 
     if (!human) {
       return res.status(404).json({ error: 'Human not found' });
     }
 
-    const reputation = await getReputationStats(human.id);
-    res.json({ ...human, reputation });
+    const [reputation, trustScore] = await Promise.all([
+      getReputationStats(human.id),
+      computeTrustScore(human.id),
+    ]);
+    const { vouchesReceived, ...rest } = human;
+    res.json({ ...rest, reputation, trustScore, vouches: vouchesReceived });
   } catch (error) {
     logger.error({ err: error }, 'Get human by username error');
     res.status(500).json({ error: 'Internal server error' });

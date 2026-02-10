@@ -20,6 +20,7 @@ import WalletsSection from '../components/dashboard/WalletsSection';
 import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
+import VouchSection from '../components/dashboard/VouchSection';
 // TODO: Unhide once LinkedIn redirect URIs are configured
 // import LinkedInSection from '../components/dashboard/LinkedInSection';
 import SEO from '../components/SEO';
@@ -290,7 +291,7 @@ export default function Dashboard() {
       setEditingProfile(false);
       toast.success(t('toast.profileSaved'));
     } catch (error) {
-      toast.error(t('toast.genericError'));
+      toast.error(error instanceof Error ? error.message : t('toast.genericError'));
     } finally {
       setSaving(false);
     }
@@ -590,6 +591,8 @@ export default function Dashboard() {
           copiedReferral={copiedReferral}
           setCopiedReferral={setCopiedReferral}
         />
+
+        <VouchSection />
 
         <WorkStatusSection
           isAvailable={profile.isAvailable}

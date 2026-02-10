@@ -254,6 +254,92 @@ describe('Profile API', () => {
     });
   });
 
+  describe('PATCH /api/humans/me - Telegram validation', () => {
+    it('should accept valid Telegram handle', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@validuser' });
+      expect(response.status).toBe(200);
+      expect(response.body.telegram).toBe('@validuser');
+    });
+
+    it('should accept Telegram handle with underscores', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@my_user_name' });
+      expect(response.status).toBe(200);
+      expect(response.body.telegram).toBe('@my_user_name');
+    });
+
+    it('should reject Telegram handle starting with underscore', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@_valid123' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle ending with underscore', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@validuser_' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle with consecutive underscores', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@valid__user' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle without @ prefix', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: 'noatsign' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle that is too short', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@abcd' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle starting with a digit after @', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@1baduser' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle with special characters', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@bad-user!' });
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject Telegram handle that is too long (over 32 chars after @)', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@a' + 'b'.repeat(32) });
+      expect(response.status).toBe(400);
+    });
+
+    it('should accept null to clear Telegram handle', async () => {
+      await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: '@validuser' });
+
+      const response = await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ telegram: null });
+      expect(response.status).toBe(200);
+      expect(response.body.telegram).toBeNull();
+    });
+  });
+
   describe('PATCH /api/humans/me - WhatsApp validation', () => {
     it('should accept valid WhatsApp number with country code', async () => {
       const response = await authRequest(user.token)
