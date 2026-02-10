@@ -11,7 +11,8 @@ test.describe('Password Reset', () => {
 
     // Backend always returns success to prevent email enumeration
     // Success screen shows the email and a "Back Sign In" link
-    await expect(page.getByText('anyuser@example.com')).toBeVisible({ timeout: 5_000 });
+    // (wait long enough for the API round-trip on slow DBs)
+    await expect(page.getByText('anyuser@example.com')).toBeVisible({ timeout: 30_000 });
   });
 
   test('forgot password – back to login link', async ({ page }) => {

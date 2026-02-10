@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { signupAndGoToDashboard } from './helpers';
 
+// Profile save involves API call + full profile reload (trust score, reputation, etc.)
+const SAVE_TIMEOUT = 30_000;
+
 test.describe('Dashboard – Profile', () => {
   test('edit and save profile fields', async ({ page }) => {
     await signupAndGoToDashboard(page);
@@ -17,12 +20,12 @@ test.describe('Dashboard – Profile', () => {
 
     await page.getByRole('button', { name: 'Save Profile' }).click();
 
-    // Wait for save to complete
-    await expect(page.locator('#profile-bio')).not.toBeVisible({ timeout: 5_000 });
+    // Wait for save to complete (form closes, bio input disappears)
+    await expect(page.locator('#profile-bio')).not.toBeVisible({ timeout: SAVE_TIMEOUT });
 
     // Reload and verify values persisted
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.getByRole('heading', { name: 'Profile', exact: true }).waitFor({ timeout: SAVE_TIMEOUT });
     await expect(page.locator('text=I am an E2E test user.')).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('text=contact@test.com')).toBeVisible();
   });
@@ -42,11 +45,11 @@ test.describe('Dashboard – Profile', () => {
     await page.getByRole('button', { name: 'Save Profile' }).click();
 
     // Wait for save to complete
-    await expect(page.locator('#profile-linkedin')).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('#profile-linkedin')).not.toBeVisible({ timeout: SAVE_TIMEOUT });
 
     // Reload and verify links are saved
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.getByRole('heading', { name: 'Profile', exact: true }).waitFor({ timeout: SAVE_TIMEOUT });
     // Social links display as anchor text "LinkedIn", "GitHub" in view mode with URLs in href
     await expect(page.locator('a[href="https://linkedin.com/in/e2etest"]')).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('a[href="https://github.com/e2etest"]')).toBeVisible();

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { signupAndGoToDashboard, signupViaAPI, uniqueEmail } from './helpers';
+import { signupAndGoToDashboard, signupViaAPI, uniqueEmail, goToDashboard } from './helpers';
 
 test.describe('Account', () => {
   test('export data triggers download', async ({ page }) => {
@@ -27,10 +27,7 @@ test.describe('Account', () => {
     const token = await signupViaAPI({ name: 'Delete Me', email, password });
 
     // Inject token and go to dashboard
-    await page.goto('/');
-    await page.evaluate((t) => localStorage.setItem('token', t), token);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await goToDashboard(page, token);
 
     // Expand account management
     await page.getByText('Account Management').click();

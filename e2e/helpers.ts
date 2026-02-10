@@ -113,13 +113,34 @@ export async function signupAndGoToDashboard(page: Page) {
 
   const token = await signupViaAPI({ name, email, password });
 
-  // Inject token into browser and navigate to dashboard
+  // Inject token and navigate to dashboard.
+  // We avoid waitForLoadState('networkidle') because analytics/PostHog
+  // keep connections alive indefinitely, causing spurious timeouts.
+  await goToDashboard(page, token);
+
+  return { email, password, name, token };
+}
+
+/**
+ * Inject a token and navigate to the dashboard, waiting for it to fully load.
+ */
+export async function goToDashboard(page: Page, token: string) {
   await page.goto('/');
   await page.evaluate((t) => localStorage.setItem('token', t), token);
   await page.goto('/dashboard');
-  await page.waitForLoadState('networkidle', { timeout: 15_000 });
+  // Wait for the profile to load — the "Profile" heading only renders
+  // after the auth check succeeds and the profile API call returns.
+  await page.getByRole('heading', { name: 'Profile', exact: true }).waitFor({ timeout: 45_000 });
+}
 
-  return { email, password, name, token };
+/**
+ * Inject a token and navigate to the onboarding page, waiting for it to load.
+ */
+export async function goToOnboarding(page: Page, token: string) {
+  await page.goto('/');
+  await page.evaluate((t) => localStorage.setItem('token', t), token);
+  await page.goto('/onboarding');
+  await page.waitForSelector('#location-input', { timeout: 15_000 });
 }
 
 export async function getToken(page: Page): Promise<string | null> {

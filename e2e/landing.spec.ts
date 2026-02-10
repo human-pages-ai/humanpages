@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Landing Page', () => {
   test('renders hero, task cards, and CTAs', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Hero section
     await expect(page.locator('h1')).toBeVisible();
@@ -39,7 +39,7 @@ test.describe('Landing Page', () => {
 
   test('JSON-LD structured data present', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait for React/Helmet to inject all JSON-LD scripts (static + dynamic)
     await expect(async () => {

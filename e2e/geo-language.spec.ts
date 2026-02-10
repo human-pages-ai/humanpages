@@ -62,7 +62,7 @@ test.describe('Geo-based Language Detection', () => {
     await page.goto('/');
     await clearLanguageState(page);
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const lang = await page.locator('html').getAttribute('lang');
     expect(lang).toBe('en');
@@ -91,7 +91,7 @@ test.describe('Geo-based Language Detection', () => {
     await page.goto('/');
     await clearLanguageState(page);
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait for the geo fetch to complete and cache the result
     await expect(async () => {
@@ -128,7 +128,7 @@ test.describe('Geo-based Language Detection', () => {
     });
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Should NOT have fetched — cache was used (sync path)
     expect(geoFetchCount).toBe(0);
@@ -158,7 +158,7 @@ test.describe('Geo-based Language Detection', () => {
 
     // Reload — should stay English despite Venezuelan IP mock
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const lang = await page.locator('html').getAttribute('lang');
     expect(lang).toBe('en');
@@ -171,7 +171,7 @@ test.describe('Geo-based Language Detection', () => {
     await page.goto('/');
     await clearLanguageState(page);
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const lang = await page.locator('html').getAttribute('lang');
     expect(lang).toBe('en');

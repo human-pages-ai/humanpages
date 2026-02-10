@@ -1,19 +1,23 @@
 import { test, expect, request as pwRequest } from '@playwright/test';
 import { signupAndGoToDashboard, getToken, API_BASE } from './helpers';
 
+// API calls go through profile reload (trust score, reputation, etc.)
+// which can take 5-15 s on slow DBs, so we use generous timeouts.
+const SAVE_TIMEOUT = 30_000;
+
 test.describe('Dashboard – Settings', () => {
   test('toggle availability', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
-    const workStatusSection = page.locator('h2:has-text("Work Status")').locator('..').locator('..');
-    const toggleBtn = workStatusSection.locator('button').filter({ hasText: /^(Active|Paused)$/ });
+    const toggleBtn = page.locator('button').filter({ hasText: /^(Active|Paused)$/ });
+    await toggleBtn.waitFor({ timeout: 10_000 });
     const initialText = await toggleBtn.textContent();
+    const expectedText = initialText === 'Active' ? 'Paused' : 'Active';
 
     await toggleBtn.click();
-    await page.waitForTimeout(1_000);
 
-    const newText = await toggleBtn.textContent();
-    expect(newText).not.toBe(initialText);
+    // Wait for the API round-trip and React state to update
+    await expect(toggleBtn).toHaveText(expectedText, { timeout: SAVE_TIMEOUT });
 
     // Verify via direct API call
     const token = await getToken(page);
@@ -30,12 +34,10 @@ test.describe('Dashboard – Settings', () => {
     await signupAndGoToDashboard(page);
 
     await page.getByRole('button', { name: 'Escrow' }).click();
-    await page.waitForTimeout(500);
-    await expect(page.getByRole('button', { name: 'Escrow' })).toHaveClass(/bg-indigo-600/);
+    await expect(page.getByRole('button', { name: 'Escrow' })).toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
 
     await page.getByRole('button', { name: 'Payment Upfront' }).click();
-    await page.waitForTimeout(500);
-    await expect(page.getByRole('button', { name: 'Payment Upfront' })).toHaveClass(/bg-indigo-600/);
+    await expect(page.getByRole('button', { name: 'Payment Upfront' })).toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
   });
 
   test('notification toggles', async ({ page }) => {
@@ -46,16 +48,15 @@ test.describe('Dashboard – Settings', () => {
 
     const emailSwitch = switches.first();
     const initialState = await emailSwitch.getAttribute('aria-checked');
+    const expectedState = initialState === 'true' ? 'false' : 'true';
 
     await emailSwitch.click();
-    await page.waitForTimeout(500);
-    const newState = await emailSwitch.getAttribute('aria-checked');
-    expect(newState).not.toBe(initialState);
+    // Wait for the API round-trip to complete and aria-checked to update
+    await expect(emailSwitch).toHaveAttribute('aria-checked', expectedState, { timeout: SAVE_TIMEOUT });
 
+    // Toggle back
     await emailSwitch.click();
-    await page.waitForTimeout(500);
-    const restoredState = await emailSwitch.getAttribute('aria-checked');
-    expect(restoredState).toBe(initialState);
+    await expect(emailSwitch).toHaveAttribute('aria-checked', initialState!, { timeout: SAVE_TIMEOUT });
   });
 
   test('offer filters – set min price and max distance', async ({ page }) => {
@@ -70,9 +71,7 @@ test.describe('Dashboard – Settings', () => {
 
     await page.getByRole('button', { name: 'Save Filters' }).click();
 
-    await page.waitForTimeout(1_500);
-
-    await expect(page.locator('text=$50')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=$50')).toBeVisible({ timeout: SAVE_TIMEOUT });
     await expect(page.locator('text=100 km')).toBeVisible();
   });
 });

@@ -69,8 +69,8 @@ async function connectAndAddWallet(
     }
   }, signature);
 
-  // Wait for wallet to appear
-  await expect(page.locator(`text=${opts.label}`)).toBeVisible({ timeout: 10_000 });
+  // Wait for wallet to appear (involves API call + profile reload)
+  await expect(page.locator(`text=${opts.label}`)).toBeVisible({ timeout: 30_000 });
 }
 
 test.describe('Dashboard – Wallets', () => {
@@ -98,7 +98,7 @@ test.describe('Dashboard – Wallets', () => {
     await page.locator('[role="alertdialog"]').getByRole('button', { name: 'Confirm' }).click();
 
     // Verify wallet is gone
-    await expect(page.locator('text=Delete Me')).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Delete Me')).not.toBeVisible({ timeout: 30_000 });
   });
 
   test('shows install wallet message when no extension', async ({ page }) => {

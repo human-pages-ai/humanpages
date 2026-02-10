@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uniqueEmail, signup, login, signupViaAPI, bypassRateLimit, getToken } from './helpers';
+import { uniqueEmail, signup, login, signupViaAPI, bypassRateLimit, getToken, goToDashboard } from './helpers';
 
 test.describe('Auth', () => {
   test('signup happy path → redirects to onboarding', async ({ page }) => {
@@ -43,10 +43,7 @@ test.describe('Auth', () => {
     const token = await signupViaAPI({ name: 'Logout Test', email, password });
 
     // Inject token and go to dashboard
-    await page.goto('/');
-    await page.evaluate((t) => localStorage.setItem('token', t), token);
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await goToDashboard(page, token);
 
     // Click the Logout button specifically
     await page.getByRole('button', { name: 'Logout' }).click();
