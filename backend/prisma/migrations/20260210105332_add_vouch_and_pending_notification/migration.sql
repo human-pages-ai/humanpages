@@ -1,9 +1,6 @@
 -- CreateEnum
 CREATE TYPE "AffiliateStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED');
 
--- CreateEnum
-CREATE TYPE "PayoutStatus" AS ENUM ('PENDING', 'ELIGIBLE', 'PROCESSING', 'PAID', 'FAILED');
-
 -- CreateTable
 CREATE TABLE "Vouch" (
     "id" TEXT NOT NULL,
@@ -24,15 +21,15 @@ CREATE TABLE "Affiliate" (
     "promotionMethod" VARCHAR(500),
     "website" TEXT,
     "audience" VARCHAR(200),
-    "commissionRate" DECIMAL(10,2) NOT NULL DEFAULT 2.00,
-    "bonusTier1" DECIMAL(10,2) NOT NULL DEFAULT 25.00,
-    "bonusTier2" DECIMAL(10,2) NOT NULL DEFAULT 150.00,
-    "bonusTier3" DECIMAL(10,2) NOT NULL DEFAULT 500.00,
+    "creditsPerReferral" INTEGER NOT NULL DEFAULT 10,
+    "bonusTier1" INTEGER NOT NULL DEFAULT 50,
+    "bonusTier2" INTEGER NOT NULL DEFAULT 200,
+    "bonusTier3" INTEGER NOT NULL DEFAULT 500,
     "totalClicks" INTEGER NOT NULL DEFAULT 0,
     "totalSignups" INTEGER NOT NULL DEFAULT 0,
     "qualifiedSignups" INTEGER NOT NULL DEFAULT 0,
-    "totalEarnings" DECIMAL(10,2) NOT NULL DEFAULT 0,
-    "totalPaid" DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "totalCredits" INTEGER NOT NULL DEFAULT 0,
+    "creditsRedeemed" INTEGER NOT NULL DEFAULT 0,
     "approvedAt" TIMESTAMP(3),
     "approvedBy" TEXT,
     "rejectedReason" TEXT,
@@ -53,31 +50,23 @@ CREATE TABLE "AffiliateReferral" (
     "qualifiedAt" TIMESTAMP(3),
     "ipAddress" TEXT,
     "userAgent" TEXT,
-    "commissionAmount" DECIMAL(10,2),
-    "commissionPaid" BOOLEAN NOT NULL DEFAULT false,
+    "creditsAwarded" INTEGER NOT NULL DEFAULT 0,
+    "creditsClaimed" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "AffiliateReferral_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "AffiliatePayout" (
+CREATE TABLE "AffiliateCredit" (
     "id" TEXT NOT NULL,
     "affiliateId" TEXT NOT NULL,
-    "amount" DECIMAL(10,2) NOT NULL,
-    "status" "PayoutStatus" NOT NULL DEFAULT 'PENDING',
-    "type" TEXT NOT NULL DEFAULT 'commission',
+    "credits" INTEGER NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'referral',
     "description" TEXT,
-    "walletAddress" TEXT,
-    "txHash" TEXT,
-    "network" TEXT,
-    "paidAt" TIMESTAMP(3),
-    "failedReason" TEXT,
-    "eligibleAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "AffiliatePayout_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "AffiliateCredit_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -108,13 +97,10 @@ CREATE INDEX "AffiliateReferral_affiliateId_qualified_idx" ON "AffiliateReferral
 CREATE INDEX "AffiliateReferral_affiliateId_createdAt_idx" ON "AffiliateReferral"("affiliateId", "createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AffiliatePayout_txHash_key" ON "AffiliatePayout"("txHash");
+CREATE INDEX "AffiliateCredit_affiliateId_idx" ON "AffiliateCredit"("affiliateId");
 
 -- CreateIndex
-CREATE INDEX "AffiliatePayout_affiliateId_status_idx" ON "AffiliatePayout"("affiliateId", "status");
-
--- CreateIndex
-CREATE INDEX "AffiliatePayout_status_eligibleAt_idx" ON "AffiliatePayout"("status", "eligibleAt");
+CREATE INDEX "AffiliateCredit_affiliateId_type_idx" ON "AffiliateCredit"("affiliateId", "type");
 
 -- AddForeignKey
 ALTER TABLE "Vouch" ADD CONSTRAINT "Vouch_voucherId_fkey" FOREIGN KEY ("voucherId") REFERENCES "Human"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -132,4 +118,4 @@ ALTER TABLE "AffiliateReferral" ADD CONSTRAINT "AffiliateReferral_affiliateId_fk
 ALTER TABLE "AffiliateReferral" ADD CONSTRAINT "AffiliateReferral_referredHumanId_fkey" FOREIGN KEY ("referredHumanId") REFERENCES "Human"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AffiliatePayout" ADD CONSTRAINT "AffiliatePayout_affiliateId_fkey" FOREIGN KEY ("affiliateId") REFERENCES "Affiliate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "AffiliateCredit" ADD CONSTRAINT "AffiliateCredit_affiliateId_fkey" FOREIGN KEY ("affiliateId") REFERENCES "Affiliate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
