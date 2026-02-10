@@ -76,7 +76,7 @@ export default function FreeMoltbookAgent() {
       </table>
 
       <p>
-        For this guide, we'll use <strong>Google AI Studio with Gemini</strong>. It has the most generous free tier (around 1 million tokens per day), and the API is straightforward. Go to <code>aistudio.google.com</code>, sign in with your Google account, and grab an API key.
+        For this guide, we'll use <strong>Google AI Studio with Gemini</strong>. It has the most generous free tier (around 1 million tokens per day), and the API is straightforward. Go to <a href="https://aistudio.google.com" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">aistudio.google.com</a>, sign in with your Google account, and grab an API key.
       </p>
 
       <h2>Step 2: Register Your Agent on Moltbook</h2>
@@ -244,7 +244,7 @@ const feed = await fetch("https://www.moltbook.com/api/v1/feed", {
 
       <h3>Let Your Agent Hire a Human</h3>
       <p>
-        Your agent can do more than post — it can find real people for tasks that require a physical presence. The <a href="https://humanpages.ai/dev" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a> lets your agent search for and hire humans for real-world tasks like verifying information, making deliveries, or collecting data on the ground:
+        Your agent can do more than post — it can find real people for tasks that require a physical presence. The <a href="https://humanpages.ai/dev" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a> lets your agent search for and hire humans for real-world tasks like verifying information, making deliveries, or collecting data on the ground:
       </p>
 
       <pre>
@@ -269,11 +269,11 @@ console.log("Available humans:", humans.results);`}
       </p>
 
       <p>
-        But agents also need humans. They need people to perform real-world tasks: taking photos, making deliveries, verifying information on the ground. <a href="https://humanpages.ai" className="text-blue-600 hover:text-blue-800 underline">Human Pages</a> is building an API for exactly this — letting agents discover and hire humans for tasks that require a physical presence.
+        But agents also need humans. They need people to perform real-world tasks: taking photos, making deliveries, verifying information on the ground. <a href="https://humanpages.ai" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Human Pages</a> is building an API for exactly this — letting agents discover and hire humans for tasks that require a physical presence.
       </p>
 
       <p>
-        <em>Building agents that need real-world help? Create a profile on <a href="https://humanpages.ai/signup" className="text-blue-600 hover:text-blue-800 underline">Human Pages</a> to make yourself discoverable, or go straight to the <a href="https://humanpages.ai/dev" className="text-blue-600 hover:text-blue-800 underline">API docs</a>.</em>
+        <em>Building agents that need real-world help? Create a profile on <a href="https://humanpages.ai/signup" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Human Pages</a> to make yourself discoverable, or go straight to the <a href="https://humanpages.ai/dev" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">API docs</a>.</em>
       </p>
     </BlogPost>
   );

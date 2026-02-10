@@ -41,7 +41,7 @@ export default function ZeroDollarAgent() {
       <h3>Why not just use Cloudflare Workers + Gemini?</h3>
 
       <p>
-        If you read our <a href="/blog/free-moltbook-agent" className="text-blue-600 hover:text-blue-800 underline">previous guide</a>, you know the simpler approach: a Cloudflare Worker running on a cron trigger, calling Google's Gemini API, posting to <a href="https://www.moltbook.com" className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">Moltbook</a>. That's a great starting point — you can deploy it in 5 minutes and it genuinely works.
+        If you read our <a href="/blog/free-moltbook-agent" className="text-blue-600 hover:text-blue-800 underline">previous guide</a>, you know the simpler approach: a Cloudflare Worker running on a cron trigger, calling Google's Gemini API, posting to <a href="https://www.moltbook.com" className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="nofollow noopener noreferrer">Moltbook</a>. That's a great starting point — you can deploy it in 5 minutes and it genuinely works.
       </p>
 
       <p>
@@ -201,7 +201,7 @@ python main.py`}
             <td>Latest open models (Llama, Mistral, Minimax, etc.)</td>
             <td>Generous</td>
             <td>No</td>
-            <td>Good selection, rotates periodically. Check build.nvidia.com for what's currently free.</td>
+            <td>Good selection, rotates periodically. Check <a href="https://build.nvidia.com" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">build.nvidia.com</a> for what's currently free.</td>
           </tr>
           <tr>
             <td>Google AI Studio</td>
@@ -235,7 +235,7 @@ python main.py`}
       </table>
 
       <p>
-        For Nvidia NIM, sign up at <code>build.nvidia.com</code>, get your API key, and use <code>https://integrate.api.nvidia.com/v1</code> as your base URL. It's OpenAI-compatible, so any framework that talks to OpenAI can talk to Nvidia NIM by just changing the base URL and model name.
+        For Nvidia NIM, sign up at <a href="https://build.nvidia.com" target="_blank" rel="nofollow noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">build.nvidia.com</a>, get your API key, and use <code>https://integrate.api.nvidia.com/v1</code> as your base URL. It's OpenAI-compatible, so any framework that talks to OpenAI can talk to Nvidia NIM by just changing the base URL and model name.
       </p>
 
       <h2>The Oracle Cloud Setup (When You Get In)</h2>
@@ -286,7 +286,7 @@ python main.py`}
       </p>
 
       <ul>
-        <li><strong>Post to <a href="https://www.moltbook.com" className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">Moltbook</a></strong> — the social network for AI agents. Let it build a reputation, interact with other agents, and develop a public persona. (See our <a href="/blog/free-moltbook-agent" className="text-blue-600 hover:text-blue-800 underline">Moltbook guide</a> for the full setup.)</li>
+        <li><strong>Post to <a href="https://www.moltbook.com" className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="nofollow noopener noreferrer">Moltbook</a></strong> — the social network for AI agents. Let it build a reputation, interact with other agents, and develop a public persona. (See our <a href="/blog/free-moltbook-agent" className="text-blue-600 hover:text-blue-800 underline">Moltbook guide</a> for the full setup.)</li>
         <li><strong>Monitor and summarize</strong> — have it watch RSS feeds, Twitter accounts, or news sites, and send you daily Telegram digests.</li>
         <li><strong>Hire humans for real-world tasks</strong> — your agent can use the <a href="/dev" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a> to find and hire real people for tasks that require a physical presence: verifying information, scouting locations, making deliveries, collecting samples.</li>
       </ul>
