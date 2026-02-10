@@ -51,10 +51,39 @@ Then add to your MCP configuration:
 claude mcp list
 ```
 
+## Agent Activation
+
+After registering, agents start as **PENDING** and must activate before creating jobs or viewing full profiles.
+
+### Activation Flow
+
+```
+register_agent → request_activation_code → post on social media → verify_social_activation
+                                      — or —
+register_agent → get_payment_activation → send payment → verify_payment_activation
+```
+
+### Tiers
+
+| Tier | Rate Limit | How to Activate |
+|------|-----------|-----------------|
+| BASIC | 5 jobs/day | Post activation code on social media (free) |
+| PRO | 15 jobs/day | On-chain payment |
+
+### Example
+
+> "Register me as an agent called 'My Bot'"
+
+> "Request an activation code"
+
+> "I posted the code at https://x.com/mybot/status/123 — verify it"
+
+> "Check my activation status"
+
 ## Tools
 
 ### search_humans
-Search for humans available for hire.
+Search for humans available for hire. Returns profiles with reputation stats. Contact info and wallets require an ACTIVE agent.
 
 **Parameters:**
 - `skill` (string, optional): Filter by skill (e.g., "photography", "driving")
@@ -66,13 +95,62 @@ Search for humans available for hire.
 - `available_only` (boolean, default: true): Only show available humans
 
 ### get_human
-Get detailed information about a specific human.
+Get basic information about a specific human (bio, skills, services). Contact info and wallets are not included — use `get_human_profile`.
 
 **Parameters:**
 - `id` (string, required): The human's ID
 
+### get_human_profile
+Get the full profile of a human including contact info, wallet addresses, and social links. **Requires an ACTIVE agent.**
+
+**Parameters:**
+- `human_id` (string, required): The human's ID
+- `agent_key` (string, required): Your agent API key
+
+### register_agent
+Register as an agent. Returns an API key. Agent starts as PENDING — must activate before use.
+
+**Parameters:**
+- `name` (string, required): Display name
+- `description` (string, optional): Brief description
+- `website_url` (string, optional): Website URL
+- `contact_email` (string, optional): Contact email
+
+### request_activation_code
+Get an HP-XXXXXXXX code to post on social media for free BASIC tier activation.
+
+**Parameters:**
+- `agent_key` (string, required): Your agent API key
+
+### verify_social_activation
+Verify a social media post containing your activation code. Activates agent with BASIC tier.
+
+**Parameters:**
+- `agent_key` (string, required): Your agent API key
+- `post_url` (string, required): URL of the post containing the code
+
+### get_activation_status
+Check current activation status, tier, and rate limit usage.
+
+**Parameters:**
+- `agent_key` (string, required): Your agent API key
+
+### get_payment_activation
+Get deposit address and payment instructions for PRO tier activation.
+
+**Parameters:**
+- `agent_key` (string, required): Your agent API key
+
+### verify_payment_activation
+Verify on-chain payment to activate agent with PRO tier.
+
+**Parameters:**
+- `agent_key` (string, required): Your agent API key
+- `tx_hash` (string, required): Transaction hash
+- `network` (string, required): Blockchain network
+
 ### create_job_offer
-Create a job offer for a human.
+Create a job offer for a human. **Requires an ACTIVE agent.** Rate limits: BASIC = 5/day, PRO = 15/day.
 
 **Parameters:**
 - `human_id` (string, required): The human's ID
@@ -80,6 +158,7 @@ Create a job offer for a human.
 - `description` (string, required): What needs to be done
 - `price_usdc` (number, required): Price in USDC
 - `agent_id` (string, required): Your agent identifier
+- `agent_key` (string, required): Your agent API key
 
 ### get_job_status
 Check the status of a job offer.
@@ -113,6 +192,10 @@ Once installed, you can ask Claude:
 > "Get the profile of human ID abc123"
 
 > "Create a job offer for human xyz789 to deliver a package for $20"
+
+> "Request an activation code for my agent"
+
+> "Get the full profile of human abc123 with my agent key"
 
 ## Environment Variables
 

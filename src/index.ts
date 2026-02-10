@@ -47,7 +47,7 @@ interface Human {
     avgRating: number;
     reviewCount: number;
   };
-  wallets: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
+  wallets?: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
 }
 
@@ -164,7 +164,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'search_humans',
       description:
-        'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates), and rate. Returns profiles with contact info, wallet addresses, and reputation stats.',
+        'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates), and rate. Returns profiles with reputation stats. Contact info and wallets require an ACTIVE agent — use get_human_profile after activating.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -221,7 +221,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'get_human',
       description:
-        'Get detailed information about a specific human by their ID, including their bio, skills, contact info, wallet addresses, and service offerings.',
+        'Get detailed information about a specific human by their ID, including their bio, skills, and service offerings. Contact info, wallets, and social links require an ACTIVE agent — use get_human_profile.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -302,7 +302,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'create_job_offer',
       description:
-        'Create a job offer for a human. Requires a registered agent API key (from register_agent). The human must ACCEPT the offer before you can proceed with payment. RATE LIMIT: 20 offers per hour per registered agent. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
+        'Create a job offer for a human. Requires an ACTIVE agent API key (from register_agent + activation). The human must ACCEPT the offer before you can proceed with payment. RATE LIMITS: BASIC tier = 5 offers/day, PRO tier = 15 offers/day. Agents must be activated before creating jobs — use request_activation_code or get_payment_activation. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -438,6 +438,112 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['job_id', 'rating'],
       },
     },
+    {
+      name: 'get_human_profile',
+      description:
+        'Get the full profile of a human including contact info, wallet addresses, and social links. Requires an ACTIVE agent API key.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          human_id: {
+            type: 'string',
+            description: 'The ID of the human',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+        },
+        required: ['human_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'request_activation_code',
+      description:
+        'Request an activation code (HP-XXXXXXXX) to post on social media for free BASIC tier activation. After posting, use verify_social_activation with the post URL.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+        },
+        required: ['agent_key'],
+      },
+    },
+    {
+      name: 'verify_social_activation',
+      description:
+        'Verify a social media post containing your activation code. On success, your agent is activated with BASIC tier.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+          post_url: {
+            type: 'string',
+            description: 'URL of the social media post containing your activation code',
+          },
+        },
+        required: ['agent_key', 'post_url'],
+      },
+    },
+    {
+      name: 'get_activation_status',
+      description:
+        'Check the current activation status, tier, and expiry for your agent.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+        },
+        required: ['agent_key'],
+      },
+    },
+    {
+      name: 'get_payment_activation',
+      description:
+        'Get a deposit address and payment instructions for PRO tier activation via on-chain payment.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+        },
+        required: ['agent_key'],
+      },
+    },
+    {
+      name: 'verify_payment_activation',
+      description:
+        'Verify an on-chain payment for PRO tier activation. On success, your agent is activated with PRO tier.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+          tx_hash: {
+            type: 'string',
+            description: 'The on-chain transaction hash of the activation payment',
+          },
+          network: {
+            type: 'string',
+            description: 'The blockchain network (e.g., "ethereum", "base", "solana")',
+          },
+        },
+        required: ['agent_key', 'tx_hash', 'network'],
+      },
+    },
   ],
 }));
 
@@ -468,11 +574,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       const summary = humans
         .map((h) => {
-          const primaryWallet = h.wallets.find((w) => w.isPrimary) || h.wallets[0];
-          const walletInfo = primaryWallet
-            ? `${primaryWallet.chain || primaryWallet.network}: ${primaryWallet.address}`
-            : 'No wallet';
-          const contact = [h.contactEmail, h.telegram, h.signal].filter(Boolean).join(' | ');
           const rep = h.reputation;
           const rating = rep && rep.avgRating > 0 ? `${rep.avgRating}★ (${rep.reviewCount} reviews)` : 'No reviews';
 
@@ -496,24 +597,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   Skills: ${h.skills.join(', ') || 'None listed'}
   Equipment: ${h.equipment.join(', ') || 'None listed'}
   Languages: ${h.languages.join(', ') || 'Not specified'}
-  Contact: ${contact || 'See profile'}
-  Wallet: ${walletInfo}
   Jobs completed: ${rep?.jobsCompleted || 0}`;
         })
         .join('\n\n');
 
       return {
-        content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}` }],
+        content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}\n\n_Contact info and wallets require an ACTIVE agent. Use get_human_profile after activating._` }],
       };
     }
 
     if (name === 'get_human') {
       const human = await getHuman(args?.id as string);
-
-      const primaryWallet = human.wallets.find((w) => w.isPrimary) || human.wallets[0];
-      const walletInfo = human.wallets
-        .map((w) => `- ${w.chain || w.network}${w.label ? ` (${w.label})` : ''}${w.isPrimary ? ' ⭐' : ''}: ${w.address}`)
-        .join('\n');
 
       const servicesInfo = human.services
         .map((s) => {
@@ -527,15 +621,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${price}`;
         })
         .join('\n\n');
-
-      const socialLinks = [
-        human.linkedinUrl && `- LinkedIn: ${human.linkedinUrl}`,
-        human.twitterUrl && `- Twitter: ${human.twitterUrl}`,
-        human.githubUrl && `- GitHub: ${human.githubUrl}`,
-        human.instagramUrl && `- Instagram: ${human.instagramUrl}`,
-        human.youtubeUrl && `- YouTube: ${human.youtubeUrl}`,
-        human.websiteUrl && `- Website: ${human.websiteUrl}`,
-      ].filter(Boolean).join('\n');
 
       const rep = human.reputation;
       const rating = rep && rep.avgRating > 0 ? `${rep.avgRating}★ (${rep.reviewCount} reviews)` : 'No reviews yet';
@@ -576,17 +661,8 @@ ${human.locationGranularity === 'neighborhood' && human.neighborhood && human.lo
 - **Rate Currency:** ${human.rateCurrency || 'USD'}
 - **Rate Type:** ${human.rateType || 'NEGOTIABLE'}
 
-## Contact
-- Email: ${human.contactEmail || 'Not provided'}
-- Telegram: ${human.telegram || 'Not provided'}
-- Signal: ${human.signal || 'Not provided'}
-
-## Payment Wallets
-${walletInfo || 'No wallets added'}
-${primaryWallet ? `\n**Preferred wallet:** ${primaryWallet.chain || primaryWallet.network} - ${primaryWallet.address}` : ''}
-
-## Social Profiles (Trust Verification)
-${socialLinks || 'No social profiles added'}
+## Contact & Payment
+_Available via get_human_profile (requires ACTIVE agent)._
 
 ## Services Offered
 ${servicesInfo || 'No services listed'}`;
@@ -624,9 +700,14 @@ ${servicesInfo || 'No services listed'}`;
 **Agent ID:** ${result.agent.id}
 **Name:** ${result.agent.name}
 **API Key:** \`${result.apiKey}\`
+**Status:** PENDING
 
 **IMPORTANT:** Save your API key now — it cannot be retrieved later.
 Pass it as \`agent_key\` when using \`create_job_offer\`.
+
+**⚠️ Activation Required:** Your agent starts as PENDING. You must activate before creating jobs or viewing full profiles.
+- **Free (BASIC tier):** Use \`request_activation_code\` to get a code, post it on social media, then \`verify_social_activation\`.
+- **Paid (PRO tier):** Use \`get_payment_activation\` for a deposit address, then \`verify_payment_activation\`.
 
 **Domain Verification Token:** \`${result.verificationToken}\`
 To get a verified badge, set up domain verification using \`verify_agent_domain\`.`,
@@ -725,7 +806,15 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
       });
 
       if (!res.ok) {
-        const error = await res.json() as ApiError;
+        const error = await res.json() as ApiError & { code?: string };
+        if (res.status === 403 && error.code === 'AGENT_PENDING') {
+          throw new Error(
+            'Agent is not yet activated. You must activate before creating jobs.\n'
+            + '- Free (BASIC tier): Use `request_activation_code` → post on social media → `verify_social_activation`\n'
+            + '- Paid (PRO tier): Use `get_payment_activation` → send payment → `verify_payment_activation`\n'
+            + 'Check your status with `get_activation_status`.'
+          );
+        }
         throw new Error(error.error || `API error: ${res.status}`);
       }
 
@@ -881,6 +970,269 @@ ${human.humanityVerified
   : human.humanityScore
     ? 'This human has checked their score but does not meet the verification threshold (20+).'
     : 'This human has not yet verified their identity.'}`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'get_human_profile') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required. Register and activate first.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/humans/${args?.human_id}/profile`, {
+        headers: { 'X-Agent-Key': agentKey },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { code?: string };
+        if (res.status === 403 && error.code === 'AGENT_PENDING') {
+          throw new Error('Agent is not yet activated. Activate first using request_activation_code or get_payment_activation.');
+        }
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const human = await res.json() as Human;
+
+      const walletInfo = (human.wallets || [])
+        .map((w) => `- ${w.chain || w.network}${w.label ? ` (${w.label})` : ''}${w.isPrimary ? ' ⭐' : ''}: ${w.address}`)
+        .join('\n');
+      const primaryWallet = (human.wallets || []).find((w) => w.isPrimary) || (human.wallets || [])[0];
+
+      const socialLinks = [
+        human.linkedinUrl && `- LinkedIn: ${human.linkedinUrl}`,
+        human.twitterUrl && `- Twitter: ${human.twitterUrl}`,
+        human.githubUrl && `- GitHub: ${human.githubUrl}`,
+        human.instagramUrl && `- Instagram: ${human.instagramUrl}`,
+        human.youtubeUrl && `- YouTube: ${human.youtubeUrl}`,
+        human.websiteUrl && `- Website: ${human.websiteUrl}`,
+      ].filter(Boolean).join('\n');
+
+      const details = `# ${human.name}${human.username ? ` (@${human.username})` : ''} — Full Profile
+
+## Contact
+- Email: ${human.contactEmail || 'Not provided'}
+- Telegram: ${human.telegram || 'Not provided'}
+- Signal: ${human.signal || 'Not provided'}
+
+## Payment Wallets
+${walletInfo || 'No wallets added'}
+${primaryWallet ? `\n**Preferred wallet:** ${primaryWallet.chain || primaryWallet.network} - ${primaryWallet.address}` : ''}
+
+## Social Profiles
+${socialLinks || 'No social profiles added'}`;
+
+      return {
+        content: [{ type: 'text', text: details }],
+      };
+    }
+
+    if (name === 'request_activation_code') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/agents/activate/social`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as {
+        code: string;
+        expiresAt: string;
+        requirements?: string;
+        suggestedPosts?: Record<string, string>;
+        platforms?: string[];
+        instructions?: Record<string, string>;
+      };
+
+      let text = `**Activation Code Generated!**
+
+**Code:** \`${result.code}\`
+**Expires:** ${result.expiresAt}`;
+
+      if (result.requirements) {
+        text += `\n\n**Requirements:** ${result.requirements}`;
+      }
+
+      const suggestedPosts = result.suggestedPosts || {};
+      const platforms = result.platforms || [];
+
+      if (platforms.length > 0) {
+        text += '\n\n**Copy-paste for each platform:**';
+        for (const platform of platforms) {
+          text += `\n\n**${platform}:**\n> ${suggestedPosts[platform] || result.code}`;
+        }
+      }
+
+      text += '\n\nAfter posting, use `verify_social_activation` with the URL of your post.';
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text,
+          },
+        ],
+      };
+    }
+
+    if (name === 'verify_social_activation') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/agents/activate/social/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({ postUrl: args?.post_url }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { status: string; tier: string; message: string };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Agent Activated!**
+
+**Status:** ${result.status}
+**Tier:** ${result.tier}
+
+You can now create job offers and view full human profiles using \`get_human_profile\`.`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'get_activation_status') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/agents/activate/status`, {
+        headers: { 'X-Agent-Key': agentKey },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { status: string; tier: string; expiresAt?: string; jobsToday: number; jobLimit: number };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Activation Status**
+
+**Status:** ${result.status}
+**Tier:** ${result.tier}
+**Expires:** ${result.expiresAt || 'N/A'}
+**Jobs Today:** ${result.jobsToday}/${result.jobLimit}`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'get_payment_activation') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/agents/activate/payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { depositAddress: string; amount: string; currency: string; network: string; expiresAt: string; message: string };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**PRO Tier Payment Instructions**
+
+**Deposit Address:** \`${result.depositAddress}\`
+**Amount:** ${result.amount} ${result.currency}
+**Network:** ${result.network}
+**Expires:** ${result.expiresAt}
+
+**Next Steps:**
+1. Send exactly ${result.amount} ${result.currency} to the address above on ${result.network}
+2. Use \`verify_payment_activation\` with the transaction hash and network
+3. Once verified, your agent will be activated with PRO tier (15 jobs/day)`,
+          },
+        ],
+      };
+    }
+
+    if (name === 'verify_payment_activation') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/agents/activate/payment/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({
+          txHash: args?.tx_hash,
+          network: args?.network,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { status: string; tier: string; expiresAt: string; message: string };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**Agent Activated — PRO Tier!**
+
+**Status:** ${result.status}
+**Tier:** ${result.tier}
+**Expires:** ${result.expiresAt}
+
+You can now create up to 15 job offers per day and view full human profiles using \`get_human_profile\`.`,
           },
         ],
       };

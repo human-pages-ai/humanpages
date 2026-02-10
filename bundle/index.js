@@ -46,7 +46,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'search_humans',
       description:
-        'Search for humans available for hire. Returns a list of humans matching the criteria with their contact info and wallet addresses for direct payment.',
+        'Search for humans available for hire. Returns a list of humans matching the criteria with reputation stats. Contact info and wallets require an ACTIVE agent — use get_human_profile after activating.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -69,7 +69,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'get_human',
       description:
-        'Get detailed information about a specific human by their ID, including their bio, skills, contact info, wallet addresses, and service offerings.',
+        'Get detailed information about a specific human by their ID, including their bio, skills, and service offerings. Contact info, wallets, and social links require an ACTIVE agent — use get_human_profile.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -130,27 +130,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       const summary = humans
         .map((h) => {
-          const walletInfo = h.wallets.map((w) => `${w.network}: ${w.address}`).join(', ');
-          const contact = [h.contactEmail, h.telegram].filter(Boolean).join(' | ');
           return `- **${h.name}** (${h.location || 'Location not specified'})
   Skills: ${h.skills.join(', ')}
-  Contact: ${contact}
-  Wallets: ${walletInfo}
   Services: ${h.services.map((s) => `${s.title} (${s.priceRange || 'Price negotiable'})`).join(', ')}`;
         })
         .join('\n\n');
 
       return {
-        content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}` }],
+        content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}\n\n_Contact info and wallets require an ACTIVE agent. Use get_human_profile after activating._` }],
       };
     }
 
     if (name === 'get_human') {
       const human = await getHuman(args?.id);
-
-      const walletInfo = human.wallets
-        .map((w) => `- ${w.network}${w.label ? ` (${w.label})` : ''}: ${w.address}`)
-        .join('\n');
 
       const servicesInfo = human.services
         .map((s) => `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${s.priceRange || 'Negotiable'}`)
@@ -168,12 +160,8 @@ ${human.location || 'Not specified'}
 ## Skills
 ${human.skills.join(', ') || 'None listed'}
 
-## Contact
-- Email: ${human.contactEmail || 'Not provided'}
-- Telegram: ${human.telegram || 'Not provided'}
-
-## Wallets
-${walletInfo || 'No wallets added'}
+## Contact & Payment
+_Available via get_human_profile (requires ACTIVE agent)._
 
 ## Services Offered
 ${servicesInfo || 'No services listed'}`;
@@ -208,7 +196,7 @@ ${servicesInfo || 'No services listed'}`;
         content: [
           {
             type: 'text',
-            text: `Job recorded successfully!\n\n**Human:** ${human.name}\n**Task:** ${taskDescription}\n**Category:** ${taskCategory || 'general'}\n**Price:** ${agreedPrice || 'Not specified'}\n\nContact ${human.name} at: ${human.contactEmail || human.telegram || 'See profile for contact info'}`,
+            text: `Job recorded successfully!\n\n**Human:** ${human.name}\n**Task:** ${taskDescription}\n**Category:** ${taskCategory || 'general'}\n**Price:** ${agreedPrice || 'Not specified'}\n\nUse get_human_profile with an ACTIVE agent key to get contact info for ${human.name}.`,
           },
         ],
       };

@@ -106,7 +106,7 @@ describe('MCP Server', () => {
   });
 
   describe('tools/list', () => {
-    it('should list all 6 tools', async () => {
+    it('should list all 16 tools', async () => {
       const res = await client.send({
         jsonrpc: '2.0',
         id: id(),
@@ -115,15 +115,25 @@ describe('MCP Server', () => {
       });
 
       const tools = res.result.tools;
-      expect(tools).toHaveLength(6);
+      expect(tools).toHaveLength(16);
 
       const names = tools.map((t: any) => t.name);
       expect(names).toContain('search_humans');
       expect(names).toContain('get_human');
+      expect(names).toContain('register_agent');
+      expect(names).toContain('get_agent_profile');
+      expect(names).toContain('verify_agent_domain');
       expect(names).toContain('create_job_offer');
       expect(names).toContain('get_job_status');
       expect(names).toContain('mark_job_paid');
+      expect(names).toContain('check_humanity_status');
       expect(names).toContain('leave_review');
+      expect(names).toContain('get_human_profile');
+      expect(names).toContain('request_activation_code');
+      expect(names).toContain('verify_social_activation');
+      expect(names).toContain('get_activation_status');
+      expect(names).toContain('get_payment_activation');
+      expect(names).toContain('verify_payment_activation');
     });
 
     it('should have input schemas for all tools', async () => {
@@ -181,7 +191,7 @@ describe('MCP Server', () => {
       expect(res.result.content[0].text).toContain('No humans found');
     });
 
-    it('should include contact info and wallet in results', async () => {
+    it('should include skills but not contact or wallet in results', async () => {
       const res = await client.send({
         jsonrpc: '2.0',
         id: id(),
@@ -191,9 +201,10 @@ describe('MCP Server', () => {
 
       const text = res.result.content[0].text;
       expect(text).toContain('Alice Smith');
-      expect(text).toContain('Contact:');
-      expect(text).toContain('Wallet:');
       expect(text).toContain('Skills:');
+      expect(text).not.toContain('Contact:');
+      expect(text).not.toContain('Wallet:');
+      expect(text).toContain('Contact info and wallets require an ACTIVE agent');
     });
   });
 
@@ -207,7 +218,7 @@ describe('MCP Server', () => {
       humanId = humans[0].id;
     });
 
-    it('should return full profile', async () => {
+    it('should return profile without contact or wallet details', async () => {
       const res = await client.send({
         jsonrpc: '2.0',
         id: id(),
@@ -219,8 +230,9 @@ describe('MCP Server', () => {
       expect(text).toContain('## Bio');
       expect(text).toContain('## Location');
       expect(text).toContain('## Capabilities');
-      expect(text).toContain('## Contact');
-      expect(text).toContain('## Payment Wallets');
+      expect(text).toContain('## Contact & Payment');
+      expect(text).toContain('Available via get_human_profile (requires ACTIVE agent)');
+      expect(text).not.toContain('## Payment Wallets');
       expect(text).toContain('## Services Offered');
     });
 
@@ -407,6 +419,90 @@ describe('MCP Server', () => {
 
       expect(res.result.isError).toBe(true);
       expect(res.result.content[0].text).toContain('Error');
+    });
+  });
+
+  describe('get_human_profile', () => {
+    it('should error without agent_key', async () => {
+      const res = await client.send({
+        jsonrpc: '2.0',
+        id: id(),
+        method: 'tools/call',
+        params: { name: 'get_human_profile', arguments: { human_id: 'test-id' } },
+      });
+
+      expect(res.result.isError).toBe(true);
+      expect(res.result.content[0].text).toContain('agent_key is required');
+    });
+  });
+
+  describe('request_activation_code', () => {
+    it('should error without agent_key', async () => {
+      const res = await client.send({
+        jsonrpc: '2.0',
+        id: id(),
+        method: 'tools/call',
+        params: { name: 'request_activation_code', arguments: {} },
+      });
+
+      expect(res.result.isError).toBe(true);
+      expect(res.result.content[0].text).toContain('agent_key is required');
+    });
+  });
+
+  describe('get_activation_status', () => {
+    it('should error without agent_key', async () => {
+      const res = await client.send({
+        jsonrpc: '2.0',
+        id: id(),
+        method: 'tools/call',
+        params: { name: 'get_activation_status', arguments: {} },
+      });
+
+      expect(res.result.isError).toBe(true);
+      expect(res.result.content[0].text).toContain('agent_key is required');
+    });
+  });
+
+  describe('verify_social_activation', () => {
+    it('should error without agent_key', async () => {
+      const res = await client.send({
+        jsonrpc: '2.0',
+        id: id(),
+        method: 'tools/call',
+        params: { name: 'verify_social_activation', arguments: { post_url: 'https://x.com/test' } },
+      });
+
+      expect(res.result.isError).toBe(true);
+      expect(res.result.content[0].text).toContain('agent_key is required');
+    });
+  });
+
+  describe('get_payment_activation', () => {
+    it('should error without agent_key', async () => {
+      const res = await client.send({
+        jsonrpc: '2.0',
+        id: id(),
+        method: 'tools/call',
+        params: { name: 'get_payment_activation', arguments: {} },
+      });
+
+      expect(res.result.isError).toBe(true);
+      expect(res.result.content[0].text).toContain('agent_key is required');
+    });
+  });
+
+  describe('verify_payment_activation', () => {
+    it('should error without agent_key', async () => {
+      const res = await client.send({
+        jsonrpc: '2.0',
+        id: id(),
+        method: 'tools/call',
+        params: { name: 'verify_payment_activation', arguments: { tx_hash: '0xabc', network: 'ethereum' } },
+      });
+
+      expect(res.result.isError).toBe(true);
+      expect(res.result.content[0].text).toContain('agent_key is required');
     });
   });
 
