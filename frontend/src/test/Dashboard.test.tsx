@@ -220,7 +220,8 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('dashboard.telegram.title')).toBeInTheDocument();
+    // Telegram is inside the collapsed "Integrations" group - check the group header exists
+    expect(screen.getByText('Integrations')).toBeInTheDocument();
   });
 
   it('renders job stats with review data', async () => {
@@ -246,6 +247,7 @@ describe('Dashboard', () => {
       expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('dashboard.shareProfile')).toBeInTheDocument();
+    // Share/referral is inside the collapsed "Sharing & Growth" group - check the group header exists
+    expect(screen.getByText('Sharing & Growth')).toBeInTheDocument();
   });
 });
