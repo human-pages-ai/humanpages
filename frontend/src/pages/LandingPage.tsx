@@ -16,7 +16,6 @@ import {
   UserPlusIcon,
   BoltIcon,
   BanknotesIcon,
-  ShieldCheckIcon,
   EyeSlashIcon,
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
