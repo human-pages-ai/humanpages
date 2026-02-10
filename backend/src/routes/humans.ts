@@ -621,13 +621,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       };
     });
 
-    // Track search in PostHog
+    // Track search in PostHog (pass req for country geolocation)
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
     trackServerEvent(ip, 'humans_searched', {
       skill,
       location,
       resultCount: humansWithReputation.length,
-    });
+    }, req);
 
     res.json(humansWithReputation);
   } catch (error) {
@@ -694,9 +694,9 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Human not found' });
     }
 
-    // Track profile view in PostHog
+    // Track profile view in PostHog (pass req for country geolocation)
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
-    trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id });
+    trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id }, req);
 
     const reputation = await getReputationStats(human.id);
     res.json({ ...human, reputation });

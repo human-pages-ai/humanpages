@@ -272,13 +272,13 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
 
     const displayName = data.agentName || agent.name;
 
-    // Track job offer creation in PostHog
+    // Track job offer creation in PostHog (pass req for country geolocation)
     trackServerEvent(data.agentId, 'job_offer_sent', {
       humanId: data.humanId,
       priceUsdc: data.priceUsdc,
       category: data.category,
       registeredAgentId: agent.id,
-    });
+    }, req);
 
     // Send email notification (async, don't block response)
     const notifyEmail = human.contactEmail || human.email;
@@ -461,13 +461,13 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
       data: updateData,
     });
 
-    // Track event
+    // Track event (pass req for country geolocation)
     trackServerEvent(job.agentId, 'job_offer_updated', {
       jobId: job.id,
       humanId: job.humanId,
       updateCount: updated.updateCount,
       changedFields: Object.keys(data).filter(k => (data as any)[k] !== undefined),
-    });
+    }, req);
 
     // Fire webhook
     if (job.callbackUrl) {
@@ -769,12 +769,12 @@ router.patch('/:id/paid', async (req, res) => {
       );
     }
 
-    // Track payment received in PostHog
+    // Track payment received in PostHog (pass req for country geolocation)
     trackServerEvent(job.humanId, 'payment_received', {
       jobId: job.id,
       amount: verification.amount,
       network: verification.network,
-    });
+    }, req);
 
     res.json({
       id: updated.id,

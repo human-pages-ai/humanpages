@@ -197,8 +197,8 @@ router.post('/google/callback', async (req, res) => {
         });
         isNew = true;
 
-        // Track OAuth signup in PostHog
-        trackServerEvent(human.id, 'user_signed_up_server', { method: 'google' });
+        // Track OAuth signup in PostHog (pass req for country geolocation)
+        trackServerEvent(human.id, 'user_signed_up_server', { method: 'google' }, req);
       }
     } else {
       // Existing user by Google ID - consume state
@@ -387,7 +387,7 @@ router.post('/linkedin/callback', async (req, res) => {
         });
         isNew = true;
 
-        trackServerEvent(human.id, 'user_signed_up_server', { method: 'linkedin' });
+        trackServerEvent(human.id, 'user_signed_up_server', { method: 'linkedin' }, req);
       }
     } else {
       await consumeOAuthState(state);

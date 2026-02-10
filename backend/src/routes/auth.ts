@@ -95,8 +95,8 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
       select: { id: true, email: true, name: true },
     });
 
-    // Track signup in PostHog
-    trackServerEvent(human.id, 'user_signed_up_server', { method: 'email' });
+    // Track signup in PostHog (pass req for country geolocation)
+    trackServerEvent(human.id, 'user_signed_up_server', { method: 'email' }, req);
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
