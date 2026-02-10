@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "Bảng điều khiển",
     "settings": "Settings",
+    "trustScoreLabel": "Điểm tin cậy: {{score}}%",
     "welcome": "Chào mừng",
     "shareProfile": "Chia sẻ hồ sơ",
     "shareProfileDesc": "Chia sẻ liên kết hồ sơ để AI agent và khách hàng có thể tìm thấy bạn",
@@ -162,6 +163,7 @@
     "referralYourLink": "Liên kết giới thiệu của bạn",
     "referralSignups": "Đăng ký",
     "referralQualified": "Đủ điều kiện",
+    "referralQualifiedHint": "Đã hoàn thành hồ sơ",
     "referralCreditsEarned": "Tín dụng đã kiếm",
     "referralCreditsPerSignup": "tín dụng / đăng ký",
     "referralBonusAt10": "khi đạt 10 giới thiệu",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "Hình thức thanh toán",
       "subtitle": "Cho đại lý biết bạn muốn được thanh toán như thế nào",
+      "hint": "Trả trước: thanh toán trước khi bạn bắt đầu. Ký quỹ: giữ cho đến khi công việc hoàn thành.",
       "upfront": "Thanh toán trước",
       "escrow": "Ký quỹ",
       "both": "Linh hoạt (Đều được)",
@@ -293,11 +296,13 @@
       "website": "Website",
       "saveProfile": "Lưu hồ sơ",
       "showNeighborhood": "Hiển thị khu vực trên hồ sơ công khai của tôi",
+      "neighborhoodHint": "Khi tắt, chỉ thành phố của bạn hiển thị trên hồ sơ công khai",
       "hideContact": "Ẩn thông tin liên hệ khỏi hồ sơ công khai",
       "hideContactHelp": "Khi bật, email, Telegram, WhatsApp và phương thức thanh toán của bạn sẽ không hiển thị với người truy cập.",
       "saving": "Đang lưu...",
       "paymentInfo": "Thông tin thanh toán",
       "defaultPaymentUsdc": "Thanh toán mặc định: USDC qua ví đã kết nối của bạn",
+      "usdcHint": "USDC là stablecoin — luôn có giá trị $1 USD",
       "walletConnected": "Ví đã kết nối",
       "connectWalletPrompt": "Kết nối ví để nhận thanh toán USDC",
       "alsoAcceptNonCrypto": "Tôi cũng chấp nhận thanh toán không dùng crypto",
@@ -319,7 +324,7 @@
       "connectDescription": "Kết nối ví trình duyệt để xác minh quyền sở hữu và thêm vào hồ sơ của bạn.",
       "verifyAndAdd": "Xác minh và thêm",
       "connectAndVerify": "Kết nối ví và xác minh",
-      "connectHint": "Ví của bạn sẽ mở hai lần: một lần để kết nối, một lần để ký.",
+      "connectHint": "Ví của bạn sẽ mở hai lần: một lần để kết nối, một lần để ký. Không có tiền nào được gửi đi.",
       "signing": "Vui lòng ký tin nhắn trong ví của bạn...",
       "connecting": "Đang kết nối ví...",
       "connectedAs": "Đã kết nối với",
@@ -504,6 +509,14 @@
     "updated": "Đã cập nhật",
     "lastUpdated": "Cập nhật lần cuối",
     "offerUpdated": "Đề nghị này đã được đại lý cập nhật"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "Email, LinkedIn, GitHub, xác minh danh tính",
+      "reputationDesc": "Công việc đã hoàn thành, đánh giá và nhận xét",
+      "socialDesc": "Bảo lãnh từ những người dùng đã xác minh khác",
+      "activityDesc": "Mức độ hoàn thiện hồ sơ và hoạt động trên nền tảng"
+    }
   },
   "errors": {
     "required": "Trường này là bắt buộc",

@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "控制面板",
     "settings": "Settings",
+    "trustScoreLabel": "信任评分：{{score}}%",
     "welcome": "欢迎",
     "shareProfile": "分享你的资料",
     "shareProfileDesc": "分享您的个人资料链接，让AI代理和客户找到您",
@@ -162,6 +163,7 @@
     "referralYourLink": "您的推荐链接",
     "referralSignups": "注册数",
     "referralQualified": "已达标",
+    "referralQualifiedHint": "已完善个人资料",
     "referralCreditsEarned": "已获积分",
     "referralCreditsPerSignup": "积分 / 注册",
     "referralBonusAt10": "满10次推荐",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "付款偏好",
       "subtitle": "告诉代理您希望如何接收工作报酬",
+      "hint": "预付款：开工前支付。托管：工作完成后释放。",
       "upfront": "预付款",
       "escrow": "托管付款",
       "both": "灵活（均可）",
@@ -328,11 +331,13 @@
       "website": "网站",
       "saveProfile": "保存资料",
       "showNeighborhood": "在我的公开资料中显示社区",
+      "neighborhoodHint": "关闭后，您的公开资料上只显示城市",
       "hideContact": "在公开资料中隐藏联系方式",
       "hideContactHelp": "启用后，您的邮箱、Telegram、WhatsApp 和付款方式将不会对访客可见。",
       "saving": "保存中...",
       "paymentInfo": "支付信息",
       "defaultPaymentUsdc": "默认支付方式：通过您连接的钱包使用USDC",
+      "usdcHint": "USDC是一种稳定币——始终价值1美元",
       "walletConnected": "钱包已连接",
       "connectWalletPrompt": "连接钱包以接收USDC付款",
       "alsoAcceptNonCrypto": "我也接受非加密货币支付",
@@ -354,7 +359,7 @@
       "connectDescription": "连接浏览器钱包以验证所有权并将其添加到您的个人资料。",
       "verifyAndAdd": "验证并添加",
       "connectAndVerify": "连接钱包并验证",
-      "connectHint": "您的钱包将打开两次：一次连接，一次签名。",
+      "connectHint": "您的钱包将打开两次：一次连接，一次签名。不会发送任何资金。",
       "signing": "请在钱包中签署消息...",
       "connecting": "正在连接钱包...",
       "connectedAs": "已连接为",
@@ -509,6 +514,14 @@
     "updated": "已更新",
     "lastUpdated": "最后更新",
     "offerUpdated": "此报价已被代理更新"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "邮箱、LinkedIn、GitHub、人类验证",
+      "reputationDesc": "已完成的工作、评分和评价",
+      "socialDesc": "来自其他已验证用户的担保",
+      "activityDesc": "资料完整度和平台使用情况"
+    }
   },
   "errors": {
     "required": "此字段为必填",

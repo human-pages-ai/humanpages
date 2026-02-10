@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "Panel",
     "settings": "Settings",
+    "trustScoreLabel": "Puntuación de confianza: {{score}}%",
     "welcome": "Bienvenido",
     "shareProfile": "Comparte tu perfil",
     "shareProfileDesc": "Comparte el enlace de tu perfil para que los agentes de IA y clientes te encuentren",
@@ -162,6 +163,7 @@
     "referralYourLink": "Tu enlace de referido",
     "referralSignups": "Registros",
     "referralQualified": "Calificados",
+    "referralQualifiedHint": "Completaron su perfil",
     "referralCreditsEarned": "Créditos ganados",
     "referralCreditsPerSignup": "créditos / registro",
     "referralBonusAt10": "con 10 referidos",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "Preferencia de Pago",
       "subtitle": "Indica a los agentes cómo prefieres recibir el pago",
+      "hint": "Por adelantado: se paga antes de empezar. Depósito en garantía: se retiene hasta que el trabajo esté hecho.",
       "upfront": "Pago por adelantado",
       "escrow": "Depósito en garantía",
       "both": "Flexible (Cualquiera)",
@@ -328,11 +331,13 @@
       "website": "Sitio Web",
       "saveProfile": "Guardar Perfil",
       "showNeighborhood": "Mostrar barrio en mi perfil público",
+      "neighborhoodHint": "Cuando está desactivado, solo tu ciudad es visible en tu perfil público",
       "hideContact": "Ocultar información de contacto del perfil público",
       "hideContactHelp": "Cuando está activado, tu email, Telegram, WhatsApp y métodos de pago no serán visibles para los visitantes.",
       "saving": "Guardando...",
       "paymentInfo": "Información de Pago",
       "defaultPaymentUsdc": "Pago predeterminado: USDC a través de tu billetera conectada",
+      "usdcHint": "USDC es una stablecoin — siempre vale $1 USD",
       "walletConnected": "Billetera conectada",
       "connectWalletPrompt": "Conecta una billetera para recibir pagos en USDC",
       "alsoAcceptNonCrypto": "También acepto pagos fuera de cripto",
@@ -354,7 +359,7 @@
       "connectDescription": "Conecta tu billetera del navegador para verificar la propiedad y agregarla a tu perfil.",
       "verifyAndAdd": "Verificar y agregar",
       "connectAndVerify": "Conectar billetera y verificar",
-      "connectHint": "Tu billetera se abrirá dos veces: una para conectar, otra para firmar.",
+      "connectHint": "Tu billetera se abrirá dos veces: una para conectar, otra para firmar. No se envían fondos.",
       "signing": "Por favor firma el mensaje en tu billetera...",
       "connecting": "Conectando a la billetera...",
       "connectedAs": "Conectado como",
@@ -509,6 +514,14 @@
     "updated": "Actualizada",
     "lastUpdated": "Última actualización",
     "offerUpdated": "Esta oferta ha sido actualizada por el agente"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "Email, LinkedIn, GitHub, verificación de humanidad",
+      "reputationDesc": "Trabajos completados, calificaciones y reseñas",
+      "socialDesc": "Avales de otros usuarios verificados",
+      "activityDesc": "Completitud del perfil y uso de la plataforma"
+    }
   },
   "errors": {
     "required": "Este campo es requerido",

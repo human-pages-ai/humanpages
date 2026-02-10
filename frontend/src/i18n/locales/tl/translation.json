@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "Dashboard",
     "settings": "Settings",
+    "trustScoreLabel": "Trust score: {{score}}%",
     "welcome": "Welcome",
     "shareProfile": "Ibahagi ang iyong profile",
     "shareProfileDesc": "Ibahagi ang iyong profile link para mahanap ka ng mga AI agent at kliyente",
@@ -162,6 +163,7 @@
     "referralYourLink": "Ang iyong referral link",
     "referralSignups": "Mga Signup",
     "referralQualified": "Kwalipikado",
+    "referralQualifiedHint": "Nakumpleto ang kanilang profile",
     "referralCreditsEarned": "Nakuhang Credits",
     "referralCreditsPerSignup": "credits / signup",
     "referralBonusAt10": "sa 10 referrals",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "Kagustuhan sa Pagbabayad",
       "subtitle": "Sabihin sa mga ahente kung paano mo gustong mabayaran",
+      "hint": "Bayad muna: binabayaran bago ka magsimula. Escrow: hawak hanggang matapos ang trabaho.",
       "upfront": "Bayad Muna",
       "escrow": "Escrow",
       "both": "Flexible (Alinman)",
@@ -328,11 +331,13 @@
       "website": "Website",
       "saveProfile": "I-save ang Profile",
       "showNeighborhood": "Ipakita ang neighborhood sa aking pampublikong profile",
+      "neighborhoodHint": "Kapag naka-off, ang iyong lungsod lang ang makikita sa iyong pampublikong profile",
       "hideContact": "Itago ang contact info sa public profile",
       "hideContactHelp": "Kapag naka-enable, ang iyong email, Telegram, WhatsApp, at payment methods ay hindi makikita ng mga bisita.",
       "saving": "Nagse-save...",
       "paymentInfo": "Impormasyon ng Bayad",
       "defaultPaymentUsdc": "Default na bayad: USDC sa pamamagitan ng iyong nakakonektang wallet",
+      "usdcHint": "Ang USDC ay isang stablecoin — laging katumbas ng $1 USD",
       "walletConnected": "Nakakonekta ang wallet",
       "connectWalletPrompt": "Ikonekta ang wallet para makatanggap ng USDC na bayad",
       "alsoAcceptNonCrypto": "Tumatanggap din ako ng hindi crypto na bayad",
@@ -354,7 +359,7 @@
       "connectDescription": "Ikonekta ang wallet ng iyong browser upang ma-verify ang pagmamay-ari at idagdag ito sa iyong profile.",
       "verifyAndAdd": "I-verify at Idagdag",
       "connectAndVerify": "Ikonekta ang Wallet at I-verify",
-      "connectHint": "Magbubukas ang iyong wallet nang dalawang beses: isang beses para kumonekta, isang beses para mag-sign.",
+      "connectHint": "Magbubukas ang iyong wallet nang dalawang beses: isang beses para kumonekta, isang beses para mag-sign. Walang ipapadala na pondo.",
       "signing": "Paki-sign ang mensahe sa iyong wallet...",
       "connecting": "Kumokonekta sa wallet...",
       "connectedAs": "Nakakonekta bilang",
@@ -504,6 +509,14 @@
     "updated": "Na-update",
     "lastUpdated": "Huling na-update",
     "offerUpdated": "Ang alok na ito ay na-update ng ahente"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "Email, LinkedIn, GitHub, pagpapatunay ng pagkatao",
+      "reputationDesc": "Mga natapos na trabaho, rating, at review",
+      "socialDesc": "Mga patunay mula sa ibang mga na-verify na user",
+      "activityDesc": "Pagkakumpleto ng profile at paggamit ng platform"
+    }
   },
   "errors": {
     "required": "Kinakailangan ang field na ito",

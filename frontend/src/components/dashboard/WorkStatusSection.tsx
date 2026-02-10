@@ -140,7 +140,8 @@ export default function WorkStatusSection({
       {/* Payment preference - only interactive when available */}
       <div className={`pt-4 border-t border-gray-100 ${!isAvailable ? 'opacity-50' : ''}`}>
         <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dashboard.paymentPreference.title')}</h3>
-        <p className="text-gray-500 text-xs mb-3">{t('dashboard.paymentPreference.subtitle')}</p>
+        <p className="text-gray-500 text-xs mb-1">{t('dashboard.paymentPreference.subtitle')}</p>
+        <p className="text-gray-400 text-xs mb-3">{t('dashboard.paymentPreference.hint')}</p>
         <div className="flex flex-wrap gap-2">
           {PAYMENT_OPTIONS.map((opt) => (
             <button

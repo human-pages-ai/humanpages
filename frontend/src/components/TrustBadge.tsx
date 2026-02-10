@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TrustScoreData } from './dashboard/types';
 
 interface TrustBadgeProps {
@@ -195,30 +196,49 @@ export default function TrustBadge({
       )}
 
       {expanded && trustScore?.breakdown && (
-        <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
-          <TrustBar label="Identity" value={trustScore.breakdown.identity} max={30} />
-          <TrustBar label="Reputation" value={trustScore.breakdown.reputation} max={40} />
-          <TrustBar label="Social" value={trustScore.breakdown.social} max={15} />
-          <TrustBar label="Activity" value={trustScore.breakdown.activity} max={15} />
-        </div>
+        <TrustBreakdown breakdown={trustScore.breakdown} />
       )}
     </div>
   );
 }
 
-function TrustBar({ label, value, max }: { label: string; value: number; max: number }) {
+function TrustBreakdown({ breakdown }: { breakdown: { identity: number; reputation: number; social: number; activity: number } }) {
+  const { t } = useTranslation();
+
+  const categories = [
+    { label: 'Identity', value: breakdown.identity, max: 30, descKey: 'trust.breakdown.identityDesc' },
+    { label: 'Reputation', value: breakdown.reputation, max: 40, descKey: 'trust.breakdown.reputationDesc' },
+    { label: 'Social', value: breakdown.social, max: 15, descKey: 'trust.breakdown.socialDesc' },
+    { label: 'Activity', value: breakdown.activity, max: 15, descKey: 'trust.breakdown.activityDesc' },
+  ];
+
+  return (
+    <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3 text-sm">
+      {categories.map((cat) => (
+        <TrustBar key={cat.label} label={cat.label} value={cat.value} max={cat.max} description={t(cat.descKey)} />
+      ))}
+    </div>
+  );
+}
+
+function TrustBar({ label, value, max, description }: { label: string; value: number; max: number; description?: string }) {
   const pct = Math.round((value / max) * 100);
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-20 text-xs text-gray-500 shrink-0">{label}</span>
-      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-          style={{ width: `${pct}%` }}
-        />
+    <div>
+      <div className="flex items-center gap-2">
+        <span className="w-20 text-xs text-gray-500 shrink-0">{label}</span>
+        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className="text-xs text-gray-400 w-12 text-right">{value}/{max}</span>
       </div>
-      <span className="text-xs text-gray-400 w-12 text-right">{value}/{max}</span>
+      {description && (
+        <p className="text-xs text-gray-400 ml-[5.5rem] mt-0.5">{description}</p>
+      )}
     </div>
   );
 }

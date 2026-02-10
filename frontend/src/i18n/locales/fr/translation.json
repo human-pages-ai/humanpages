@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "Tableau de bord",
     "settings": "Settings",
+    "trustScoreLabel": "Score de confiance : {{score}}%",
     "welcome": "Bienvenue",
     "shareProfile": "Partagez votre profil",
     "shareProfileDesc": "Partagez le lien de votre profil pour que les agents IA et les clients vous trouvent",
@@ -160,6 +161,7 @@
     "referralYourLink": "Votre lien de parrainage",
     "referralSignups": "Inscriptions",
     "referralQualified": "Qualifiés",
+    "referralQualifiedHint": "Ont complété leur profil",
     "referralCreditsEarned": "Crédits gagnés",
     "referralCreditsPerSignup": "crédits / inscription",
     "referralBonusAt10": "à 10 parrainages",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "Préférence de paiement",
       "subtitle": "Indiquez aux agents comment vous préférez être payé",
+      "hint": "D'avance : payé avant de commencer. Séquestre : retenu jusqu'à ce que le travail soit terminé.",
       "upfront": "Paiement d'avance",
       "escrow": "Séquestre",
       "both": "Flexible (les deux)",
@@ -299,9 +302,12 @@
       "howToPayYou": "Comment vous payer",
       "saveProfile": "Enregistrer le profil",
       "showNeighborhood": "Afficher le quartier sur mon profil public",
+      "neighborhoodHint": "Lorsque désactivé, seule votre ville est visible sur votre profil public",
       "hideContact": "Masquer les infos de contact du profil public",
       "hideContactHelp": "Quand activé, votre e-mail, Telegram, WhatsApp et méthodes de paiement ne seront pas visibles pour les visiteurs.",
-      "saving": "Enregistrement..."
+      "saving": "Enregistrement...",
+      "defaultPaymentUsdc": "Paiement par défaut : USDC via votre portefeuille connecté",
+      "usdcHint": "USDC est un stablecoin — toujours d'une valeur de 1 $ USD"
     },
     "wallets": {
       "title": "Portefeuilles",
@@ -310,7 +316,7 @@
       "connectDescription": "Connectez votre portefeuille navigateur pour vérifier la propriété et l'ajouter à votre profil.",
       "verifyAndAdd": "Vérifier et ajouter",
       "connectAndVerify": "Connecter et vérifier",
-      "connectHint": "Votre portefeuille s'ouvrira deux fois : une pour connecter, une pour signer.",
+      "connectHint": "Votre portefeuille s'ouvrira deux fois : une pour connecter, une pour signer. Aucun fonds n'est envoyé.",
       "signing": "Veuillez signer le message dans votre portefeuille...",
       "connecting": "Connexion au portefeuille...",
       "connectedAs": "Connecté en tant que",
@@ -499,6 +505,14 @@
     "label": "Devise",
     "selectCurrency": "Sélectionner la devise",
     "usdEstimate": "~{{amount}} $ USD"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "Email, LinkedIn, GitHub, vérification d'humanité",
+      "reputationDesc": "Travaux complétés, notes et avis",
+      "socialDesc": "Recommandations d'autres utilisateurs vérifiés",
+      "activityDesc": "Complétude du profil et utilisation de la plateforme"
+    }
   },
   "errors": {
     "required": "Ce champ est requis",

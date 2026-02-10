@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "Panel",
     "settings": "Settings",
+    "trustScoreLabel": "Güven puanı: {{score}}%",
     "welcome": "Hoş geldiniz",
     "shareProfile": "Profilinizi paylaşın",
     "shareProfileDesc": "Profil bağlantınızı paylaşın, yapay zeka ajanları ve müşteriler sizi bulsun",
@@ -162,6 +163,7 @@
     "referralYourLink": "Tavsiye linkiniz",
     "referralSignups": "Kayıtlar",
     "referralQualified": "Nitelikli",
+    "referralQualifiedHint": "Profilini tamamladı",
     "referralCreditsEarned": "Kazanılan Krediler",
     "referralCreditsPerSignup": "kredi / kayıt",
     "referralBonusAt10": "10 tavsiyede",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "Ödeme Tercihi",
       "subtitle": "Ajanlara nasıl ödeme almak istediğinizi bildirin",
+      "hint": "Peşin: başlamadan önce ödenir. Emanet: iş bitene kadar tutulur.",
       "upfront": "Peşin Ödeme",
       "escrow": "Emanet",
       "both": "Esnek (Her ikisi)",
@@ -328,11 +331,13 @@
       "website": "Web Sitesi",
       "saveProfile": "Profili Kaydet",
       "showNeighborhood": "Mahallemi herkese açık profilimde göster",
+      "neighborhoodHint": "Kapalıyken, herkese açık profilinizde yalnızca şehriniz görünür",
       "hideContact": "İletişim bilgilerini herkese açık profilden gizle",
       "hideContactHelp": "Etkinleştirildiğinde, e-postanız, Telegram, WhatsApp ve ödeme yöntemleriniz ziyaretçilere görünmez.",
       "saving": "Kaydediliyor...",
       "paymentInfo": "Ödeme Bilgisi",
       "defaultPaymentUsdc": "Varsayılan ödeme: Bağlı cüzdanınız üzerinden USDC",
+      "usdcHint": "USDC bir stablecoin'dir — her zaman 1 USD değerindedir",
       "walletConnected": "Cüzdan bağlı",
       "connectWalletPrompt": "USDC ödemeleri almak için bir cüzdan bağlayın",
       "alsoAcceptNonCrypto": "Kripto dışı ödemeleri de kabul ediyorum",
@@ -354,7 +359,7 @@
       "connectDescription": "Sahipliği doğrulamak ve profilinize eklemek için tarayıcı cüzdanınızı bağlayın.",
       "verifyAndAdd": "Doğrula ve Ekle",
       "connectAndVerify": "Cüzdanı Bağla ve Doğrula",
-      "connectHint": "Cüzdanınız iki kez açılacak: bir kez bağlanmak, bir kez imzalamak için.",
+      "connectHint": "Cüzdanınız iki kez açılacak: bir kez bağlanmak, bir kez imzalamak için. Hiçbir fon gönderilmez.",
       "signing": "Lütfen cüzdanınızda mesajı imzalayın...",
       "connecting": "Cüzdana bağlanıyor...",
       "connectedAs": "Bağlandı:",
@@ -504,6 +509,14 @@
     "updated": "Güncellendi",
     "lastUpdated": "Son güncelleme",
     "offerUpdated": "Bu teklif ajan tarafından güncellendi"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "E-posta, LinkedIn, GitHub, insanlık doğrulaması",
+      "reputationDesc": "Tamamlanan işler, puanlar ve değerlendirmeler",
+      "socialDesc": "Diğer doğrulanmış kullanıcılardan referanslar",
+      "activityDesc": "Profil tamamlanma oranı ve platform kullanımı"
+    }
   },
   "errors": {
     "required": "Bu alan zorunludur",

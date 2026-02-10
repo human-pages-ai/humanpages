@@ -149,6 +149,7 @@
   "dashboard": {
     "title": "Painel",
     "settings": "Settings",
+    "trustScoreLabel": "Pontuação de confiança: {{score}}%",
     "welcome": "Bem-vindo",
     "shareProfile": "Compartilhe seu perfil",
     "shareProfileDesc": "Compartilhe o link do seu perfil para que agentes de IA e clientes te encontrem",
@@ -160,6 +161,7 @@
     "referralYourLink": "Seu link de indicação",
     "referralSignups": "Cadastros",
     "referralQualified": "Qualificados",
+    "referralQualifiedHint": "Completaram o perfil",
     "referralCreditsEarned": "Créditos ganhos",
     "referralCreditsPerSignup": "créditos / cadastro",
     "referralBonusAt10": "com 10 indicações",
@@ -197,6 +199,7 @@
     "paymentPreference": {
       "title": "Preferência de Pagamento",
       "subtitle": "Informe aos agentes como prefere receber o pagamento",
+      "hint": "Adiantado: pago antes de começar. Custódia: retido até o trabalho ser concluído.",
       "upfront": "Pagamento Antecipado",
       "escrow": "Garantia",
       "both": "Flexível (Qualquer um)",
@@ -299,9 +302,12 @@
       "howToPayYou": "Como te pagar",
       "saveProfile": "Salvar Perfil",
       "showNeighborhood": "Mostrar bairro no meu perfil público",
+      "neighborhoodHint": "Quando desativado, apenas sua cidade é visível no seu perfil público",
       "hideContact": "Ocultar informações de contato do perfil público",
       "hideContactHelp": "Quando ativado, seu e-mail, Telegram, WhatsApp e métodos de pagamento não serão visíveis para visitantes.",
-      "saving": "Salvando..."
+      "saving": "Salvando...",
+      "defaultPaymentUsdc": "Pagamento padrão: USDC via sua carteira conectada",
+      "usdcHint": "USDC é uma stablecoin — sempre vale $1 USD"
     },
     "wallets": {
       "title": "Carteiras",
@@ -310,7 +316,7 @@
       "connectDescription": "Conecte sua carteira do navegador para verificar a propriedade e adicioná-la ao seu perfil.",
       "verifyAndAdd": "Verificar e Adicionar",
       "connectAndVerify": "Conectar e Verificar",
-      "connectHint": "Sua carteira abrirá duas vezes: uma para conectar, outra para assinar.",
+      "connectHint": "Sua carteira abrirá duas vezes: uma para conectar, outra para assinar. Nenhum fundo é enviado.",
       "signing": "Por favor, assine a mensagem na sua carteira...",
       "connecting": "Conectando à carteira...",
       "connectedAs": "Conectado como",
@@ -499,6 +505,14 @@
     "label": "Moeda",
     "selectCurrency": "Selecionar moeda",
     "usdEstimate": "~US${{amount}}"
+  },
+  "trust": {
+    "breakdown": {
+      "identityDesc": "E-mail, LinkedIn, GitHub, verificação de humanidade",
+      "reputationDesc": "Trabalhos concluídos, avaliações e resenhas",
+      "socialDesc": "Referências de outros usuários verificados",
+      "activityDesc": "Completude do perfil e uso da plataforma"
+    }
   },
   "errors": {
     "required": "Este campo é obrigatório",
