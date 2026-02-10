@@ -26,7 +26,8 @@
     "error": "Something went wrong",
     "success": "Success!",
     "free": "Free",
-    "noFees": "No fees"
+    "noFees": "No fees",
+    "backHome": "Back to home"
   },
   "nav": {
     "home": "Home",
@@ -41,16 +42,26 @@
   },
   "landing": {
     "hero": {
-      "tagline": "The directory AI agents use to hire humans",
-      "title": "AI's hiring.",
-      "titleLine2": "Are you listed?",
-      "subtitle": "List your skills, get discovered by AI agents, keep 100% of what you earn.",
+      "tagline": "Get paid for what AI can't do",
+      "title": "Real tasks. Real pay.",
+      "titleLine2": "No middleman.",
+      "subtitle": "AI agents need humans for photography, deliveries, research, and more. List your skills, get hired directly, keep 100%.",
       "cta": "Start your profile",
-      "flow": "Create a profile → get discovered → get hired"
+      "flow": "List your skills → get matched → get paid",
+      "example": "Example: An AI agent needs photos of 5 storefronts in Brooklyn. It finds you, sends a $150 offer. You accept, shoot, get paid. That's it."
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "step1Title": "List your skills",
+      "step1Desc": "Create a free profile with your skills, location, and rates. Takes under a minute.",
+      "step2Title": "Get matched",
+      "step2Desc": "AI agents search the directory and send you job offers with a description and price.",
+      "step3Title": "Get paid",
+      "step3Desc": "Accept the offer, do the work, get paid directly. We never touch your money."
     },
     "tasks": {
       "title": "What you can offer",
-      "subtitle": "Here are some examples—but you can list any skill. If a human can do it, you can offer it.",
+      "subtitle": "Here are some examples — but you can list any skill. If a human can do it, you can offer it.",
       "photography": "Photography",
       "photographyDesc": "On-location photos, product shots, event coverage",
       "research": "Research",
@@ -59,8 +70,8 @@
       "phoneCallsDesc": "Appointments, verifications, customer outreach",
       "deliveries": "Deliveries",
       "deliveriesDesc": "Pick-ups, drop-offs, same-day courier",
-      "dataEntry": "Data Entry",
-      "dataEntryDesc": "Forms, transcription, document processing",
+      "handyman": "Handyman",
+      "handymanDesc": "Furniture assembly, mounting, minor repairs",
       "mysteryShopping": "Mystery Shopping",
       "mysteryShoppingDesc": "Store visits, service audits, feedback"
     },
@@ -70,18 +81,18 @@
       "findWorkDesc": "Create your listing once. When someone needs your skills in your area, they'll reach out directly.",
       "keepEarnings": "Keep 100% of your earnings",
       "keepEarningsDesc": "We don't take a cut. You negotiate terms and get paid straight to your wallet or bank.",
-      "workAnywhere": "Work anywhere in the world",
-      "workAnywhereDesc": "Whether you're in Tokyo or Toronto, clients can find you based on your skills and location."
+      "oneProfile": "One profile, every AI agent",
+      "oneProfileDesc": "You don't need accounts on ten different platforms. Any AI agent can find you through a single listing."
     },
     "cta": {
-      "ready": "Ready to get discovered?",
-      "createListing": "Create your listing in under a minute.",
-      "startGetting": "Start getting hired",
-      "letOpportunities": "Create your listing and let opportunities come to you."
+      "ready": "Get listed before everyone else",
+      "createListing": "Early profiles get found first. Set yours up in under a minute.",
+      "startGetting": "Don't wait for the work to start",
+      "letOpportunities": "List your skills now. When tasks match, you'll be the first to know."
     },
     "trust": {
       "title": "You're in control",
-      "dataPrivacy": "Your data stays yours. We never sell your information.",
+      "dataPrivacy": "Free forever. No hidden costs, no platform fees.",
       "visibility": "You control visibility. Go invisible anytime.",
       "contact": "You choose how to be contacted. Any method you agree on."
     },
@@ -96,9 +107,7 @@
       "available": "Is this available in my country?",
       "availableAnswer": "Yes! Human Pages is global. Payments can happen however works for both sides. Payment apps, crypto, bank transfer, you name it. Just add your location and you'll be discoverable for tasks in your area.",
       "free": "Is it really free?",
-      "freeAnswer": "Yes. Creating a profile is 100% free, forever. There are no platform fees on any transaction. We plan to offer optional premium features in the future—but your listing and payments will always be free.",
-      "token": "Does Human Pages have a token?",
-      "tokenAnswer": "No. Human Pages does not have a cryptocurrency token, and we have no plans to launch one. If anyone offers you a \"Human Pages token\" or similar, it is a scam. We will never ask you to buy or trade any token."
+      "freeAnswer": "Yes. Creating a profile is 100% free, forever. There are no platform fees on any transaction. We plan to offer optional premium features in the future—but your listing and payments will always be free."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -370,6 +379,13 @@
       "whatsappLabel": "WhatsApp",
       "whatsappDesc": "Receive WhatsApp messages for job offers"
     },
+    "emailDigest": {
+      "title": "Email Frequency",
+      "subtitle": "Control how often you receive email notifications",
+      "realtime": "Realtime",
+      "hourly": "Hourly Digest",
+      "daily": "Daily Digest"
+    },
     "account": {
       "dangerZone": "Account Management",
       "exportTitle": "Export Your Data",
@@ -541,6 +557,26 @@
     "title": "Page not found",
     "message": "The page you're looking for doesn't exist or has been moved.",
     "goHome": "Go home"
+  },
+  "report": {
+    "title": "Report Agent",
+    "description": "If you believe this agent is engaging in spam, fraud, or other abusive behavior, please submit a report.",
+    "invalidToken": "Invalid or missing report token. Please use the link from your email.",
+    "reasonLabel": "Reason",
+    "selectReason": "Select a reason",
+    "descriptionLabel": "Additional details (optional)",
+    "descriptionPlaceholder": "Describe what happened...",
+    "submit": "Submit Report",
+    "submitted": "Report Submitted",
+    "submittedDesc": "Thank you. We will review your report and take action if necessary.",
+    "error": "Failed to submit report. Please try again.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraud",
+      "harassment": "Harassment",
+      "irrelevant": "Irrelevant offers",
+      "other": "Other"
+    }
   },
   "dev": {
     "hero": {
