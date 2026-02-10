@@ -72,6 +72,26 @@ ${escapeHtml(data.jobDescription.slice(0, 200))}${data.jobDescription.length > 2
   });
 }
 
+export async function sendJobOfferUpdatedTelegram(data: JobOfferNotification): Promise<boolean> {
+  const message = `
+<b>Updated Job Offer!</b>
+
+<b>${escapeHtml(data.jobTitle)}</b>
+${data.agentName ? `From: ${escapeHtml(data.agentName)}` : ''}
+Price: <b>$${data.priceUsdc} USDC</b>
+
+${escapeHtml(data.jobDescription.slice(0, 200))}${data.jobDescription.length > 200 ? '...' : ''}
+
+<a href="${data.dashboardUrl}">Review Updated Offer</a>
+`.trim();
+
+  return sendTelegramMessage({
+    chatId: data.chatId,
+    text: message,
+    parseMode: 'HTML',
+  });
+}
+
 // Escape HTML special characters for Telegram
 function escapeHtml(text: string): string {
   return text

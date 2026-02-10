@@ -193,6 +193,10 @@ model Job {
 
   status          JobStatus @default(PENDING)
 
+  // Agent update tracking
+  lastUpdatedByAgent DateTime?  // When the agent last updated the offer
+  updateCount        Int        @default(0) // Number of times the offer was updated
+
   // Timestamps
   createdAt       DateTime  @default(now())
   acceptedAt      DateTime?

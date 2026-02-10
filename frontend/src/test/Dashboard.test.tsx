@@ -107,7 +107,7 @@ describe('Dashboard', () => {
     });
 
     // Wallets section should be present (title may appear in completeness widget too)
-    expect(screen.getAllByText('dashboard.wallets.title')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('dashboard.wallets.paymentSetupTitle')[0]).toBeInTheDocument();
   });
 
   it('renders services section', async () => {
@@ -137,7 +137,7 @@ describe('Dashboard', () => {
 
     // Should render sections even with empty data
     expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
-    expect(screen.getAllByText('dashboard.wallets.title')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('dashboard.wallets.paymentSetupTitle')[0]).toBeInTheDocument();
     expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
   });
 

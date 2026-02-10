@@ -528,12 +528,23 @@ export default function Dashboard() {
               document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
           }}
+          onScrollToWallets={() => {
+            setTimeout(() => {
+              document.getElementById('payment-setup-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }}
         />
 
         <ProfileSection
           profile={profile}
           editingProfile={editingProfile}
           setEditingProfile={setEditingProfile}
+          hasWallet={profile.wallets.length > 0}
+          onScrollToWallets={() => {
+            setTimeout(() => {
+              document.getElementById('payment-setup-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }}
           profileForm={profileForm}
           setProfileForm={setProfileForm}
           saving={saving}
@@ -550,6 +561,13 @@ export default function Dashboard() {
           onAddService={addService}
           onToggleServiceActive={toggleServiceActive}
           onDeleteService={deleteService}
+        />
+
+        <WalletsSection
+          wallets={profile.wallets}
+          saving={saving}
+          onAddWallet={addWallet}
+          onDeleteWallet={deleteWallet}
         />
 
         <ShareReferralSection
@@ -599,13 +617,6 @@ export default function Dashboard() {
           setFiltersForm={setFiltersForm}
           saving={saving}
           onSaveFilters={saveFilters}
-        />
-
-        <WalletsSection
-          wallets={profile.wallets}
-          saving={saving}
-          onAddWallet={addWallet}
-          onDeleteWallet={deleteWallet}
         />
 
         {/* TODO: Unhide once LinkedIn redirect URIs are configured */}

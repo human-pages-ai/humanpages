@@ -256,6 +256,7 @@
       "awaitingPayment": "Ödeme bekleniyor...",
       "reviewReceived": "Değerlendirme alındı",
       "from": "Gönderen",
+      "updated": "Güncellendi",
       "confirmReject": "Bu iş teklifini reddet?",
       "status": {
         "PENDING": "Bekliyor",
@@ -295,10 +296,25 @@
       "showNeighborhood": "Mahallemi herkese açık profilimde göster",
       "hideContact": "İletişim bilgilerini herkese açık profilden gizle",
       "hideContactHelp": "Etkinleştirildiğinde, e-postanız, Telegram, WhatsApp ve ödeme yöntemleriniz ziyaretçilere görünmez.",
-      "saving": "Kaydediliyor..."
+      "saving": "Kaydediliyor...",
+      "paymentInfo": "Ödeme Bilgisi",
+      "defaultPaymentUsdc": "Varsayılan ödeme: Bağlı cüzdanınız üzerinden USDC",
+      "walletConnected": "Cüzdan bağlı",
+      "connectWalletPrompt": "USDC ödemeleri almak için bir cüzdan bağlayın",
+      "alsoAcceptNonCrypto": "Kripto dışı ödemeleri de kabul ediyorum",
+      "usdcWalletConnected": "USDC (cüzdan bağlı)",
+      "howToPayYou": "Size nasıl ödeme yapılır",
+      "paymentMethods": "Ödeme Yöntemleri",
+      "paymentMethodsPlaceholder": "örn., PayPal: paypal.me/siz, Venmo: @siz, banka transferi",
+      "paymentMethodsHelp": "Müşterilere size nasıl ödeme yapabileceklerini söyleyin",
+      "howToReachYou": "Size nasıl ulaşılır",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890"
     },
     "wallets": {
       "title": "Cüzdanlar",
+      "paymentSetupTitle": "Ödeme Kurulumu",
+      "paymentSetupSubtitle": "USDC varsayılan ödeme yöntemidir. Ödeme almak için bir cüzdan bağlayın.",
       "addWallet": "Cüzdan Ekle",
       "connectWallet": "Cüzdanı Bağla",
       "connectDescription": "Sahipliği doğrulamak ve profilinize eklemek için tarayıcı cüzdanınızı bağlayın.",
@@ -452,7 +468,10 @@
     "completionRate": "Tamamlandı",
     "paymentRate": "Ödendi",
     "avgPaySpeed": "Ort. Ödeme Hızı",
-    "memberSince": "{{date}} tarihinden beri üye"
+    "memberSince": "{{date}} tarihinden beri üye",
+    "updated": "Güncellendi",
+    "lastUpdated": "Son güncelleme",
+    "offerUpdated": "Bu teklif ajan tarafından güncellendi"
   },
   "errors": {
     "required": "Bu alan zorunludur",
@@ -482,6 +501,7 @@
     "jobAccepted": "İş kabul edildi",
     "jobRejected": "İş reddedildi",
     "jobCompleted": "İş tamamlandı",
+    "offerUpdated": "Teklif güncellendi",
     "telegramConnected": "Telegram bağlandı",
     "telegramDisconnected": "Telegram bağlantısı kesildi",
     "accountDeleted": "Hesap başarıyla silindi",

@@ -96,6 +96,8 @@ export interface Job {
   category?: string;
   priceUsdc: string;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
+  updateCount?: number;
+  lastUpdatedByAgent?: string;
   createdAt: string;
   acceptedAt?: string;
   paidAt?: string;

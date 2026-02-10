@@ -176,7 +176,7 @@ export default function TermsOfUse() {
           <p>
             If you have questions about these Terms of Use, reach out to us on our{' '}
             <a
-              href="https://facebook.com/humanpages"
+              href="https://www.facebook.com/HumanPagesAI/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700"

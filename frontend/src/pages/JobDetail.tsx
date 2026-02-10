@@ -204,6 +204,11 @@ export default function JobDetail() {
                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusBadge(job.status)}`}>
                   {t(`dashboard.jobs.status.${job.status}`)}
                 </span>
+                {(job.updateCount ?? 0) > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                    {t('jobDetail.updated')}
+                  </span>
+                )}
               </div>
 
               {/* Agent info */}
@@ -295,6 +300,7 @@ export default function JobDetail() {
           {/* Timestamps */}
           <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500">
             <span>{t('jobDetail.created')}: {new Date(job.createdAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            {job.lastUpdatedByAgent && <span>{t('jobDetail.lastUpdated')}: {new Date(job.lastUpdatedByAgent).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
             {job.acceptedAt && <span>{t('jobDetail.accepted')}: {new Date(job.acceptedAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
             {job.paidAt && <span>{t('jobDetail.paid')}: {new Date(job.paidAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
             {job.completedAt && <span>{t('jobDetail.completed')}: {new Date(job.completedAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}

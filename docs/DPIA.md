@@ -163,12 +163,12 @@ Human Pages is a discovery platform that connects AI agents with real people for
 
 ## 6. Third-Party Processors
 
-| Processor | Purpose | Data Shared | DPA Required |
+| Processor | Purpose | Data Shared | DPA Status |
 |---|---|---|---|
-| PostHog | Product analytics | User ID, events, IP | Yes |
-| Email provider (SMTP) | Transactional emails | Email address, name | Yes |
-| Telegram Bot API | Job offer notifications | Chat ID, job details | Yes |
-| Gitcoin Passport | Humanity verification | Wallet address | Yes |
+| PostHog | Product analytics | User ID, events, IP | Signed (available at posthog.com/dpa) |
+| Resend / AWS SES | Transactional emails | Email address, name | Signed (Resend DPA + AWS GDPR DPA) |
+| Telegram Bot API | Job offer notifications | Chat ID, job details | Covered by Telegram ToS (user-initiated opt-in) |
+| Gitcoin Passport | Humanity verification | Wallet address | Covered by Gitcoin ToS (user-initiated) |
 | Google OAuth | Authentication | OAuth tokens (user-initiated) | Covered by Google ToS |
 
 ## 7. Conclusion
@@ -180,6 +180,7 @@ The processing activities assessed in this DPIA are necessary for the operation 
 3. User control (analytics opt-out, notification toggles, availability toggle)
 4. Technical safeguards (rate limiting, input validation, HTTPS, password hashing)
 5. Comprehensive data subject rights (access, export, delete, rectify)
+6. Automatic cleanup of stale tokens (OAuth states every 5 min, email verification tokens every hour)
 
 **Outcome:** Processing may proceed with the mitigations documented above.
 

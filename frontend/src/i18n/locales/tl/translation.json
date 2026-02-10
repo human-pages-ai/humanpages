@@ -256,6 +256,7 @@
       "awaitingPayment": "Naghihintay ng bayad...",
       "reviewReceived": "Natanggap ang review",
       "from": "Mula sa",
+      "updated": "Na-update",
       "confirmReject": "Tanggihan ang job offer na ito?",
       "status": {
         "PENDING": "Pending",
@@ -295,10 +296,25 @@
       "showNeighborhood": "Ipakita ang neighborhood sa aking pampublikong profile",
       "hideContact": "Itago ang contact info sa public profile",
       "hideContactHelp": "Kapag naka-enable, ang iyong email, Telegram, WhatsApp, at payment methods ay hindi makikita ng mga bisita.",
-      "saving": "Nagse-save..."
+      "saving": "Nagse-save...",
+      "paymentInfo": "Impormasyon ng Bayad",
+      "defaultPaymentUsdc": "Default na bayad: USDC sa pamamagitan ng iyong nakakonektang wallet",
+      "walletConnected": "Nakakonekta ang wallet",
+      "connectWalletPrompt": "Ikonekta ang wallet para makatanggap ng USDC na bayad",
+      "alsoAcceptNonCrypto": "Tumatanggap din ako ng hindi crypto na bayad",
+      "usdcWalletConnected": "USDC (nakakonekta ang wallet)",
+      "howToPayYou": "Paano ka babayaran",
+      "paymentMethods": "Paraan ng Bayad",
+      "paymentMethodsPlaceholder": "hal., PayPal: paypal.me/ikaw, Venmo: @ikaw, bank transfer",
+      "paymentMethodsHelp": "Sabihin sa mga kliyente kung paano ka nila mababayaran",
+      "howToReachYou": "Paano ka makontak",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890"
     },
     "wallets": {
       "title": "Mga Wallet",
+      "paymentSetupTitle": "Setup ng Bayad",
+      "paymentSetupSubtitle": "USDC ang default na paraan ng bayad. Ikonekta ang wallet para makatanggap ng bayad.",
       "addWallet": "Magdagdag ng Wallet",
       "connectWallet": "Ikonekta ang Wallet",
       "connectDescription": "Ikonekta ang wallet ng iyong browser upang ma-verify ang pagmamay-ari at idagdag ito sa iyong profile.",
@@ -452,7 +468,10 @@
     "completionRate": "Nakumpleto",
     "paymentRate": "Nabayaran",
     "avgPaySpeed": "Average na Bilis ng Bayad",
-    "memberSince": "Miyembro mula {{date}}"
+    "memberSince": "Miyembro mula {{date}}",
+    "updated": "Na-update",
+    "lastUpdated": "Huling na-update",
+    "offerUpdated": "Ang alok na ito ay na-update ng ahente"
   },
   "errors": {
     "required": "Kinakailangan ang field na ito",
@@ -482,6 +501,7 @@
     "jobAccepted": "Tinanggap ang trabaho",
     "jobRejected": "Tinanggihan ang trabaho",
     "jobCompleted": "Nakumpleto ang trabaho",
+    "offerUpdated": "Na-update ang alok",
     "telegramConnected": "Nakakonekta ang Telegram",
     "telegramDisconnected": "Nadiskonekta ang Telegram",
     "accountDeleted": "Matagumpay na nabura ang account",

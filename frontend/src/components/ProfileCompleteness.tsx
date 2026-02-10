@@ -35,17 +35,18 @@ interface ProfileCompletenessProps {
   profile: Profile;
   onEditProfile?: (field?: string) => void;
   onAddService?: () => void;
+  onScrollToWallets?: () => void;
 }
 
 interface CompletionItem {
   labelKey: string;
   complete: boolean;
   weight: number;
-  actionType: 'editProfile' | 'addService';
+  actionType: 'editProfile' | 'addService' | 'scrollToWallets';
   fieldId?: string; // DOM id to scroll to
 }
 
-export default function ProfileCompleteness({ profile, onEditProfile, onAddService }: ProfileCompletenessProps) {
+export default function ProfileCompleteness({ profile, onEditProfile, onAddService, onScrollToWallets }: ProfileCompletenessProps) {
   const { t } = useTranslation();
 
   const items: CompletionItem[] = [
@@ -59,7 +60,7 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
     {
       labelKey: 'bio',
       complete: Boolean(profile.bio && profile.bio.trim().length > 0),
-      weight: 20,
+      weight: 15,
       actionType: 'editProfile',
       fieldId: 'profile-bio',
     },
@@ -80,7 +81,7 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
     {
       labelKey: 'skills',
       complete: profile.skills && profile.skills.length > 0,
-      weight: 20,
+      weight: 15,
       actionType: 'editProfile',
       fieldId: 'profile-skills',
     },
@@ -89,6 +90,12 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
       complete: profile.services?.some(s => s.isActive) ?? false,
       weight: 15,
       actionType: 'addService',
+    },
+    {
+      labelKey: 'paymentInfo',
+      complete: profile.wallets.length > 0,
+      weight: 10,
+      actionType: 'scrollToWallets',
     },
   ];
 
@@ -100,6 +107,7 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
       contactEmail: t('dashboard.profile.contactEmail'),
       skills: t('dashboard.profile.skills'),
       services: t('dashboard.services.title'),
+      paymentInfo: t('dashboard.profile.paymentInfo'),
     };
     return labels[key] || key;
   };
@@ -113,6 +121,8 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
   const handleItemClick = (item: CompletionItem) => {
     if (item.actionType === 'addService') {
       onAddService?.();
+    } else if (item.actionType === 'scrollToWallets') {
+      onScrollToWallets?.();
     } else if (item.actionType === 'editProfile') {
       onEditProfile?.(item.fieldId);
     }

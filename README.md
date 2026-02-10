@@ -65,7 +65,7 @@ All accounts use password: `password123`
 ### Jobs
 - `GET /api/jobs` - List user's job listings (auth required)
 - `POST /api/jobs` - Create job listing (auth required)
-- `PATCH /api/jobs/:id` - Update job (auth required)
+- `PATCH /api/jobs/:id` - Update pending job offer (agent auth)
 - `DELETE /api/jobs/:id` - Delete job (auth required)
 
 ## Related Repos

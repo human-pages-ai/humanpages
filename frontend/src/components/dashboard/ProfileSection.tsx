@@ -8,6 +8,8 @@ interface Props {
   profile: Profile;
   editingProfile: boolean;
   setEditingProfile: (v: boolean) => void;
+  hasWallet: boolean;
+  onScrollToWallets?: () => void;
   profileForm: {
     name: string;
     bio: string;
@@ -41,6 +43,8 @@ export default function ProfileSection({
   profile,
   editingProfile,
   setEditingProfile,
+  hasWallet,
+  onScrollToWallets,
   profileForm,
   setProfileForm,
   saving,
@@ -49,6 +53,13 @@ export default function ProfileSection({
   const { t } = useTranslation();
 
   const [usernameError, setUsernameError] = React.useState<string>('');
+  const [showNonCrypto, setShowNonCrypto] = React.useState(Boolean(profileForm.paymentMethods));
+
+  React.useEffect(() => {
+    if (editingProfile) {
+      setShowNonCrypto(Boolean(profileForm.paymentMethods));
+    }
+  }, [editingProfile]);
 
   const EQUIPMENT_OPTIONS = [
     'car', 'bike', 'drone', 'camera', 'smartphone',
@@ -304,19 +315,54 @@ export default function ProfileSection({
             <h3 className="text-sm font-medium text-gray-900 mb-3">
               {t('dashboard.profile.howToPayYou')}
             </h3>
-            <div>
-              <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
-                {t('dashboard.profile.paymentMethods')}
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">{t('dashboard.profile.defaultPaymentUsdc')}</p>
+              {hasWallet ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {t('dashboard.profile.walletConnected')}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onScrollToWallets}
+                  className="text-sm text-indigo-600 hover:text-indigo-500 underline"
+                >
+                  {t('dashboard.profile.connectWalletPrompt')}
+                </button>
+              )}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showNonCrypto}
+                  onChange={(e) => {
+                    setShowNonCrypto(e.target.checked);
+                    if (!e.target.checked) {
+                      setProfileForm({ ...profileForm, paymentMethods: '' });
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-gray-700">{t('dashboard.profile.alsoAcceptNonCrypto')}</span>
               </label>
-              <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
-              <textarea
-                id="profile-payment-methods"
-                value={profileForm.paymentMethods}
-                onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
-                placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
-                rows={2}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
+              {showNonCrypto && (
+                <div>
+                  <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
+                    {t('dashboard.profile.paymentMethods')}
+                  </label>
+                  <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
+                  <textarea
+                    id="profile-payment-methods"
+                    value={profileForm.paymentMethods}
+                    onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
+                    placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
+                    rows={2}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -477,6 +523,16 @@ export default function ProfileSection({
                       ? <span className="text-gray-900">{profile.whatsapp}</span>
                       : <span className="text-gray-400 italic">{t('common.notSet')}</span>}
                   </div>
+                  {hasWallet && (
+                    <div>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {t('dashboard.profile.usdcWalletConnected')}
+                      </span>
+                    </div>
+                  )}
                   {profile.paymentMethods && (
                     <div>
                       <span className="text-gray-500">{t('dashboard.profile.paymentMethods')}:</span>{' '}

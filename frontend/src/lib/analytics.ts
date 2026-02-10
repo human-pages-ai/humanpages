@@ -28,6 +28,7 @@ class Analytics {
     this.optedOut = optedOut;
     if (optedOut) {
       posthog.reset();
+      try { localStorage.removeItem('analytics_events'); } catch { /* ignore */ }
     }
   }
 
@@ -53,15 +54,17 @@ class Analytics {
       posthog.capture(event, properties);
     }
 
-    // Store in localStorage for debugging
-    try {
-      const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
-      events.push(payload);
-      // Keep last 100 events
-      if (events.length > 100) events.shift();
-      localStorage.setItem('analytics_events', JSON.stringify(events));
-    } catch (e) {
-      // Ignore storage errors
+    // Store in localStorage for debugging (skip if opted out)
+    if (!this.optedOut) {
+      try {
+        const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+        events.push(payload);
+        // Keep last 100 events
+        if (events.length > 100) events.shift();
+        localStorage.setItem('analytics_events', JSON.stringify(events));
+      } catch (e) {
+        // Ignore storage errors
+      }
     }
   }
 

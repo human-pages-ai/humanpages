@@ -256,6 +256,7 @@
       "awaitingPayment": "等待付款...",
       "reviewReceived": "已收到评价",
       "from": "来自",
+      "updated": "已更新",
       "confirmReject": "拒绝这份工作邀约？",
       "status": {
         "PENDING": "待处理",
@@ -295,10 +296,25 @@
       "showNeighborhood": "在我的公开资料中显示社区",
       "hideContact": "在公开资料中隐藏联系方式",
       "hideContactHelp": "启用后，您的邮箱、Telegram、WhatsApp 和付款方式将不会对访客可见。",
-      "saving": "保存中..."
+      "saving": "保存中...",
+      "paymentInfo": "支付信息",
+      "defaultPaymentUsdc": "默认支付方式：通过您连接的钱包使用USDC",
+      "walletConnected": "钱包已连接",
+      "connectWalletPrompt": "连接钱包以接收USDC付款",
+      "alsoAcceptNonCrypto": "我也接受非加密货币支付",
+      "usdcWalletConnected": "USDC（钱包已连接）",
+      "howToPayYou": "如何付款",
+      "paymentMethods": "支付方式",
+      "paymentMethodsPlaceholder": "例如，PayPal: paypal.me/you，Venmo: @you，银行转账",
+      "paymentMethodsHelp": "告诉客户如何付款给你",
+      "howToReachYou": "如何联系你",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890"
     },
     "wallets": {
       "title": "钱包",
+      "paymentSetupTitle": "支付设置",
+      "paymentSetupSubtitle": "USDC是默认支付方式。连接钱包以接收付款。",
       "addWallet": "添加钱包",
       "connectWallet": "连接钱包",
       "connectDescription": "连接浏览器钱包以验证所有权并将其添加到您的个人资料。",
@@ -457,7 +473,10 @@
     "completionRate": "已完成",
     "paymentRate": "已付款",
     "avgPaySpeed": "平均付款速度",
-    "memberSince": "会员自 {{date}}"
+    "memberSince": "会员自 {{date}}",
+    "updated": "已更新",
+    "lastUpdated": "最后更新",
+    "offerUpdated": "此报价已被代理更新"
   },
   "errors": {
     "required": "此字段为必填",
@@ -487,6 +506,7 @@
     "jobAccepted": "工作已接受",
     "jobRejected": "工作已拒绝",
     "jobCompleted": "工作已完成",
+    "offerUpdated": "报价已更新",
     "telegramConnected": "Telegram已连接",
     "telegramDisconnected": "Telegram已断开",
     "accountDeleted": "账户已成功删除",

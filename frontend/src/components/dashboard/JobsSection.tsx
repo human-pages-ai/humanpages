@@ -154,6 +154,11 @@ export default function JobsSection({
                   <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${getStatusBadge(job.status)}`}>
                     {t(`dashboard.jobs.status.${job.status}`)}
                   </span>
+                  {(job.updateCount ?? 0) > 0 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full shrink-0 bg-amber-100 text-amber-700 font-medium">
+                      {t('dashboard.jobs.updated')}
+                    </span>
+                  )}
                   {(job._count?.messages ?? 0) > 0 && (
                     <span className="inline-flex items-center gap-1 text-xs text-gray-500 shrink-0">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

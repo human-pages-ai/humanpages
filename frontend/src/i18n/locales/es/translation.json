@@ -256,6 +256,7 @@
       "awaitingPayment": "Esperando pago...",
       "reviewReceived": "Reseña recibida",
       "from": "De",
+      "updated": "Actualizada",
       "confirmReject": "¿Rechazar esta oferta de trabajo?",
       "status": {
         "PENDING": "Pendiente",
@@ -295,10 +296,25 @@
       "showNeighborhood": "Mostrar barrio en mi perfil público",
       "hideContact": "Ocultar información de contacto del perfil público",
       "hideContactHelp": "Cuando está activado, tu email, Telegram, WhatsApp y métodos de pago no serán visibles para los visitantes.",
-      "saving": "Guardando..."
+      "saving": "Guardando...",
+      "paymentInfo": "Información de Pago",
+      "defaultPaymentUsdc": "Pago predeterminado: USDC a través de tu billetera conectada",
+      "walletConnected": "Billetera conectada",
+      "connectWalletPrompt": "Conecta una billetera para recibir pagos en USDC",
+      "alsoAcceptNonCrypto": "También acepto pagos fuera de cripto",
+      "usdcWalletConnected": "USDC (billetera conectada)",
+      "howToPayYou": "Cómo pagarte",
+      "paymentMethods": "Métodos de Pago",
+      "paymentMethodsPlaceholder": "ej., PayPal: paypal.me/tu, Venmo: @tu, transferencia bancaria",
+      "paymentMethodsHelp": "Indica a los clientes cómo pueden pagarte",
+      "howToReachYou": "Cómo contactarte",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890"
     },
     "wallets": {
       "title": "Billeteras",
+      "paymentSetupTitle": "Configuración de Pagos",
+      "paymentSetupSubtitle": "USDC es el método de pago predeterminado. Conecta una billetera para recibir pagos.",
       "addWallet": "Agregar Billetera",
       "connectWallet": "Conectar billetera",
       "connectDescription": "Conecta tu billetera del navegador para verificar la propiedad y agregarla a tu perfil.",
@@ -457,7 +473,10 @@
     "completionRate": "Completados",
     "paymentRate": "Pagados",
     "avgPaySpeed": "Velocidad de Pago Promedio",
-    "memberSince": "Miembro desde {{date}}"
+    "memberSince": "Miembro desde {{date}}",
+    "updated": "Actualizada",
+    "lastUpdated": "Última actualización",
+    "offerUpdated": "Esta oferta ha sido actualizada por el agente"
   },
   "errors": {
     "required": "Este campo es requerido",
@@ -487,6 +506,7 @@
     "jobAccepted": "Trabajo aceptado",
     "jobRejected": "Trabajo rechazado",
     "jobCompleted": "Trabajo completado",
+    "offerUpdated": "Oferta actualizada",
     "telegramConnected": "Telegram conectado",
     "telegramDisconnected": "Telegram desconectado",
     "accountDeleted": "Cuenta eliminada exitosamente",

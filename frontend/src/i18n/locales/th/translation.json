@@ -228,6 +228,7 @@
       "awaitingPayment": "รอการชำระเงิน...",
       "reviewReceived": "ได้รับรีวิวแล้ว",
       "from": "จาก",
+      "updated": "อัปเดตแล้ว",
       "confirmReject": "ปฏิเสธข้อเสนองานนี้?",
       "status": {
         "PENDING": "รอดำเนินการ",
@@ -267,10 +268,25 @@
       "showNeighborhood": "แสดงย่านที่อยู่ในโปรไฟล์สาธารณะของฉัน",
       "hideContact": "ซ่อนข้อมูลติดต่อจากโปรไฟล์สาธารณะ",
       "hideContactHelp": "เมื่อเปิดใช้งาน อีเมล, Telegram, WhatsApp และวิธีการชำระเงินของคุณจะไม่แสดงให้ผู้เยี่ยมชมเห็น",
-      "saving": "กำลังบันทึก..."
+      "saving": "กำลังบันทึก...",
+      "paymentInfo": "ข้อมูลการชำระเงิน",
+      "defaultPaymentUsdc": "การชำระเงินเริ่มต้น: USDC ผ่านกระเป๋าเงินที่เชื่อมต่อของคุณ",
+      "walletConnected": "กระเป๋าเงินเชื่อมต่อแล้ว",
+      "connectWalletPrompt": "เชื่อมต่อกระเป๋าเงินเพื่อรับการชำระเงิน USDC",
+      "alsoAcceptNonCrypto": "ฉันยังรับการชำระเงินที่ไม่ใช่คริปโต",
+      "usdcWalletConnected": "USDC (กระเป๋าเงินเชื่อมต่อแล้ว)",
+      "howToPayYou": "วิธีชำระเงินให้คุณ",
+      "paymentMethods": "วิธีการชำระเงิน",
+      "paymentMethodsPlaceholder": "เช่น PayPal: paypal.me/you, Venmo: @you, โอนเงินธนาคาร",
+      "paymentMethodsHelp": "บอกลูกค้าว่าพวกเขาสามารถชำระเงินให้คุณได้อย่างไร",
+      "howToReachYou": "วิธีติดต่อคุณ",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890"
     },
     "wallets": {
       "title": "กระเป๋าเงิน",
+      "paymentSetupTitle": "ตั้งค่าการชำระเงิน",
+      "paymentSetupSubtitle": "USDC เป็นวิธีการชำระเงินเริ่มต้น เชื่อมต่อกระเป๋าเงินเพื่อรับการชำระเงิน",
       "addWallet": "เพิ่มกระเป๋าเงิน",
       "connectWallet": "เชื่อมต่อกระเป๋าเงิน",
       "connectDescription": "เชื่อมต่อกระเป๋าเงินเบราว์เซอร์เพื่อยืนยันความเป็นเจ้าของและเพิ่มลงในโปรไฟล์ของคุณ",
@@ -452,7 +468,10 @@
     "completionRate": "เสร็จสิ้น",
     "paymentRate": "ชำระแล้ว",
     "avgPaySpeed": "ความเร็วการจ่ายเฉลี่ย",
-    "memberSince": "สมาชิกตั้งแต่ {{date}}"
+    "memberSince": "สมาชิกตั้งแต่ {{date}}",
+    "updated": "อัปเดตแล้ว",
+    "lastUpdated": "อัปเดตล่าสุด",
+    "offerUpdated": "ข้อเสนอนี้ได้รับการอัปเดตโดยตัวแทน"
   },
   "errors": {
     "required": "ต้องกรอกข้อมูลนี้",
@@ -482,6 +501,7 @@
     "jobAccepted": "รับงานแล้ว",
     "jobRejected": "ปฏิเสธงานแล้ว",
     "jobCompleted": "ทำงานเสร็จแล้ว",
+    "offerUpdated": "อัปเดตข้อเสนอแล้ว",
     "telegramConnected": "เชื่อมต่อ Telegram แล้ว",
     "telegramDisconnected": "ยกเลิกการเชื่อมต่อ Telegram แล้ว",
     "accountDeleted": "ลบบัญชีสำเร็จ",

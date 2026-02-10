@@ -21,7 +21,7 @@ describe('ProfileCompleteness', () => {
     expect(screen.getByText('15%')).toBeInTheDocument();
   });
 
-  it('shows 100% and success message when profile is complete', () => {
+  it('renders nothing when profile is complete', () => {
     const completeProfile = {
       id: 'test-id',
       name: 'Test User',
@@ -31,7 +31,7 @@ describe('ProfileCompleteness', () => {
       skills: ['react', 'typescript'],
       contactEmail: 'contact@example.com',
       isAvailable: true,
-      wallets: [],
+      wallets: [{ id: 'w1', network: 'ethereum', address: '0xabc123' }],
       services: [
         {
           title: 'Test Service',
@@ -42,9 +42,10 @@ describe('ProfileCompleteness', () => {
       ],
     };
 
-    render(<ProfileCompleteness profile={completeProfile} />);
+    const { container } = render(<ProfileCompleteness profile={completeProfile} />);
 
-    expect(screen.getByText(/common.success/i)).toBeInTheDocument();
+    // Component returns null when 100% complete
+    expect(container.innerHTML).toBe('');
   });
 
   it('lists missing items when profile is incomplete', () => {
@@ -85,7 +86,7 @@ describe('ProfileCompleteness', () => {
     expect(screen.queryByText('dashboard.profile.telegramHandle')).not.toBeInTheDocument();
   });
 
-  it('does not list wallets as a required completion item', () => {
+  it('lists paymentInfo as a completion item when no wallet connected', () => {
     const incompleteProfile = {
       id: 'test-id',
       name: 'Test User',
@@ -98,8 +99,25 @@ describe('ProfileCompleteness', () => {
 
     render(<ProfileCompleteness profile={incompleteProfile} />);
 
-    // Wallets should NOT be in the missing items list
-    expect(screen.queryByText('dashboard.wallets.title')).not.toBeInTheDocument();
+    // Payment Info should be in the missing items list when no wallet
+    expect(screen.getByText('dashboard.profile.paymentInfo')).toBeInTheDocument();
+  });
+
+  it('does not list paymentInfo when wallet is connected', () => {
+    const profileWithWallet = {
+      id: 'test-id',
+      name: 'Test User',
+      email: 'test@example.com',
+      skills: [],
+      isAvailable: true,
+      wallets: [{ id: 'w1', network: 'ethereum', address: '0xabc123' }],
+      services: [],
+    };
+
+    render(<ProfileCompleteness profile={profileWithWallet} />);
+
+    // Payment Info should NOT be listed when wallet is connected
+    expect(screen.queryByText('dashboard.profile.paymentInfo')).not.toBeInTheDocument();
   });
 
   it('calculates partial completion correctly', () => {
@@ -118,7 +136,7 @@ describe('ProfileCompleteness', () => {
 
     render(<ProfileCompleteness profile={partialProfile} />);
 
-    // name (15) + bio (20) + location (15) + skills (20) = 70 out of 100
-    expect(screen.getByText('70%')).toBeInTheDocument();
+    // name (15) + bio (15) + location (15) + skills (15) = 60 out of 100
+    expect(screen.getByText('60%')).toBeInTheDocument();
   });
 });

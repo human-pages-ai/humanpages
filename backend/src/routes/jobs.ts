@@ -6,8 +6,8 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.js';
-import { sendJobOfferEmail, sendJobMessageEmail } from '../lib/email.js';
-import { sendJobOfferTelegram, sendTelegramMessage } from '../lib/telegram.js';
+import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
+import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
 import {
   verifyUsdcPayment,
   PaymentVerificationError,
@@ -60,6 +60,19 @@ const createJobSchema = z.object({
   callbackUrl: z.string().url().optional(),
   callbackSecret: z.string().min(16).max(256).optional(),
 });
+
+// Schema for updating a job offer (called by agents)
+const updateJobSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  category: z.string().optional(),
+  priceUsdc: z.number().positive().optional(),
+}).refine(data => Object.values(data).some(v => v !== undefined), {
+  message: 'At least one field must be provided',
+});
+
+// Rate limit: 10 updates per hour per job
+const RATE_LIMIT_UPDATES_PER_JOB = 10;
 
 // Schema for marking job as paid
 const markPaidSchema = z.object({
@@ -335,6 +348,185 @@ router.get('/:id', async (req, res) => {
     res.json(safeJob);
   } catch (error) {
     logger.error({ err: error }, 'Get job error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update a pending job offer (requires registered agent with API key)
+router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const data = updateJobSchema.parse(req.body);
+    const agent = req.agent!;
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Auth: only the agent that created the job can update it
+    if (job.registeredAgentId !== agent.id) {
+      return res.status(403).json({ error: 'Not authorized. Only the agent that created this offer can update it.' });
+    }
+
+    // Status guard: only PENDING jobs can be updated
+    if (job.status !== 'PENDING') {
+      return res.status(400).json({
+        error: 'Cannot update offer',
+        message: `Only PENDING offers can be updated. This offer is ${job.status}.`,
+      });
+    }
+
+    // Rate limit: 10 updates per hour per job
+    if (job.updateCount >= RATE_LIMIT_UPDATES_PER_JOB) {
+      const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+      if (job.lastUpdatedByAgent && job.lastUpdatedByAgent > oneHourAgo) {
+        return res.status(429).json({
+          error: 'Update rate limit exceeded',
+          message: `Maximum ${RATE_LIMIT_UPDATES_PER_JOB} updates per job. Try again later.`,
+        });
+      }
+    }
+
+    // If priceUsdc changes, re-validate offer filters
+    if (data.priceUsdc !== undefined) {
+      const human = await prisma.human.findUnique({
+        where: { id: job.humanId },
+        select: {
+          minOfferPrice: true,
+          minRateUsdc: true,
+          rateCurrency: true,
+        },
+      });
+
+      if (human) {
+        const currency = human.rateCurrency || 'USD';
+        const isNonUsd = currency !== 'USD';
+
+        if (human.minOfferPrice) {
+          const minPriceLocal = human.minOfferPrice.toNumber();
+          const minPriceUsd = await convertToUsd(minPriceLocal, currency);
+          if (data.priceUsdc < minPriceUsd) {
+            const localNote = isNonUsd ? ` (${currency} ${minPriceLocal} ~$${Math.round(minPriceUsd)} USD)` : '';
+            return res.status(400).json({
+              error: 'Offer filtered',
+              code: 'PRICE_TOO_LOW',
+              message: `This human requires a minimum offer of $${Math.round(minPriceUsd)} USDC${localNote}. Your updated price of $${data.priceUsdc} was filtered.`,
+              minPrice: minPriceUsd,
+              yourPrice: data.priceUsdc,
+            });
+          }
+        }
+
+        if (human.minRateUsdc) {
+          const minRateLocal = human.minRateUsdc.toNumber();
+          const minRateUsd = await convertToUsd(minRateLocal, currency);
+          if (data.priceUsdc < minRateUsd) {
+            const localNote = isNonUsd ? ` (${currency} ${minRateLocal} ~$${Math.round(minRateUsd)} USD)` : '';
+            return res.status(400).json({
+              error: 'Offer filtered',
+              code: 'BELOW_MIN_RATE',
+              message: `This human's minimum rate is $${Math.round(minRateUsd)} USDC${localNote}. Your updated price of $${data.priceUsdc} was filtered.`,
+              minRate: minRateUsd,
+              yourPrice: data.priceUsdc,
+            });
+          }
+        }
+      }
+    }
+
+    // Build update data
+    const updateData: any = {
+      lastUpdatedByAgent: new Date(),
+      updateCount: { increment: 1 },
+    };
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.priceUsdc !== undefined) updateData.priceUsdc = new Decimal(data.priceUsdc);
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: updateData,
+    });
+
+    // Track event
+    trackServerEvent(job.agentId, 'job_offer_updated', {
+      jobId: job.id,
+      humanId: job.humanId,
+      updateCount: updated.updateCount,
+      changedFields: Object.keys(data).filter(k => (data as any)[k] !== undefined),
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.updated',
+        { changes: data },
+      );
+    }
+
+    // Send notifications to human
+    const human = await prisma.human.findUnique({
+      where: { id: job.humanId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        contactEmail: true,
+        emailNotifications: true,
+        telegramChatId: true,
+        preferredLanguage: true,
+      },
+    });
+
+    if (human) {
+      const jobDetailUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/jobs/${job.id}`;
+      const displayName = job.agentName || agent.name;
+
+      const notifyEmail = human.contactEmail || human.email;
+      if (notifyEmail && human.emailNotifications) {
+        sendJobOfferUpdatedEmail({
+          humanName: human.name,
+          humanEmail: notifyEmail,
+          humanId: human.id,
+          jobTitle: updated.title,
+          jobDescription: updated.description,
+          priceUsdc: updated.priceUsdc.toNumber(),
+          agentName: displayName,
+          category: updated.category || undefined,
+          language: human.preferredLanguage,
+          jobDetailUrl,
+        }).catch((err) => logger.error({ err }, 'Updated offer email notification failed'));
+      }
+
+      if (human.telegramChatId) {
+        sendJobOfferUpdatedTelegram({
+          chatId: human.telegramChatId,
+          humanName: human.name,
+          jobTitle: updated.title,
+          jobDescription: updated.description,
+          priceUsdc: updated.priceUsdc.toNumber(),
+          agentName: displayName,
+          dashboardUrl: jobDetailUrl,
+        }).catch((err) => logger.error({ err }, 'Updated offer Telegram notification failed'));
+      }
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      updateCount: updated.updateCount,
+      message: 'Offer updated successfully.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update job error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

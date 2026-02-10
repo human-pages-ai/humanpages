@@ -164,9 +164,9 @@ export default function WalletsSection({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">{t('dashboard.wallets.title')}</h2>
+    <div id="payment-setup-section" className="bg-white rounded-lg shadow p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-lg font-semibold">{t('dashboard.wallets.paymentSetupTitle')}</h2>
         {step !== 'idle' && (
           <button
             onClick={resetState}
@@ -176,6 +176,7 @@ export default function WalletsSection({
           </button>
         )}
       </div>
+      <p className="text-sm text-gray-500 mb-4">{t('dashboard.wallets.paymentSetupSubtitle')}</p>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">

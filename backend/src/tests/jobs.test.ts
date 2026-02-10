@@ -561,6 +561,175 @@ describe('Jobs API - Mutual Handshake', () => {
     });
   });
 
+  describe('PATCH /api/jobs/:id - Update Offer', () => {
+    let updateJobId: string;
+
+    beforeEach(async () => {
+      const job = await prisma.job.create({
+        data: {
+          humanId,
+          agentId: 'test-agent',
+          agentName: 'Test Agent',
+          registeredAgentId: agentId,
+          title: 'Original Title',
+          description: 'Original Description',
+          category: 'photography',
+          priceUsdc: 100,
+          status: 'PENDING',
+        },
+      });
+      updateJobId = job.id;
+    });
+
+    it('should update title/description/category/priceUsdc of PENDING job', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({
+          title: 'Updated Title',
+          description: 'Updated Description',
+          category: 'delivery',
+          priceUsdc: 150,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Offer updated successfully.');
+      expect(res.body.updateCount).toBe(1);
+
+      // Verify the changes persisted
+      const getRes = await request(app).get(`/api/jobs/${updateJobId}`);
+      expect(getRes.body.title).toBe('Updated Title');
+      expect(getRes.body.description).toBe('Updated Description');
+      expect(getRes.body.category).toBe('delivery');
+      expect(parseFloat(getRes.body.priceUsdc)).toBe(150);
+      expect(getRes.body.updateCount).toBe(1);
+      expect(getRes.body.lastUpdatedByAgent).toBeDefined();
+    });
+
+    it('should allow partial updates (only title)', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({ title: 'Only Title Changed' });
+
+      expect(res.status).toBe(200);
+
+      const getRes = await request(app).get(`/api/jobs/${updateJobId}`);
+      expect(getRes.body.title).toBe('Only Title Changed');
+      expect(getRes.body.description).toBe('Original Description');
+    });
+
+    it('should reject update of ACCEPTED job (status guard)', async () => {
+      // Accept the job first
+      await prisma.job.update({
+        where: { id: updateJobId },
+        data: { status: 'ACCEPTED', acceptedAt: new Date() },
+      });
+
+      const res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({ title: 'Trying to update after accept' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Cannot update offer');
+    });
+
+    it('should reject update from different agent (auth guard)', async () => {
+      // Create a second agent
+      const keyBytes2 = crypto.randomBytes(24).toString('hex');
+      const otherApiKey = `hp_${keyBytes2}`;
+      const apiKeyPrefix2 = otherApiKey.substring(0, 8);
+      const apiKeyHash2 = await bcrypt.hash(otherApiKey, 10);
+      const otherAgent = await prisma.agent.create({
+        data: {
+          name: 'Other Agent',
+          apiKeyHash: apiKeyHash2,
+          apiKeyPrefix: apiKeyPrefix2,
+          verificationToken: crypto.randomBytes(32).toString('hex'),
+        },
+      });
+
+      try {
+        const res = await request(app)
+          .patch(`/api/jobs/${updateJobId}`)
+          .set('X-Agent-Key', otherApiKey)
+          .send({ title: 'Hijack attempt' });
+
+        expect(res.status).toBe(403);
+        expect(res.body.error).toContain('Not authorized');
+      } finally {
+        await prisma.agent.delete({ where: { id: otherAgent.id } });
+      }
+    });
+
+    it('should reject update without API key (401)', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .send({ title: 'No key' });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('should reject empty update body', async () => {
+      const res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should re-validate offer filters on price change', async () => {
+      // Set a minimum offer price for the human
+      await prisma.human.update({
+        where: { id: humanId },
+        data: { minOfferPrice: 200 },
+      });
+
+      try {
+        const res = await request(app)
+          .patch(`/api/jobs/${updateJobId}`)
+          .set('X-Agent-Key', agentApiKey)
+          .send({ priceUsdc: 50 });
+
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe('PRICE_TOO_LOW');
+      } finally {
+        // Clean up filter
+        await prisma.human.update({
+          where: { id: humanId },
+          data: { minOfferPrice: null },
+        });
+      }
+    });
+
+    it('should increment updateCount on each update', async () => {
+      // First update
+      let res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({ title: 'Update 1' });
+      expect(res.body.updateCount).toBe(1);
+
+      // Second update
+      res = await request(app)
+        .patch(`/api/jobs/${updateJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({ title: 'Update 2' });
+      expect(res.body.updateCount).toBe(2);
+    });
+
+    it('should return 404 for non-existent job', async () => {
+      const res = await request(app)
+        .patch('/api/jobs/non-existent-id')
+        .set('X-Agent-Key', agentApiKey)
+        .send({ title: 'Ghost' });
+
+      expect(res.status).toBe(404);
+    });
+  });
+
   describe('PATCH /api/jobs/:id/reject', () => {
     beforeEach(async () => {
       const job = await prisma.job.create({
@@ -805,12 +974,27 @@ describe('Jobs API - Mutual Handshake', () => {
       expect(createRes.status).toBe(201);
       const lifecycleJobId = createRes.body.id;
 
-      // 2. Accept
+      // 2. Update offer (agent revises price)
+      const updateRes = await request(app)
+        .patch(`/api/jobs/${lifecycleJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({ priceUsdc: 120, title: 'Updated lifecycle test' });
+      expect(updateRes.status).toBe(200);
+      expect(updateRes.body.updateCount).toBe(1);
+
+      // 3. Accept
       const acceptRes = await request(app)
         .patch(`/api/jobs/${lifecycleJobId}/accept`)
         .set('Authorization', `Bearer ${humanToken}`);
       expect(acceptRes.status).toBe(200);
       expect(acceptRes.body.status).toBe('ACCEPTED');
+
+      // 3b. Try to update after accept — should fail
+      const failedUpdateRes = await request(app)
+        .patch(`/api/jobs/${lifecycleJobId}`)
+        .set('X-Agent-Key', agentApiKey)
+        .send({ title: 'Should fail' });
+      expect(failedUpdateRes.status).toBe(400);
 
       // 3. Pay
       const payRes = await request(app)

@@ -239,6 +239,7 @@
       "awaitingPayment": "Awaiting payment...",
       "reviewReceived": "Review received",
       "from": "From",
+      "updated": "Updated",
       "confirmReject": "Reject this job offer?",
       "status": {
         "PENDING": "Pending",
@@ -285,10 +286,18 @@
       "showNeighborhood": "Show neighborhood on my public profile",
       "hideContact": "Hide contact info from public profile",
       "hideContactHelp": "When enabled, your email, Telegram, WhatsApp, and payment methods won't be visible to visitors.",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "paymentInfo": "Payment Info",
+      "defaultPaymentUsdc": "Default payment: USDC via your connected wallet",
+      "walletConnected": "Wallet connected",
+      "connectWalletPrompt": "Connect a wallet to receive USDC payments",
+      "alsoAcceptNonCrypto": "I also accept non-crypto payments",
+      "usdcWalletConnected": "USDC (wallet connected)"
     },
     "wallets": {
       "title": "Wallets",
+      "paymentSetupTitle": "Payment Setup",
+      "paymentSetupSubtitle": "USDC is the default payment method. Connect a wallet to receive payments.",
       "addWallet": "Add Wallet",
       "connectWallet": "Connect Wallet",
       "connectDescription": "Connect your browser wallet to verify ownership and add it to your profile.",
@@ -478,7 +487,10 @@
     "completionRate": "Completed",
     "paymentRate": "Paid",
     "avgPaySpeed": "Avg Pay Speed",
-    "memberSince": "Member since {{date}}"
+    "memberSince": "Member since {{date}}",
+    "updated": "Updated",
+    "lastUpdated": "Last updated",
+    "offerUpdated": "This offer has been updated by the agent"
   },
   "currency": {
     "label": "Currency",
@@ -513,6 +525,7 @@
     "jobAccepted": "Job accepted",
     "jobRejected": "Job rejected",
     "jobCompleted": "Job completed",
+    "offerUpdated": "Offer updated",
     "linkedinConnected": "LinkedIn verified successfully",
     "linkedinDisconnected": "LinkedIn disconnected",
     "telegramConnected": "Telegram connected",

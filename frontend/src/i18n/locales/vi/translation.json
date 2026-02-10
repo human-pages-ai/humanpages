@@ -228,6 +228,7 @@
       "awaitingPayment": "Đang chờ thanh toán...",
       "reviewReceived": "Đã nhận đánh giá",
       "from": "Từ",
+      "updated": "Đã cập nhật",
       "confirmReject": "Từ chối offer công việc này?",
       "status": {
         "PENDING": "Chờ xử lý",
@@ -267,10 +268,25 @@
       "showNeighborhood": "Hiển thị khu vực trên hồ sơ công khai của tôi",
       "hideContact": "Ẩn thông tin liên hệ khỏi hồ sơ công khai",
       "hideContactHelp": "Khi bật, email, Telegram, WhatsApp và phương thức thanh toán của bạn sẽ không hiển thị với người truy cập.",
-      "saving": "Đang lưu..."
+      "saving": "Đang lưu...",
+      "paymentInfo": "Thông tin thanh toán",
+      "defaultPaymentUsdc": "Thanh toán mặc định: USDC qua ví đã kết nối của bạn",
+      "walletConnected": "Ví đã kết nối",
+      "connectWalletPrompt": "Kết nối ví để nhận thanh toán USDC",
+      "alsoAcceptNonCrypto": "Tôi cũng chấp nhận thanh toán không dùng crypto",
+      "usdcWalletConnected": "USDC (ví đã kết nối)",
+      "howToPayYou": "Cách thanh toán cho bạn",
+      "paymentMethods": "Phương thức thanh toán",
+      "paymentMethodsPlaceholder": "vd., PayPal: paypal.me/ban, Venmo: @ban, chuyển khoản ngân hàng",
+      "paymentMethodsHelp": "Cho khách hàng biết cách thanh toán cho bạn",
+      "howToReachYou": "Cách liên hệ với bạn",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890"
     },
     "wallets": {
       "title": "Ví",
+      "paymentSetupTitle": "Thiết lập thanh toán",
+      "paymentSetupSubtitle": "USDC là phương thức thanh toán mặc định. Kết nối ví để nhận thanh toán.",
       "addWallet": "Thêm ví",
       "connectWallet": "Kết nối ví",
       "connectDescription": "Kết nối ví trình duyệt để xác minh quyền sở hữu và thêm vào hồ sơ của bạn.",
@@ -452,7 +468,10 @@
     "completionRate": "Hoàn Thành",
     "paymentRate": "Đã Trả",
     "avgPaySpeed": "Tốc Độ Trả Trung Bình",
-    "memberSince": "Thành viên từ {{date}}"
+    "memberSince": "Thành viên từ {{date}}",
+    "updated": "Đã cập nhật",
+    "lastUpdated": "Cập nhật lần cuối",
+    "offerUpdated": "Đề nghị này đã được đại lý cập nhật"
   },
   "errors": {
     "required": "Trường này là bắt buộc",
@@ -482,6 +501,7 @@
     "jobAccepted": "Đã chấp nhận công việc",
     "jobRejected": "Đã từ chối công việc",
     "jobCompleted": "Đã hoàn thành công việc",
+    "offerUpdated": "Đề nghị đã cập nhật",
     "telegramConnected": "Đã kết nối Telegram",
     "telegramDisconnected": "Đã ngắt kết nối Telegram",
     "accountDeleted": "Đã xóa tài khoản thành công",

@@ -256,6 +256,7 @@
       "awaitingPayment": "पेमेंट का इंतजार...",
       "reviewReceived": "रिव्यू मिला",
       "from": "से",
+      "updated": "अपडेट किया गया",
       "confirmReject": "यह जॉब ऑफर अस्वीकार करें?",
       "status": {
         "PENDING": "पेंडिंग",
@@ -295,10 +296,25 @@
       "showNeighborhood": "मेरी सार्वजनिक प्रोफ़ाइल पर पड़ोस दिखाएं",
       "hideContact": "सार्वजनिक प्रोफ़ाइल से संपर्क जानकारी छिपाएं",
       "hideContactHelp": "सक्षम होने पर, आपका ईमेल, टेलीग्राम, व्हाट्सएप और भुगतान विधियाँ विज़िटर्स को दिखाई नहीं देंगी।",
-      "saving": "सेव हो रहा है..."
+      "saving": "सेव हो रहा है...",
+      "howToPayYou": "आपको कैसे भुगतान करें",
+      "paymentMethods": "भुगतान के तरीके",
+      "paymentMethodsPlaceholder": "उदा., PayPal: paypal.me/you, Venmo: @you, बैंक ट्रांसफर",
+      "paymentMethodsHelp": "ग्राहकों को बताएं कि वे आपको कैसे भुगतान कर सकते हैं",
+      "howToReachYou": "आप तक कैसे पहुँचें",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+1234567890",
+      "paymentInfo": "भुगतान जानकारी",
+      "defaultPaymentUsdc": "डिफ़ॉल्ट भुगतान: आपके कनेक्टेड वॉलेट से USDC",
+      "walletConnected": "वॉलेट कनेक्ट है",
+      "connectWalletPrompt": "USDC भुगतान प्राप्त करने के लिए वॉलेट कनेक्ट करें",
+      "alsoAcceptNonCrypto": "मैं गैर-क्रिप्टो भुगतान भी स्वीकार करता/करती हूँ",
+      "usdcWalletConnected": "USDC (वॉलेट कनेक्ट है)"
     },
     "wallets": {
       "title": "वॉलेट्स",
+      "paymentSetupTitle": "भुगतान सेटअप",
+      "paymentSetupSubtitle": "USDC डिफ़ॉल्ट भुगतान विधि है। भुगतान प्राप्त करने के लिए वॉलेट कनेक्ट करें।",
       "addWallet": "वॉलेट जोड़ें",
       "connectWallet": "वॉलेट कनेक्ट करें",
       "connectDescription": "स्वामित्व सत्यापित करने और अपनी प्रोफ़ाइल में जोड़ने के लिए अपना ब्राउज़र वॉलेट कनेक्ट करें।",
@@ -452,7 +468,10 @@
     "completionRate": "पूर्ण",
     "paymentRate": "भुगतान किया",
     "avgPaySpeed": "औसत भुगतान गति",
-    "memberSince": "{{date}} से सदस्य"
+    "memberSince": "{{date}} से सदस्य",
+    "updated": "अपडेट किया गया",
+    "lastUpdated": "अंतिम अपडेट",
+    "offerUpdated": "यह प्रस्ताव एजेंट द्वारा अपडेट किया गया है"
   },
   "errors": {
     "required": "यह फील्ड आवश्यक है",
@@ -482,6 +501,7 @@
     "jobAccepted": "कार्य स्वीकार किया गया",
     "jobRejected": "कार्य अस्वीकार किया गया",
     "jobCompleted": "कार्य पूरा हुआ",
+    "offerUpdated": "प्रस्ताव अपडेट किया गया",
     "telegramConnected": "टेलीग्राम जुड़ा",
     "telegramDisconnected": "टेलीग्राम डिस्कनेक्ट हुआ",
     "accountDeleted": "खाता सफलतापूर्वक हटाया गया",

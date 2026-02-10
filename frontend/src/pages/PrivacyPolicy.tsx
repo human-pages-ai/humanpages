@@ -174,6 +174,13 @@ export default function PrivacyPolicy() {
             and <strong>auto-capture disabled</strong> (only explicit events are tracked).
           </p>
           <p>
+            <strong>Legitimate Interest Assessment:</strong> We rely on legitimate interest (Art.
+            6(1)(f)) for analytics because: (1) we have a genuine need to understand how features are
+            used to improve the platform; (2) we minimize data collected (no cookies, no auto-capture,
+            server-side IP only); (3) the impact on users is minimal; and (4) users can easily opt out
+            at any time from their dashboard, which immediately stops all tracking.
+          </p>
+          <p>
             <strong>You can opt out of analytics tracking at any time</strong> from your dashboard
             under Account Management. When opted out, we will not associate any analytics data with
             your account.
@@ -181,7 +188,11 @@ export default function PrivacyPolicy() {
 
           {/* Section 7: Third-Party Services */}
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">7. Third-Party Services</h2>
-          <p>We integrate with the following third-party services and maintain Data Processing Agreements (DPAs) where required:</p>
+          <p>
+            We integrate with the following third-party services. Where these services process personal
+            data on our behalf, we maintain Data Processing Agreements (DPAs) as required by GDPR
+            Article 28. Copies of signed DPAs are available upon request via our Facebook page.
+          </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-700">
             <li>
               <strong>PostHog (Analytics):</strong> Processes usage events and page views to help us
@@ -329,7 +340,7 @@ export default function PrivacyPolicy() {
             If you have questions about this Privacy Policy or want to exercise your data rights,
             reach out to us on our{' '}
             <a
-              href="https://facebook.com/humanpages"
+              href="https://www.facebook.com/HumanPagesAI/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700"
