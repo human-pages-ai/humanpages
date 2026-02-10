@@ -178,7 +178,8 @@
       "subtitle": "Sabihin sa mga ahente kung paano mo gustong mabayaran",
       "upfront": "Bayad Muna",
       "escrow": "Escrow",
-      "both": "Flexible (Alinman)"
+      "both": "Flexible (Alinman)",
+      "bothDesc": "Bayad muna, escrow, o pagkatapos makumpleto ang trabaho"
     },
     "workMode": {
       "title": "Mode ng Trabaho",
@@ -264,6 +265,8 @@
       "reject": "Tanggihan",
       "markComplete": "Markahang Kumpleto",
       "awaitingPayment": "Naghihintay ng bayad...",
+      "completeBeforePayment": "Maaari mo ring markahan na kumpleto ang trabahong ito bago ang bayad",
+      "awaitingPaymentAfterComplete": "Kumpleto — naghihintay ng bayad",
       "reviewReceived": "Natanggap ang review",
       "from": "Mula sa",
       "updated": "Na-update",

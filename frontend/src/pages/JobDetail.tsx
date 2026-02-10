@@ -82,7 +82,7 @@ export default function JobDetail() {
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -339,7 +339,20 @@ export default function JobDetail() {
                 </>
               )}
               {job.status === 'ACCEPTED' && (
-                <span className="text-sm text-blue-600 font-medium">{t('dashboard.jobs.awaitingPayment')}</span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-blue-600 font-medium">{t('dashboard.jobs.awaitingPayment')}</span>
+                  {job.human?.paymentPreference === 'BOTH' && (
+                    <>
+                      <span className="text-xs text-gray-500">{t('dashboard.jobs.completeBeforePayment')}</span>
+                      <button
+                        onClick={handleComplete}
+                        className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700"
+                      >
+                        {t('dashboard.jobs.markComplete')}
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
               {job.status === 'PAID' && (
                 <button

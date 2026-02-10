@@ -178,7 +178,8 @@
       "subtitle": "Cho đại lý biết bạn muốn được thanh toán như thế nào",
       "upfront": "Thanh toán trước",
       "escrow": "Ký quỹ",
-      "both": "Linh hoạt (Đều được)"
+      "both": "Linh hoạt (Đều được)",
+      "bothDesc": "Thanh toán trước, ký quỹ hoặc sau khi hoàn thành công việc"
     },
     "workMode": {
       "title": "Chế độ làm việc",
@@ -229,6 +230,8 @@
       "reject": "Từ chối",
       "markComplete": "Đánh dấu hoàn thành",
       "awaitingPayment": "Đang chờ thanh toán...",
+      "completeBeforePayment": "Bạn cũng có thể đánh dấu hoàn thành công việc này trước khi thanh toán",
+      "awaitingPaymentAfterComplete": "Hoàn thành — đang chờ thanh toán",
       "reviewReceived": "Đã nhận đánh giá",
       "from": "Từ",
       "updated": "Đã cập nhật",

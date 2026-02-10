@@ -95,6 +95,11 @@ export interface Job {
   agentId: string;
   agentName?: string;
   registeredAgent?: AgentProfile;
+  human?: {
+    id: string;
+    name: string;
+    paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
+  };
   title: string;
   description: string;
   category?: string;

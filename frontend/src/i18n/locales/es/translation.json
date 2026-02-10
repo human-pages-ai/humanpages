@@ -178,7 +178,8 @@
       "subtitle": "Indica a los agentes cómo prefieres recibir el pago",
       "upfront": "Pago por adelantado",
       "escrow": "Depósito en garantía",
-      "both": "Flexible (Cualquiera)"
+      "both": "Flexible (Cualquiera)",
+      "bothDesc": "Por adelantado, depósito en garantía o después de completar el trabajo"
     },
     "workMode": {
       "title": "Modo de Trabajo",
@@ -264,6 +265,8 @@
       "reject": "Rechazar",
       "markComplete": "Marcar Completo",
       "awaitingPayment": "Esperando pago...",
+      "completeBeforePayment": "También puedes marcar este trabajo como completo antes del pago",
+      "awaitingPaymentAfterComplete": "Completado — esperando pago",
       "reviewReceived": "Reseña recibida",
       "from": "De",
       "updated": "Actualizada",

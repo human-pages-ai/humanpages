@@ -187,7 +187,8 @@
       "subtitle": "Tell agents how you prefer to be paid for jobs",
       "upfront": "Payment Upfront",
       "escrow": "Escrow",
-      "both": "Flexible (Either)"
+      "both": "Flexible (Any)",
+      "bothDesc": "Upfront, escrow, or after job completion"
     },
     "workMode": {
       "title": "Work Mode",
@@ -248,6 +249,8 @@
       "reject": "Reject",
       "markComplete": "Mark Complete",
       "awaitingPayment": "Awaiting payment...",
+      "completeBeforePayment": "You can also mark this job complete before payment",
+      "awaitingPaymentAfterComplete": "Completed — awaiting payment",
       "reviewReceived": "Review received",
       "from": "From",
       "updated": "Updated",

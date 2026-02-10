@@ -178,7 +178,8 @@
       "subtitle": "告诉代理您希望如何接收工作报酬",
       "upfront": "预付款",
       "escrow": "托管付款",
-      "both": "灵活（均可）"
+      "both": "灵活（均可）",
+      "bothDesc": "预付、托管或工作完成后付款"
     },
     "workMode": {
       "title": "工作模式",
@@ -264,6 +265,8 @@
       "reject": "拒绝",
       "markComplete": "标记完成",
       "awaitingPayment": "等待付款...",
+      "completeBeforePayment": "您也可以在付款前将此工作标记为完成",
+      "awaitingPaymentAfterComplete": "已完成 — 等待付款",
       "reviewReceived": "已收到评价",
       "from": "来自",
       "updated": "已更新",

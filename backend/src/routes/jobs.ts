@@ -338,7 +338,7 @@ router.get('/:id', async (req, res) => {
       where: { id: req.params.id },
       include: {
         human: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, paymentPreference: true },
         },
         review: true,
         registeredAgent: {
@@ -705,11 +705,11 @@ router.patch('/:id/paid', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // CRITICAL: Only accept payment for ACCEPTED jobs
-    if (job.status !== 'ACCEPTED') {
+    // Only accept payment for ACCEPTED or COMPLETED jobs
+    if (job.status !== 'ACCEPTED' && job.status !== 'COMPLETED') {
       return res.status(400).json({
         error: 'Payment rejected',
-        reason: `Job must be in ACCEPTED status. Current status: ${job.status}`,
+        reason: `Job must be in ACCEPTED or COMPLETED status. Current status: ${job.status}`,
         hint: 'The human must accept the job before payment can be recorded.',
       });
     }
@@ -742,10 +742,12 @@ router.patch('/:id/paid', async (req, res) => {
     });
 
     // Payment verified! Update job status
+    // If job is already COMPLETED (pay-after-completion flow), keep it COMPLETED
+    const newStatus = job.status === 'COMPLETED' ? 'COMPLETED' : 'PAID';
     const updated = await prisma.job.update({
       where: { id: job.id },
       data: {
-        status: 'PAID',
+        status: newStatus,
         paymentTxHash: data.paymentTxHash,
         paymentNetwork: networkLower,
         paymentAmount: new Decimal(verification.amount),
@@ -807,6 +809,7 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
   try {
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
+      include: { human: { select: { paymentPreference: true } } },
     });
 
     if (!job) {
@@ -817,8 +820,13 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    // Allow PAID → COMPLETED always, and ACCEPTED → COMPLETED when preference is BOTH
     if (job.status !== 'PAID') {
-      return res.status(400).json({ error: `Cannot complete job in ${job.status} status` });
+      if (job.status === 'ACCEPTED' && job.human.paymentPreference === 'BOTH') {
+        // Allow completion before payment for flexible preference
+      } else {
+        return res.status(400).json({ error: `Cannot complete job in ${job.status} status` });
+      }
     }
 
     const updated = await prisma.job.update({

@@ -178,7 +178,8 @@
       "subtitle": "Indiquez aux agents comment vous préférez être payé",
       "upfront": "Paiement d'avance",
       "escrow": "Séquestre",
-      "both": "Flexible (les deux)"
+      "both": "Flexible (les deux)",
+      "bothDesc": "D'avance, séquestre ou après l'achèvement du travail"
     },
     "workMode": {
       "title": "Mode de travail",
@@ -229,6 +230,8 @@
       "reject": "Refuser",
       "markComplete": "Marquer comme terminé",
       "awaitingPayment": "En attente de paiement...",
+      "completeBeforePayment": "Vous pouvez aussi marquer ce travail comme terminé avant le paiement",
+      "awaitingPaymentAfterComplete": "Terminé — en attente de paiement",
       "reviewReceived": "Avis reçu",
       "from": "De",
       "confirmReject": "Refuser cette offre d'emploi ?",

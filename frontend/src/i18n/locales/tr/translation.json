@@ -178,7 +178,8 @@
       "subtitle": "Ajanlara nasıl ödeme almak istediğinizi bildirin",
       "upfront": "Peşin Ödeme",
       "escrow": "Emanet",
-      "both": "Esnek (Her ikisi)"
+      "both": "Esnek (Her ikisi)",
+      "bothDesc": "Peşin, emanet veya iş tamamlandıktan sonra"
     },
     "workMode": {
       "title": "Çalışma Modu",
@@ -264,6 +265,8 @@
       "reject": "Reddet",
       "markComplete": "Tamamlandı İşaretle",
       "awaitingPayment": "Ödeme bekleniyor...",
+      "completeBeforePayment": "Bu işi ödemeden önce de tamamlandı olarak işaretleyebilirsiniz",
+      "awaitingPaymentAfterComplete": "Tamamlandı — ödeme bekleniyor",
       "reviewReceived": "Değerlendirme alındı",
       "from": "Gönderen",
       "updated": "Güncellendi",

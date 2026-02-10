@@ -25,7 +25,7 @@ enum WorkMode {
 enum PaymentPreference {
   ESCROW    // Willing to use escrow
   UPFRONT   // Wants payment before starting work
-  BOTH      // Flexible — accepts either
+  BOTH      // Flexible — upfront, escrow, or after completion
 }
 
 // Agent lifecycle status

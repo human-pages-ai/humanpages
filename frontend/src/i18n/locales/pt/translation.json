@@ -178,7 +178,8 @@
       "subtitle": "Informe aos agentes como prefere receber o pagamento",
       "upfront": "Pagamento Antecipado",
       "escrow": "Garantia",
-      "both": "Flexível (Qualquer um)"
+      "both": "Flexível (Qualquer um)",
+      "bothDesc": "Antecipado, garantia ou após a conclusão do trabalho"
     },
     "workMode": {
       "title": "Modo de Trabalho",
@@ -229,6 +230,8 @@
       "reject": "Recusar",
       "markComplete": "Marcar como Concluído",
       "awaitingPayment": "Aguardando pagamento...",
+      "completeBeforePayment": "Você também pode marcar este trabalho como concluído antes do pagamento",
+      "awaitingPaymentAfterComplete": "Concluído — aguardando pagamento",
       "reviewReceived": "Avaliação recebida",
       "from": "De",
       "confirmReject": "Recusar esta oferta de trabalho?",
