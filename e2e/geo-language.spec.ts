@@ -106,17 +106,6 @@ test.describe('Geo-based Language Detection', () => {
   });
 
   test('cached result is used on second visit without re-fetching', async ({ page }) => {
-    // Pre-populate the cache by navigating first
-    await page.goto('/');
-    await page.evaluate(() => {
-      localStorage.removeItem('i18next_user_choice');
-      localStorage.removeItem('i18nextLng');
-      localStorage.setItem('i18next_ip_lang', JSON.stringify({
-        language: 'pt',
-        timestamp: Date.now(),
-      }));
-    });
-
     // Track fetch calls
     let geoFetchCount = 0;
     await page.route('**/api/geo/language', (route) => {
@@ -126,6 +115,16 @@ test.describe('Geo-based Language Detection', () => {
         contentType: 'application/json',
         body: JSON.stringify({ language: 'en', country: 'US', source: 'ip' }),
       });
+    });
+
+    // Pre-populate cache BEFORE navigation so main.tsx reads it synchronously on load
+    await page.addInitScript(() => {
+      localStorage.removeItem('i18next_user_choice');
+      localStorage.removeItem('i18nextLng');
+      localStorage.setItem('i18next_ip_lang', JSON.stringify({
+        language: 'pt',
+        timestamp: Date.now(),
+      }));
     });
 
     await page.goto('/');
