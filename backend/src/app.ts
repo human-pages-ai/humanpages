@@ -10,6 +10,7 @@ import humansRoutes from './routes/humans.js';
 import walletsRoutes from './routes/wallets.js';
 import servicesRoutes from './routes/services.js';
 import jobsRoutes from './routes/jobs.js';
+import agentActivationRoutes from './routes/agentActivation.js';
 import agentsRoutes from './routes/agents.js';
 import telegramRoutes from './routes/telegram.js';
 import sitemapRoutes from './routes/sitemap.js';
@@ -48,6 +49,7 @@ app.use('/api/humans', humansRoutes);
 app.use('/api/wallets', walletsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/agents/activate', agentActivationRoutes);
 app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 

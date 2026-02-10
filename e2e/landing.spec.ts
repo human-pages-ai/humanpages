@@ -13,7 +13,7 @@ test.describe('Landing Page', () => {
     await expect(signupLinks.first()).toBeVisible();
 
     // Task cards section – check a few tasks render
-    await expect(page.getByText('Photography', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Photography' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Research' })).toBeVisible();
   });
 

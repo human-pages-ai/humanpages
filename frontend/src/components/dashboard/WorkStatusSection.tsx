@@ -6,10 +6,12 @@ interface Props {
   emailNotifications: boolean;
   telegramNotifications: boolean;
   whatsappNotifications: boolean;
+  emailDigestMode: 'REALTIME' | 'HOURLY' | 'DAILY';
   saving: boolean;
   onToggleAvailability: () => void;
   onPaymentPreferenceChange: (pref: 'ESCROW' | 'UPFRONT' | 'BOTH') => void;
   onToggleNotification: (channel: 'email' | 'telegram' | 'whatsapp') => void;
+  onEmailDigestModeChange: (mode: 'REALTIME' | 'HOURLY' | 'DAILY') => void;
 }
 
 function Toggle({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled: boolean }) {
@@ -38,10 +40,12 @@ export default function WorkStatusSection({
   emailNotifications,
   telegramNotifications,
   whatsappNotifications,
+  emailDigestMode,
   saving,
   onToggleAvailability,
   onPaymentPreferenceChange,
   onToggleNotification,
+  onEmailDigestModeChange,
 }: Props) {
   const { t } = useTranslation();
 
@@ -49,6 +53,12 @@ export default function WorkStatusSection({
     { value: 'UPFRONT', labelKey: 'dashboard.paymentPreference.upfront' },
     { value: 'ESCROW', labelKey: 'dashboard.paymentPreference.escrow' },
     { value: 'BOTH', labelKey: 'dashboard.paymentPreference.both' },
+  ];
+
+  const DIGEST_OPTIONS: { value: 'REALTIME' | 'HOURLY' | 'DAILY'; labelKey: string }[] = [
+    { value: 'REALTIME', labelKey: 'dashboard.emailDigest.realtime' },
+    { value: 'HOURLY', labelKey: 'dashboard.emailDigest.hourly' },
+    { value: 'DAILY', labelKey: 'dashboard.emailDigest.daily' },
   ];
 
   const channels = [
@@ -102,6 +112,30 @@ export default function WorkStatusSection({
           ))}
         </div>
       </div>
+
+      {/* Email frequency / digest mode */}
+      {emailNotifications && isAvailable && (
+        <div className="pt-4 border-t border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dashboard.emailDigest.title')}</h3>
+          <p className="text-gray-500 text-xs mb-3">{t('dashboard.emailDigest.subtitle')}</p>
+          <div className="flex flex-wrap gap-2">
+            {DIGEST_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onEmailDigestModeChange(opt.value)}
+                disabled={saving}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                  emailDigestMode === opt.value
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
+                }`}
+              >
+                {t(opt.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Payment preference - only interactive when available */}
       <div className={`pt-4 border-t border-gray-100 ${!isAvailable ? 'opacity-50' : ''}`}>

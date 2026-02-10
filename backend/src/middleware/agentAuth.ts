@@ -6,6 +6,9 @@ export interface AgentAuthRequest extends Request {
   agent?: {
     id: string;
     name: string;
+    status: string;
+    activationExpiresAt: Date | null;
+    activationTier: string;
   };
 }
 
@@ -25,7 +28,7 @@ export async function authenticateAgent(req: AgentAuthRequest, res: Response, ne
   try {
     const agent = await prisma.agent.findUnique({
       where: { apiKeyPrefix: prefix },
-      select: { id: true, name: true, apiKeyHash: true },
+      select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true, activationTier: true },
     });
 
     if (!agent) {
@@ -43,7 +46,13 @@ export async function authenticateAgent(req: AgentAuthRequest, res: Response, ne
       data: { lastActiveAt: new Date() },
     }).catch(() => {});
 
-    req.agent = { id: agent.id, name: agent.name };
+    req.agent = {
+      id: agent.id,
+      name: agent.name,
+      status: agent.status,
+      activationExpiresAt: agent.activationExpiresAt,
+      activationTier: agent.activationTier,
+    };
     next();
   } catch {
     return res.status(500).json({ error: 'Internal server error' });
@@ -66,7 +75,7 @@ export async function optionalAgentAuth(req: AgentAuthRequest, _res: Response, n
   try {
     const agent = await prisma.agent.findUnique({
       where: { apiKeyPrefix: prefix },
-      select: { id: true, name: true, apiKeyHash: true },
+      select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true, activationTier: true },
     });
 
     if (!agent) {
@@ -84,7 +93,13 @@ export async function optionalAgentAuth(req: AgentAuthRequest, _res: Response, n
       data: { lastActiveAt: new Date() },
     }).catch(() => {});
 
-    req.agent = { id: agent.id, name: agent.name };
+    req.agent = {
+      id: agent.id,
+      name: agent.name,
+      status: agent.status,
+      activationExpiresAt: agent.activationExpiresAt,
+      activationTier: agent.activationTier,
+    };
   } catch {
     // Silent failure
   }

@@ -23,6 +23,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const Badge = lazy(() => import('./pages/Badge'));
 const JobDetail = lazy(() => import('./pages/JobDetail'));
+const ReportAgent = lazy(() => import('./pages/ReportAgent'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
@@ -156,6 +157,7 @@ function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/badge" element={<Badge />} />
+      <Route path="/report" element={<ReportAgent />} />
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/ai-agents-hiring-humans" element={<AiAgentsHiringHumans />} />
       <Route path="/blog/getting-paid-usdc-freelancers" element={<GettingPaidUsdc />} />

@@ -60,7 +60,7 @@ interface PublicHuman {
   humanityScore?: number;
   humanityProvider?: string;
   humanityVerifiedAt?: string;
-  wallets: Wallet[];
+  wallets?: Wallet[];
   services: Service[];
 }
 
@@ -300,10 +300,10 @@ export default function PublicProfile() {
             )}
 
             {/* Payment Methods */}
-            {(profile.wallets.length > 0 || profile.paymentMethods) && (
+            {((profile.wallets && profile.wallets.length > 0) || profile.paymentMethods) && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.profile.paymentMethods')}</h2>
-                {profile.wallets.length > 0 && (
+                {profile.wallets && profile.wallets.length > 0 && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

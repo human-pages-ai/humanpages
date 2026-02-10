@@ -25,7 +25,8 @@
     "error": "出错了",
     "success": "成功！",
     "free": "免费",
-    "noFees": "零手续费"
+    "noFees": "零手续费",
+    "backHome": "返回首页"
   },
   "nav": {
     "home": "首页",
@@ -222,6 +223,13 @@
       "telegramDesc": "接收工作邀约的Telegram消息",
       "whatsappLabel": "WhatsApp",
       "whatsappDesc": "接收工作邀约的WhatsApp消息"
+    },
+    "emailDigest": {
+      "title": "邮件频率",
+      "subtitle": "控制接收邮件通知的频率",
+      "realtime": "实时",
+      "hourly": "每小时摘要",
+      "daily": "每日摘要"
     },
     "account": {
       "dangerZone": "账户管理",
@@ -520,6 +528,26 @@
     "title": "页面未找到",
     "message": "您查找的页面不存在或已被移动。",
     "goHome": "返回首页"
+  },
+  "report": {
+    "title": "举报代理",
+    "description": "如果您认为此代理存在垃圾信息、欺诈或其他滥用行为，请提交举报。",
+    "invalidToken": "举报令牌无效或缺失。请使用电子邮件中的链接。",
+    "reasonLabel": "原因",
+    "selectReason": "选择原因",
+    "descriptionLabel": "补充说明（可选）",
+    "descriptionPlaceholder": "描述发生了什么...",
+    "submit": "提交举报",
+    "submitted": "举报已提交",
+    "submittedDesc": "谢谢。我们将审查您的举报，并在必要时采取行动。",
+    "error": "提交举报失败。请重试。",
+    "reasons": {
+      "spam": "垃圾信息",
+      "fraud": "欺诈",
+      "harassment": "骚扰",
+      "irrelevant": "无关报价",
+      "other": "其他"
+    }
   },
   "dev": {
     "hero": {

@@ -74,6 +74,11 @@ describe('Jobs API - Mutual Handshake', () => {
         apiKeyHash,
         apiKeyPrefix,
         verificationToken: crypto.randomBytes(32).toString('hex'),
+        status: 'ACTIVE',
+        activatedAt: new Date(),
+        activationMethod: 'SOCIAL',
+        activationTier: 'BASIC',
+        activationExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     });
     agentId = agent.id;

@@ -137,8 +137,8 @@ describe('Search API', () => {
       expect(response.body).toEqual([]);
     });
 
-    it('should include wallets in results', async () => {
-      // Add wallet to Alice directly in DB (search test, not wallet verification test)
+    it('should NOT include wallets in public search results (contact info stripped)', async () => {
+      // Add wallet to Alice directly in DB
       await prisma.wallet.create({
         data: { humanId: alice.id, network: 'ethereum', address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
       });
@@ -146,9 +146,8 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?skill=react&available=true');
 
       expect(response.status).toBe(200);
-      expect(response.body[0]).toHaveProperty('wallets');
-      expect(response.body[0].wallets).toHaveLength(1);
-      expect(response.body[0].wallets[0].address).toBe('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+      // Wallets should be stripped from public search results
+      expect(response.body[0]).not.toHaveProperty('wallets');
     });
 
     it('should include only active services in results', async () => {
@@ -178,7 +177,7 @@ describe('Search API', () => {
       });
     });
 
-    it('should expose contactEmail for public profiles', async () => {
+    it('should NOT expose contactEmail in public search (contact info stripped)', async () => {
       // Explicitly unhide contact info (hideContact defaults to true)
       await authRequest(alice.token)
         .patch('/api/humans/me')
@@ -187,9 +186,9 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?available=true');
 
       expect(response.status).toBe(200);
-      // contactEmail should be present when hideContact is false
+      // contactEmail should NOT be present — public search strips contact info
       const aliceResult = response.body.find((h: any) => h.name === 'Alice Smith');
-      expect(aliceResult).toHaveProperty('contactEmail');
+      expect(aliceResult).not.toHaveProperty('contactEmail');
     });
   });
 

@@ -48,7 +48,7 @@ export async function authenticateEither(req: EitherAuthRequest, res: Response, 
     try {
       const agent = await prisma.agent.findUnique({
         where: { apiKeyPrefix: prefix },
-        select: { id: true, name: true, apiKeyHash: true },
+        select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true },
       });
 
       if (agent) {
@@ -63,6 +63,9 @@ export async function authenticateEither(req: EitherAuthRequest, res: Response, 
           req.senderType = 'agent';
           req.senderId = agent.id;
           req.senderName = agent.name;
+          // Store status for requireActiveIfAgent middleware
+          (req as any).agentStatus = agent.status;
+          (req as any).agentActivationExpiresAt = agent.activationExpiresAt;
           return next();
         }
       }

@@ -28,6 +28,43 @@ enum PaymentPreference {
   BOTH      // Flexible — accepts either
 }
 
+// Agent lifecycle status
+enum AgentStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+// How the agent activated their account
+enum ActivationMethod {
+  SOCIAL
+  PAYMENT
+}
+
+// Reason for reporting an agent
+enum ReportReason {
+  SPAM
+  FRAUD
+  HARASSMENT
+  IRRELEVANT
+  OTHER
+}
+
+// Status of an abuse report
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+// Email notification delivery mode
+enum EmailDigestMode {
+  REALTIME
+  HOURLY
+  DAILY
+}
+
 model Human {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -78,6 +115,9 @@ model Human {
   // ===== PRIVACY =====
   hideContact     Boolean  @default(true) // Hide contact info from public profile
 
+  // ===== EMAIL DIGEST =====
+  emailDigestMode EmailDigestMode @default(REALTIME)
+
   // ===== ACTIVITY & REPUTATION (System Generated) =====
   lastActiveAt  DateTime @default(now()) // For deprioritizing ghosts
   createdAt     DateTime @default(now())
@@ -122,6 +162,8 @@ model Human {
   services      Service[]
   jobs          Job[]
   reviews       Review[]
+  agentReports  AgentReport[]
+  pendingNotifications PendingNotification[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -158,9 +200,64 @@ model Agent {
   lastActiveAt      DateTime  @default(now())
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  jobs              Job[]
+
+  // ===== ACTIVATION & GATING =====
+  status              AgentStatus      @default(PENDING)
+  activatedAt         DateTime?
+  activationMethod    ActivationMethod?
+  activationExpiresAt DateTime?
+  activationTier      String           @default("BASIC") // BASIC, PRO, WHALE
+  activationPlatform  String?          // "twitter", "linkedin", "github"
+  socialVerificationCode String?
+  socialCodeExpiresAt DateTime?
+  socialPostUrl       String?          // URL of verification post
+  socialAccountSize   Int?             // follower count at activation time
+  paymentTxHash       String?          @unique // prevents reuse of same tx
+  paymentNetwork      String?
+  paymentAmount       Decimal?         @db.Decimal(18, 6)
+
+  // ===== ABUSE TRACKING =====
+  abuseScore   Int @default(0)
+  abuseStrikes Int @default(0)
+
+  // Relations
+  jobs    Job[]
+  reports AgentReport[]
 
   @@index([lastActiveAt])
+  @@index([status])
+}
+
+model AgentReport {
+  id              String       @id @default(cuid())
+  agentId         String
+  reporterHumanId String
+  jobId           String?      // optional: the specific job that triggered the report
+  reason          ReportReason
+  description     String?      @db.VarChar(1000)
+  status          ReportStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+
+  agent   Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  reporter Human @relation(fields: [reporterHumanId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([reporterHumanId])
+  @@index([agentId, status])
+}
+
+model PendingNotification {
+  id        String   @id @default(cuid())
+  humanId   String
+  type      String   // "job_offer" | "job_message"
+  payload   Json
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+
+  human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([humanId, sentAt])
+  @@index([sentAt, createdAt])
 }
 
 model Job {

@@ -4,12 +4,74 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
+import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
+import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 
 const router = Router();
+
+// Tier-based rate limits for profile views
+const TIER_PROFILE_LIMITS: Record<string, number> = {
+  BASIC: 30,
+  PRO: 100,
+  WHALE: 300,
+};
+
+// Public select fields (no contact info, no wallets)
+const publicHumanSelect = {
+  id: true,
+  name: true,
+  username: true,
+  bio: true,
+  avatarUrl: true,
+  location: true,
+  neighborhood: true,
+  locationGranularity: true,
+  skills: true,
+  equipment: true,
+  languages: true,
+  isAvailable: true,
+  minRateUsdc: true,
+  rateCurrency: true,
+  minRateUsdEstimate: true,
+  rateType: true,
+  paymentPreference: true,
+  workMode: true,
+  linkedinVerified: true,
+  humanityVerified: true,
+  humanityScore: true,
+  humanityProvider: true,
+  humanityVerifiedAt: true,
+  lastActiveAt: true,
+  createdAt: true,
+  services: {
+    where: { isActive: true },
+    select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
+  },
+} as const;
+
+// Full select fields for active agents (includes contact info + wallets)
+const fullHumanSelect = {
+  ...publicHumanSelect,
+  contactEmail: true,
+  telegram: true,
+  whatsapp: true,
+  signal: true,
+  paymentMethods: true,
+  hideContact: true,
+  linkedinUrl: true,
+  twitterUrl: true,
+  githubUrl: true,
+  instagramUrl: true,
+  youtubeUrl: true,
+  websiteUrl: true,
+  wallets: {
+    select: { network: true, chain: true, address: true, label: true, isPrimary: true },
+  },
+} as const;
 
 // Helper function to validate URL domain
 const isUrlFromDomain = (url: string, domains: string[]) => {
@@ -103,6 +165,9 @@ const updateProfileSchema = z.object({
 
   // Analytics opt-out (GDPR)
   analyticsOptOut: z.boolean().optional(),
+
+  // Email digest mode
+  emailDigestMode: z.enum(['REALTIME', 'HOURLY', 'DAILY']).optional(),
 
   // Social profiles
   linkedinUrl: z.string().url().refine(
@@ -488,59 +553,16 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       };
     }
 
-    // Fetch humans
+    // Fetch humans (public: no contact info, no wallets)
     let humans = await prisma.human.findMany({
       where,
       take: Math.min(parseInt(limit as string) || 20, 100),
       skip: parseInt(offset as string) || 0,
       orderBy: { lastActiveAt: 'desc' },
       select: {
-        id: true,
-        name: true,
-        username: true,
-        bio: true,
-        avatarUrl: true,
-        location: true,
-        neighborhood: true,
-        locationGranularity: true,
+        ...publicHumanSelect,
         locationLat: true,
         locationLng: true,
-        skills: true,
-        equipment: true,
-        languages: true,
-        isAvailable: true,
-        minRateUsdc: true,
-        rateCurrency: true,
-        minRateUsdEstimate: true,
-        rateType: true,
-        paymentPreference: true,
-        workMode: true,
-        contactEmail: true,
-        telegram: true,
-        whatsapp: true,
-        signal: true,
-        paymentMethods: true,
-        hideContact: true,
-        linkedinUrl: true,
-        linkedinVerified: true,
-        twitterUrl: true,
-        githubUrl: true,
-        instagramUrl: true,
-        youtubeUrl: true,
-        websiteUrl: true,
-        humanityVerified: true,
-        humanityScore: true,
-        humanityProvider: true,
-        humanityVerifiedAt: true,
-        lastActiveAt: true,
-        createdAt: true,
-        wallets: {
-          select: { network: true, chain: true, address: true, label: true, isPrimary: true },
-        },
-        services: {
-          where: { isActive: true },
-          select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
-        },
       },
     });
 
@@ -587,17 +609,17 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       ])
     );
 
-    // Attach stats to each human, strip coords, and filter hidden contact info
+    // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = humans.map((h) => {
       const { locationLat, locationLng, ...rest } = h;
-      return filterHiddenContact({
+      return {
         ...rest,
         reputation: {
           jobsCompleted: jobCountMap.get(h.id) || 0,
           avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
           reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
         },
-      });
+      };
     });
 
     // Track search in PostHog
@@ -615,57 +637,61 @@ router.get('/search', searchRateLimiter, async (req, res) => {
   }
 });
 
-// Get specific human by ID (public)
+// Get full profile with contact info (active agents only, tier-based rate limit)
+const profileViewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 300, // max tier limit; actual enforcement below
+  message: { error: 'Profile view rate limit exceeded' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AgentAuthRequest) => req.agent?.id || 'unknown',
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+router.get('/:id/profile', profileViewLimiter, authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const agent = req.agent!;
+
+    // Check tier-specific rate limit
+    const tierLimit = TIER_PROFILE_LIMITS[agent.activationTier] || TIER_PROFILE_LIMITS.BASIC;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    // Use a simple in-memory approach: we count via a header from express-rate-limit
+    // The profileViewLimiter already tracks the count, but we check tier here
+    const remaining = parseInt(res.getHeader('X-RateLimit-Remaining') as string || '999');
+    const used = 300 - remaining;
+    if (used > tierLimit) {
+      return res.status(429).json({
+        error: 'Profile view rate limit exceeded',
+        message: `Your ${agent.activationTier} tier allows ${tierLimit} profile views per hour.`,
+        tier: agent.activationTier,
+        limit: tierLimit,
+      });
+    }
+
+    const human = await prisma.human.findFirst({
+      where: { id: req.params.id, emailVerified: true },
+      select: fullHumanSelect,
+    });
+
+    if (!human) {
+      return res.status(404).json({ error: 'Human not found' });
+    }
+
+    const reputation = await getReputationStats(human.id);
+    res.json(filterHiddenContact({ ...human, reputation }));
+  } catch (error) {
+    logger.error({ err: error }, 'Get full profile error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get specific human by ID (public — no contact info)
 router.get('/:id', async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
       where: { id: req.params.id, emailVerified: true },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        bio: true,
-        avatarUrl: true,
-        location: true,
-        neighborhood: true,
-        locationGranularity: true,
-        skills: true,
-        equipment: true,
-        languages: true,
-        isAvailable: true,
-        minRateUsdc: true,
-        rateCurrency: true,
-        minRateUsdEstimate: true,
-        rateType: true,
-        paymentPreference: true,
-        workMode: true,
-        contactEmail: true,
-        telegram: true,
-        whatsapp: true,
-        signal: true,
-        paymentMethods: true,
-        hideContact: true,
-        linkedinUrl: true,
-        linkedinVerified: true,
-        twitterUrl: true,
-        githubUrl: true,
-        instagramUrl: true,
-        youtubeUrl: true,
-        websiteUrl: true,
-        humanityVerified: true,
-        humanityScore: true,
-        humanityProvider: true,
-        humanityVerifiedAt: true,
-        lastActiveAt: true,
-        createdAt: true,
-        wallets: {
-          select: { network: true, chain: true, address: true, label: true, isPrimary: true },
-        },
-        services: {
-          where: { isActive: true },
-          select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
-        },
-      },
+      select: publicHumanSelect,
     });
 
     if (!human) {
@@ -677,64 +703,19 @@ router.get('/:id', async (req, res) => {
     trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id });
 
     const reputation = await getReputationStats(human.id);
-    res.json(filterHiddenContact({ ...human, reputation }));
+    res.json({ ...human, reputation });
   } catch (error) {
     logger.error({ err: error }, 'Get human error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get human by username (public)
+// Get human by username (public — no contact info)
 router.get('/u/:username', async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
       where: { username: req.params.username, emailVerified: true },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        bio: true,
-        avatarUrl: true,
-        location: true,
-        neighborhood: true,
-        locationGranularity: true,
-        skills: true,
-        equipment: true,
-        languages: true,
-        isAvailable: true,
-        minRateUsdc: true,
-        rateCurrency: true,
-        minRateUsdEstimate: true,
-        rateType: true,
-        paymentPreference: true,
-        workMode: true,
-        contactEmail: true,
-        telegram: true,
-        whatsapp: true,
-        signal: true,
-        paymentMethods: true,
-        hideContact: true,
-        linkedinUrl: true,
-        linkedinVerified: true,
-        twitterUrl: true,
-        githubUrl: true,
-        instagramUrl: true,
-        youtubeUrl: true,
-        websiteUrl: true,
-        humanityVerified: true,
-        humanityScore: true,
-        humanityProvider: true,
-        humanityVerifiedAt: true,
-        lastActiveAt: true,
-        createdAt: true,
-        wallets: {
-          select: { network: true, chain: true, address: true, label: true, isPrimary: true },
-        },
-        services: {
-          where: { isActive: true },
-          select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
-        },
-      },
+      select: publicHumanSelect,
     });
 
     if (!human) {
@@ -742,7 +723,7 @@ router.get('/u/:username', async (req, res) => {
     }
 
     const reputation = await getReputationStats(human.id);
-    res.json(filterHiddenContact({ ...human, reputation }));
+    res.json({ ...human, reputation });
   } catch (error) {
     logger.error({ err: error }, 'Get human by username error');
     res.status(500).json({ error: 'Internal server error' });

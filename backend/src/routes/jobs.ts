@@ -5,7 +5,9 @@ import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
+import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.js';
+import { requireActiveIfAgent } from '../middleware/requireActiveAgent.js';
 import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
 import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
 import {
@@ -108,8 +110,8 @@ const reviewSchema = z.object({
 const RATE_LIMIT_OFFERS = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-// Create a job offer (requires registered agent with API key)
-router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest, res) => {
+// Create a job offer (requires registered + activated agent)
+router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
   try {
     const data = createJobSchema.parse(req.body);
     const agent = req.agent!;
@@ -288,6 +290,8 @@ router.post('/', ipRateLimiter, authenticateAgent, async (req: AgentAuthRequest,
         category: data.category,
         language: human.preferredLanguage,
         jobDetailUrl,
+        jobId: job.id,
+        agentId: agent.id,
       }).catch((err) => logger.error({ err }, 'Email notification failed'));
     }
 
@@ -910,7 +914,7 @@ const messageSchema = z.object({
 });
 
 // Send a message on a job
-router.post('/:id/messages', messageRateLimiter, authenticateEither, async (req: EitherAuthRequest, res) => {
+router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
   try {
     const data = messageSchema.parse(req.body);
 

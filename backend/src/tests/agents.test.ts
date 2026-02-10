@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
 import { prisma } from '../lib/prisma.js';
-import { cleanDatabase, createTestUser, createTestAgent, createTestUserWithProfile } from './helpers.js';
+import { cleanDatabase, createTestUser, createTestAgent, createActiveTestAgent, createTestUserWithProfile } from './helpers.js';
 
 describe('Agent Identity & Reputation', () => {
   beforeEach(async () => {
@@ -172,7 +172,7 @@ describe('Agent Identity & Reputation', () => {
 
   describe('Job creation with agent key', () => {
     it('should create job linked to registered agent', async () => {
-      const agent = await createTestAgent();
+      const agent = await createActiveTestAgent();
       const user = await createTestUserWithProfile({ emailVerified: true });
 
       const res = await request(app)
@@ -215,7 +215,7 @@ describe('Agent Identity & Reputation', () => {
     });
 
     it('should use custom agentName when provided', async () => {
-      const agent = await createTestAgent({ name: 'Default Name' });
+      const agent = await createActiveTestAgent({ name: 'Default Name' });
       const user = await createTestUserWithProfile({ emailVerified: true });
 
       const res = await request(app)
@@ -294,7 +294,7 @@ describe('Agent Identity & Reputation', () => {
 
   describe('Rate limiting for registered agents', () => {
     it('should allow up to 20 jobs per hour for registered agents', async () => {
-      const agent = await createTestAgent();
+      const agent = await createActiveTestAgent();
       const user = await createTestUserWithProfile({ emailVerified: true });
 
       // Create a job and check the rate limit info

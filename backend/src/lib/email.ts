@@ -95,6 +95,13 @@ async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<
   return false;
 }
 
+export function generateReportUrl(humanId: string, agentId: string, jobId?: string): string {
+  const payload: any = { humanId, agentId, action: 'report' };
+  if (jobId) payload.jobId = jobId;
+  const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '90d' });
+  return `${FRONTEND_URL}/report?token=${token}`;
+}
+
 interface JobOfferEmailData {
   humanName: string;
   humanEmail: string;
@@ -106,6 +113,8 @@ interface JobOfferEmailData {
   category?: string;
   language?: string;
   jobDetailUrl?: string;
+  jobId?: string;
+  agentId?: string;
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
@@ -116,6 +125,7 @@ export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolea
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+  const reportUrl = data.agentId ? generateReportUrl(data.humanId, data.agentId, data.jobId) : null;
 
   const textContent = `
 ${t('email.jobOffer.greeting', { name: data.humanName })}
@@ -136,7 +146,7 @@ ${data.jobDetailUrl || `${FRONTEND_URL}/dashboard`}
 ---
 ${t('email.jobOffer.footer')}
 
-
+${reportUrl ? `Report this agent: ${reportUrl}` : ''}
 To unsubscribe from email notifications: ${unsubscribeUrl}
   `.trim();
 
@@ -205,6 +215,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
     </div>
     <div class="footer">
       <p>${t('email.jobOffer.footer')}</p>
+      ${reportUrl ? `<p style="margin-top: 8px;"><a href="${reportUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Report this agent</a></p>` : ''}
       <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
     </div>
   </div>
@@ -568,6 +579,192 @@ Human Pages - Get hired for real-world tasks
     text: textContent,
     html: htmlContent,
   });
+}
+
+// ===== DIGEST EMAIL =====
+
+interface DigestEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  language?: string;
+  notifications: Array<{
+    type: string;
+    payload: any;
+    createdAt: Date;
+  }>;
+}
+
+export async function sendDigestEmail(data: DigestEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+  const count = data.notifications.length;
+
+  const jobOffers = data.notifications.filter(n => n.type === 'job_offer');
+  const messages = data.notifications.filter(n => n.type === 'job_message');
+
+  let textItems = '';
+  for (const n of data.notifications) {
+    if (n.type === 'job_offer') {
+      textItems += `- New offer: ${n.payload.jobTitle} ($${n.payload.priceUsdc} USDC) from ${n.payload.agentName || 'an agent'}\n`;
+    } else if (n.type === 'job_message') {
+      textItems += `- Message from ${n.payload.agentName} on "${n.payload.jobTitle}"\n`;
+    }
+  }
+
+  const textContent = `
+${t('email.jobOffer.greeting', { name: data.humanName })}
+
+You have ${count} new notification${count !== 1 ? 's' : ''}:
+
+${textItems}
+View your dashboard: ${FRONTEND_URL}/dashboard
+
+---
+${t('email.jobOffer.footer')}
+
+To unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  let htmlCards = '';
+  for (const n of data.notifications) {
+    if (n.type === 'job_offer') {
+      htmlCards += `
+        <div style="background:#fff;padding:16px;border-radius:8px;margin:8px 0;border:1px solid #e5e7eb;">
+          <strong>${n.payload.jobTitle}</strong>
+          ${n.payload.agentName ? `<br><span style="color:#6b7280;">From: ${n.payload.agentName}</span>` : ''}
+          <br><span style="color:#059669;font-weight:bold;font-size:18px;">$${n.payload.priceUsdc} USDC</span>
+        </div>`;
+    } else if (n.type === 'job_message') {
+      htmlCards += `
+        <div style="background:#fff;padding:16px;border-radius:8px;margin:8px 0;border:1px solid #e5e7eb;border-left:4px solid #4F46E5;">
+          <strong>Message from ${n.payload.agentName}</strong>
+          <br><span style="color:#6b7280;">On: ${n.payload.jobTitle}</span>
+        </div>`;
+    }
+  }
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #ffffff; color: #1f2937; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; }
+    .header h1 { margin: 0; color: #ffffff; font-size: 20px; }
+    .content { background-color: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; }
+    .footer { text-align: center; padding: 20px; }
+    .footer p { color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>You have ${count} new notification${count !== 1 ? 's' : ''}</h1>
+    </div>
+    <div class="content">
+      <p>${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+      ${jobOffers.length > 0 ? `<p><strong>${jobOffers.length} new job offer${jobOffers.length !== 1 ? 's' : ''}</strong></p>` : ''}
+      ${messages.length > 0 ? `<p><strong>${messages.length} new message${messages.length !== 1 ? 's' : ''}</strong></p>` : ''}
+      ${htmlCards}
+      <a href="${FRONTEND_URL}/dashboard" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;margin-top:16px;">View Dashboard</a>
+    </div>
+    <div class="footer">
+      <p>${t('email.jobOffer.footer')}</p>
+      <p style="margin-top: 12px;"><a href="${unsubscribeUrl}" style="color: #9ca3af; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `${count} new notification${count !== 1 ? 's' : ''} - Human Pages`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
+// ===== SEND OR QUEUE NOTIFICATION =====
+
+// Lazy import prisma to avoid circular dependency issues
+let _prisma: any = null;
+async function getPrisma() {
+  if (!_prisma) {
+    const mod = await import('./prisma.js');
+    _prisma = mod.prisma;
+  }
+  return _prisma;
+}
+
+// Per-recipient throttle: max 10 emails/hour in REALTIME mode
+const recentEmailCounts = new Map<string, { count: number; resetAt: number }>();
+const MAX_REALTIME_PER_HOUR = 10;
+const AUTO_SWITCH_THRESHOLD = 5;
+
+export async function sendOrQueueNotification(
+  humanId: string,
+  type: 'job_offer' | 'job_message',
+  payload: any,
+  sendFn: () => Promise<boolean>
+): Promise<boolean> {
+  const prisma = await getPrisma();
+
+  const human = await prisma.human.findUnique({
+    where: { id: humanId },
+    select: { emailDigestMode: true },
+  });
+
+  if (!human) return false;
+
+  const mode = human.emailDigestMode || 'REALTIME';
+
+  if (mode === 'HOURLY' || mode === 'DAILY') {
+    // Queue for digest
+    await prisma.pendingNotification.create({
+      data: { humanId, type, payload },
+    });
+    return true;
+  }
+
+  // REALTIME mode — check throttle
+  const now = Date.now();
+  let tracker = recentEmailCounts.get(humanId);
+  if (!tracker || now > tracker.resetAt) {
+    tracker = { count: 0, resetAt: now + 60 * 60 * 1000 };
+    recentEmailCounts.set(humanId, tracker);
+  }
+
+  tracker.count++;
+
+  // Auto-switch to HOURLY if too many in one hour
+  if (tracker.count > AUTO_SWITCH_THRESHOLD) {
+    await prisma.human.update({
+      where: { id: humanId },
+      data: { emailDigestMode: 'HOURLY' },
+    });
+    // Queue this notification
+    await prisma.pendingNotification.create({
+      data: { humanId, type, payload },
+    });
+    logger.info({ humanId, count: tracker.count }, 'Auto-switched to HOURLY digest due to high email volume');
+    return true;
+  }
+
+  if (tracker.count > MAX_REALTIME_PER_HOUR) {
+    // Queue instead of sending
+    await prisma.pendingNotification.create({
+      data: { humanId, type, payload },
+    });
+    return true;
+  }
+
+  // Send immediately
+  return sendFn();
 }
 
 // Verify email configuration on startup

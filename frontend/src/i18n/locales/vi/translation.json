@@ -25,7 +25,8 @@
     "error": "Đã xảy ra lỗi",
     "success": "Thành công!",
     "free": "Miễn phí",
-    "noFees": "Không phí"
+    "noFees": "Không phí",
+    "backHome": "Về trang chủ"
   },
   "nav": {
     "home": "Trang chủ",
@@ -359,6 +360,13 @@
       "whatsappLabel": "WhatsApp",
       "whatsappDesc": "Nhận tin nhắn WhatsApp cho lời mời việc làm"
     },
+    "emailDigest": {
+      "title": "Tần suất Email",
+      "subtitle": "Kiểm soát tần suất nhận thông báo email",
+      "realtime": "Thời gian thực",
+      "hourly": "Tóm tắt theo giờ",
+      "daily": "Tóm tắt hàng ngày"
+    },
     "account": {
       "dangerZone": "Quản lý Tài khoản",
       "exportTitle": "Xuất Dữ liệu",
@@ -515,6 +523,26 @@
     "title": "Không tìm thấy trang",
     "message": "Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.",
     "goHome": "Về trang chủ"
+  },
+  "report": {
+    "title": "Báo cáo Đại lý",
+    "description": "Nếu bạn cho rằng đại lý này đang tham gia spam, lừa đảo hoặc hành vi lạm dụng khác, vui lòng gửi báo cáo.",
+    "invalidToken": "Token báo cáo không hợp lệ hoặc bị thiếu. Vui lòng sử dụng liên kết từ email của bạn.",
+    "reasonLabel": "Lý do",
+    "selectReason": "Chọn lý do",
+    "descriptionLabel": "Chi tiết bổ sung (tùy chọn)",
+    "descriptionPlaceholder": "Mô tả điều gì đã xảy ra...",
+    "submit": "Gửi Báo cáo",
+    "submitted": "Đã Gửi Báo cáo",
+    "submittedDesc": "Cảm ơn bạn. Chúng tôi sẽ xem xét báo cáo của bạn và thực hiện hành động nếu cần thiết.",
+    "error": "Không gửi được báo cáo. Vui lòng thử lại.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Lừa đảo",
+      "harassment": "Quấy rối",
+      "irrelevant": "Đề nghị không liên quan",
+      "other": "Khác"
+    }
   },
   "dev": {
     "hero": {

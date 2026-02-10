@@ -3,9 +3,11 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import dns from 'dns/promises';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
 
 const router = Router();
@@ -283,6 +285,129 @@ router.post('/:id/verify-domain', authenticateAgent, async (req: AgentAuthReques
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Verify domain error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Rate limit reports: 3 per human per day
+const reportLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'Too many reports. Limit: 3 per day.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: any) => req.reporterHumanId || req.userId || req.ip || 'unknown',
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const reportSchema = z.object({
+  reason: z.enum(['SPAM', 'FRAUD', 'HARASSMENT', 'IRRELEVANT', 'OTHER']),
+  description: z.string().max(1000).optional(),
+  jobId: z.string().optional(),
+  token: z.string().optional(), // report JWT token from email link
+});
+
+// POST /api/agents/:id/report — report an agent for abuse
+router.post('/:id/report', reportLimiter, async (req, res) => {
+  try {
+    const data = reportSchema.parse(req.body);
+    const agentId = req.params.id;
+
+    // Determine reporter identity: either JWT token or report token from email
+    let reporterHumanId: string | null = null;
+    let reportJobId = data.jobId;
+
+    if (data.token) {
+      // Verify report token from email link
+      try {
+        const payload = jwt.verify(data.token, process.env.JWT_SECRET!) as {
+          humanId: string;
+          agentId: string;
+          jobId?: string;
+          action: string;
+        };
+        if (payload.action !== 'report' || payload.agentId !== agentId) {
+          return res.status(400).json({ error: 'Invalid report token' });
+        }
+        reporterHumanId = payload.humanId;
+        if (payload.jobId && !reportJobId) reportJobId = payload.jobId;
+      } catch {
+        return res.status(400).json({ error: 'Invalid or expired report token' });
+      }
+    } else {
+      // Try JWT auth
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ error: 'Authentication required (JWT or report token)' });
+      }
+      try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+        reporterHumanId = payload.userId;
+      } catch {
+        return res.status(401).json({ error: 'Invalid authentication token' });
+      }
+    }
+
+    if (!reporterHumanId) {
+      return res.status(401).json({ error: 'Could not identify reporter' });
+    }
+
+    // Set for rate limiter
+    (req as any).reporterHumanId = reporterHumanId;
+
+    // Verify agent exists
+    const agent = await prisma.agent.findUnique({
+      where: { id: agentId },
+      select: { id: true, abuseScore: true, abuseStrikes: true },
+    });
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    // Create report and increment abuse score atomically
+    const [report] = await prisma.$transaction([
+      prisma.agentReport.create({
+        data: {
+          agentId,
+          reporterHumanId,
+          jobId: reportJobId,
+          reason: data.reason,
+          description: data.description,
+        },
+      }),
+      prisma.agent.update({
+        where: { id: agentId },
+        data: { abuseScore: { increment: 1 } },
+      }),
+    ]);
+
+    // Check thresholds for auto-suspension/ban
+    const nonDismissedCount = await prisma.agentReport.count({
+      where: { agentId, status: { not: 'DISMISSED' } },
+    });
+
+    if (nonDismissedCount >= 5) {
+      await prisma.agent.update({
+        where: { id: agentId },
+        data: { status: 'BANNED', abuseStrikes: { increment: 1 } },
+      });
+      logger.info({ agentId, reportCount: nonDismissedCount }, 'Agent auto-banned');
+    } else if (nonDismissedCount >= 3) {
+      await prisma.agent.update({
+        where: { id: agentId },
+        data: { status: 'SUSPENDED', abuseStrikes: { increment: 1 } },
+      });
+      logger.info({ agentId, reportCount: nonDismissedCount }, 'Agent auto-suspended');
+    }
+
+    res.status(201).json({ id: report.id, message: 'Report submitted' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Report agent error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

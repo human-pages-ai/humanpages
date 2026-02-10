@@ -66,6 +66,7 @@ export interface Profile {
   telegramNotifications?: boolean;
   whatsappNotifications?: boolean;
   analyticsOptOut?: boolean;
+  emailDigestMode?: 'REALTIME' | 'HOURLY' | 'DAILY';
 }
 
 export interface AgentProfile {

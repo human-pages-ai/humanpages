@@ -25,7 +25,8 @@
     "error": "Bir şeyler yanlış gitti",
     "success": "Başarılı!",
     "free": "Ücretsiz",
-    "noFees": "Komisyon yok"
+    "noFees": "Komisyon yok",
+    "backHome": "Ana sayfaya dön"
   },
   "nav": {
     "home": "Ana Sayfa",
@@ -222,6 +223,13 @@
       "telegramDesc": "İş teklifleri için Telegram mesajları alın",
       "whatsappLabel": "WhatsApp",
       "whatsappDesc": "İş teklifleri için WhatsApp mesajları alın"
+    },
+    "emailDigest": {
+      "title": "E-posta Sıklığı",
+      "subtitle": "E-posta bildirimlerini ne sıklıkta alacağınızı kontrol edin",
+      "realtime": "Gerçek Zamanlı",
+      "hourly": "Saatlik Özet",
+      "daily": "Günlük Özet"
     },
     "account": {
       "dangerZone": "Hesap Yönetimi",
@@ -515,6 +523,26 @@
     "title": "Sayfa bulunamadı",
     "message": "Aradığınız sayfa mevcut değil veya taşınmış.",
     "goHome": "Ana sayfaya git"
+  },
+  "report": {
+    "title": "Ajanı Bildir",
+    "description": "Bu ajanın spam, dolandırıcılık veya diğer kötüye kullanım davranışlarında bulunduğunu düşünüyorsanız, lütfen bir rapor gönderin.",
+    "invalidToken": "Geçersiz veya eksik rapor tokeni. Lütfen e-postanızdaki bağlantıyı kullanın.",
+    "reasonLabel": "Sebep",
+    "selectReason": "Bir sebep seçin",
+    "descriptionLabel": "Ek detaylar (isteğe bağlı)",
+    "descriptionPlaceholder": "Ne olduğunu açıklayın...",
+    "submit": "Rapor Gönder",
+    "submitted": "Rapor Gönderildi",
+    "submittedDesc": "Teşekkürler. Raporunuzu inceleyeceğiz ve gerekirse işlem yapacağız.",
+    "error": "Rapor gönderilemedi. Lütfen tekrar deneyin.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Dolandırıcılık",
+      "harassment": "Taciz",
+      "irrelevant": "İlgisiz teklifler",
+      "other": "Diğer"
+    }
   },
   "dev": {
     "hero": {

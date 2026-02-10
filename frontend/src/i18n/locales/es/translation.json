@@ -25,7 +25,8 @@
     "error": "Algo salió mal",
     "success": "¡Éxito!",
     "free": "Gratis",
-    "noFees": "Sin comisiones"
+    "noFees": "Sin comisiones",
+    "backHome": "Volver al inicio"
   },
   "nav": {
     "home": "Inicio",
@@ -222,6 +223,13 @@
       "telegramDesc": "Recibir mensajes de Telegram para ofertas de trabajo",
       "whatsappLabel": "WhatsApp",
       "whatsappDesc": "Recibir mensajes de WhatsApp para ofertas de trabajo"
+    },
+    "emailDigest": {
+      "title": "Frecuencia de Correos",
+      "subtitle": "Controla con qué frecuencia recibes notificaciones por correo",
+      "realtime": "Tiempo Real",
+      "hourly": "Resumen Horario",
+      "daily": "Resumen Diario"
     },
     "account": {
       "dangerZone": "Gestión de Cuenta",
@@ -520,6 +528,26 @@
     "title": "Página no encontrada",
     "message": "La página que buscas no existe o ha sido movida.",
     "goHome": "Ir al inicio"
+  },
+  "report": {
+    "title": "Reportar Agente",
+    "description": "Si crees que este agente está realizando spam, fraude u otro comportamiento abusivo, por favor envía un reporte.",
+    "invalidToken": "Token de reporte inválido o faltante. Por favor usa el enlace de tu correo electrónico.",
+    "reasonLabel": "Razón",
+    "selectReason": "Selecciona una razón",
+    "descriptionLabel": "Detalles adicionales (opcional)",
+    "descriptionPlaceholder": "Describe lo que sucedió...",
+    "submit": "Enviar Reporte",
+    "submitted": "Reporte Enviado",
+    "submittedDesc": "Gracias. Revisaremos tu reporte y tomaremos acción si es necesario.",
+    "error": "Error al enviar el reporte. Por favor intenta de nuevo.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraude",
+      "harassment": "Acoso",
+      "irrelevant": "Ofertas irrelevantes",
+      "other": "Otro"
+    }
   },
   "dev": {
     "hero": {

@@ -25,7 +25,8 @@
     "error": "May nangyaring mali",
     "success": "Tagumpay!",
     "free": "Libre",
-    "noFees": "Walang bayad"
+    "noFees": "Walang bayad",
+    "backHome": "Bumalik sa home"
   },
   "nav": {
     "home": "Home",
@@ -208,6 +209,13 @@
       "telegramDesc": "Tumanggap ng Telegram message para sa mga job offer",
       "whatsappLabel": "WhatsApp",
       "whatsappDesc": "Tumanggap ng WhatsApp message para sa mga job offer"
+    },
+    "emailDigest": {
+      "title": "Dalas ng Email",
+      "subtitle": "Kontrolin kung gaano kadalas ka makakatanggap ng email notifications",
+      "realtime": "Realtime",
+      "hourly": "Hourly Digest",
+      "daily": "Daily Digest"
     },
     "account": {
       "dangerZone": "Pamamahala ng Account",
@@ -515,6 +523,26 @@
     "title": "Hindi natagpuan ang pahina",
     "message": "Ang pahina na hinahanap mo ay hindi umiiral o inilipat na.",
     "goHome": "Pumunta sa home"
+  },
+  "report": {
+    "title": "I-report ang Agent",
+    "description": "Kung naniniwala ka na ang agent na ito ay gumagawa ng spam, panloloko, o iba pang abusadong pag-uugali, mangyaring magsumite ng report.",
+    "invalidToken": "Invalid o nawawalang report token. Mangyaring gamitin ang link mula sa iyong email.",
+    "reasonLabel": "Dahilan",
+    "selectReason": "Pumili ng dahilan",
+    "descriptionLabel": "Karagdagang detalye (opsyonal)",
+    "descriptionPlaceholder": "Ilarawan kung ano ang nangyari...",
+    "submit": "Isumite ang Report",
+    "submitted": "Naisumite ang Report",
+    "submittedDesc": "Salamat. Susuriin namin ang iyong report at magsasagawa ng aksyon kung kinakailangan.",
+    "error": "Nabigong isumite ang report. Pakisubukan muli.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Panloloko",
+      "harassment": "Panliligalig",
+      "irrelevant": "Hindi nauugnay na alok",
+      "other": "Iba pa"
+    }
   },
   "dev": {
     "hero": {

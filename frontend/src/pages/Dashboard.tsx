@@ -398,6 +398,19 @@ export default function Dashboard() {
     });
   };
 
+  const changeEmailDigestMode = async (mode: 'REALTIME' | 'HOURLY' | 'DAILY') => {
+    if (!profile) return;
+    setSaving(true);
+    try {
+      const updated = await api.updateProfile({ emailDigestMode: mode });
+      setProfile(updated);
+    } catch (error) {
+      console.error('Failed to update email digest mode:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toggleNotification = async (channel: 'email' | 'telegram' | 'whatsapp') => {
     if (!profile) return;
     setSaving(true);
@@ -584,10 +597,12 @@ export default function Dashboard() {
           emailNotifications={profile.emailNotifications !== false}
           telegramNotifications={profile.telegramNotifications !== false}
           whatsappNotifications={profile.whatsappNotifications !== false}
+          emailDigestMode={profile.emailDigestMode || 'REALTIME'}
           saving={saving}
           onToggleAvailability={toggleAvailability}
           onPaymentPreferenceChange={changePaymentPreference}
           onToggleNotification={toggleNotification}
+          onEmailDigestModeChange={changeEmailDigestMode}
         />
 
         <JobsSection

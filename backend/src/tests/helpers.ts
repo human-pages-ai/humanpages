@@ -22,6 +22,8 @@ export interface TestAgent {
  */
 export async function cleanDatabase(): Promise<void> {
   // Delete in order respecting foreign key constraints
+  await prisma.pendingNotification.deleteMany();
+  await prisma.agentReport.deleteMany();
   await prisma.review.deleteMany();
   await prisma.job.deleteMany();
   await prisma.service.deleteMany();
@@ -30,6 +32,39 @@ export async function cleanDatabase(): Promise<void> {
   await prisma.human.deleteMany();
   await prisma.passwordReset.deleteMany();
   await prisma.oAuthState.deleteMany();
+}
+
+/**
+ * Create a test agent with specific activation status
+ */
+export async function createActiveTestAgent(overrides?: {
+  name?: string;
+  tier?: string;
+  status?: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'BANNED';
+  expiresInDays?: number | null;
+}): Promise<TestAgent> {
+  const agent = await createTestAgent({
+    name: overrides?.name,
+    domainVerified: false,
+  });
+
+  const status = overrides?.status ?? 'ACTIVE';
+  const expiresAt = overrides?.expiresInDays === null
+    ? null
+    : new Date(Date.now() + (overrides?.expiresInDays ?? 30) * 24 * 60 * 60 * 1000);
+
+  await prisma.agent.update({
+    where: { id: agent.id },
+    data: {
+      status,
+      activatedAt: status === 'ACTIVE' ? new Date() : null,
+      activationMethod: 'SOCIAL',
+      activationExpiresAt: expiresAt,
+      activationTier: overrides?.tier ?? 'BASIC',
+    },
+  });
+
+  return agent;
 }
 
 /**
