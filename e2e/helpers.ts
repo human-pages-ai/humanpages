@@ -57,7 +57,7 @@ export async function signup(
 export async function signupViaAPI(creds: { name: string; email: string; password: string }): Promise<string> {
   const ctx = await pwRequest.newContext();
   const res = await ctx.post(`${API_BASE}/api/auth/signup`, {
-    data: { email: creds.email, password: creds.password, name: creds.name, termsAccepted: true },
+    data: { email: creds.email, password: creds.password, name: creds.name, termsAccepted: true, captchaToken: 'test-token' },
     headers: { 'X-Forwarded-For': uniqueIp() },
   });
   if (!res.ok()) {
@@ -75,7 +75,7 @@ export async function signupViaAPI(creds: { name: string; email: string; passwor
 export async function loginViaAPI(creds: { email: string; password: string }): Promise<string> {
   const ctx = await pwRequest.newContext();
   const res = await ctx.post(`${API_BASE}/api/auth/login`, {
-    data: { email: creds.email, password: creds.password },
+    data: { email: creds.email, password: creds.password, captchaToken: 'test-token' },
     headers: { 'X-Forwarded-For': uniqueIp() },
   });
   if (!res.ok()) {
