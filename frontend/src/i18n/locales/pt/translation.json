@@ -385,7 +385,7 @@
       "confirmDelete": "Sim, Excluir Minha Conta",
       "confirmDeleteTitle": "Excluir Conta?",
       "confirmDeleteMsg": "Isso excluirá permanentemente sua conta e todos os seus dados."
-    },
+    }
   },
   "onboarding": {
     "title": "Complete Seu Perfil",

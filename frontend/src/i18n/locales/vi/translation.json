@@ -401,7 +401,7 @@
       "confirmDelete": "Có, Xóa Tài khoản",
       "confirmDeleteTitle": "Xóa Tài khoản?",
       "confirmDeleteMsg": "Điều này sẽ xóa vĩnh viễn tài khoản và tất cả dữ liệu của bạn."
-    },
+    }
   },
   "onboarding": {
     "title": "Hoàn thành hồ sơ",

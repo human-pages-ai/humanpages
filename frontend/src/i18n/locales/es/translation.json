@@ -401,7 +401,7 @@
       "addAnother": "Agregar otro servicio",
       "statusActive": "Activo",
       "statusInactive": "Inactivo"
-    },
+    }
   },
   "currency": {
     "label": "Moneda",

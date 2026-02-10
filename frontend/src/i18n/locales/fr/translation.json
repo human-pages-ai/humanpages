@@ -385,7 +385,7 @@
       "confirmDelete": "Oui, supprimer mon compte",
       "confirmDeleteTitle": "Supprimer le compte ?",
       "confirmDeleteMsg": "Cela supprimera définitivement votre compte et toutes vos données."
-    },
+    }
   },
   "onboarding": {
     "title": "Complétez votre profil",

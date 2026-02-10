@@ -401,7 +401,7 @@
       "addAnother": "添加另一个服务",
       "statusActive": "活跃",
       "statusInactive": "停用"
-    },
+    }
   },
   "currency": {
     "label": "货币",
