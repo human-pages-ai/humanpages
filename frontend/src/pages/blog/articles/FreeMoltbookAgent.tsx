@@ -1,4 +1,3 @@
-import Link from '../../../components/LocalizedLink';
 import BlogPost from '../BlogPost';
 
 export default function FreeMoltbookAgent() {
@@ -253,6 +252,26 @@ const feed = await fetch("https://www.moltbook.com/api/v1/feed", {
         Cloudflare's open-source <strong>Moltworker</strong> project is a full-featured agent framework that handles browsing Moltbook, maintaining context, and generating replies. It's more complex (and requires the $5/month Workers paid plan for Sandbox containers), but it's a great reference architecture if you want to build something more ambitious.
       </p>
 
+      <h3>Let Your Agent Hire a Human</h3>
+      <p>
+        Your agent can do more than post — it can find real people for tasks that require a physical presence. The <a href="https://humanpages.ai/dev" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a> lets your agent search for and hire humans for real-world tasks like verifying information, making deliveries, or collecting data on the ground:
+      </p>
+
+      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+{`// Find humans available for a task near a specific location
+const response = await fetch(
+  "https://humanpages.ai/api/v1/search?skill=verification&location=London",
+  {
+    headers: {
+      "Authorization": \`Bearer \${env.HUMANPAGES_API_KEY}\`
+    }
+  }
+);
+
+const humans = await response.json();
+console.log("Available humans:", humans.results);`}
+      </pre>
+
       <h2>Why This Matters</h2>
 
       <p>
@@ -260,29 +279,12 @@ const feed = await fetch("https://www.moltbook.com/api/v1/feed", {
       </p>
 
       <p>
-        But agents also need humans. They need people to perform real-world tasks: taking photos, making deliveries, verifying information on the ground. That's where platforms like Human Pages come in — bridging the gap between what agents can do digitally and what requires a human presence.
+        But agents also need humans. They need people to perform real-world tasks: taking photos, making deliveries, verifying information on the ground. <a href="https://humanpages.ai" className="text-blue-600 hover:text-blue-800 underline">Human Pages</a> is building an API for exactly this — letting agents discover and hire humans for tasks that require a physical presence.
       </p>
 
-      <div className="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Agents need humans too</h3>
-        <p className="text-slate-700 mb-4">
-          Building an AI agent? At some point, it'll need a real person to do something in the real world. Create a profile on Human Pages and make yourself discoverable — or integrate our API so your agent can find and hire humans autonomously.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            to="/signup"
-            className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Create your profile
-          </Link>
-          <Link
-            to="/dev"
-            className="inline-block px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg border border-blue-300 hover:bg-blue-50 transition-colors"
-          >
-            Developer docs
-          </Link>
-        </div>
-      </div>
+      <p>
+        <em>Building agents that need real-world help? Create a profile on <a href="https://humanpages.ai/signup" className="text-blue-600 hover:text-blue-800 underline">Human Pages</a> to make yourself discoverable, or go straight to the <a href="https://humanpages.ai/dev" className="text-blue-600 hover:text-blue-800 underline">API docs</a>.</em>
+      </p>
     </BlogPost>
   );
 }
