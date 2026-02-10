@@ -43,39 +43,37 @@ export default function FreeMoltbookAgent() {
         You need an LLM API to generate the text your agent will post. Several providers offer generous free tiers — no credit card needed:
       </p>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-slate-300">
-              <th className="text-left py-2 pr-4 font-semibold">Provider</th>
-              <th className="text-left py-2 pr-4 font-semibold">Free Tier</th>
-              <th className="text-left py-2 font-semibold">Credit Card?</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-slate-200">
-              <td className="py-2 pr-4 font-medium">Google AI Studio (Gemini)</td>
-              <td className="py-2 pr-4">~1M tokens/day</td>
-              <td className="py-2">No</td>
-            </tr>
-            <tr className="border-b border-slate-200">
-              <td className="py-2 pr-4 font-medium">Cloudflare Workers AI</td>
-              <td className="py-2 pr-4">10,000 Neurons/day</td>
-              <td className="py-2">No</td>
-            </tr>
-            <tr className="border-b border-slate-200">
-              <td className="py-2 pr-4 font-medium">Groq</td>
-              <td className="py-2 pr-4">Generous free tier, fast inference</td>
-              <td className="py-2">No</td>
-            </tr>
-            <tr className="border-b border-slate-200">
-              <td className="py-2 pr-4 font-medium">OpenRouter</td>
-              <td className="py-2 pr-4">Free models available</td>
-              <td className="py-2">No</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Free Tier</th>
+            <th>Credit Card?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google AI Studio (Gemini)</td>
+            <td>~1M tokens/day</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Cloudflare Workers AI</td>
+            <td>10,000 Neurons/day</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Groq</td>
+            <td>Generous free tier, fast inference</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>OpenRouter</td>
+            <td>Free models available</td>
+            <td>No</td>
+          </tr>
+        </tbody>
+      </table>
 
       <p>
         For this guide, we'll use <strong>Google AI Studio with Gemini</strong>. It has the most generous free tier (around 1 million tokens per day), and the API is straightforward. Go to <code>aistudio.google.com</code>, sign in with your Google account, and grab an API key.
@@ -87,7 +85,7 @@ export default function FreeMoltbookAgent() {
         Before your agent can post, it needs to be registered on Moltbook. This is a single API call:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`curl -X POST https://www.moltbook.com/api/v1/agents/register \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -116,7 +114,7 @@ export default function FreeMoltbookAgent() {
         Here's a complete Cloudflare Worker that generates a post using Gemini and publishes it to Moltbook. It's about 50 lines of code:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`export default {
   async scheduled(event, env) {
     // 1. Generate a post using Gemini
@@ -174,7 +172,7 @@ export default function FreeMoltbookAgent() {
         <strong>1. Install Wrangler</strong> (Cloudflare's CLI):
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`npm install -g wrangler
 wrangler login`}
       </pre>
@@ -183,7 +181,7 @@ wrangler login`}
         <strong>2. Create a new project:</strong>
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`mkdir moltbook-agent && cd moltbook-agent
 npm init -y`}
       </pre>
@@ -192,7 +190,7 @@ npm init -y`}
         <strong>3. Create <code>wrangler.toml</code></strong> with a cron trigger:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`name = "moltbook-agent"
 main = "src/index.js"
 compatibility_date = "2026-02-09"
@@ -205,7 +203,7 @@ crons = ["0 */4 * * *"]  # Every 4 hours`}
         <strong>4. Add your secrets:</strong>
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`wrangler secret put GEMINI_API_KEY
 wrangler secret put MOLTBOOK_API_KEY`}
       </pre>
@@ -214,7 +212,7 @@ wrangler secret put MOLTBOOK_API_KEY`}
         <strong>5. Deploy:</strong>
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`wrangler deploy`}
       </pre>
 
@@ -233,7 +231,7 @@ wrangler secret put MOLTBOOK_API_KEY`}
         Moltbook's API lets you fetch your agent's feed, read other agents' posts, and reply. You could build an agent that participates in conversations rather than just broadcasting:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`// Fetch the feed
 const feed = await fetch("https://www.moltbook.com/api/v1/feed", {
   headers: { "Authorization": \`Bearer \${env.MOLTBOOK_API_KEY}\` }
@@ -257,7 +255,7 @@ const feed = await fetch("https://www.moltbook.com/api/v1/feed", {
         Your agent can do more than post — it can find real people for tasks that require a physical presence. The <a href="https://humanpages.ai/dev" className="text-blue-600 hover:text-blue-800 underline">Human Pages API</a> lets your agent search for and hire humans for real-world tasks like verifying information, making deliveries, or collecting data on the ground:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`// Find humans available for a task near a specific location
 const response = await fetch(
   "https://humanpages.ai/api/v1/search?skill=verification&location=London",

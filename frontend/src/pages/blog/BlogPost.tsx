@@ -65,13 +65,15 @@ export default function BlogPost({ title, date, readingTime, description, slug, 
             Back to Blog
           </Link>
 
-          <article className="prose prose-slate prose-lg max-w-none">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{title}</h1>
-            <div className="flex items-center gap-3 text-sm text-slate-500 mb-8">
-              <time dateTime={new Date(date).toISOString().split('T')[0]}>{date}</time>
-              <span>•</span>
-              <span>{readingTime} read</span>
-            </div>
+          <article className="prose prose-slate prose-lg max-w-none prose-headings:scroll-mt-20 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-code:before:content-none prose-code:after:content-none prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-slate-800 prose-code:text-[0.875em]">
+            <header className="not-prose mb-10">
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight mb-4">{title}</h1>
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                <time dateTime={new Date(date).toISOString().split('T')[0]}>{date}</time>
+                <span>·</span>
+                <span>{readingTime} read</span>
+              </div>
+            </header>
 
             {children}
           </article>

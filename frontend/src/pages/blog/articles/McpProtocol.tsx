@@ -69,7 +69,7 @@ export default function McpProtocol() {
         This tool lets AI agents search for people based on location, skills, and other criteria. For example, an agent looking for someone in Manila who speaks English and has a smartphone can query:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`{
   "location": "Manila",
   "skills": ["photography", "local research"],
@@ -113,7 +113,7 @@ export default function McpProtocol() {
         Here's a quick example of what the configuration looks like:
       </p>
 
-      <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre>
 {`{
   "mcpServers": {
     "human-pages": {
