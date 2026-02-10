@@ -82,7 +82,7 @@ export default function JobDetail() {
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
     } finally {
-      setInitialLoading(false);
+      setLoading(false);
     }
   };
 
