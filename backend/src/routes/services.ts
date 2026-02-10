@@ -34,7 +34,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Create a new service
-router.post('/', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const data = serviceSchema.parse(req.body);
 
@@ -56,7 +56,7 @@ router.post('/', authenticateToken, requireEmailVerified, async (req: AuthReques
 });
 
 // Update a service
-router.patch('/:id', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const updates = serviceSchema.partial().parse(req.body);
 
@@ -84,7 +84,7 @@ router.patch('/:id', authenticateToken, requireEmailVerified, async (req: AuthRe
 });
 
 // Delete a service
-router.delete('/:id', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const existing = await prisma.service.findFirst({
       where: { id: req.params.id, humanId: req.userId },

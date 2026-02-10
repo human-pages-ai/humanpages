@@ -83,9 +83,9 @@ export default function Onboarding() {
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save profile:', error);
-      setError(t('common.error'));
+      setError(error.message || t('common.error'));
     } finally {
       setLoading(false);
     }

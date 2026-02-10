@@ -317,8 +317,8 @@ export default function Dashboard() {
       setProfile(updated);
       setEditingFilters(false);
       toast.success(t('toast.filtersSaved'));
-    } catch (error) {
-      toast.error(t('toast.genericError'));
+    } catch (error: any) {
+      toast.error(error.message || t('toast.genericError'));
     } finally {
       setSaving(false);
     }
@@ -350,8 +350,8 @@ export default function Dashboard() {
           await api.deleteWallet(id);
           toast.success(t('toast.walletDeleted'));
           await loadProfile();
-        } catch (error) {
-          toast.error(t('toast.genericError'));
+        } catch (error: any) {
+          toast.error(error.message || t('toast.genericError'));
         }
       },
     });
@@ -384,8 +384,8 @@ export default function Dashboard() {
     try {
       await api.updateService(service.id, { isActive: !service.isActive });
       await loadProfile();
-    } catch (error) {
-      toast.error(t('toast.genericError'));
+    } catch (error: any) {
+      toast.error(error.message || t('toast.genericError'));
     }
   };
 
@@ -400,8 +400,8 @@ export default function Dashboard() {
           await api.deleteService(id);
           toast.success(t('toast.serviceDeleted'));
           await loadProfile();
-        } catch (error) {
-          toast.error(t('toast.genericError'));
+        } catch (error: any) {
+          toast.error(error.message || t('toast.genericError'));
         }
       },
     });
@@ -430,8 +430,8 @@ export default function Dashboard() {
       const updated = await api.updateProfile({ [key]: !(profile as any)[key] });
       setProfile(updated);
       toast.success(t('toast.preferencesSaved'));
-    } catch (error) {
-      toast.error(t('toast.genericError'));
+    } catch (error: any) {
+      toast.error(error.message || t('toast.genericError'));
     } finally {
       setSaving(false);
     }

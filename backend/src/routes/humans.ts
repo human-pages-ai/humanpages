@@ -417,7 +417,7 @@ router.delete('/me/vouch/:voucheeId', authenticateToken, async (req: AuthRequest
 });
 
 // Update current user profile
-router.patch('/me', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const updates = updateProfileSchema.parse(req.body);
 

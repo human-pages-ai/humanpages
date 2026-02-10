@@ -15,9 +15,8 @@ export async function requireEmailVerified(req: AuthRequest, res: Response, next
 
     if (!user || !user.emailVerified) {
       return res.status(403).json({
-        error: 'Email verification required',
+        error: 'This feature requires email verification. Please check your inbox and verify your email.',
         code: 'EMAIL_NOT_VERIFIED',
-        message: 'Please verify your email address before performing this action.',
       });
     }
 

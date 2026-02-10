@@ -41,7 +41,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Request a nonce for wallet verification
-router.post('/nonce', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.post('/nonce', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { address } = nonceRequestSchema.parse(req.body);
     const nonce = nonceStore.generate(req.userId!, address);
@@ -57,7 +57,7 @@ router.post('/nonce', authenticateToken, requireEmailVerified, async (req: AuthR
 });
 
 // Add a new wallet (with signature verification)
-router.post('/', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { network, address, label, signature, nonce } = addWalletSchema.parse(req.body);
 
@@ -101,7 +101,7 @@ router.post('/', authenticateToken, requireEmailVerified, async (req: AuthReques
 });
 
 // Delete a wallet
-router.delete('/:id', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const wallet = await prisma.wallet.findFirst({
       where: { id: req.params.id, humanId: req.userId },
