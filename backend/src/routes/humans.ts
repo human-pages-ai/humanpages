@@ -522,6 +522,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         paymentMethods: true,
         hideContact: true,
         linkedinUrl: true,
+        linkedinVerified: true,
         twitterUrl: true,
         githubUrl: true,
         instagramUrl: true,
@@ -645,6 +646,7 @@ router.get('/:id', async (req, res) => {
         paymentMethods: true,
         hideContact: true,
         linkedinUrl: true,
+        linkedinVerified: true,
         twitterUrl: true,
         githubUrl: true,
         instagramUrl: true,
@@ -713,6 +715,7 @@ router.get('/u/:username', async (req, res) => {
         paymentMethods: true,
         hideContact: true,
         linkedinUrl: true,
+        linkedinVerified: true,
         twitterUrl: true,
         githubUrl: true,
         instagramUrl: true,
@@ -742,6 +745,24 @@ router.get('/u/:username', async (req, res) => {
     res.json(filterHiddenContact({ ...human, reputation }));
   } catch (error) {
     logger.error({ err: error }, 'Get human by username error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Disconnect LinkedIn (keeps linkedinUrl, clears linkedinId + linkedinVerified)
+router.post('/me/disconnect-linkedin', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    await prisma.human.update({
+      where: { id: req.userId },
+      data: {
+        linkedinId: null,
+        linkedinVerified: false,
+      },
+    });
+
+    res.json({ message: 'LinkedIn disconnected' });
+  } catch (error) {
+    logger.error({ err: error }, 'Disconnect LinkedIn error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

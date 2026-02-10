@@ -55,6 +55,7 @@ export interface Profile {
   paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
   preferredLanguage?: string;
+  linkedinVerified?: boolean;
   humanityVerified?: boolean;
   humanityScore?: number;
   humanityProvider?: string;

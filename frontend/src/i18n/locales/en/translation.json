@@ -184,6 +184,16 @@
       "onsite": "On-site",
       "hybrid": "Hybrid"
     },
+    "linkedin": {
+      "title": "LinkedIn Verification",
+      "connect": "Connect LinkedIn",
+      "connected": "Connected",
+      "connectedDesc": "Your LinkedIn account is verified",
+      "notConnected": "Verify your LinkedIn account to boost credibility",
+      "disconnect": "Disconnect",
+      "verified": "Verified",
+      "verifying": "Verifying LinkedIn..."
+    },
     "telegram": {
       "title": "Telegram Notifications",
       "connected": "Connected - You'll receive job offers via Telegram",
@@ -503,6 +513,8 @@
     "jobAccepted": "Job accepted",
     "jobRejected": "Job rejected",
     "jobCompleted": "Job completed",
+    "linkedinConnected": "LinkedIn verified successfully",
+    "linkedinDisconnected": "LinkedIn disconnected",
     "telegramConnected": "Telegram connected",
     "telegramDisconnected": "Telegram disconnected",
     "accountDeleted": "Account deleted successfully",

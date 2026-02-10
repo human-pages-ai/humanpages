@@ -20,6 +20,7 @@ import WalletsSection from '../components/dashboard/WalletsSection';
 import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
+import LinkedInSection from '../components/dashboard/LinkedInSection';
 import SEO from '../components/SEO';
 
 export default function Dashboard() {
@@ -107,6 +108,12 @@ export default function Dashboard() {
       toast.success(t('toast.preferencesSaved'));
       searchParams.delete('unsubscribed');
       setSearchParams(searchParams, { replace: true });
+    }
+    if (searchParams.get('linkedinVerified') === 'true') {
+      toast.success(t('toast.linkedinConnected'));
+      searchParams.delete('linkedinVerified');
+      setSearchParams(searchParams, { replace: true });
+      loadProfile();
     }
   }, []);
 
@@ -599,6 +606,8 @@ export default function Dashboard() {
           onAddWallet={addWallet}
           onDeleteWallet={deleteWallet}
         />
+
+        <LinkedInSection profile={profile} onProfileUpdate={setProfile} />
 
         <HumanitySection profile={profile} onVerified={loadProfile} />
 

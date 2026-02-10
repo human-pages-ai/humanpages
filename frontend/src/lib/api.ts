@@ -45,6 +45,7 @@ export interface PublicHuman {
   telegram?: string;
   isAvailable: boolean;
   linkedinUrl?: string;
+  linkedinVerified?: boolean;
   twitterUrl?: string;
   githubUrl?: string;
   instagramUrl?: string;
@@ -81,10 +82,10 @@ export const api = {
     }),
 
   // OAuth
-  getOAuthUrl: (provider: 'google') =>
+  getOAuthUrl: (provider: 'google' | 'linkedin') =>
     request<{ url: string; state: string }>(`/oauth/${provider}`),
 
-  oauthCallback: (provider: 'google', code: string, state: string, referrerId?: string, termsAccepted?: boolean) =>
+  oauthCallback: (provider: 'google' | 'linkedin', code: string, state: string, referrerId?: string, termsAccepted?: boolean) =>
     request<AuthResponse>(`/oauth/${provider}/callback`, {
       method: 'POST',
       body: JSON.stringify({ code, state, referrerId, termsAccepted }),
@@ -163,6 +164,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ walletAddress }),
     }),
+
+  // LinkedIn verification
+  getLinkedInVerifyUrl: () =>
+    request<{ url: string; state: string }>('/oauth/linkedin/verify'),
+
+  linkedinVerifyCallback: (code: string, state: string) =>
+    request<{ linkedinVerified: boolean }>('/oauth/linkedin/verify/callback', {
+      method: 'POST',
+      body: JSON.stringify({ code, state }),
+    }),
+
+  disconnectLinkedin: () =>
+    request<{ message: string }>('/humans/me/disconnect-linkedin', { method: 'POST' }),
 
   // Referrals
   getReferrals: () =>

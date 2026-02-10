@@ -15,6 +15,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Welcome = lazy(() => import('./pages/Welcome'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
+const LinkedInVerifyCallback = lazy(() => import('./pages/LinkedInVerifyCallback'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
@@ -134,6 +135,14 @@ function AppRoutes() {
         }
       />
       <Route path="/auth/:provider/callback" element={<OAuthCallback />} />
+      <Route
+        path="/auth/linkedin-verify/callback"
+        element={
+          <ProtectedRoute>
+            <LinkedInVerifyCallback />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/humans/:id" element={<PublicProfile />} />
       <Route
         path="/forgot-password"

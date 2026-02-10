@@ -17,6 +17,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, termsAccepted: boolean) => Promise<void>;
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
+  loginWithLinkedIn: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,8 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
+
+  const loginWithLinkedIn = async () => {
+    const { url, state } = await api.getOAuthUrl('linkedin');
+    sessionStorage.setItem('oauth_state', state);
+    window.location.href = url;
+  };
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, loginWithGoogle, loginWithLinkedIn }}>
       {children}
     </AuthContext.Provider>
   );
