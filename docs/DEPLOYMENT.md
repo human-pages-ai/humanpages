@@ -165,9 +165,16 @@ npm ci
 npx prisma migrate deploy
 npm run build
 
-cd ../frontend
+# Inject frontend env vars from Infisical before building
+cd ..
+node scripts/inject-frontend-env.mjs
+
+cd frontend
 npm ci
 npm run build
+
+# Clean up temporary frontend .env
+rm -f .env
 
 pm2 restart human-pages
 echo "Deployed successfully"
