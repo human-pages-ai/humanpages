@@ -49,8 +49,15 @@ describe('Agent Activation', () => {
         expect(res.body.instructions.instagram).toBeUndefined();
       }
       expect(res.body.requirements).toContain('humanpages.ai');
-      expect(res.body.suggestedPost).toContain('humanpages.ai');
-      expect(res.body.suggestedPost).toContain(res.body.code);
+      // suggestedPosts is a Record<string, string> keyed by platform
+      expect(res.body.suggestedPosts).toBeDefined();
+      expect(typeof res.body.suggestedPosts).toBe('object');
+      // Twitter uses @mention, others use link — all must contain the code
+      expect(res.body.suggestedPosts.twitter).toContain('@HumanPagesAI');
+      expect(res.body.suggestedPosts.linkedin).toContain('humanpages.ai');
+      for (const platform of res.body.platforms) {
+        expect(res.body.suggestedPosts[platform]).toContain(res.body.code);
+      }
     });
 
     it('should store the code in the database', async () => {

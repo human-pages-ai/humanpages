@@ -97,27 +97,41 @@ router.post('/social', authenticateAgent, async (req: AgentAuthRequest, res) => 
       },
     });
 
+    const link = 'https://humanpages.ai';
+    const mention = '@HumanPagesAI';
+
+    // Platforms that mangle links (e.g. Twitter rewrites to t.co) use @mention
     const hasMetaToken = !!process.env.META_APP_ACCESS_TOKEN;
     const platforms: string[] = ['twitter', 'linkedin', 'tiktok', 'youtube', 'telegram', 'moltbook'];
+    const suggestedPosts: Record<string, string> = {
+      twitter: `Just got my AI agent verified on ${mention} — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      linkedin: `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      tiktok: `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      youtube: `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      telegram: `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      moltbook: `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`,
+    };
     const instructions: Record<string, string> = {
-      twitter: `Tweet something that includes https://humanpages.ai and your code ${code}. Example: "Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}"`,
-      linkedin: `Create a post that includes a link to https://humanpages.ai and your code ${code}. Say something nice about us!`,
-      tiktok: `Post a TikTok video with a caption that includes https://humanpages.ai and your code ${code}.`,
-      youtube: `Upload a YouTube video with a title that includes https://humanpages.ai and your code ${code}.`,
-      telegram: `Post in a public Telegram channel/group that includes https://humanpages.ai and your code ${code}.`,
-      moltbook: `Create a public Moltbook post that includes https://humanpages.ai and your code ${code}.`,
+      twitter: `Tweet something that includes ${mention} and your code ${code}. Example: "${suggestedPosts.twitter}"`,
+      linkedin: `Create a post that includes a link to ${link} and your code ${code}. Say something nice about us!`,
+      tiktok: `Post a TikTok video with a caption that includes ${link} and your code ${code}.`,
+      youtube: `Upload a YouTube video with a title that includes ${link} and your code ${code}.`,
+      telegram: `Post in a public Telegram channel/group that includes ${link} and your code ${code}.`,
+      moltbook: `Create a public Moltbook post that includes ${link} and your code ${code}.`,
     };
     if (hasMetaToken) {
       platforms.push('facebook', 'instagram');
-      instructions.facebook = `Create a public Facebook post that includes https://humanpages.ai and your code ${code}.`;
-      instructions.instagram = `Create a public Instagram post with a caption that includes @HumanPagesAI and your code ${code}.`;
+      suggestedPosts.facebook = `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`;
+      suggestedPosts.instagram = `Just got my AI agent verified on ${mention} — the directory where AI agents hire humans for real-world tasks. ${code}`;
+      instructions.facebook = `Create a public Facebook post that includes ${link} and your code ${code}.`;
+      instructions.instagram = `Create a public Instagram post with a caption that includes ${mention} and your code ${code}.`;
     }
 
     res.json({
       code,
       expiresAt: expiresAt.toISOString(),
-      requirements: 'Post MUST contain: (1) a link to humanpages.ai, (2) your unique code. Posts missing either will be rejected.',
-      suggestedPost: `Just got my AI agent verified on https://humanpages.ai — the directory where AI agents hire humans for real-world tasks. ${code}`,
+      requirements: 'Post MUST contain: (1) a link to humanpages.ai or a mention of @HumanPagesAI, (2) your unique code. Posts missing either will be rejected.',
+      suggestedPosts,
       platforms,
       instructions,
     });
