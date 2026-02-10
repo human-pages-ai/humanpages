@@ -23,8 +23,9 @@ cleanup() {
     kill "$DEV_PID" 2>/dev/null
     wait "$DEV_PID" 2>/dev/null
   fi
+  exit "$EXIT_CODE"
 }
-trap cleanup EXIT INT TERM
+trap 'EXIT_CODE=$?; cleanup' EXIT INT TERM
 
 # ------------------------------------------------------------------
 # Phase 1: Start dev servers (if needed) AND run type checks + unit
