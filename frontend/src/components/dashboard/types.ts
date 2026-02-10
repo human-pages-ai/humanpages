@@ -46,6 +46,38 @@ export interface Profile {
   wallets: Wallet[];
   services: Service[];
   referralCount?: number;
+  referralProgram?: {
+    status: 'APPROVED' | 'SUSPENDED';
+    creditsPerReferral: number;
+    totalSignups: number;
+    qualifiedSignups: number;
+    totalCredits: number;
+    creditsRedeemed: number;
+    availableCredits: number;
+    suspendedReason?: string;
+    milestones: Array<{
+      threshold: number;
+      bonus: number;
+      label: string;
+      reached: boolean;
+      progress: number;
+    }>;
+    referrals: Array<{
+      id: string;
+      name: string;
+      qualified: boolean;
+      qualifiedAt?: string;
+      creditsAwarded: number;
+      createdAt: string;
+    }>;
+    creditLedger: Array<{
+      id: string;
+      credits: number;
+      type: string;
+      description?: string;
+      createdAt: string;
+    }>;
+  };
   minOfferPrice?: number;
   maxOfferDistance?: number;
   minRateUsdc?: number;

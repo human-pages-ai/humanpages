@@ -418,44 +418,32 @@ model Vouch {
   @@index([voucheeId])
 }
 
-// ===== AFFILIATE / PARTNER PROGRAM =====
-// Single-tier only. Affiliates earn on direct referrals. No sub-affiliates, no MLM.
+// ===== REFERRAL PROGRAM =====
+// Single-tier referral credits. Every user is automatically a referrer. No MLM.
 
 enum AffiliateStatus {
-  PENDING    // Application submitted, awaiting review
-  APPROVED   // Active affiliate
-  REJECTED   // Application denied
+  APPROVED   // Active referrer
   SUSPENDED  // Temporarily disabled (fraud, TOS violation)
 }
 
 model Affiliate {
   id              String          @id @default(cuid())
-  humanId         String          @unique  // One affiliate per human
-  status          AffiliateStatus @default(PENDING)
-  code            String          @unique  // Short referral code (e.g., "alice123")
+  humanId         String          @unique  // One referrer record per human
+  status          AffiliateStatus @default(APPROVED)
 
-  // Application info
-  promotionMethod String?         @db.VarChar(500) // How they plan to promote
-  website         String?         // Their website/social
-  audience        String?         @db.VarChar(200) // Audience description
-
-  // Credits config (per-affiliate overrides; defaults in app config)
+  // Credits config (per-user overrides; defaults in app config)
   creditsPerReferral Int          @default(10)   // Credits earned per qualified signup
   bonusTier1      Int             @default(50)   // Bonus credits at 10 referrals
   bonusTier2      Int             @default(200)  // Bonus credits at 50 referrals
   bonusTier3      Int             @default(500)  // Bonus credits at 100 referrals
 
   // Stats (denormalized for fast reads)
-  totalClicks     Int             @default(0)
   totalSignups    Int             @default(0)
   qualifiedSignups Int            @default(0) // Signups that completed profile
   totalCredits    Int             @default(0) // Total credits earned
   creditsRedeemed Int             @default(0) // Credits already redeemed
 
   // Admin
-  approvedAt      DateTime?
-  approvedBy      String?         // Admin user ID
-  rejectedReason  String?
   suspendedAt     DateTime?
   suspendedReason String?
 
@@ -468,7 +456,6 @@ model Affiliate {
   creditLedger    AffiliateCredit[]
 
   @@index([status])
-  @@index([code])
 }
 
 model AffiliateReferral {

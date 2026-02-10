@@ -11,7 +11,7 @@ import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 import { computeTrustScore, computeTrustScoresBatch } from '../lib/trustScore.js';
-import { qualifyAffiliateReferral } from './affiliate.js';
+import { qualifyAffiliateReferral, getReferralProgramData } from './affiliate.js';
 
 const router = Router();
 
@@ -245,42 +245,21 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
       data: { lastActiveAt: new Date() },
     });
 
-    const [reputation, trustScore, referralCount] = await Promise.all([
+    const [reputation, trustScore, referralCount, referralProgram] = await Promise.all([
       getReputationStats(human.id),
       computeTrustScore(human.id),
       prisma.human.count({ where: { referredBy: human.id } }),
+      getReferralProgramData(human.id),
     ]);
 
     const { passwordHash, emailVerificationToken, ...profile } = human;
-    res.json({ ...profile, reputation, trustScore, referralCount, hasPassword: !!passwordHash });
+    res.json({ ...profile, reputation, trustScore, referralCount, referralProgram, hasPassword: !!passwordHash });
   } catch (error) {
     logger.error({ err: error }, 'Get profile error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get referral stats for current user
-router.get('/me/referrals', authenticateToken, async (req: AuthRequest, res) => {
-  try {
-    const referrals = await prisma.human.findMany({
-      where: { referredBy: req.userId },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    res.json({
-      count: referrals.length,
-      referrals,
-    });
-  } catch (error) {
-    logger.error({ err: error }, 'Get referrals error');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Get current user's vouches (given and received)
 router.get('/me/vouches', authenticateToken, async (req: AuthRequest, res) => {

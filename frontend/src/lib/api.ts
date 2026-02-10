@@ -198,9 +198,6 @@ export const api = {
   disconnectGithub: () =>
     request<{ message: string }>('/humans/me/disconnect-github', { method: 'POST' }),
 
-  // Referrals
-  getReferrals: () =>
-    request<{ count: number; referrals: Array<{ id: string; name: string; createdAt: string }> }>('/humans/me/referrals'),
 
   // Vouches
   getMyVouches: () =>
@@ -286,27 +283,9 @@ export const api = {
   unlinkTelegram: () =>
     request<{ message: string }>('/telegram/link', { method: 'DELETE' }),
 
-  // Affiliate / Partner Program
-  getAffiliateDashboard: () =>
-    request<AffiliateResponse>('/affiliate/me'),
-
-  applyAffiliate: (data: { code: string; promotionMethod?: string; website?: string; audience?: string }) =>
-    request<{ message: string; affiliate: { id: string; status: string; code: string; creditsPerReferral: number } }>('/affiliate/apply', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  trackAffiliateClick: (code: string) =>
-    request<{ ok: boolean }>('/affiliate/track-click', {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    }),
-
-  resolveAffiliateCode: (code: string) =>
-    request<{ referrerId: string; affiliateId: string }>(`/affiliate/resolve/${encodeURIComponent(code)}`),
-
+  // Referral Program
   getAffiliateLeaderboard: () =>
-    request<Array<{ rank: number; code: string; name: string; username?: string; avatarUrl?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
+    request<Array<{ rank: number; name: string; username?: string; avatarUrl?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
 
   // Admin
   checkAdmin: () =>
@@ -351,53 +330,36 @@ export const api = {
     request<{ activity: AdminActivity[] }>(`/admin/activity${limit ? `?limit=${limit}` : ''}`),
 };
 
-// Affiliate types
-export interface AffiliateData {
-  id: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
-  code: string;
+// Referral Program types (included in profile response)
+export interface ReferralProgramData {
+  status: 'APPROVED' | 'SUSPENDED';
   creditsPerReferral: number;
-  totalClicks: number;
   totalSignups: number;
   qualifiedSignups: number;
   totalCredits: number;
   creditsRedeemed: number;
   availableCredits: number;
-  approvedAt?: string;
-  rejectedReason?: string;
   suspendedReason?: string;
-  createdAt: string;
-}
-
-export interface AffiliateMilestone {
-  threshold: number;
-  bonus: number;
-  label: string;
-  reached: boolean;
-  progress: number;
-}
-
-export interface AffiliateReferralItem {
-  id: string;
-  name: string;
-  qualified: boolean;
-  qualifiedAt?: string;
-  creditsAwarded: number;
-  createdAt: string;
-}
-
-export interface AffiliateCreditItem {
-  id: string;
-  credits: number;
-  type: string;
-  description?: string;
-  createdAt: string;
-}
-
-export interface AffiliateResponse {
-  enrolled: boolean;
-  affiliate?: AffiliateData;
-  milestones?: AffiliateMilestone[];
-  referrals?: AffiliateReferralItem[];
-  creditLedger?: AffiliateCreditItem[];
+  milestones: Array<{
+    threshold: number;
+    bonus: number;
+    label: string;
+    reached: boolean;
+    progress: number;
+  }>;
+  referrals: Array<{
+    id: string;
+    name: string;
+    qualified: boolean;
+    qualifiedAt?: string;
+    creditsAwarded: number;
+    createdAt: string;
+  }>;
+  creditLedger: Array<{
+    id: string;
+    credits: number;
+    type: string;
+    description?: string;
+    createdAt: string;
+  }>;
 }

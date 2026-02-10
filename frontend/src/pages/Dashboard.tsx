@@ -22,7 +22,6 @@ import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
-import AffiliateSection from '../components/dashboard/AffiliateSection';
 // TODO: Unhide once LinkedIn redirect URIs are configured
 // import LinkedInSection from '../components/dashboard/LinkedInSection';
 import CollapsibleSection from '../components/dashboard/CollapsibleSection';
@@ -73,7 +72,6 @@ export default function Dashboard() {
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
 
   const [copiedProfile, setCopiedProfile] = useState(false);
-  const [copiedReferral, setCopiedReferral] = useState(false);
 
   const [telegramStatus, setTelegramStatus] = useState<{
     connected: boolean;
@@ -658,11 +656,6 @@ export default function Dashboard() {
             profile={profile}
             copiedProfile={copiedProfile}
             setCopiedProfile={setCopiedProfile}
-            copiedReferral={copiedReferral}
-            setCopiedReferral={setCopiedReferral}
-          />
-          <AffiliateSection
-            profileUsername={profile.username}
           />
           <VouchSection />
         </CollapsibleSection>

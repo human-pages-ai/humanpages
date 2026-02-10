@@ -13,7 +13,6 @@ vi.mock('../lib/api', () => ({
     getServices: vi.fn(),
     getMyReviews: vi.fn(),
     getTelegramStatus: vi.fn(),
-    getReferrals: vi.fn(),
     updateProfile: vi.fn(),
     acceptJob: vi.fn(),
     rejectJob: vi.fn(),
@@ -60,7 +59,6 @@ describe('Dashboard', () => {
     vi.mocked(api.getJobs).mockResolvedValue([]);
     vi.mocked(api.getMyReviews).mockResolvedValue({ stats: { totalReviews: 0, averageRating: 0, completedJobs: 0 }, reviews: [] });
     vi.mocked(api.getTelegramStatus).mockResolvedValue({ connected: false, botAvailable: false });
-    vi.mocked(api.getReferrals).mockResolvedValue({ referrals: [], count: 0 });
   });
 
   it('renders loading state initially', () => {
