@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Profile } from './types';
-import PhoneInput from '../PhoneInput';
+const PhoneInput = lazy(() => import('../PhoneInput'));
 import LocationAutocomplete from '../LocationAutocomplete';
 
 interface Props {
@@ -348,12 +348,14 @@ export default function ProfileSection({
               </div>
               <div>
                 <label htmlFor="profile-whatsapp" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.whatsapp')}</label>
-                <PhoneInput
-                  id="profile-whatsapp"
-                  value={profileForm.whatsapp}
-                  onChange={(val) => setProfileForm({ ...profileForm, whatsapp: val })}
-                  className="mt-1 w-full"
-                />
+                <Suspense fallback={<div className="mt-1 h-10 w-full bg-gray-100 rounded-md animate-pulse" />}>
+                  <PhoneInput
+                    id="profile-whatsapp"
+                    value={profileForm.whatsapp}
+                    onChange={(val) => setProfileForm({ ...profileForm, whatsapp: val })}
+                    className="mt-1 w-full"
+                  />
+                </Suspense>
                 {profileForm.whatsapp && /^\+[1-9]\d{6,14}$/.test(profileForm.whatsapp) && (
                   <a
                     href={`https://wa.me/${profileForm.whatsapp.replace(/[^0-9]/g, '')}`}

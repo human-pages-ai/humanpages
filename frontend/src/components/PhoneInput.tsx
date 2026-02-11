@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
 
+// Country codes sorted by dial code length DESC for parsePhone matching,
+// then alphabetically by name for display.
 const COUNTRY_CODES = [
   { code: '+93', flag: '\u{1F1E6}\u{1F1EB}', name: 'Afghanistan' },
   { code: '+355', flag: '\u{1F1E6}\u{1F1F1}', name: 'Albania' },
@@ -175,18 +177,21 @@ const COUNTRY_CODES = [
   { code: '+263', flag: '\u{1F1FF}\u{1F1FC}', name: 'Zimbabwe' },
 ];
 
+// Pre-sorted by code length DESC — computed once at module level, not per render
+const CODES_BY_LENGTH_DESC = [...COUNTRY_CODES].sort(
+  (a, b) => b.code.length - a.code.length
+);
+
 /**
  * Parse an E.164 phone number into country code + local number.
- * Returns the best match from COUNTRY_CODES.
+ * Uses pre-sorted array (longest codes first) so +1876 matches before +1.
  */
 function parsePhone(value: string): { dialCode: string; localNumber: string } {
   if (!value || !value.startsWith('+')) {
     return { dialCode: '+1', localNumber: value || '' };
   }
 
-  // Try longest country codes first (e.g., +1876 before +1)
-  const sorted = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length);
-  for (const cc of sorted) {
+  for (const cc of CODES_BY_LENGTH_DESC) {
     if (value.startsWith(cc.code)) {
       return { dialCode: cc.code, localNumber: value.slice(cc.code.length) };
     }
@@ -202,6 +207,31 @@ interface PhoneInputProps {
   placeholder?: string;
   className?: string;
 }
+
+/** Single row in the country dropdown — memoized to avoid re-rendering all 170 rows on typing */
+const CountryRow = memo(function CountryRow({
+  cc,
+  isSelected,
+  onSelect,
+}: {
+  cc: (typeof COUNTRY_CODES)[number];
+  isSelected: boolean;
+  onSelect: (code: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(cc.code)}
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 ${
+        isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+      }`}
+    >
+      <span>{cc.flag}</span>
+      <span className="flex-1 text-left truncate">{cc.name}</span>
+      <span className="text-gray-500 shrink-0">{cc.code}</span>
+    </button>
+  );
+});
 
 export default function PhoneInput({ id, value, onChange, placeholder, className }: PhoneInputProps) {
   const parsed = parsePhone(value);
@@ -236,34 +266,41 @@ export default function PhoneInput({ id, value, onChange, placeholder, className
     }
   }, [dropdownOpen]);
 
-  const selectedCountry = COUNTRY_CODES.find(c => c.code === dialCode) || COUNTRY_CODES[0];
+  const selectedCountry = useMemo(
+    () => COUNTRY_CODES.find(c => c.code === dialCode) || COUNTRY_CODES[0],
+    [dialCode]
+  );
 
-  const filtered = search
-    ? COUNTRY_CODES.filter((cc) =>
-        cc.name.toLowerCase().includes(search.toLowerCase()) ||
-        cc.code.includes(search)
-      )
-    : COUNTRY_CODES;
+  const filtered = useMemo(() => {
+    if (!search) return COUNTRY_CODES;
+    const q = search.toLowerCase();
+    return COUNTRY_CODES.filter(
+      (cc) => cc.name.toLowerCase().includes(q) || cc.code.includes(search)
+    );
+  }, [search]);
 
-  const handleDialCodeChange = (code: string) => {
+  const handleDialCodeChange = useCallback((code: string) => {
     setDialCode(code);
     setDropdownOpen(false);
     setSearch('');
-    if (localNumber) {
-      onChange(code + localNumber);
-    }
-  };
+    setLocalNumber((prev) => {
+      if (prev) onChange(code + prev);
+      return prev;
+    });
+  }, [onChange]);
 
-  const handleNumberChange = (num: string) => {
-    // Strip non-digit characters
+  const handleNumberChange = useCallback((num: string) => {
     const cleaned = num.replace(/\D/g, '');
     setLocalNumber(cleaned);
     if (cleaned) {
-      onChange(dialCode + cleaned);
+      setDialCode((dc) => {
+        onChange(dc + cleaned);
+        return dc;
+      });
     } else {
       onChange('');
     }
-  };
+  }, [onChange]);
 
   return (
     <div className={`flex ${className || ''}`}>
@@ -296,19 +333,13 @@ export default function PhoneInput({ id, value, onChange, placeholder, className
               {filtered.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-gray-500">No results</div>
               ) : (
-                filtered.map((cc, i) => (
-                  <button
-                    key={`${cc.code}-${cc.name}-${i}`}
-                    type="button"
-                    onClick={() => handleDialCodeChange(cc.code)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 ${
-                      cc.code === dialCode && cc.name === selectedCountry.name ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                    }`}
-                  >
-                    <span>{cc.flag}</span>
-                    <span className="flex-1 text-left truncate">{cc.name}</span>
-                    <span className="text-gray-500 shrink-0">{cc.code}</span>
-                  </button>
+                filtered.map((cc) => (
+                  <CountryRow
+                    key={`${cc.code}-${cc.name}`}
+                    cc={cc}
+                    isSelected={cc.code === dialCode && cc.name === selectedCountry.name}
+                    onSelect={handleDialCodeChange}
+                  />
                 ))
               )}
             </div>
