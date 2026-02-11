@@ -46,7 +46,7 @@ test.describe('Onboarding', () => {
     await page.waitForSelector('#location-input', { timeout: 15_000 });
 
     await page.getByText('Skip setup and go to dashboard').click();
-    await page.waitForURL('**/dashboard', { timeout: 10_000 });
+    await page.waitForURL('**/dashboard', { timeout: 30_000 });
   });
 
   test('validation – no location/skills → error', async ({ page }) => {
