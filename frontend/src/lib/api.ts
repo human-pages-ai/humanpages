@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, Pagination } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, Pagination } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -290,6 +290,47 @@ export const api = {
   // Referral Program
   getAffiliateLeaderboard: () =>
     request<Array<{ rank: number; name: string; username?: string; avatarUrl?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
+
+  // Feedback
+  submitFeedback: (data: {
+    type: 'BUG' | 'FEATURE' | 'FEEDBACK';
+    category?: string;
+    title?: string;
+    description: string;
+    sentiment?: number;
+    stepsToReproduce?: string;
+    expectedBehavior?: string;
+    actualBehavior?: string;
+    severity?: 'low' | 'medium' | 'high' | 'critical';
+    pageUrl?: string;
+    browser?: string;
+    os?: string;
+    viewport?: string;
+    userAgent?: string;
+    appVersion?: string;
+    screenshotData?: string;
+  }) =>
+    request<{ id: string; message: string }>('/feedback', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Admin - Feedback
+  getAdminFeedback: (params: { page?: number; limit?: number; status?: string; type?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.status) query.set('status', params.status);
+    if (params.type) query.set('type', params.type);
+    const qs = query.toString();
+    return request<{ feedback: AdminFeedback[]; pagination: Pagination }>(`/feedback/admin${qs ? `?${qs}` : ''}`);
+  },
+
+  updateAdminFeedback: (id: string, data: { status?: string; adminNotes?: string }) =>
+    request<AdminFeedback>(`/feedback/admin/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   // Admin
   checkAdmin: () =>

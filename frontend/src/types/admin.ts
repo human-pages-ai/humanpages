@@ -24,6 +24,10 @@ export interface AdminStats {
     total: number;
     approved: number;
   };
+  feedback: {
+    total: number;
+    new: number;
+  };
 }
 
 export interface AdminUser {
@@ -87,6 +91,32 @@ export interface AdminActivity {
   id: string;
   description: string;
   timestamp: string;
+}
+
+export interface AdminFeedback {
+  id: string;
+  humanId: string | null;
+  type: 'BUG' | 'FEATURE' | 'FEEDBACK';
+  category: string | null;
+  title: string | null;
+  description: string;
+  sentiment: number | null;
+  stepsToReproduce: string | null;
+  expectedBehavior: string | null;
+  actualBehavior: string | null;
+  severity: string | null;
+  pageUrl: string | null;
+  browser: string | null;
+  os: string | null;
+  viewport: string | null;
+  userAgent: string | null;
+  appVersion: string | null;
+  screenshotData: string | null;
+  status: 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  human: { id: string; name: string; email: string } | null;
 }
 
 export interface Pagination {

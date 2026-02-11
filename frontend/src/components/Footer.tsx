@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import Link from './LocalizedLink';
 import { SOCIAL_LINKS } from '../lib/social';
+import { useFeedback } from '../hooks/useFeedback';
 
 const SOCIAL_ICONS: Record<string, JSX.Element> = {
   Instagram: (
@@ -31,6 +32,7 @@ interface FooterProps {
 
 export default function Footer({ className = '' }: FooterProps) {
   const { t } = useTranslation();
+  const { openFeedback } = useFeedback();
 
   return (
     <footer className={`py-8 bg-white border-t border-slate-200 px-4 ${className}`}>
@@ -41,6 +43,7 @@ export default function Footer({ className = '' }: FooterProps) {
           <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
           <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
           <Link to="/blog" className="text-slate-500 hover:text-slate-700">{t('nav.blog')}</Link>
+          <button onClick={() => openFeedback('BUG')} className="text-slate-500 hover:text-slate-700">{t('feedback.reportProblem', 'Report a Problem')}</button>
         </div>
         <div className="flex items-center gap-4">
           {SOCIAL_LINKS.map((link) => (

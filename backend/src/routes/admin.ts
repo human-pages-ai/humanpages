@@ -37,6 +37,8 @@ router.get('/stats', async (_req, res) => {
       reportsPending,
       affiliatesTotal,
       affiliatesApproved,
+      feedbackTotal,
+      feedbackNew,
     ] = await Promise.all([
       prisma.human.count(),
       prisma.human.count({ where: { emailVerified: true } }),
@@ -53,6 +55,8 @@ router.get('/stats', async (_req, res) => {
       prisma.agentReport.count({ where: { status: 'PENDING' } }),
       prisma.affiliate.count(),
       prisma.affiliate.count({ where: { status: 'APPROVED' } }),
+      prisma.feedback.count(),
+      prisma.feedback.count({ where: { status: 'NEW' } }),
     ]);
 
     const agentStatusMap: Record<string, number> = {};
@@ -90,6 +94,10 @@ router.get('/stats', async (_req, res) => {
       affiliates: {
         total: affiliatesTotal,
         approved: affiliatesApproved,
+      },
+      feedback: {
+        total: feedbackTotal,
+        new: feedbackNew,
       },
     });
   } catch (error) {

@@ -19,6 +19,7 @@ import badgeRoutes from './routes/badge.js';
 import geoRoutes from './routes/geo.js';
 import affiliateRoutes from './routes/affiliate.js';
 import adminRoutes from './routes/admin.js';
+import feedbackRoutes from './routes/feedback.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml } from './lib/seo.js';
 
 const app = express();
@@ -56,6 +57,7 @@ app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/feedback', express.json({ limit: '2mb' }), feedbackRoutes);
 
 // Geo detection
 app.use('/api/geo', geoRoutes);

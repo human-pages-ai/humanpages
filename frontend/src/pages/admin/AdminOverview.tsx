@@ -122,11 +122,18 @@ export default function AdminOverview() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-5">
-        <p className="text-sm font-medium text-gray-500 mb-2">Affiliates</p>
-        <p className="text-lg font-semibold text-gray-900">
-          {stats.affiliates.approved} approved <span className="text-sm font-normal text-gray-400">/ {stats.affiliates.total} total</span>
-        </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow p-5">
+          <p className="text-sm font-medium text-gray-500 mb-2">Affiliates</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {stats.affiliates.approved} approved <span className="text-sm font-normal text-gray-400">/ {stats.affiliates.total} total</span>
+          </p>
+        </div>
+        <a href="/admin/feedback" className="bg-white rounded-lg shadow p-5 hover:ring-2 hover:ring-indigo-200 transition-all block">
+          <p className="text-sm font-medium text-gray-500 mb-2">Feedback</p>
+          <p className="text-xl font-semibold text-gray-900">{stats.feedback.total}</p>
+          <p className="text-sm text-gray-400">{stats.feedback.new} new</p>
+        </a>
       </div>
     </div>
   );

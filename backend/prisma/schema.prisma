@@ -172,6 +172,7 @@ model Human {
   vouchesReceived Vouch[] @relation("VouchesReceived")
   affiliate       Affiliate?
   affiliateReferral AffiliateReferral?
+  feedback        Feedback[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -496,4 +497,58 @@ model AffiliateCredit {
 
   @@index([affiliateId])
   @@index([affiliateId, type])
+}
+
+// ===== USER FEEDBACK & BUG REPORTS =====
+
+enum FeedbackType {
+  BUG
+  FEATURE
+  FEEDBACK
+}
+
+enum FeedbackStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Feedback {
+  id              String         @id @default(cuid())
+  humanId         String?        // Nullable: allow anonymous feedback
+  type            FeedbackType   @default(FEEDBACK)
+  category        String?        // "ui", "performance", "payments", "jobs", "search", "other"
+  title           String?        @db.VarChar(200)
+  description     String         @db.VarChar(5000)
+  sentiment       Int?           // 1-5 emoji scale
+
+  // Bug-report fields
+  stepsToReproduce  String?      @db.VarChar(2000)
+  expectedBehavior  String?      @db.VarChar(1000)
+  actualBehavior    String?      @db.VarChar(1000)
+  severity          String?      // "low" | "medium" | "high" | "critical"
+
+  // Auto-captured context
+  pageUrl         String?
+  browser         String?
+  os              String?
+  viewport        String?        // "1920x1080"
+  userAgent       String?
+  appVersion      String?
+  screenshotData  String?        @db.Text // base64 data URI
+
+  // Admin processing
+  status          FeedbackStatus @default(NEW)
+  adminNotes      String?        @db.VarChar(2000)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  human           Human?         @relation(fields: [humanId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([humanId])
 }

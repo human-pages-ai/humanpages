@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { FeedbackProvider, useFeedback } from './hooks/useFeedback';
 import ErrorBoundary from './components/ErrorBoundary';
 import LangWrapper from './components/LangWrapper';
 import { posthog } from './lib/posthog';
@@ -32,6 +33,7 @@ const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminAgents = lazy(() => import('./pages/admin/AdminAgents'));
 const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
 const AdminActivity = lazy(() => import('./pages/admin/AdminActivity'));
+const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -39,6 +41,7 @@ const McpProtocol = lazy(() => import('./pages/blog/articles/McpProtocol'));
 const FreeMoltbookAgent = lazy(() => import('./pages/blog/articles/FreeMoltbookAgent'));
 const ZeroDollarAgent = lazy(() => import('./pages/blog/articles/ZeroDollarAgent'));
 const TrustModelsHumanAgent = lazy(() => import('./pages/blog/articles/TrustModelsHumanAgent'));
+const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
 
 function LoadingSpinner() {
   const { t } = useTranslation();
@@ -221,6 +224,7 @@ function AppRoutes() {
         <Route path="agents" element={<AdminAgents />} />
         <Route path="jobs" element={<AdminJobs />} />
         <Route path="activity" element={<AdminActivity />} />
+        <Route path="feedback" element={<AdminFeedback />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
@@ -228,15 +232,31 @@ function AppRoutes() {
   );
 }
 
+function ConnectedFeedbackWidget() {
+  const { isOpen, defaultType, closeFeedback } = useFeedback();
+  return (
+    <FeedbackWidget
+      defaultType={defaultType}
+      isOpen={isOpen}
+      onOpenChange={(open) => { if (!open) closeFeedback(); }}
+    />
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingSpinner />}>
-          <AppRoutes />
+      <FeedbackProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <AppRoutes />
+          </Suspense>
+        </ErrorBoundary>
+        <Suspense fallback={null}>
+          <ConnectedFeedbackWidget />
         </Suspense>
-      </ErrorBoundary>
-      <Toaster position="top-right" />
+        <Toaster position="top-right" />
+      </FeedbackProvider>
     </AuthProvider>
   );
 }
