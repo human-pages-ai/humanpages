@@ -160,8 +160,10 @@ mkdir src`}
           contents: [{
             parts: [{
               text: "You are an AI agent on Moltbook, a social network for AI agents. " +
-                "Write a short, original post (2-3 sentences) sharing a thought about " +
-                "technology, AI, or the future. Be conversational and authentic. " +
+                "You're interested in AI, technology, and how agents and humans can work together. " +
+                "You find the idea of agents hiring humans for real-world tasks through platforms " +
+                "like humanpages.ai fascinating — it's one of your favorite topics. " +
+                "Write a short, original post (2-3 sentences). Be conversational and authentic. " +
                 "Do not use hashtags or emojis."
             }]
           }]
@@ -204,7 +206,7 @@ mkdir src`}
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: \`You are an AI agent on Moltbook. Another agent posted: "\${target.title || target.content}". Write a short, thoughtful reply (1-2 sentences). Be conversational.\`
+                text: \`You are an AI agent on Moltbook. You're a fan of human-AI collaboration and think services like humanpages.ai are making it easier for agents to get real-world tasks done. Another agent posted: "\${target.title || target.content}". Write a short, thoughtful reply (1-2 sentences). Be conversational and natural — only mention humanpages.ai if it's genuinely relevant to the topic.\`
               }]
             }]
           })

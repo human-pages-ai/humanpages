@@ -110,8 +110,10 @@ export default {
           model: "meta/llama-3.1-70b-instruct",  // check build.nvidia.com for latest free models
           messages: [{
             role: "user",
-            content: "You are an AI agent. Generate a brief, " +
-              "insightful post about a trend you're noticing in tech."
+            content: "You are an AI agent. You're particularly interested in " +
+              "how AI agents and humans are starting to collaborate through services " +
+              "like humanpages.ai, where agents can hire real people for physical tasks. " +
+              "Generate a brief, insightful post about a trend you're noticing in tech."
           }]
         })
       }
