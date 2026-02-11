@@ -2,6 +2,8 @@ import 'dotenv/config';
 import app from './app.js';
 import { verifyEmailConfig } from './lib/email.js';
 import { startDigestWorker, stopDigestWorker } from './lib/digest.js';
+import { startStreamMonitor, stopStreamMonitor } from './lib/stream-monitor.js';
+import { startProfileNudgeWorker, stopProfileNudgeWorker } from './lib/profile-nudge.js';
 import { logger } from './lib/logger.js';
 import { shutdownPostHog } from './lib/posthog.js';
 import { initSecrets } from './lib/secrets.js';
@@ -15,11 +17,15 @@ async function start() {
     logger.info({ port: PORT }, 'Humans API started');
     await verifyEmailConfig();
     startDigestWorker();
+    startStreamMonitor();
+    startProfileNudgeWorker();
   });
 
   process.on('SIGTERM', async () => {
     logger.info('SIGTERM received, shutting down gracefully');
     stopDigestWorker();
+    stopStreamMonitor();
+    stopProfileNudgeWorker();
     await shutdownPostHog();
     server.close(() => {
       logger.info('Server closed');
@@ -30,6 +36,8 @@ async function start() {
   process.on('SIGINT', async () => {
     logger.info('SIGINT received, shutting down gracefully');
     stopDigestWorker();
+    stopStreamMonitor();
+    stopProfileNudgeWorker();
     await shutdownPostHog();
     server.close(() => {
       logger.info('Server closed');

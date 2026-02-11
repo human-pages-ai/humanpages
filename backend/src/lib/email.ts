@@ -858,6 +858,192 @@ Human Pages - Get hired for real-world tasks
   });
 }
 
+// ===== STREAM NOTIFICATION EMAILS =====
+
+interface StreamFlowStoppedEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  jobTitle: string;
+  totalPaid: number;
+  language?: string;
+}
+
+export async function sendStreamFlowStoppedEmail(data: StreamFlowStoppedEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+
+  const textContent = `
+${t('email.jobOffer.greeting', { name: data.humanName })}
+
+The payment flow for "${data.jobTitle}" was stopped by the agent.
+
+Total received so far: $${data.totalPaid.toFixed(2)} USDC
+
+The stream has been paused. The agent may resume it later.
+
+Stream payments arrive as USDCx (a wrapped version of USDC). You can convert USDCx back to regular USDC anytime at app.superfluid.finance — it takes one quick transaction.
+
+View your dashboard: ${FRONTEND_URL}/dashboard
+
+---
+${t('email.jobOffer.footer')}
+
+To unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Payment Flow Stopped</title></head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f5;">
+    <tr><td align="center" style="padding: 40px 20px;">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+        <tr><td align="center" style="padding: 32px 40px 24px;">
+          <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f;">Payment Flow Stopped</h1>
+        </td></tr>
+        <tr><td style="padding: 0 40px;">
+          <p style="margin: 0 0 8px; font-size: 15px; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+          <p style="margin: 0 0 16px; font-size: 15px; color: #44445a;">The payment flow for <strong>"${data.jobTitle}"</strong> was stopped.</p>
+          <p style="font-size: 28px; font-weight: bold; color: #059669; margin: 12px 0;">$${data.totalPaid.toFixed(2)} USDC received</p>
+          <p style="margin: 0 0 16px; font-size: 14px; color: #6b7280;">Stream payments arrive as USDCx (a wrapped version of USDC). You can convert USDCx back to regular USDC anytime at <a href="https://app.superfluid.finance" style="color: #4F46E5;">app.superfluid.finance</a> — it takes one quick transaction.</p>
+        </td></tr>
+        <tr><td align="center" style="padding: 8px 40px 24px;">
+          <a href="${FRONTEND_URL}/dashboard" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px;">View Dashboard</a>
+        </td></tr>
+        <tr><td style="padding: 24px 40px 32px;">
+          <p style="margin: 0; font-size: 12px; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+          <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" style="color: #8b8ba0; font-size: 12px;">Unsubscribe</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `Payment flow stopped: ${data.jobTitle}`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
+interface StreamStartedEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  jobTitle: string;
+  rateUsdc: number;
+  interval: string;
+  method: string;
+  language?: string;
+}
+
+export async function sendStreamStartedEmail(data: StreamStartedEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+  const intervalLabel = data.interval.toLowerCase().replace('ly', '');
+
+  const textContent = `
+${t('email.jobOffer.greeting', { name: data.humanName })}
+
+An agent started streaming $${data.rateUsdc}/${intervalLabel} to your wallet${data.method === 'SUPERFLUID' ? ' via Superfluid' : ''} for "${data.jobTitle}".
+
+${data.method === 'SUPERFLUID' ? 'Stream payments arrive as USDCx (a wrapped version of USDC). You can convert USDCx back to regular USDC anytime at app.superfluid.finance — it takes one quick transaction.' : ''}
+
+View your dashboard: ${FRONTEND_URL}/dashboard
+
+---
+${t('email.jobOffer.footer')}
+
+To unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Stream Started</title></head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f5;">
+    <tr><td align="center" style="padding: 40px 20px;">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+        <tr><td align="center" style="padding: 32px 40px 24px;">
+          <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f;">Stream Payment Started</h1>
+        </td></tr>
+        <tr><td style="padding: 0 40px;">
+          <p style="margin: 0 0 8px; font-size: 15px; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+          <p style="margin: 0 0 16px; font-size: 15px; color: #44445a;">An agent started streaming payments for <strong>"${data.jobTitle}"</strong>${data.method === 'SUPERFLUID' ? ' via Superfluid' : ''}.</p>
+          <p style="font-size: 28px; font-weight: bold; color: #059669; margin: 12px 0;">$${data.rateUsdc}/${intervalLabel}</p>
+          ${data.method === 'SUPERFLUID' ? '<p style="margin: 0 0 16px; font-size: 14px; color: #6b7280;">Stream payments arrive as USDCx (a wrapped version of USDC). You can convert USDCx back to regular USDC anytime at <a href="https://app.superfluid.finance" style="color: #4F46E5;">app.superfluid.finance</a> — it takes one quick transaction.</p>' : ''}
+        </td></tr>
+        <tr><td align="center" style="padding: 8px 40px 24px;">
+          <a href="${FRONTEND_URL}/dashboard" style="display: inline-block; background-color: #059669; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px;">View Dashboard</a>
+        </td></tr>
+        <tr><td style="padding: 24px 40px 32px;">
+          <p style="margin: 0; font-size: 12px; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+          <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" style="color: #8b8ba0; font-size: 12px;">Unsubscribe</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `Stream started: $${data.rateUsdc}/${intervalLabel} for ${data.jobTitle}`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
+interface StreamCompletedEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  jobTitle: string;
+  totalPaid: number;
+  days: number;
+  language?: string;
+}
+
+export async function sendStreamCompletedEmail(data: StreamCompletedEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+
+  const textContent = `
+${t('email.jobOffer.greeting', { name: data.humanName })}
+
+The stream for "${data.jobTitle}" has ended.
+
+Total received: $${data.totalPaid.toFixed(2)} USDC over ${data.days} day(s).
+
+View your dashboard: ${FRONTEND_URL}/dashboard
+
+---
+${t('email.jobOffer.footer')}
+
+To unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `Stream completed: ${data.jobTitle} — $${data.totalPaid.toFixed(2)} total`,
+    text: textContent,
+    html: `<html><body><p>${textContent.replace(/\n/g, '<br>')}</p></body></html>`,
+  });
+}
+
 // ===== DIGEST EMAIL =====
 
 interface DigestEmailData {
@@ -1128,6 +1314,149 @@ export async function sendOrQueueNotification(
 
   // Send immediately
   return sendFn();
+}
+
+// ===== PROFILE COMPLETION NUDGE EMAIL =====
+
+interface ProfileNudgeEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  missingFields: string[];
+  completionPercent: number;
+  language?: string;
+}
+
+export async function sendProfileNudgeEmail(data: ProfileNudgeEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+  const dashboardUrl = `${FRONTEND_URL}/dashboard?tab=profile`;
+
+  const missingList = data.missingFields.map(f => `- ${f}`).join('\n');
+  const missingHtmlList = data.missingFields.map(f =>
+    `<li style="padding: 4px 0; color: #44445a;">${f}</li>`
+  ).join('');
+
+  const textContent = `
+Hi ${data.humanName},
+
+Your profile is ${data.completionPercent}% complete — but AI agents can't find you yet.
+
+To start receiving job offers, you still need:
+${missingList}
+
+It only takes a couple of minutes to finish:
+${dashboardUrl}
+
+Profiles with complete information get significantly more job offers. Don't miss out!
+
+---
+Human Pages — Get hired for real-world tasks
+
+To unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Complete your profile</title>
+  <style>
+    :root { color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+      .email-checklist { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+      .email-checklist li { color: #c8c8d8 !important; }
+    }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+    [data-ogsc] .email-checklist { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-checklist li { color: #c8c8d8 !important; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">You're ${data.completionPercent}% there</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">Hi ${data.humanName},</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">AI agents are searching for people like you right now, but they can't see your profile yet. Complete these steps to start getting hired:</p>
+            </td>
+          </tr>
+          <!-- Checklist -->
+          <tr>
+            <td style="padding: 0 40px 16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-checklist" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; line-height: 1.8;">
+                      ${missingHtmlList}
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <a href="${dashboardUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; border: 2px solid #4F46E5;">Complete My Profile</a>
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">Human Pages — Get hired for real-world tasks</p>
+              <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `Your profile is ${data.completionPercent}% complete — finish it to get hired`,
+    text: textContent,
+    html: htmlContent,
+  });
 }
 
 // Verify email configuration on startup

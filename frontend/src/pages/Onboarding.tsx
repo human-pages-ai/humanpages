@@ -6,6 +6,7 @@ import { analytics } from '../lib/analytics';
 import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const SKILL_SUGGESTIONS = [
   'Local Photography', 'Phone Calls', 'In-Person Verification',
@@ -29,6 +30,7 @@ export default function Onboarding() {
   const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
   const [error, setError] = useState('');
+  const [showSkipWarning, setShowSkipWarning] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -224,16 +226,28 @@ export default function Onboarding() {
 
           {/* Skip link */}
           <button
-            onClick={() => {
-              analytics.track('onboarding_skip');
-              navigate('/dashboard');
-            }}
+            onClick={() => setShowSkipWarning(true)}
             className="w-full mt-4 text-sm text-slate-500 hover:text-slate-700"
           >
             {t('onboarding.skipToDashboard')}
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showSkipWarning}
+        title={t('onboarding.skipWarning.title')}
+        message={t('onboarding.skipWarning.message')}
+        confirmLabel={t('onboarding.skipWarning.confirm')}
+        cancelLabel={t('onboarding.skipWarning.cancel')}
+        onConfirm={() => {
+          setShowSkipWarning(false);
+          analytics.track('onboarding_skip');
+          posthog.capture('onboarding_skipped');
+          navigate('/dashboard');
+        }}
+        onCancel={() => setShowSkipWarning(false)}
+      />
     </div>
   );
 }

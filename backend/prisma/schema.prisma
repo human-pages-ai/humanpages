@@ -21,11 +21,31 @@ enum WorkMode {
   HYBRID
 }
 
-// Payment preference for deals
-enum PaymentPreference {
-  ESCROW    // Willing to use escrow
-  UPFRONT   // Wants payment before starting work
-  BOTH      // Flexible — upfront, escrow, or after completion
+// Payment mode for jobs
+enum PaymentMode {
+  ONE_TIME
+  STREAM
+}
+
+// Stream payment interval
+enum StreamInterval {
+  HOURLY
+  DAILY
+  WEEKLY
+}
+
+// Stream payment method
+enum StreamMethod {
+  SUPERFLUID
+  MICRO_TRANSFER
+}
+
+// Stream tick verification status
+enum TickStatus {
+  PENDING
+  VERIFIED
+  MISSED
+  SKIPPED
 }
 
 // Agent lifecycle status
@@ -96,7 +116,7 @@ model Human {
   minRateUsdEstimate Decimal? @db.Decimal(18, 6) // Computed USD equivalent of minRateUsdc
   rateType         RateType @default(NEGOTIABLE)
   workMode         WorkMode?
-  paymentPreference PaymentPreference @default(BOTH) // Escrow vs upfront
+  paymentPreferences String[] @default(["UPFRONT", "ESCROW", "UPON_COMPLETION"]) // Payment types accepted
 
   // ===== OFFER FILTERS (Anti-Spam) =====
   minOfferPrice    Decimal? @db.Decimal(18, 6) // Reject offers below this price
@@ -137,6 +157,9 @@ model Human {
 
   // Token invalidation for logout-all
   tokenInvalidatedAt DateTime? // All tokens issued before this time are invalid
+
+  // Profile completion nudge tracking
+  profileNudgeSentAt DateTime? // When last profile-completion reminder was sent
 
   // Privacy & legal compliance
   termsAcceptedAt        DateTime?
@@ -183,13 +206,17 @@ model Human {
   @@index([isAvailable, lastActiveAt])
 }
 
-// Job status flow: PENDING -> ACCEPTED -> PAID -> COMPLETED
+// Job status flow:
+// One-time: PENDING -> ACCEPTED -> PAID -> COMPLETED
+// Stream:   PENDING -> ACCEPTED -> STREAMING -> PAUSED -> COMPLETED
 // Can be REJECTED or CANCELLED at various stages
 enum JobStatus {
   PENDING    // Agent created offer, waiting for human to accept
   ACCEPTED   // Human accepted, waiting for payment
   REJECTED   // Human rejected the offer
   PAID       // Payment received, work can begin
+  STREAMING  // Stream payment active (Superfluid flow or micro-transfers)
+  PAUSED     // Stream paused (flow deleted or tick missed)
   COMPLETED  // Work done, review unlocked
   CANCELLED  // Cancelled by either party
   DISPUTED   // Payment dispute
@@ -292,6 +319,27 @@ model Job {
   paymentNetwork  String?   // e.g., "ethereum", "base", "polygon", "arbitrum"
   paymentAmount   Decimal?  @db.Decimal(18, 6) // Actual amount received
   paidAt          DateTime?
+  paymentTiming   String?   @default("upfront") // "upfront" or "upon_completion"
+
+  // ===== STREAM PAYMENT FIELDS =====
+  paymentMode          PaymentMode    @default(ONE_TIME)
+  streamMethod         StreamMethod?
+  streamInterval       StreamInterval?
+  streamRateUsdc       Decimal?       @db.Decimal(18, 6) // USD amount per interval
+  streamFlowRate       String?        // Superfluid: wei/sec flow rate (stored as string because int96)
+  streamMaxTicks       Int?           // Optional cap (null = indefinite)
+  streamNetwork        String?        // Locked chain for all stream payments
+  streamToken          String?        // Locked token (e.g. "USDC")
+  streamSuperToken     String?        // Superfluid: Super Token contract address (e.g. USDCx)
+  streamSenderAddress  String?        // Agent's wallet address (for flow verification)
+  streamStartedAt      DateTime?      // When streaming began
+  streamPausedAt       DateTime?      // When paused
+  streamEndedAt        DateTime?      // When stopped
+  streamTickCount      Int            @default(0) // Total verified ticks/checkpoints
+  streamMissedTicks    Int            @default(0) // Consecutive misses (micro-transfer)
+  streamTotalPaid      Decimal?       @db.Decimal(18, 6) // Running total paid
+  streamGraceTicks     Int            @default(1) // Misses before auto-pause (micro-transfer)
+  streamContractId     String?        // Future: Sablier stream ID
 
   // Webhook callback (optional, provided by agent)
   callbackUrl     String?   // URL to POST status updates to
@@ -312,6 +360,7 @@ model Job {
   human           Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
   review          Review?
   messages        JobMessage[]
+  streamTicks     StreamTick[]
 
   @@index([humanId, status])
   @@index([agentId])
@@ -319,6 +368,32 @@ model Job {
   @@index([status])
   @@index([createdAt])
   @@index([humanId, status, createdAt])
+  @@index([paymentMode, status])
+  @@index([status, streamMethod])
+}
+
+model StreamTick {
+  id              String     @id @default(cuid())
+  jobId           String
+  tickNumber      Int
+  status          TickStatus @default(PENDING)
+  expectedAt      DateTime
+  graceDeadline   DateTime
+  txHash          String?    @unique    // micro-transfer: on-chain txHash. superfluid: null
+  network         String?
+  token           String?
+  amount          Decimal?   @db.Decimal(18, 6)
+  fromAddress     String?
+  toAddress       String?
+  verifiedAt      DateTime?
+  confirmations   Int?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  job             Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, tickNumber])
+  @@index([jobId, status])
+  @@index([status, graceDeadline])
 }
 
 model Review {

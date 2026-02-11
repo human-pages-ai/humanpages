@@ -502,6 +502,12 @@
       "negotiable": "negotiable",
       "equipment": "Equipment you have (optional)",
       "languages": "Languages you speak (optional)"
+    },
+    "skipWarning": {
+      "title": "Your profile won't be visible",
+      "message": "Without your location and skills, AI agents can't find you. You won't appear in search results and won't receive job offers until your profile is complete. Are you sure you want to skip?",
+      "confirm": "Skip anyway",
+      "cancel": "Complete my profile"
     }
   },
   "welcome": {
@@ -563,7 +569,12 @@
     "memberSince": "Member since {{date}}",
     "updated": "Updated",
     "lastUpdated": "Last updated",
-    "offerUpdated": "This offer has been updated by the agent"
+    "offerUpdated": "This offer has been updated by the agent",
+    "walletNudge": {
+      "title": "Set up a wallet to get this job",
+      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
+      "action": "Set Up Wallet"
+    }
   },
   "currency": {
     "label": "Currency",
@@ -628,7 +639,10 @@
     "verificationSent": "Verification email sent",
     "emailVerified": "Email verified successfully",
     "preferencesSaved": "Preferences saved",
-    "genericError": "Something went wrong. Please try again."
+    "genericError": "Something went wrong. Please try again.",
+    "walletNudgeTitle": "Set up your wallet",
+    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
+    "walletNudgeAction": "Set Up"
   },
   "notFound": {
     "title": "Page not found",

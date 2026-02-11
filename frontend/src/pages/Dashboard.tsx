@@ -29,7 +29,7 @@ const VALID_TABS: DashboardTab[] = ['jobs', 'profile', 'payments', 'settings'];
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -182,6 +182,7 @@ export default function Dashboard() {
         rateCurrency: data.rateCurrency || 'USD',
       });
       setServiceForm((prev) => ({ ...prev, priceCurrency: data.rateCurrency || 'USD' }));
+      updateUser({ hasWallet: (data.wallets?.length ?? 0) > 0 });
       if (data.id) {
         try {
           const reviewData = await api.getMyReviews(data.id);
@@ -444,10 +445,33 @@ export default function Dashboard() {
         priceUnit: serviceForm.priceUnit || null,
       });
       posthog.capture('service_added');
+      const prevWalletCount = profile?.wallets?.length ?? 0;
       await loadProfile();
       setServiceForm({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: profile?.rateCurrency || 'USD' });
       setShowServiceForm(false);
       toast.success(t('toast.serviceAdded'));
+      if (prevWalletCount === 0) {
+        setTimeout(() => {
+          toast(
+            (toastObj) => (
+              <div>
+                <p className="font-medium text-sm">{t('toast.walletNudgeTitle')}</p>
+                <p className="text-xs text-gray-500 mt-1">{t('toast.walletNudgeDescription')}</p>
+                <button
+                  className="mt-2 text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                  onClick={() => {
+                    toast.dismiss(toastObj.id);
+                    setActiveTab('payments');
+                  }}
+                >
+                  {t('toast.walletNudgeAction')}
+                </button>
+              </div>
+            ),
+            { duration: 8000 }
+          );
+        }, 500);
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -736,7 +760,7 @@ export default function Dashboard() {
             <div className="space-y-6">
               {/* Two-column grid for settings cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Trust & Verification */}
+                {/* Boost Your Profile */}
                 <div className="space-y-4">
                   <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
                   <HumanitySection profile={profile} onVerified={loadProfile} />
