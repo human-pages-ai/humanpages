@@ -39,7 +39,7 @@ const publicHumanSelect = {
   rateCurrency: true,
   minRateUsdEstimate: true,
   rateType: true,
-  paymentPreference: true,
+  paymentPreferences: true,
   workMode: true,
   linkedinVerified: true,
   githubVerified: true,
@@ -142,7 +142,9 @@ const updateProfileSchema = z.object({
     `Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}`
   ).optional(),
   rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
-  paymentPreference: z.enum(['ESCROW', 'UPFRONT', 'BOTH']).optional(),
+  paymentPreferences: z.array(
+    z.enum(['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STREAM'])
+  ).min(1).optional(),
   workMode: z.enum(['REMOTE', 'ONSITE', 'HYBRID']).nullable().optional(),
 
   // Offer filters (anti-spam)
@@ -655,6 +657,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       available,
       workMode,
       verified,
+      paymentType,
       limit = '20',
       offset = '0',
     } = req.query;
@@ -700,6 +703,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     // Filter by work mode
     if (workMode) {
       where.workMode = workMode as string;
+    }
+
+    // Filter by payment type (has overlap with requested types)
+    if (paymentType) {
+      where.paymentPreferences = { has: paymentType as string };
     }
 
     // Filter by rate range (search params are in USD, compare against USD estimate)

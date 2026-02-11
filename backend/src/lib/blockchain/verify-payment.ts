@@ -194,6 +194,20 @@ export async function verifyUsdcPayment(params: VerifyPaymentParams): Promise<Ve
     );
   }
 
+  // Also check StreamTick for duplicate txHash (micro-transfer stream payments)
+  const existingTick = await prisma.streamTick.findUnique({ where: { txHash } });
+  if (existingTick) {
+    logger.warn('Duplicate txHash detected in stream tick', { ...logContext, tickId: existingTick.id });
+    throw new PaymentVerificationError(
+      PaymentErrorCode.TX_ALREADY_USED,
+      'This transaction hash has already been used for a stream payment',
+      {
+        txHash,
+        hint: 'Each transaction can only be used once',
+      }
+    );
+  }
+
   // 4. Get public client for the network
   const client = getPublicClient(networkLower);
   if (!client) {

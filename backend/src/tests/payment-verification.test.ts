@@ -18,6 +18,9 @@ vi.mock('../lib/prisma.js', () => ({
     job: {
       findFirst: vi.fn(),
     },
+    streamTick: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -73,8 +76,9 @@ describe('Payment Verification', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Reset prisma mock
+    // Reset prisma mocks
     (prisma.job.findFirst as any).mockResolvedValue(null);
+    (prisma.streamTick.findUnique as any).mockResolvedValue(null);
 
     // Setup mock client
     (createPublicClient as any).mockReturnValue({
@@ -162,6 +166,36 @@ describe('Payment Verification', () => {
         });
       } catch (error) {
         expect((error as PaymentVerificationError).code).toBe(PaymentErrorCode.TX_ALREADY_USED);
+      }
+    });
+
+    it('should reject txHash already used in a StreamTick', async () => {
+      // Job findFirst returns null (no duplicate in jobs)
+      (prisma.job.findFirst as any).mockResolvedValue(null);
+      // But streamTick findUnique returns a match
+      (prisma.streamTick.findUnique as any).mockResolvedValue({ id: 'tick-123', jobId: 'some-job' });
+
+      await expect(
+        verifyUsdcPayment({
+          txHash: validTxHash,
+          network: 'base',
+          recipientWallets: [recipientWallet],
+          expectedAmount: 100,
+          jobId,
+        })
+      ).rejects.toThrow(PaymentVerificationError);
+
+      try {
+        await verifyUsdcPayment({
+          txHash: validTxHash,
+          network: 'base',
+          recipientWallets: [recipientWallet],
+          expectedAmount: 100,
+          jobId,
+        });
+      } catch (error) {
+        expect((error as PaymentVerificationError).code).toBe(PaymentErrorCode.TX_ALREADY_USED);
+        expect((error as PaymentVerificationError).message).toContain('stream payment');
       }
     });
   });

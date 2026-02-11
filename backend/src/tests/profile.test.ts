@@ -244,13 +244,13 @@ describe('Profile API', () => {
       expect(response.body.locationLng).toBeCloseTo(-122.4194);
     });
 
-    it('should update rateType and paymentPreference', async () => {
+    it('should update rateType and paymentPreferences', async () => {
       const response = await authRequest(user.token)
         .patch('/api/humans/me')
-        .send({ rateType: 'HOURLY', paymentPreference: 'ESCROW' });
+        .send({ rateType: 'HOURLY', paymentPreferences: ['ESCROW', 'STREAM'] });
       expect(response.status).toBe(200);
       expect(response.body.rateType).toBe('HOURLY');
-      expect(response.body.paymentPreference).toBe('ESCROW');
+      expect(response.body.paymentPreferences).toEqual(['ESCROW', 'STREAM']);
     });
   });
 

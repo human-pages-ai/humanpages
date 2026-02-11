@@ -29,6 +29,7 @@ export async function cleanDatabase(): Promise<void> {
   await prisma.pendingNotification.deleteMany();
   await prisma.agentReport.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.streamTick.deleteMany();
   await prisma.jobMessage.deleteMany();
   await prisma.job.deleteMany();
   await prisma.vouch.deleteMany();
@@ -159,6 +160,38 @@ export async function createTestUserWithProfile(
     data: profileOverrides,
   });
   return user;
+}
+
+/**
+ * Create a stream job directly in the database for testing
+ */
+export async function createStreamJob(overrides: {
+  humanId: string;
+  agentId: string;
+  registeredAgentId: string;
+  method?: 'SUPERFLUID' | 'MICRO_TRANSFER';
+  interval?: 'HOURLY' | 'DAILY' | 'WEEKLY';
+  rateUsdc?: number;
+  maxTicks?: number;
+  status?: string;
+}): Promise<{ id: string }> {
+  const job = await prisma.job.create({
+    data: {
+      humanId: overrides.humanId,
+      agentId: overrides.agentId,
+      registeredAgentId: overrides.registeredAgentId,
+      title: 'Stream Test Job',
+      description: 'Test stream job',
+      priceUsdc: overrides.rateUsdc || 10,
+      paymentMode: 'STREAM',
+      streamMethod: overrides.method || 'SUPERFLUID',
+      streamInterval: overrides.interval || 'DAILY',
+      streamRateUsdc: overrides.rateUsdc || 10,
+      streamMaxTicks: overrides.maxTicks,
+      status: (overrides.status as any) || 'ACCEPTED',
+    },
+  });
+  return { id: job.id };
 }
 
 /**

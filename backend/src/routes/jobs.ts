@@ -16,6 +16,15 @@ import {
   SUPPORTED_NETWORKS,
   SUPPORTED_TOKENS,
   type SupportedToken,
+  verifyFlow,
+  isFlowActive,
+  getSuperTokenAddress,
+  usdcPerIntervalToFlowRate,
+  flowRateToUsdcPerInterval,
+  calculateTotalStreamed,
+  getFlowInfo,
+  SUPER_TOKEN_ADDRESSES,
+  CFA_V1_FORWARDER,
 } from '../lib/blockchain/index.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
@@ -46,6 +55,9 @@ const ipRateLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
+// Valid payment preferences
+const VALID_PAYMENT_PREFERENCES = ['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STREAM'];
+
 // Schema for creating a job offer (called by agents)
 const createJobSchema = z.object({
   humanId: z.string().min(1),
@@ -55,6 +67,15 @@ const createJobSchema = z.object({
   description: z.string().min(1),
   category: z.string().optional(),
   priceUsdc: z.number().positive(),
+  // Payment mode & timing
+  paymentMode: z.enum(['ONE_TIME', 'STREAM']).optional().default('ONE_TIME'),
+  paymentTiming: z.enum(['upfront', 'upon_completion']).optional().default('upfront'),
+  // Stream-specific fields (required when paymentMode=STREAM)
+  streamMethod: z.enum(['SUPERFLUID', 'MICRO_TRANSFER']).optional(),
+  streamInterval: z.enum(['HOURLY', 'DAILY', 'WEEKLY']).optional(),
+  streamRateUsdc: z.number().positive().optional(),
+  streamMaxTicks: z.number().int().positive().optional(),
+  streamGraceTicks: z.number().int().min(1).optional(),
   // Agent location for distance filtering
   agentLat: z.number().min(-90).max(90).optional(),
   agentLng: z.number().min(-180).max(180).optional(),
@@ -145,6 +166,19 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
       });
     }
 
+    // Validate stream fields when mode is STREAM
+    if (data.paymentMode === 'STREAM') {
+      if (!data.streamMethod) {
+        return res.status(400).json({ error: 'streamMethod is required when paymentMode is STREAM' });
+      }
+      if (!data.streamInterval) {
+        return res.status(400).json({ error: 'streamInterval is required when paymentMode is STREAM' });
+      }
+      if (!data.streamRateUsdc) {
+        return res.status(400).json({ error: 'streamRateUsdc is required when paymentMode is STREAM' });
+      }
+    }
+
     // Verify human exists, is email-verified, and get contact info + filter settings
     const human = await prisma.human.findUnique({
       where: { id: data.humanId },
@@ -158,6 +192,7 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
         telegramChatId: true,
         preferredLanguage: true,
         emailNotifications: true,
+        paymentPreferences: true,
         // Filter settings
         minOfferPrice: true,
         maxOfferDistance: true,
@@ -252,6 +287,23 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
       }
     }
 
+    // Check payment preference compatibility
+    if (data.paymentMode === 'STREAM' && !human.paymentPreferences.includes('STREAM')) {
+      return res.status(400).json({
+        error: 'Payment preference mismatch',
+        code: 'STREAM_NOT_ACCEPTED',
+        message: 'This human does not accept stream payments. Check their paymentPreferences.',
+      });
+    }
+    if (data.paymentMode === 'ONE_TIME' && data.paymentTiming === 'upon_completion'
+        && !human.paymentPreferences.includes('UPON_COMPLETION')) {
+      return res.status(400).json({
+        error: 'Payment preference mismatch',
+        code: 'UPON_COMPLETION_NOT_ACCEPTED',
+        message: 'This human does not accept upon-completion payments.',
+      });
+    }
+
     const job = await prisma.job.create({
       data: {
         humanId: data.humanId,
@@ -262,6 +314,16 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
         description: data.description,
         category: data.category,
         priceUsdc: new Decimal(data.priceUsdc),
+        paymentMode: data.paymentMode,
+        paymentTiming: data.paymentMode === 'ONE_TIME' ? data.paymentTiming : null,
+        // Stream fields
+        ...(data.paymentMode === 'STREAM' ? {
+          streamMethod: data.streamMethod,
+          streamInterval: data.streamInterval,
+          streamRateUsdc: data.streamRateUsdc ? new Decimal(data.streamRateUsdc) : undefined,
+          streamMaxTicks: data.streamMaxTicks,
+          streamGraceTicks: data.streamGraceTicks ?? 1,
+        } : {}),
         callbackUrl: data.callbackUrl,
         callbackSecret: data.callbackSecret,
         status: 'PENDING',
@@ -338,13 +400,28 @@ router.get('/:id', async (req, res) => {
       where: { id: req.params.id },
       include: {
         human: {
-          select: { id: true, name: true, paymentPreference: true },
+          select: { id: true, name: true, paymentPreferences: true },
         },
         review: true,
         registeredAgent: {
           select: { id: true, name: true, description: true, websiteUrl: true, domainVerified: true },
         },
         _count: { select: { messages: true } },
+        ...(true ? {
+          streamTicks: {
+            orderBy: { tickNumber: 'desc' as const },
+            take: 10,
+            select: {
+              id: true,
+              tickNumber: true,
+              status: true,
+              expectedAt: true,
+              amount: true,
+              verifiedAt: true,
+              txHash: true,
+            },
+          },
+        } : {}),
       },
     });
 
@@ -352,9 +429,33 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
+    // Build stream summary for stream jobs
+    let streamSummary = undefined;
+    if (job.paymentMode === 'STREAM') {
+      streamSummary = {
+        method: job.streamMethod,
+        interval: job.streamInterval,
+        rateUsdc: job.streamRateUsdc?.toString(),
+        flowRate: job.streamFlowRate,
+        network: job.streamNetwork,
+        token: job.streamToken,
+        superToken: job.streamSuperToken,
+        senderAddress: job.streamSenderAddress,
+        startedAt: job.streamStartedAt,
+        pausedAt: job.streamPausedAt,
+        endedAt: job.streamEndedAt,
+        tickCount: job.streamTickCount,
+        missedTicks: job.streamMissedTicks,
+        totalPaid: job.streamTotalPaid?.toString(),
+        maxTicks: job.streamMaxTicks,
+        graceTicks: job.streamGraceTicks,
+        recentTicks: job.streamTicks,
+      };
+    }
+
     // Strip callbackSecret from response to prevent leaking
-    const { callbackSecret, ...safeJob } = job;
-    res.json(safeJob);
+    const { callbackSecret, streamTicks, ...safeJob } = job;
+    res.json({ ...safeJob, ...(streamSummary ? { streamSummary } : {}) });
   } catch (error) {
     logger.error({ err: error }, 'Get job error');
     res.status(500).json({ error: 'Internal server error' });
@@ -705,12 +806,21 @@ router.patch('/:id/paid', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Only accept payment for ACCEPTED or COMPLETED jobs
+    // Accept payment for ACCEPTED jobs (upfront flow) or COMPLETED jobs (upon-completion flow)
     if (job.status !== 'ACCEPTED' && job.status !== 'COMPLETED') {
       return res.status(400).json({
         error: 'Payment rejected',
         reason: `Job must be in ACCEPTED or COMPLETED status. Current status: ${job.status}`,
         hint: 'The human must accept the job before payment can be recorded.',
+      });
+    }
+
+    // For upon-completion: only accept payment after job is completed
+    if (job.paymentTiming === 'upon_completion' && job.status !== 'COMPLETED') {
+      return res.status(400).json({
+        error: 'Payment rejected',
+        reason: 'This is an upon-completion job. Payment is accepted only after the human marks work as done.',
+        hint: 'Wait for the job status to be COMPLETED before paying.',
       });
     }
 
@@ -816,7 +926,7 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
   try {
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
-      include: { human: { select: { paymentPreference: true } } },
+      include: { human: { select: { paymentPreferences: true } } },
     });
 
     if (!job) {
@@ -827,12 +937,22 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Allow PAID → COMPLETED always, and ACCEPTED → COMPLETED when preference is BOTH
-    if (job.status !== 'PAID') {
-      if (job.status === 'ACCEPTED' && job.human.paymentPreference === 'BOTH') {
-        // Allow completion before payment for flexible preference
-      } else {
-        return res.status(400).json({ error: `Cannot complete job in ${job.status} status` });
+    // For stream jobs, allow completion from STREAMING or PAUSED
+    if (job.paymentMode === 'STREAM') {
+      if (job.status !== 'STREAMING' && job.status !== 'PAUSED') {
+        return res.status(400).json({ error: `Cannot complete stream job in ${job.status} status` });
+      }
+    } else {
+      // Allow PAID → COMPLETED always
+      // Allow ACCEPTED → COMPLETED when human accepts upon-completion
+      // Allow ACCEPTED → COMPLETED when paymentPreferences includes UPON_COMPLETION
+      if (job.status !== 'PAID') {
+        const hasUponCompletion = job.human.paymentPreferences.includes('UPON_COMPLETION');
+        if (job.status === 'ACCEPTED' && (hasUponCompletion || job.paymentTiming === 'upon_completion')) {
+          // Allow completion before payment for upon-completion flow
+        } else {
+          return res.status(400).json({ error: `Cannot complete job in ${job.status} status` });
+        }
       }
     }
 
@@ -955,7 +1075,7 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
     }
 
     // Status check: only allow on non-terminal statuses
-    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAID'];
+    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAID', 'STREAMING', 'PAUSED'];
     if (!allowedStatuses.includes(job.status)) {
       return res.status(400).json({ error: `Cannot send messages on ${job.status} jobs` });
     }
@@ -1068,6 +1188,720 @@ router.get('/:id/messages', authenticateEither, async (req: EitherAuthRequest, r
     res.json(messages);
   } catch (error) {
     logger.error({ err: error }, 'Get messages error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ===== STREAM PAYMENT ENDPOINTS =====
+
+// Schema for starting a stream
+const startStreamSchema = z.object({
+  senderAddress: z.string().min(1),
+  network: z.string().min(1),
+  token: z.string().optional().default('USDC'),
+});
+
+// Start a stream payment
+router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const data = startStreamSchema.parse(req.body);
+    const agent = req.agent!;
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: {
+        human: {
+          include: {
+            wallets: { select: { address: true, network: true } },
+          },
+        },
+      },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.registeredAgentId !== agent.id) return res.status(403).json({ error: 'Not authorized' });
+    if (job.status !== 'ACCEPTED') {
+      return res.status(400).json({ error: `Cannot start stream on ${job.status} job. Must be ACCEPTED.` });
+    }
+    if (job.paymentMode !== 'STREAM') {
+      return res.status(400).json({ error: 'This is not a stream job' });
+    }
+
+    const networkLower = data.network.toLowerCase();
+
+    if (job.streamMethod === 'SUPERFLUID') {
+      // Resolve human's wallet on the network
+      const humanWallet = job.human.wallets.find(
+        (w) => w.network.toLowerCase() === networkLower
+      ) || job.human.wallets[0];
+
+      if (!humanWallet) {
+        return res.status(400).json({
+          error: 'Human has no wallet for this network',
+          hint: `The human needs a wallet on ${data.network} to receive Superfluid streams.`,
+        });
+      }
+
+      // Get super token address
+      const superToken = getSuperTokenAddress(networkLower, data.token);
+      if (!superToken) {
+        return res.status(400).json({
+          error: `No Super Token for ${data.token} on ${data.network}`,
+          hint: `Supported networks for Superfluid: ${Object.keys(SUPER_TOKEN_ADDRESSES).join(', ')}`,
+        });
+      }
+
+      // Calculate expected flow rate
+      const expectedFlowRate = usdcPerIntervalToFlowRate(
+        job.streamRateUsdc!.toNumber(),
+        job.streamInterval!,
+      );
+
+      // Verify on-chain flow
+      const flowResult = await verifyFlow({
+        network: networkLower,
+        superToken,
+        sender: data.senderAddress,
+        receiver: humanWallet.address,
+        expectedFlowRate,
+      });
+
+      if (!flowResult.active) {
+        return res.status(400).json({
+          error: 'No active flow found',
+          hint: `Create a flow on CFAv1Forwarder (${CFA_V1_FORWARDER}) with: token=${superToken}, receiver=${humanWallet.address}, flowRate=${expectedFlowRate}`,
+        });
+      }
+
+      if (!flowResult.matchesExpected) {
+        return res.status(400).json({
+          error: 'Flow rate does not match agreed rate',
+          expectedFlowRate,
+          actualFlowRate: flowResult.flowRate,
+          hint: 'The flow rate must match the agreed stream rate (within 1% tolerance).',
+        });
+      }
+
+      // Lock stream params and start
+      const updated = await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'STREAMING',
+          streamNetwork: networkLower,
+          streamToken: data.token.toUpperCase(),
+          streamSuperToken: superToken,
+          streamSenderAddress: data.senderAddress,
+          streamFlowRate: flowResult.flowRate,
+          streamStartedAt: new Date(),
+        },
+      });
+
+      // Create first checkpoint tick
+      await prisma.streamTick.create({
+        data: {
+          jobId: job.id,
+          tickNumber: 1,
+          status: 'VERIFIED',
+          expectedAt: new Date(),
+          graceDeadline: new Date(),
+          amount: new Decimal(0),
+          verifiedAt: new Date(),
+        },
+      });
+
+      await prisma.job.update({
+        where: { id: job.id },
+        data: { streamTickCount: 1 },
+      });
+
+      // Fire webhook
+      if (job.callbackUrl) {
+        fireWebhook(
+          { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+          'job.stream_started',
+          { method: 'SUPERFLUID', network: networkLower, flowRate: flowResult.flowRate },
+        );
+      }
+
+      return res.json({
+        id: updated.id,
+        status: updated.status,
+        message: 'Superfluid flow verified. Stream is now active.',
+        stream: {
+          method: 'SUPERFLUID',
+          network: networkLower,
+          superToken,
+          flowRate: flowResult.flowRate,
+          receiver: humanWallet.address,
+        },
+      });
+
+    } else {
+      // MICRO_TRANSFER: lock network/token, create first PENDING tick
+      const intervalMs = {
+        HOURLY: 60 * 60 * 1000,
+        DAILY: 24 * 60 * 60 * 1000,
+        WEEKLY: 7 * 24 * 60 * 60 * 1000,
+      };
+      const graceMs = {
+        HOURLY: 30 * 60 * 1000,
+        DAILY: 6 * 60 * 60 * 1000,
+        WEEKLY: 24 * 60 * 60 * 1000,
+      };
+
+      const interval = job.streamInterval!;
+      const expectedAt = new Date();
+      const graceDeadline = new Date(expectedAt.getTime() + (graceMs[interval] || intervalMs[interval]));
+
+      const updated = await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'STREAMING',
+          streamNetwork: networkLower,
+          streamToken: data.token.toUpperCase(),
+          streamStartedAt: new Date(),
+        },
+      });
+
+      // Create first PENDING tick
+      await prisma.streamTick.create({
+        data: {
+          jobId: job.id,
+          tickNumber: 1,
+          status: 'PENDING',
+          expectedAt,
+          graceDeadline,
+        },
+      });
+
+      // Get human's wallet for payment instructions
+      const humanWallet = job.human.wallets.find(
+        (w) => w.network.toLowerCase() === networkLower
+      ) || job.human.wallets[0];
+
+      // Fire webhook
+      if (job.callbackUrl) {
+        fireWebhook(
+          { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+          'job.stream_started',
+          { method: 'MICRO_TRANSFER', network: networkLower },
+        );
+      }
+
+      return res.json({
+        id: updated.id,
+        status: updated.status,
+        message: 'Stream started. Send the first payment.',
+        stream: {
+          method: 'MICRO_TRANSFER',
+          network: networkLower,
+          token: data.token.toUpperCase(),
+          amount: job.streamRateUsdc?.toString(),
+          interval,
+          receiverWallet: humanWallet?.address,
+        },
+      });
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Start stream error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Record a stream tick payment (micro-transfer only)
+const streamTickSchema = z.object({
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash format'),
+});
+
+router.patch('/:id/stream-tick', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const data = streamTickSchema.parse(req.body);
+    const agent = req.agent!;
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: {
+        human: {
+          include: {
+            wallets: { select: { address: true, network: true } },
+          },
+        },
+      },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.registeredAgentId !== agent.id) return res.status(403).json({ error: 'Not authorized' });
+    if (job.status !== 'STREAMING') {
+      return res.status(400).json({ error: `Job is not streaming. Current status: ${job.status}` });
+    }
+    if (job.streamMethod !== 'MICRO_TRANSFER') {
+      return res.status(400).json({ error: 'stream-tick is only for micro-transfer streams. Superfluid streams are verified automatically.' });
+    }
+
+    // Find the current PENDING tick
+    const pendingTick = await prisma.streamTick.findFirst({
+      where: { jobId: job.id, status: 'PENDING' },
+      orderBy: { tickNumber: 'asc' },
+    });
+
+    if (!pendingTick) {
+      return res.status(400).json({ error: 'No pending tick to verify' });
+    }
+
+    // Get wallet addresses for verification
+    const networkLower = job.streamNetwork!;
+    const recipientWallets = job.human.wallets
+      .filter((w) => w.network.toLowerCase() === networkLower)
+      .map((w) => w.address);
+    const fallbackWallets = recipientWallets.length > 0
+      ? recipientWallets
+      : [...new Set(job.human.wallets.map((w) => w.address.toLowerCase()))];
+
+    // Verify on-chain
+    const token = (job.streamToken || 'USDC') as SupportedToken;
+    const verification = await verifyUsdcPayment({
+      txHash: data.txHash,
+      network: networkLower,
+      recipientWallets: fallbackWallets,
+      expectedAmount: job.streamRateUsdc!.toNumber(),
+      jobId: job.id,
+      token,
+    });
+
+    // Update tick as VERIFIED
+    await prisma.streamTick.update({
+      where: { id: pendingTick.id },
+      data: {
+        status: 'VERIFIED',
+        txHash: data.txHash,
+        network: networkLower,
+        token,
+        amount: new Decimal(verification.amount),
+        fromAddress: verification.from,
+        toAddress: verification.to,
+        verifiedAt: new Date(),
+        confirmations: verification.confirmations,
+      },
+    });
+
+    // Update job totals
+    const newTotalPaid = (job.streamTotalPaid?.toNumber() || 0) + verification.amount;
+    const newTickCount = job.streamTickCount + 1;
+
+    await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        streamTickCount: newTickCount,
+        streamTotalPaid: new Decimal(newTotalPaid),
+        streamMissedTicks: 0, // Reset consecutive misses
+      },
+    });
+
+    // Check max ticks
+    if (job.streamMaxTicks && newTickCount >= job.streamMaxTicks) {
+      await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'COMPLETED',
+          streamEndedAt: new Date(),
+          completedAt: new Date(),
+        },
+      });
+
+      return res.json({
+        id: job.id,
+        status: 'COMPLETED',
+        message: 'Final tick verified. Stream completed.',
+        tick: { tickNumber: pendingTick.tickNumber, amount: verification.amount },
+        totalPaid: newTotalPaid,
+      });
+    }
+
+    // Create next PENDING tick
+    const intervalMs: Record<string, number> = {
+      HOURLY: 60 * 60 * 1000,
+      DAILY: 24 * 60 * 60 * 1000,
+      WEEKLY: 7 * 24 * 60 * 60 * 1000,
+    };
+    const graceMs: Record<string, number> = {
+      HOURLY: 30 * 60 * 1000,
+      DAILY: 6 * 60 * 60 * 1000,
+      WEEKLY: 24 * 60 * 60 * 1000,
+    };
+
+    const interval = job.streamInterval!;
+    const nextExpectedAt = new Date(Date.now() + intervalMs[interval]);
+    const nextGraceDeadline = new Date(nextExpectedAt.getTime() + (graceMs[interval] || intervalMs[interval]));
+
+    await prisma.streamTick.create({
+      data: {
+        jobId: job.id,
+        tickNumber: newTickCount + 1,
+        status: 'PENDING',
+        expectedAt: nextExpectedAt,
+        graceDeadline: nextGraceDeadline,
+      },
+    });
+
+    res.json({
+      id: job.id,
+      status: 'STREAMING',
+      message: 'Tick verified. Next payment due.',
+      tick: { tickNumber: pendingTick.tickNumber, amount: verification.amount },
+      totalPaid: newTotalPaid,
+      nextTick: {
+        tickNumber: newTickCount + 1,
+        expectedAt: nextExpectedAt,
+        graceDeadline: nextGraceDeadline,
+      },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    if (error instanceof PaymentVerificationError) {
+      return res.status(400).json(error.toResponse());
+    }
+    logger.error({ err: error }, 'Stream tick error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Pause a stream
+router.patch('/:id/pause-stream', authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: {
+        human: {
+          include: { wallets: { select: { address: true, network: true } } },
+        },
+      },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    // Auth check
+    if (req.senderType === 'human' && job.humanId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.senderType === 'agent' && job.registeredAgentId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (job.status !== 'STREAMING') {
+      return res.status(400).json({ error: `Cannot pause job in ${job.status} status` });
+    }
+
+    if (job.streamMethod === 'SUPERFLUID') {
+      // Verify flow has been deleted
+      const humanWallet = job.human.wallets.find(
+        (w) => w.network.toLowerCase() === job.streamNetwork!.toLowerCase()
+      ) || job.human.wallets[0];
+
+      if (humanWallet && job.streamSuperToken && job.streamSenderAddress) {
+        const flowActive = await isFlowActive({
+          network: job.streamNetwork!,
+          superToken: job.streamSuperToken,
+          sender: job.streamSenderAddress,
+          receiver: humanWallet.address,
+        });
+
+        if (flowActive) {
+          return res.status(400).json({
+            error: 'Flow is still active',
+            hint: 'Delete the Superfluid flow first, then call pause-stream.',
+          });
+        }
+      }
+
+      // Record final checkpoint
+      const totalStreamed = job.streamFlowRate && job.streamStartedAt
+        ? calculateTotalStreamed(
+            job.streamFlowRate,
+            Math.floor(job.streamStartedAt.getTime() / 1000),
+          )
+        : (job.streamTotalPaid?.toNumber() || 0);
+
+      const tickCount = job.streamTickCount + 1;
+      await prisma.streamTick.create({
+        data: {
+          jobId: job.id,
+          tickNumber: tickCount,
+          status: 'VERIFIED',
+          expectedAt: new Date(),
+          graceDeadline: new Date(),
+          amount: new Decimal(totalStreamed),
+          verifiedAt: new Date(),
+        },
+      });
+
+      await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'PAUSED',
+          streamPausedAt: new Date(),
+          streamTickCount: tickCount,
+          streamTotalPaid: new Decimal(totalStreamed),
+        },
+      });
+    } else {
+      // MICRO_TRANSFER: skip current PENDING tick
+      await prisma.streamTick.updateMany({
+        where: { jobId: job.id, status: 'PENDING' },
+        data: { status: 'SKIPPED' },
+      });
+
+      await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'PAUSED',
+          streamPausedAt: new Date(),
+        },
+      });
+    }
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...job, status: 'PAUSED', callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.stream_paused',
+      );
+    }
+
+    res.json({
+      id: job.id,
+      status: 'PAUSED',
+      message: 'Stream paused.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Pause stream error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Resume a stream (agent only)
+const resumeStreamSchema = z.object({
+  senderAddress: z.string().optional(),
+});
+
+router.patch('/:id/resume-stream', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const data = resumeStreamSchema.parse(req.body);
+    const agent = req.agent!;
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: {
+        human: {
+          include: { wallets: { select: { address: true, network: true } } },
+        },
+      },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.registeredAgentId !== agent.id) return res.status(403).json({ error: 'Not authorized' });
+    if (job.status !== 'PAUSED') {
+      return res.status(400).json({ error: `Cannot resume job in ${job.status} status` });
+    }
+
+    if (job.streamMethod === 'SUPERFLUID') {
+      const senderAddress = data.senderAddress || job.streamSenderAddress;
+      if (!senderAddress) {
+        return res.status(400).json({ error: 'senderAddress is required to resume a Superfluid stream' });
+      }
+
+      const humanWallet = job.human.wallets.find(
+        (w) => w.network.toLowerCase() === job.streamNetwork!.toLowerCase()
+      ) || job.human.wallets[0];
+
+      if (!humanWallet) {
+        return res.status(400).json({ error: 'No wallet found for human on this network' });
+      }
+
+      // Verify new flow exists
+      const flowResult = await verifyFlow({
+        network: job.streamNetwork!,
+        superToken: job.streamSuperToken!,
+        sender: senderAddress,
+        receiver: humanWallet.address,
+      });
+
+      if (!flowResult.active) {
+        return res.status(400).json({
+          error: 'No active flow found',
+          hint: `Create a new flow on ${job.streamNetwork} before resuming.`,
+        });
+      }
+
+      await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'STREAMING',
+          streamSenderAddress: senderAddress,
+          streamFlowRate: flowResult.flowRate,
+          streamPausedAt: null,
+        },
+      });
+    } else {
+      // MICRO_TRANSFER: create new PENDING tick
+      const intervalMs: Record<string, number> = {
+        HOURLY: 60 * 60 * 1000,
+        DAILY: 24 * 60 * 60 * 1000,
+        WEEKLY: 7 * 24 * 60 * 60 * 1000,
+      };
+      const graceMs: Record<string, number> = {
+        HOURLY: 30 * 60 * 1000,
+        DAILY: 6 * 60 * 60 * 1000,
+        WEEKLY: 24 * 60 * 60 * 1000,
+      };
+
+      const interval = job.streamInterval!;
+      const expectedAt = new Date();
+      const graceDeadline = new Date(expectedAt.getTime() + (graceMs[interval] || intervalMs[interval]));
+
+      // Get next tick number
+      const lastTick = await prisma.streamTick.findFirst({
+        where: { jobId: job.id },
+        orderBy: { tickNumber: 'desc' },
+      });
+      const nextTickNumber = (lastTick?.tickNumber || 0) + 1;
+
+      await prisma.streamTick.create({
+        data: {
+          jobId: job.id,
+          tickNumber: nextTickNumber,
+          status: 'PENDING',
+          expectedAt,
+          graceDeadline,
+        },
+      });
+
+      await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'STREAMING',
+          streamPausedAt: null,
+          streamMissedTicks: 0,
+        },
+      });
+    }
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...job, status: 'STREAMING', callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.stream_resumed',
+      );
+    }
+
+    res.json({
+      id: job.id,
+      status: 'STREAMING',
+      message: 'Stream resumed.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Resume stream error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Stop a stream permanently
+router.patch('/:id/stop-stream', authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    // Auth check
+    if (req.senderType === 'human' && job.humanId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.senderType === 'agent' && job.registeredAgentId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (job.status !== 'STREAMING' && job.status !== 'PAUSED') {
+      return res.status(400).json({ error: `Cannot stop stream in ${job.status} status` });
+    }
+
+    // Skip remaining PENDING ticks
+    await prisma.streamTick.updateMany({
+      where: { jobId: job.id, status: 'PENDING' },
+      data: { status: 'SKIPPED' },
+    });
+
+    await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'COMPLETED',
+        streamEndedAt: new Date(),
+        completedAt: new Date(),
+      },
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...job, status: 'COMPLETED', callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.stream_stopped',
+        { totalPaid: job.streamTotalPaid?.toString() },
+      );
+    }
+
+    res.json({
+      id: job.id,
+      status: 'COMPLETED',
+      message: 'Stream stopped. Job completed.',
+      totalPaid: job.streamTotalPaid?.toString(),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Stop stream error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get stream ticks (paginated)
+router.get('/:id/stream-ticks', authenticateEither, async (req: EitherAuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    // Auth check
+    if (req.senderType === 'human' && job.humanId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.senderType === 'agent' && job.registeredAgentId !== req.senderId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const [ticks, total] = await Promise.all([
+      prisma.streamTick.findMany({
+        where: { jobId: job.id },
+        orderBy: { tickNumber: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.streamTick.count({ where: { jobId: job.id } }),
+    ]);
+
+    res.json({ ticks, total, limit, offset });
+  } catch (error) {
+    logger.error({ err: error }, 'Get stream ticks error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

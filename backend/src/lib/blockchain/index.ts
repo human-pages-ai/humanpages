@@ -36,3 +36,18 @@ export {
   type VerifyPaymentParams,
   type VerificationResult,
 } from './verify-payment.js';
+
+export {
+  CFA_V1_FORWARDER,
+  SUPER_TOKEN_ADDRESSES,
+  getSuperTokenAddress,
+  usdcPerIntervalToFlowRate,
+  flowRateToUsdcPerInterval,
+  calculateTotalStreamed,
+  getFlowInfo,
+  verifyFlow,
+  isFlowActive,
+  type FlowInfo,
+  type VerifyFlowParams,
+  type VerifyFlowResult,
+} from './superfluid.js';
