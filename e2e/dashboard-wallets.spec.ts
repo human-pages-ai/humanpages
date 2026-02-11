@@ -33,16 +33,15 @@ async function mockEthereum(page: import('@playwright/test').Page) {
   `);
 }
 
-/** Helper: open the add-wallet form, pick network/label, connect + sign, and wait for wallet to appear */
+/** Helper: open the add-wallet form, fill label, connect + sign, and wait for wallet to appear */
 async function connectAndAddWallet(
   page: import('@playwright/test').Page,
-  opts: { network: string; label: string },
+  opts: { label: string },
 ) {
   // Click "Add Wallet" to open the form
   await page.getByRole('button', { name: /Add Wallet/i }).click();
 
-  // Select network and fill label
-  await page.locator('#wallet-network').selectOption(opts.network);
+  // Fill label (no network select — auto-registers across all EVM mainnets)
   await page.locator('#wallet-label').fill(opts.label);
 
   // Intercept the nonce API call to capture the message for signing
@@ -79,7 +78,7 @@ test.describe('Dashboard – Wallets', () => {
     await signupAndGoToDashboard(page);
     await page.getByRole('tab', { name: /payment/i }).click();
 
-    await connectAndAddWallet(page, { network: 'ethereum', label: 'Main Wallet' });
+    await connectAndAddWallet(page, { label: 'Main Wallet' });
 
     // Verify wallet details appear in the list
     await expect(page.locator('text=Main Wallet')).toBeVisible();
@@ -91,16 +90,20 @@ test.describe('Dashboard – Wallets', () => {
     await signupAndGoToDashboard(page);
     await page.getByRole('tab', { name: /payment/i }).click();
 
-    await connectAndAddWallet(page, { network: 'polygon', label: 'Delete Me' });
+    await connectAndAddWallet(page, { label: 'Delete Me' });
 
-    // Delete it
-    await page.getByRole('button', { name: 'Delete' }).click();
+    // Count network badges before deletion
+    const removeButtons = page.getByRole('button', { name: /Remove/i });
+    const countBefore = await removeButtons.count();
+
+    // Delete one network entry
+    await removeButtons.first().click();
 
     // Confirm deletion in dialog
     await page.locator('[role="alertdialog"]').getByRole('button', { name: 'Confirm' }).click();
 
-    // Verify wallet is gone
-    await expect(page.locator('text=Delete Me')).not.toBeVisible({ timeout: 30_000 });
+    // Verify one fewer network badge
+    await expect(removeButtons).toHaveCount(countBefore - 1, { timeout: 30_000 });
   });
 
   test('shows install wallet message when no extension', async ({ page }) => {
