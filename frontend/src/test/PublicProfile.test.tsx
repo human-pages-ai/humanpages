@@ -106,7 +106,7 @@ describe('PublicProfile', () => {
     });
 
     // Check wallets title
-    expect(screen.getByText('dashboard.wallets.title')).toBeInTheDocument();
+    expect(screen.getByText('dashboard.wallets.paymentSetupTitle')).toBeInTheDocument();
 
     // Check wallet data
     expect(screen.getByText('ethereum')).toBeInTheDocument();

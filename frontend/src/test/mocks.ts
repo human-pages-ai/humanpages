@@ -3,10 +3,13 @@ import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ReactElement } from 'react';
 import React from 'react';
+import { FeedbackProvider } from '../hooks/useFeedback';
 
 function AllProviders({ children }: { children: React.ReactNode }) {
   return React.createElement(HelmetProvider, null,
-    React.createElement(BrowserRouter, null, children)
+    React.createElement(BrowserRouter, null,
+      React.createElement(FeedbackProvider, null, children)
+    )
   );
 }
 

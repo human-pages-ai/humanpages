@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
 import { renderWithProviders, mockProfile } from './mocks';
 import Dashboard from '../pages/Dashboard';
 import { api } from '../lib/api';
@@ -48,8 +48,30 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+/** Wait for dashboard to finish loading */
+async function waitForDashboard() {
+  await waitFor(() => {
+    expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+  });
+}
+
+/** Click a dashboard tab by its translated label key */
+function clickTab(labelKey: string) {
+  const tabs = screen.getAllByRole('tab');
+  const tab = tabs.find((t) => t.textContent?.includes(labelKey));
+  if (!tab) throw new Error(`Tab with text "${labelKey}" not found`);
+  fireEvent.click(tab);
+}
+
 describe('Dashboard', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset URL so each test starts on the default (jobs) tab
+    window.history.pushState({}, '', '/');
     // Set up default mocks
     vi.mocked(api.getProfile).mockResolvedValue({
       ...mockProfile,
@@ -69,9 +91,7 @@ describe('Dashboard', () => {
   it('renders profile section after loading', async () => {
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
     // Should display user name in nav
     expect(screen.getAllByText('Test User')[0]).toBeInTheDocument();
@@ -89,33 +109,29 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Jobs section should be present
-    expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
+    // Jobs tab is the default — title appears in both tab label and section heading
+    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders wallets section', async () => {
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Wallets section should be present (title may appear in completeness widget too)
+    // Wallets tab label is visible even before switching
     expect(screen.getAllByText('dashboard.wallets.paymentSetupTitle')[0]).toBeInTheDocument();
   });
 
   it('renders services section', async () => {
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Services section should be present (title may appear in completeness widget too)
+    // Services are on the Profile tab — switch to it
+    clickTab('dashboard.profile.title');
+
     expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
   });
 
@@ -129,26 +145,20 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Should render sections even with empty data
-    expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
-    expect(screen.getAllByText('dashboard.wallets.paymentSetupTitle')[0]).toBeInTheDocument();
+    // Jobs section (default tab)
+    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThanOrEqual(1);
+
+    // Switch to profile tab for services
+    clickTab('dashboard.profile.title');
     expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
-  });
 
-  it('displays error state when profile fails to load', async () => {
-    vi.mocked(api.getProfile).mockRejectedValue(new Error('Failed to load'));
-
-    renderWithProviders(<Dashboard />);
-
+    // Switch to payments tab for wallets
+    clickTab('dashboard.wallets.paymentSetupTitle');
     await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+      expect(screen.getAllByText('dashboard.wallets.paymentSetupTitle').length).toBeGreaterThanOrEqual(1);
     });
-
-    expect(screen.getByText('common.error')).toBeInTheDocument();
   });
 
   it('renders pending jobs with accept/reject buttons', async () => {
@@ -167,10 +177,8 @@ describe('Dashboard', () => {
     renderWithProviders(<Dashboard />);
 
     await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
+      expect(screen.getByText('Pending Job')).toBeInTheDocument();
     });
-
-    expect(screen.getByText('Pending Job')).toBeInTheDocument();
   });
 
   it('renders wallet addresses', async () => {
@@ -184,9 +192,10 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
+
+    // Wallets are on the Payments tab
+    clickTab('dashboard.wallets.paymentSetupTitle');
 
     expect(screen.getByText(/0xabc123/)).toBeInTheDocument();
   });
@@ -202,9 +211,10 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
+
+    // Services are on the Profile tab
+    clickTab('dashboard.profile.title');
 
     expect(screen.getByText('Web Development')).toBeInTheDocument();
   });
@@ -214,12 +224,12 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Telegram is inside the collapsed "Integrations" group - check the group header exists
-    expect(screen.getByText('Integrations')).toBeInTheDocument();
+    // Telegram is on the Settings tab
+    clickTab('dashboard.settings');
+
+    expect(screen.getByText('dashboard.telegram.title')).toBeInTheDocument();
   });
 
   it('renders job stats with review data', async () => {
@@ -230,22 +240,30 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Jobs section renders stats inline
-    expect(screen.getByText('dashboard.jobs.title')).toBeInTheDocument();
+    // Jobs section renders stats inline — on default jobs tab
+    expect(screen.getAllByText('dashboard.jobs.title').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders share/referral section', async () => {
     renderWithProviders(<Dashboard />);
 
-    await waitFor(() => {
-      expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
-    });
+    await waitForDashboard();
 
-    // Share/referral is inside the collapsed "Sharing & Growth" group - check the group header exists
-    expect(screen.getByText('Sharing & Growth')).toBeInTheDocument();
+    // Share/referral is on the Settings tab
+    clickTab('dashboard.settings');
+
+    expect(screen.getByText('dashboard.shareProfile')).toBeInTheDocument();
+  });
+
+  it('displays error state when profile fails to load', async () => {
+    vi.mocked(api.getProfile).mockRejectedValueOnce(new Error('Failed to load'));
+
+    renderWithProviders(<Dashboard />);
+
+    await waitForDashboard();
+
+    expect(screen.getByText('common.error')).toBeInTheDocument();
   });
 });

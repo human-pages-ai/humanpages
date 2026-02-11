@@ -241,7 +241,7 @@ describe('Onboarding', () => {
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
       await waitFor(() => {
-        expect(screen.getByText('common.error')).toBeInTheDocument();
+        expect(screen.getByText('Network error')).toBeInTheDocument();
       });
     });
   });

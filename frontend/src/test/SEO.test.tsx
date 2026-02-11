@@ -42,7 +42,7 @@ describe('SEO Component', () => {
   it('renders default title when no title prop provided', async () => {
     renderWithProviders(<SEO />);
     await waitFor(() => {
-      expect(document.title).toBe('Human Pages - AI-to-Human Marketplace');
+      expect(document.title).toBe("Human Pages \u2014 AI's Hiring. Are You Listed?");
     });
   });
 
@@ -57,7 +57,8 @@ describe('SEO Component', () => {
     renderWithProviders(<SEO />);
     await waitFor(() => {
       const description = getMetaContent('description');
-      expect(description).toContain('Find real humans for real-world tasks');
+      expect(description).toContain("AI's hiring");
+      expect(description).toContain('real-world gigs');
     });
   });
 
@@ -92,7 +93,7 @@ describe('SEO Component', () => {
     await waitFor(() => {
       expect(getMetaContent('og:title', true)).toBe('Test Page | Human Pages');
       expect(getMetaContent('og:description', true)).toBe('Test description');
-      expect(getMetaContent('og:image', true)).toBe('https://humanpages.ai/og-default.png');
+      expect(getMetaContent('og:image', true)).toBe('https://humanpages.ai/api/og/default');
       expect(getMetaContent('og:url', true)).toBe('https://humanpages.ai');
       expect(getMetaContent('og:type', true)).toBe('website');
       expect(getMetaContent('og:site_name', true)).toBe('Human Pages');
@@ -123,7 +124,7 @@ describe('SEO Component', () => {
       expect(getMetaContent('twitter:card')).toBe('summary_large_image');
       expect(getMetaContent('twitter:title')).toBe('Test Page | Human Pages');
       expect(getMetaContent('twitter:description')).toBe('Test description');
-      expect(getMetaContent('twitter:image')).toBe('https://humanpages.ai/og-default.png');
+      expect(getMetaContent('twitter:image')).toBe('https://humanpages.ai/api/og/default');
     });
   });
 
