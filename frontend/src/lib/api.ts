@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, Pagination } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, Pagination } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -370,6 +370,15 @@ export const api = {
     const qs = query.toString();
     return request<{ jobs: AdminJob[]; pagination: Pagination }>(`/admin/jobs${qs ? `?${qs}` : ''}`);
   },
+
+  getAdminUser: (id: string) =>
+    request<AdminUserDetail>(`/admin/users/${id}`),
+
+  getAdminAgent: (id: string) =>
+    request<AdminAgentDetail>(`/admin/agents/${id}`),
+
+  getAdminJob: (id: string) =>
+    request<AdminJobDetail>(`/admin/jobs/${id}`),
 
   getAdminActivity: (limit?: number) =>
     request<{ activity: AdminActivity[] }>(`/admin/activity${limit ? `?limit=${limit}` : ''}`),

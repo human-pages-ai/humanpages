@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import type { AdminAgent, Pagination } from '../../types/admin';
 
@@ -10,6 +11,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminAgents() {
+  const navigate = useNavigate();
   const [agents, setAgents] = useState<AdminAgent[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
@@ -82,11 +84,13 @@ export default function AdminAgents() {
               <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No agents found</td></tr>
             ) : (
               agents.map((a) => (
-                <tr key={a.id} className="hover:bg-gray-50">
+                <tr key={a.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/agents/${a.id}`)}>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {a.name}
+                    <Link to={`/admin/agents/${a.id}`} className="text-indigo-600 hover:text-indigo-800 hover:underline" onClick={(e) => e.stopPropagation()}>
+                      {a.name}
+                    </Link>
                     {a.websiteUrl && (
-                      <a href={a.websiteUrl} target="_blank" rel="noopener noreferrer" className="ml-1 text-indigo-500 text-xs">link</a>
+                      <a href={a.websiteUrl} target="_blank" rel="noopener noreferrer" className="ml-1 text-indigo-500 text-xs" onClick={(e) => e.stopPropagation()}>link</a>
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm">

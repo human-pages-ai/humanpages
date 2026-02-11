@@ -312,6 +312,132 @@ router.get('/jobs', async (req: AuthRequest, res) => {
   }
 });
 
+// GET /api/admin/users/:id — Full user detail
+router.get('/users/:id', async (req: AuthRequest, res) => {
+  try {
+    const user = await prisma.human.findUnique({
+      where: { id: req.params.id },
+      include: {
+        wallets: { select: { id: true, network: true, chain: true, address: true, label: true, isPrimary: true, createdAt: true } },
+        services: { select: { id: true, title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true, isActive: true, createdAt: true } },
+        jobs: {
+          select: {
+            id: true, title: true, status: true, priceUsdc: true, createdAt: true,
+            agentName: true,
+            registeredAgent: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        reviews: {
+          select: { id: true, rating: true, comment: true, createdAt: true, jobId: true },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        affiliate: true,
+        affiliateReferral: true,
+        _count: {
+          select: {
+            vouchesGiven: true,
+            vouchesReceived: true,
+            jobs: true,
+            reviews: true,
+            services: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const referralCount = await prisma.human.count({ where: { referredBy: user.referralCode } });
+
+    res.json({ ...user, referralCount });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin user detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/agents/:id — Full agent detail
+router.get('/agents/:id', async (req: AuthRequest, res) => {
+  try {
+    const agent = await prisma.agent.findUnique({
+      where: { id: req.params.id },
+      include: {
+        jobs: {
+          select: {
+            id: true, title: true, status: true, priceUsdc: true, createdAt: true,
+            human: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        reports: {
+          select: {
+            id: true, reason: true, description: true, status: true, createdAt: true,
+            reporter: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    res.json(agent);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin agent detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/jobs/:id — Full job detail
+router.get('/jobs/:id', async (req: AuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: {
+        human: {
+          select: { id: true, name: true, email: true, username: true },
+        },
+        registeredAgent: {
+          select: { id: true, name: true, status: true, domainVerified: true },
+        },
+        messages: {
+          select: {
+            id: true, senderType: true, senderName: true, content: true, createdAt: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        review: {
+          select: { id: true, rating: true, comment: true, createdAt: true, humanId: true },
+        },
+        streamTicks: {
+          select: {
+            id: true, tickNumber: true, status: true, expectedAt: true, amount: true,
+            txHash: true, network: true, verifiedAt: true, createdAt: true,
+          },
+          orderBy: { tickNumber: 'asc' },
+        },
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    res.json(job);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin job detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/admin/activity — Recent activity feed
 router.get('/activity', async (req: AuthRequest, res) => {
   try {

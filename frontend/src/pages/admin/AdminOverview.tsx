@@ -1,18 +1,29 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import type { AdminStats } from '../../types/admin';
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <div className="bg-white rounded-lg shadow p-5">
+function StatCard({ label, value, sub, to }: { label: string; value: string | number; sub?: string; to?: string }) {
+  const content = (
+    <>
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
       {sub && <p className="mt-1 text-sm text-gray-400">{sub}</p>}
-    </div>
+    </>
   );
+
+  if (to) {
+    return (
+      <Link to={to} className="bg-white rounded-lg shadow p-5 hover:ring-2 hover:ring-indigo-200 transition-all block">
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="bg-white rounded-lg shadow p-5">{content}</div>;
 }
 
-function StatusBar({ data, colorMap }: { data: Record<string, number>; colorMap: Record<string, string> }) {
+function StatusBar({ data, colorMap, linkPrefix }: { data: Record<string, number>; colorMap: Record<string, string>; linkPrefix?: string }) {
   const total = Object.values(data).reduce((s, v) => s + v, 0);
   if (total === 0) return <p className="text-sm text-gray-400">No data</p>;
 
@@ -30,10 +41,17 @@ function StatusBar({ data, colorMap }: { data: Record<string, number>; colorMap:
       </div>
       <div className="flex flex-wrap gap-3 mt-2">
         {Object.entries(data).map(([status, count]) => (
-          <span key={status} className="text-xs text-gray-500">
-            <span className={`inline-block w-2 h-2 rounded-full mr-1 ${colorMap[status] || 'bg-gray-300'}`} />
-            {status}: {count}
-          </span>
+          linkPrefix ? (
+            <Link key={status} to={`${linkPrefix}?status=${status}`} className="text-xs text-gray-500 hover:text-indigo-600">
+              <span className={`inline-block w-2 h-2 rounded-full mr-1 ${colorMap[status] || 'bg-gray-300'}`} />
+              {status}: {count}
+            </Link>
+          ) : (
+            <span key={status} className="text-xs text-gray-500">
+              <span className={`inline-block w-2 h-2 rounded-full mr-1 ${colorMap[status] || 'bg-gray-300'}`} />
+              {status}: {count}
+            </span>
+          )
         ))}
       </div>
     </div>
@@ -80,21 +98,25 @@ export default function AdminOverview() {
           label="Total Users"
           value={stats.users.total}
           sub={`${stats.users.verified} verified`}
+          to="/admin/users"
         />
         <StatCard
           label="Total Agents"
           value={stats.agents.total}
           sub={`${stats.agents.byStatus['ACTIVE'] || 0} active`}
+          to="/admin/agents"
         />
         <StatCard
           label="Total Jobs"
           value={stats.jobs.total}
           sub={`${stats.jobs.last7d} in last 7d`}
+          to="/admin/jobs"
         />
         <StatCard
           label="Payment Volume"
           value={`$${stats.jobs.paymentVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           sub={`${stats.jobs.byStatus['PAID'] || 0} paid jobs`}
+          to="/admin/jobs"
         />
       </div>
 
@@ -114,11 +136,11 @@ export default function AdminOverview() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg shadow p-5">
           <p className="text-sm font-medium text-gray-500 mb-3">Agent Status</p>
-          <StatusBar data={stats.agents.byStatus} colorMap={agentColors} />
+          <StatusBar data={stats.agents.byStatus} colorMap={agentColors} linkPrefix="/admin/agents" />
         </div>
         <div className="bg-white rounded-lg shadow p-5">
           <p className="text-sm font-medium text-gray-500 mb-3">Job Status</p>
-          <StatusBar data={stats.jobs.byStatus} colorMap={jobColors} />
+          <StatusBar data={stats.jobs.byStatus} colorMap={jobColors} linkPrefix="/admin/jobs" />
         </div>
       </div>
 

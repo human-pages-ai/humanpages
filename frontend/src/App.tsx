@@ -34,6 +34,9 @@ const AdminAgents = lazy(() => import('./pages/admin/AdminAgents'));
 const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
 const AdminActivity = lazy(() => import('./pages/admin/AdminActivity'));
 const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
+const AdminUserDetailPage = lazy(() => import('./pages/admin/AdminUserDetail'));
+const AdminAgentDetailPage = lazy(() => import('./pages/admin/AdminAgentDetail'));
+const AdminJobDetailPage = lazy(() => import('./pages/admin/AdminJobDetail'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -230,8 +233,11 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route index element={<AdminOverview />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="users/:id" element={<AdminUserDetailPage />} />
         <Route path="agents" element={<AdminAgents />} />
+        <Route path="agents/:id" element={<AdminAgentDetailPage />} />
         <Route path="jobs" element={<AdminJobs />} />
+        <Route path="jobs/:id" element={<AdminJobDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
       </Route>

@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import type { AdminActivity } from '../../types/admin';
+
+function activityLink(item: AdminActivity): string {
+  switch (item.type) {
+    case 'job': return `/admin/jobs/${item.id}`;
+    case 'user': return `/admin/users/${item.id}`;
+    case 'agent': return `/admin/agents/${item.id}`;
+    default: return '#';
+  }
+}
 
 const typeStyles: Record<string, { bg: string; label: string }> = {
   user: { bg: 'bg-blue-100 text-blue-700', label: 'User' },
@@ -46,7 +56,7 @@ export default function AdminActivity() {
         activity.map((item, i) => {
           const style = typeStyles[item.type] || typeStyles.job;
           return (
-            <div key={`${item.type}-${item.id}-${i}`} className="px-4 py-3 flex items-start gap-3">
+            <Link key={`${item.type}-${item.id}-${i}`} to={activityLink(item)} className="px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors block">
               <span className={`mt-0.5 inline-block px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${style.bg}`}>
                 {style.label}
               </span>
@@ -54,7 +64,7 @@ export default function AdminActivity() {
                 <p className="text-sm text-gray-900">{item.description}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{relativeTime(item.timestamp)}</p>
               </div>
-            </div>
+            </Link>
           );
         })
       )}

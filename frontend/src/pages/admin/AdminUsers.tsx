@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import type { AdminUser, Pagination } from '../../types/admin';
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
@@ -97,16 +99,15 @@ export default function AdminUsers() {
               <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No users found</td></tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-50">
+                <tr key={u.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/users/${u.id}`)}>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    <a
-                      href={`/humans/${u.username || u.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      to={`/admin/users/${u.id}`}
                       className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {u.name}
-                    </a>
+                    </Link>
                     {u.username && <span className="ml-1 text-gray-400">@{u.username}</span>}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
