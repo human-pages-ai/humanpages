@@ -26,7 +26,7 @@ stop_servers() {
   fi
 }
 trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' INT TERM
-trap 'stop_servers' EXIT
+trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' EXIT
 
 # ------------------------------------------------------------------
 # Phase 1: Start dev servers (if needed) AND run type checks + unit
