@@ -21,7 +21,21 @@ export default function BlogIndex() {
       slug: 'social-media-marketing-hiring-process',
       date: 'February 11, 2026',
       excerpt: 'A step-by-step look at how our marketing bot finds, hires, and pays real humans for social media promotion — from project setup to final review.',
-      readingTime: '7 min',
+      readingTime: '8 min',
+    },
+    {
+      title: 'Automated Influencer Outreach: Skip the Agency, Keep the Results',
+      slug: 'automated-influencer-outreach',
+      date: 'February 11, 2026',
+      excerpt: 'How to run social media promotion campaigns without agencies, spreadsheets, or email chains — using an AI agent that handles discovery, outreach, and payment.',
+      readingTime: '6 min',
+    },
+    {
+      title: 'Get Paid to Promote Projects You Believe In',
+      slug: 'get-paid-social-media-promotion',
+      date: 'February 11, 2026',
+      excerpt: 'How social media marketers get discovered, hired, and paid by AI agents for promotion work — no applications, no invoices, no payment delays.',
+      readingTime: '5 min',
     },
     {
       title: 'Trust Models Between Humans and AI Agents: How We Learn to Work Together',
