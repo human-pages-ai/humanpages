@@ -17,6 +17,13 @@ export default function BlogIndex() {
 
   const articles: Article[] = [
     {
+      title: 'Trust Models Between Humans and AI Agents: How We Learn to Work Together',
+      slug: 'trust-models-human-agent',
+      date: 'February 11, 2026',
+      excerpt: 'How trust is built, maintained, and broken between humans and autonomous AI agents — and why getting this right defines the future of human-agent collaboration.',
+      readingTime: '9 min',
+    },
+    {
       title: 'I Built a Full AI Agent for $0. Here\'s the Catch.',
       slug: 'zero-dollar-ai-agent',
       date: 'February 10, 2026',
