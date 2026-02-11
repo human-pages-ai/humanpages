@@ -1,6 +1,105 @@
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Service } from './types';
 import { SUPPORTED_CURRENCIES, getCurrencySymbol } from '../../lib/currencies';
+
+const SERVICE_CATEGORIES = [
+  'Photography', 'Videography', 'Delivery', 'Data Collection', 'Research',
+  'Translation', 'Transcription', 'Writing', 'Editing', 'Proofreading',
+  'Graphic Design', 'Web Design', 'UI/UX Design', 'Logo Design',
+  'Web Development', 'Mobile Development', 'Software Development', 'QA Testing',
+  'Data Entry', 'Data Analysis', 'Virtual Assistant', 'Customer Support',
+  'Social Media Management', 'Content Creation', 'SEO', 'Marketing',
+  'Accounting', 'Bookkeeping', 'Legal Consulting', 'Business Consulting',
+  'Tutoring', 'Language Teaching', 'Music Lessons', 'Fitness Training',
+  'Cooking', 'Cleaning', 'Handyman', 'Plumbing', 'Electrical Work',
+  'Carpentry', 'Painting', 'Landscaping', 'Gardening', 'Moving',
+  'Pet Care', 'Dog Walking', 'House Sitting', 'Babysitting', 'Elder Care',
+  'Event Planning', 'Catering', 'DJ Services', 'Audio Engineering',
+  'Voice Acting', 'Modeling', 'Illustration', 'Animation', '3D Modeling',
+  'Video Editing', 'Audio Editing', 'Podcast Production',
+  'IT Support', 'Network Administration', 'Cybersecurity',
+  'Project Management', 'Product Management', 'Recruiting',
+  'Real Estate', 'Interior Design', 'Architecture',
+  'Auto Repair', 'Tailoring', 'Jewelry Making', 'Crafts',
+  'Survey', 'Mystery Shopping', 'Local Guide', 'Errand Running',
+  'Document Notarization', 'Courier', 'Assembly', 'Installation',
+  'Other',
+];
+
+function CategoryCombobox({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearch('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filtered = SERVICE_CATEGORIES.filter((c) =>
+    c.toLowerCase().includes((search || value).toLowerCase())
+  );
+
+  return (
+    <div className="relative" ref={ref}>
+      <input
+        id="service-category"
+        type="text"
+        value={open ? search : value}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          if (!open) setOpen(true);
+        }}
+        onFocus={() => {
+          setOpen(true);
+          setSearch(value);
+        }}
+        placeholder={placeholder}
+        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+        autoComplete="off"
+      />
+      {open && (
+        <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+          {filtered.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-gray-500">No matching categories</div>
+          ) : (
+            filtered.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  onChange(cat);
+                  setSearch('');
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 ${
+                  cat === value ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function formatPrice(priceMin?: string | number | null, priceUnit?: string | null, t?: (key: string) => string, priceCurrency?: string): string | null {
   if (!priceMin && priceUnit !== 'NEGOTIABLE') return null;
@@ -76,59 +175,73 @@ export default function ServicesSection({
           </div>
           <div>
             <label htmlFor="service-category" className="block text-sm font-medium text-gray-700">{t('dashboard.services.category')}</label>
-            <input
-              id="service-category"
-              type="text"
+            <CategoryCombobox
               value={serviceForm.category}
-              onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
+              onChange={(v) => setServiceForm({ ...serviceForm, category: v })}
               placeholder={t('dashboard.services.categoryPlaceholder')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
               {t('dashboard.services.price')} ({t('common.optional')})
             </label>
-            <div className="mt-1 flex gap-2">
-              <select
-                id="service-price-currency"
-                value={serviceForm.priceCurrency}
-                onChange={(e) => setServiceForm({ ...serviceForm, priceCurrency: e.target.value })}
-                className="block w-28 px-2 py-2 border border-gray-300 rounded-md bg-white"
-              >
-                {SUPPORTED_CURRENCIES.map((c) => (
-                  <option key={c.code} value={c.code}>{c.code}</option>
-                ))}
-              </select>
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{getCurrencySymbol(serviceForm.priceCurrency)}</span>
-                <input
-                  id="service-price-min"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={serviceForm.priceMin}
-                  onChange={(e) => setServiceForm({ ...serviceForm, priceMin: e.target.value })}
-                  placeholder={t('dashboard.services.pricePlaceholder')}
-                  className="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
+            <div className="mt-1 flex flex-col sm:flex-row gap-2">
               <select
                 id="service-price-unit"
                 value={serviceForm.priceUnit}
-                onChange={(e) => setServiceForm({ ...serviceForm, priceUnit: e.target.value })}
-                className="block w-40 px-3 py-2 border border-gray-300 rounded-md bg-white"
+                onChange={(e) => {
+                  const unit = e.target.value;
+                  if (unit === 'NEGOTIABLE') {
+                    setServiceForm({ ...serviceForm, priceUnit: unit, priceMin: '' });
+                  } else {
+                    setServiceForm({ ...serviceForm, priceUnit: unit });
+                  }
+                }}
+                className="block w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-md bg-white"
               >
                 <option value="">{t('dashboard.services.selectUnit')}</option>
                 <option value="HOURLY">{t('dashboard.services.perHour')}</option>
                 <option value="FLAT_TASK">{t('dashboard.services.perTask')}</option>
                 <option value="NEGOTIABLE">{t('dashboard.services.negotiable')}</option>
               </select>
+              {serviceForm.priceUnit && serviceForm.priceUnit !== 'NEGOTIABLE' && (
+                <div className="flex gap-2 flex-1">
+                  <select
+                    id="service-price-currency"
+                    value={serviceForm.priceCurrency}
+                    onChange={(e) => setServiceForm({ ...serviceForm, priceCurrency: e.target.value })}
+                    className="block w-24 sm:w-28 px-2 py-2 border border-gray-300 rounded-md bg-white shrink-0"
+                  >
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.code}</option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1 min-w-0">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{getCurrencySymbol(serviceForm.priceCurrency)}</span>
+                    <input
+                      id="service-price-min"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={serviceForm.priceMin}
+                      onChange={(e) => setServiceForm({ ...serviceForm, priceMin: e.target.value })}
+                      placeholder={t('dashboard.services.pricePlaceholder')}
+                      className="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <button
             onClick={onAddService}
-            disabled={saving || !serviceForm.title || !serviceForm.description || !serviceForm.category}
+            disabled={
+              saving ||
+              !serviceForm.title ||
+              !serviceForm.description ||
+              !serviceForm.category ||
+              (!!serviceForm.priceMin && !serviceForm.priceUnit)
+            }
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
           >
             {t('dashboard.services.addService')}

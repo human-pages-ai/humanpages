@@ -22,6 +22,15 @@ async function openServiceForm(page: import('@playwright/test').Page) {
   await expect(page.locator('#service-title')).toBeVisible({ timeout: 5_000 });
 }
 
+/** Select a category from the searchable combobox by typing and clicking the option */
+async function selectCategory(page: import('@playwright/test').Page, category: string) {
+  const input = page.locator('#service-category');
+  await input.click();
+  await input.fill(category);
+  // Click the matching option in the dropdown
+  await page.locator(`button:text-is("${category}")`).click();
+}
+
 test.describe('Dashboard – Services', () => {
   test('add service with $50/hr pricing', async ({ page }) => {
     await signupAndGoToDashboard(page);
@@ -29,9 +38,11 @@ test.describe('Dashboard – Services', () => {
 
     await page.locator('#service-title').fill('Web Development');
     await page.locator('#service-description').fill('Full-stack web development services');
-    await page.locator('#service-category').fill('development');
-    await page.locator('#service-price-min').fill('50');
+    await selectCategory(page, 'Web Development');
+
+    // Select unit first (price fields appear after selecting HOURLY/FLAT_TASK)
     await page.locator('#service-price-unit').selectOption('HOURLY');
+    await page.locator('#service-price-min').fill('50');
 
     // Wait for submit button to be enabled (React state must catch up with fill())
     const submitBtn = page.locator('button', { hasText: 'Add Service' }).last();
@@ -49,7 +60,7 @@ test.describe('Dashboard – Services', () => {
 
     await page.locator('#service-title').fill('Consulting');
     await page.locator('#service-description').fill('Business consulting and strategy');
-    await page.locator('#service-category').fill('consulting');
+    await selectCategory(page, 'Business Consulting');
     await page.locator('#service-price-unit').selectOption('NEGOTIABLE');
 
     const submitBtn = page.locator('button', { hasText: 'Add Service' }).last();
@@ -68,9 +79,11 @@ test.describe('Dashboard – Services', () => {
 
     await page.locator('#service-title').fill('Logo Design');
     await page.locator('#service-description').fill('Professional logo design');
-    await page.locator('#service-category').fill('design');
-    await page.locator('#service-price-min').fill('200');
+    await selectCategory(page, 'Logo Design');
+
+    // Select unit first, then fill price
     await page.locator('#service-price-unit').selectOption('FLAT_TASK');
+    await page.locator('#service-price-min').fill('200');
 
     const submitBtn = page.locator('button', { hasText: 'Add Service' }).last();
     await expect(submitBtn).toBeEnabled({ timeout: 5_000 });
@@ -86,7 +99,7 @@ test.describe('Dashboard – Services', () => {
 
     await page.locator('#service-title').fill('Temp Service');
     await page.locator('#service-description').fill('Service to be toggled and deleted');
-    await page.locator('#service-category').fill('temp');
+    await selectCategory(page, 'Other');
 
     const submitBtn = page.locator('button', { hasText: 'Add Service' }).last();
     await expect(submitBtn).toBeEnabled({ timeout: 5_000 });

@@ -20,6 +20,11 @@ const serviceSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+const createServiceSchema = serviceSchema.refine(
+  (data) => !data.priceMin || data.priceUnit,
+  { message: 'Price unit is required when a price is set', path: ['priceUnit'] },
+);
+
 // Get all services for current user
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -36,7 +41,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 // Create a new service
 router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const data = serviceSchema.parse(req.body);
+    const data = createServiceSchema.parse(req.body);
 
     const service = await prisma.service.create({
       data: {
