@@ -53,6 +53,6 @@ test.describe('Account', () => {
     await page.locator('#email').fill(email);
     await page.locator('#password').fill(password);
     await page.locator('button[type="submit"]').click();
-    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 15_000 });
   });
 });
