@@ -75,6 +75,6 @@ test.describe('Dashboard – Profile', () => {
     await signupAndGoToDashboard(page);
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 });
     // Verify the dashboard loaded — the StatusHeader availability button should be visible
-    await expect(page.locator('button').filter({ hasText: /^(Active|Paused)$/ })).toBeVisible();
+    await expect(page.locator('[data-testid="status-availability"]')).toBeVisible();
   });
 });

@@ -42,11 +42,11 @@ export default function Dashboard() {
 
   // Tab state — driven by URL search param
   const tabParam = searchParams.get('tab') as DashboardTab | null;
-  const activeTab: DashboardTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'jobs';
+  const activeTab: DashboardTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'profile';
 
   const setActiveTab = (tab: DashboardTab) => {
     const newParams = new URLSearchParams(searchParams);
-    if (tab === 'jobs') {
+    if (tab === 'profile') {
       newParams.delete('tab');
     } else {
       newParams.set('tab', tab);

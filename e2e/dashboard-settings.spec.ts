@@ -10,7 +10,7 @@ test.describe('Dashboard – Settings', () => {
     await signupAndGoToDashboard(page);
 
     // Availability toggle is in the StatusHeader, visible on all tabs
-    const toggleBtn = page.locator('button').filter({ hasText: /^(Active|Paused)$/ });
+    const toggleBtn = page.locator('[data-testid="status-availability"]');
     await toggleBtn.waitFor({ timeout: 10_000 });
     const initialText = await toggleBtn.textContent();
     const expectedText = initialText === 'Active' ? 'Paused' : 'Active';

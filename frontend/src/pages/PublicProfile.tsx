@@ -46,6 +46,7 @@ interface PublicVouch {
 interface PublicHuman {
   id: string;
   name: string;
+  username?: string;
   bio?: string;
   location?: string;
   neighborhood?: string;
@@ -218,6 +219,9 @@ export default function PublicProfile() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-white">{profile.name}</h1>
+                {profile.username && (
+                  <p className="text-indigo-200 text-sm mt-0.5">@{profile.username}</p>
+                )}
                 {getDisplayLocation(profile) && (
                   <p className="text-indigo-200 mt-1 flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

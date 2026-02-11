@@ -161,6 +161,7 @@ export default function StatusHeader({
 
           {/* Availability toggle */}
           <button
+            data-testid="status-availability"
             onClick={onToggleAvailability}
             disabled={saving}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${

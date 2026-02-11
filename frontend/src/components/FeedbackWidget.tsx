@@ -197,7 +197,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
   const button = (
     <button
       onClick={() => setOpen(true)}
-      className="fixed bottom-6 right-6 z-40 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 group"
+      className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-2.5 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-200 group"
       aria-label={t('feedback.title', 'Send Feedback')}
       title={t('feedback.title', 'Send Feedback')}
     >
