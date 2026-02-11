@@ -17,10 +17,10 @@ export default function BlogIndex() {
 
   const articles: Article[] = [
     {
-      title: 'How We Hire Social Media Marketers With an AI Agent',
+      title: 'How to Hire Social Media Marketers with an AI Agent (CLI Tool)',
       slug: 'social-media-marketing-hiring-process',
       date: 'February 11, 2026',
-      excerpt: 'A step-by-step look at how our marketing bot finds, hires, and pays real humans for social media promotion — from project setup to final review.',
+      excerpt: 'A technical guide to automating influencer marketing. We built a TypeScript bot that finds, hires, and pays freelancers in USDC using the Human Pages API.',
       readingTime: '8 min',
     },
     {
