@@ -38,6 +38,7 @@ export interface AdminUser {
   location: string | null;
   isAvailable: boolean;
   emailVerified: boolean;
+  referralCode: string;
   createdAt: string;
   lastActiveAt: string;
   _count: {

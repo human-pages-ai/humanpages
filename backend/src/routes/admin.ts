@@ -143,6 +143,7 @@ router.get('/users', async (req: AuthRequest, res) => {
           location: true,
           isAvailable: true,
           emailVerified: true,
+          referralCode: true,
           createdAt: true,
           lastActiveAt: true,
           _count: {

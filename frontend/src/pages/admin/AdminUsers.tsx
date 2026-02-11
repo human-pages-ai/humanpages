@@ -81,6 +81,7 @@ export default function AdminUsers() {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verified</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jobs</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reviews</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referral Link</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer" onClick={() => toggleSort('createdAt')}>
                 Joined{sortIndicator('createdAt')}
               </th>
@@ -91,14 +92,21 @@ export default function AdminUsers() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No users found</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No users found</td></tr>
             ) : (
               users.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {u.name}
+                    <a
+                      href={`/humans/${u.username || u.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                    >
+                      {u.name}
+                    </a>
                     {u.username && <span className="ml-1 text-gray-400">@{u.username}</span>}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
@@ -109,6 +117,15 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{u._count.jobs}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{u._count.reviews}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">
+                    <button
+                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${u.referralCode}`)}
+                      className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs"
+                      title={`${window.location.origin}/signup?ref=${u.referralCode}`}
+                    >
+                      Copy
+                    </button>
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(u.lastActiveAt).toLocaleDateString()}</td>
                 </tr>
