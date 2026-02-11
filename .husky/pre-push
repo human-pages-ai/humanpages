@@ -15,17 +15,18 @@ fi
 # ------------------------------------------------------------------
 STARTED_SERVERS=0
 DEV_PID=""
+FINAL_EXIT=0
 
-cleanup() {
+stop_servers() {
   if [ "$STARTED_SERVERS" = "1" ] && [ -n "$DEV_PID" ]; then
     echo "  Stopping dev servers..."
     pkill -P "$DEV_PID" 2>/dev/null
     kill "$DEV_PID" 2>/dev/null
     wait "$DEV_PID" 2>/dev/null
   fi
-  exit "$EXIT_CODE"
 }
-trap 'EXIT_CODE=$?; cleanup' EXIT INT TERM
+trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' INT TERM
+trap 'stop_servers' EXIT
 
 # ------------------------------------------------------------------
 # Phase 1: Start dev servers (if needed) AND run type checks + unit
