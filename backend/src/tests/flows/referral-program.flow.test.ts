@@ -69,8 +69,10 @@ describe('Flow: Referral Program — Affiliate Lifecycle', () => {
     const referredUser = await prisma.human.findUnique({ where: { id: referredId } });
     expect(referredUser?.referredBy).toBe(referrer.id);
 
-    // ─── Step 2: Record the referral ───────────────────────────────────
-    await recordAffiliateReferral(referrer.id, referredId, '1.2.3.4', 'TestAgent/1.0');
+    // ─── Step 2: Wait for the referral to be recorded ──────────────────
+    // The signup route fires recordAffiliateReferral asynchronously.
+    // Wait for it to complete before asserting.
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Verify referral recorded but not qualified
     const affiliate = await prisma.affiliate.findUnique({
