@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhoneInput from '../components/PhoneInput';
 
@@ -226,7 +226,7 @@ describe('PhoneInput', () => {
 
     it('closes dropdown when clicking outside', async () => {
       const user = userEvent.setup();
-      const { container } = render(
+      render(
         <div>
           <PhoneInput id="phone" value="" onChange={vi.fn()} />
           <div data-testid="outside">outside</div>
@@ -304,7 +304,7 @@ describe('PhoneInput', () => {
       // This is a data integrity check — import the module and verify
       // We can check by rendering and opening dropdown
       const seen = new Set<string>();
-      const { container } = render(<PhoneInput id="phone" value="" onChange={vi.fn()} />);
+      render(<PhoneInput id="phone" value="" onChange={vi.fn()} />);
 
       fireEvent.click(screen.getByRole('button'));
 
