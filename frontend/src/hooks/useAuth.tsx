@@ -8,6 +8,7 @@ interface User {
   email: string;
   name: string;
   analyticsOptOut?: boolean;
+  hasWallet?: boolean;
 }
 
 interface AuthContextType {
@@ -18,6 +19,7 @@ interface AuthContextType {
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
   loginWithLinkedIn: () => Promise<void>;
+  updateUser: (fields: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,8 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
+
+  const updateUser = (fields: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...fields } : prev));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, loginWithGoogle, loginWithLinkedIn }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, loginWithGoogle, loginWithLinkedIn, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

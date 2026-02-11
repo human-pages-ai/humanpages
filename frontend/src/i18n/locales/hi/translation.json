@@ -356,7 +356,7 @@
       "paymentSetupSubtitle": "USDC डिफ़ॉल्ट भुगतान विधि है। भुगतान प्राप्त करने के लिए वॉलेट कनेक्ट करें।",
       "addWallet": "वॉलेट जोड़ें",
       "connectWallet": "वॉलेट कनेक्ट करें",
-      "connectDescription": "स्वामित्व सत्यापित करने और अपनी प्रोफ़ाइल में जोड़ने के लिए अपना ब्राउज़र वॉलेट कनेक्ट करें।",
+      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
       "verifyAndAdd": "सत्यापित करें और जोड़ें",
       "connectAndVerify": "वॉलेट कनेक्ट करें और सत्यापित करें",
       "connectHint": "आपका वॉलेट दो बार खुलेगा: एक बार कनेक्ट करने के लिए, एक बार साइन करने के लिए। कोई फंड नहीं भेजा जाएगा।",
@@ -384,7 +384,8 @@
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
-      }
+      },
+      "allNetworksNote": "Available on all EVM networks"
     },
     "services": {
       "title": "सेवाएं",
@@ -508,7 +509,12 @@
     "memberSince": "{{date}} से सदस्य",
     "updated": "अपडेट किया गया",
     "lastUpdated": "अंतिम अपडेट",
-    "offerUpdated": "यह प्रस्ताव एजेंट द्वारा अपडेट किया गया है"
+    "offerUpdated": "यह प्रस्ताव एजेंट द्वारा अपडेट किया गया है",
+    "walletNudge": {
+      "title": "Set up a wallet to get this job",
+      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
+      "action": "Set Up Wallet"
+    }
   },
   "trust": {
     "breakdown": {
@@ -551,7 +557,7 @@
   "toast": {
     "profileSaved": "प्रोफ़ाइल सहेजी गई",
     "filtersSaved": "फ़िल्टर सहेजे गए",
-    "walletAdded": "वॉलेट जोड़ा गया",
+    "walletAdded": "Wallet added on all networks",
     "walletDeleted": "वॉलेट हटाया गया",
     "serviceAdded": "सेवा जोड़ी गई",
     "serviceDeleted": "सेवा हटाई गई",
@@ -566,7 +572,10 @@
     "verificationSent": "सत्यापन ईमेल भेजा गया",
     "emailVerified": "ईमेल सफलतापूर्वक सत्यापित",
     "preferencesSaved": "प्राथमिकताएं सहेजी गईं",
-    "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
+    "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+    "walletNudgeTitle": "Set up your wallet",
+    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
+    "walletNudgeAction": "Set Up"
   },
   "notFound": {
     "title": "पेज नहीं मिला",

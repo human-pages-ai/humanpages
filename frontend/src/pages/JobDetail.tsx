@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -30,6 +30,7 @@ export default function JobDetail() {
   const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [job, setJob] = useState<Job | null>(null);
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null);
   const [messages, setMessages] = useState<JobMessage[]>([]);
@@ -194,6 +195,24 @@ export default function JobDetail() {
           </svg>
           {t('jobDetail.backToDashboard')}
         </Link>
+
+        {/* Wallet nudge banner */}
+        {isOwner && user && !user.hasWallet && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 mt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-amber-800">{t('jobDetail.walletNudge.title')}</p>
+                <p className="text-xs text-amber-700 mt-1">{t('jobDetail.walletNudge.description')}</p>
+              </div>
+              <button
+                onClick={() => navigate('/dashboard?tab=payments')}
+                className="ml-4 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded whitespace-nowrap"
+              >
+                {t('jobDetail.walletNudge.action')}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Job header card */}
         <div className="bg-white rounded-lg shadow p-6 mt-4">

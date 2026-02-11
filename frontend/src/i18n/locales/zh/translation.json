@@ -356,7 +356,7 @@
       "paymentSetupSubtitle": "USDC是默认支付方式。连接钱包以接收付款。",
       "addWallet": "添加钱包",
       "connectWallet": "连接钱包",
-      "connectDescription": "连接浏览器钱包以验证所有权并将其添加到您的个人资料。",
+      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
       "verifyAndAdd": "验证并添加",
       "connectAndVerify": "连接钱包并验证",
       "connectHint": "您的钱包将打开两次：一次连接，一次签名。不会发送任何资金。",
@@ -384,7 +384,8 @@
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
-      }
+      },
+      "allNetworksNote": "Available on all EVM networks"
     },
     "services": {
       "title": "服务",
@@ -513,7 +514,12 @@
     "memberSince": "会员自 {{date}}",
     "updated": "已更新",
     "lastUpdated": "最后更新",
-    "offerUpdated": "此报价已被代理更新"
+    "offerUpdated": "此报价已被代理更新",
+    "walletNudge": {
+      "title": "Set up a wallet to get this job",
+      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
+      "action": "Set Up Wallet"
+    }
   },
   "trust": {
     "breakdown": {
@@ -556,7 +562,7 @@
   "toast": {
     "profileSaved": "个人资料已保存",
     "filtersSaved": "筛选条件已保存",
-    "walletAdded": "钱包已添加",
+    "walletAdded": "Wallet added on all networks",
     "walletDeleted": "钱包已删除",
     "serviceAdded": "服务已添加",
     "serviceDeleted": "服务已删除",
@@ -571,7 +577,10 @@
     "verificationSent": "验证邮件已发送",
     "emailVerified": "邮箱验证成功",
     "preferencesSaved": "偏好设置已保存",
-    "genericError": "出了点问题。请重试。"
+    "genericError": "出了点问题。请重试。",
+    "walletNudgeTitle": "Set up your wallet",
+    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
+    "walletNudgeAction": "Set Up"
   },
   "notFound": {
     "title": "页面未找到",

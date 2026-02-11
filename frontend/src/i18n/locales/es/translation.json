@@ -356,7 +356,7 @@
       "paymentSetupSubtitle": "USDC es el método de pago predeterminado. Conecta una billetera para recibir pagos.",
       "addWallet": "Agregar Billetera",
       "connectWallet": "Conectar billetera",
-      "connectDescription": "Conecta tu billetera del navegador para verificar la propiedad y agregarla a tu perfil.",
+      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
       "verifyAndAdd": "Verificar y agregar",
       "connectAndVerify": "Conectar billetera y verificar",
       "connectHint": "Tu billetera se abrirá dos veces: una para conectar, otra para firmar. No se envían fondos.",
@@ -384,7 +384,8 @@
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
-      }
+      },
+      "allNetworksNote": "Available on all EVM networks"
     },
     "services": {
       "title": "Servicios",
@@ -513,7 +514,12 @@
     "memberSince": "Miembro desde {{date}}",
     "updated": "Actualizada",
     "lastUpdated": "Última actualización",
-    "offerUpdated": "Esta oferta ha sido actualizada por el agente"
+    "offerUpdated": "Esta oferta ha sido actualizada por el agente",
+    "walletNudge": {
+      "title": "Set up a wallet to get this job",
+      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
+      "action": "Set Up Wallet"
+    }
   },
   "trust": {
     "breakdown": {
@@ -556,7 +562,7 @@
   "toast": {
     "profileSaved": "Perfil guardado",
     "filtersSaved": "Filtros guardados",
-    "walletAdded": "Billetera agregada",
+    "walletAdded": "Wallet added on all networks",
     "walletDeleted": "Billetera eliminada",
     "serviceAdded": "Servicio agregado",
     "serviceDeleted": "Servicio eliminado",
@@ -571,7 +577,10 @@
     "verificationSent": "Correo de verificación enviado",
     "emailVerified": "Email verificado exitosamente",
     "preferencesSaved": "Preferencias guardadas",
-    "genericError": "Algo salió mal. Por favor, intenta de nuevo."
+    "genericError": "Algo salió mal. Por favor, intenta de nuevo.",
+    "walletNudgeTitle": "Set up your wallet",
+    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
+    "walletNudgeAction": "Set Up"
   },
   "notFound": {
     "title": "Página no encontrada",

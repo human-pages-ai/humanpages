@@ -321,7 +321,7 @@
       "paymentSetupSubtitle": "USDC เป็นวิธีการชำระเงินเริ่มต้น เชื่อมต่อกระเป๋าเงินเพื่อรับการชำระเงิน",
       "addWallet": "เพิ่มกระเป๋าเงิน",
       "connectWallet": "เชื่อมต่อกระเป๋าเงิน",
-      "connectDescription": "เชื่อมต่อกระเป๋าเงินเบราว์เซอร์เพื่อยืนยันความเป็นเจ้าของและเพิ่มลงในโปรไฟล์ของคุณ",
+      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
       "verifyAndAdd": "ยืนยันและเพิ่ม",
       "connectAndVerify": "เชื่อมต่อกระเป๋าเงินและยืนยัน",
       "connectHint": "กระเป๋าเงินของคุณจะเปิดสองครั้ง: ครั้งหนึ่งเพื่อเชื่อมต่อ ครั้งหนึ่งเพื่อลงนาม ไม่มีการส่งเงิน",
@@ -349,7 +349,8 @@
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
-      }
+      },
+      "allNetworksNote": "Available on all EVM networks"
     },
     "services": {
       "title": "บริการ",
@@ -508,7 +509,12 @@
     "memberSince": "สมาชิกตั้งแต่ {{date}}",
     "updated": "อัปเดตแล้ว",
     "lastUpdated": "อัปเดตล่าสุด",
-    "offerUpdated": "ข้อเสนอนี้ได้รับการอัปเดตโดยตัวแทน"
+    "offerUpdated": "ข้อเสนอนี้ได้รับการอัปเดตโดยตัวแทน",
+    "walletNudge": {
+      "title": "Set up a wallet to get this job",
+      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
+      "action": "Set Up Wallet"
+    }
   },
   "trust": {
     "breakdown": {
@@ -551,7 +557,7 @@
   "toast": {
     "profileSaved": "บันทึกโปรไฟล์แล้ว",
     "filtersSaved": "บันทึกตัวกรองแล้ว",
-    "walletAdded": "เพิ่มกระเป๋าเงินแล้ว",
+    "walletAdded": "Wallet added on all networks",
     "walletDeleted": "ลบกระเป๋าเงินแล้ว",
     "serviceAdded": "เพิ่มบริการแล้ว",
     "serviceDeleted": "ลบบริการแล้ว",
@@ -566,7 +572,10 @@
     "verificationSent": "ส่งอีเมลยืนยันแล้ว",
     "emailVerified": "ยืนยันอีเมลสำเร็จ",
     "preferencesSaved": "บันทึกการตั้งค่าแล้ว",
-    "genericError": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง"
+    "genericError": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง",
+    "walletNudgeTitle": "Set up your wallet",
+    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
+    "walletNudgeAction": "Set Up"
   },
   "notFound": {
     "title": "ไม่พบหน้าเว็บ",

@@ -313,7 +313,7 @@
       "title": "Carteiras",
       "addWallet": "Adicionar Carteira",
       "connectWallet": "Conectar Carteira",
-      "connectDescription": "Conecte sua carteira do navegador para verificar a propriedade e adicioná-la ao seu perfil.",
+      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
       "verifyAndAdd": "Verificar e Adicionar",
       "connectAndVerify": "Conectar e Verificar",
       "connectHint": "Sua carteira abrirá duas vezes: uma para conectar, outra para assinar. Nenhum fundo é enviado.",
@@ -341,7 +341,8 @@
         "polygon": "Polygon",
         "arbitrum": "Arbitrum",
         "base": "Base"
-      }
+      },
+      "allNetworksNote": "Available on all EVM networks"
     },
     "services": {
       "title": "Serviços",
@@ -499,7 +500,12 @@
     "completionRate": "Concluídos",
     "paymentRate": "Pagos",
     "avgPaySpeed": "Velocidade Média de Pagamento",
-    "memberSince": "Membro desde {{date}}"
+    "memberSince": "Membro desde {{date}}",
+    "walletNudge": {
+      "title": "Set up a wallet to get this job",
+      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
+      "action": "Set Up Wallet"
+    }
   },
   "currency": {
     "label": "Moeda",
@@ -547,7 +553,7 @@
   "toast": {
     "profileSaved": "Perfil salvo",
     "filtersSaved": "Filtros salvos",
-    "walletAdded": "Carteira adicionada",
+    "walletAdded": "Wallet added on all networks",
     "walletDeleted": "Carteira excluída",
     "serviceAdded": "Serviço adicionado",
     "serviceDeleted": "Serviço excluído",
@@ -561,7 +567,10 @@
     "verificationSent": "E-mail de verificação enviado",
     "emailVerified": "E-mail verificado com sucesso",
     "preferencesSaved": "Preferências salvas",
-    "genericError": "Algo deu errado. Tente novamente."
+    "genericError": "Algo deu errado. Tente novamente.",
+    "walletNudgeTitle": "Set up your wallet",
+    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
+    "walletNudgeAction": "Set Up"
   },
   "notFound": {
     "title": "Página não encontrada",

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { Wallet } from './types';
@@ -31,7 +31,19 @@ export default function WalletsSection({
   const [error, setError] = useState('');
   const [busyMessage, setBusyMessage] = useState('');
 
-  const hasWalletExtension = typeof window !== 'undefined' && !!window.ethereum;
+  const [walletDetected, setWalletDetected] = useState(
+    typeof window !== 'undefined' && !!window.ethereum
+  );
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setWalletDetected(!!window.ethereum);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, []);
 
   // Group wallets by address
   const walletGroups = useMemo<WalletGroup[]>(() => {
@@ -115,7 +127,7 @@ export default function WalletsSection({
   };
 
   const renderForm = () => {
-    if (!hasWalletExtension) {
+    if (!walletDetected) {
       return (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-700 mb-2">{t('dashboard.wallets.noWalletExtension')}</p>
@@ -205,7 +217,7 @@ export default function WalletsSection({
               <p className="text-lg font-medium text-gray-900 mb-1">{t('dashboard.wallets.emptyTitle')}</p>
               <p className="text-sm text-gray-500 mb-2">{t('dashboard.wallets.emptyDescription')}</p>
             </div>
-            {hasWalletExtension ? (
+            {walletDetected ? (
               <button
                 onClick={() => setStep('form')}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
