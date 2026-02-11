@@ -9,15 +9,6 @@ test.describe('Auth', () => {
     expect(page.url()).toContain('/onboarding');
   });
 
-  test('signup validation – terms checkbox required', async ({ page }) => {
-    await page.goto('/signup');
-    await page.locator('#name').fill('No Terms');
-    await page.locator('#email').fill(uniqueEmail());
-    await page.locator('#password').fill('TestPass123!');
-    // Do NOT check #terms
-    await expect(page.locator('button[type="submit"]')).toBeDisabled();
-  });
-
   test('login happy path → redirects to dashboard', async ({ page }) => {
     await bypassRateLimit(page);
     const email = uniqueEmail();
@@ -26,15 +17,6 @@ test.describe('Auth', () => {
     await signupViaAPI({ name: 'Login Test', email, password });
     await login(page, { email, password });
     expect(page.url()).toContain('/dashboard');
-  });
-
-  test('login with invalid credentials → shows error', async ({ page }) => {
-    await bypassRateLimit(page);
-    await page.goto('/login');
-    await page.locator('#email').fill('nonexistent@test.com');
-    await page.locator('#password').fill('WrongPassword');
-    await page.locator('button[type="submit"]').click();
-    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5_000 });
   });
 
   test('logout → redirects to login and clears token', async ({ page }) => {

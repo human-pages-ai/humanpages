@@ -69,29 +69,6 @@ export async function signupViaAPI(creds: { name: string; email: string; passwor
   return body.token;
 }
 
-/**
- * Login via the Vite-proxied API with unique X-Forwarded-For.
- */
-export async function loginViaAPI(creds: { email: string; password: string }): Promise<string> {
-  const ctx = await pwRequest.newContext();
-  const res = await ctx.post(`${API_BASE}/api/auth/login`, {
-    data: { email: creds.email, password: creds.password, captchaToken: 'test-token' },
-    headers: { 'X-Forwarded-For': uniqueIp() },
-  });
-  if (!res.ok()) {
-    const text = await res.text();
-    throw new Error(`loginViaAPI failed (${res.status()}): ${text}`);
-  }
-  const body = await res.json();
-  await ctx.dispose();
-  return body.token;
-}
-
-export async function skipOnboarding(page: Page) {
-  await page.getByText('Skip setup and go to dashboard').click();
-  await page.waitForURL('**/dashboard', { timeout: 10_000 });
-}
-
 export async function login(
   page: Page,
   { email, password }: { email: string; password: string },
@@ -104,24 +81,6 @@ export async function login(
 }
 
 /**
- * Create a fresh user via API, inject token into browser, and go to /dashboard.
- */
-export async function signupAndGoToDashboard(page: Page) {
-  const email = uniqueEmail();
-  const password = 'TestPass123!';
-  const name = 'E2E User';
-
-  const token = await signupViaAPI({ name, email, password });
-
-  // Inject token and navigate to dashboard.
-  // We avoid waitForLoadState('networkidle') because analytics/PostHog
-  // keep connections alive indefinitely, causing spurious timeouts.
-  await goToDashboard(page, token);
-
-  return { email, password, name, token };
-}
-
-/**
  * Inject a token and navigate to the dashboard, waiting for it to fully load.
  */
 export async function goToDashboard(page: Page, token: string) {
@@ -131,16 +90,6 @@ export async function goToDashboard(page: Page, token: string) {
   // Wait for the StatusHeader availability button — it renders only after
   // the auth check succeeds and the profile API call returns.
   await page.locator('[data-testid="status-availability"]').waitFor({ timeout: 30_000 });
-}
-
-/**
- * Inject a token and navigate to the onboarding page, waiting for it to load.
- */
-export async function goToOnboarding(page: Page, token: string) {
-  await page.goto('/');
-  await page.evaluate((t) => localStorage.setItem('token', t), token);
-  await page.goto('/onboarding');
-  await page.waitForSelector('#location-input', { timeout: 15_000 });
 }
 
 export async function getToken(page: Page): Promise<string | null> {

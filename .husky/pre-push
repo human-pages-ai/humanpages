@@ -29,11 +29,8 @@ trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' INT TERM
 trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' EXIT
 
 # ------------------------------------------------------------------
-# Phase 1: Start dev servers (if needed) AND run type checks + unit
-#           tests in parallel. Server startup overlaps with checks.
+# Start dev servers (if needed) — they boot while checks run
 # ------------------------------------------------------------------
-
-# Start servers early so they boot while checks run
 if curl -sf http://localhost:3001/health >/dev/null 2>&1 && curl -sf http://localhost:3000 >/dev/null 2>&1; then
   echo "  Dev servers already running"
 else
@@ -47,47 +44,20 @@ else
   DEV_PID=$!
 fi
 
-echo "[1/2] Type checks + unit tests (parallel)"
+# ------------------------------------------------------------------
+# Run all checks in parallel: type checks, backend tests, and E2E
+# The e2e command waits for servers inline before running playwright.
+# ------------------------------------------------------------------
+echo "Running all checks in parallel..."
 npx concurrently --kill-others-on-fail \
-  -n "tsc:be,tsc:fe,test" \
+  -n "tsc:be,tsc:fe,test,e2e" \
   "cd backend && npx tsc --noEmit" \
   "cd frontend && npx tsc --noEmit" \
-  "cd backend && npm test"
+  "cd backend && npm test" \
+  "i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3001/health >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3000 >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && npx playwright test --config e2e/playwright.config.ts"
 
 if [ $? -ne 0 ]; then
-  echo "  Type checks or unit tests failed"
-  exit 1
-fi
-
-# ------------------------------------------------------------------
-# Phase 2: Wait for servers (should already be up by now), run E2E
-# ------------------------------------------------------------------
-echo "[2/2] E2E tests"
-
-wait_for_server() {
-  local url="$1" label="$2" i=0
-  while [ $i -lt 60 ]; do
-    curl -sf "$url" >/dev/null 2>&1 && return 0
-    i=$((i + 1))
-    sleep 1
-  done
-  echo "  ERROR: $label not ready after 60s"
-  return 1
-}
-
-if ! wait_for_server "http://localhost:3001/health" "Backend (:3001)"; then
-  tail -20 /tmp/human-pages-e2e-servers.log 2>/dev/null
-  exit 1
-fi
-
-if ! wait_for_server "http://localhost:3000" "Frontend (:3000)"; then
-  tail -20 /tmp/human-pages-e2e-servers.log 2>/dev/null
-  exit 1
-fi
-
-npx playwright test --config e2e/playwright.config.ts
-if [ $? -ne 0 ]; then
-  echo "  E2E tests failed"
+  echo "  One or more checks failed"
   exit 1
 fi
 
