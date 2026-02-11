@@ -445,8 +445,12 @@ export default function ProfileSection({
                   value={profileForm.linkedinUrl}
                   onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
                   placeholder="https://linkedin.com/in/username"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  readOnly={!!profile.linkedinVerified}
+                  className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md${profile.linkedinVerified ? ' bg-gray-50 cursor-not-allowed' : ''}`}
                 />
+                {profile.linkedinVerified && (
+                  <p className="mt-1 text-xs text-gray-500">{t('dashboard.profile.disconnectToEdit', 'Disconnect to edit')}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="profile-twitter" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.twitter')}</label>
@@ -467,8 +471,12 @@ export default function ProfileSection({
                   value={profileForm.githubUrl}
                   onChange={(e) => setProfileForm({ ...profileForm, githubUrl: e.target.value })}
                   placeholder="https://github.com/username"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  readOnly={!!profile.githubVerified}
+                  className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md${profile.githubVerified ? ' bg-gray-50 cursor-not-allowed' : ''}`}
                 />
+                {profile.githubVerified && (
+                  <p className="mt-1 text-xs text-gray-500">{t('dashboard.profile.disconnectToEdit', 'Disconnect to edit')}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="profile-instagram" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.instagram')}</label>

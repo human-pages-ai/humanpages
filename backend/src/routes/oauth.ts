@@ -443,18 +443,14 @@ router.post('/linkedin/verify/callback', authenticateToken, async (req: AuthRequ
       return res.status(409).json({ error: 'This LinkedIn account is already linked to another user' });
     }
 
-    // Update current user: set linkedinId, linkedinVerified, auto-fill linkedinUrl if empty
-    const currentUser = await prisma.human.findUnique({
-      where: { id: req.userId },
-      select: { linkedinUrl: true },
-    });
-
+    // Update current user: set linkedinId, linkedinVerified, and always overwrite linkedinUrl
+    // to prevent set-fake-URL → verify-real-account → badge-on-fake-URL attack
     await prisma.human.update({
       where: { id: req.userId },
       data: {
         linkedinId: profile.linkedinId,
         linkedinVerified: true,
-        ...(currentUser && !currentUser.linkedinUrl ? { linkedinUrl: `https://www.linkedin.com/in/${profile.linkedinId}` } : {}),
+        linkedinUrl: `https://www.linkedin.com/in/${profile.linkedinId}`,
       },
     });
 
@@ -560,21 +556,14 @@ router.post('/github/verify/callback', authenticateToken, async (req: AuthReques
       return res.status(409).json({ error: 'This GitHub account is already linked to another user' });
     }
 
-    // Update current user
-    const currentUser = await prisma.human.findUnique({
-      where: { id: req.userId },
-      select: { githubUrl: true },
-    });
-
+    // Update current user: always overwrite githubUrl to prevent URL spoofing
     await prisma.human.update({
       where: { id: req.userId },
       data: {
         githubId,
         githubVerified: true,
         githubUsername: githubUser.login,
-        ...(currentUser && !currentUser.githubUrl
-          ? { githubUrl: `https://github.com/${githubUser.login}` }
-          : {}),
+        githubUrl: `https://github.com/${githubUser.login}`,
       },
     });
 

@@ -23,8 +23,6 @@ import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
-// TODO: Unhide once LinkedIn redirect URIs are configured
-// import LinkedInSection from '../components/dashboard/LinkedInSection';
 import SEO from '../components/SEO';
 
 const VALID_TABS: DashboardTab[] = ['jobs', 'profile', 'payments', 'settings'];
@@ -741,8 +739,6 @@ export default function Dashboard() {
                 {/* Trust & Verification */}
                 <div className="space-y-4">
                   <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
-                  {/* TODO: Unhide once LinkedIn redirect URIs are configured */}
-                  {/* <LinkedInSection profile={profile} onProfileUpdate={setProfile} /> */}
                   <HumanitySection profile={profile} onVerified={loadProfile} />
                 </div>
 

@@ -436,12 +436,21 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     // Compute minRateUsdEstimate if rate or currency changed
     const dataToSave: any = { ...updates, lastActiveAt: new Date() };
     const rateChanged = updates.minRateUsdc !== undefined || updates.rateCurrency !== undefined;
-    if (rateChanged) {
-      // Need current human to get the other value if only one changed
+    const urlLockNeeded = updates.linkedinUrl !== undefined || updates.githubUrl !== undefined;
+    if (rateChanged || urlLockNeeded) {
+      // Need current human to get rate values and verification state
       const current = await prisma.human.findUnique({
         where: { id: req.userId },
-        select: { minRateUsdc: true, rateCurrency: true },
+        select: { minRateUsdc: true, rateCurrency: true, linkedinVerified: true, githubVerified: true },
       });
+
+      // Prevent changing verified URLs — silently strip the update
+      if (current?.linkedinVerified && updates.linkedinUrl !== undefined) {
+        delete dataToSave.linkedinUrl;
+      }
+      if (current?.githubVerified && updates.githubUrl !== undefined) {
+        delete dataToSave.githubUrl;
+      }
       const rate = updates.minRateUsdc !== undefined ? updates.minRateUsdc : current?.minRateUsdc?.toNumber() ?? null;
       const currency = updates.rateCurrency || current?.rateCurrency || 'USD';
       if (rate != null) {
