@@ -8,7 +8,6 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import TrustBadge from '../components/TrustBadge';
-import type { TrustScoreData } from '../components/dashboard/types';
 
 interface Wallet {
   network: string;
@@ -71,7 +70,6 @@ interface PublicHuman {
   humanityScore?: number;
   humanityProvider?: string;
   humanityVerifiedAt?: string;
-  trustScore?: TrustScoreData;
   reputation?: {
     avgRating: number;
     reviewCount: number;
@@ -241,9 +239,8 @@ export default function PublicProfile() {
           </div>
 
           <div className="p-6 space-y-6">
-            {/* Trust Badge — primary trust signal */}
+            {/* Reputation & Verified Accounts */}
             <TrustBadge
-              trustScore={profile.trustScore}
               linkedinVerified={profile.linkedinVerified}
               githubVerified={profile.githubVerified}
               githubUsername={profile.githubUsername}

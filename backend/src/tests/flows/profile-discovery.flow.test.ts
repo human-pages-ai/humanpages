@@ -159,8 +159,7 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     expect(photographer).toBeDefined();
     expect(photographer.reputation).toBeDefined();
     expect(photographer.reputation.jobsCompleted).toBe(0);
-    expect(photographer.trustScore).toBeDefined();
-    expect(photographer.trustScore.score).toBeTypeOf('number');
+    expect(photographer).not.toHaveProperty('trustScore');
   });
 
   it('should not include contact info in public search results', async () => {
@@ -181,7 +180,7 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     expect(res.body.name).toBe('SF Photographer');
     expect(res.body.skills).toContain('photography');
     expect(res.body.reputation).toBeDefined();
-    expect(res.body.trustScore).toBeDefined();
+    expect(res.body).not.toHaveProperty('trustScore');
 
     // No contact info in public view
     expect(res.body).not.toHaveProperty('contactEmail');

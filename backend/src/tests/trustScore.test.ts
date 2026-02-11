@@ -456,13 +456,11 @@ describe('Trust Score — Integration', () => {
       expect(response.body.trustScore).toHaveProperty('breakdown');
     });
 
-    it('should include trust score in GET /api/humans/:id', async () => {
+    it('should not include trust score in GET /api/humans/:id (public)', async () => {
       const response = await request(app).get(`/api/humans/${user.id}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('trustScore');
-      expect(response.body.trustScore).toHaveProperty('score');
-      expect(response.body.trustScore).toHaveProperty('level');
+      expect(response.body).not.toHaveProperty('trustScore');
     });
 
     it('should include trust score in PATCH /api/humans/me response', async () => {
@@ -474,7 +472,7 @@ describe('Trust Score — Integration', () => {
       expect(response.body).toHaveProperty('trustScore');
     });
 
-    it('should include trust score in search results', async () => {
+    it('should not include trust score in search results (public)', async () => {
       // Add skills so user appears in search
       await authRequest(user.token)
         .patch('/api/humans/me')
@@ -484,12 +482,10 @@ describe('Trust Score — Integration', () => {
         .get('/api/humans/search?skill=javascript');
 
       expect(response.status).toBe(200);
-      if (response.body.humans && response.body.humans.length > 0) {
-        const found = response.body.humans.find((h: any) => h.id === user.id);
+      if (response.body.length > 0) {
+        const found = response.body.find((h: any) => h.id === user.id);
         if (found) {
-          expect(found).toHaveProperty('trustScore');
-          expect(found.trustScore).toHaveProperty('score');
-          expect(found.trustScore).toHaveProperty('level');
+          expect(found).not.toHaveProperty('trustScore');
         }
       }
     });

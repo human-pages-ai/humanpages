@@ -10,7 +10,7 @@ import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
-import { computeTrustScore, computeTrustScoresBatch } from '../lib/trustScore.js';
+import { computeTrustScore } from '../lib/trustScore.js';
 import { qualifyAffiliateReferral, getReferralProgramData } from './affiliate.js';
 
 const router = Router();
@@ -767,13 +767,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     );
     const vouchCountMap = new Map(vouchCounts.map((vc) => [vc.voucheeId, vc._count]));
 
-    // Compute trust scores in batch (4 queries total, not N+1)
-    const trustScores = await computeTrustScoresBatch(humanIds);
-
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = humans.map((h) => {
       const { locationLat, locationLng, ...rest } = h;
-      const ts = trustScores.get(h.id);
       return {
         ...rest,
         vouchCount: vouchCountMap.get(h.id) || 0,
@@ -782,7 +778,6 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
           reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
         },
-        trustScore: ts ? { score: ts.score, level: ts.level } : { score: 0, level: 'new' as const },
       };
     });
 
@@ -839,11 +834,8 @@ router.get('/:id/profile', profileViewLimiter, authenticateAgent, requireActiveA
       return res.status(404).json({ error: 'Human not found' });
     }
 
-    const [reputation, trustScore] = await Promise.all([
-      getReputationStats(human.id),
-      computeTrustScore(human.id),
-    ]);
-    res.json(filterHiddenContact({ ...human, reputation, trustScore }));
+    const reputation = await getReputationStats(human.id);
+    res.json(filterHiddenContact({ ...human, reputation }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -877,12 +869,9 @@ router.get('/:id', async (req, res) => {
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
     trackServerEvent(ip, 'profile_viewed', { humanId: req.params.id }, req);
 
-    const [reputation, trustScore] = await Promise.all([
-      getReputationStats(human.id),
-      computeTrustScore(human.id),
-    ]);
+    const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
-    res.json({ ...rest, reputation, trustScore, vouches: vouchesReceived });
+    res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
     logger.error({ err: error }, 'Get human error');
     res.status(500).json({ error: 'Internal server error' });
@@ -912,12 +901,9 @@ router.get('/u/:username', async (req, res) => {
       return res.status(404).json({ error: 'Human not found' });
     }
 
-    const [reputation, trustScore] = await Promise.all([
-      getReputationStats(human.id),
-      computeTrustScore(human.id),
-    ]);
+    const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
-    res.json({ ...rest, reputation, trustScore, vouches: vouchesReceived });
+    res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
     logger.error({ err: error }, 'Get human by username error');
     res.status(500).json({ error: 'Internal server error' });

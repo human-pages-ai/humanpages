@@ -131,7 +131,6 @@ export default function TrustBadge({
 
   const level = trustScore?.level || 'new';
   const config = levelConfig[level];
-  const score = trustScore?.score || 0;
 
   // Count verified accounts for the badge row
   const verifiedBadges: Array<{ label: string; color: string }> = [];
@@ -143,12 +142,13 @@ export default function TrustBadge({
     <div className={`${className}`}>
       {/* Primary badge row: Level + Rating + Verified accounts */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Trust level */}
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text} ring-1 ${config.ring}`}>
-          <ShieldIcon className="w-4 h-4" />
-          {config.label}
-          {score > 0 && <span className="text-xs opacity-75">({score})</span>}
-        </span>
+        {/* Trust level — only shown when trustScore data is available */}
+        {trustScore && (
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text} ring-1 ${config.ring}`}>
+            <ShieldIcon className="w-4 h-4" />
+            {config.label}
+          </span>
+        )}
 
         {/* Star rating */}
         {reputation && reputation.reviewCount > 0 && (
