@@ -91,13 +91,6 @@ export default function StatusHeader({
     setShowChecklist(false);
   };
   const pendingJobs = jobs.filter(j => j.status === 'PENDING').length;
-  const trustScore = profile.trustScore?.score;
-  const trustLevel = profile.trustScore?.level;
-
-  const trustColor =
-    trustLevel === 'trusted' ? 'text-green-700 bg-green-100' :
-    trustLevel === 'verified' ? 'text-blue-700 bg-blue-100' :
-    'text-gray-700 bg-gray-100';
 
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-5">
@@ -163,16 +156,6 @@ export default function StatusHeader({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {profile.referralProgram.totalCredits}
-            </span>
-          )}
-
-          {/* Trust score */}
-          {trustScore !== undefined && (
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${trustColor}`}
-              aria-label={t('dashboard.trustScoreLabel', { score: trustScore })}
-            >
-              {trustScore}%
             </span>
           )}
 
