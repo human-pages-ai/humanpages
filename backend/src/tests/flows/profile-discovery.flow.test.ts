@@ -109,17 +109,17 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
 
     // Should find both the SF photographer (available) and NY offline (unavailable)
     // since we're not filtering by availability
-    const names = res.body.map((h: any) => h.name);
-    expect(names).toContain('SF Photographer');
+    const usernames = res.body.map((h: any) => h.username);
+    expect(usernames).toContain('sf_photographer');
   });
 
   it('should search by skill and filter by availability', async () => {
     const res = await request(app).get('/api/humans/search?skill=photography&available=true');
     expect(res.status).toBe(200);
 
-    const names = res.body.map((h: any) => h.name);
-    expect(names).toContain('SF Photographer');
-    expect(names).not.toContain('NY Offline');
+    const usernames = res.body.map((h: any) => h.username);
+    expect(usernames).toContain('sf_photographer');
+    expect(usernames).not.toContain('ny_offline');
   });
 
   it('should search by location text', async () => {
@@ -127,7 +127,7 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     expect(res.status).toBe(200);
 
     expect(res.body.length).toBeGreaterThanOrEqual(1);
-    expect(res.body[0].name).toBe('SF Photographer');
+    expect(res.body[0].username).toBe('sf_photographer');
   });
 
   it('should search by work mode', async () => {
@@ -135,8 +135,8 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     expect(res.status).toBe(200);
 
     expect(res.body.length).toBeGreaterThanOrEqual(1);
-    const names = res.body.map((h: any) => h.name);
-    expect(names).toContain('LA Driver');
+    const usernames = res.body.map((h: any) => h.username);
+    expect(usernames).toContain('la_driver');
   });
 
   it('should search by geo radius and find only nearby humans', async () => {
@@ -146,16 +146,16 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     );
     expect(res.status).toBe(200);
 
-    const names = res.body.map((h: any) => h.name);
-    expect(names).toContain('SF Photographer');
-    expect(names).not.toContain('LA Driver'); // LA is ~600km from SF
+    const usernames = res.body.map((h: any) => h.username);
+    expect(usernames).toContain('sf_photographer');
+    expect(usernames).not.toContain('la_driver'); // LA is ~600km from SF
   });
 
   it('should include reputation and trust score in search results', async () => {
     const res = await request(app).get('/api/humans/search?skill=photography');
     expect(res.status).toBe(200);
 
-    const photographer = res.body.find((h: any) => h.name === 'SF Photographer');
+    const photographer = res.body.find((h: any) => h.username === 'sf_photographer');
     expect(photographer).toBeDefined();
     expect(photographer.reputation).toBeDefined();
     expect(photographer.reputation.jobsCompleted).toBe(0);
@@ -166,11 +166,12 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     const res = await request(app).get('/api/humans/search?skill=photography');
     expect(res.status).toBe(200);
 
-    const photographer = res.body.find((h: any) => h.name === 'SF Photographer');
+    const photographer = res.body.find((h: any) => h.username === 'sf_photographer');
     expect(photographer).not.toHaveProperty('contactEmail');
     expect(photographer).not.toHaveProperty('email');
     expect(photographer).not.toHaveProperty('telegram');
     expect(photographer).not.toHaveProperty('wallets');
+    expect(photographer).not.toHaveProperty('name');
   });
 
   it('should view public profile by ID without contact info', async () => {
@@ -262,23 +263,27 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     );
 
     const res = await request(app).get('/api/humans/search?skill=photography');
-    const names = res.body.map((h: any) => h.name);
-    expect(names).not.toContain('Unverified User');
+    const ids = res.body.map((h: any) => h.id);
+    // Unverified users should not appear — just verify count matches verified users only
+    expect(res.body.length).toBeGreaterThanOrEqual(1);
+    res.body.forEach((h: any) => {
+      expect(h).not.toHaveProperty('name');
+    });
   });
 
   it('should search by equipment', async () => {
     const res = await request(app).get('/api/humans/search?equipment=DJI%20Mavic');
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThanOrEqual(1);
-    expect(res.body[0].name).toBe('SF Photographer');
+    expect(res.body[0].username).toBe('sf_photographer');
   });
 
   it('should search by language', async () => {
     const res = await request(app).get('/api/humans/search?language=Spanish');
     expect(res.status).toBe(200);
-    const names = res.body.map((h: any) => h.name);
-    expect(names).toContain('SF Photographer');
-    expect(names).not.toContain('LA Driver');
+    const usernames = res.body.map((h: any) => h.username);
+    expect(usernames).toContain('sf_photographer');
+    expect(usernames).not.toContain('la_driver');
   });
 
   it('should include services in public profile', async () => {

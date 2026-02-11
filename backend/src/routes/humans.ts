@@ -668,10 +668,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.humanityVerified = true;
     }
 
-    // Filter by skill
-    if (skill) {
-      where.skills = { has: skill as string };
-    }
+    // Skill search: tokenize for relevance scoring (applied after fetch)
+    const skillTokens = skill
+      ? (skill as string).toLowerCase().split(/[\s,\-_]+/).filter(t => t.length > 2)
+      : [];
+    const isSkillSearch = skillTokens.length > 0;
 
     // Filter by equipment
     if (equipment) {
@@ -712,11 +713,15 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       };
     }
 
+    const requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
+    const requestedOffset = parseInt(offset as string) || 0;
+
     // Fetch humans (public: no contact info, no wallets)
+    // When doing skill search, fetch more candidates for relevance scoring
     let humans = await prisma.human.findMany({
       where,
-      take: Math.min(parseInt(limit as string) || 20, 100),
-      skip: parseInt(offset as string) || 0,
+      take: isSkillSearch ? 500 : requestedLimit,
+      skip: isSkillSearch ? 0 : requestedOffset,
       orderBy: { lastActiveAt: 'desc' },
       select: {
         ...publicHumanSelect,
@@ -724,6 +729,38 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         locationLng: true,
       },
     });
+
+    // Score and filter by skill relevance
+    if (isSkillSearch) {
+      const scored = humans.map(h => {
+        let score = 0;
+        const skillsLower = (h.skills || []).map(s => s.toLowerCase());
+        const bioLower = (h.bio || '').toLowerCase();
+        const servicesText = (h.services || [])
+          .map(s => `${s.title} ${s.description}`).join(' ').toLowerCase();
+
+        for (const token of skillTokens) {
+          // Exact skill match (case-insensitive)
+          if (skillsLower.includes(token)) {
+            score += 10;
+          // Skill contains token as substring (e.g. "social" in "social media")
+          } else if (skillsLower.some(s => s.includes(token))) {
+            score += 5;
+          }
+          // Bio or service descriptions contain token
+          if (bioLower.includes(token)) score += 2;
+          if (servicesText.includes(token)) score += 3;
+        }
+
+        return { human: h, score };
+      });
+
+      humans = scored
+        .filter(s => s.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(requestedOffset, requestedOffset + requestedLimit)
+        .map(s => s.human);
+    }
 
     // Apply radius filter if lat/lng provided
     if (lat && lng && radius) {
@@ -778,7 +815,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = humans.map((h) => {
-      const { locationLat, locationLng, ...rest } = h;
+      const { locationLat, locationLng, name, ...rest } = h;
       return {
         ...rest,
         vouchCount: vouchCountMap.get(h.id) || 0,

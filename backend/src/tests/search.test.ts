@@ -70,7 +70,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2); // Alice and Carol
-      expect(response.body.map((h: any) => h.name).sort()).toEqual(['Alice Smith', 'Carol Williams']);
+      expect(response.body.map((h: any) => h.id).sort()).toEqual([alice.id, carol.id].sort());
     });
 
     it('should filter by skill - python', async () => {
@@ -78,7 +78,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Bob Johnson');
+      expect(response.body[0].id).toBe(bob.id);
     });
 
     it('should filter by location', async () => {
@@ -86,7 +86,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2); // Bob and Carol
-      expect(response.body.map((h: any) => h.name).sort()).toEqual(['Bob Johnson', 'Carol Williams']);
+      expect(response.body.map((h: any) => h.id).sort()).toEqual([bob.id, carol.id].sort());
     });
 
     it('should filter by location - case insensitive', async () => {
@@ -101,7 +101,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2); // Alice and Bob
-      expect(response.body.map((h: any) => h.name).sort()).toEqual(['Alice Smith', 'Bob Johnson']);
+      expect(response.body.map((h: any) => h.id).sort()).toEqual([alice.id, bob.id].sort());
     });
 
     it('should combine skill and location filters', async () => {
@@ -109,7 +109,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Carol Williams');
+      expect(response.body[0].id).toBe(carol.id);
     });
 
     it('should combine skill and availability filters', async () => {
@@ -117,7 +117,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Alice Smith');
+      expect(response.body[0].id).toBe(alice.id);
     });
 
     it('should combine all filters', async () => {
@@ -127,7 +127,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Alice Smith');
+      expect(response.body[0].id).toBe(alice.id);
     });
 
     it('should return empty array when no matches', async () => {
@@ -177,6 +177,15 @@ describe('Search API', () => {
       });
     });
 
+    it('should not expose name in search results', async () => {
+      const response = await request(app).get('/api/humans/search');
+
+      expect(response.status).toBe(200);
+      response.body.forEach((human: any) => {
+        expect(human).not.toHaveProperty('name');
+      });
+    });
+
     it('should NOT expose contactEmail in public search (contact info stripped)', async () => {
       // Explicitly unhide contact info (hideContact defaults to true)
       await authRequest(alice.token)
@@ -187,7 +196,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       // contactEmail should NOT be present — public search strips contact info
-      const aliceResult = response.body.find((h: any) => h.name === 'Alice Smith');
+      const aliceResult = response.body.find((h: any) => h.id === alice.id);
       expect(aliceResult).not.toHaveProperty('contactEmail');
     });
   });
@@ -201,7 +210,7 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?equipment=camera');
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Alice Smith');
+      expect(response.body[0].id).toBe(alice.id);
     });
 
     it('should filter by language', async () => {
@@ -212,7 +221,7 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?language=spanish');
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Bob Johnson');
+      expect(response.body[0].id).toBe(bob.id);
     });
 
     it('should filter by minRate', async () => {
@@ -226,7 +235,7 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?minRate=75');
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Bob Johnson');
+      expect(response.body[0].id).toBe(bob.id);
     });
 
     it('should filter by maxRate', async () => {
@@ -240,7 +249,7 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?maxRate=75');
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Alice Smith');
+      expect(response.body[0].id).toBe(alice.id);
     });
 
     it('should respect limit parameter', async () => {
@@ -272,7 +281,7 @@ describe('Search API', () => {
       );
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Alice Smith');
+      expect(response.body[0].id).toBe(alice.id);
     });
 
     it('should combine equipment + language + rate range filters', async () => {
@@ -288,7 +297,7 @@ describe('Search API', () => {
       );
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
-      expect(response.body[0].name).toBe('Alice Smith');
+      expect(response.body[0].id).toBe(alice.id);
     });
   });
 });
