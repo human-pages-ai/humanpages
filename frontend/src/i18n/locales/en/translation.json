@@ -207,11 +207,13 @@
       "confirmSuspend": "This will suspend you from receiving job offers. Are you sure?"
     },
     "paymentPreference": {
-      "title": "Payment Preference",
+      "title": "Payment Preferences",
       "subtitle": "Tell agents how you prefer to be paid for jobs",
-      "hint": "Upfront: paid before you start. Escrow: held until the job is done.",
+      "hint": "Select all payment methods you accept. At least one is required.",
       "upfront": "Payment Upfront",
       "escrow": "Escrow",
+      "upon_completion": "Upon Completion",
+      "stream": "Streaming",
       "both": "Flexible (Any)",
       "bothDesc": "Upfront, escrow, or after job completion"
     },

@@ -360,7 +360,7 @@ export default function JobDetail() {
               {job.status === 'ACCEPTED' && (
                 <div className="flex flex-col gap-2">
                   <span className="text-sm text-blue-600 font-medium">{t('dashboard.jobs.awaitingPayment')}</span>
-                  {job.human?.paymentPreference === 'BOTH' && (
+                  {job.human?.paymentPreferences?.includes('UPON_COMPLETION') && (
                     <>
                       <span className="text-xs text-gray-500">{t('dashboard.jobs.completeBeforePayment')}</span>
                       <button

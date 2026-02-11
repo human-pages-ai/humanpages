@@ -85,7 +85,7 @@ export interface Profile {
   rateCurrency?: string;
   minRateUsdEstimate?: number;
   rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
-  paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
+  paymentPreferences?: ('UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM')[];
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
   preferredLanguage?: string;
   linkedinVerified?: boolean;
@@ -131,7 +131,7 @@ export interface Job {
   human?: {
     id: string;
     name: string;
-    paymentPreference?: 'ESCROW' | 'UPFRONT' | 'BOTH';
+    paymentPreferences?: ('UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM')[];
   };
   title: string;
   description: string;

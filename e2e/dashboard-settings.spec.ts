@@ -34,17 +34,21 @@ test.describe('Dashboard – Settings', () => {
     expect(typeof profile.isAvailable).toBe('boolean');
   });
 
-  test('change payment preference', async ({ page }) => {
+  test('toggle payment preferences', async ({ page }) => {
     await signupAndGoToDashboard(page);
 
-    // Payment preference is in the Profile tab > WorkStatusSection
+    // Payment preferences are in the Profile tab > WorkStatusSection (multi-select)
     await page.getByRole('tab', { name: /profile/i }).click();
 
-    await page.getByRole('button', { name: 'Escrow' }).click();
-    await expect(page.getByRole('button', { name: 'Escrow' })).toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
+    // By default all non-stream options are selected. Toggle Escrow off then back on.
+    const escrowBtn = page.getByRole('button', { name: 'Escrow' });
+    await escrowBtn.click();
+    // After toggling off, should lose the selected style
+    await expect(escrowBtn).not.toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
 
-    await page.getByRole('button', { name: 'Payment Upfront' }).click();
-    await expect(page.getByRole('button', { name: 'Payment Upfront' })).toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
+    // Toggle it back on
+    await escrowBtn.click();
+    await expect(escrowBtn).toHaveClass(/bg-indigo-600/, { timeout: SAVE_TIMEOUT });
   });
 
   test('notification toggles', async ({ page }) => {

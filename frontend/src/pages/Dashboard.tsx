@@ -276,14 +276,19 @@ export default function Dashboard() {
     }
   };
 
-  const changePaymentPreference = async (pref: 'ESCROW' | 'UPFRONT' | 'BOTH') => {
+  const togglePaymentPreference = async (pref: 'UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM') => {
     if (!profile) return;
+    const current = profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION'];
+    const next = current.includes(pref)
+      ? current.filter(p => p !== pref)
+      : [...current, pref];
+    if (next.length === 0) return; // must keep at least one
     setSaving(true);
     try {
-      const updated = await api.updateProfile({ paymentPreference: pref });
+      const updated = await api.updateProfile({ paymentPreferences: next });
       setProfile(updated);
     } catch (error) {
-      console.error('Failed to update payment preference:', error);
+      console.error('Failed to update payment preferences:', error);
     } finally {
       setSaving(false);
     }
@@ -718,14 +723,14 @@ export default function Dashboard() {
                   />
                   <WorkStatusSection
                     isAvailable={profile.isAvailable}
-                    paymentPreference={profile.paymentPreference || 'BOTH'}
+                    paymentPreferences={profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION']}
                     emailNotifications={profile.emailNotifications !== false}
                     telegramNotifications={profile.telegramNotifications !== false}
                     whatsappNotifications={profile.whatsappNotifications !== false}
                     emailDigestMode={profile.emailDigestMode || 'REALTIME'}
                     saving={saving}
                     onToggleAvailability={toggleAvailability}
-                    onPaymentPreferenceChange={changePaymentPreference}
+                    onPaymentPreferenceToggle={togglePaymentPreference}
                     onToggleNotification={toggleNotification}
                     onEmailDigestModeChange={changeEmailDigestMode}
                   />

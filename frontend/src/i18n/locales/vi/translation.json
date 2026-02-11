@@ -197,13 +197,15 @@
       "confirmSuspend": "Điều này sẽ tạm ngưng bạn nhận các lời mời làm việc. Bạn có chắc không?"
     },
     "paymentPreference": {
-      "title": "Hình thức thanh toán",
+      "title": "Tùy chọn thanh toán",
       "subtitle": "Cho đại lý biết bạn muốn được thanh toán như thế nào",
-      "hint": "Trả trước: thanh toán trước khi bạn bắt đầu. Ký quỹ: giữ cho đến khi công việc hoàn thành.",
+      "hint": "Chọn tất cả phương thức thanh toán bạn chấp nhận. Cần ít nhất một phương thức.",
       "upfront": "Thanh toán trước",
       "escrow": "Ký quỹ",
       "both": "Linh hoạt (Đều được)",
-      "bothDesc": "Thanh toán trước, ký quỹ hoặc sau khi hoàn thành công việc"
+      "bothDesc": "Thanh toán trước, ký quỹ hoặc sau khi hoàn thành công việc",
+      "upon_completion": "Sau khi hoàn thành",
+      "stream": "Streaming"
     },
     "workMode": {
       "title": "Chế độ làm việc",

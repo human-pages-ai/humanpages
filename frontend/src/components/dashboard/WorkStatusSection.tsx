@@ -1,15 +1,17 @@
 import { useTranslation } from 'react-i18next';
 
+type PaymentPref = 'UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM';
+
 interface Props {
   isAvailable: boolean;
-  paymentPreference: 'ESCROW' | 'UPFRONT' | 'BOTH';
+  paymentPreferences: PaymentPref[];
   emailNotifications: boolean;
   telegramNotifications: boolean;
   whatsappNotifications: boolean;
   emailDigestMode: 'REALTIME' | 'HOURLY' | 'DAILY';
   saving: boolean;
   onToggleAvailability: () => void;
-  onPaymentPreferenceChange: (pref: 'ESCROW' | 'UPFRONT' | 'BOTH') => void;
+  onPaymentPreferenceToggle: (pref: PaymentPref) => void;
   onToggleNotification: (channel: 'email' | 'telegram' | 'whatsapp') => void;
   onEmailDigestModeChange: (mode: 'REALTIME' | 'HOURLY' | 'DAILY') => void;
 }
@@ -36,23 +38,24 @@ function Toggle({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: (
 
 export default function WorkStatusSection({
   isAvailable,
-  paymentPreference,
+  paymentPreferences,
   emailNotifications,
   telegramNotifications,
   whatsappNotifications,
   emailDigestMode,
   saving,
   onToggleAvailability,
-  onPaymentPreferenceChange,
+  onPaymentPreferenceToggle,
   onToggleNotification,
   onEmailDigestModeChange,
 }: Props) {
   const { t } = useTranslation();
 
-  const PAYMENT_OPTIONS: { value: 'ESCROW' | 'UPFRONT' | 'BOTH'; labelKey: string }[] = [
+  const PAYMENT_OPTIONS: { value: PaymentPref; labelKey: string }[] = [
     { value: 'UPFRONT', labelKey: 'dashboard.paymentPreference.upfront' },
     { value: 'ESCROW', labelKey: 'dashboard.paymentPreference.escrow' },
-    { value: 'BOTH', labelKey: 'dashboard.paymentPreference.both' },
+    { value: 'UPON_COMPLETION', labelKey: 'dashboard.paymentPreference.uponCompletion' },
+    { value: 'STREAM', labelKey: 'dashboard.paymentPreference.stream' },
   ];
 
   const DIGEST_OPTIONS: { value: 'REALTIME' | 'HOURLY' | 'DAILY'; labelKey: string }[] = [
@@ -137,7 +140,7 @@ export default function WorkStatusSection({
         </div>
       )}
 
-      {/* Payment preference - only interactive when available */}
+      {/* Payment preferences - multi-select toggles */}
       <div className={`pt-4 border-t border-gray-100 ${!isAvailable ? 'opacity-50' : ''}`}>
         <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dashboard.paymentPreference.title')}</h3>
         <p className="text-gray-500 text-xs mb-1">{t('dashboard.paymentPreference.subtitle')}</p>
@@ -146,10 +149,10 @@ export default function WorkStatusSection({
           {PAYMENT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              onClick={() => onPaymentPreferenceChange(opt.value)}
+              onClick={() => onPaymentPreferenceToggle(opt.value)}
               disabled={saving || !isAvailable}
               className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                paymentPreference === opt.value
+                paymentPreferences.includes(opt.value)
                   ? 'bg-indigo-600 text-white border-indigo-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
               }`}

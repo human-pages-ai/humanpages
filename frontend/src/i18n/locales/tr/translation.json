@@ -197,13 +197,15 @@
       "confirmSuspend": "Bu sizi iş teklifleri almaktan askıya alacaktır. Emin misiniz?"
     },
     "paymentPreference": {
-      "title": "Ödeme Tercihi",
+      "title": "Ödeme Tercihleri",
       "subtitle": "Ajanlara nasıl ödeme almak istediğinizi bildirin",
-      "hint": "Peşin: başlamadan önce ödenir. Emanet: iş bitene kadar tutulur.",
+      "hint": "Kabul ettiğiniz tüm ödeme yöntemlerini seçin. En az bir tane gereklidir.",
       "upfront": "Peşin Ödeme",
       "escrow": "Emanet",
       "both": "Esnek (Her ikisi)",
-      "bothDesc": "Peşin, emanet veya iş tamamlandıktan sonra"
+      "bothDesc": "Peşin, emanet veya iş tamamlandıktan sonra",
+      "upon_completion": "Tamamlandıktan Sonra",
+      "stream": "Streaming"
     },
     "workMode": {
       "title": "Çalışma Modu",

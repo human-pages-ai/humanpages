@@ -197,13 +197,15 @@
       "confirmSuspend": "Esto te suspenderá de recibir ofertas de trabajo. ¿Estás seguro?"
     },
     "paymentPreference": {
-      "title": "Preferencia de Pago",
+      "title": "Preferencias de Pago",
       "subtitle": "Indica a los agentes cómo prefieres recibir el pago",
-      "hint": "Por adelantado: se paga antes de empezar. Depósito en garantía: se retiene hasta que el trabajo esté hecho.",
+      "hint": "Selecciona todos los métodos de pago que aceptas. Se requiere al menos uno.",
       "upfront": "Pago por adelantado",
       "escrow": "Depósito en garantía",
       "both": "Flexible (Cualquiera)",
-      "bothDesc": "Por adelantado, depósito en garantía o después de completar el trabajo"
+      "bothDesc": "Por adelantado, depósito en garantía o después de completar el trabajo",
+      "upon_completion": "Al Finalizar",
+      "stream": "Streaming"
     },
     "workMode": {
       "title": "Modo de Trabajo",

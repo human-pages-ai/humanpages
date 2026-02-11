@@ -197,13 +197,15 @@
       "confirmSuspend": "Cela vous suspendra de recevoir des offres d'emploi. Êtes-vous sûr ?"
     },
     "paymentPreference": {
-      "title": "Préférence de paiement",
+      "title": "Préférences de Paiement",
       "subtitle": "Indiquez aux agents comment vous préférez être payé",
-      "hint": "D'avance : payé avant de commencer. Séquestre : retenu jusqu'à ce que le travail soit terminé.",
+      "hint": "Sélectionnez tous les modes de paiement acceptés. Au moins un est requis.",
       "upfront": "Paiement d'avance",
       "escrow": "Séquestre",
       "both": "Flexible (les deux)",
-      "bothDesc": "D'avance, séquestre ou après l'achèvement du travail"
+      "bothDesc": "D'avance, séquestre ou après l'achèvement du travail",
+      "upon_completion": "À la Fin",
+      "stream": "Streaming"
     },
     "workMode": {
       "title": "Mode de travail",

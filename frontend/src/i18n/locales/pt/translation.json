@@ -197,13 +197,15 @@
       "confirmSuspend": "Isso vai suspender você de receber ofertas de trabalho. Tem certeza?"
     },
     "paymentPreference": {
-      "title": "Preferência de Pagamento",
+      "title": "Preferências de Pagamento",
       "subtitle": "Informe aos agentes como prefere receber o pagamento",
-      "hint": "Adiantado: pago antes de começar. Custódia: retido até o trabalho ser concluído.",
+      "hint": "Selecione todos os métodos de pagamento que aceita. Pelo menos um é obrigatório.",
       "upfront": "Pagamento Antecipado",
       "escrow": "Garantia",
       "both": "Flexível (Qualquer um)",
-      "bothDesc": "Antecipado, garantia ou após a conclusão do trabalho"
+      "bothDesc": "Antecipado, garantia ou após a conclusão do trabalho",
+      "upon_completion": "Após Conclusão",
+      "stream": "Streaming"
     },
     "workMode": {
       "title": "Modo de Trabalho",

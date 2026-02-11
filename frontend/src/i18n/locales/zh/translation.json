@@ -199,11 +199,13 @@
     "paymentPreference": {
       "title": "付款偏好",
       "subtitle": "告诉代理您希望如何接收工作报酬",
-      "hint": "预付款：开工前支付。托管：工作完成后释放。",
+      "hint": "选择您接受的所有付款方式。至少需要一种。",
       "upfront": "预付款",
       "escrow": "托管付款",
       "both": "灵活（均可）",
-      "bothDesc": "预付、托管或工作完成后付款"
+      "bothDesc": "预付、托管或工作完成后付款",
+      "upon_completion": "完成后付款",
+      "stream": "流式付款"
     },
     "workMode": {
       "title": "工作模式",

@@ -1,26 +1,29 @@
 import { useTranslation } from 'react-i18next';
 
+type PaymentPref = 'UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM';
+
 interface Props {
   isAvailable: boolean;
-  paymentPreference: 'ESCROW' | 'UPFRONT' | 'BOTH';
+  paymentPreferences: PaymentPref[];
   saving: boolean;
   onToggle: () => void;
-  onPaymentPreferenceChange: (pref: 'ESCROW' | 'UPFRONT' | 'BOTH') => void;
+  onPaymentPreferenceToggle: (pref: PaymentPref) => void;
 }
 
 export default function AvailabilitySection({
   isAvailable,
-  paymentPreference,
+  paymentPreferences,
   saving,
   onToggle,
-  onPaymentPreferenceChange,
+  onPaymentPreferenceToggle,
 }: Props) {
   const { t } = useTranslation();
 
-  const PAYMENT_OPTIONS: { value: 'ESCROW' | 'UPFRONT' | 'BOTH'; labelKey: string }[] = [
+  const PAYMENT_OPTIONS: { value: PaymentPref; labelKey: string }[] = [
     { value: 'UPFRONT', labelKey: 'dashboard.paymentPreference.upfront' },
     { value: 'ESCROW', labelKey: 'dashboard.paymentPreference.escrow' },
-    { value: 'BOTH', labelKey: 'dashboard.paymentPreference.both' },
+    { value: 'UPON_COMPLETION', labelKey: 'dashboard.paymentPreference.upon_completion' },
+    { value: 'STREAM', labelKey: 'dashboard.paymentPreference.stream' },
   ];
 
   return (
@@ -52,10 +55,10 @@ export default function AvailabilitySection({
           {PAYMENT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              onClick={() => onPaymentPreferenceChange(opt.value)}
+              onClick={() => onPaymentPreferenceToggle(opt.value)}
               disabled={saving}
               className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                paymentPreference === opt.value
+                paymentPreferences.includes(opt.value)
                   ? 'bg-indigo-600 text-white border-indigo-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
               }`}

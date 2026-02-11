@@ -197,13 +197,15 @@
       "confirmSuspend": "Isu-suspend ka nito sa pagtanggap ng mga alok ng trabaho. Sigurado ka ba?"
     },
     "paymentPreference": {
-      "title": "Kagustuhan sa Pagbabayad",
+      "title": "Mga Kagustuhan sa Pagbabayad",
       "subtitle": "Sabihin sa mga ahente kung paano mo gustong mabayaran",
-      "hint": "Bayad muna: binabayaran bago ka magsimula. Escrow: hawak hanggang matapos ang trabaho.",
+      "hint": "Piliin ang lahat ng paraan ng pagbabayad na tinatanggap mo. Kailangan ng kahit isa.",
       "upfront": "Bayad Muna",
       "escrow": "Escrow",
       "both": "Flexible (Alinman)",
-      "bothDesc": "Bayad muna, escrow, o pagkatapos makumpleto ang trabaho"
+      "bothDesc": "Bayad muna, escrow, o pagkatapos makumpleto ang trabaho",
+      "upon_completion": "Pagkatapos Matapos",
+      "stream": "Streaming"
     },
     "workMode": {
       "title": "Mode ng Trabaho",
