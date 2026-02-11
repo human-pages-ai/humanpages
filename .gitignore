@@ -19,3 +19,5 @@ Thumbs.db
 logo-tests/
 test-results/
 .claude/
+scripts/job-posting/
+agents/
