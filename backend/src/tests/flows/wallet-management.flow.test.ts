@@ -70,51 +70,54 @@ describe('Flow: Wallet Management — Multi-chain Wallet Lifecycle', () => {
     expect(emptyRes.status).toBe(200);
     expect(emptyRes.body).toEqual([]);
 
-    // ─── Step 2: Add Ethereum wallet ───────────────────────────────────
+    // ─── Step 2: Add wallet (auto-registers across all EVM mainnets) ───
     const ethRes = await addWalletSigned(user.token, WALLET_ETH, 'ethereum', 'My ETH Wallet');
     expect(ethRes.status).toBe(201);
-    expect(ethRes.body.network).toBe('ethereum');
-    expect(ethRes.body.address).toBe(WALLET_ETH.address);
-    expect(ethRes.body.label).toBe('My ETH Wallet');
-    const ethWalletId = ethRes.body.id;
+    expect(Array.isArray(ethRes.body)).toBe(true);
+    expect(ethRes.body).toHaveLength(4);
+    const ethWallet = ethRes.body.find((w: any) => w.network === 'ethereum');
+    expect(ethWallet).toBeDefined();
+    expect(ethWallet.address).toBe(WALLET_ETH.address);
+    expect(ethWallet.label).toBe('My ETH Wallet');
+    const ethWalletId = ethWallet.id;
 
-    // ─── Step 3: Add same address on Polygon (allowed) ─────────────────
-    const polyRes = await addWalletSigned(user.token, WALLET_ETH, 'polygon', 'My Polygon Wallet');
-    expect(polyRes.status).toBe(201);
-    expect(polyRes.body.network).toBe('polygon');
-    expect(polyRes.body.address).toBe(WALLET_ETH.address);
-
-    // ─── Step 4: Add different wallet on Base ──────────────────────────
+    // ─── Step 3: Add different address (auto-registers across all networks) ──
     const baseRes = await addWalletSigned(user.token, WALLET_BASE, 'base', 'My Base Wallet');
     expect(baseRes.status).toBe(201);
-    expect(baseRes.body.network).toBe('base');
-    expect(baseRes.body.address).toBe(WALLET_BASE.address);
+    expect(Array.isArray(baseRes.body)).toBe(true);
+    expect(baseRes.body).toHaveLength(4);
+    const baseWallet = baseRes.body.find((w: any) => w.network === 'base');
+    expect(baseWallet).toBeDefined();
+    expect(baseWallet.address).toBe(WALLET_BASE.address);
 
-    // ─── Step 5: Verify all wallets listed ─────────────────────────────
+    // ─── Step 4: Verify all wallets listed (4 + 4 = 8) ─────────────────
     const listRes = await authRequest(user.token).get('/api/wallets');
     expect(listRes.status).toBe(200);
-    expect(listRes.body).toHaveLength(3);
+    expect(listRes.body).toHaveLength(8);
 
-    const networks = listRes.body.map((w: any) => w.network);
-    expect(networks).toContain('ethereum');
-    expect(networks).toContain('polygon');
-    expect(networks).toContain('base');
+    const ethNetworks = listRes.body
+      .filter((w: any) => w.address === WALLET_ETH.address)
+      .map((w: any) => w.network);
+    expect(ethNetworks).toContain('ethereum');
+    expect(ethNetworks).toContain('polygon');
+    expect(ethNetworks).toContain('base');
+    expect(ethNetworks).toContain('arbitrum');
 
-    // ─── Step 6: Try duplicate (same address + same network) ───────────
+    // ─── Step 5: Try duplicate (already on all networks) ────────────────
     const dupeRes = await addWalletSigned(user.token, WALLET_ETH, 'ethereum');
     expect(dupeRes.status).toBe(400);
-    expect(dupeRes.body.error).toContain('already added');
+    expect(dupeRes.body.error).toContain('already registered on all supported networks');
 
-    // ─── Step 7: Delete Ethereum wallet ────────────────────────────────
+    // ─── Step 6: Delete Ethereum wallet ────────────────────────────────
     const deleteRes = await authRequest(user.token).delete(`/api/wallets/${ethWalletId}`);
     expect(deleteRes.status).toBe(200);
     expect(deleteRes.body.message).toBe('Wallet deleted');
 
-    // Verify only 2 remain
+    // Verify 7 remain (8 - 1 deleted)
     const afterDeleteRes = await authRequest(user.token).get('/api/wallets');
-    expect(afterDeleteRes.body).toHaveLength(2);
+    expect(afterDeleteRes.body).toHaveLength(7);
 
-    // ─── Step 8: Try deleting non-existent wallet ──────────────────────
+    // ─── Step 7: Try deleting non-existent wallet ──────────────────────
     const notFoundRes = await authRequest(user.token).delete('/api/wallets/non-existent-id');
     expect(notFoundRes.status).toBe(404);
   });
@@ -128,7 +131,7 @@ describe('Flow: Wallet Management — Multi-chain Wallet Lifecycle', () => {
 
     // User 2 tries to delete user 1's wallet
     const crossDeleteRes = await authRequest(otherUser.token)
-      .delete(`/api/wallets/${walletRes.body.id}`);
+      .delete(`/api/wallets/${walletRes.body[0].id}`);
     expect(crossDeleteRes.status).toBe(404);
     expect(crossDeleteRes.body.error).toBe('Wallet not found');
   });

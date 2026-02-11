@@ -7,6 +7,7 @@ export {
   SUPPORTED_TOKENS,
   TRANSFER_EVENT_SIGNATURE,
   SUPPORTED_NETWORKS,
+  EVM_MAINNET_NETWORKS,
   // Functions
   isNetworkSupported,
   isTokenSupportedOnNetwork,

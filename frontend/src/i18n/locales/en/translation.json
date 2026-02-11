@@ -347,7 +347,7 @@
       "paymentSetupSubtitle": "USDC is the default payment method. Connect a wallet to receive payments.",
       "addWallet": "Add Wallet",
       "connectWallet": "Connect Wallet",
-      "connectDescription": "Connect your browser wallet to verify ownership and add it to your profile.",
+      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
       "verifyAndAdd": "Verify & Add",
       "connectAndVerify": "Connect Wallet & Verify",
       "connectHint": "Your wallet will open twice: once to connect, once to sign. No funds are sent.",
@@ -370,6 +370,7 @@
       "emptyDescription": "Add a wallet to receive payments for completed jobs",
       "walletAddress": "Wallet address",
       "confirmDelete": "Delete this wallet?",
+      "allNetworksNote": "Available on all EVM networks",
       "networks": {
         "ethereum": "Ethereum",
         "polygon": "Polygon",
@@ -610,7 +611,7 @@
   "toast": {
     "profileSaved": "Profile saved",
     "filtersSaved": "Filters saved",
-    "walletAdded": "Wallet added",
+    "walletAdded": "Wallet added on all networks",
     "walletDeleted": "Wallet deleted",
     "serviceAdded": "Service added",
     "serviceDeleted": "Service deleted",

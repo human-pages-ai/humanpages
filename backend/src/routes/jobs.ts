@@ -715,11 +715,18 @@ router.patch('/:id/paid', async (req, res) => {
     }
 
     // Get wallet addresses for the payment network
-    // Match wallets where network matches the payment network (case-insensitive)
     const networkLower = data.paymentNetwork.toLowerCase();
-    const recipientWallets = job.human.wallets
-      .filter((w) => w.network.toLowerCase() === networkLower || w.network.toLowerCase() === 'ethereum')
+
+    // Primary: exact network match
+    const exactMatch = job.human.wallets
+      .filter((w) => w.network.toLowerCase() === networkLower)
       .map((w) => w.address);
+
+    // Fallback for pre-existing single-network wallets:
+    // any registered EVM address works on any EVM chain
+    const recipientWallets = exactMatch.length > 0
+      ? exactMatch
+      : [...new Set(job.human.wallets.map((w) => w.address.toLowerCase()))];
 
     if (recipientWallets.length === 0) {
       return res.status(400).json({

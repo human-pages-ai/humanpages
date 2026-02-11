@@ -399,11 +399,11 @@ export default function Dashboard() {
     }
   };
 
-  const addWallet = async (data: { network: string; address: string; label?: string; signature: string; nonce: string }) => {
+  const addWallet = async (data: { address: string; label?: string; signature: string; nonce: string }) => {
     setSaving(true);
     try {
       await api.addWallet(data);
-      posthog.capture('wallet_added', { network: data.network });
+      posthog.capture('wallet_added', { address: data.address });
       await loadProfile();
       toast.success(t('toast.walletAdded'));
     } catch (error: any) {

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { verifyMessage } from 'viem';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
-import { SUPPORTED_NETWORKS } from '../lib/blockchain/chains.js';
+import { SUPPORTED_NETWORKS, EVM_MAINNET_NETWORKS } from '../lib/blockchain/chains.js';
 import { nonceStore } from '../lib/nonce-store.js';
 import { logger } from '../lib/logger.js';
 
@@ -20,7 +20,7 @@ const nonceRequestSchema = z.object({
 });
 
 const addWalletSchema = z.object({
-  network: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]),
+  network: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]).optional(),
   address: z.string().regex(EVM_ADDRESS_RE, 'Invalid EVM address format'),
   label: z.string().max(50).optional(),
   signature: z.string().min(1, 'Signature is required'),
@@ -57,9 +57,10 @@ router.post('/nonce', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Add a new wallet (with signature verification)
+// Creates wallet records for all supported EVM mainnet networks
 router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { network, address, label, signature, nonce } = addWalletSchema.parse(req.body);
+    const { address, label, signature, nonce } = addWalletSchema.parse(req.body);
 
     // Verify nonce is valid and not expired/reused
     if (!nonceStore.verify(req.userId!, address, nonce)) {
@@ -78,16 +79,36 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Invalid signature. Wallet ownership could not be verified.' });
     }
 
-    const wallet = await prisma.wallet.create({
-      data: {
+    // Find which EVM mainnet networks already have this address registered
+    const existing = await prisma.wallet.findMany({
+      where: {
         humanId: req.userId!,
-        network,
         address,
-        label,
+        network: { in: EVM_MAINNET_NETWORKS },
       },
     });
+    const existingNetworks = new Set(existing.map((w) => w.network));
+    const missingNetworks = EVM_MAINNET_NETWORKS.filter((n) => !existingNetworks.has(n));
 
-    res.status(201).json(wallet);
+    if (missingNetworks.length === 0) {
+      return res.status(400).json({ error: 'This wallet is already registered on all supported networks' });
+    }
+
+    // Create wallet records for all missing networks in a transaction
+    const created = await prisma.$transaction(
+      missingNetworks.map((network) =>
+        prisma.wallet.create({
+          data: {
+            humanId: req.userId!,
+            network,
+            address,
+            label,
+          },
+        })
+      )
+    );
+
+    res.status(201).json(created);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });

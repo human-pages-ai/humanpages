@@ -120,6 +120,8 @@ const CHAIN_CONFIGS: Record<string, ChainConfig> = {
 
 export const SUPPORTED_NETWORKS = Object.keys(CHAIN_CONFIGS);
 
+export const EVM_MAINNET_NETWORKS = SUPPORTED_NETWORKS.filter(n => !n.includes('sepolia'));
+
 export function isNetworkSupported(network: string): boolean {
   return network.toLowerCase() in CHAIN_CONFIGS;
 }

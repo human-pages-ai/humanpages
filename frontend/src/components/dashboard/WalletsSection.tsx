@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { Wallet } from './types';
@@ -8,8 +8,14 @@ type Step = 'idle' | 'form' | 'busy';
 interface Props {
   wallets: Wallet[];
   saving: boolean;
-  onAddWallet: (data: { network: string; address: string; label?: string; signature: string; nonce: string }) => Promise<void>;
+  onAddWallet: (data: { address: string; label?: string; signature: string; nonce: string }) => Promise<void>;
   onDeleteWallet: (id: string) => void;
+}
+
+interface WalletGroup {
+  address: string;
+  label?: string;
+  wallets: Wallet[];
 }
 
 export default function WalletsSection({
@@ -21,16 +27,27 @@ export default function WalletsSection({
   const { t } = useTranslation();
 
   const [step, setStep] = useState<Step>('idle');
-  const [network, setNetwork] = useState('ethereum');
   const [label, setLabel] = useState('');
   const [error, setError] = useState('');
   const [busyMessage, setBusyMessage] = useState('');
 
   const hasWalletExtension = typeof window !== 'undefined' && !!window.ethereum;
 
+  // Group wallets by address
+  const walletGroups = useMemo<WalletGroup[]>(() => {
+    const groups = new Map<string, WalletGroup>();
+    for (const wallet of wallets) {
+      const key = wallet.address.toLowerCase();
+      if (!groups.has(key)) {
+        groups.set(key, { address: wallet.address, label: wallet.label, wallets: [] });
+      }
+      groups.get(key)!.wallets.push(wallet);
+    }
+    return Array.from(groups.values());
+  }, [wallets]);
+
   const resetState = () => {
     setStep('idle');
-    setNetwork('ethereum');
     setLabel('');
     setError('');
     setBusyMessage('');
@@ -73,7 +90,6 @@ export default function WalletsSection({
       }) as string;
 
       await onAddWallet({
-        network,
         address,
         label: label || undefined,
         signature,
@@ -89,6 +105,13 @@ export default function WalletsSection({
       }
       setStep('form');
     }
+  };
+
+  const networkDisplayName = (network: string): string => {
+    const key = `dashboard.wallets.networks.${network}` as const;
+    const translated = t(key);
+    // If no translation found, capitalize first letter
+    return translated !== key ? translated : network.charAt(0).toUpperCase() + network.slice(1);
   };
 
   const renderForm = () => {
@@ -109,20 +132,6 @@ export default function WalletsSection({
       return (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
           <p className="text-sm text-gray-600">{t('dashboard.wallets.connectDescription')}</p>
-          <div>
-            <label htmlFor="wallet-network" className="block text-sm font-medium text-gray-700">{t('dashboard.wallets.selectNetwork')}</label>
-            <select
-              id="wallet-network"
-              value={network}
-              onChange={(e) => setNetwork(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="ethereum">{t('dashboard.wallets.networks.ethereum')}</option>
-              <option value="base">{t('dashboard.wallets.networks.base')}</option>
-              <option value="polygon">{t('dashboard.wallets.networks.polygon')}</option>
-              <option value="arbitrum">{t('dashboard.wallets.networks.arbitrum')}</option>
-            </select>
-          </div>
           <div>
             <label htmlFor="wallet-label" className="block text-sm font-medium text-gray-700">
               {t('dashboard.wallets.label')} ({t('common.optional')})
@@ -186,7 +195,7 @@ export default function WalletsSection({
 
       {step !== 'idle' && renderForm()}
 
-      {wallets.length === 0 && step === 'idle' ? (
+      {walletGroups.length === 0 && step === 'idle' ? (
         <div className="text-center py-8">
           <div className="flex flex-col items-center gap-4">
             <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,26 +224,41 @@ export default function WalletsSection({
         </div>
       ) : (
         <>
-          {wallets.length > 0 && (
-            <div className="space-y-2">
-              {wallets.map((wallet) => (
-                <div key={wallet.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="font-medium text-sm">{wallet.network}</span>
-                    {wallet.label && <span className="text-gray-500 text-sm ml-2">({wallet.label})</span>}
-                    <p aria-label={t('dashboard.wallets.walletAddress')} className="text-xs text-gray-600 font-mono truncate max-w-md">{wallet.address}</p>
+          {walletGroups.length > 0 && (
+            <div className="space-y-3">
+              {walletGroups.map((group) => (
+                <div key={group.address} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      {group.label && <span className="text-sm text-gray-500">{group.label}</span>}
+                      <p aria-label={t('dashboard.wallets.walletAddress')} className="text-xs text-gray-600 font-mono truncate max-w-md">{group.address}</p>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => onDeleteWallet(wallet.id)}
-                    className="text-red-600 hover:text-red-700 text-sm"
-                  >
-                    {t('common.delete')}
-                  </button>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.wallets.map((wallet) => (
+                      <span
+                        key={wallet.id}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium"
+                      >
+                        {networkDisplayName(wallet.network)}
+                        <button
+                          onClick={() => onDeleteWallet(wallet.id)}
+                          className="ml-0.5 text-indigo-400 hover:text-red-600"
+                          aria-label={`Remove ${wallet.network}`}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1.5">{t('dashboard.wallets.allNetworksNote')}</p>
                 </div>
               ))}
             </div>
           )}
-          {wallets.length > 0 && step === 'idle' && (
+          {walletGroups.length > 0 && step === 'idle' && (
             <button
               onClick={() => setStep('form')}
               className="mt-4 text-indigo-600 hover:text-indigo-500 text-sm"

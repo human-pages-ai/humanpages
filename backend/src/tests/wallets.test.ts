@@ -64,8 +64,12 @@ describe('Wallets API', () => {
       const response = await authRequest(user.token).get('/api/wallets');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].network).toBe('ethereum');
+      expect(response.body).toHaveLength(4);
+      const networks = response.body.map((w: any) => w.network);
+      expect(networks).toContain('ethereum');
+      expect(networks).toContain('polygon');
+      expect(networks).toContain('base');
+      expect(networks).toContain('arbitrum');
       expect(response.body[0].address).toBe(ACCOUNT_1.address);
     });
 
@@ -111,35 +115,45 @@ describe('Wallets API', () => {
       const response = await addWalletWithSignature(user.token, ACCOUNT_2, 'ethereum', 'My ETH Wallet');
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.network).toBe('ethereum');
-      expect(response.body.address).toBe(ACCOUNT_2.address);
-      expect(response.body.label).toBe('My ETH Wallet');
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(4);
+      const ethWallet = response.body.find((w: any) => w.network === 'ethereum');
+      expect(ethWallet).toBeDefined();
+      expect(ethWallet).toHaveProperty('id');
+      expect(ethWallet.address).toBe(ACCOUNT_2.address);
+      expect(ethWallet.label).toBe('My ETH Wallet');
     });
 
     it('should create wallet without label', async () => {
       const response = await addWalletWithSignature(user.token, ACCOUNT_1, 'base');
 
       expect(response.status).toBe(201);
-      expect(response.body.network).toBe('base');
-      expect(response.body.label).toBeNull();
+      expect(Array.isArray(response.body)).toBe(true);
+      const baseWallet = response.body.find((w: any) => w.network === 'base');
+      expect(baseWallet).toBeDefined();
+      expect(baseWallet.label).toBeNull();
     });
 
-    it('should reject duplicate wallet address for same network', async () => {
+    it('should reject duplicate wallet address when already registered on all networks', async () => {
       await addWalletWithSignature(user.token, ACCOUNT_DUP, 'ethereum');
 
       const response = await addWalletWithSignature(user.token, ACCOUNT_DUP, 'ethereum');
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('already added');
+      expect(response.body.error).toContain('already registered on all supported networks');
     });
 
-    it('should allow same address on different networks', async () => {
-      await addWalletWithSignature(user.token, ACCOUNT_MULTI, 'ethereum');
-
-      const response = await addWalletWithSignature(user.token, ACCOUNT_MULTI, 'polygon');
+    it('should auto-register wallet across all EVM mainnet networks', async () => {
+      const response = await addWalletWithSignature(user.token, ACCOUNT_MULTI, 'ethereum');
 
       expect(response.status).toBe(201);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(4);
+      const networks = response.body.map((w: any) => w.network);
+      expect(networks).toContain('ethereum');
+      expect(networks).toContain('polygon');
+      expect(networks).toContain('base');
+      expect(networks).toContain('arbitrum');
     });
 
     it('should reject invalid signature', async () => {
@@ -244,16 +258,16 @@ describe('Wallets API', () => {
     it('should delete own wallet', async () => {
       const createResponse = await addWalletWithSignature(user.token, ACCOUNT_DEL, 'ethereum');
 
-      const walletId = createResponse.body.id;
+      const walletId = createResponse.body[0].id;
 
       const response = await authRequest(user.token).delete(`/api/wallets/${walletId}`);
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Wallet deleted');
 
-      // Verify deletion
+      // Verify deletion (3 remaining from the 4 auto-created)
       const listResponse = await authRequest(user.token).get('/api/wallets');
-      expect(listResponse.body).toHaveLength(0);
+      expect(listResponse.body).toHaveLength(3);
     });
 
     it('should not delete another user wallet', async () => {
@@ -261,7 +275,7 @@ describe('Wallets API', () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
       const createResponse = await addWalletWithSignature(otherUser.token, ACCOUNT_OTHER, 'ethereum');
 
-      const walletId = createResponse.body.id;
+      const walletId = createResponse.body[0].id;
 
       // Try to delete with first user's token
       const response = await authRequest(user.token).delete(`/api/wallets/${walletId}`);

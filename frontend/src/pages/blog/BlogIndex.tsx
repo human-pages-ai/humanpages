@@ -17,6 +17,13 @@ export default function BlogIndex() {
 
   const articles: Article[] = [
     {
+      title: 'How We Hire Social Media Marketers With an AI Agent',
+      slug: 'social-media-marketing-hiring-process',
+      date: 'February 11, 2026',
+      excerpt: 'A step-by-step look at how our marketing bot finds, hires, and pays real humans for social media promotion — from project setup to final review.',
+      readingTime: '7 min',
+    },
+    {
       title: 'Trust Models Between Humans and AI Agents: How We Learn to Work Together',
       slug: 'trust-models-human-agent',
       date: 'February 11, 2026',

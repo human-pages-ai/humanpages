@@ -533,26 +533,46 @@ export default function PublicProfile() {
             )}
 
             {/* Wallets */}
-            {profile.wallets && profile.wallets.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('dashboard.wallets.paymentSetupTitle')}</h2>
-                <div className="space-y-2">
-                  {profile.wallets.map((wallet, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm capitalize">{wallet.network}</span>
-                        {wallet.label && (
-                          <span className="text-xs text-gray-500">{wallet.label}</span>
+            {profile.wallets && profile.wallets.length > 0 && (() => {
+              // Group wallets by address
+              const groups = new Map<string, { address: string; label?: string; networks: string[] }>();
+              for (const wallet of profile.wallets) {
+                const key = wallet.address.toLowerCase();
+                if (!groups.has(key)) {
+                  groups.set(key, { address: wallet.address, label: wallet.label, networks: [] });
+                }
+                groups.get(key)!.networks.push(wallet.network);
+              }
+              const walletGroups = Array.from(groups.values());
+
+              return (
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('dashboard.wallets.paymentSetupTitle')}</h2>
+                  <div className="space-y-2">
+                    {walletGroups.map((group, index) => (
+                      <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                        {group.label && (
+                          <span className="text-xs text-gray-500">{group.label}</span>
                         )}
+                        <p className="text-xs text-gray-600 font-mono break-all">
+                          {group.address}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {group.networks.map((network) => (
+                            <span
+                              key={network}
+                              className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium capitalize"
+                            >
+                              {t(`dashboard.wallets.networks.${network}`, network)}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-600 font-mono mt-1 break-all">
-                        {wallet.address}
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t">
