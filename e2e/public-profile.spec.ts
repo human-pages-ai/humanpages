@@ -79,6 +79,28 @@ test.describe('Public Profile', () => {
     expect(data.makesOffer[0].itemOffered.name).toBe('Coding Service');
   });
 
+  test('view profile via /u/:username route', async ({ page }) => {
+    const { token } = await signupAndGoToDashboard(page);
+
+    const api = await pwRequest.newContext({ baseURL: API_BASE });
+
+    // Set a username and profile data
+    const username = `testuser${Date.now()}`;
+    await api.patch('/api/humans/me', {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { username, skills: ['design'], bio: 'Username route test' },
+    });
+
+    await api.dispose();
+
+    // Navigate using the /u/:username route
+    await page.goto(`/u/${username}`);
+    await page.waitForSelector('h1', { timeout: 10_000 });
+
+    await expect(page.locator('h1')).toContainText('E2E User');
+    await expect(page.getByText('design', { exact: true })).toBeVisible();
+  });
+
   test('contact hidden when hideContact is true', async ({ page }) => {
     const { token } = await signupAndGoToDashboard(page);
 

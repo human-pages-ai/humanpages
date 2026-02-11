@@ -177,6 +177,7 @@ function AppRoutes() {
         }
       />
       <Route path="/humans/:id" element={<PublicProfile />} />
+      <Route path="/u/:username" element={<PublicProfile />} />
       <Route
         path="/forgot-password"
         element={
@@ -202,6 +203,7 @@ function AppRoutes() {
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
       <Route path="/:lang/dev" element={<LangWrapper><DevelopersPage /></LangWrapper>} />
       <Route path="/:lang/humans/:id" element={<LangWrapper><PublicProfile /></LangWrapper>} />
+      <Route path="/:lang/u/:username" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/signup" element={<LangWrapper><PublicRoute><Signup /></PublicRoute></LangWrapper>} />
       <Route path="/:lang/blog" element={<LangWrapper><BlogIndex /></LangWrapper>} />
       <Route path="/:lang/blog/ai-agents-hiring-humans" element={<LangWrapper><AiAgentsHiringHumans /></LangWrapper>} />

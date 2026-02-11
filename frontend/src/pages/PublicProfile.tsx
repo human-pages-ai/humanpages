@@ -90,7 +90,7 @@ function getDisplayLocation(profile: PublicHuman): string | undefined {
 
 export default function PublicProfile() {
   const { t, i18n } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const { id, username } = useParams<{ id?: string; username?: string }>();
   const [profile, setProfile] = useState<PublicHuman | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,16 +98,20 @@ export default function PublicProfile() {
   const [showAllVouches, setShowAllVouches] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id && !username) return;
 
-    api.getHumanById(id)
+    const fetchProfile = username
+      ? api.getHumanByUsername(username)
+      : api.getHumanById(id!);
+
+    fetchProfile
       .then((data) => {
         setProfile(data);
-        analytics.track('profile_view', { profileId: id });
+        analytics.track('profile_view', { profileId: data.id });
       })
       .catch((err) => setError(err.message || t('errors.notFound')))
       .finally(() => setLoading(false));
-  }, [id, t]);
+  }, [id, username, t]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -163,15 +167,15 @@ export default function PublicProfile() {
       <SEO
         title={profile.name}
         description={profile.bio || `${profile.name} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
-        ogImage={`https://humanpages.ai/api/og/${id}`}
+        ogImage={`https://humanpages.ai/api/og/${profile.id}`}
         ogType="profile"
-        path={`/humans/${id}`}
+        path={`/humans/${profile.id}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",
           "name": profile.name,
           "description": profile.bio,
-          "url": `https://humanpages.ai/humans/${id}`,
+          "url": `https://humanpages.ai/humans/${profile.id}`,
           ...(profile.location && { "address": {
             "@type": "PostalAddress",
             "addressLocality": profile.location,

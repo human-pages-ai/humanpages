@@ -217,6 +217,7 @@ export const api = {
 
   // Public profiles
   getHumanById: (id: string) => request<PublicHuman>(`/humans/${id}`),
+  getHumanByUsername: (username: string) => request<PublicHuman>(`/humans/u/${username}`),
 
   // Agents
   getAgent: (id: string) =>

@@ -126,6 +126,24 @@ export async function getProfileMetaHtml(humanId: string, lang?: string): Promis
   }
 }
 
+export async function getProfileMetaHtmlByUsername(username: string, lang?: string): Promise<string | null> {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  try {
+    const human = await prisma.human.findUnique({
+      where: { username },
+      select: { id: true, name: true, bio: true, location: true, neighborhood: true, locationGranularity: true, skills: true, isAvailable: true },
+    });
+
+    if (!human) return null;
+
+    return getProfileMetaHtml(human.id, lang);
+  } catch {
+    return null;
+  }
+}
+
 // Blog post metadata (must match frontend BlogIndex.tsx)
 const BLOG_POSTS: Record<string, { title: string; description: string; date: string }> = {
   'free-moltbook-agent': {

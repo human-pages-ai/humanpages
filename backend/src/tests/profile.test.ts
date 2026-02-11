@@ -451,5 +451,29 @@ describe('Profile API', () => {
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Human not found');
     });
+
+    it('should include reputation stats in username lookup', async () => {
+      await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ username: 'repuser' });
+
+      const response = await request(app).get('/api/humans/u/repuser');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('reputation');
+      expect(response.body.reputation).toHaveProperty('avgRating');
+      expect(response.body.reputation).toHaveProperty('reviewCount');
+      expect(response.body.reputation).toHaveProperty('jobsCompleted');
+    });
+
+    it('should not expose private fields via username lookup', async () => {
+      await authRequest(user.token)
+        .patch('/api/humans/me')
+        .send({ username: 'privuser', contactEmail: 'private@test.com' });
+
+      const response = await request(app).get('/api/humans/u/privuser');
+      expect(response.status).toBe(200);
+      expect(response.body).not.toHaveProperty('passwordHash');
+      expect(response.body).not.toHaveProperty('email');
+    });
   });
 });

@@ -19,7 +19,7 @@ import badgeRoutes from './routes/badge.js';
 import geoRoutes from './routes/geo.js';
 import affiliateRoutes from './routes/affiliate.js';
 import adminRoutes from './routes/admin.js';
-import { getProfileMetaHtml, getBlogMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml } from './lib/seo.js';
 
 const app = express();
 
@@ -113,6 +113,33 @@ app.get('/:lang/humans/:id', async (req, res, next) => {
 app.get('/humans/:id', async (req, res, next) => {
   try {
     const html = await getProfileMetaHtml(req.params.id);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+app.get('/:lang/u/:username', async (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  try {
+    const html = await getProfileMetaHtmlByUsername(req.params.username, req.params.lang);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+app.get('/u/:username', async (req, res, next) => {
+  try {
+    const html = await getProfileMetaHtmlByUsername(req.params.username);
     if (html) {
       res.set('Content-Type', 'text/html');
       return res.send(html);
