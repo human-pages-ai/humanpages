@@ -65,6 +65,13 @@ const agentColors: Record<string, string> = {
   BANNED: 'bg-red-500',
 };
 
+const listingColors: Record<string, string> = {
+  OPEN: 'bg-green-500',
+  CLOSED: 'bg-blue-500',
+  EXPIRED: 'bg-gray-400',
+  CANCELLED: 'bg-red-400',
+};
+
 const jobColors: Record<string, string> = {
   COMPLETED: 'bg-green-500',
   PAID: 'bg-blue-500',
@@ -115,7 +122,7 @@ export default function AdminOverview() {
         <StatCard
           label="Payment Volume"
           value={`$${stats.jobs.paymentVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          sub={`${stats.jobs.byStatus['PAID'] || 0} paid jobs`}
+          sub={`${stats.jobs.paidJobCount ?? stats.jobs.byStatus['PAID'] ?? 0} paid jobs`}
           to="/admin/jobs"
         />
       </div>
@@ -146,6 +153,19 @@ export default function AdminOverview() {
         <div className="bg-white rounded-lg shadow p-5">
           <p className="text-sm font-medium text-gray-500 mb-3">Job Status</p>
           <StatusBar data={stats.jobs.byStatus} colorMap={jobColors} linkPrefix="/admin/jobs" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard
+          label="Listings"
+          value={stats.listings.total}
+          sub={`${stats.listings.open} open · ${stats.listings.applications} applications`}
+          to="/admin/listings"
+        />
+        <div className="bg-white rounded-lg shadow p-5">
+          <p className="text-sm font-medium text-gray-500 mb-3">Listing Status</p>
+          <StatusBar data={stats.listings.byStatus} colorMap={listingColors} linkPrefix="/admin/listings" />
         </div>
       </div>
 

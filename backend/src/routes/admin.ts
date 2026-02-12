@@ -32,7 +32,9 @@ router.get('/stats', async (_req, res) => {
       jobsByStatus,
       jobsLast7d,
       jobsLast30d,
-      paymentVolume,
+      paymentVolumeOneTime,
+      paymentVolumeStream,
+      paidJobCount,
       reportsTotal,
       reportsPending,
       affiliatesTotal,
@@ -41,6 +43,10 @@ router.get('/stats', async (_req, res) => {
       feedbackNew,
       humanReportsTotal,
       humanReportsPending,
+      listingsTotal,
+      listingsOpen,
+      listingsByStatus,
+      applicationsTotal,
     ] = await Promise.all([
       prisma.human.count(),
       prisma.human.count({ where: { emailVerified: true } }),
@@ -52,7 +58,9 @@ router.get('/stats', async (_req, res) => {
       prisma.job.groupBy({ by: ['status'], _count: true }),
       prisma.job.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
       prisma.job.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-      prisma.job.aggregate({ _sum: { paymentAmount: true }, where: { paidAt: { not: null } } }),
+      prisma.job.aggregate({ _sum: { paymentAmount: true }, where: { paymentAmount: { not: null } } }),
+      prisma.job.aggregate({ _sum: { streamTotalPaid: true }, where: { streamTotalPaid: { not: null } } }),
+      prisma.job.count({ where: { OR: [{ paidAt: { not: null } }, { streamTotalPaid: { gt: 0 } }] } }),
       prisma.agentReport.count(),
       prisma.agentReport.count({ where: { status: 'PENDING' } }),
       prisma.affiliate.count(),
@@ -61,6 +69,10 @@ router.get('/stats', async (_req, res) => {
       prisma.feedback.count({ where: { status: 'NEW' } }),
       prisma.humanReport.count(),
       prisma.humanReport.count({ where: { status: 'PENDING' } }),
+      prisma.listing.count(),
+      prisma.listing.count({ where: { status: 'OPEN' } }),
+      prisma.listing.groupBy({ by: ['status'], _count: true }),
+      prisma.listingApplication.count(),
     ]);
 
     const agentStatusMap: Record<string, number> = {};
@@ -89,7 +101,8 @@ router.get('/stats', async (_req, res) => {
         byStatus: jobStatusMap,
         last7d: jobsLast7d,
         last30d: jobsLast30d,
-        paymentVolume: paymentVolume._sum.paymentAmount?.toNumber() ?? 0,
+        paymentVolume: (paymentVolumeOneTime._sum.paymentAmount?.toNumber() ?? 0) + (paymentVolumeStream._sum.streamTotalPaid?.toNumber() ?? 0),
+        paidJobCount,
       },
       reports: {
         total: reportsTotal,
@@ -106,6 +119,12 @@ router.get('/stats', async (_req, res) => {
       humanReports: {
         total: humanReportsTotal,
         pending: humanReportsPending,
+      },
+      listings: {
+        total: listingsTotal,
+        open: listingsOpen,
+        byStatus: Object.fromEntries(listingsByStatus.map(g => [g.status, g._count])),
+        applications: applicationsTotal,
       },
     });
   } catch (error) {
@@ -527,6 +546,93 @@ router.get('/activity', async (req: AuthRequest, res) => {
     res.json({ activity: activity.slice(0, limit) });
   } catch (error) {
     logger.error({ err: error }, 'Admin activity error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/listings — Paginated listings
+router.get('/listings', async (req: AuthRequest, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const search = (req.query.search as string) || '';
+    const status = req.query.status as string;
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (status && ['OPEN', 'CLOSED', 'EXPIRED', 'CANCELLED'].includes(status)) {
+      where.status = status;
+    }
+
+    const [listings, total] = await Promise.all([
+      prisma.listing.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          budgetUsdc: true,
+          status: true,
+          isPro: true,
+          expiresAt: true,
+          createdAt: true,
+          agent: { select: { id: true, name: true } },
+          _count: { select: { applications: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.listing.count({ where }),
+    ]);
+
+    res.json({
+      listings,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin listings error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/listings/:id — Full listing detail
+router.get('/listings/:id', async (req: AuthRequest, res) => {
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id: req.params.id },
+      include: {
+        agent: { select: { id: true, name: true, status: true, activationTier: true } },
+        applications: {
+          select: {
+            id: true,
+            pitch: true,
+            status: true,
+            createdAt: true,
+            jobId: true,
+            human: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    // Strip callback secret
+    const { callbackSecret, ...safeListing } = listing;
+    res.json(safeListing);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin listing detail error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

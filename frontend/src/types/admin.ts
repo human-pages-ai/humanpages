@@ -15,6 +15,7 @@ export interface AdminStats {
     last7d: number;
     last30d: number;
     paymentVolume: number;
+    paidJobCount?: number;
   };
   reports: {
     total: number;
@@ -31,6 +32,12 @@ export interface AdminStats {
   humanReports: {
     total: number;
     pending: number;
+  };
+  listings: {
+    total: number;
+    open: number;
+    byStatus: Record<string, number>;
+    applications: number;
   };
 }
 
