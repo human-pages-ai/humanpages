@@ -52,13 +52,48 @@ export default function AdminAgentDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Admin override controls
+  const [editStatus, setEditStatus] = useState('');
+  const [editTier, setEditTier] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   useEffect(() => {
     if (!id) return;
     api.getAdminAgent(id)
-      .then(setAgent)
+      .then((a) => {
+        setAgent(a);
+        setEditStatus(a.status);
+        setEditTier(a.activationTier);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleSave = async () => {
+    if (!id || !agent) return;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const data: { status?: string; activationTier?: string } = {};
+      if (editStatus !== agent.status) data.status = editStatus;
+      if (editTier !== agent.activationTier) data.activationTier = editTier;
+      if (Object.keys(data).length === 0) {
+        setSaveMsg({ type: 'error', text: 'No changes to save' });
+        setSaving(false);
+        return;
+      }
+      const updated = await api.updateAdminAgent(id, data);
+      setAgent(updated);
+      setEditStatus(updated.status);
+      setEditTier(updated.activationTier);
+      setSaveMsg({ type: 'success', text: 'Agent updated successfully' });
+    } catch (err: any) {
+      setSaveMsg({ type: 'error', text: err.message || 'Failed to update agent' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) return <p className="text-gray-500">Loading agent...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
@@ -92,6 +127,47 @@ export default function AdminAgentDetail() {
           </div>
         </div>
       </div>
+
+      <Section title="Admin Actions">
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Status</label>
+            <select
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value)}
+              className="block w-40 rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              {['PENDING', 'ACTIVE', 'SUSPENDED', 'BANNED'].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Tier</label>
+            <select
+              value={editTier}
+              onChange={(e) => setEditTier(e.target.value)}
+              className="block w-40 rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              {['BASIC', 'PRO'].map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          {saveMsg && (
+            <span className={`text-sm ${saveMsg.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {saveMsg.text}
+            </span>
+          )}
+        </div>
+      </Section>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Section title="Activation Info">

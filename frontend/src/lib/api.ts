@@ -1,4 +1,4 @@
-import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch } from '../components/dashboard/types';
+import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
 import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, Pagination } from '../types/admin';
 
 const API_BASE = '/api';
@@ -390,11 +390,57 @@ export const api = {
   getAdminAgent: (id: string) =>
     request<AdminAgentDetail>(`/admin/agents/${id}`),
 
+  updateAdminAgent: (id: string, data: { status?: string; activationTier?: string; activationExpiresAt?: string | null }) =>
+    request<AdminAgentDetail>(`/admin/agents/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
   getAdminJob: (id: string) =>
     request<AdminJobDetail>(`/admin/jobs/${id}`),
 
   getAdminActivity: (limit?: number) =>
     request<{ activity: AdminActivity[] }>(`/admin/activity${limit ? `?limit=${limit}` : ''}`),
+
+  // Listings (Job Board)
+  getListings: (params: { page?: number; limit?: number; skill?: string; category?: string; workMode?: string; minBudget?: number; maxBudget?: number; lat?: number; lng?: number; radius?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.skill) query.set('skill', params.skill);
+    if (params.category) query.set('category', params.category);
+    if (params.workMode) query.set('workMode', params.workMode);
+    if (params.minBudget) query.set('minBudget', String(params.minBudget));
+    if (params.maxBudget) query.set('maxBudget', String(params.maxBudget));
+    if (params.lat) query.set('lat', String(params.lat));
+    if (params.lng) query.set('lng', String(params.lng));
+    if (params.radius) query.set('radius', String(params.radius));
+    const qs = query.toString();
+    return request<{ listings: Listing[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/listings${qs ? `?${qs}` : ''}`);
+  },
+
+  getListing: (id: string) =>
+    request<Listing>(`/listings/${id}`),
+
+  applyToListing: (id: string, pitch: string) =>
+    request<ListingApplication>(`/listings/${id}/apply`, {
+      method: 'POST',
+      body: JSON.stringify({ pitch }),
+    }),
+
+  getMyApplications: () =>
+    request<ListingApplication[]>('/listings/my-applications'),
+
+  // Admin Listings
+  getAdminListings: (params: { page?: number; limit?: number; search?: string; status?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.status) query.set('status', params.status);
+    const qs = query.toString();
+    return request<{ listings: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/admin/listings${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminListing: (id: string) =>
+    request<any>(`/admin/listings/${id}`),
 };
 
 // Referral Program types (included in profile response)

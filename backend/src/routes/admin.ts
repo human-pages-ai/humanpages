@@ -438,6 +438,86 @@ router.get('/agents/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// PATCH /api/admin/agents/:id — Update agent status/tier (admin override)
+router.patch('/agents/:id', async (req: AuthRequest, res) => {
+  try {
+    const { status, activationTier, activationExpiresAt } = req.body;
+
+    const agent = await prisma.agent.findUnique({ where: { id: req.params.id } });
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    const VALID_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED', 'BANNED'];
+    const VALID_TIERS = ['BASIC', 'PRO'];
+    const TIER_DURATIONS: Record<string, number> = { BASIC: 30, PRO: 60 };
+
+    if (status !== undefined && !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+    if (activationTier !== undefined && !VALID_TIERS.includes(activationTier)) {
+      return res.status(400).json({ error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}` });
+    }
+
+    const data: any = {};
+
+    if (status !== undefined) {
+      data.status = status;
+      // When activating a non-active agent, record activation metadata
+      if (status === 'ACTIVE' && agent.status !== 'ACTIVE') {
+        data.activatedAt = new Date();
+        data.activationMethod = 'ADMIN';
+      }
+    }
+
+    if (activationTier !== undefined) {
+      data.activationTier = activationTier;
+      // Compute expiration from tier duration unless custom expiration is provided
+      if (activationExpiresAt === undefined) {
+        const tier = activationTier;
+        const days = TIER_DURATIONS[tier] || 30;
+        data.activationExpiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+      }
+    }
+
+    // Handle explicit activationExpiresAt (null = no expiry, string = custom date)
+    if (activationExpiresAt !== undefined) {
+      data.activationExpiresAt = activationExpiresAt === null ? null : new Date(activationExpiresAt);
+    }
+
+    const updated = await prisma.agent.update({
+      where: { id: req.params.id },
+      data,
+      include: {
+        jobs: {
+          select: {
+            id: true, title: true, status: true, priceUsdc: true, createdAt: true,
+            human: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        reports: {
+          select: {
+            id: true, reason: true, description: true, status: true, createdAt: true,
+            reporter: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        _count: {
+          select: { jobs: true, reports: true },
+        },
+      },
+    });
+
+    logger.info({ agentId: req.params.id, changes: { status, activationTier, activationExpiresAt } }, 'Admin updated agent');
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin agent update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/admin/jobs/:id — Full job detail
 router.get('/jobs/:id', async (req: AuthRequest, res) => {
   try {

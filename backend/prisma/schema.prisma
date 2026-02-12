@@ -67,6 +67,7 @@ enum HumanStatus {
 enum ActivationMethod {
   SOCIAL
   PAYMENT
+  ADMIN
 }
 
 // Reason for reporting an agent
@@ -210,6 +211,7 @@ model Human {
   feedback        Feedback[]
   humanReportsReceived HumanReport[] @relation("ReportsReceived")
   humanReportsGiven    HumanReport[] @relation("ReportsGiven")
+  listingApplications ListingApplication[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -278,6 +280,7 @@ model Agent {
   jobs    Job[]
   reports AgentReport[]
   x402Payments X402Payment[]
+  listings Listing[]
 
   @@index([lastActiveAt])
   @@index([status])
@@ -414,6 +417,7 @@ model Job {
   review          Review?
   messages        JobMessage[]
   streamTicks     StreamTick[]
+  sourceApplication ListingApplication?
 
   @@index([humanId, status])
   @@index([agentId])
@@ -699,4 +703,77 @@ model Feedback {
   @@index([type])
   @@index([createdAt])
   @@index([humanId])
+}
+
+// ===== JOB BOARD =====
+
+enum ListingStatus {
+  OPEN
+  CLOSED
+  EXPIRED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+model Listing {
+  id               String        @id @default(cuid())
+  agentId          String
+  agent            Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  title            String
+  description      String        @db.VarChar(5000)
+  category         String?
+  budgetUsdc       Decimal       @db.Decimal(18, 6)
+  requiredSkills   String[]      @default([])
+  requiredEquipment String[]     @default([])
+  location         String?
+  locationLat      Float?
+  locationLng      Float?
+  radiusKm         Int?
+  workMode         WorkMode?
+
+  status           ListingStatus @default(OPEN)
+  expiresAt        DateTime
+  maxApplicants    Int?
+  isPro            Boolean       @default(false) // Denormalized from agent tier at creation time
+
+  callbackUrl      String?
+  callbackSecret   String?
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  applications     ListingApplication[]
+
+  @@index([status, isPro, createdAt])
+  @@index([agentId])
+  @@index([status, expiresAt])
+  @@index([requiredSkills])
+}
+
+model ListingApplication {
+  id          String            @id @default(cuid())
+  listingId   String
+  listing     Listing           @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  humanId     String
+  human       Human             @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  pitch       String            @db.VarChar(500)
+  status      ApplicationStatus @default(PENDING)
+
+  jobId       String?           @unique // Set when offer is made, links to created Job
+  job         Job?              @relation(fields: [jobId], references: [id])
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([listingId, humanId])
+  @@index([humanId])
+  @@index([listingId, status])
 }
