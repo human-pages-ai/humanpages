@@ -232,6 +232,13 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Report an agent
+  reportAgent: (agentId: string, data: { reason: string; description?: string; jobId?: string }) =>
+    request<{ id: string; message: string }>(`/agents/${agentId}/report`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   // Agents
   getAgent: (id: string) =>
     request<{

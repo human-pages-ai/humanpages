@@ -8,6 +8,8 @@ import SEO from '../components/SEO';
 import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Listing } from '../components/dashboard/types';
+import Footer from '../components/Footer';
+import ReportAgentModal from '../components/ReportAgentModal';
 
 function formatTimeUntil(dateStr: string): string {
   const diff = new Date(dateStr).getTime() - Date.now();
@@ -25,6 +27,7 @@ export default function JobBoard() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 0 });
+  const [reportTarget, setReportTarget] = useState<{ agentId: string; agentName: string } | null>(null);
 
   // Filter state from URL search params
   const skill = searchParams.get('skill') || '';
@@ -317,6 +320,16 @@ export default function JobBoard() {
                 >
                   {t('listings.card.viewDetails')}
                 </Link>
+
+                {/* Report link (logged-in only) */}
+                {user && listing.agent && (
+                  <button
+                    onClick={() => setReportTarget({ agentId: listing.agent!.id, agentName: listing.agent!.name })}
+                    className="mt-2 w-full text-xs text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    {t('reportAgent.reportThis', 'Report this listing')}
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -360,6 +373,17 @@ export default function JobBoard() {
           </div>
         )}
       </main>
+
+      <Footer className="mt-12" />
+
+      {reportTarget && (
+        <ReportAgentModal
+          isOpen={!!reportTarget}
+          onClose={() => setReportTarget(null)}
+          agentId={reportTarget.agentId}
+          agentName={reportTarget.agentName}
+        />
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import TrustBadge from '../components/TrustBadge';
 import ReportUserModal from '../components/ReportUserModal';
+import Footer from '../components/Footer';
 
 interface Wallet {
   network: string;
@@ -625,6 +626,8 @@ export default function PublicProfile() {
           targetUserName={profile.name}
         />
       )}
+
+      <Footer className="mt-12" />
     </div>
   );
 }

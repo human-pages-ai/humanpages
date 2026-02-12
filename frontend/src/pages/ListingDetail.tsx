@@ -8,6 +8,8 @@ import SEO from '../components/SEO';
 import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Listing } from '../components/dashboard/types';
+import Footer from '../components/Footer';
+import ReportAgentModal from '../components/ReportAgentModal';
 
 function formatTimeUntil(dateStr: string): string {
   const diff = new Date(dateStr).getTime() - Date.now();
@@ -26,6 +28,7 @@ export default function ListingDetail() {
   const [loading, setLoading] = useState(true);
   const [pitch, setPitch] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -391,9 +394,30 @@ export default function ListingDetail() {
                 </div>
               </div>
             )}
+
+            {/* Report link (logged-in only) */}
+            {user && listing.agent && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+              >
+                {t('reportAgent.reportThis', 'Report this listing')}
+              </button>
+            )}
           </div>
         </div>
       </main>
+
+      <Footer className="mt-12" />
+
+      {listing.agent && (
+        <ReportAgentModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          agentId={listing.agent.id}
+          agentName={listing.agent.name}
+        />
+      )}
     </div>
   );
 }

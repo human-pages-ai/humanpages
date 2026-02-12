@@ -316,11 +316,11 @@ router.get('/', browseRateLimiter, async (req, res) => {
     const agentIds = Array.from(new Set(filteredListings.map(l => l.agentId)));
     const agentStats = await Promise.all(
       agentIds.map(async (agentId) => {
-        const [completedJobs, reviews] = await Promise.all([
+        const [completedJobs, reviews, paymentSpeedResult] = await Promise.all([
           prisma.job.count({
             where: {
               registeredAgentId: agentId,
-              status: 'COMPLETED',
+              status: { in: ['PAID', 'STREAMING', 'COMPLETED'] },
             },
           }),
           prisma.review.findMany({
@@ -329,22 +329,34 @@ router.get('/', browseRateLimiter, async (req, res) => {
             },
             select: { rating: true },
           }),
+          prisma.$queryRaw<{ avg_hours: number | null }[]>`
+            SELECT AVG(EXTRACT(EPOCH FROM ("paidAt" - "acceptedAt")) / 3600) as avg_hours
+            FROM "Job"
+            WHERE "registeredAgentId" = ${agentId}
+              AND "paidAt" IS NOT NULL
+              AND "acceptedAt" IS NOT NULL
+          `,
         ]);
 
-        const avgReview = reviews.length > 0
+        const avgRating = reviews.length > 0
           ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : null;
+
+        const avgPaymentSpeedHours = paymentSpeedResult[0]?.avg_hours
+          ? Math.round(paymentSpeedResult[0].avg_hours * 10) / 10
           : null;
 
         return {
           agentId,
           completedJobs,
-          avgReview,
+          avgRating,
+          avgPaymentSpeedHours,
         };
       })
     );
 
     const agentStatsMap = Object.fromEntries(
-      agentStats.map(s => [s.agentId, { completedJobs: s.completedJobs, avgReview: s.avgReview }])
+      agentStats.map(s => [s.agentId, { completedJobs: s.completedJobs, avgRating: s.avgRating, avgPaymentSpeedHours: s.avgPaymentSpeedHours }])
     );
 
     // Format response
@@ -352,7 +364,7 @@ router.get('/', browseRateLimiter, async (req, res) => {
       const { callbackSecret, ...safeListing } = listing as any;
       return {
         ...safeListing,
-        agentReputation: agentStatsMap[listing.agentId] || { completedJobs: 0, avgReview: null },
+        agentReputation: agentStatsMap[listing.agentId] || { completedJobs: 0, avgRating: null, avgPaymentSpeedHours: null },
       };
     });
 
@@ -431,11 +443,11 @@ router.get('/:id', async (req, res) => {
     }
 
     // Get agent reputation
-    const [completedJobs, reviews] = await Promise.all([
+    const [completedJobs, reviews, paymentSpeedResult] = await Promise.all([
       prisma.job.count({
         where: {
           registeredAgentId: listing.agentId,
-          status: 'COMPLETED',
+          status: { in: ['PAID', 'STREAMING', 'COMPLETED'] },
         },
       }),
       prisma.review.findMany({
@@ -444,10 +456,21 @@ router.get('/:id', async (req, res) => {
         },
         select: { rating: true },
       }),
+      prisma.$queryRaw<{ avg_hours: number | null }[]>`
+        SELECT AVG(EXTRACT(EPOCH FROM ("paidAt" - "acceptedAt")) / 3600) as avg_hours
+        FROM "Job"
+        WHERE "registeredAgentId" = ${listing.agentId}
+          AND "paidAt" IS NOT NULL
+          AND "acceptedAt" IS NOT NULL
+      `,
     ]);
 
-    const avgReview = reviews.length > 0
+    const avgRating = reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : null;
+
+    const avgPaymentSpeedHours = paymentSpeedResult[0]?.avg_hours
+      ? Math.round(paymentSpeedResult[0].avg_hours * 10) / 10
       : null;
 
     // Check if authenticated human has applied
@@ -484,7 +507,8 @@ router.get('/:id', async (req, res) => {
       ...safeListing,
       agentReputation: {
         completedJobs,
-        avgReview,
+        avgRating,
+        avgPaymentSpeedHours,
       },
       hasApplied,
       applicationStatus,

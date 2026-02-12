@@ -27,6 +27,7 @@ import PaymentPreferencesSection from '../components/dashboard/PaymentPreference
 import ContactPrivacySection from '../components/dashboard/ContactPrivacySection';
 import ListingsSection from '../components/dashboard/ListingsSection';
 import SEO from '../components/SEO';
+import Footer from '../components/Footer';
 
 const VALID_TABS: DashboardTab[] = ['jobs', 'listings', 'profile', 'payments', 'settings', 'privacy'];
 
@@ -844,6 +845,8 @@ export default function Dashboard() {
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(d => ({ ...d, open: false }))}
       />
+
+      <Footer className="mt-12" />
     </div>
   );
 }

@@ -8,6 +8,8 @@ import { posthog } from '../lib/posthog';
 import { Job, JobMessage } from '../components/dashboard/types';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SEO from '../components/SEO';
+import Footer from '../components/Footer';
+import ReportAgentModal from '../components/ReportAgentModal';
 
 interface AgentReputation {
   totalJobs: number;
@@ -44,6 +46,7 @@ export default function JobDetail() {
     onConfirm: () => void;
   }>({ open: false, title: '', message: '', onConfirm: () => {} });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -300,6 +303,16 @@ export default function JobDetail() {
                   {t('jobDetail.memberSince', { date: new Date(agentInfo.createdAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short' }) })}
                 </p>
               )}
+              {user && (
+                <div className="mt-3 text-center">
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    {t('reportAgent.reportThis', 'Report this listing')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -457,6 +470,18 @@ export default function JobDetail() {
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(d => ({ ...d, open: false }))}
       />
+
+      <Footer className="mt-12" />
+
+      {job?.registeredAgent && (
+        <ReportAgentModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          agentId={job.registeredAgent.id}
+          agentName={job.registeredAgent.name}
+          jobId={job.id}
+        />
+      )}
     </div>
   );
 }
