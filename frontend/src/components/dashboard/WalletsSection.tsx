@@ -35,6 +35,20 @@ export default function WalletsSection({
     typeof window !== 'undefined' && !!window.ethereum
   );
 
+  const isMobileOrInApp = useMemo(() =>
+    typeof navigator !== 'undefined' &&
+    /Android|iPhone|iPad|iPod|FBAN|FBAV|Instagram|TikTok|BytedanceWebview/i.test(navigator.userAgent),
+  []);
+
+  const deepLinks = useMemo(() => {
+    const url = window.location.href;
+    const hostAndPath = window.location.host + window.location.pathname + window.location.search;
+    return {
+      metamask: `https://metamask.app.link/dapp/${hostAndPath}`,
+      coinbase: `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(url)}`,
+    };
+  }, []);
+
   useEffect(() => {
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -128,6 +142,25 @@ export default function WalletsSection({
 
   const renderForm = () => {
     if (!walletDetected) {
+      if (isMobileOrInApp) {
+        return (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+            <p className="text-sm text-gray-700">{t('dashboard.wallets.mobileWalletHint')}</p>
+            <a
+              href={deepLinks.metamask}
+              className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
+            >
+              {t('dashboard.wallets.openInMetaMask')}
+            </a>
+            <a
+              href={deepLinks.coinbase}
+              className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
+            >
+              {t('dashboard.wallets.openInCoinbase')}
+            </a>
+          </div>
+        );
+      }
       return (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-700 mb-2">{t('dashboard.wallets.noWalletExtension')}</p>
@@ -224,6 +257,22 @@ export default function WalletsSection({
               >
                 {t('dashboard.wallets.addWallet')}
               </button>
+            ) : isMobileOrInApp ? (
+              <div className="space-y-2 w-full max-w-xs">
+                <p className="text-sm text-gray-500">{t('dashboard.wallets.mobileWalletHint')}</p>
+                <a
+                  href={deepLinks.metamask}
+                  className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
+                >
+                  {t('dashboard.wallets.openInMetaMask')}
+                </a>
+                <a
+                  href={deepLinks.coinbase}
+                  className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
+                >
+                  {t('dashboard.wallets.openInCoinbase')}
+                </a>
+              </div>
             ) : (
               <div className="text-xs text-gray-400">
                 {t('dashboard.wallets.noWalletExtension')}{' '}
