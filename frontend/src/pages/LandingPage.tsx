@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -103,23 +103,67 @@ const MOCK_PROFILES = [
   },
 ];
 
-/** Rotating profile card carousel for the hero */
-function ProfileCardCarousel() {
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
+const ROTATING_PHRASES = [
+  'do your laundry',
+  'perform a surgery',
+  'bake a cake',
+  'fight a fire',
+  'take a photo',
+  'build a house',
+  'walk your dog',
+  'deliver a baby',
+  'mow the lawn',
+  'pilot a plane',
+  'pick up groceries',
+  'rescue someone',
+  'make a delivery',
+  'assemble furniture',
+  'fix a leaky faucet',
+];
 
-  const advance = useCallback(() => {
-    setFade(false);
-    setTimeout(() => {
-      setIndex((prev) => (prev + 1) % MOCK_PROFILES.length);
-      setFade(true);
-    }, 300);
-  }, []);
+/** Shared tick hook — drives both the headline and the profile card in sync */
+function useHeroTick() {
+  const [tick, setTick] = useState(0);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setInterval(advance, 4000);
+    const timer = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setTick((prev) => prev + 1);
+        setVisible(true);
+      }, 350);
+    }, 3500);
     return () => clearInterval(timer);
-  }, [advance]);
+  }, []);
+
+  return { tick, visible };
+}
+
+/** Cycling "AI agents can't ___" headline */
+function RotatingHeadline({ tick, visible }: { tick: number; visible: boolean }) {
+  const phrase = ROTATING_PHRASES[tick % ROTATING_PHRASES.length];
+
+  return (
+    <span className="block">
+      <span>AI agents can't </span>
+      <span
+        className={`inline-block transition-all duration-300 ${
+          visible
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-2'
+        }`}
+      >
+        <span className="text-blue-600">{phrase}</span>
+        <span className="text-blue-600">.</span>
+      </span>
+    </span>
+  );
+}
+
+/** Rotating profile card carousel for the hero */
+function ProfileCardCarousel({ tick, visible: fade }: { tick: number; visible: boolean }) {
+  const index = tick % MOCK_PROFILES.length;
 
   const p = MOCK_PROFILES[index];
 
@@ -162,11 +206,9 @@ function ProfileCardCarousel() {
       {/* Dots */}
       <div className="flex justify-center gap-1.5 mt-4">
         {MOCK_PROFILES.map((_, i) => (
-          <button
+          <div
             key={i}
-            onClick={() => { setFade(false); setTimeout(() => { setIndex(i); setFade(true); }, 300); }}
             className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-blue-600 w-4' : 'bg-slate-300'}`}
-            aria-label={`View profile ${i + 1}`}
           />
         ))}
       </div>
@@ -204,6 +246,7 @@ function JobOfferMockup() {
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const heroTick = useHeroTick();
 
   const TASKS = [
     { icon: CameraIcon, title: t('landing.tasks.photography'), description: t('landing.tasks.photographyDesc') },
@@ -273,8 +316,9 @@ export default function LandingPage() {
           "@type": "BreadcrumbList",
           "itemListElement": [
             { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://humanpages.ai/" },
-            { "@type": "ListItem", "position": 2, "name": "Developers", "item": "https://humanpages.ai/dev" },
-            { "@type": "ListItem", "position": 3, "name": "Blog", "item": "https://humanpages.ai/blog" }
+            { "@type": "ListItem", "position": 2, "name": "Job Board", "item": "https://humanpages.ai/listings" },
+            { "@type": "ListItem", "position": 3, "name": "Developers", "item": "https://humanpages.ai/dev" },
+            { "@type": "ListItem", "position": 4, "name": "Blog", "item": "https://humanpages.ai/blog" }
           ]
         }}
       />
@@ -289,6 +333,9 @@ export default function LandingPage() {
             </Link>
             <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700 hidden sm:inline">
               {t('nav.developers')}
+            </Link>
+            <Link to="/listings" className="text-sm text-slate-500 hover:text-slate-700 hidden sm:inline">
+              {t('nav.jobBoard')}
             </Link>
             <Link to="/blog" className="text-sm text-slate-500 hover:text-slate-700 hidden sm:inline">
               {t('nav.blog')}
@@ -315,7 +362,8 @@ export default function LandingPage() {
                   {t('landing.hero.tagline')}
                 </span>
                 <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-                  {t('landing.hero.title')}<br />{t('landing.hero.titleLine2')}
+                  <RotatingHeadline tick={heroTick.tick} visible={heroTick.visible} />
+                  <span className="block mt-1">{t('landing.hero.titleLine2Rotating')}</span>
                 </h1>
                 <p className="mt-4 text-xl text-slate-600">
                   {t('landing.hero.subtitle')}
@@ -340,7 +388,7 @@ export default function LandingPage() {
               </div>
               {/* Right: profile card mockup */}
               <div className="hidden md:block">
-                <ProfileCardCarousel />
+                <ProfileCardCarousel tick={heroTick.tick} visible={heroTick.visible} />
               </div>
             </div>
           </div>
@@ -371,8 +419,66 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Job offer mockup + example */}
+        {/* Job Board showcase */}
         <section className="py-16 bg-white px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-sm font-medium rounded-full mb-4">
+                {t('listings.title')}
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                {t('landing.jobBoard.title')}
+              </h2>
+              <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
+                {t('landing.jobBoard.subtitle')}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              {[
+                { title: t('landing.jobBoard.card1Title'), budget: t('landing.jobBoard.card1Budget'), agent: t('landing.jobBoard.card1Agent'), skills: t('landing.jobBoard.card1Skills'), isPro: true },
+                { title: t('landing.jobBoard.card2Title'), budget: t('landing.jobBoard.card2Budget'), agent: t('landing.jobBoard.card2Agent'), skills: t('landing.jobBoard.card2Skills'), isPro: false },
+                { title: t('landing.jobBoard.card3Title'), budget: t('landing.jobBoard.card3Budget'), agent: t('landing.jobBoard.card3Agent'), skills: t('landing.jobBoard.card3Skills'), isPro: true },
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  className={`p-5 rounded-xl border transition-shadow hover:shadow-md ${
+                    card.isPro ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-medium text-slate-900">{card.title}</h3>
+                    {card.isPro && (
+                      <span className="shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">PRO</span>
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold text-green-600 mt-2">{card.budget} <span className="text-sm font-normal text-slate-400">USDC</span></p>
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {card.skills.split(', ').map((s) => (
+                      <span key={s} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">{s}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3">{card.agent}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link
+                to="/listings"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
+              >
+                {t('landing.jobBoard.browseCta')}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Job offer mockup + example */}
+        <section className="py-16 bg-slate-50 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
@@ -407,7 +513,7 @@ export default function LandingPage() {
         </section>
 
         {/* Why list — benefits */}
-        <section className="py-16 px-4 bg-slate-50">
+        <section className="py-16 px-4 bg-white">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
               {t('landing.benefits.title')}

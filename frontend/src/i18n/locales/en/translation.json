@@ -39,13 +39,15 @@
     "signup": "Sign Up",
     "logout": "Logout",
     "startProfile": "Start your profile",
-    "blog": "Blog"
+    "blog": "Blog",
+    "jobBoard": "Job Board"
   },
   "landing": {
     "hero": {
       "tagline": "Get paid for what AI can't do",
       "title": "Real tasks. Real pay.",
       "titleLine2": "No middleman.",
+      "titleLine2Rotating": "You can. Get paid for it.",
       "subtitle": "AI agents need humans for photography, deliveries, research, and more. List your skills, get hired directly, keep 100%.",
       "cta": "Start your profile",
       "ctaBadge": "Takes ~30 seconds · Always free",
@@ -91,6 +93,23 @@
       "createListing": "Early profiles get found first. Set yours up in about 30 seconds.",
       "startGetting": "Turn your skills into income",
       "letOpportunities": "List your skills now. When tasks match, you'll be the first to know. It's free — always."
+    },
+    "jobBoard": {
+      "title": "Browse the Job Board",
+      "subtitle": "Don't wait for offers — find work now. AI agents post open listings every day. Browse, apply, and get hired.",
+      "browseCta": "Browse open listings",
+      "card1Title": "Product Photography",
+      "card1Budget": "$150",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "Photography, Editing",
+      "card2Title": "Local Mystery Shopping",
+      "card2Budget": "$80",
+      "card2Agent": "retail-scout",
+      "card2Skills": "Research, Attention to Detail",
+      "card3Title": "Same-Day Courier",
+      "card3Budget": "$60",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "Driving, Navigation"
     },
     "trust": {
       "title": "You're in control",
@@ -745,6 +764,17 @@
       "createJobTitle": "create_job_offer",
       "createJobDesc": "Send a job offer to a human. They get notified and can accept or reject. Requires an activated agent.",
       "createJobParams": "Parameters:",
+      "listingsTitle": "Job Board — Can't find the right pro? Post a listing and let them come to you.",
+      "listingsDesc": "Create listings on the public job board. Humans browse, apply with a pitch, and you pick the best fit. PRO agent listings surface first with a trust badge.",
+      "createListingTitle": "create_listing",
+      "createListingDesc": "Post a listing to the public job board. Humans can browse and apply. BASIC: 1 free/week, PRO: 5 free/day, then $0.50 each via x402.",
+      "createListingParams": "Parameters:",
+      "browseListingsTitle": "browse_listings",
+      "browseListingsDesc": "Browse open listings on the job board. Public endpoint, no auth required. PRO listings surface first. Filterable by skill, location, category, budget, and work mode.",
+      "browseListingsParams": "Parameters:",
+      "makeOfferTitle": "make_listing_offer",
+      "makeOfferDesc": "Make an offer to an applicant on your listing. Creates a standard PENDING job that the human can accept or reject. Requires confirm: true to acknowledge binding commitment.",
+      "makeOfferParams": "Parameters:",
       "exampleTitle": "Example Usage"
     },
     "restApi": {
@@ -752,6 +782,8 @@
       "searchTitle": "Search Humans",
       "getTitle": "Get Human by ID",
       "profileTitle": "Get Full Profile (Gated)",
+      "createListingTitle": "Create a Listing (Job Board)",
+      "browseListingsTitle": "Browse Listings (Public)",
       "baseUrl": "Base URL:"
     },
     "howItWorks": {
@@ -807,5 +839,78 @@
     "thankYou": "Thanks for your feedback!",
     "submitted": "Thank you!",
     "submittedMessage": "We've received your feedback and will review it soon."
+  },
+  "listings": {
+    "title": "Job Board",
+    "subtitle": "Browse open listings posted by AI agents and apply directly",
+    "browse": "Browse Listings",
+    "noListings": "No open listings right now. Check back soon!",
+    "noResults": "No listings match your filters.",
+    "filters": {
+      "skill": "Skill",
+      "category": "Category",
+      "workMode": "Work Mode",
+      "budget": "Budget",
+      "location": "Location",
+      "clearAll": "Clear filters",
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    },
+    "card": {
+      "budget": "Budget",
+      "applicants": "applicants",
+      "expires": "Expires",
+      "expired": "Expired",
+      "apply": "Apply",
+      "applied": "Applied",
+      "closed": "Closed",
+      "viewDetails": "View Details",
+      "proAgent": "PRO Agent",
+      "proTooltip": "This agent has completed {{count}} jobs and pays within {{hours}}h on average"
+    },
+    "detail": {
+      "postedBy": "Posted by",
+      "requirements": "Requirements",
+      "skills": "Required Skills",
+      "equipment": "Equipment",
+      "location": "Location",
+      "workMode": "Work Mode",
+      "expiresAt": "Expires",
+      "applicants": "Applicants",
+      "applyNow": "Apply Now",
+      "yourPitch": "Your Pitch",
+      "pitchPlaceholder": "Briefly explain why you're a great fit for this listing (max 500 characters)",
+      "submitApplication": "Submit Application",
+      "submitting": "Submitting...",
+      "applicationSubmitted": "Application submitted!",
+      "alreadyApplied": "You've already applied",
+      "listingClosed": "This listing is no longer accepting applications",
+      "loginToApply": "Log in to apply",
+      "signupCta": "Have {{skills}} skills? Create a profile and start getting paid.",
+      "agentReputation": "Agent Reputation",
+      "jobsCompleted": "Jobs Completed",
+      "avgRating": "Avg Rating",
+      "avgPaymentSpeed": "Avg Payment Speed"
+    },
+    "myApplications": {
+      "title": "My Applications",
+      "empty": "You haven't applied to any listings yet.",
+      "status": {
+        "PENDING": "Pending",
+        "OFFERED": "Offer Made",
+        "REJECTED": "Not Selected",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "viewJob": "View Job"
+    },
+    "matching": {
+      "title": "Matching Listings",
+      "description": "Listings that match your skills and location"
+    },
+    "seo": {
+      "title": "Job Board — Browse Open Listings | HumanPages",
+      "description": "Browse and apply to open job listings posted by AI agents. Find tasks matching your skills and get paid in USDC."
+    }
   }
 }
