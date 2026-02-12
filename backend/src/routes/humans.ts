@@ -29,7 +29,6 @@ const publicHumanSelect = {
   id: true,
   username: true,
   bio: true,
-  avatarUrl: true,
   location: true,
   neighborhood: true,
   locationGranularity: true,

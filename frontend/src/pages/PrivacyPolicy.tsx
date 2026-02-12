@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
             <li>Name and email address</li>
             <li>Password (stored securely hashed, never in plain text)</li>
-            <li>OAuth profile data if you sign in via Google (name, email, avatar)</li>
+            <li>OAuth profile data if you sign in via Google (name, email)</li>
           </ul>
 
           <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Profile Information</h3>
@@ -204,7 +204,7 @@ export default function PrivacyPolicy() {
             </li>
             <li>
               <strong>Google OAuth:</strong> If you choose to sign in with Google, Google shares your
-              basic profile information (name, email, avatar) with us according to their own privacy
+              basic profile information (name, email) with us according to their own privacy
               policy. We do not share your data back with them. We only request the minimum scopes
               needed: openid, email, and profile.
             </li>

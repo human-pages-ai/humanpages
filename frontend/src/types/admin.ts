@@ -133,7 +133,6 @@ export interface AdminFeedback {
 
 export interface AdminUserDetail extends AdminUser {
   bio: string | null;
-  avatarUrl: string | null;
   neighborhood: string | null;
   skills: string[];
   equipment: string[];

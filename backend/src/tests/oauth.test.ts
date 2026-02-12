@@ -25,7 +25,6 @@ vi.mock('google-auth-library', () => {
         sub: 'google-123',
         email: 'googleuser@gmail.com',
         name: 'Google User',
-        picture: 'https://example.com/avatar.jpg',
       }),
     }),
   };
@@ -78,7 +77,6 @@ describe('OAuth API', () => {
       });
       expect(user).not.toBeNull();
       expect(user?.googleId).toBe('google-123');
-      expect(user?.avatarUrl).toBe('https://example.com/avatar.jpg');
       expect(user?.passwordHash).toBeNull();
       expect(user?.termsAcceptedAt).not.toBeNull();
       expect(user?.emailVerified).toBe(true);

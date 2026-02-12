@@ -302,7 +302,7 @@ export const api = {
 
   // Referral Program
   getAffiliateLeaderboard: () =>
-    request<Array<{ rank: number; name: string; username?: string; avatarUrl?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
+    request<Array<{ rank: number; name: string; username?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),
 
   // Feedback
   submitFeedback: (data: {

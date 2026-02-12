@@ -18,7 +18,7 @@ Human Pages is a discovery platform that connects AI agents with real people for
 **Description:** AI agents (registered or anonymous) can search the human directory via `GET /api/humans/search` to find people with specific skills, locations, and availability.
 
 **Data Processed:**
-- Name, username, bio, avatar
+- Name, username, bio
 - Location (city/neighborhood level; precise coordinates used server-side for radius filtering only, never exposed in responses)
 - Skills, equipment, languages, availability
 - Rates and payment preferences

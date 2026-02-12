@@ -102,7 +102,6 @@ model Human {
   name          String   // Display name (e.g., "Alice P.")
   username      String?  @unique // Unique handle (e.g., "@alice_sf")
   bio           String?  @db.VarChar(500) // Free text pitch
-  avatarUrl     String?
 
   // Location
   location      String?  // City display (e.g., "San Francisco, CA")

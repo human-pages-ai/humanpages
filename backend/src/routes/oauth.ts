@@ -85,7 +85,7 @@ router.get('/google', async (req, res) => {
 
 // Cache Google profile info between the requiresTerms round-trip.
 // Key: OAuth state token → Google profile. Entries expire with the state (10 min).
-const pendingOAuthProfiles = new Map<string, { googleId: string; email: string; name: string; picture?: string }>();
+const pendingOAuthProfiles = new Map<string, { googleId: string; email: string; name: string }>();
 
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
@@ -112,12 +112,11 @@ router.post('/google/callback', async (req, res) => {
     let googleId: string;
     let email: string;
     let name: string;
-    let picture: string | undefined;
 
     const cached = pendingOAuthProfiles.get(state);
     if (cached) {
       // Second call after termsAccepted — code was already exchanged
-      ({ googleId, email, name, picture } = cached);
+      ({ googleId, email, name } = cached);
     } else {
       // First call — exchange the authorization code for tokens
       const { tokens } = await googleClient.getToken(code);
@@ -141,7 +140,6 @@ router.post('/google/callback', async (req, res) => {
       googleId = payload.sub!;
       email = payload.email;
       name = payload.name || email.split('@')[0];
-      picture = payload.picture;
     }
 
     // Account linking logic:
@@ -161,14 +159,13 @@ router.post('/google/callback', async (req, res) => {
           where: { id: human.id },
           data: {
             googleId,
-            avatarUrl: human.avatarUrl || picture,
           },
         });
       } else {
         // New user - require terms acceptance before creating account
         if (!termsAccepted) {
           // Cache the profile so we don't need the code again
-          pendingOAuthProfiles.set(state, { googleId, email, name, picture });
+          pendingOAuthProfiles.set(state, { googleId, email, name });
           return res.json({ requiresTerms: true, provider: 'google' });
         }
 
@@ -190,7 +187,6 @@ router.post('/google/callback', async (req, res) => {
             email,
             name,
             googleId,
-            avatarUrl: picture,
             contactEmail: email,
             referredBy: validReferrerId,
             referralCode: generateReferralCode(),
@@ -230,7 +226,6 @@ interface LinkedInProfile {
   linkedinId: string;
   email: string;
   name: string;
-  picture?: string;
 }
 
 async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<LinkedInProfile> {
@@ -268,7 +263,6 @@ async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<
     sub: string;
     email?: string;
     name?: string;
-    picture?: string;
   };
 
   if (!userInfo.sub || !userInfo.email) {
@@ -279,7 +273,6 @@ async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<
     linkedinId: userInfo.sub,
     email: userInfo.email,
     name: userInfo.name || userInfo.email.split('@')[0],
-    picture: userInfo.picture,
   };
 }
 
@@ -357,7 +350,6 @@ router.post('/linkedin/callback', async (req, res) => {
           where: { id: human.id },
           data: {
             linkedinId: profile.linkedinId,
-            avatarUrl: human.avatarUrl || profile.picture,
           },
         });
       } else {
@@ -382,7 +374,6 @@ router.post('/linkedin/callback', async (req, res) => {
             email: profile.email,
             name: profile.name,
             linkedinId: profile.linkedinId,
-            avatarUrl: profile.picture,
             contactEmail: profile.email,
             referredBy: validReferrerId,
             referralCode: generateReferralCode(),

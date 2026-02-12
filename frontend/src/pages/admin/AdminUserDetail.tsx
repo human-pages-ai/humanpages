@@ -59,9 +59,6 @@ export default function AdminUserDetail() {
 
       <div className="bg-white rounded-lg shadow p-5">
         <div className="flex items-start gap-4">
-          {user.avatarUrl && (
-            <img src={user.avatarUrl} alt="" className="w-16 h-16 rounded-full object-cover" />
-          )}
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{user.name}</h2>
             {user.username && <p className="text-sm text-gray-500">@{user.username}</p>}

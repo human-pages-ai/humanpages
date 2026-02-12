@@ -118,7 +118,7 @@ router.get('/leaderboard', async (req, res) => {
         totalCredits: true,
         createdAt: true,
         human: {
-          select: { name: true, username: true, avatarUrl: true },
+          select: { name: true, username: true },
         },
       },
     });
@@ -128,7 +128,6 @@ router.get('/leaderboard', async (req, res) => {
         rank: i + 1,
         name: a.human.name,
         username: a.human.username,
-        avatarUrl: a.human.avatarUrl,
         referrals: a.qualifiedSignups,
         totalCredits: a.totalCredits,
         joinedAt: a.createdAt,
