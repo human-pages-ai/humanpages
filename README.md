@@ -67,8 +67,19 @@ register_agent → get_payment_activation → send payment → verify_payment_ac
 
 | Tier | Rate Limit | How to Activate |
 |------|-----------|-----------------|
-| BASIC | 5 jobs/day | Post activation code on social media (free) |
-| PRO | 15 jobs/day | On-chain payment |
+| BASIC | 1 job offer/2 days, 1 profile view/day | Post activation code on social media (free) |
+| PRO | 15 jobs/day, 50 profile views/day | On-chain payment ($10 USDC, 60 days) |
+
+### x402 Pay-Per-Use (Alternative)
+
+Agents can skip activation and pay per request via the [x402 payment protocol](https://www.x402.org/) (USDC on Base):
+
+| Action | Price |
+|--------|-------|
+| Profile view | $0.05 |
+| Job offer | $0.25 |
+
+Include an `x-payment` header with the payment payload. No activation required (API key still needed).
 
 ### Example
 
@@ -101,7 +112,7 @@ Get basic information about a specific human (bio, skills, services). Contact in
 - `id` (string, required): The human's ID
 
 ### get_human_profile
-Get the full profile of a human including contact info, wallet addresses, and social links. **Requires an ACTIVE agent.**
+Get the full profile of a human including contact info, wallet addresses, and social links. **Requires an ACTIVE agent or x402 payment ($0.05).**
 
 **Parameters:**
 - `human_id` (string, required): The human's ID
@@ -150,7 +161,7 @@ Verify on-chain payment to activate agent with PRO tier.
 - `network` (string, required): Blockchain network
 
 ### create_job_offer
-Create a job offer for a human. **Requires an ACTIVE agent.** Rate limits: BASIC = 5/day, PRO = 15/day.
+Create a job offer for a human. **Requires an ACTIVE agent or x402 payment ($0.25).** Rate limits: BASIC = 1 offer/2 days, PRO = 15/day. x402 payments bypass rate limits.
 
 **Parameters:**
 - `human_id` (string, required): The human's ID

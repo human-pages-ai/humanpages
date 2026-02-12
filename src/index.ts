@@ -302,7 +302,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'create_job_offer',
       description:
-        'Create a job offer for a human. Requires an ACTIVE agent API key (from register_agent + activation). The human must ACCEPT the offer before you can proceed with payment. RATE LIMITS: BASIC tier = 5 offers/day, PRO tier = 15 offers/day. Agents must be activated before creating jobs — use request_activation_code or get_payment_activation. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
+        'Create a job offer for a human. Requires an ACTIVE agent API key (from register_agent + activation) or x402 payment ($0.25 USDC on Base via x-payment header). RATE LIMITS: BASIC tier = 1 offer/2 days, PRO tier = 15 offers/day. x402 payments bypass tier limits. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -353,6 +353,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           callback_secret: {
             type: 'string',
             description: 'Secret for HMAC-SHA256 signature verification (min 16 chars). The signature is sent in X-HumanPages-Signature header.',
+          },
+          payment_mode: {
+            type: 'string',
+            enum: ['ONE_TIME', 'STREAM'],
+            description: 'Payment mode. ONE_TIME (default) for single payments. STREAM for ongoing stream payments.',
+          },
+          payment_timing: {
+            type: 'string',
+            enum: ['upfront', 'upon_completion'],
+            description: 'For ONE_TIME jobs only. "upfront" (default) = pay before work. "upon_completion" = pay after work is done.',
+          },
+          stream_method: {
+            type: 'string',
+            enum: ['SUPERFLUID', 'MICRO_TRANSFER'],
+            description: 'Stream method. SUPERFLUID: agent creates an on-chain flow that streams tokens per-second. MICRO_TRANSFER: agent sends periodic discrete transfers. Required when payment_mode=STREAM.',
+          },
+          stream_interval: {
+            type: 'string',
+            enum: ['HOURLY', 'DAILY', 'WEEKLY'],
+            description: 'How often payments are made/checkpointed. Required when payment_mode=STREAM.',
+          },
+          stream_rate_usdc: {
+            type: 'number',
+            description: 'USDC amount per interval (e.g., 10 = $10/day if interval=DAILY). Required when payment_mode=STREAM.',
+          },
+          stream_max_ticks: {
+            type: 'number',
+            description: 'Optional cap on number of payment intervals. Null = indefinite.',
           },
         },
         required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id', 'agent_key'],
@@ -441,7 +469,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'get_human_profile',
       description:
-        'Get the full profile of a human including contact info, wallet addresses, and social links. Requires an ACTIVE agent API key.',
+        'Get the full profile of a human including contact info, wallet addresses, and social links. Requires an ACTIVE agent API key. Alternative: agents can pay $0.05 per view via x402 (USDC on Base) by including an x-payment header — no activation needed.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -542,6 +570,76 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
         required: ['agent_key', 'tx_hash', 'network'],
+      },
+    },
+    {
+      name: 'start_stream',
+      description:
+        'Start a stream payment for an ACCEPTED stream job. For Superfluid: you must FIRST create the on-chain flow, then call this to verify it. Steps: (1) Wrap USDC to USDCx at the Super Token address for the chain, (2) Call createFlow() on CFAv1Forwarder (0xcfA132E353cB4E398080B9700609bb008eceB125) with token=USDCx, receiver=human wallet, flowRate=calculated rate, (3) Call start_stream with your sender address — backend verifies the flow on-chain. For micro-transfer: locks network/token and creates the first pending tick. Prefer L2s (Base, Arbitrum, Polygon) for lower gas costs.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string', description: 'The job ID' },
+          agent_key: { type: 'string', description: 'Your agent API key (starts with hp_)' },
+          sender_address: { type: 'string', description: 'Your wallet address that created the flow (Superfluid) or will send payments (micro-transfer)' },
+          network: { type: 'string', description: 'Blockchain network (e.g., "base", "polygon", "arbitrum")' },
+          token: { type: 'string', description: 'Token symbol (default: "USDC")' },
+        },
+        required: ['job_id', 'agent_key', 'sender_address', 'network'],
+      },
+    },
+    {
+      name: 'record_stream_tick',
+      description:
+        'Record a micro-transfer stream payment. Submit the transaction hash for the current pending tick. Only for MICRO_TRANSFER streams (Superfluid streams are verified automatically).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string', description: 'The job ID' },
+          agent_key: { type: 'string', description: 'Your agent API key (starts with hp_)' },
+          tx_hash: { type: 'string', description: 'The on-chain transaction hash for this tick payment' },
+        },
+        required: ['job_id', 'agent_key', 'tx_hash'],
+      },
+    },
+    {
+      name: 'pause_stream',
+      description:
+        'Pause an active stream. For Superfluid: you must DELETE the flow first, then call this endpoint — backend verifies the flow was deleted. For micro-transfer: skips the current pending tick.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string', description: 'The job ID' },
+          agent_key: { type: 'string', description: 'Your agent API key (starts with hp_)' },
+        },
+        required: ['job_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'resume_stream',
+      description:
+        'Resume a paused stream. For Superfluid: create a new flow first, then call this — backend verifies. For micro-transfer: creates a new pending tick.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string', description: 'The job ID' },
+          agent_key: { type: 'string', description: 'Your agent API key (starts with hp_)' },
+          sender_address: { type: 'string', description: 'Wallet address for the new flow (Superfluid only, optional if same as before)' },
+        },
+        required: ['job_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'stop_stream',
+      description:
+        'Stop a stream permanently and mark the job as completed. Can be called by agent or human on STREAMING or PAUSED jobs.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: { type: 'string', description: 'The job ID' },
+          agent_key: { type: 'string', description: 'Your agent API key (starts with hp_)' },
+        },
+        required: ['job_id', 'agent_key'],
       },
     },
   ],
@@ -800,6 +898,12 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
           description: args?.description,
           category: args?.category,
           priceUsdc: args?.price_usdc,
+          paymentMode: args?.payment_mode,
+          paymentTiming: args?.payment_timing,
+          streamMethod: args?.stream_method,
+          streamInterval: args?.stream_interval,
+          streamRateUsdc: args?.stream_rate_usdc,
+          streamMaxTicks: args?.stream_max_ticks,
           callbackUrl: args?.callback_url,
           callbackSecret: args?.callback_secret,
         }),
@@ -857,10 +961,15 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
         ACCEPTED: '✅',
         REJECTED: '❌',
         PAID: '💰',
+        STREAMING: '🔄',
+        PAUSED: '⏸️',
         COMPLETED: '🎉',
         CANCELLED: '🚫',
         DISPUTED: '⚠️',
       };
+
+      const isStream = (job as any).paymentMode === 'STREAM';
+      const streamSummary = (job as any).streamSummary;
 
       let nextStep = '';
       switch (job.status) {
@@ -868,15 +977,32 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
           nextStep = 'Waiting for the human to accept or reject.';
           break;
         case 'ACCEPTED':
-          nextStep = job.callbackUrl
-            ? `Human accepted! Contact info was sent to your webhook. Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`
-            : `Human accepted! Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`;
+          if (isStream) {
+            const method = (job as any).streamMethod;
+            nextStep = method === 'SUPERFLUID'
+              ? 'Human accepted! Create a Superfluid flow to their wallet, then use `start_stream` with your sender address to verify.'
+              : 'Human accepted! Use `start_stream` to lock the network/token and start sending payments.';
+          } else {
+            nextStep = job.callbackUrl
+              ? `Human accepted! Contact info was sent to your webhook. Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`
+              : `Human accepted! Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`;
+          }
           break;
         case 'REJECTED':
           nextStep = 'The human rejected this offer. Consider adjusting your offer or finding another human.';
           break;
         case 'PAID':
           nextStep = 'Payment recorded. Work is in progress. The human will mark it complete when done.';
+          break;
+        case 'STREAMING':
+          if (streamSummary?.method === 'SUPERFLUID') {
+            nextStep = `Stream active via Superfluid. Total streamed: $${streamSummary?.totalPaid || '0'} USDC. Use \`pause_stream\` or \`stop_stream\` to manage.`;
+          } else {
+            nextStep = `Stream active via micro-transfer. Total paid: $${streamSummary?.totalPaid || '0'} USDC. Use \`record_stream_tick\` to submit each payment.`;
+          }
+          break;
+        case 'PAUSED':
+          nextStep = 'Stream is paused. Use `resume_stream` to continue or `stop_stream` to end permanently.';
           break;
         case 'COMPLETED':
           nextStep = job.review
@@ -891,6 +1017,15 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
           ? `**Agent:** ${job.agentName}`
           : '';
 
+      let streamInfo = '';
+      if (isStream && streamSummary) {
+        streamInfo = `\n**Payment Mode:** STREAM (${streamSummary.method})
+**Rate:** $${streamSummary.rateUsdc || '?'}/${(streamSummary.interval || 'DAILY').toLowerCase()}
+**Total Paid:** $${streamSummary.totalPaid || '0'} USDC
+**Ticks:** ${streamSummary.tickCount || 0}${streamSummary.maxTicks ? `/${streamSummary.maxTicks}` : ''}
+**Network:** ${streamSummary.network || 'Not set'}`;
+      }
+
       return {
         content: [
           {
@@ -902,7 +1037,7 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
 **Title:** ${job.title}
 **Price:** $${job.priceUsdc} USDC
 **Human:** ${job.human.name}
-${agentInfo ? agentInfo + '\n' : ''}
+${agentInfo ? agentInfo + '\n' : ''}${streamInfo}
 **Next Step:** ${nextStep}`,
           },
         ],
@@ -1191,7 +1326,7 @@ You can now create job offers and view full human profiles using \`get_human_pro
 **Next Steps:**
 1. Send exactly ${result.amount} ${result.currency} to the address above on ${result.network}
 2. Use \`verify_payment_activation\` with the transaction hash and network
-3. Once verified, your agent will be activated with PRO tier (15 jobs/day)`,
+3. Once verified, your agent will be activated with PRO tier (15 jobs/day, 50 profile views/day)`,
           },
         ],
       };
@@ -1232,9 +1367,148 @@ You can now create job offers and view full human profiles using \`get_human_pro
 **Tier:** ${result.tier}
 **Expires:** ${result.expiresAt}
 
-You can now create up to 15 job offers per day and view full human profiles using \`get_human_profile\`.`,
+You can now create up to 15 job offers per day and view up to 50 full human profiles per day using \`get_human_profile\`.`,
           },
         ],
+      };
+    }
+
+    if (name === 'start_stream') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/start-stream`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({
+          senderAddress: args?.sender_address,
+          network: args?.network,
+          token: args?.token || 'USDC',
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { hint?: string };
+        throw new Error((error as any).hint || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as any;
+      return {
+        content: [{
+          type: 'text',
+          text: `**Stream Started!**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Method:** ${result.stream?.method}\n**Network:** ${result.stream?.network}\n\n${result.message}${result.stream?.receiverWallet ? `\n\n**Send payments to:** ${result.stream.receiverWallet}` : ''}`,
+        }],
+      };
+    }
+
+    if (name === 'record_stream_tick') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/stream-tick`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({ txHash: args?.tx_hash }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as any;
+      return {
+        content: [{
+          type: 'text',
+          text: `**Tick Verified!**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Tick:** #${result.tick?.tickNumber}\n**Amount:** $${result.tick?.amount} USDC\n**Total Paid:** $${result.totalPaid} USDC${result.nextTick ? `\n\n**Next payment due:** ${result.nextTick.expectedAt}` : ''}`,
+        }],
+      };
+    }
+
+    if (name === 'pause_stream') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/pause-stream`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { hint?: string };
+        throw new Error((error as any).hint || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as any;
+      return {
+        content: [{
+          type: 'text',
+          text: `**Stream Paused**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n\nUse \`resume_stream\` to continue or \`stop_stream\` to end permanently.`,
+        }],
+      };
+    }
+
+    if (name === 'resume_stream') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/resume-stream`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({
+          senderAddress: args?.sender_address,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { hint?: string };
+        throw new Error((error as any).hint || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as any;
+      return {
+        content: [{
+          type: 'text',
+          text: `**Stream Resumed!**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n\nStream is active again.`,
+        }],
+      };
+    }
+
+    if (name === 'stop_stream') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/stop-stream`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as any;
+      return {
+        content: [{
+          type: 'text',
+          text: `**Stream Stopped**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Total Paid:** $${result.totalPaid || '0'} USDC\n\nThe stream has ended. You can now use \`leave_review\` to rate the human.`,
+        }],
       };
     }
 
