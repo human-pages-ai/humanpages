@@ -8,6 +8,9 @@ import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js'
 import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.js';
 import { requireActiveIfAgent } from '../middleware/requireActiveAgent.js';
+import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
+import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
+import { isX402Enabled, X402_PRICES } from '../lib/x402.js';
 import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
 import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
 import {
@@ -128,12 +131,14 @@ const reviewSchema = z.object({
   comment: z.string().optional(),
 });
 
-// Tier-based daily offer limits. Accepted jobs don't count toward the limit.
-const TIER_OFFER_LIMITS: Record<string, number> = { BASIC: 5, PRO: 15 };
-const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Tier-based offer limits with per-tier windows. Accepted jobs don't count toward the limit.
+const TIER_OFFER_CONFIG: Record<string, { limit: number; windowMs: number }> = {
+  BASIC: { limit: 1, windowMs: 48 * 60 * 60 * 1000 }, // 1 per 2 days
+  PRO:   { limit: 15, windowMs: 24 * 60 * 60 * 1000 }, // 15 per day
+};
 
-// Create a job offer (requires registered + activated agent)
-router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+// Create a job offer (requires registered + activated agent, or x402 payment)
+router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent, requireActiveOrPaid, async (req: X402Request, res) => {
   try {
     const data = createJobSchema.parse(req.body);
     const agent = req.agent!;
@@ -146,25 +151,36 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
       });
     }
 
-    // Tier-based daily rate limit — accepted jobs don't count
-    const tierLimit = TIER_OFFER_LIMITS[agent.activationTier] || TIER_OFFER_LIMITS.BASIC;
-    const oneDayAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
-    const recentOfferCount = await prisma.job.count({
-      where: {
-        registeredAgentId: agent.id,
-        createdAt: { gte: oneDayAgo },
-        status: { notIn: ['ACCEPTED', 'COMPLETED', 'PAID'] },
-      },
-    });
+    // Tier-based rate limit — skipped for x402 paid requests
+    const config = TIER_OFFER_CONFIG[agent.activationTier] || TIER_OFFER_CONFIG.BASIC;
+    let recentOfferCount = 0;
 
-    if (recentOfferCount >= tierLimit) {
-      return res.status(429).json({
-        error: 'Rate limit exceeded',
-        message: `Your ${agent.activationTier} tier allows ${tierLimit} job offers per day. Accepted offers don't count toward this limit.`,
-        tier: agent.activationTier,
-        limit: tierLimit,
-        retryAfter: '24 hours',
+    if (!req.x402Paid) {
+      const windowStart = new Date(Date.now() - config.windowMs);
+      recentOfferCount = await prisma.job.count({
+        where: {
+          registeredAgentId: agent.id,
+          createdAt: { gte: windowStart },
+          status: { notIn: ['ACCEPTED', 'COMPLETED', 'PAID'] },
+        },
       });
+
+      if (recentOfferCount >= config.limit) {
+        const windowHours = config.windowMs / (60 * 60 * 1000);
+        const windowLabel = windowHours >= 48 ? `${windowHours / 24} days` : `${windowHours} hours`;
+        return res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: `Your ${agent.activationTier} tier allows ${config.limit} job offer(s) per ${windowLabel}. Accepted offers don't count toward this limit.`,
+          tier: agent.activationTier,
+          limit: config.limit,
+          retryAfter: windowLabel,
+          // x402 pay-per-use hint
+          ...(isX402Enabled() ? {
+            x402Available: true,
+            x402Price: `$${X402_PRICES.job_offer}`,
+          } : {}),
+        });
+      }
     }
 
     // Validate stream fields when mode is STREAM
@@ -375,15 +391,36 @@ router.post('/', ipRateLimiter, authenticateAgent, requireActiveAgent, async (re
       }).catch((err) => logger.error({ err }, 'Telegram notification failed'));
     }
 
+    // Log x402 payment if this was a paid request
+    if (req.x402Paid && req.x402PaymentPayload) {
+      prisma.x402Payment.create({
+        data: {
+          agentId: agent.id,
+          resourceType: 'job_offer',
+          resourceId: job.id,
+          amountUsd: X402_PRICES.job_offer,
+          network: req.x402MatchedRequirements?.network || 'eip155:8453',
+          paymentPayload: req.x402PaymentPayload as any,
+          settled: true,
+          agentIp: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
+        },
+      }).catch((err) => logger.error({ err }, 'Failed to log x402 payment'));
+    }
+
+    const windowHours = config.windowMs / (60 * 60 * 1000);
+    const windowLabel = windowHours >= 48 ? `${windowHours / 24} days` : `${windowHours} hours`;
+
     res.status(201).json({
       id: job.id,
       status: job.status,
       message: 'Job offer created. Waiting for human to accept.',
-      rateLimit: {
-        remaining: tierLimit - recentOfferCount - 1,
-        resetIn: '24 hours',
-        tier: agent.activationTier,
-      },
+      ...(req.x402Paid ? { paidVia: 'x402' } : {
+        rateLimit: {
+          remaining: config.limit - recentOfferCount - 1,
+          resetIn: windowLabel,
+          tier: agent.activationTier,
+        },
+      }),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -492,7 +529,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
 
     // Rate limit: 10 updates per hour per job
     if (job.updateCount >= RATE_LIMIT_UPDATES_PER_JOB) {
-      const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       if (job.lastUpdatedByAgent && job.lastUpdatedByAgent > oneHourAgo) {
         return res.status(429).json({
           error: 'Update rate limit exceeded',

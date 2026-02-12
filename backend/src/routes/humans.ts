@@ -6,6 +6,9 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
+import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
+import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
+import { isX402Enabled, X402_PRICES } from '../lib/x402.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
@@ -17,7 +20,7 @@ const router = Router();
 
 // Tier-based rate limits for profile views (per day)
 const TIER_PROFILE_LIMITS: Record<string, number> = {
-  BASIC: 20,
+  BASIC: 1,
   PRO: 50,
 };
 
@@ -864,21 +867,28 @@ const profileViewLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
-router.get('/:id/profile', profileViewLimiter, authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'), authenticateAgent, requireActiveOrPaid, async (req: X402Request, res) => {
   try {
     const agent = req.agent!;
 
-    // Check tier-specific daily rate limit
-    const tierLimit = TIER_PROFILE_LIMITS[agent.activationTier] || TIER_PROFILE_LIMITS.BASIC;
-    const remaining = parseInt(res.getHeader('X-RateLimit-Remaining') as string || '999');
-    const used = 50 - remaining;
-    if (used > tierLimit) {
-      return res.status(429).json({
-        error: 'Profile view rate limit exceeded',
-        message: `Your ${agent.activationTier} tier allows ${tierLimit} profile views per day.`,
-        tier: agent.activationTier,
-        limit: tierLimit,
-      });
+    // Tier-specific daily rate limit — skipped for x402 paid requests
+    if (!req.x402Paid) {
+      const tierLimit = TIER_PROFILE_LIMITS[agent.activationTier] || TIER_PROFILE_LIMITS.BASIC;
+      const remaining = parseInt(res.getHeader('X-RateLimit-Remaining') as string || '999');
+      const used = 50 - remaining;
+      if (used > tierLimit) {
+        return res.status(429).json({
+          error: 'Profile view rate limit exceeded',
+          message: `Your ${agent.activationTier} tier allows ${tierLimit} profile view(s) per day.`,
+          tier: agent.activationTier,
+          limit: tierLimit,
+          // x402 pay-per-use hint
+          ...(isX402Enabled() ? {
+            x402Available: true,
+            x402Price: `$${X402_PRICES.profile_view}`,
+          } : {}),
+        });
+      }
     }
 
     const human = await prisma.human.findFirst({
@@ -888,6 +898,22 @@ router.get('/:id/profile', profileViewLimiter, authenticateAgent, requireActiveA
 
     if (!human) {
       return res.status(404).json({ error: 'Human not found' });
+    }
+
+    // Log x402 payment if this was a paid request
+    if (req.x402Paid && req.x402PaymentPayload) {
+      prisma.x402Payment.create({
+        data: {
+          agentId: agent.id,
+          resourceType: 'profile_view',
+          resourceId: req.params.id,
+          amountUsd: X402_PRICES.profile_view,
+          network: req.x402MatchedRequirements?.network || 'eip155:8453',
+          paymentPayload: req.x402PaymentPayload as any,
+          settled: true,
+          agentIp: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
+        },
+      }).catch((err) => logger.error({ err }, 'Failed to log x402 payment'));
     }
 
     const reputation = await getReputationStats(human.id);

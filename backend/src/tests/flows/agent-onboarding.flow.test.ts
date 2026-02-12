@@ -107,8 +107,8 @@ describe('Flow: Agent Onboarding — Registration & Activation', () => {
     expect(activeStatusRes.body.tier).toBe('BASIC');
     expect(activeStatusRes.body.platform).toBe('twitter');
     expect(activeStatusRes.body.limits).toBeDefined();
-    expect(activeStatusRes.body.limits.jobOffersPerDay).toBe(5);
-    expect(activeStatusRes.body.limits.profileViewsPerDay).toBe(20);
+    expect(activeStatusRes.body.limits.jobOffersPerTwoDays).toBe(1);
+    expect(activeStatusRes.body.limits.profileViewsPerDay).toBe(1);
 
     // ─── Step 6: Update agent profile ──────────────────────────────────
     const updateRes = await request(app)

@@ -262,9 +262,27 @@ model Agent {
   // Relations
   jobs    Job[]
   reports AgentReport[]
+  x402Payments X402Payment[]
 
   @@index([lastActiveAt])
   @@index([status])
+}
+
+model X402Payment {
+  id              String   @id @default(cuid())
+  agentId         String
+  resourceType    String   // "profile_view" | "job_offer"
+  resourceId      String?  // human ID or job ID
+  amountUsd       Decimal  @db.Decimal(18, 6)
+  network         String   // "eip155:8453"
+  paymentPayload  Json
+  settled         Boolean  @default(false)
+  agentIp         String?
+  createdAt       DateTime @default(now())
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId, createdAt])
+  @@index([resourceType, createdAt])
 }
 
 model AgentReport {

@@ -310,7 +310,7 @@ describe('Agent Identity & Reputation', () => {
         });
 
       expect(res.status).toBe(201);
-      expect(res.body.rateLimit.remaining).toBe(4); // BASIC tier: 5 - 1
+      expect(res.body.rateLimit.remaining).toBe(0); // BASIC tier: 1 per 2 days - 1
       expect(res.body.rateLimit.tier).toBe('BASIC');
     });
   });

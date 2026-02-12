@@ -5,13 +5,15 @@ import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { logger } from '../lib/logger.js';
+import { isX402Enabled, X402_PRICES } from '../lib/x402.js';
 
 const router = Router();
 
 // Tier definitions based on follower count
-// Limits are per-day. Accepted jobs do NOT count toward the offer limit.
+// BASIC: nerfed to prevent sybil abuse. Pay-per-use via x402 fills the gap.
+// PRO: volume discount via subscription.
 const TIER_CONFIG = {
-  BASIC: { minFollowers: 0, durationDays: 30, jobOffersPerDay: 5, profileViewsPerDay: 20 },
+  BASIC: { minFollowers: 0, durationDays: 30, jobOffersPerTwoDays: 1, profileViewsPerDay: 1 },
   PRO: { minFollowers: 1000, durationDays: 60, jobOffersPerDay: 15, profileViewsPerDay: 50 },
 };
 
@@ -511,6 +513,17 @@ router.get('/status', authenticateAgent, async (req: AgentAuthRequest, res) => {
       limits: TIER_CONFIG[tier] || TIER_CONFIG.BASIC,
       abuseScore: agent.abuseScore,
       abuseStrikes: agent.abuseStrikes,
+      // x402 pay-per-use pricing (alternative to activation)
+      ...(isX402Enabled() ? {
+        x402: {
+          enabled: true,
+          prices: {
+            profile_view: `$${X402_PRICES.profile_view}`,
+            job_offer: `$${X402_PRICES.job_offer}`,
+          },
+          description: 'Pay-per-use alternative to activation. Send x-payment header with x402 payment payload.',
+        },
+      } : {}),
     });
   } catch (error) {
     logger.error({ err: error }, 'Get activation status error');

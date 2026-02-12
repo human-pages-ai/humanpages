@@ -145,7 +145,7 @@
       "get": {
         "operationId": "getHumanProfile",
         "summary": "Get a human's full profile including contact info and wallets",
-        "description": "Gated endpoint. Returns the complete profile including contact email, Telegram, WhatsApp, social links, and wallet addresses. Requires an activated agent API key in X-Agent-Key header.",
+        "description": "Gated endpoint. Returns the complete profile including contact email, Telegram, WhatsApp, social links, and wallet addresses. Requires an activated agent API key in X-Agent-Key header (or x402 payment via x-payment header, $0.05 USDC on Base).",
         "security": [{ "agentApiKey": [] }],
         "parameters": [
           {
@@ -168,8 +168,11 @@
           "401": {
             "description": "Missing or invalid agent API key"
           },
+          "402": {
+            "description": "Payment required. Agent not activated. Pay $0.05 via x402 (x-payment header, USDC on Base) or activate via /agents/activate/social or /agents/activate/payment. Response includes X-PAYMENT-REQUIREMENTS header."
+          },
           "403": {
-            "description": "Agent not activated. Complete activation first via /agents/activate/social or /agents/activate/payment."
+            "description": "Agent banned or suspended."
           },
           "404": {
             "description": "Human not found"
@@ -425,7 +428,7 @@
       "post": {
         "operationId": "createJob",
         "summary": "Create a job offer for a human",
-        "description": "Send a job offer to a specific human. Requires an activated agent API key in X-Agent-Key header. The human will be notified and can accept or reject. Rate limits: BASIC tier: 5 offers/day, PRO tier: 15 offers/day.",
+        "description": "Send a job offer to a specific human. Requires an activated agent API key in X-Agent-Key header (or x402 payment via x-payment header, $0.25 USDC on Base). The human will be notified and can accept or reject. Rate limits: BASIC tier: 1 offer per 2 days, PRO tier: 15 offers/day. x402 payments bypass rate limits.",
         "security": [{ "agentApiKey": [] }],
         "requestBody": {
           "required": true,
@@ -491,8 +494,11 @@
               }
             }
           },
+          "402": {
+            "description": "Payment required. Agent not activated. Pay $0.25 via x402 (x-payment header, USDC on Base) or activate via /agents/activate/social or /agents/activate/payment. Response includes X-PAYMENT-REQUIREMENTS header."
+          },
           "403": {
-            "description": "Agent not activated. Complete activation first."
+            "description": "Agent banned or suspended."
           }
         }
       }
@@ -791,9 +797,10 @@
           "activatedAt": { "type": "string", "format": "date-time" },
           "rateLimits": {
             "type": "object",
+            "description": "Tier-based rate limits. BASIC: 1 offer/2 days, 1 profile view/day. PRO: 15 offers/day, 50 views/day. x402 payments bypass these limits.",
             "properties": {
-              "jobOffersPerDay": { "type": "integer", "description": "BASIC: 5/day, PRO: 15/day" },
-              "profileAccessPerDay": { "type": "integer", "description": "BASIC: 20/day, PRO: 100/day" }
+              "jobOffersPerDay": { "type": "integer", "description": "BASIC: 1 per 2 days, PRO: 15/day" },
+              "profileAccessPerDay": { "type": "integer", "description": "BASIC: 1/day, PRO: 50/day" }
             }
           }
         }

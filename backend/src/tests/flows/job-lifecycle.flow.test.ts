@@ -398,17 +398,20 @@ describe('Flow: Complete Job Lifecycle', () => {
   });
 
   it('should filter jobs by status', async () => {
+    // Use a PRO tier agent so we can create multiple jobs (BASIC tier allows only 1 per 2 days)
+    const proAgent = await createActiveTestAgent({ name: 'ProBot AI', tier: 'PRO' });
+
     // Create two jobs
     await request(app)
       .post('/api/jobs')
       .set('X-Forwarded-For', '10.50.7.1')
-      .set('X-Agent-Key', agent.apiKey)
+      .set('X-Agent-Key', proAgent.apiKey)
       .send({ humanId: human.id, agentId: 'a1', title: 'Job 1', description: 'D', priceUsdc: 50 });
 
     const job2Res = await request(app)
       .post('/api/jobs')
       .set('X-Forwarded-For', '10.50.7.2')
-      .set('X-Agent-Key', agent.apiKey)
+      .set('X-Agent-Key', proAgent.apiKey)
       .send({ humanId: human.id, agentId: 'a2', title: 'Job 2', description: 'D', priceUsdc: 75 });
 
     // Accept job 2

@@ -89,7 +89,7 @@ Human Pages is a discovery platform that connects AI agents with real people for
 - Rate limiting: 30 requests/minute per IP for search
 - No bulk export endpoint
 - Terms of Use prohibit scraping and bulk data extraction
-- Registered agents have separate rate limits (20 offers/hour)
+- Registered agents have separate tier-based rate limits (BASIC: 1 offer/2 days, PRO: 15 offers/day; IP limit: 30/day)
 
 **Residual risk:** Low
 
@@ -103,7 +103,7 @@ Human Pages is a discovery platform that connects AI agents with real people for
 **Mitigations:**
 - `hideContact` defaults to `true` — users must explicitly choose to show contact info
 - Contact info only shared with agents on job acceptance via webhook
-- Rate limiting on job offer creation (20/hour per agent)
+- Rate limiting on job offer creation (tier-based: BASIC 1/2 days, PRO 15/day; IP: 30/day)
 
 **Residual risk:** Low
 
