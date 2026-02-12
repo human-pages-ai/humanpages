@@ -10,7 +10,7 @@ import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.
 import { requireActiveIfAgent } from '../middleware/requireActiveAgent.js';
 import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
 import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
-import { isX402Enabled, X402_PRICES } from '../lib/x402.js';
+import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib/x402.js';
 import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
 import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
 import {
@@ -168,17 +168,33 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
       if (recentOfferCount >= config.limit) {
         const windowHours = config.windowMs / (60 * 60 * 1000);
         const windowLabel = windowHours >= 48 ? `${windowHours / 24} days` : `${windowHours} hours`;
+        const tierMsg = `Your ${agent.activationTier} tier allows ${config.limit} job offer(s) per ${windowLabel}. Accepted offers don't count toward this limit.`;
+        const price = X402_PRICES.job_offer;
+
+        if (isX402Enabled()) {
+          const resourceUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+          const paymentRequired = await buildPaymentRequiredResponse('job_offer', resourceUrl);
+          res.setHeader('X-PAYMENT-REQUIREMENTS', JSON.stringify(paymentRequired.accepts));
+          return res.status(402).json({
+            ...paymentRequired,
+            error: 'Payment required',
+            message: `${tierMsg} To proceed, pay $${price} USDC per request via x402, or upgrade to PRO for higher limits.`,
+            tier: agent.activationTier,
+            limit: config.limit,
+            x402: {
+              price: `$${price}`,
+              currency: 'USDC',
+              description: 'Retry this exact request with an X-Payment header to pay per use and bypass the rate limit.',
+            },
+          });
+        }
+
         return res.status(429).json({
           error: 'Rate limit exceeded',
-          message: `Your ${agent.activationTier} tier allows ${config.limit} job offer(s) per ${windowLabel}. Accepted offers don't count toward this limit.`,
+          message: `${tierMsg} Upgrade to PRO for higher limits.`,
           tier: agent.activationTier,
           limit: config.limit,
           retryAfter: windowLabel,
-          // x402 pay-per-use hint
-          ...(isX402Enabled() ? {
-            x402Available: true,
-            x402Price: `$${X402_PRICES.job_offer}`,
-          } : {}),
         });
       }
     }

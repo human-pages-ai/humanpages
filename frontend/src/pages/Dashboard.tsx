@@ -25,9 +25,10 @@ import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
 import PaymentPreferencesSection from '../components/dashboard/PaymentPreferencesSection';
 import ContactPrivacySection from '../components/dashboard/ContactPrivacySection';
+import ListingsSection from '../components/dashboard/ListingsSection';
 import SEO from '../components/SEO';
 
-const VALID_TABS: DashboardTab[] = ['jobs', 'profile', 'payments', 'settings', 'privacy'];
+const VALID_TABS: DashboardTab[] = ['jobs', 'listings', 'profile', 'payments', 'settings', 'privacy'];
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -700,6 +701,11 @@ export default function Dashboard() {
                 profileUsername={profile.username}
               />
             </div>
+          )}
+
+          {/* ───── LISTINGS TAB ───── */}
+          {activeTab === 'listings' && (
+            <ListingsSection skills={profile.skills || []} />
           )}
 
           {/* ───── PROFILE TAB ───── */}

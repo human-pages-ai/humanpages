@@ -203,3 +203,66 @@ export interface Vouch {
   voucher: { id: string; name: string; username?: string };
   vouchee: { id: string; name: string; username?: string };
 }
+
+export interface Listing {
+  id: string;
+  title: string;
+  description: string;
+  category?: string;
+  budgetUsdc: string;
+  requiredSkills: string[];
+  requiredEquipment: string[];
+  location?: string;
+  locationLat?: number;
+  locationLng?: number;
+  radiusKm?: number;
+  workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID';
+  status: 'OPEN' | 'CLOSED' | 'EXPIRED' | 'CANCELLED';
+  expiresAt: string;
+  maxApplicants?: number;
+  isPro: boolean;
+  createdAt: string;
+  agent?: {
+    id: string;
+    name: string;
+    description?: string;
+    domainVerified: boolean;
+    activationTier: string;
+  };
+  agentReputation?: {
+    completedJobs: number;
+    avgRating: number;
+    avgPaymentSpeedHours: number | null;
+  };
+  _count?: { applications: number };
+  hasApplied?: boolean;
+  myApplication?: {
+    id: string;
+    status: string;
+    pitch: string;
+  };
+}
+
+export interface ListingApplication {
+  id: string;
+  listingId: string;
+  pitch: string;
+  status: 'PENDING' | 'OFFERED' | 'REJECTED' | 'WITHDRAWN';
+  jobId?: string;
+  createdAt: string;
+  listing?: {
+    id: string;
+    title: string;
+    budgetUsdc: string;
+    status: string;
+    isPro: boolean;
+    agent?: { id: string; name: string };
+  };
+  human?: {
+    id: string;
+    name: string;
+    skills: string[];
+    location?: string;
+    bio?: string;
+  };
+}

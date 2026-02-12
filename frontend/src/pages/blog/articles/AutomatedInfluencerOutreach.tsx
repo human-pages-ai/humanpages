@@ -7,19 +7,19 @@ export default function AutomatedInfluencerOutreach() {
       title="Automated Influencer Outreach: Skip the Agency, Keep the Results"
       date="February 11, 2026"
       readingTime="6 min"
-      description="How to run social media promotion campaigns without agencies, spreadsheets, or email chains — using an AI agent that handles discovery, outreach, and payment."
+      description="We replaced our influencer agency with a bot that finds, hires, and pays marketers directly in crypto. Campaigns that took weeks now launch in hours — here's what we learned."
       slug="automated-influencer-outreach"
     >
       <p>
-        If you've ever run an influencer marketing campaign, you know the drill: find an agency (or build a spreadsheet yourself), negotiate rates over email, wait for contracts, chase invoices, and hope the posts actually go live on schedule. The process takes weeks and costs more in coordination overhead than the actual promotion.
+        Last quarter we spent three weeks coordinating a single influencer campaign. Two weeks of that was email — finding people, negotiating rates, chasing contracts, resending invoices when the first ones got lost. By the time the posts went live, the product update we were promoting was old news.
       </p>
 
       <p>
-        We replaced all of that with a bot. Not a dashboard. Not a SaaS platform with a monthly fee. A bot that runs from the command line, finds real social media marketers, sends them offers, answers their questions, pays them in stablecoins, and collects reviews — all in a single session.
+        So we built a bot. Not a dashboard with a monthly fee. A bot that runs from the command line, finds real social media marketers on <Link to="/" className="text-blue-600 hover:text-blue-700 font-medium">Human Pages</Link>, sends them offers, answers their questions automatically, and pays them in stablecoins — all in a single session. The longest campaign we've run took 48 hours from "run the bot" to "posts are live."
       </p>
 
       <p>
-        Here's what the process looks like from a hiring manager's perspective.
+        Here's what the process looks like if you're the one deciding to run a campaign — not the one writing the code.
       </p>
 
       <h2>You Define the Campaign, the Bot Does the Rest</h2>
@@ -69,33 +69,31 @@ export default function AutomatedInfluencerOutreach() {
         No email back-and-forth. No scheduling calls. The marketer gets answers in seconds and accepts when they're ready.
       </p>
 
-      <h2>Payment Is Direct and Instant</h2>
+      <h2>Payment Is Direct — No Middleman</h2>
 
       <p>
-        This is where the model diverges most from traditional influencer marketing. There's no invoice, no net-30, no payment processor taking a cut.
+        Human Pages is a discovery platform — it connects your bot with marketers but never touches the money. Payment is peer-to-peer: USDC (a stablecoin pegged to the US dollar) goes directly from your bot's wallet to the marketer's wallet on-chain. No invoice. No net-30. No payment processor. No platform cut.
       </p>
 
       <p>
-        The bot pays the marketer directly in USDC (a stablecoin pegged to the US dollar) on their preferred blockchain network. The payment method adapts to the <Link to="/blog/trust-models-human-agent" className="text-blue-600 hover:text-blue-700 font-medium">trust level</Link> between you and the marketer:
+        The bot chooses <em>when</em> to pay. Ours pays upfront — the moment the marketer accepts, before they do the work. We chose this because the bot only sends offers to marketers who've already been vetted by the platform's <Link to="/blog/trust-models-human-agent" className="text-blue-600 hover:text-blue-700 font-medium">reputation system</Link> — they have completed jobs and ratings on their profile before we ever reach out. Paying upfront builds loyalty, eliminates payment disputes, and means the marketer starts working immediately instead of waiting for a wire transfer to clear. If you prefer to pay on completion, the API supports that too.
       </p>
 
-      <p>
-        The bot pays directly on completion — fast, simple, builds loyalty. This works because the platform's reputation system does the pre-screening. By the time the bot sends an offer, we already know the marketer has a solid history.
-      </p>
-
-      <h2>The Numbers</h2>
+      <h2>What Actually Changes</h2>
 
       <p>
-        Here's how the economics compare to working with an agency:
+        Here's what we stopped doing after switching from an agency to the bot:
       </p>
 
       <ul>
-        <li><strong>Agency model:</strong> Monthly retainer + 15-20% markup on influencer payments + 2-4 week lead time per campaign</li>
-        <li><strong>Bot model:</strong> No platform fee + you set the per-post rate (paid directly to the marketer) + hours from setup to live posts</li>
+        <li><strong>No more retainer.</strong> We were paying a monthly fee whether we ran campaigns or not. The bot costs nothing when it's idle.</li>
+        <li><strong>No more markups.</strong> Agencies typically add a significant markup on top of what they pay the influencer. The bot sends payment directly — every dollar of your budget reaches the marketer.</li>
+        <li><strong>No more invoicing.</strong> Crypto payments settle in minutes. No accounts payable, no "we'll pay net-30," no "can you resend the invoice?"</li>
+        <li><strong>No more lead time.</strong> Our last three campaigns went from "let's promote this" to live social posts in under two days. The agency equivalent was two to four weeks.</li>
       </ul>
 
       <p>
-        The savings come from three places: no agency retainer, no payment processing fees (crypto is direct), and no coordination overhead (the bot handles outreach, Q&A, and follow-up).
+        The part we didn't expect: the marketers prefer it too. They deal with a bot that responds in seconds instead of an account manager who responds in hours, payment goes straight to their wallet with no processing delay, and they can decline offers freely without burning a relationship.
       </p>
 
       <h2>What You're Giving Up</h2>

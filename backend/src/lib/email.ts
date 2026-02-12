@@ -1459,6 +1459,80 @@ To unsubscribe: ${unsubscribeUrl}
   });
 }
 
+// ===== LISTING MATCH NOTIFICATION =====
+
+interface ListingMatchEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  listingTitle: string;
+  budgetUsdc: number;
+  agentName: string;
+  listingUrl: string;
+  language?: string;
+}
+
+export async function sendListingMatchEmail(data: ListingMatchEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+
+  const textContent = `
+${t('email.jobOffer.greeting', { name: data.humanName })}
+
+New listing matching your skills: "${data.listingTitle}"
+Budget: $${data.budgetUsdc} USDC
+Posted by: ${data.agentName}
+
+Apply now: ${data.listingUrl}
+
+---
+${t('email.jobOffer.footer')}
+
+To unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>New listing match</title></head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f5;">
+    <tr><td align="center" style="padding: 40px 20px;">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+        <tr><td align="center" style="padding: 32px 40px 24px;">
+          <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f;">New listing matching your skills</h1>
+        </td></tr>
+        <tr><td style="padding: 0 40px;">
+          <p style="margin: 0 0 8px; font-size: 15px; color: #44445a;">${t('email.jobOffer.greeting', { name: data.humanName })}</p>
+          <p style="margin: 0 0 16px; font-size: 15px; color: #44445a;">A new listing was posted that matches your skills:</p>
+          <h2 style="margin: 0 0 8px; font-size: 18px; color: #1e1e2f;">${data.listingTitle}</h2>
+          <p style="font-size: 28px; font-weight: bold; color: #059669; margin: 12px 0;">$${data.budgetUsdc} USDC</p>
+          <p style="margin: 0 0 16px; font-size: 14px; color: #6b7280;">Posted by: ${data.agentName}</p>
+        </td></tr>
+        <tr><td align="center" style="padding: 8px 40px 24px;">
+          <a href="${data.listingUrl}" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px;">View & Apply</a>
+        </td></tr>
+        <tr><td style="padding: 24px 40px 32px;">
+          <p style="margin: 0; font-size: 12px; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
+          <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" style="color: #8b8ba0; font-size: 12px;">Unsubscribe</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `New listing: ${data.listingTitle} — $${data.budgetUsdc} USDC`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
   const hasResend = !!process.env.RESEND_API_KEY;

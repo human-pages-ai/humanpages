@@ -1,5 +1,23 @@
+import { Helmet } from 'react-helmet-async';
 import Link from '../../../components/LocalizedLink';
 import BlogPost from '../BlogPost';
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Hire Social Media Marketers with an AI Agent",
+  "description": "A technical guide to automating influencer marketing using a TypeScript CLI bot and the Human Pages API.",
+  "step": [
+    { "@type": "HowToStep", "name": "Configure the Campaign", "text": "Set your project name, URL, social links, task description, and price per post." },
+    { "@type": "HowToStep", "name": "Register and Activate", "text": "The bot auto-registers as an agent on Human Pages and activates via social post or payment." },
+    { "@type": "HowToStep", "name": "Find the Right Marketer", "text": "The bot searches the marketplace and scores candidates on skills, track record, and rate compatibility." },
+    { "@type": "HowToStep", "name": "Send the Offer", "text": "Confirm task details and send a job offer with an introductory message to the marketer." },
+    { "@type": "HowToStep", "name": "Conversation and Acceptance", "text": "The bot answers questions via LLM or keyword matching while waiting for the marketer to accept." },
+    { "@type": "HowToStep", "name": "Payment", "text": "The bot sends USDC payment on-chain directly to the marketer's wallet. Payment timing is configurable — this bot pays immediately after acceptance." },
+    { "@type": "HowToStep", "name": "Wait for Completion", "text": "The marketer creates and posts content while the bot continues to reply to messages." },
+    { "@type": "HowToStep", "name": "Review", "text": "Leave a rating and comment that becomes part of the marketer's public reputation." },
+  ],
+};
 
 export default function SocialMediaMarketingHiring() {
   return (
@@ -10,16 +28,36 @@ export default function SocialMediaMarketingHiring() {
       description="A technical guide to automating influencer marketing. We built a TypeScript bot that finds, hires, and pays freelancers in USDC using the Human Pages API."
       slug="social-media-marketing-hiring-process"
     >
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+      </Helmet>
+
       <p>
-        Most companies hire marketers the old-fashioned way: post a job listing, wait for applications, sift through resumes, schedule interviews, negotiate rates, and hope for the best. It takes days or weeks before anyone actually posts anything.
+        This is what it looks like to hire a social media marketer from your terminal:
+      </p>
+
+      <pre className="bg-slate-800 text-slate-100 p-4 rounded-lg text-sm overflow-x-auto">{`$ npm run dev
+
+=== Marketing Bot ===
+Hiring humans for social media promotion via Human Pages
+
+Searching for available humans...
+
+  1. Sarah (@sarahcreates) — Lagos ← recommended
+     Skills: social media, content creation, tiktok, instagram
+     negotiable | 4.8★ | 12 jobs
+  2. Marco (@marco_digital) — São Paulo
+     Skills: marketing, video, youtube, copywriting
+     negotiable | 4.5★ | 7 jobs
+
+Who would you like to hire? #`}</pre>
+
+      <p>
+        That's the <strong>marketing bot</strong> — an open-source TypeScript CLI that searches a marketplace of real humans, scores them on marketing fitness, sends job offers, handles Q&A via LLM, pays in USDC on-chain, and collects reviews. One command, full lifecycle.
       </p>
 
       <p>
-        We do it differently. We built an AI agent — our <strong>marketing bot</strong> — that finds social media marketers, sends them offers, coordinates the work, and pays them in USDC. The entire process runs from a single terminal command, and a promotion campaign can go from zero to live posts in hours instead of weeks.
-      </p>
-
-      <p>
-        Here's exactly how it works, step by step.
+        We built it on the <Link to="/dev" className="text-blue-600 hover:text-blue-700 font-medium">Human Pages API</Link>. Here's exactly how each step works.
       </p>
 
       <h2>Step 1: Configure the Campaign</h2>
@@ -47,7 +85,17 @@ export default function SocialMediaMarketingHiring() {
       </p>
 
       <p>
-        New agents also need to activate. There are two paths: post an activation code on social media (free, BASIC tier) or pay for activation (PRO tier, with higher job limits). Either way, the step proves there's a real human behind the agent and prevents spam bots from flooding the marketplace with junk offers.
+        New agents also need to get past the API gate. There are three paths:
+      </p>
+
+      <ul>
+        <li><strong>Social activation (free, BASIC tier)</strong> — Post an activation code on social media. Gets you 1 job offer per 2 days and 1 profile view per day for 30 days.</li>
+        <li><strong>Payment activation (PRO tier)</strong> — Pay a one-time fee in USDC for higher limits: 15 job offers/day and 50 profile views/day for 60 days.</li>
+        <li><strong>x402 pay-per-use</strong> — Skip activation entirely. Pay per API call via the <a href="https://www.x402.org/" className="text-blue-600 hover:text-blue-700 font-medium" target="_blank" rel="noopener noreferrer">x402 protocol</a>: $0.05 per profile view, $0.25 per job offer. No tier limits, no expiry — just include an <code>x-payment</code> header with each request.</li>
+      </ul>
+
+      <p>
+        All three paths serve the same purpose: proving the agent isn't a spam bot. The marketing bot currently uses social activation, but x402 is the better fit for agents that need to scale past BASIC tier limits without committing to PRO.
       </p>
 
       <h2>Step 3: Find the Right Marketer</h2>
@@ -56,26 +104,29 @@ export default function SocialMediaMarketingHiring() {
         This is where it gets interesting. The bot searches the Human Pages marketplace for available humans and scores each one on <strong>marketing fitness</strong>. No LLM "vibe checking" here — the ranking is deterministic:
       </p>
 
-      <pre className="bg-slate-800 text-slate-100 p-4 rounded-lg text-sm overflow-x-auto">{`function marketingScore(human: Human): number {
+      <pre className="bg-slate-800 text-slate-100 p-4 rounded-lg text-sm overflow-x-auto">{`function marketingScore(h: Human): number {
   let score = 0;
 
   // +10 per matching skill keyword
-  const keywords = ['marketing', 'social media', 'content',
-    'promotion', 'copywriting', 'seo', 'influencer',
-    'tiktok', 'instagram', 'twitter', 'youtube'];
-  for (const kw of keywords) {
-    if (human.skills.some(s => s.toLowerCase().includes(kw)))
-      score += 10;
+  const marketingKeywords = [
+    'marketing', 'social media', 'content', 'promotion',
+    'advertising', 'copywriting', 'seo', 'influencer',
+    'branding', 'video', 'tiktok', 'instagram',
+    'twitter', 'youtube', 'community',
+  ];
+  const skillsLower = h.skills.map(s => s.toLowerCase());
+  for (const kw of marketingKeywords) {
+    if (skillsLower.some(s => s.includes(kw))) score += 10;
   }
 
   // Up to 30 pts for completed jobs, up to 25 for rating
-  score += Math.min(human.reputation.jobsCompleted * 3, 30);
-  if (human.reputation.avgRating != null)
-    score += human.reputation.avgRating * 5;
+  score += Math.min(h.reputation.jobsCompleted * 3, 30);
+  if (h.reputation.avgRating != null)
+    score += h.reputation.avgRating * 5;
 
   // +15 if within budget, -10 if above
-  if (human.minRateUsdc != null) {
-    score += human.minRateUsdc <= budget ? 15 : -10;
+  if (h.minRateUsdc != null) {
+    score += h.minRateUsdc <= config.jobPriceUsdc ? 15 : -10;
   }
 
   return score;
@@ -133,31 +184,34 @@ Let me know if you have any questions before accepting!`}</pre>
       </p>
 
       <p>
-        The bot can run with three different response modes:
+        The bot supports two response modes:
       </p>
 
       <ul>
         <li><strong>LLM-powered replies</strong> — Connect any OpenAI-compatible API (or Anthropic directly) for natural, context-aware conversations. The bot maintains conversation history so its replies are coherent across multiple exchanges.</li>
         <li><strong>Keyword matching</strong> — A zero-dependency fallback that recognizes common questions about pricing, platforms, deadlines, social accounts, and content expectations, and responds with the right details.</li>
-        <li><strong>Operator notifications</strong> — Optionally, the bot forwards every message to the operator via Telegram, so they can step in for unusual questions.</li>
       </ul>
+
+      <p>
+        Independently of which response mode is active, the bot can also forward every message to the operator via Telegram — so you can monitor conversations and step in manually for unusual questions.
+      </p>
 
       <p>
         Once the marketer is satisfied, they click "Accept" in their dashboard. The bot detects this via webhook (or polling) and moves to the next phase.
       </p>
 
-      <h2>Step 6: Payment and Trust</h2>
+      <h2>Step 6: Payment</h2>
 
       <p>
-        Payment happens on-chain, but <em>how</em> it happens depends on the trust level between the bot and the marketer. As we explored in our deep dive on <Link to="/blog/trust-models-human-agent" className="text-blue-600 hover:text-blue-700 font-medium">trust models between humans and AI agents</Link>, trust isn't binary — it's a spectrum. The bot supports two modes:
+        Human Pages is a discovery platform — it connects agents with humans but <strong>never touches funds</strong>. All payments are peer-to-peer: USDC goes directly from the bot's wallet to the marketer's wallet on-chain. The platform verifies the transaction happened, but never custodies anything.
       </p>
 
       <p>
-        The bot uses <strong>direct payment</strong> — reputation-based trust. It loads a crypto wallet, checks the USDC balance, resolves the marketer's wallet address from their profile, and sends the funds on completion. This works because the scoring algorithm in Step 3 already filters for proven marketers before we ever send an offer. Unproven accounts get deprioritized, so by the time we're paying someone, they have a track record.
+        The API supports two payment timings: <code>upfront</code> (pay when the marketer accepts) and <code>upon_completion</code> (pay when the work is done). Each agent chooses what fits its trust model — as we explored in our deep dive on <Link to="/blog/trust-models-human-agent" className="text-blue-600 hover:text-blue-700 font-medium">trust models between humans and AI agents</Link>.
       </p>
 
       <p>
-        For our internal marketing, this has been the right call: faster turnaround, less friction, and the platform's review system catches problems before they become patterns.
+        This bot pays upfront. It loads a crypto wallet, checks the USDC balance, resolves the marketer's wallet address from their profile, and sends the funds immediately after acceptance. We chose this because the scoring algorithm in Step 3 already filters for proven marketers before we ever send an offer. By the time we're paying someone, they have a track record — and paying upfront means they start working right away.
       </p>
 
       <p>
@@ -194,7 +248,7 @@ Let me know if you have any questions before accepting!`}</pre>
         <li><strong>Speed</strong> — A campaign can go live in hours, not weeks. The bot handles discovery, outreach, and payment automatically.</li>
         <li><strong>Cost transparency</strong> — The price is set upfront. No hidden platform fees, no agency markups. USDC goes directly from the bot's wallet to the marketer's wallet.</li>
         <li><strong>Scalability</strong> — Need 50 marketers instead of one? Run the bot 50 times. Each session is independent and stateless (jobs can even be resumed if interrupted).</li>
-        <li><strong>Global reach</strong> — Anyone with a Human Pages profile and a crypto wallet can participate, regardless of location or banking access. We've hired marketers on four continents.</li>
+        <li><strong>Global reach</strong> — Anyone with a Human Pages profile and a crypto wallet can participate, regardless of location or banking access.</li>
         <li><strong>Quality signals</strong> — The scoring algorithm and review system create a feedback loop. Good marketers rise to the top; unreliable ones drop off.</li>
       </ul>
 
@@ -212,7 +266,7 @@ Let me know if you have any questions before accepting!`}</pre>
       </ol>
 
       <p>
-        The bot handles everything else — from finding the right person to sending payment when the job is done.
+        The bot handles everything else — from finding the right person to sending payment as soon as they accept.
       </p>
 
       <div className="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">

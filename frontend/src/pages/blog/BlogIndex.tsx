@@ -27,7 +27,7 @@ export default function BlogIndex() {
       title: 'Automated Influencer Outreach: Skip the Agency, Keep the Results',
       slug: 'automated-influencer-outreach',
       date: 'February 11, 2026',
-      excerpt: 'How to run social media promotion campaigns without agencies, spreadsheets, or email chains — using an AI agent that handles discovery, outreach, and payment.',
+      excerpt: 'We replaced our influencer agency with a bot that pays marketers upfront in crypto. Campaigns that took weeks now launch in hours — here\'s what we learned.',
       readingTime: '6 min',
     },
     {

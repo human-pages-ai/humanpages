@@ -378,6 +378,14 @@ export default function LandingPage() {
                   >
                     {t('landing.hero.cta')}
                   </Link>
+                  <Link
+                    to="/listings"
+                    className="inline-block px-8 py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors text-lg"
+                  >
+                    {t('landing.hero.browseListings')}
+                  </Link>
+                </div>
+                <div className="mt-3">
                   <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
                     {t('landing.hero.ctaBadge')}
                   </span>

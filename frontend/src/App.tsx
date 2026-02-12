@@ -26,6 +26,8 @@ const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const Badge = lazy(() => import('./pages/Badge'));
 const JobDetail = lazy(() => import('./pages/JobDetail'));
 const ReportAgent = lazy(() => import('./pages/ReportAgent'));
+const JobBoard = lazy(() => import('./pages/JobBoard'));
+const ListingDetail = lazy(() => import('./pages/ListingDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -37,6 +39,8 @@ const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
 const AdminUserDetailPage = lazy(() => import('./pages/admin/AdminUserDetail'));
 const AdminAgentDetailPage = lazy(() => import('./pages/admin/AdminAgentDetail'));
 const AdminJobDetailPage = lazy(() => import('./pages/admin/AdminJobDetail'));
+const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
+const AdminListingDetailPage = lazy(() => import('./pages/admin/AdminListingDetail'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -200,6 +204,8 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/badge" element={<Badge />} />
       <Route path="/report" element={<ReportAgent />} />
+      <Route path="/listings" element={<JobBoard />} />
+      <Route path="/listings/:id" element={<ListingDetail />} />
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/ai-agents-hiring-humans" element={<AiAgentsHiringHumans />} />
       <Route path="/blog/getting-paid-usdc-freelancers" element={<GettingPaidUsdc />} />
@@ -217,6 +223,8 @@ function AppRoutes() {
       <Route path="/:lang/humans/:id" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/u/:username" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/signup" element={<LangWrapper><PublicRoute><Signup /></PublicRoute></LangWrapper>} />
+      <Route path="/:lang/listings" element={<LangWrapper><JobBoard /></LangWrapper>} />
+      <Route path="/:lang/listings/:id" element={<LangWrapper><ListingDetail /></LangWrapper>} />
       <Route path="/:lang/blog" element={<LangWrapper><BlogIndex /></LangWrapper>} />
       <Route path="/:lang/blog/ai-agents-hiring-humans" element={<LangWrapper><AiAgentsHiringHumans /></LangWrapper>} />
       <Route path="/:lang/blog/getting-paid-usdc-freelancers" element={<LangWrapper><GettingPaidUsdc /></LangWrapper>} />
@@ -238,6 +246,8 @@ function AppRoutes() {
         <Route path="agents/:id" element={<AdminAgentDetailPage />} />
         <Route path="jobs" element={<AdminJobs />} />
         <Route path="jobs/:id" element={<AdminJobDetailPage />} />
+        <Route path="listings" element={<AdminListings />} />
+        <Route path="listings/:id" element={<AdminListingDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
       </Route>

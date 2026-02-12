@@ -41,6 +41,7 @@ export default function Footer({ className = '' }: FooterProps) {
         <div className="flex items-center gap-6 text-sm">
           <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
           <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
+          <Link to="/listings" className="text-slate-500 hover:text-slate-700">{t('nav.jobBoard')}</Link>
           <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
           <Link to="/blog" className="text-slate-500 hover:text-slate-700">{t('nav.blog')}</Link>
           <button onClick={() => openFeedback('BUG')} className="text-slate-500 hover:text-slate-700">{t('feedback.reportProblem', 'Report a Problem')}</button>

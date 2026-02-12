@@ -8,7 +8,7 @@ import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js'
 import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
 import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
-import { isX402Enabled, X402_PRICES } from '../lib/x402.js';
+import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib/x402.js';
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
@@ -27,7 +27,6 @@ const TIER_PROFILE_LIMITS: Record<string, number> = {
 // Public select fields (no contact info, no wallets)
 const publicHumanSelect = {
   id: true,
-  name: true,
   username: true,
   bio: true,
   avatarUrl: true,
@@ -59,9 +58,10 @@ const publicHumanSelect = {
   },
 } as const;
 
-// Full select fields for active agents (includes contact info + wallets)
+// Full select fields for active agents (includes contact info + wallets + name)
 const fullHumanSelect = {
   ...publicHumanSelect,
+  name: true,
   contactEmail: true,
   telegram: true,
   whatsapp: true,
@@ -114,6 +114,23 @@ const searchRateLimiter = rateLimit({
     return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
       || req.ip || 'unknown';
   },
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const profileLookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: {
+    error: 'Too many profile requests',
+    message: 'Profile lookup rate limit: 5 requests per minute. Try again later.',
+  },
+  keyGenerator: (req) => {
+    return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+      || req.ip || 'unknown';
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
   validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
@@ -730,6 +747,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     const requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
     const requestedOffset = parseInt(offset as string) || 0;
 
+    const MAX_OFFSET = 200;
+    if (requestedOffset > MAX_OFFSET) {
+      return res.status(400).json({
+        error: 'Offset too large',
+        message: `Maximum offset is ${MAX_OFFSET}. Use filters to narrow results.`,
+      });
+    }
+
     // Fetch humans (public: no contact info, no wallets)
     // When doing skill search, fetch more candidates for relevance scoring
     let humans = await prisma.human.findMany({
@@ -829,7 +854,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = humans.map((h) => {
-      const { locationLat, locationLng, name, ...rest } = h;
+      const { locationLat, locationLng, ...rest } = h;
       return {
         ...rest,
         vouchCount: vouchCountMap.get(h.id) || 0,
@@ -878,16 +903,32 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
       const remaining = parseInt(res.getHeader('X-RateLimit-Remaining') as string || '999');
       const used = 50 - remaining;
       if (used > tierLimit) {
+        const tierMsg = `Your ${agent.activationTier} tier allows ${tierLimit} profile view(s) per day.`;
+        const price = X402_PRICES.profile_view;
+
+        if (isX402Enabled()) {
+          const resourceUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+          const paymentRequired = await buildPaymentRequiredResponse('profile_view', resourceUrl);
+          res.setHeader('X-PAYMENT-REQUIREMENTS', JSON.stringify(paymentRequired.accepts));
+          return res.status(402).json({
+            ...paymentRequired,
+            error: 'Payment required',
+            message: `${tierMsg} To proceed, pay $${price} USDC per request via x402, or upgrade to PRO for higher limits.`,
+            tier: agent.activationTier,
+            limit: tierLimit,
+            x402: {
+              price: `$${price}`,
+              currency: 'USDC',
+              description: 'Retry this exact request with an X-Payment header to pay per use and bypass the rate limit.',
+            },
+          });
+        }
+
         return res.status(429).json({
-          error: 'Profile view rate limit exceeded',
-          message: `Your ${agent.activationTier} tier allows ${tierLimit} profile view(s) per day.`,
+          error: 'Rate limit exceeded',
+          message: `${tierMsg} Upgrade to PRO for higher limits.`,
           tier: agent.activationTier,
           limit: tierLimit,
-          // x402 pay-per-use hint
-          ...(isX402Enabled() ? {
-            x402Available: true,
-            x402Price: `$${X402_PRICES.profile_view}`,
-          } : {}),
         });
       }
     }
@@ -926,7 +967,7 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 });
 
 // Get specific human by ID (public — no contact info)
-router.get('/:id', async (req, res) => {
+router.get('/:id', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
       where: { id: req.params.id, emailVerified: true, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
@@ -937,7 +978,7 @@ router.get('/:id', async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, name: true, username: true } },
+            voucher: { select: { id: true, username: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -962,7 +1003,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Get human by username (public — no contact info)
-router.get('/u/:username', async (req, res) => {
+router.get('/u/:username', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
       where: { username: req.params.username, emailVerified: true, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
@@ -973,7 +1014,7 @@ router.get('/u/:username', async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, name: true, username: true } },
+            voucher: { select: { id: true, username: true } },
           },
           orderBy: { createdAt: 'desc' },
         },

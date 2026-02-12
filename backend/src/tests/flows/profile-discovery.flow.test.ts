@@ -178,7 +178,7 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     const res = await request(app).get(`/api/humans/${photographerId}`);
     expect(res.status).toBe(200);
 
-    expect(res.body.name).toBe('SF Photographer');
+    expect(res.body).not.toHaveProperty('name'); // name stripped from public profiles
     expect(res.body.skills).toContain('photography');
     expect(res.body.reputation).toBeDefined();
     expect(res.body).not.toHaveProperty('trustScore');
@@ -191,7 +191,7 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
   it('should look up profile by username', async () => {
     const res = await request(app).get('/api/humans/u/sf_photographer');
     expect(res.status).toBe(200);
-    expect(res.body.name).toBe('SF Photographer');
+    expect(res.body).not.toHaveProperty('name'); // name stripped from public profiles
     expect(res.body.username).toBe('sf_photographer');
   });
 

@@ -15,6 +15,7 @@ const USDC_BASE_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 export const X402_PRICES = {
   profile_view: parseFloat(process.env.X402_PROFILE_VIEW_PRICE || '0.05'),
   job_offer: parseFloat(process.env.X402_JOB_OFFER_PRICE || '0.25'),
+  listing_post: parseFloat(process.env.X402_LISTING_POST_PRICE || '0.50'),
 } as const;
 
 export type X402ResourceType = keyof typeof X402_PRICES;
@@ -77,6 +78,8 @@ export async function buildPaymentRequiredResponse(
 
   const description = resourceType === 'profile_view'
     ? 'Full human profile with contact info and wallets'
+    : resourceType === 'listing_post'
+    ? 'Post a job listing on the board'
     : 'Create a job offer for a human';
 
   return server.createPaymentRequiredResponse(
