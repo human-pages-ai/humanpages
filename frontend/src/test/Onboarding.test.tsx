@@ -111,6 +111,12 @@ describe('Onboarding', () => {
     const skipButton = screen.getByText('onboarding.skipToDashboard');
     fireEvent.click(skipButton);
 
+    // Skip button opens a confirmation dialog — confirm it
+    await waitFor(() => {
+      expect(screen.getByText('onboarding.skipWarning.confirm')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('onboarding.skipWarning.confirm'));
+
     expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });
 

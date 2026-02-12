@@ -23,9 +23,11 @@ import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
+import PaymentPreferencesSection from '../components/dashboard/PaymentPreferencesSection';
+import ContactPrivacySection from '../components/dashboard/ContactPrivacySection';
 import SEO from '../components/SEO';
 
-const VALID_TABS: DashboardTab[] = ['jobs', 'profile', 'payments', 'settings'];
+const VALID_TABS: DashboardTab[] = ['jobs', 'profile', 'payments', 'settings', 'privacy'];
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -723,19 +725,24 @@ export default function Dashboard() {
                   />
                   <WorkStatusSection
                     isAvailable={profile.isAvailable}
-                    paymentPreferences={profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION']}
                     emailNotifications={profile.emailNotifications !== false}
                     telegramNotifications={profile.telegramNotifications !== false}
                     whatsappNotifications={profile.whatsappNotifications !== false}
                     emailDigestMode={profile.emailDigestMode || 'REALTIME'}
                     saving={saving}
                     onToggleAvailability={toggleAvailability}
-                    onPaymentPreferenceToggle={togglePaymentPreference}
                     onToggleNotification={toggleNotification}
                     onEmailDigestModeChange={changeEmailDigestMode}
                   />
                 </div>
               </div>
+
+              {/* Sharing & Referral — full width below the grid */}
+              <ShareReferralSection
+                profile={profile}
+                copiedProfile={copiedProfile}
+                setCopiedProfile={setCopiedProfile}
+              />
             </div>
           )}
 
@@ -747,6 +754,12 @@ export default function Dashboard() {
                 saving={saving}
                 onAddWallet={addWallet}
                 onDeleteWallet={deleteWallet}
+              />
+              <PaymentPreferencesSection
+                paymentPreferences={profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION']}
+                saving={saving}
+                isAvailable={profile.isAvailable}
+                onPaymentPreferenceToggle={togglePaymentPreference}
               />
               <OfferFiltersSection
                 profile={profile}
@@ -760,38 +773,37 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ───── SETTINGS TAB ───── */}
+          {/* ───── BOOST YOUR PROFILE TAB ───── */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* Two-column grid for settings cards */}
+              {/* Verification + Humanity side-by-side on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Boost Your Profile */}
-                <div className="space-y-4">
-                  <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
-                  <HumanitySection profile={profile} onVerified={loadProfile} />
-                </div>
-
-                {/* Integrations */}
-                <div className="space-y-4">
-                  <TelegramSection
-                    telegramStatus={telegramStatus}
-                    telegramLinkUrl={telegramLinkUrl}
-                    telegramLoading={telegramLoading}
-                    onConnect={connectTelegram}
-                    onDisconnect={disconnectTelegram}
-                  />
-                </div>
+                <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
+                <HumanitySection profile={profile} onVerified={loadProfile} />
               </div>
 
-              {/* Sharing & Growth — full width */}
-              <ShareReferralSection
-                profile={profile}
-                copiedProfile={copiedProfile}
-                setCopiedProfile={setCopiedProfile}
+              {/* Integrations */}
+              <TelegramSection
+                telegramStatus={telegramStatus}
+                telegramLinkUrl={telegramLinkUrl}
+                telegramLoading={telegramLoading}
+                onConnect={connectTelegram}
+                onDisconnect={disconnectTelegram}
               />
-              <VouchSection />
 
-              {/* Account — full width at bottom */}
+              <VouchSection />
+            </div>
+          )}
+
+          {/* ───── PRIVACY TAB ───── */}
+          {activeTab === 'privacy' && (
+            <div className="space-y-6">
+              <ContactPrivacySection
+                profile={profile}
+                editingProfile={editingProfile}
+                profileForm={profileForm}
+                setProfileForm={setProfileForm}
+              />
               <AccountSection
                 profile={profile}
                 onDeleteAccount={deleteAccount}

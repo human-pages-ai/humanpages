@@ -159,6 +159,12 @@
   "dashboard": {
     "title": "Dashboard",
     "settings": "Settings",
+    "boostYourProfile": "Boost Your Profile",
+    "privacy": "Privacy",
+    "contactPrivacy": {
+      "title": "Contact & Privacy",
+      "subtitle": "Control how people can reach you and what's visible on your public profile"
+    },
     "trustScoreLabel": "Trust score: {{score}}%",
     "welcome": "Welcome",
     "shareProfile": "Share your profile",
@@ -211,9 +217,13 @@
       "subtitle": "Tell agents how you prefer to be paid for jobs",
       "hint": "Select all payment methods you accept. At least one is required.",
       "upfront": "Payment Upfront",
+      "upfrontDesc": "Get paid in full before starting the work",
       "escrow": "Escrow",
+      "escrowDesc": "Funds held by a trusted third party until work is verified",
       "upon_completion": "Upon Completion",
+      "upon_completionDesc": "Get paid after the work is delivered and approved",
       "stream": "Streaming",
+      "streamDesc": "Get paid continuously as you work via Superfluid or micro-transfers",
       "both": "Flexible (Any)",
       "bothDesc": "Upfront, escrow, or after job completion"
     },
@@ -330,7 +340,7 @@
       "showNeighborhood": "Show neighborhood on my public profile",
       "neighborhoodHint": "When off, only your city is visible on your public profile",
       "hideContact": "Hide contact info from public profile",
-      "hideContactHelp": "When enabled, your email, Telegram, WhatsApp, and payment methods won't be visible to visitors.",
+      "hideContactHelp": "When enabled, your email, Telegram, and payment methods won't be visible to visitors.",
       "saving": "Saving...",
       "saved": "Saved",
       "usernameTaken": "This username is already taken",

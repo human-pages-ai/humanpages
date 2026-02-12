@@ -40,8 +40,11 @@ export default function NotificationPreferencesSection({
   const channels = [
     { key: 'email' as const, label: t('dashboard.notifications.emailLabel'), desc: t('dashboard.notifications.emailDesc'), enabled: emailNotifications },
     { key: 'telegram' as const, label: t('dashboard.notifications.telegramLabel'), desc: t('dashboard.notifications.telegramDesc'), enabled: telegramNotifications },
-    { key: 'whatsapp' as const, label: t('dashboard.notifications.whatsappLabel'), desc: t('dashboard.notifications.whatsappDesc'), enabled: whatsappNotifications },
+    // { key: 'whatsapp' as const, label: t('dashboard.notifications.whatsappLabel'), desc: t('dashboard.notifications.whatsappDesc'), enabled: whatsappNotifications },
   ];
+
+  // Keep whatsappNotifications in scope to avoid unused variable warning
+  void whatsappNotifications;
 
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6">

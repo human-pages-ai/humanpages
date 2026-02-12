@@ -1,17 +1,13 @@
 import { useTranslation } from 'react-i18next';
 
-type PaymentPref = 'UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM';
-
 interface Props {
   isAvailable: boolean;
-  paymentPreferences: PaymentPref[];
   emailNotifications: boolean;
   telegramNotifications: boolean;
   whatsappNotifications: boolean;
   emailDigestMode: 'REALTIME' | 'HOURLY' | 'DAILY';
   saving: boolean;
   onToggleAvailability: () => void;
-  onPaymentPreferenceToggle: (pref: PaymentPref) => void;
   onToggleNotification: (channel: 'email' | 'telegram' | 'whatsapp') => void;
   onEmailDigestModeChange: (mode: 'REALTIME' | 'HOURLY' | 'DAILY') => void;
 }
@@ -38,25 +34,16 @@ function Toggle({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: (
 
 export default function WorkStatusSection({
   isAvailable,
-  paymentPreferences,
   emailNotifications,
   telegramNotifications,
   whatsappNotifications,
   emailDigestMode,
   saving,
   onToggleAvailability,
-  onPaymentPreferenceToggle,
   onToggleNotification,
   onEmailDigestModeChange,
 }: Props) {
   const { t } = useTranslation();
-
-  const PAYMENT_OPTIONS: { value: PaymentPref; labelKey: string }[] = [
-    { value: 'UPFRONT', labelKey: 'dashboard.paymentPreference.upfront' },
-    { value: 'ESCROW', labelKey: 'dashboard.paymentPreference.escrow' },
-    { value: 'UPON_COMPLETION', labelKey: 'dashboard.paymentPreference.uponCompletion' },
-    { value: 'STREAM', labelKey: 'dashboard.paymentPreference.stream' },
-  ];
 
   const DIGEST_OPTIONS: { value: 'REALTIME' | 'HOURLY' | 'DAILY'; labelKey: string }[] = [
     { value: 'REALTIME', labelKey: 'dashboard.emailDigest.realtime' },
@@ -67,8 +54,11 @@ export default function WorkStatusSection({
   const channels = [
     { key: 'email' as const, label: t('dashboard.notifications.emailLabel'), desc: t('dashboard.notifications.emailDesc'), enabled: emailNotifications },
     { key: 'telegram' as const, label: t('dashboard.notifications.telegramLabel'), desc: t('dashboard.notifications.telegramDesc'), enabled: telegramNotifications },
-    { key: 'whatsapp' as const, label: t('dashboard.notifications.whatsappLabel'), desc: t('dashboard.notifications.whatsappDesc'), enabled: whatsappNotifications },
+    // { key: 'whatsapp' as const, label: t('dashboard.notifications.whatsappLabel'), desc: t('dashboard.notifications.whatsappDesc'), enabled: whatsappNotifications },
   ];
+
+  // Keep whatsappNotifications in scope to avoid unused variable warning
+  void whatsappNotifications;
 
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6 space-y-5">
@@ -139,29 +129,6 @@ export default function WorkStatusSection({
           </div>
         </div>
       )}
-
-      {/* Payment preferences - multi-select toggles */}
-      <div className={`pt-4 border-t border-gray-100 ${!isAvailable ? 'opacity-50' : ''}`}>
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('dashboard.paymentPreference.title')}</h3>
-        <p className="text-gray-500 text-xs mb-1">{t('dashboard.paymentPreference.subtitle')}</p>
-        <p className="text-gray-400 text-xs mb-3">{t('dashboard.paymentPreference.hint')}</p>
-        <div className="flex flex-wrap gap-2">
-          {PAYMENT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => onPaymentPreferenceToggle(opt.value)}
-              disabled={saving || !isAvailable}
-              className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                paymentPreferences.includes(opt.value)
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
-              }`}
-            >
-              {t(opt.labelKey)}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

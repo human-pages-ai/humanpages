@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "Panel",
     "settings": "Settings",
+    "boostYourProfile": "Mejora Tu Perfil",
+    "privacy": "Privacidad",
+    "contactPrivacy": {
+      "title": "Contacto y Privacidad",
+      "subtitle": "Controla cómo te contactan y qué es visible en tu perfil público"
+    },
     "trustScoreLabel": "Puntuación de confianza: {{score}}%",
     "welcome": "Bienvenido",
     "shareProfile": "Comparte tu perfil",
@@ -201,11 +207,15 @@
       "subtitle": "Indica a los agentes cómo prefieres recibir el pago",
       "hint": "Selecciona todos los métodos de pago que aceptas. Se requiere al menos uno.",
       "upfront": "Pago por adelantado",
+      "upfrontDesc": "Recibe el pago completo antes de comenzar el trabajo",
       "escrow": "Depósito en garantía",
+      "escrowDesc": "Fondos retenidos por un tercero de confianza hasta que se verifique el trabajo",
       "both": "Flexible (Cualquiera)",
       "bothDesc": "Por adelantado, depósito en garantía o después de completar el trabajo",
       "upon_completion": "Al Finalizar",
-      "stream": "Streaming"
+      "upon_completionDesc": "Recibe el pago después de entregar y aprobar el trabajo",
+      "stream": "Streaming",
+      "streamDesc": "Recibe pagos continuos mientras trabajas vía Superfluid o micro-transferencias"
     },
     "workMode": {
       "title": "Modo de Trabajo",
@@ -335,7 +345,7 @@
       "showNeighborhood": "Mostrar barrio en mi perfil público",
       "neighborhoodHint": "Cuando está desactivado, solo tu ciudad es visible en tu perfil público",
       "hideContact": "Ocultar información de contacto del perfil público",
-      "hideContactHelp": "Cuando está activado, tu email, Telegram, WhatsApp y métodos de pago no serán visibles para los visitantes.",
+      "hideContactHelp": "Cuando está activado, tu email, Telegram y métodos de pago no serán visibles para los visitantes.",
       "saving": "Guardando...",
       "paymentInfo": "Información de Pago",
       "defaultPaymentUsdc": "Pago predeterminado: USDC a través de tu billetera conectada",

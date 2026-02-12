@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "Tableau de bord",
     "settings": "Settings",
+    "boostYourProfile": "Booster Votre Profil",
+    "privacy": "Confidentialité",
+    "contactPrivacy": {
+      "title": "Contact et Confidentialité",
+      "subtitle": "Contrôlez comment on peut vous contacter et ce qui est visible sur votre profil public"
+    },
     "trustScoreLabel": "Score de confiance : {{score}}%",
     "welcome": "Bienvenue",
     "shareProfile": "Partagez votre profil",
@@ -201,11 +207,15 @@
       "subtitle": "Indiquez aux agents comment vous préférez être payé",
       "hint": "Sélectionnez tous les modes de paiement acceptés. Au moins un est requis.",
       "upfront": "Paiement d'avance",
+      "upfrontDesc": "Soyez payé intégralement avant de commencer le travail",
       "escrow": "Séquestre",
+      "escrowDesc": "Fonds détenus par un tiers de confiance jusqu'à vérification du travail",
       "both": "Flexible (les deux)",
       "bothDesc": "D'avance, séquestre ou après l'achèvement du travail",
       "upon_completion": "À la Fin",
-      "stream": "Streaming"
+      "upon_completionDesc": "Soyez payé après la livraison et l'approbation du travail",
+      "stream": "Streaming",
+      "streamDesc": "Soyez payé en continu pendant que vous travaillez via Superfluid ou micro-transferts"
     },
     "workMode": {
       "title": "Mode de travail",
@@ -306,7 +316,7 @@
       "showNeighborhood": "Afficher le quartier sur mon profil public",
       "neighborhoodHint": "Lorsque désactivé, seule votre ville est visible sur votre profil public",
       "hideContact": "Masquer les infos de contact du profil public",
-      "hideContactHelp": "Quand activé, votre e-mail, Telegram, WhatsApp et méthodes de paiement ne seront pas visibles pour les visiteurs.",
+      "hideContactHelp": "Quand activé, votre e-mail, Telegram et méthodes de paiement ne seront pas visibles pour les visiteurs.",
       "saving": "Enregistrement...",
       "defaultPaymentUsdc": "Paiement par défaut : USDC via votre portefeuille connecté",
       "usdcHint": "USDC est un stablecoin — toujours d'une valeur de 1 $ USD"

@@ -176,6 +176,11 @@ describe('Dashboard', () => {
 
     renderWithProviders(<Dashboard />);
 
+    await waitForDashboard();
+
+    // Jobs are on the Jobs tab — switch to it
+    clickTab('dashboard.jobs.title');
+
     await waitFor(() => {
       expect(screen.getByText('Pending Job')).toBeInTheDocument();
     });
@@ -226,8 +231,8 @@ describe('Dashboard', () => {
 
     await waitForDashboard();
 
-    // Telegram is on the Settings tab
-    clickTab('dashboard.settings');
+    // Telegram is on the Boost Your Profile tab
+    clickTab('dashboard.boostYourProfile');
 
     expect(screen.getByText('dashboard.telegram.title')).toBeInTheDocument();
   });
@@ -251,8 +256,8 @@ describe('Dashboard', () => {
 
     await waitForDashboard();
 
-    // Share/referral is on the Settings tab
-    clickTab('dashboard.settings');
+    // Share/referral is now on the Profile tab
+    clickTab('dashboard.profile.title');
 
     expect(screen.getByText('dashboard.shareProfile')).toBeInTheDocument();
   });

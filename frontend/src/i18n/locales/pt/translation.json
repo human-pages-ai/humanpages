@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "Painel",
     "settings": "Settings",
+    "boostYourProfile": "Impulsione Seu Perfil",
+    "privacy": "Privacidade",
+    "contactPrivacy": {
+      "title": "Contato e Privacidade",
+      "subtitle": "Controle como as pessoas podem entrar em contato e o que é visível no seu perfil público"
+    },
     "trustScoreLabel": "Pontuação de confiança: {{score}}%",
     "welcome": "Bem-vindo",
     "shareProfile": "Compartilhe seu perfil",
@@ -201,11 +207,15 @@
       "subtitle": "Informe aos agentes como prefere receber o pagamento",
       "hint": "Selecione todos os métodos de pagamento que aceita. Pelo menos um é obrigatório.",
       "upfront": "Pagamento Antecipado",
+      "upfrontDesc": "Receba o pagamento integral antes de iniciar o trabalho",
       "escrow": "Garantia",
+      "escrowDesc": "Fundos retidos por terceiros confiáveis até a verificação do trabalho",
       "both": "Flexível (Qualquer um)",
       "bothDesc": "Antecipado, garantia ou após a conclusão do trabalho",
       "upon_completion": "Após Conclusão",
-      "stream": "Streaming"
+      "upon_completionDesc": "Receba o pagamento após a entrega e aprovação do trabalho",
+      "stream": "Streaming",
+      "streamDesc": "Receba pagamentos contínuos enquanto trabalha via Superfluid ou micro-transferências"
     },
     "workMode": {
       "title": "Modo de Trabalho",
@@ -306,7 +316,7 @@
       "showNeighborhood": "Mostrar bairro no meu perfil público",
       "neighborhoodHint": "Quando desativado, apenas sua cidade é visível no seu perfil público",
       "hideContact": "Ocultar informações de contato do perfil público",
-      "hideContactHelp": "Quando ativado, seu e-mail, Telegram, WhatsApp e métodos de pagamento não serão visíveis para visitantes.",
+      "hideContactHelp": "Quando ativado, seu e-mail, Telegram e métodos de pagamento não serão visíveis para visitantes.",
       "saving": "Salvando...",
       "defaultPaymentUsdc": "Pagamento padrão: USDC via sua carteira conectada",
       "usdcHint": "USDC é uma stablecoin — sempre vale $1 USD"

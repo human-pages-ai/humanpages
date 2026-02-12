@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "Panel",
     "settings": "Settings",
+    "boostYourProfile": "Profilinizi Güçlendirin",
+    "privacy": "Gizlilik",
+    "contactPrivacy": {
+      "title": "İletişim ve Gizlilik",
+      "subtitle": "İnsanların size nasıl ulaşabileceğini ve herkese açık profilinizde neyin görüneceğini kontrol edin"
+    },
     "trustScoreLabel": "Güven puanı: {{score}}%",
     "welcome": "Hoş geldiniz",
     "shareProfile": "Profilinizi paylaşın",
@@ -201,11 +207,15 @@
       "subtitle": "Ajanlara nasıl ödeme almak istediğinizi bildirin",
       "hint": "Kabul ettiğiniz tüm ödeme yöntemlerini seçin. En az bir tane gereklidir.",
       "upfront": "Peşin Ödeme",
+      "upfrontDesc": "İşe başlamadan önce tam ödeme alın",
       "escrow": "Emanet",
+      "escrowDesc": "İş doğrulanana kadar güvenilir bir üçüncü tarafça tutulan fonlar",
       "both": "Esnek (Her ikisi)",
       "bothDesc": "Peşin, emanet veya iş tamamlandıktan sonra",
       "upon_completion": "Tamamlandıktan Sonra",
-      "stream": "Streaming"
+      "upon_completionDesc": "İş teslim edilip onaylandıktan sonra ödeme alın",
+      "stream": "Streaming",
+      "streamDesc": "Superfluid veya mikro transferler aracılığıyla çalışırken sürekli ödeme alın"
     },
     "workMode": {
       "title": "Çalışma Modu",
@@ -335,7 +345,7 @@
       "showNeighborhood": "Mahallemi herkese açık profilimde göster",
       "neighborhoodHint": "Kapalıyken, herkese açık profilinizde yalnızca şehriniz görünür",
       "hideContact": "İletişim bilgilerini herkese açık profilden gizle",
-      "hideContactHelp": "Etkinleştirildiğinde, e-postanız, Telegram, WhatsApp ve ödeme yöntemleriniz ziyaretçilere görünmez.",
+      "hideContactHelp": "Etkinleştirildiğinde, e-postanız, Telegram ve ödeme yöntemleriniz ziyaretçilere görünmez.",
       "saving": "Kaydediliyor...",
       "paymentInfo": "Ödeme Bilgisi",
       "defaultPaymentUsdc": "Varsayılan ödeme: Bağlı cüzdanınız üzerinden USDC",

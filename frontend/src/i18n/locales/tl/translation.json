@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "Dashboard",
     "settings": "Settings",
+    "boostYourProfile": "I-boost ang Iyong Profile",
+    "privacy": "Privacy",
+    "contactPrivacy": {
+      "title": "Contact at Privacy",
+      "subtitle": "Kontrolin kung paano ka maaaring kontakin at kung ano ang nakikita sa iyong pampublikong profile"
+    },
     "trustScoreLabel": "Trust score: {{score}}%",
     "welcome": "Welcome",
     "shareProfile": "Ibahagi ang iyong profile",
@@ -201,11 +207,15 @@
       "subtitle": "Sabihin sa mga ahente kung paano mo gustong mabayaran",
       "hint": "Piliin ang lahat ng paraan ng pagbabayad na tinatanggap mo. Kailangan ng kahit isa.",
       "upfront": "Bayad Muna",
+      "upfrontDesc": "Mabayaran nang buo bago simulan ang trabaho",
       "escrow": "Escrow",
+      "escrowDesc": "Mga pondo na hawak ng pinagkakatiwalaang third party hanggang ma-verify ang trabaho",
       "both": "Flexible (Alinman)",
       "bothDesc": "Bayad muna, escrow, o pagkatapos makumpleto ang trabaho",
       "upon_completion": "Pagkatapos Matapos",
-      "stream": "Streaming"
+      "upon_completionDesc": "Mabayaran pagkatapos maihatid at maaprubahan ang trabaho",
+      "stream": "Streaming",
+      "streamDesc": "Mabayaran nang tuloy-tuloy habang nagtatrabaho sa pamamagitan ng Superfluid o micro-transfers"
     },
     "workMode": {
       "title": "Mode ng Trabaho",
@@ -335,7 +345,7 @@
       "showNeighborhood": "Ipakita ang neighborhood sa aking pampublikong profile",
       "neighborhoodHint": "Kapag naka-off, ang iyong lungsod lang ang makikita sa iyong pampublikong profile",
       "hideContact": "Itago ang contact info sa public profile",
-      "hideContactHelp": "Kapag naka-enable, ang iyong email, Telegram, WhatsApp, at payment methods ay hindi makikita ng mga bisita.",
+      "hideContactHelp": "Kapag naka-enable, ang iyong email, Telegram at payment methods ay hindi makikita ng mga bisita.",
       "saving": "Nagse-save...",
       "paymentInfo": "Impormasyon ng Bayad",
       "defaultPaymentUsdc": "Default na bayad: USDC sa pamamagitan ng iyong nakakonektang wallet",

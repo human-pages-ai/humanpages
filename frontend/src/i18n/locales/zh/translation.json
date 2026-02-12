@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "控制面板",
     "settings": "Settings",
+    "boostYourProfile": "提升您的个人资料",
+    "privacy": "隐私",
+    "contactPrivacy": {
+      "title": "联系方式与隐私",
+      "subtitle": "控制人们如何联系您以及公开资料上显示的内容"
+    },
     "trustScoreLabel": "信任评分：{{score}}%",
     "welcome": "欢迎",
     "shareProfile": "分享你的资料",
@@ -201,11 +207,15 @@
       "subtitle": "告诉代理您希望如何接收工作报酬",
       "hint": "选择您接受的所有付款方式。至少需要一种。",
       "upfront": "预付款",
+      "upfrontDesc": "在开始工作前获得全额付款",
       "escrow": "托管付款",
+      "escrowDesc": "资金由受信任的第三方保管，直到工作验证完成",
       "both": "灵活（均可）",
       "bothDesc": "预付、托管或工作完成后付款",
       "upon_completion": "完成后付款",
-      "stream": "流式付款"
+      "upon_completionDesc": "工作交付并获得批准后收到付款",
+      "stream": "流式付款",
+      "streamDesc": "通过 Superfluid 或微转账在工作时持续获得报酬"
     },
     "workMode": {
       "title": "工作模式",
@@ -335,7 +345,7 @@
       "showNeighborhood": "在我的公开资料中显示社区",
       "neighborhoodHint": "关闭后，您的公开资料上只显示城市",
       "hideContact": "在公开资料中隐藏联系方式",
-      "hideContactHelp": "启用后，您的邮箱、Telegram、WhatsApp 和付款方式将不会对访客可见。",
+      "hideContactHelp": "启用后，您的邮箱、Telegram 和付款方式将不会对访客可见。",
       "saving": "保存中...",
       "paymentInfo": "支付信息",
       "defaultPaymentUsdc": "默认支付方式：通过您连接的钱包使用USDC",

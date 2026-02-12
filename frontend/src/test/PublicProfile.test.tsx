@@ -108,8 +108,8 @@ describe('PublicProfile', () => {
     // Check wallets title
     expect(screen.getByText('dashboard.wallets.paymentSetupTitle')).toBeInTheDocument();
 
-    // Check wallet data
-    expect(screen.getByText('ethereum')).toBeInTheDocument();
+    // Check wallet data (i18n returns the key in test environment)
+    expect(screen.getByText('dashboard.wallets.networks.ethereum')).toBeInTheDocument();
     expect(screen.getByText('0x123456789')).toBeInTheDocument();
     expect(screen.getByText('Main wallet')).toBeInTheDocument();
   });

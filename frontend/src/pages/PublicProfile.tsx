@@ -390,7 +390,7 @@ export default function PublicProfile() {
             {/* Contact */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('publicProfile.contactInfo')}</h2>
-              {!profile.contactEmail && !profile.telegram && !profile.whatsapp ? (
+              {!profile.contactEmail && !profile.telegram ? (
                 <p className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
                   {t('publicProfile.contactHidden')}
                 </p>
@@ -420,6 +420,7 @@ export default function PublicProfile() {
                       {profile.telegram}
                     </a>
                   )}
+                  {/* WhatsApp hidden — not yet functional
                   {profile.whatsapp && (
                     <a
                       href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
@@ -433,6 +434,7 @@ export default function PublicProfile() {
                       {profile.whatsapp}
                     </a>
                   )}
+                  */}
                 </div>
               )}
             </div>

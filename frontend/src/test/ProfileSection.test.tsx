@@ -154,14 +154,16 @@ describe('ProfileSection', () => {
       expect(screen.getByText('English')).toBeInTheDocument();
     });
 
-    it('shows Telegram link in view mode', () => {
+    // Telegram display moved to ContactPrivacySection (Privacy tab)
+    it.skip('shows Telegram link in view mode', () => {
       renderSection();
       const link = screen.getByText('@testhandle');
       expect(link).toBeInTheDocument();
       expect(link.closest('a')).toHaveAttribute('href', 'https://t.me/testhandle');
     });
 
-    it('shows WhatsApp link in view mode', () => {
+    // WhatsApp hidden from UI
+    it.skip('shows WhatsApp link in view mode', () => {
       renderSection();
       const link = screen.getByText('+15551234567');
       expect(link).toBeInTheDocument();
@@ -219,12 +221,7 @@ describe('ProfileSection', () => {
       expect(document.getElementById('profile-username')).toBeInTheDocument();
       expect(document.getElementById('profile-bio')).toBeInTheDocument();
       expect(document.getElementById('profile-skills')).toBeInTheDocument();
-      expect(document.getElementById('profile-contact-email')).toBeInTheDocument();
-      expect(document.getElementById('profile-telegram')).toBeInTheDocument();
-      // PhoneInput is lazy-loaded via React.lazy/Suspense
-      await waitFor(() => {
-        expect(screen.getByTestId('phone-input')).toBeInTheDocument();
-      });
+      // Contact fields moved to ContactPrivacySection (Privacy tab)
     });
 
     it('shows Cancel button instead of Edit in edit mode', () => {
@@ -491,7 +488,8 @@ describe('ProfileSection', () => {
   });
 
   // ─── Telegram validation & verification link ───────────────────────
-  describe('telegram input', () => {
+  // Telegram input moved to ContactPrivacySection (Privacy tab)
+  describe.skip('telegram input', () => {
     it('auto-prepends @ when user types without it', () => {
       const setProfileForm = vi.fn();
       renderSection({
@@ -556,7 +554,8 @@ describe('ProfileSection', () => {
   });
 
   // ─── WhatsApp validation & verification link ───────────────────────
-  describe('whatsapp input', () => {
+  // WhatsApp has been hidden from the UI — skip these tests
+  describe.skip('whatsapp input', () => {
     it('shows wa.me verification link for valid E.164 number', () => {
       renderSection({
         editingProfile: true,
@@ -641,7 +640,8 @@ describe('ProfileSection', () => {
   });
 
   // ─── Hide contact info ─────────────────────────────────────────────
-  describe('hide contact checkbox', () => {
+  // Hide contact moved to ContactPrivacySection (Privacy tab)
+  describe.skip('hide contact checkbox', () => {
     it('calls setProfileForm with hideContact toggled', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       const { props } = renderSection({

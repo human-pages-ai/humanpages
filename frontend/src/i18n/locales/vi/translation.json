@@ -149,6 +149,12 @@
   "dashboard": {
     "title": "Bảng điều khiển",
     "settings": "Settings",
+    "boostYourProfile": "Nâng cấp hồ sơ",
+    "privacy": "Quyền riêng tư",
+    "contactPrivacy": {
+      "title": "Liên hệ & Quyền riêng tư",
+      "subtitle": "Kiểm soát cách mọi người liên hệ với bạn và nội dung hiển thị trên hồ sơ công khai"
+    },
     "trustScoreLabel": "Điểm tin cậy: {{score}}%",
     "welcome": "Chào mừng",
     "shareProfile": "Chia sẻ hồ sơ",
@@ -201,11 +207,15 @@
       "subtitle": "Cho đại lý biết bạn muốn được thanh toán như thế nào",
       "hint": "Chọn tất cả phương thức thanh toán bạn chấp nhận. Cần ít nhất một phương thức.",
       "upfront": "Thanh toán trước",
+      "upfrontDesc": "Được trả toàn bộ trước khi bắt đầu công việc",
       "escrow": "Ký quỹ",
+      "escrowDesc": "Tiền được giữ bởi bên thứ ba đáng tin cậy cho đến khi công việc được xác minh",
       "both": "Linh hoạt (Đều được)",
       "bothDesc": "Thanh toán trước, ký quỹ hoặc sau khi hoàn thành công việc",
       "upon_completion": "Sau khi hoàn thành",
-      "stream": "Streaming"
+      "upon_completionDesc": "Được trả sau khi công việc được giao và phê duyệt",
+      "stream": "Streaming",
+      "streamDesc": "Được trả liên tục khi bạn làm việc thông qua Superfluid hoặc chuyển khoản vi mô"
     },
     "workMode": {
       "title": "Chế độ làm việc",
@@ -300,7 +310,7 @@
       "showNeighborhood": "Hiển thị khu vực trên hồ sơ công khai của tôi",
       "neighborhoodHint": "Khi tắt, chỉ thành phố của bạn hiển thị trên hồ sơ công khai",
       "hideContact": "Ẩn thông tin liên hệ khỏi hồ sơ công khai",
-      "hideContactHelp": "Khi bật, email, Telegram, WhatsApp và phương thức thanh toán của bạn sẽ không hiển thị với người truy cập.",
+      "hideContactHelp": "Khi bật, email, Telegram và phương thức thanh toán của bạn sẽ không hiển thị với người truy cập.",
       "saving": "Đang lưu...",
       "paymentInfo": "Thông tin thanh toán",
       "defaultPaymentUsdc": "Thanh toán mặc định: USDC qua ví đã kết nối của bạn",
