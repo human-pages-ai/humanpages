@@ -15,6 +15,7 @@ Planned features for post-launch implementation.
 | Human Verification & Credibility | Medium | Planned | [human-verification.md](./human-verification.md) |
 | Transparency & Audit Trail | Medium | Planned | [transparency-audit.md](./transparency-audit.md) |
 | Graduated Trust & Repeat Relationships | Medium | Planned | [graduated-trust.md](./graduated-trust.md) |
+| ERC-8004 Reputation Compatibility | High | Data Layer Complete | [erc8004-compatibility.md](./erc8004-compatibility.md) |
 
 ## How to Add a Feature
 

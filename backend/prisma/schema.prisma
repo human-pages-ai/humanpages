@@ -252,6 +252,9 @@ model Agent {
   paymentNetwork      String?
   paymentAmount       Decimal?         @db.Decimal(18, 6)
 
+  // ===== ERC-8004 REPUTATION REGISTRY =====
+  erc8004AgentId  Int?  @unique  // Sequential ID for ERC-8004 registry. See docs/ERC-8004-MAPPING.md
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)
@@ -396,6 +399,19 @@ model StreamTick {
   @@index([status, graceDeadline])
 }
 
+// ERC-8004: The fields below (erc8004*) store pre-computed values for the
+// ERC-8004 Reputation Registry's `giveFeedback(agentId, value, valueDecimals,
+// tag1, tag2, feedbackHash)` call. They are derived from `rating` and job
+// metadata at review-creation time. A future on-chain bridge can publish them
+// directly without re-deriving anything.
+//
+// Invariants — DO NOT break:
+//   • erc8004Value == rating * 20   (1★=20 … 5★=100)
+//   • erc8004ValueDecimals == 0     (integer percent scale)
+//   • erc8004Tag1 == "starred"      (constant for star ratings)
+//   • erc8004FeedbackHash == SHA-256 of canonical feedback JSON (sorted keys)
+//
+// See docs/ERC-8004-MAPPING.md for the full specification.
 model Review {
   id          String   @id @default(cuid())
   jobId       String   @unique
@@ -403,6 +419,13 @@ model Review {
 
   rating      Int      // 1-5 stars
   comment     String?
+
+  // ERC-8004 pre-computed fields (see block comment above)
+  erc8004Value         Int?     // Math.round((rating / 5) * 100). 1★=20, 5★=100
+  erc8004ValueDecimals Int      @default(0)
+  erc8004Tag1          String   @default("starred")
+  erc8004Tag2          String   @default("")        // from Job.category
+  erc8004FeedbackHash  String?                      // SHA-256 of canonical feedback JSON
 
   createdAt   DateTime @default(now())
 

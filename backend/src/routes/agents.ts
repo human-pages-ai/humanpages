@@ -62,6 +62,11 @@ router.post('/register', registerLimiter, async (req, res) => {
     // Generate verification token for domain verification
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
+    // ERC-8004: Assign the next sequential agent ID for the reputation registry.
+    // See docs/ERC-8004-MAPPING.md for the mapping specification.
+    const maxResult = await prisma.agent.aggregate({ _max: { erc8004AgentId: true } });
+    const erc8004AgentId = (maxResult._max.erc8004AgentId ?? 0) + 1;
+
     const agent = await prisma.agent.create({
       data: {
         name: data.name,
@@ -71,6 +76,7 @@ router.post('/register', registerLimiter, async (req, res) => {
         apiKeyHash,
         apiKeyPrefix,
         verificationToken,
+        erc8004AgentId,
       },
     });
 

@@ -108,6 +108,8 @@ function computeReputationScore(signals: TrustSignals['reputation']): number {
   // Completion rate (0-0.3)
   score += signals.completionRate * 0.3;
 
+  // ERC-8004: This reads the internal `rating` (1-5 scale), NOT `erc8004Value`
+  // (0-100 percent scale). Do not substitute erc8004Value here.
   // Average rating normalized to 0-0.35 (scale: 1-5 → 0-1)
   const ratingNorm = signals.avgRating > 0 ? (signals.avgRating - 1) / 4 : 0;
   score += ratingNorm * 0.35;

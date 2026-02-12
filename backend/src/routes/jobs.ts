@@ -31,6 +31,7 @@ import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl, fireWebhook } from '../lib/webhook.js';
 import { convertToUsd } from '../lib/exchangeRates.js';
+import { starRatingToERC8004Value, buildFeedbackJSON, hashFeedbackJSON } from '../lib/erc8004.js';
 
 const router = Router();
 
@@ -990,7 +991,10 @@ router.post('/:id/review', async (req, res) => {
 
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
-      include: { review: true },
+      include: {
+        review: true,
+        registeredAgent: { select: { erc8004AgentId: true } },
+      },
     });
 
     if (!job) {
@@ -1011,14 +1015,46 @@ router.post('/:id/review', async (req, res) => {
       return res.status(400).json({ error: 'Job has already been reviewed' });
     }
 
+    // ERC-8004: Pre-compute reputation registry fields at creation time so a
+    // future on-chain bridge can publish them without re-deriving anything.
+    // See docs/ERC-8004-MAPPING.md for the mapping specification.
+    const { value: erc8004Value, valueDecimals: erc8004ValueDecimals } =
+      starRatingToERC8004Value(data.rating as 1 | 2 | 3 | 4 | 5);
+    const erc8004Tag2 = job.category || '';
+
+    // Build the feedback hash only when the agent has an ERC-8004 ID
+    const erc8004AgentId = job.registeredAgent?.erc8004AgentId ?? null;
+    let erc8004FeedbackHash: string | null = null;
+
     const review = await prisma.review.create({
       data: {
         jobId: job.id,
         humanId: job.humanId,
         rating: data.rating,
         comment: data.comment,
+        erc8004Value,
+        erc8004ValueDecimals,
+        erc8004Tag2,
       },
     });
+
+    // Compute the feedback hash now that we have the review ID
+    if (erc8004AgentId != null) {
+      const feedback = buildFeedbackJSON({
+        agentId: erc8004AgentId,
+        rating: data.rating as 1 | 2 | 3 | 4 | 5,
+        tag2: erc8004Tag2,
+        reviewId: review.id,
+        jobId: job.id,
+        createdAt: review.createdAt,
+        network: job.paymentNetwork ?? undefined,
+      });
+      erc8004FeedbackHash = hashFeedbackJSON(feedback);
+      await prisma.review.update({
+        where: { id: review.id },
+        data: { erc8004FeedbackHash },
+      });
+    }
 
     res.status(201).json({
       id: review.id,

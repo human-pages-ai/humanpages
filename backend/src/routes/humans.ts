@@ -201,6 +201,8 @@ const updateProfileSchema = z.object({
   websiteUrl: z.string().url().optional().nullable(),
 });
 
+// ERC-8004: This function reads the internal `rating` (1-5 scale), NOT
+// `erc8004Value` (0-100 percent scale). Do not substitute erc8004Value here.
 // Helper: Get reputation stats for a human
 async function getReputationStats(humanId: string) {
   const [completedJobs, reviews] = await Promise.all([

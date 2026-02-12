@@ -94,6 +94,17 @@ model Job {
 }
 ```
 
+### ERC-8004 Alignment
+
+The mutual rating system maps directly to the ERC-8004 Reputation Registry:
+
+- **`HUMAN_RATES_AGENT`** maps to `giveFeedback(agentId, ...)` — the human is the feedback giver, the agent is the subject. This is the primary ERC-8004 use case.
+- **Multi-dimensional ratings** (clarity, payment, communication, overall) become **multiple ERC-8004 entries** for the same `agentId`, each with `tag2` set to the dimension name (e.g. `"clarity"`, `"payment"`, `"communication"`, `"overall"`).
+- The `tag1` field stays `"starred"` for all dimensions since they all use the 1-5 star scale.
+- **Must use `backend/src/lib/erc8004.ts` utility functions** (`starRatingToERC8004Value`, `buildFeedbackJSON`, `hashFeedbackJSON`) — never inline the conversion math. This ensures the encoding invariants documented in `docs/ERC-8004-MAPPING.md` are maintained.
+
+See [docs/ERC-8004-MAPPING.md](../docs/ERC-8004-MAPPING.md) for the full specification.
+
 ---
 
 ## API Changes
