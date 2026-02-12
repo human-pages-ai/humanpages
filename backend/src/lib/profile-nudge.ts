@@ -71,38 +71,51 @@ async function processProfileNudges() {
     // 1. Signed up more than 24 hours ago
     // 2. Haven't received a nudge email yet
     // 3. Have email notifications enabled
-    const humans = await prisma.human.findMany({
-      where: {
-        createdAt: { lt: cutoff },
-        profileNudgeSentAt: null,
-        emailNotifications: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        contactEmail: true,
-        bio: true,
-        location: true,
-        skills: true,
-        preferredLanguage: true,
-        services: { select: { isActive: true } },
-        wallets: { select: { id: true } },
-      },
-      take: BATCH_SIZE,
-      orderBy: { createdAt: 'asc' },
+    // Use a transaction with row locking to prevent concurrent runs
+    // from picking up the same users (fixes duplicate email race condition)
+    const humans = await prisma.$transaction(async (tx) => {
+      // Atomically lock rows so concurrent runs skip them
+      const ids: { id: string }[] = await tx.$queryRaw`
+        SELECT id FROM "Human"
+        WHERE "profileNudgeSentAt" IS NULL
+          AND "createdAt" < ${cutoff}
+          AND "emailNotifications" = true
+        ORDER BY "createdAt" ASC
+        LIMIT ${BATCH_SIZE}
+        FOR UPDATE SKIP LOCKED
+      `;
+      if (ids.length === 0) return [];
+
+      // Mark them as claimed immediately
+      await tx.human.updateMany({
+        where: { id: { in: ids.map(r => r.id) } },
+        data: { profileNudgeSentAt: new Date() },
+      });
+
+      // Fetch full data for email sending
+      return tx.human.findMany({
+        where: { id: { in: ids.map(r => r.id) } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contactEmail: true,
+          bio: true,
+          location: true,
+          skills: true,
+          preferredLanguage: true,
+          services: { select: { isActive: true } },
+          wallets: { select: { id: true } },
+        },
+      });
     });
 
     let sent = 0;
     for (const human of humans) {
       const missing = getIncompleteFields(human);
 
-      // Profile is already complete — mark as handled so we don't query them again
+      // Profile is already complete — no email needed
       if (missing.length === 0) {
-        await prisma.human.update({
-          where: { id: human.id },
-          data: { profileNudgeSentAt: new Date() },
-        });
         continue;
       }
 
@@ -116,13 +129,6 @@ async function processProfileNudges() {
           missingFields: missing.map(f => f.label),
           completionPercent,
           language: human.preferredLanguage,
-        });
-
-        // Mark nudge as sent regardless of email delivery success
-        // so we don't retry endlessly
-        await prisma.human.update({
-          where: { id: human.id },
-          data: { profileNudgeSentAt: new Date() },
         });
 
         if (emailSent) sent++;

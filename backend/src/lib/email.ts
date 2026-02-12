@@ -1341,7 +1341,7 @@ export async function sendProfileNudgeEmail(data: ProfileNudgeEmailData): Promis
   const textContent = `
 Hi ${data.humanName},
 
-Your profile is ${data.completionPercent}% complete — but AI agents can't find you yet.
+Your profile is ${data.completionPercent}% complete. Finishing it helps agents find you for the right jobs.
 
 To start receiving job offers, you still need:
 ${missingList}
@@ -1407,7 +1407,7 @@ To unsubscribe: ${unsubscribeUrl}
           <tr>
             <td style="padding: 0 40px;">
               <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">Hi ${data.humanName},</p>
-              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">AI agents are searching for people like you right now, but they can't see your profile yet. Complete these steps to start getting hired:</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">AI agents are searching for people like you right now. A complete profile makes you much more likely to get hired. Here's what's left:</p>
             </td>
           </tr>
           <!-- Checklist -->
@@ -1453,7 +1453,7 @@ To unsubscribe: ${unsubscribeUrl}
 
   return sendEmail({
     to: data.humanEmail,
-    subject: `Your profile is ${data.completionPercent}% complete — finish it to get hired`,
+    subject: `Your profile is ${data.completionPercent}% complete — finish it to get more offers`,
     text: textContent,
     html: htmlContent,
   });
