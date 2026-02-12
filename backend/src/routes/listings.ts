@@ -609,7 +609,6 @@ router.get('/:id/applications', authenticateAgent, requireActiveAgent, async (re
             skills: true,
             equipment: true,
             location: true,
-            avatarUrl: true,
             locationLat: true,
             locationLng: true,
           },
