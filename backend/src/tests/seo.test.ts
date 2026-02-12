@@ -36,19 +36,19 @@ describe('SEO Endpoints', () => {
   });
 
   describe('GET /sitemap.xml', () => {
-    it('should return valid XML with correct Content-Type', async () => {
+    it('should return sitemapindex with correct Content-Type', async () => {
       const res = await request(app).get('/sitemap.xml');
 
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toContain('application/xml');
       expect(res.text).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-      expect(res.text).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
-      expect(res.text).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
-      expect(res.text).toContain('</urlset>');
+      expect(res.text).toContain('<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
+      expect(res.text).toContain('sitemap-static.xml');
+      expect(res.text).toContain('</sitemapindex>');
     });
 
-    it('should include static pages', async () => {
-      const res = await request(app).get('/sitemap.xml');
+    it('should include static pages in sitemap-static.xml', async () => {
+      const res = await request(app).get('/api/sitemap-static.xml');
 
       expect(res.status).toBe(200);
 
@@ -66,15 +66,15 @@ describe('SEO Endpoints', () => {
       expect(res.text).toContain('<changefreq>monthly</changefreq>');
     });
 
-    it('should not include profile pages', async () => {
-      const res = await request(app).get('/sitemap.xml');
+    it('should not include profile pages in sitemap-static.xml', async () => {
+      const res = await request(app).get('/api/sitemap-static.xml');
 
       expect(res.status).toBe(200);
       expect(res.text).not.toContain('/humans/');
     });
 
-    it('should return proper XML structure with url elements', async () => {
-      const res = await request(app).get('/sitemap.xml');
+    it('should return proper XML structure in sitemap-static.xml', async () => {
+      const res = await request(app).get('/api/sitemap-static.xml');
 
       expect(res.status).toBe(200);
 
