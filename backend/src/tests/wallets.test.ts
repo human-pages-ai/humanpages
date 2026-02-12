@@ -296,4 +296,90 @@ describe('Wallets API', () => {
       expect(response.status).toBe(401);
     });
   });
+
+  describe('PATCH /api/wallets/:address/label', () => {
+    it('should update label for all wallets with that address', async () => {
+      await addWalletWithSignature(user.token, ACCOUNT_1, 'ethereum');
+
+      const response = await authRequest(user.token)
+        .patch(`/api/wallets/${ACCOUNT_1.address}/label`)
+        .send({ label: 'My Main Wallet' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('Label updated');
+      expect(response.body.count).toBe(4);
+
+      // Verify all wallets have the updated label
+      const listRes = await authRequest(user.token).get('/api/wallets');
+      for (const wallet of listRes.body) {
+        expect(wallet.label).toBe('My Main Wallet');
+      }
+    });
+
+    it('should clear label when empty string sent', async () => {
+      await addWalletWithSignature(user.token, ACCOUNT_1, 'ethereum', 'Old Label');
+
+      const response = await authRequest(user.token)
+        .patch(`/api/wallets/${ACCOUNT_1.address}/label`)
+        .send({ label: '' });
+
+      expect(response.status).toBe(200);
+
+      const listRes = await authRequest(user.token).get('/api/wallets');
+      for (const wallet of listRes.body) {
+        expect(wallet.label).toBeNull();
+      }
+    });
+
+    it('should return 404 for address not owned by user', async () => {
+      const response = await authRequest(user.token)
+        .patch(`/api/wallets/${ACCOUNT_OTHER.address}/label`)
+        .send({ label: 'Hacked' });
+
+      expect(response.status).toBe(404);
+    });
+
+    it('should not update another user wallet label', async () => {
+      const otherUser = await createTestUser({ email: 'other2@example.com' });
+      await addWalletWithSignature(otherUser.token, ACCOUNT_OTHER, 'ethereum', 'Original');
+
+      const response = await authRequest(user.token)
+        .patch(`/api/wallets/${ACCOUNT_OTHER.address}/label`)
+        .send({ label: 'Tampered' });
+
+      expect(response.status).toBe(404);
+
+      // Verify original label unchanged
+      const listRes = await authRequest(otherUser.token).get('/api/wallets');
+      for (const wallet of listRes.body) {
+        expect(wallet.label).toBe('Original');
+      }
+    });
+
+    it('should reject invalid address format', async () => {
+      const response = await authRequest(user.token)
+        .patch('/api/wallets/not-an-address/label')
+        .send({ label: 'Test' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject label exceeding 50 characters', async () => {
+      await addWalletWithSignature(user.token, ACCOUNT_1, 'ethereum');
+
+      const response = await authRequest(user.token)
+        .patch(`/api/wallets/${ACCOUNT_1.address}/label`)
+        .send({ label: 'A'.repeat(51) });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject unauthenticated request', async () => {
+      const response = await request(app)
+        .patch(`/api/wallets/${ACCOUNT_1.address}/label`)
+        .send({ label: 'Test' });
+
+      expect(response.status).toBe(401);
+    });
+  });
 });

@@ -144,6 +144,12 @@ export const api = {
   deleteWallet: (id: string) =>
     request<void>(`/wallets/${id}`, { method: 'DELETE' }),
 
+  updateWalletLabel: (address: string, label?: string) =>
+    request<{ message: string; count: number }>(`/wallets/${address}/label`, {
+      method: 'PATCH',
+      body: JSON.stringify({ label }),
+    }),
+
   // Services
   getServices: () => request<Service[]>('/services'),
 

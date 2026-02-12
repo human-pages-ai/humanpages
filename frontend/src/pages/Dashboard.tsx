@@ -407,13 +407,27 @@ export default function Dashboard() {
     }
   };
 
-  const addWallet = async (data: { address: string; label?: string; signature: string; nonce: string }) => {
+  const addWallet = async (data: { address: string; signature: string; nonce: string }) => {
     setSaving(true);
     try {
       await api.addWallet(data);
       posthog.capture('wallet_added', { address: data.address });
       await loadProfile();
       toast.success(t('toast.walletAdded'));
+    } catch (error: any) {
+      toast.error(error.message);
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateWalletLabel = async (address: string, label?: string) => {
+    setSaving(true);
+    try {
+      await api.updateWalletLabel(address, label);
+      await loadProfile();
+      toast.success(t('toast.walletLabelUpdated'));
     } catch (error: any) {
       toast.error(error.message);
       throw error;
@@ -754,6 +768,7 @@ export default function Dashboard() {
                 saving={saving}
                 onAddWallet={addWallet}
                 onDeleteWallet={deleteWallet}
+                onUpdateWalletLabel={updateWalletLabel}
               />
               <PaymentPreferencesSection
                 paymentPreferences={profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION']}

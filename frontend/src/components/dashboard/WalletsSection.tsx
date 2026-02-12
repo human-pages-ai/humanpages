@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { Wallet } from './types';
 
-type Step = 'idle' | 'form' | 'busy';
+type Step = 'idle' | 'busy';
 
 interface Props {
   wallets: Wallet[];
   saving: boolean;
-  onAddWallet: (data: { address: string; label?: string; signature: string; nonce: string }) => Promise<void>;
+  onAddWallet: (data: { address: string; signature: string; nonce: string }) => Promise<void>;
   onDeleteWallet: (id: string) => void;
+  onUpdateWalletLabel: (address: string, label?: string) => Promise<void>;
 }
 
 interface WalletGroup {
@@ -23,13 +24,15 @@ export default function WalletsSection({
   saving,
   onAddWallet,
   onDeleteWallet,
+  onUpdateWalletLabel,
 }: Props) {
   const { t } = useTranslation();
 
   const [step, setStep] = useState<Step>('idle');
-  const [label, setLabel] = useState('');
   const [error, setError] = useState('');
   const [busyMessage, setBusyMessage] = useState('');
+  const [editingAddress, setEditingAddress] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState('');
 
   const [walletDetected, setWalletDetected] = useState(
     typeof window !== 'undefined' && !!window.ethereum
@@ -74,7 +77,6 @@ export default function WalletsSection({
 
   const resetState = () => {
     setStep('idle');
-    setLabel('');
     setError('');
     setBusyMessage('');
   };
@@ -91,7 +93,7 @@ export default function WalletsSection({
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
       if (accounts.length === 0) {
         setError(t('dashboard.wallets.connectionFailed'));
-        setStep('form');
+        setStep('idle');
         return;
       }
       address = accounts[0];
@@ -101,7 +103,7 @@ export default function WalletsSection({
       } else {
         setError(t('dashboard.wallets.connectionFailed'));
       }
-      setStep('form');
+      setStep('idle');
       return;
     }
 
@@ -117,7 +119,6 @@ export default function WalletsSection({
 
       await onAddWallet({
         address,
-        label: label || undefined,
         signature,
         nonce,
       });
@@ -129,8 +130,24 @@ export default function WalletsSection({
       } else {
         setError(err?.message || t('dashboard.wallets.verificationFailed'));
       }
-      setStep('form');
+      setStep('idle');
     }
+  };
+
+  const startEditLabel = (address: string, currentLabel?: string) => {
+    setEditingAddress(address);
+    setEditLabel(currentLabel || '');
+  };
+
+  const saveLabel = async (address: string) => {
+    await onUpdateWalletLabel(address, editLabel || undefined);
+    setEditingAddress(null);
+    setEditLabel('');
+  };
+
+  const cancelEditLabel = () => {
+    setEditingAddress(null);
+    setEditLabel('');
   };
 
   const networkDisplayName = (network: string): string => {
@@ -140,95 +157,65 @@ export default function WalletsSection({
     return translated !== key ? translated : network.charAt(0).toUpperCase() + network.slice(1);
   };
 
-  const renderForm = () => {
-    if (!walletDetected) {
-      if (isMobileOrInApp) {
-        return (
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
-            <p className="text-sm text-gray-700">{t('dashboard.wallets.mobileWalletHint')}</p>
-            <a
-              href={deepLinks.metamask}
-              className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
-            >
-              {t('dashboard.wallets.openInMetaMask')}
-            </a>
-            <a
-              href={deepLinks.coinbase}
-              className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
-            >
-              {t('dashboard.wallets.openInCoinbase')}
-            </a>
-          </div>
-        );
-      }
-      return (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-700 mb-2">{t('dashboard.wallets.noWalletExtension')}</p>
-          <div className="text-xs text-gray-500">
-            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">MetaMask</a>
-            {' '}{t('common.or').toLowerCase()}{' '}
-            <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">Coinbase Wallet</a>
-          </div>
-        </div>
-      );
-    }
-
-    if (step === 'form') {
+  const renderNoWallet = () => {
+    if (isMobileOrInApp) {
       return (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
-          <p className="text-sm text-gray-600">{t('dashboard.wallets.connectDescription')}</p>
-          <div>
-            <label htmlFor="wallet-label" className="block text-sm font-medium text-gray-700">
-              {t('dashboard.wallets.label')} ({t('common.optional')})
-            </label>
-            <input
-              id="wallet-label"
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder={t('dashboard.wallets.labelPlaceholder')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <button
-            onClick={connectAndVerify}
-            disabled={saving}
-            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          <p className="text-sm text-gray-700">{t('dashboard.wallets.mobileWalletHint')}</p>
+          <a
+            href={deepLinks.metamask}
+            className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
           >
-            {t('dashboard.wallets.connectAndVerify')}
-          </button>
-          <p className="text-xs text-gray-400 text-center">{t('dashboard.wallets.connectHint')}</p>
+            {t('dashboard.wallets.openInMetaMask')}
+          </a>
+          <a
+            href={deepLinks.coinbase}
+            className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
+          >
+            {t('dashboard.wallets.openInCoinbase')}
+          </a>
         </div>
       );
     }
+    return (
+      <div className="text-xs text-gray-400">
+        {t('dashboard.wallets.noWalletExtension')}{' '}
+        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">MetaMask</a>
+        {' '}{t('common.or').toLowerCase()}{' '}
+        <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">Coinbase Wallet</a>
+      </div>
+    );
+  };
 
-    if (step === 'busy') {
+  const renderBusy = () => (
+    <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-2">
+      <svg className="animate-spin h-4 w-4 text-indigo-600" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      <span className="text-sm text-gray-700">{busyMessage}</span>
+    </div>
+  );
+
+  const renderAddButton = () => {
+    if (walletDetected) {
       return (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-2">
-          <svg className="animate-spin h-4 w-4 text-indigo-600" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <span className="text-sm text-gray-700">{busyMessage}</span>
-        </div>
+        <button
+          onClick={connectAndVerify}
+          disabled={saving || step === 'busy'}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {t('dashboard.wallets.addWallet')}
+        </button>
       );
     }
-
-    return null;
+    return renderNoWallet();
   };
 
   return (
     <div id="payment-setup-section" className="bg-white rounded-lg shadow p-4 sm:p-6">
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-lg font-semibold">{t('dashboard.wallets.paymentSetupTitle')}</h2>
-        {step !== 'idle' && (
-          <button
-            onClick={resetState}
-            className="text-indigo-600 hover:text-indigo-500 text-sm"
-          >
-            {t('common.cancel')}
-          </button>
-        )}
       </div>
       <p className="text-sm text-gray-500 mb-4">{t('dashboard.wallets.paymentSetupSubtitle')}</p>
 
@@ -238,7 +225,7 @@ export default function WalletsSection({
         </div>
       )}
 
-      {step !== 'idle' && renderForm()}
+      {step === 'busy' && renderBusy()}
 
       {walletGroups.length === 0 && step === 'idle' ? (
         <div className="text-center py-8">
@@ -250,37 +237,7 @@ export default function WalletsSection({
               <p className="text-lg font-medium text-gray-900 mb-1">{t('dashboard.wallets.emptyTitle')}</p>
               <p className="text-sm text-gray-500 mb-2">{t('dashboard.wallets.emptyDescription')}</p>
             </div>
-            {walletDetected ? (
-              <button
-                onClick={() => setStep('form')}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                {t('dashboard.wallets.addWallet')}
-              </button>
-            ) : isMobileOrInApp ? (
-              <div className="space-y-2 w-full max-w-xs">
-                <p className="text-sm text-gray-500">{t('dashboard.wallets.mobileWalletHint')}</p>
-                <a
-                  href={deepLinks.metamask}
-                  className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
-                >
-                  {t('dashboard.wallets.openInMetaMask')}
-                </a>
-                <a
-                  href={deepLinks.coinbase}
-                  className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
-                >
-                  {t('dashboard.wallets.openInCoinbase')}
-                </a>
-              </div>
-            ) : (
-              <div className="text-xs text-gray-400">
-                {t('dashboard.wallets.noWalletExtension')}{' '}
-                <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">MetaMask</a>
-                {' '}{t('common.or').toLowerCase()}{' '}
-                <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">Coinbase Wallet</a>
-              </div>
-            )}
+            {renderAddButton()}
           </div>
         </div>
       ) : (
@@ -290,8 +247,52 @@ export default function WalletsSection({
               {walletGroups.map((group) => (
                 <div key={group.address} className="p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <div>
-                      {group.label && <span className="text-sm text-gray-500">{group.label}</span>}
+                    <div className="min-w-0 flex-1">
+                      {editingAddress === group.address ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editLabel}
+                            onChange={(e) => setEditLabel(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveLabel(group.address);
+                              if (e.key === 'Escape') cancelEditLabel();
+                            }}
+                            placeholder={t('dashboard.wallets.labelPlaceholder')}
+                            maxLength={50}
+                            className="text-sm px-2 py-1 border border-gray-300 rounded-md flex-1 min-w-0"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveLabel(group.address)}
+                            className="text-indigo-600 hover:text-indigo-500 text-xs"
+                          >
+                            {t('common.save')}
+                          </button>
+                          <button
+                            onClick={cancelEditLabel}
+                            className="text-gray-400 hover:text-gray-600 text-xs"
+                          >
+                            {t('common.cancel')}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          {group.label ? (
+                            <span className="text-sm text-gray-500">{group.label}</span>
+                          ) : null}
+                          <button
+                            onClick={() => startEditLabel(group.address, group.label)}
+                            className="text-gray-400 hover:text-indigo-600"
+                            aria-label={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
+                            title={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
                       <p aria-label={t('dashboard.wallets.walletAddress')} className="text-xs text-gray-600 font-mono truncate max-w-md">{group.address}</p>
                     </div>
                   </div>
@@ -319,13 +320,18 @@ export default function WalletsSection({
               ))}
             </div>
           )}
-          {walletGroups.length > 0 && step === 'idle' && (
-            <button
-              onClick={() => setStep('form')}
-              className="mt-4 text-indigo-600 hover:text-indigo-500 text-sm"
-            >
-              {t('dashboard.wallets.addWallet')}
-            </button>
+          {step === 'idle' && (
+            <div className="mt-4">
+              {walletDetected ? (
+                <button
+                  onClick={connectAndVerify}
+                  disabled={saving}
+                  className="text-indigo-600 hover:text-indigo-500 text-sm"
+                >
+                  {t('dashboard.wallets.addWallet')}
+                </button>
+              ) : renderNoWallet()}
+            </div>
           )}
         </>
       )}

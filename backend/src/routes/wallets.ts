@@ -121,6 +121,39 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// Update wallet label (updates all wallets with the same address for this user)
+const updateLabelSchema = z.object({
+  label: z.string().max(50).optional(),
+});
+
+router.patch('/:address/label', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const address = req.params.address;
+    if (!EVM_ADDRESS_RE.test(address)) {
+      return res.status(400).json({ error: 'Invalid EVM address format' });
+    }
+
+    const { label } = updateLabelSchema.parse(req.body);
+
+    const result = await prisma.wallet.updateMany({
+      where: { humanId: req.userId!, address },
+      data: { label: label || null },
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ error: 'No wallets found with this address' });
+    }
+
+    res.json({ message: 'Label updated', count: result.count });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update wallet label error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Delete a wallet
 router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
