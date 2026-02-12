@@ -39,6 +39,8 @@ router.get('/stats', async (_req, res) => {
       affiliatesApproved,
       feedbackTotal,
       feedbackNew,
+      humanReportsTotal,
+      humanReportsPending,
     ] = await Promise.all([
       prisma.human.count(),
       prisma.human.count({ where: { emailVerified: true } }),
@@ -57,6 +59,8 @@ router.get('/stats', async (_req, res) => {
       prisma.affiliate.count({ where: { status: 'APPROVED' } }),
       prisma.feedback.count(),
       prisma.feedback.count({ where: { status: 'NEW' } }),
+      prisma.humanReport.count(),
+      prisma.humanReport.count({ where: { status: 'PENDING' } }),
     ]);
 
     const agentStatusMap: Record<string, number> = {};
@@ -98,6 +102,10 @@ router.get('/stats', async (_req, res) => {
       feedback: {
         total: feedbackTotal,
         new: feedbackNew,
+      },
+      humanReports: {
+        total: humanReportsTotal,
+        pending: humanReportsPending,
       },
     });
   } catch (error) {
@@ -331,6 +339,18 @@ router.get('/users/:id', async (req: AuthRequest, res) => {
         },
         reviews: {
           select: { id: true, rating: true, comment: true, createdAt: true, jobId: true },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        humanReportsReceived: {
+          select: {
+            id: true,
+            reason: true,
+            description: true,
+            status: true,
+            createdAt: true,
+            reporter: { select: { id: true, name: true, email: true } },
+          },
           orderBy: { createdAt: 'desc' },
           take: 20,
         },

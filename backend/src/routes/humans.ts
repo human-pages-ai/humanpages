@@ -669,6 +669,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     const where: any = {
       emailVerified: true,
+      humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
     };
 
     // Filter by humanity verification
@@ -928,7 +929,7 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 router.get('/:id', async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, emailVerified: true },
+      where: { id: req.params.id, emailVerified: true, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -964,7 +965,7 @@ router.get('/:id', async (req, res) => {
 router.get('/u/:username', async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { username: req.params.username, emailVerified: true },
+      where: { username: req.params.username, emailVerified: true, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1025,6 +1026,125 @@ router.post('/me/disconnect-github', authenticateToken, async (req: AuthRequest,
     res.json({ message: 'GitHub disconnected' });
   } catch (error) {
     logger.error({ err: error }, 'Disconnect GitHub error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Report a Human User ───
+
+// Rate limit reports: 3 per human per day
+const humanReportLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'Too many reports. Limit: 3 per day.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => req.userId || 'unknown',
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const humanReportSchema = z.object({
+  reason: z.enum(['SPAM', 'FRAUD', 'HARASSMENT', 'IRRELEVANT', 'OTHER']),
+  description: z.string().max(1000).optional(),
+});
+
+// POST /api/humans/:id/report — report a human user for abuse
+router.post('/:id/report', authenticateToken, requireEmailVerified, humanReportLimiter, async (req: AuthRequest, res) => {
+  try {
+    const data = humanReportSchema.parse(req.body);
+    const reportedHumanId = req.params.id;
+    const reporterHumanId = req.userId!;
+
+    // Cannot report yourself
+    if (reporterHumanId === reportedHumanId) {
+      return res.status(400).json({ error: 'You cannot report yourself' });
+    }
+
+    // Account age check: must be at least 24 hours old
+    const reporter = await prisma.human.findUnique({
+      where: { id: reporterHumanId },
+      select: { createdAt: true },
+    });
+    if (!reporter) {
+      return res.status(401).json({ error: 'Reporter not found' });
+    }
+    const accountAgeMs = Date.now() - reporter.createdAt.getTime();
+    if (accountAgeMs < 24 * 60 * 60 * 1000) {
+      return res.status(403).json({ error: 'Your account must be at least 24 hours old to submit reports' });
+    }
+
+    // Lifetime cap: max 10 total reports
+    const lifetimeCount = await prisma.humanReport.count({
+      where: { reporterHumanId },
+    });
+    if (lifetimeCount >= 10) {
+      return res.status(429).json({ error: 'You have reached the maximum number of lifetime reports (10)' });
+    }
+
+    // Duplicate check: no pending report for same target
+    const existingPending = await prisma.humanReport.findFirst({
+      where: { reporterHumanId, reportedHumanId, status: 'PENDING' },
+    });
+    if (existingPending) {
+      return res.status(400).json({ error: 'You already have a pending report for this user' });
+    }
+
+    // Verify target exists
+    const target = await prisma.human.findUnique({
+      where: { id: reportedHumanId },
+      select: { id: true, abuseScore: true },
+    });
+    if (!target) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Create report and increment abuse score atomically
+    const [report] = await prisma.$transaction([
+      prisma.humanReport.create({
+        data: {
+          reportedHumanId,
+          reporterHumanId,
+          reason: data.reason,
+          description: data.description,
+        },
+      }),
+      prisma.human.update({
+        where: { id: reportedHumanId },
+        data: { abuseScore: { increment: 1 } },
+      }),
+    ]);
+
+    // Check thresholds for auto-suspension/ban
+    const nonDismissedCount = await prisma.humanReport.count({
+      where: { reportedHumanId, status: { not: 'DISMISSED' } },
+    });
+
+    if (nonDismissedCount >= 5) {
+      await prisma.human.update({
+        where: { id: reportedHumanId },
+        data: { humanStatus: 'BANNED', abuseStrikes: { increment: 1 } },
+      });
+      logger.info({ reportedHumanId, reportCount: nonDismissedCount }, 'Human auto-banned');
+    } else if (nonDismissedCount >= 3) {
+      await prisma.human.update({
+        where: { id: reportedHumanId },
+        data: { humanStatus: 'SUSPENDED', abuseStrikes: { increment: 1 } },
+      });
+      logger.info({ reportedHumanId, reportCount: nonDismissedCount }, 'Human auto-suspended');
+    }
+
+    trackServerEvent(reporterHumanId, 'human_reported', {
+      reportedHumanId,
+      reason: data.reason,
+    });
+
+    res.status(201).json({ id: report.id, message: 'Report submitted' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Report human error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

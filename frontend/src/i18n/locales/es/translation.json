@@ -622,6 +622,28 @@
       "other": "Otro"
     }
   },
+  "reportUser": {
+    "title": "Reportar usuario",
+    "reportLink": "Reportar",
+    "description": "Si crees que esta persona participa en spam, fraude u otro comportamiento abusivo, envía un reporte.",
+    "reporting": "Reportando",
+    "reasonLabel": "Razón",
+    "selectReason": "Selecciona una razón",
+    "descriptionLabel": "Detalles adicionales (opcional)",
+    "descriptionPlaceholder": "Describe lo que sucedió...",
+    "submit": "Enviar reporte",
+    "submitting": "Enviando...",
+    "submitted": "Reporte enviado",
+    "submittedDesc": "Gracias. Revisaremos tu reporte y tomaremos medidas si es necesario.",
+    "error": "Error al enviar el reporte. Inténtalo de nuevo.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraude",
+      "harassment": "Acoso",
+      "irrelevant": "Perfil irrelevante",
+      "other": "Otro"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "Para agentes de IA y desarrolladores",

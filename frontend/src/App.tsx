@@ -248,12 +248,12 @@ function AppRoutes() {
 }
 
 function ConnectedFeedbackWidget() {
-  const { isOpen, defaultType, closeFeedback } = useFeedback();
+  const { isOpen, defaultType, openFeedback, closeFeedback } = useFeedback();
   return (
     <FeedbackWidget
       defaultType={defaultType}
       isOpen={isOpen}
-      onOpenChange={(open) => { if (!open) closeFeedback(); }}
+      onOpenChange={(open) => { if (open) openFeedback(); else closeFeedback(); }}
     />
   );
 }

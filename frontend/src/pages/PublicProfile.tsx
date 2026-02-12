@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
+import { useAuth } from '../hooks/useAuth';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import TrustBadge from '../components/TrustBadge';
+import ReportUserModal from '../components/ReportUserModal';
 
 interface Wallet {
   network: string;
@@ -92,11 +94,13 @@ function getDisplayLocation(profile: PublicHuman): string | undefined {
 export default function PublicProfile() {
   const { t, i18n } = useTranslation();
   const { id, username } = useParams<{ id?: string; username?: string }>();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<PublicHuman | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showAllVouches, setShowAllVouches] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     if (!id && !username) return;
@@ -597,9 +601,30 @@ export default function PublicProfile() {
                 {copied ? t('common.copied') : 'Share'}
               </button>
             </div>
+
+            {/* Report link — only for logged-in users viewing someone else's profile */}
+            {user && profile.id !== user.id && (
+              <div className="pt-2 text-center">
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  {t('reportUser.reportLink', 'Report')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
+
+      {profile && (
+        <ReportUserModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          targetUserId={profile.id}
+          targetUserName={profile.name}
+        />
+      )}
     </div>
   );
 }

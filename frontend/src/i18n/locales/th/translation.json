@@ -617,6 +617,28 @@
       "other": "อื่นๆ"
     }
   },
+  "reportUser": {
+    "title": "รายงานผู้ใช้",
+    "reportLink": "รายงาน",
+    "description": "หากคุณเชื่อว่าบุคคลนี้มีพฤติกรรมสแปม ฉ้อโกง หรือล่วงละเมิด กรุณารายงาน",
+    "reporting": "กำลังรายงาน",
+    "reasonLabel": "เหตุผล",
+    "selectReason": "เลือกเหตุผล",
+    "descriptionLabel": "รายละเอียดเพิ่มเติม (ไม่บังคับ)",
+    "descriptionPlaceholder": "อธิบายสิ่งที่เกิดขึ้น...",
+    "submit": "ส่งรายงาน",
+    "submitting": "กำลังส่ง...",
+    "submitted": "ส่งรายงานแล้ว",
+    "submittedDesc": "ขอบคุณ เราจะตรวจสอบรายงานของคุณ",
+    "error": "ไม่สามารถส่งรายงาน ลองอีกครั้ง",
+    "reasons": {
+      "spam": "สแปม",
+      "fraud": "ฉ้อโกง",
+      "harassment": "คุกคาม",
+      "irrelevant": "โปรไฟล์ไม่เกี่ยวข้อง",
+      "other": "อื่นๆ"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "สำหรับ AI Agent และนักพัฒนา",

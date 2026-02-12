@@ -28,6 +28,10 @@ export interface AdminStats {
     total: number;
     new: number;
   };
+  humanReports: {
+    total: number;
+    pending: number;
+  };
 }
 
 export interface AdminUser {
@@ -188,6 +192,14 @@ export interface AdminUserDetail extends AdminUser {
     comment: string | null;
     createdAt: string;
     jobId: string;
+  }>;
+  humanReportsReceived: Array<{
+    id: string;
+    reason: string;
+    description: string | null;
+    status: string;
+    createdAt: string;
+    reporter: { id: string; name: string; email: string };
   }>;
   affiliate: {
     id: string;

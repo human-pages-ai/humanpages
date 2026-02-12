@@ -592,6 +592,28 @@
     "message": "A página que você procura não existe ou foi movida.",
     "goHome": "Ir ao início"
   },
+  "reportUser": {
+    "title": "Denunciar usuário",
+    "reportLink": "Denunciar",
+    "description": "Se você acredita que esta pessoa está praticando spam, fraude ou outro comportamento abusivo, envie uma denúncia.",
+    "reporting": "Denunciando",
+    "reasonLabel": "Motivo",
+    "selectReason": "Selecione um motivo",
+    "descriptionLabel": "Detalhes adicionais (opcional)",
+    "descriptionPlaceholder": "Descreva o que aconteceu...",
+    "submit": "Enviar denúncia",
+    "submitting": "Enviando...",
+    "submitted": "Denúncia enviada",
+    "submittedDesc": "Obrigado. Analisaremos sua denúncia e tomaremos medidas se necessário.",
+    "error": "Falha ao enviar denúncia. Tente novamente.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraude",
+      "harassment": "Assédio",
+      "irrelevant": "Perfil irrelevante",
+      "other": "Outro"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "Para agentes de IA e desenvolvedores",

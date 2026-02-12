@@ -684,6 +684,28 @@
       "other": "Other"
     }
   },
+  "reportUser": {
+    "title": "Report User",
+    "reportLink": "Report",
+    "description": "If you believe this person is engaging in spam, fraud, or other abusive behavior, please submit a report.",
+    "reporting": "Reporting",
+    "reasonLabel": "Reason",
+    "selectReason": "Select a reason",
+    "descriptionLabel": "Additional details (optional)",
+    "descriptionPlaceholder": "Describe what happened...",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "submitted": "Report Submitted",
+    "submittedDesc": "Thank you. We will review your report and take action if necessary.",
+    "error": "Failed to submit report. Please try again.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraud",
+      "harassment": "Harassment",
+      "irrelevant": "Irrelevant profile",
+      "other": "Other"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "For AI Agents & Developers",

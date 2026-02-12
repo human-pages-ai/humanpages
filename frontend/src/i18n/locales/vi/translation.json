@@ -617,6 +617,28 @@
       "other": "Khác"
     }
   },
+  "reportUser": {
+    "title": "Báo cáo người dùng",
+    "reportLink": "Báo cáo",
+    "description": "Nếu bạn cho rằng người này tham gia vào spam, lừa đảo hoặc hành vi lạm dụng khác, vui lòng gửi báo cáo.",
+    "reporting": "Đang báo cáo",
+    "reasonLabel": "Lý do",
+    "selectReason": "Chọn lý do",
+    "descriptionLabel": "Chi tiết bổ sung (tùy chọn)",
+    "descriptionPlaceholder": "Mô tả điều đã xảy ra...",
+    "submit": "Gửi báo cáo",
+    "submitting": "Đang gửi...",
+    "submitted": "Đã gửi báo cáo",
+    "submittedDesc": "Cảm ơn. Chúng tôi sẽ xem xét báo cáo của bạn.",
+    "error": "Không thể gửi báo cáo. Vui lòng thử lại.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Lừa đảo",
+      "harassment": "Quấy rối",
+      "irrelevant": "Hồ sơ không liên quan",
+      "other": "Khác"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "Dành cho AI Agent & Nhà phát triển",

@@ -56,6 +56,13 @@ enum AgentStatus {
   BANNED
 }
 
+enum HumanStatus {
+  ACTIVE
+  FLAGGED
+  SUSPENDED
+  BANNED
+}
+
 // How the agent activated their account
 enum ActivationMethod {
   SOCIAL
@@ -184,6 +191,11 @@ model Human {
   youtubeUrl    String?
   websiteUrl    String?
 
+  // ===== ABUSE TRACKING =====
+  humanStatus     HumanStatus @default(ACTIVE) @map("status_human")
+  abuseScore      Int         @default(0)
+  abuseStrikes    Int         @default(0)
+
   // Relations
   wallets       Wallet[]
   services      Service[]
@@ -196,6 +208,8 @@ model Human {
   affiliate       Affiliate?
   affiliateReferral AffiliateReferral?
   feedback        Feedback[]
+  humanReportsReceived HumanReport[] @relation("ReportsReceived")
+  humanReportsGiven    HumanReport[] @relation("ReportsGiven")
 
   // Indexes for fast agent search
   @@index([skills])
@@ -204,6 +218,7 @@ model Human {
   @@index([isAvailable])
   @@index([lastActiveAt])
   @@index([isAvailable, lastActiveAt])
+  @@index([humanStatus])
 }
 
 // Job status flow:
@@ -301,6 +316,23 @@ model AgentReport {
   @@index([agentId])
   @@index([reporterHumanId])
   @@index([agentId, status])
+}
+
+model HumanReport {
+  id              String       @id @default(cuid())
+  reportedHumanId String
+  reporterHumanId String
+  reason          ReportReason
+  description     String?      @db.VarChar(1000)
+  status          ReportStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+
+  reportedHuman Human @relation("ReportsReceived", fields: [reportedHumanId], references: [id], onDelete: Cascade)
+  reporter      Human @relation("ReportsGiven", fields: [reporterHumanId], references: [id], onDelete: Cascade)
+
+  @@index([reportedHumanId])
+  @@index([reporterHumanId])
+  @@index([reportedHumanId, status])
 }
 
 model PendingNotification {

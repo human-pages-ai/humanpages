@@ -622,6 +622,28 @@
       "other": "其他"
     }
   },
+  "reportUser": {
+    "title": "举报用户",
+    "reportLink": "举报",
+    "description": "如果您认为此人参与了垃圾邮件、欺诈或其他滥用行为，请提交举报。",
+    "reporting": "正在举报",
+    "reasonLabel": "原因",
+    "selectReason": "选择原因",
+    "descriptionLabel": "补充详情（可选）",
+    "descriptionPlaceholder": "描述发生了什么...",
+    "submit": "提交举报",
+    "submitting": "提交中...",
+    "submitted": "举报已提交",
+    "submittedDesc": "谢谢。我们将审查您的举报并采取必要措施。",
+    "error": "举报提交失败。请重试。",
+    "reasons": {
+      "spam": "垃圾信息",
+      "fraud": "欺诈",
+      "harassment": "骚扰",
+      "irrelevant": "不相关资料",
+      "other": "其他"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "面向 AI 代理和开发者",

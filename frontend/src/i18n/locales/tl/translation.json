@@ -617,6 +617,28 @@
       "other": "Iba pa"
     }
   },
+  "reportUser": {
+    "title": "I-report ang User",
+    "reportLink": "I-report",
+    "description": "Kung sa tingin mo ang taong ito ay sangkot sa spam, panloloko, o iba pang abusadong gawi, mag-submit ng report.",
+    "reporting": "Nire-report",
+    "reasonLabel": "Dahilan",
+    "selectReason": "Pumili ng dahilan",
+    "descriptionLabel": "Karagdagang detalye (opsyonal)",
+    "descriptionPlaceholder": "Ilarawan ang nangyari...",
+    "submit": "I-submit ang Report",
+    "submitting": "Isinusumite...",
+    "submitted": "Na-submit na ang Report",
+    "submittedDesc": "Salamat. Susuriin namin ang iyong report at gagawa ng aksyon kung kinakailangan.",
+    "error": "Hindi na-submit ang report. Subukan muli.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Panloloko",
+      "harassment": "Panliligalig",
+      "irrelevant": "Hindi kaugnay na profile",
+      "other": "Iba pa"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "Para sa mga AI Agent at Developer",

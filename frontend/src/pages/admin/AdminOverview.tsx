@@ -120,16 +120,21 @@ export default function AdminOverview() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg shadow p-5">
           <p className="text-sm font-medium text-gray-500 mb-2">Users (last 30d)</p>
           <p className="text-xl font-semibold text-gray-900">{stats.users.last30d}</p>
           <p className="text-sm text-gray-400">{stats.users.last7d} in last 7d</p>
         </div>
         <div className="bg-white rounded-lg shadow p-5">
-          <p className="text-sm font-medium text-gray-500 mb-2">Reports</p>
+          <p className="text-sm font-medium text-gray-500 mb-2">Agent Reports</p>
           <p className="text-xl font-semibold text-gray-900">{stats.reports.total}</p>
           <p className="text-sm text-gray-400">{stats.reports.pending} pending</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-5">
+          <p className="text-sm font-medium text-gray-500 mb-2">Human Reports</p>
+          <p className="text-xl font-semibold text-gray-900">{stats.humanReports.total}</p>
+          <p className="text-sm text-gray-400">{stats.humanReports.pending} pending</p>
         </div>
       </div>
 

@@ -27,6 +27,7 @@ export async function cleanDatabase(): Promise<void> {
   await prisma.affiliateReferral.deleteMany();
   await prisma.affiliate.deleteMany();
   await prisma.pendingNotification.deleteMany();
+  await prisma.humanReport.deleteMany();
   await prisma.agentReport.deleteMany();
   await prisma.review.deleteMany();
   await prisma.streamTick.deleteMany();

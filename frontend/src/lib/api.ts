@@ -219,6 +219,13 @@ export const api = {
   getHumanById: (id: string) => request<PublicHuman>(`/humans/${id}`),
   getHumanByUsername: (username: string) => request<PublicHuman>(`/humans/u/${username}`),
 
+  // Report a human user
+  reportUser: (humanId: string, data: { reason: string; description?: string }) =>
+    request<{ id: string; message: string }>(`/humans/${humanId}/report`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   // Agents
   getAgent: (id: string) =>
     request<{

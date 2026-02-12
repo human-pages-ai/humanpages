@@ -617,6 +617,28 @@
       "other": "Diğer"
     }
   },
+  "reportUser": {
+    "title": "Kullanıcıyı Bildir",
+    "reportLink": "Bildir",
+    "description": "Bu kişinin spam, dolandırıcılık veya diğer kötüye kullanım davranışında bulunduğunu düşünüyorsanız, lütfen bir rapor gönderin.",
+    "reporting": "Bildiriliyor",
+    "reasonLabel": "Neden",
+    "selectReason": "Bir neden seçin",
+    "descriptionLabel": "Ek detaylar (isteğe bağlı)",
+    "descriptionPlaceholder": "Ne olduğunu açıklayın...",
+    "submit": "Rapor Gönder",
+    "submitting": "Gönderiliyor...",
+    "submitted": "Rapor Gönderildi",
+    "submittedDesc": "Teşekkürler. Raporunuzu inceleyeceğiz ve gerekli önlemleri alacağız.",
+    "error": "Rapor gönderilemedi. Lütfen tekrar deneyin.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Dolandırıcılık",
+      "harassment": "Taciz",
+      "irrelevant": "Alakasız profil",
+      "other": "Diğer"
+    }
+  },
   "dev": {
     "hero": {
       "tagline": "AI Ajanları ve Geliştiriciler İçin",
