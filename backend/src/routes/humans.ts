@@ -737,10 +737,26 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.minRateUsdEstimate = { gte: parseFloat(minRate as string) };
     }
     if (maxRate) {
-      where.minRateUsdEstimate = {
-        ...where.minRateUsdEstimate,
-        lte: parseFloat(maxRate as string),
-      };
+      // Include humans with no rate set (negotiable) — they haven't set a floor
+      if (minRate) {
+        // Both min and max: rate must be in range (nulls excluded since they don't meet minRate)
+        where.minRateUsdEstimate = {
+          ...where.minRateUsdEstimate,
+          lte: parseFloat(maxRate as string),
+        };
+      } else {
+        // Only max: include humans whose rate is <= max OR who have no rate set
+        // Use AND to avoid clobbering any existing OR clause (e.g. location filter)
+        where.AND = [
+          ...(where.AND || []),
+          {
+            OR: [
+              { minRateUsdEstimate: { lte: parseFloat(maxRate as string) } },
+              { minRateUsdEstimate: null },
+            ],
+          },
+        ];
+      }
     }
 
     const requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
