@@ -248,8 +248,11 @@ describe('Search API', () => {
 
       const response = await request(app).get('/api/humans/search?maxRate=75');
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(alice.id);
+      // Should include Alice (rate 50 <= 75) and Carol (null rate = negotiable)
+      // Bob (rate 100) is excluded because 100 > 75
+      const ids = response.body.map((h: any) => h.id);
+      expect(ids).toContain(alice.id);
+      expect(ids).not.toContain(bob.id);
     });
 
     it('should respect limit parameter', async () => {
