@@ -267,6 +267,7 @@ model Agent {
   paymentTxHash       String?          @unique // prevents reuse of same tx
   paymentNetwork      String?
   paymentAmount       Decimal?         @db.Decimal(18, 6)
+  promoUpgradedAt     DateTime?        // Launch promo: free PRO for first 100 agents
 
   // ===== ERC-8004 REPUTATION REGISTRY =====
   erc8004AgentId  Int?  @unique  // Sequential ID for ERC-8004 registry. See docs/ERC-8004-MAPPING.md

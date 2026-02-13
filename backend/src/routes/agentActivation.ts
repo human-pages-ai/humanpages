@@ -17,6 +17,8 @@ const TIER_CONFIG = {
   PRO: { minFollowers: 1000, durationDays: 60, jobOffersPerDay: 15, profileViewsPerDay: 50 },
 };
 
+const LAUNCH_PROMO = { totalSlots: 100, enabled: true };
+
 function determineTier(followerCount: number | null): keyof typeof TIER_CONFIG {
   if (followerCount && followerCount >= TIER_CONFIG.PRO.minFollowers) return 'PRO';
   return 'BASIC';
@@ -489,6 +491,7 @@ router.get('/status', authenticateAgent, async (req: AgentAuthRequest, res) => {
         activationPlatform: true,
         socialPostUrl: true,
         socialAccountSize: true,
+        promoUpgradedAt: true,
         abuseScore: true,
         abuseStrikes: true,
       },
@@ -511,6 +514,7 @@ router.get('/status', authenticateAgent, async (req: AgentAuthRequest, res) => {
       socialPostUrl: agent.socialPostUrl,
       followerCount: agent.socialAccountSize,
       limits: TIER_CONFIG[tier] || TIER_CONFIG.BASIC,
+      promoUpgradedAt: agent.promoUpgradedAt,
       abuseScore: agent.abuseScore,
       abuseStrikes: agent.abuseStrikes,
       // x402 pay-per-use pricing (alternative to activation)
@@ -527,6 +531,97 @@ router.get('/status', authenticateAgent, async (req: AgentAuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Get activation status error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /promo-status — public, returns launch promo counter
+router.get('/promo-status', async (_req, res) => {
+  try {
+    if (!LAUNCH_PROMO.enabled) {
+      return res.json({ enabled: false, total: 0, claimed: 0, remaining: 0 });
+    }
+
+    const claimed = await prisma.agent.count({
+      where: { promoUpgradedAt: { not: null } },
+    });
+
+    res.json({
+      enabled: true,
+      total: LAUNCH_PROMO.totalSlots,
+      claimed,
+      remaining: Math.max(0, LAUNCH_PROMO.totalSlots - claimed),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Get promo status error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /promo-upgrade — claim free PRO via launch promo
+router.post('/promo-upgrade', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const agent = req.agent!;
+
+    if (!LAUNCH_PROMO.enabled) {
+      return res.status(400).json({ error: 'Promotion not active', message: 'The launch promotion is not currently active.' });
+    }
+
+    if (agent.status !== 'ACTIVE') {
+      return res.status(400).json({ error: 'Agent not active', message: 'Agent must be ACTIVE (social-activated) before claiming the promo.' });
+    }
+
+    if (agent.activationTier !== 'BASIC') {
+      return res.status(400).json({ error: 'Not eligible', message: 'Only BASIC tier agents can claim the free PRO upgrade.' });
+    }
+
+    // Check if already claimed
+    const current = await prisma.agent.findUnique({
+      where: { id: agent.id },
+      select: { promoUpgradedAt: true },
+    });
+    if (current?.promoUpgradedAt) {
+      return res.status(400).json({ error: 'Already claimed', message: 'You have already claimed the free PRO upgrade.' });
+    }
+
+    // Atomic: count + update in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const claimed = await tx.agent.count({
+        where: { promoUpgradedAt: { not: null } },
+      });
+
+      if (claimed >= LAUNCH_PROMO.totalSlots) {
+        return null; // sold out
+      }
+
+      const expiresAt = new Date(Date.now() + TIER_CONFIG.PRO.durationDays * 24 * 60 * 60 * 1000);
+
+      return tx.agent.update({
+        where: { id: agent.id },
+        data: {
+          activationTier: 'PRO',
+          promoUpgradedAt: new Date(),
+          activationExpiresAt: expiresAt,
+        },
+      });
+    });
+
+    if (!result) {
+      return res.status(400).json({ error: 'Sold out', message: 'All 100 free PRO slots have been claimed.' });
+    }
+
+    logger.info({ agentId: agent.id }, 'Agent claimed free PRO via launch promo');
+
+    res.json({
+      status: 'ACTIVE',
+      tier: 'PRO',
+      promoUpgradedAt: result.promoUpgradedAt?.toISOString(),
+      activationExpiresAt: result.activationExpiresAt?.toISOString(),
+      limits: TIER_CONFIG.PRO,
+      message: 'Congratulations! You have been upgraded to PRO tier for free.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Promo upgrade error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

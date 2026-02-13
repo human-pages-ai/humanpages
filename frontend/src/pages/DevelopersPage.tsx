@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -159,6 +159,14 @@ Response (PRO listings surface first):
 export default function DevelopersPage() {
   const { t } = useTranslation();
   const [showRestApi, setShowRestApi] = useState(false);
+  const [promo, setPromo] = useState<{ enabled: boolean; total: number; claimed: number; remaining: number } | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.humanpages.ai/api/agents/activate/promo-status')
+      .then(res => res.json())
+      .then(data => setPromo(data))
+      .catch(() => {});
+  }, []);
 
   const scrollToInstall = () => {
     document.getElementById('install')?.scrollIntoView({ behavior: 'smooth' });
@@ -378,8 +386,132 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Pricing & Activation Section */}
+      <section id="pricing" className="py-16 px-4 bg-slate-50">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+            {t('dev.pricing.title')}
+          </h2>
+          <p className="text-slate-600 mb-8">{t('dev.pricing.subtitle')}</p>
+
+          {/* Promo Banner */}
+          {promo?.enabled && (
+            <div className="mb-8 p-6 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white">
+              <h3 className="text-lg font-bold mb-1">
+                {promo.remaining > 0 ? t('dev.pricing.promoTitle') : t('dev.pricing.promoSoldOut')}
+              </h3>
+              <p className="text-violet-100 text-sm mb-4">{t('dev.pricing.promoDesc')}</p>
+              <div className="w-full bg-white/20 rounded-full h-3 mb-2">
+                <div
+                  className="bg-white rounded-full h-3 transition-all duration-500"
+                  style={{ width: `${(promo.claimed / promo.total) * 100}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>{t('dev.pricing.promoClaimed', { claimed: promo.claimed, total: promo.total })}</span>
+                <span>{t('dev.pricing.promoRemaining', { remaining: promo.remaining })}</span>
+              </div>
+            </div>
+          )}
+
+          {/* BASIC vs PRO comparison */}
+          <div className="grid md:grid-cols-2 gap-6 mb-10">
+            {/* BASIC card */}
+            <div className="p-6 bg-white rounded-xl border border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900 mb-1">{t('dev.pricing.basicTitle')}</h3>
+              <p className="text-2xl font-bold text-slate-900 mb-4">{t('dev.pricing.basicPrice')}</p>
+              <ul className="space-y-2 text-sm text-slate-600">
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.basicActivation')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.basicDuration')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.basicOffers')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.basicViews')}
+                </li>
+              </ul>
+            </div>
+
+            {/* PRO card */}
+            <div className="p-6 bg-white rounded-xl border-2 border-blue-500 relative">
+              {promo?.enabled && promo.remaining > 0 && (
+                <span className="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {t('dev.pricing.promoPromoPrice')}
+                </span>
+              )}
+              <h3 className="text-lg font-bold text-slate-900 mb-1">{t('dev.pricing.proTitle')}</h3>
+              <p className="text-2xl font-bold text-slate-900 mb-4">
+                {promo?.enabled && promo.remaining > 0 ? (
+                  <><span className="line-through text-slate-400 text-lg mr-2">{t('dev.pricing.proPrice')}</span> {t('dev.pricing.promoPromoPrice')}</>
+                ) : (
+                  t('dev.pricing.proPrice')
+                )}
+              </p>
+              <ul className="space-y-2 text-sm text-slate-600">
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.proActivation')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.proDuration')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.proOffers')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  {t('dev.pricing.proViews')}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* 3-step flow */}
+          <h3 className="text-lg font-bold text-slate-900 mb-4">{t('dev.pricing.stepsTitle')}</h3>
+          <div className="space-y-4 mb-8">
+            <div className="flex gap-4 p-4 bg-white rounded-lg border border-slate-200">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm">1</div>
+              <div>
+                <h4 className="font-semibold text-slate-900">{t('dev.pricing.step1Title')}</h4>
+                <p className="text-sm text-slate-600">{t('dev.pricing.step1Desc')}</p>
+              </div>
+            </div>
+            <div className="flex gap-4 p-4 bg-white rounded-lg border border-slate-200">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm">2</div>
+              <div>
+                <h4 className="font-semibold text-slate-900">{t('dev.pricing.step2Title')}</h4>
+                <p className="text-sm text-slate-600">{t('dev.pricing.step2Desc')}</p>
+              </div>
+            </div>
+            <div className="flex gap-4 p-4 bg-white rounded-lg border border-slate-200">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm">3</div>
+              <div>
+                <h4 className="font-semibold text-slate-900">{t('dev.pricing.step3Title')}</h4>
+                <p className="text-sm text-slate-600">{t('dev.pricing.step3Desc')}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* x402 note */}
+          <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <h4 className="font-semibold text-slate-900 mb-1">{t('dev.pricing.x402Title')}</h4>
+            <p className="text-sm text-slate-600">{t('dev.pricing.x402Desc')}</p>
+          </div>
+        </div>
+      </section>
+
       {/* REST API Section (Accordion) */}
-      <section className="py-16 px-4 bg-slate-50">
+      <section className="py-16 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <button
             onClick={() => setShowRestApi(!showRestApi)}
