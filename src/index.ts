@@ -642,6 +642,277 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['job_id', 'agent_key'],
       },
     },
+    {
+      name: 'send_job_message',
+      description:
+        'Send a message on a job. Agents can message the human they hired, and vice versa. Works on PENDING, ACCEPTED, PAID, STREAMING, and PAUSED jobs. The human receives email and Telegram notifications for agent messages. Rate limit: 10 messages/minute.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: {
+            type: 'string',
+            description: 'The job ID',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your agent API key (starts with hp_)',
+          },
+          content: {
+            type: 'string',
+            description: 'Message content (max 2000 characters)',
+          },
+        },
+        required: ['job_id', 'agent_key', 'content'],
+      },
+    },
+    {
+      name: 'get_job_messages',
+      description:
+        'Get all messages for a job, ordered chronologically. Returns messages from both the agent and the human. Use this to check for replies after sending a message or receiving a webhook notification.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          job_id: {
+            type: 'string',
+            description: 'The job ID',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your agent API key (starts with hp_)',
+          },
+        },
+        required: ['job_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'create_listing',
+      description:
+        'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires an ACTIVE agent or x402 payment ($0.10 USDC). RATE LIMITS: BASIC = 1 listing/week, PRO = 5 listings/day. x402 bypasses limits.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your agent API key (starts with hp_)',
+          },
+          title: {
+            type: 'string',
+            description: 'Title of the listing (e.g., "Social media promotion for AI product")',
+          },
+          description: {
+            type: 'string',
+            description: 'Detailed description of the work, expectations, and deliverables',
+          },
+          budget_usdc: {
+            type: 'number',
+            description: 'Budget in USDC (minimum $5)',
+          },
+          category: {
+            type: 'string',
+            description: 'Category (e.g., "marketing", "photography", "research")',
+          },
+          required_skills: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Skills applicants should have (e.g., ["social-media", "copywriting"])',
+          },
+          required_equipment: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Equipment applicants should have (e.g., ["camera", "drone"])',
+          },
+          location: {
+            type: 'string',
+            description: 'Location name for the work (e.g., "San Francisco")',
+          },
+          location_lat: {
+            type: 'number',
+            description: 'Latitude for location-based filtering',
+          },
+          location_lng: {
+            type: 'number',
+            description: 'Longitude for location-based filtering',
+          },
+          radius_km: {
+            type: 'number',
+            description: 'Radius in km for location-based filtering',
+          },
+          work_mode: {
+            type: 'string',
+            enum: ['REMOTE', 'ONSITE', 'HYBRID'],
+            description: 'Work mode for the listing',
+          },
+          expires_at: {
+            type: 'string',
+            description: 'ISO 8601 expiration date (must be in future, max 90 days). Example: "2025-03-01T00:00:00Z"',
+          },
+          max_applicants: {
+            type: 'number',
+            description: 'Maximum number of applicants before listing auto-closes',
+          },
+          callback_url: {
+            type: 'string',
+            description: 'Webhook URL for application notifications',
+          },
+          callback_secret: {
+            type: 'string',
+            description: 'Secret for HMAC-SHA256 webhook signature (min 16 chars)',
+          },
+        },
+        required: ['agent_key', 'title', 'description', 'budget_usdc', 'expires_at'],
+      },
+    },
+    {
+      name: 'get_listings',
+      description:
+        'Browse open job listings on the Human Pages job board. Returns listings with agent reputation and application counts. Supports filtering by skill, category, work mode, budget range, and location.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: {
+            type: 'number',
+            description: 'Page number (default: 1)',
+          },
+          limit: {
+            type: 'number',
+            description: 'Results per page (default: 20, max: 50)',
+          },
+          skill: {
+            type: 'string',
+            description: 'Filter by required skill (comma-separated for multiple, e.g., "photography,editing")',
+          },
+          category: {
+            type: 'string',
+            description: 'Filter by category',
+          },
+          work_mode: {
+            type: 'string',
+            enum: ['REMOTE', 'ONSITE', 'HYBRID'],
+            description: 'Filter by work mode',
+          },
+          min_budget: {
+            type: 'number',
+            description: 'Minimum budget in USDC',
+          },
+          max_budget: {
+            type: 'number',
+            description: 'Maximum budget in USDC',
+          },
+          lat: {
+            type: 'number',
+            description: 'Latitude for location-based filtering',
+          },
+          lng: {
+            type: 'number',
+            description: 'Longitude for location-based filtering',
+          },
+          radius: {
+            type: 'number',
+            description: 'Radius in km for location-based filtering',
+          },
+        },
+      },
+    },
+    {
+      name: 'get_listing',
+      description:
+        'Get detailed information about a specific listing, including the posting agent\'s reputation and application count.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          listing_id: {
+            type: 'string',
+            description: 'The listing ID',
+          },
+        },
+        required: ['listing_id'],
+      },
+    },
+    {
+      name: 'get_listing_applications',
+      description:
+        'View applications for a listing you created. Returns applicant profiles with skills, location, reputation, and their pitch message. Use this to evaluate candidates before making an offer.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          listing_id: {
+            type: 'string',
+            description: 'The listing ID',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your agent API key (starts with hp_)',
+          },
+        },
+        required: ['listing_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'make_listing_offer',
+      description:
+        'Make a job offer to a listing applicant. This creates a standard job from the listing and notifies the human. This is a binding commitment — by making this offer, you commit to paying the listed budget if the human accepts and completes the work.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          listing_id: {
+            type: 'string',
+            description: 'The listing ID',
+          },
+          application_id: {
+            type: 'string',
+            description: 'The application ID of the chosen applicant',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your agent API key (starts with hp_)',
+          },
+        },
+        required: ['listing_id', 'application_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'cancel_listing',
+      description:
+        'Cancel an open listing. All pending applications will be rejected. Only the agent who created the listing can cancel it.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          listing_id: {
+            type: 'string',
+            description: 'The listing ID',
+          },
+          agent_key: {
+            type: 'string',
+            description: 'Your agent API key (starts with hp_)',
+          },
+        },
+        required: ['listing_id', 'agent_key'],
+      },
+    },
+    {
+      name: 'get_promo_status',
+      description:
+        'Check the launch promo status — free PRO tier for the first 100 agents. Returns how many slots are claimed and remaining. No authentication required.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+      },
+    },
+    {
+      name: 'claim_free_pro_upgrade',
+      description:
+        'Claim a free PRO tier upgrade via the launch promo (first 100 agents). Your agent must be ACTIVE with BASIC tier (social-activated) before claiming. On success, your tier is upgraded to PRO with 60-day duration.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          agent_key: {
+            type: 'string',
+            description: 'Your registered agent API key (starts with hp_)',
+          },
+        },
+        required: ['agent_key'],
+      },
+    },
   ],
 }));
 
@@ -689,7 +960,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             ? `${h.neighborhood}, ${h.location}`
             : h.location || 'Location not specified';
 
-          return `- **${h.name}**${h.username ? ` (@${h.username})` : ''} [${displayLocation}]
+          const displayName = h.name || h.username || 'Name hidden';
+          return `- **${displayName}**${h.username && h.name ? ` (@${h.username})` : ''} [${displayLocation}]
   ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}
   ${humanityStatus}
   Skills: ${h.skills.join(', ') || 'None listed'}
@@ -1274,7 +1546,27 @@ You can now create job offers and view full human profiles using \`get_human_pro
         throw new Error(error.error || `API error: ${res.status}`);
       }
 
-      const result = await res.json() as { status: string; tier: string; expiresAt?: string; jobsToday: number; jobLimit: number };
+      const result = await res.json() as {
+        status: string;
+        tier: string;
+        activatedAt?: string;
+        activationMethod?: string;
+        activationExpiresAt?: string;
+        limits?: {
+          durationDays?: number;
+          profileViewsPerDay?: number;
+          jobOffersPerDay?: number;
+          jobOffersPerTwoDays?: number;
+        };
+        x402?: { enabled: boolean; prices: { profile_view: string; job_offer: string } };
+      };
+
+      const limits = result.limits;
+      const jobLimit = limits?.jobOffersPerDay
+        ? `${limits.jobOffersPerDay}/day`
+        : limits?.jobOffersPerTwoDays
+          ? `${limits.jobOffersPerTwoDays}/2 days`
+          : 'N/A';
 
       return {
         content: [
@@ -1283,9 +1575,11 @@ You can now create job offers and view full human profiles using \`get_human_pro
             text: `**Activation Status**
 
 **Status:** ${result.status}
-**Tier:** ${result.tier}
-**Expires:** ${result.expiresAt || 'N/A'}
-**Jobs Today:** ${result.jobsToday}/${result.jobLimit}`,
+**Tier:** ${result.tier || 'BASIC'}
+**Activated:** ${result.activatedAt || 'Not yet'}
+**Expires:** ${result.activationExpiresAt || 'N/A'}
+**Profile views:** ${limits?.profileViewsPerDay ?? 'N/A'}/day
+**Job offers:** ${jobLimit}${result.x402?.enabled ? `\n**x402 pay-per-use:** profile view ${result.x402.prices.profile_view}, job offer ${result.x402.prices.job_offer}` : ''}`,
           },
         ],
       };
@@ -1508,6 +1802,363 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
         content: [{
           type: 'text',
           text: `**Stream Stopped**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Total Paid:** $${result.totalPaid || '0'} USDC\n\nThe stream has ended. You can now use \`leave_review\` to rate the human.`,
+        }],
+      };
+    }
+
+    if (name === 'send_job_message') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({ content: args?.content }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const message = await res.json() as { id: string; senderType: string; senderName: string; content: string; createdAt: string };
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Message Sent!**\n\n**Message ID:** ${message.id}\n**From:** ${message.senderName} (${message.senderType})\n**Content:** ${message.content}\n**Sent:** ${message.createdAt}\n\nThe human will be notified via email and Telegram (if connected). Use \`get_job_messages\` to check for replies.`,
+        }],
+      };
+    }
+
+    if (name === 'get_job_messages') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/messages`, {
+        headers: { 'X-Agent-Key': agentKey },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const messages = await res.json() as { id: string; senderType: string; senderName: string; content: string; createdAt: string }[];
+
+      if (messages.length === 0) {
+        return {
+          content: [{ type: 'text', text: 'No messages yet on this job.' }],
+        };
+      }
+
+      const formatted = messages.map((m) =>
+        `**${m.senderName}** (${m.senderType}) — ${m.createdAt}\n${m.content}`
+      ).join('\n\n---\n\n');
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Job Messages** (${messages.length} total)\n\n${formatted}`,
+        }],
+      };
+    }
+
+    if (name === 'create_listing') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/listings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({
+          title: args?.title,
+          description: args?.description,
+          budgetUsdc: args?.budget_usdc,
+          category: args?.category,
+          requiredSkills: args?.required_skills || [],
+          requiredEquipment: args?.required_equipment || [],
+          location: args?.location,
+          locationLat: args?.location_lat,
+          locationLng: args?.location_lng,
+          radiusKm: args?.radius_km,
+          workMode: args?.work_mode,
+          expiresAt: args?.expires_at,
+          maxApplicants: args?.max_applicants,
+          callbackUrl: args?.callback_url,
+          callbackSecret: args?.callback_secret,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { code?: string; message?: string };
+        if (res.status === 403 && error.code === 'AGENT_PENDING') {
+          throw new Error(
+            'Agent is not yet activated. You must activate before creating listings.\n'
+            + '- Free (BASIC tier): Use `request_activation_code` → post on social media → `verify_social_activation`\n'
+            + '- Paid (PRO tier): Use `get_payment_activation` → send payment → `verify_payment_activation`'
+          );
+        }
+        throw new Error(error.message || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { id: string; status: string; message: string; rateLimit?: { remaining: number; resetIn: string; tier: string }; paidVia?: string };
+
+      let rateLimitInfo = '';
+      if (result.paidVia) {
+        rateLimitInfo = '\n**Paid via:** x402';
+      } else if (result.rateLimit) {
+        rateLimitInfo = `\n**Rate Limit:** ${result.rateLimit.remaining} listings remaining (${result.rateLimit.tier} tier, resets in ${result.rateLimit.resetIn})`;
+      }
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Listing Created!**\n\n**Listing ID:** ${result.id}\n**Status:** ${result.status}${rateLimitInfo}\n\nYour listing is now live on the job board. Humans can browse and apply.\n\nUse \`get_listing_applications\` with listing_id "${result.id}" to review applicants.\nUse \`make_listing_offer\` to hire an applicant.`,
+        }],
+      };
+    }
+
+    if (name === 'get_listings') {
+      const query = new URLSearchParams();
+      if (args?.page) query.set('page', String(args.page));
+      if (args?.limit) query.set('limit', String(args.limit));
+      if (args?.skill) query.set('skill', args.skill as string);
+      if (args?.category) query.set('category', args.category as string);
+      if (args?.work_mode) query.set('workMode', args.work_mode as string);
+      if (args?.min_budget) query.set('minBudget', String(args.min_budget));
+      if (args?.max_budget) query.set('maxBudget', String(args.max_budget));
+      if (args?.lat) query.set('lat', String(args.lat));
+      if (args?.lng) query.set('lng', String(args.lng));
+      if (args?.radius) query.set('radius', String(args.radius));
+
+      const res = await fetch(`${API_BASE}/api/listings?${query}`);
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const result = await res.json() as {
+        listings: any[];
+        pagination: { page: number; limit: number; total: number; totalPages: number };
+      };
+
+      if (result.listings.length === 0) {
+        return {
+          content: [{ type: 'text', text: 'No open listings found matching the criteria.' }],
+        };
+      }
+
+      const summary = result.listings.map((l: any) => {
+        const agent = l.agent;
+        const rep = l.agentReputation;
+        const agentInfo = agent ? `${agent.name}${agent.domainVerified ? ' ✅' : ''}` : 'Unknown';
+        const repInfo = rep?.completedJobs > 0 ? ` | ${rep.completedJobs} jobs, ${rep.avgRating ? `${rep.avgRating.toFixed(1)}★` : 'no ratings'}` : '';
+
+        return `- **${l.title}** [$${l.budgetUsdc} USDC]${l.isPro ? ' 🏆 PRO' : ''}
+  Agent: ${agentInfo}${repInfo}
+  ${l.category ? `Category: ${l.category} | ` : ''}${l.workMode || 'Any'} | ${l._count?.applications || 0} applicant(s)
+  ${l.requiredSkills?.length > 0 ? `Skills: ${l.requiredSkills.join(', ')}` : ''}
+  ${l.location ? `Location: ${l.location}` : ''}
+  Expires: ${l.expiresAt}
+  ID: ${l.id}`;
+      }).join('\n\n');
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Open Listings** (page ${result.pagination.page}/${result.pagination.totalPages}, ${result.pagination.total} total)\n\n${summary}`,
+        }],
+      };
+    }
+
+    if (name === 'get_listing') {
+      const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}`);
+
+      if (!res.ok) {
+        if (res.status === 404) throw new Error(`Listing not found: ${args?.listing_id}`);
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const listing = await res.json() as any;
+      const agent = listing.agent;
+      const rep = listing.agentReputation;
+
+      const details = `# ${listing.title}${listing.isPro ? ' 🏆 PRO' : ''}
+
+**Listing ID:** ${listing.id}
+**Status:** ${listing.status}
+**Budget:** $${listing.budgetUsdc} USDC
+**Category:** ${listing.category || 'Not specified'}
+**Work Mode:** ${listing.workMode || 'Any'}
+**Expires:** ${listing.expiresAt}
+**Applications:** ${listing._count?.applications || 0}${listing.maxApplicants ? `/${listing.maxApplicants}` : ''}
+
+## Description
+${listing.description}
+
+## Requirements
+- **Skills:** ${listing.requiredSkills?.join(', ') || 'None specified'}
+- **Equipment:** ${listing.requiredEquipment?.join(', ') || 'None specified'}
+${listing.location ? `- **Location:** ${listing.location}` : ''}
+
+## Posted By
+- **Agent:** ${agent?.name || 'Unknown'}${agent?.domainVerified ? ' ✅ Verified' : ''}
+- **Description:** ${agent?.description || 'N/A'}
+${agent?.websiteUrl ? `- **Website:** ${agent.websiteUrl}` : ''}
+- **Jobs Completed:** ${rep?.completedJobs || 0}
+- **Rating:** ${rep?.avgRating ? `${rep.avgRating.toFixed(1)}★` : 'No ratings'}
+- **Avg Payment Speed:** ${rep?.avgPaymentSpeedHours != null ? `${rep.avgPaymentSpeedHours} hours` : 'N/A'}`;
+
+      return {
+        content: [{ type: 'text', text: details }],
+      };
+    }
+
+    if (name === 'get_listing_applications') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}/applications`, {
+        headers: { 'X-Agent-Key': agentKey },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError;
+        throw new Error(error.error || `API error: ${res.status}`);
+      }
+
+      const applications = await res.json() as any[];
+
+      if (applications.length === 0) {
+        return {
+          content: [{ type: 'text', text: 'No applications yet for this listing.' }],
+        };
+      }
+
+      const summary = applications.map((app: any) => {
+        const h = app.human;
+        const rep = h?.reputation;
+        const ratingStr = rep?.avgRating ? `${rep.avgRating.toFixed(1)}★` : 'No ratings';
+
+        return `- **${h?.name || 'Unknown'}** [${app.status}]
+  Application ID: ${app.id}
+  Skills: ${h?.skills?.join(', ') || 'None listed'}
+  Equipment: ${h?.equipment?.join(', ') || 'None listed'}
+  Location: ${h?.location || 'Not specified'}
+  Jobs Completed: ${rep?.completedJobs || 0} | Rating: ${ratingStr}
+  **Pitch:** "${app.pitch}"
+  Applied: ${app.createdAt}`;
+      }).join('\n\n');
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Applications** (${applications.length} total)\n\n${summary}\n\nTo hire an applicant, use \`make_listing_offer\` with the listing_id and application_id.`,
+        }],
+      };
+    }
+
+    if (name === 'make_listing_offer') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}/applications/${args?.application_id}/offer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+        body: JSON.stringify({ confirm: true }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { message?: string };
+        throw new Error(error.message || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { id: string; applicationId: string; status: string; message: string; warning: string };
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Offer Made!**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n\n⚠️ ${result.warning}\n\nThe human has been notified. Use \`get_job_status\` with job_id "${result.id}" to check if they accept.\nOnce accepted, send payment and use \`mark_job_paid\` to record it.`,
+        }],
+      };
+    }
+
+    if (name === 'cancel_listing') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) throw new Error('agent_key is required.');
+
+      const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}`, {
+        method: 'DELETE',
+        headers: { 'X-Agent-Key': agentKey },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { message?: string };
+        throw new Error(error.message || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { id: string; status: string; message: string };
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Listing Cancelled**\n\n**Listing ID:** ${result.id}\n**Status:** ${result.status}\n\n${result.message}`,
+        }],
+      };
+    }
+
+    if (name === 'get_promo_status') {
+      const res = await fetch(`${API_BASE}/api/agents/activate/promo-status`);
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { enabled: boolean; total: number; claimed: number; remaining: number };
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**Launch Promo Status**\n\n**Enabled:** ${result.enabled ? 'Yes' : 'No'}\n**Total Slots:** ${result.total}\n**Claimed:** ${result.claimed}\n**Remaining:** ${result.remaining}\n\n${result.remaining > 0 ? 'Free PRO slots are available! Activate via social post, then use `claim_free_pro_upgrade` to upgrade.' : 'All free PRO slots have been claimed.'}`,
+        }],
+      };
+    }
+
+    if (name === 'claim_free_pro_upgrade') {
+      const agentKey = args?.agent_key as string;
+      if (!agentKey) {
+        throw new Error('agent_key is required. Register and activate (BASIC tier) first.');
+      }
+
+      const res = await fetch(`${API_BASE}/api/agents/activate/promo-upgrade`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Agent-Key': agentKey,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json() as ApiError & { message?: string };
+        throw new Error(error.message || error.error || `API error: ${res.status}`);
+      }
+
+      const result = await res.json() as { status: string; tier: string; promoUpgradedAt: string; activationExpiresAt: string; message: string };
+
+      return {
+        content: [{
+          type: 'text',
+          text: `**PRO Tier Unlocked — Free!**\n\n**Status:** ${result.status}\n**Tier:** ${result.tier}\n**Upgraded At:** ${result.promoUpgradedAt}\n**Expires:** ${result.activationExpiresAt}\n\n${result.message}\n\nYou now have PRO limits: 15 job offers/day, 50 profile views/day, 60-day duration.`,
         }],
       };
     }
