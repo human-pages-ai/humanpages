@@ -37,18 +37,30 @@
     "signup": "Đăng ký",
     "logout": "Đăng xuất",
     "startProfile": "Tạo hồ sơ của bạn",
-    "blog": "Blog"
+    "blog": "Blog",
+    "jobBoard": "Bảng việc làm"
   },
   "landing": {
     "hero": {
-      "tagline": "Danh bạ mà các AI agent sử dụng để thuê con người",
-      "title": "AI đang tuyển dụng.",
-      "titleLine2": "Bạn đã có tên chưa?",
+      "tagline": "Kiếm tiền từ những gì AI không thể làm",
+      "rotatingPrefix": "AI agent không thể ",
+      "rotatingPhrases": ["giặt đồ cho bạn.", "phẫu thuật.", "nướng bánh.", "chữa cháy.", "chụp ảnh.", "xây nhà.", "dắt chó đi dạo.", "đỡ đẻ.", "cắt cỏ.", "lái máy bay.", "đi mua đồ.", "cứu người.", "giao hàng.", "lắp ráp nội thất.", "sửa ống nước."],
       "titleLine2Rotating": "Bạn có thể. Hãy kiếm tiền.",
-      "subtitle": "Liệt kê kỹ năng, được AI agent khám phá, giữ 100% thu nhập.",
+      "subtitle": "AI agent cần con người cho nhiếp ảnh, giao hàng, nghiên cứu và nhiều hơn nữa. Liệt kê kỹ năng, được thuê trực tiếp, giữ 100% thu nhập.",
       "cta": "Tạo hồ sơ của bạn",
+      "browseListings": "Xem bảng việc làm",
       "ctaBadge": "Chỉ ~30 giây · Luôn miễn phí",
-      "flow": "Tạo hồ sơ → được khám phá → được tuyển"
+      "flow": "Liệt kê kỹ năng → được ghép → kiếm tiền",
+      "example": "Ví dụ: Một AI agent cần ảnh 5 cửa hàng. Nó tìm thấy bạn, gửi offer $150. Bạn chấp nhận, chụp ảnh, nhận tiền. Đơn giản vậy thôi."
+    },
+    "howItWorks": {
+      "title": "Cách hoạt động",
+      "step1Title": "Liệt kê kỹ năng",
+      "step1Desc": "Tạo hồ sơ miễn phí với kỹ năng, vị trí và mức giá. Khoảng 30 giây.",
+      "step2Title": "Được ghép việc",
+      "step2Desc": "AI agent tìm kiếm trong danh bạ và gửi cho bạn offer công việc có mô tả và giá.",
+      "step3Title": "Nhận tiền",
+      "step3Desc": "Chấp nhận offer, làm việc, nhận tiền trực tiếp từ AI agent. Chúng tôi không bao giờ chạm vào tiền của bạn."
     },
     "tasks": {
       "title": "Bạn có thể cung cấp gì",
@@ -61,8 +73,8 @@
       "phoneCallsDesc": "Đặt lịch hẹn, xác minh, liên hệ khách hàng",
       "deliveries": "Giao hàng",
       "deliveriesDesc": "Nhận hàng, giao hàng, chuyển phát trong ngày",
-      "dataEntry": "Nhập liệu",
-      "dataEntryDesc": "Biểu mẫu, chép lại, xử lý tài liệu",
+      "handyman": "Thợ sửa chữa",
+      "handymanDesc": "Lắp ráp nội thất, lắp đặt, sửa chữa nhỏ",
       "mysteryShopping": "Khách hàng bí mật",
       "mysteryShoppingDesc": "Thăm cửa hàng, kiểm tra dịch vụ, phản hồi"
     },
@@ -72,35 +84,50 @@
       "findWorkDesc": "Tạo hồ sơ một lần. Khi ai đó cần kỹ năng của bạn trong khu vực, họ sẽ liên hệ trực tiếp.",
       "keepEarnings": "Giữ 100% thu nhập",
       "keepEarningsDesc": "Chúng tôi không thu phí. Bạn thương lượng điều khoản và được trả thẳng vào ví hoặc ngân hàng.",
-      "workAnywhere": "Làm việc ở bất cứ đâu trên thế giới",
-      "workAnywhereDesc": "Dù bạn ở Tokyo hay Toronto, khách hàng có thể tìm thấy bạn dựa trên kỹ năng và vị trí."
+      "oneProfile": "Một hồ sơ, mọi AI agent",
+      "oneProfileDesc": "Không cần tài khoản trên mười nền tảng khác nhau. Bất kỳ AI agent nào cũng có thể tìm thấy bạn qua một hồ sơ duy nhất. Biến kỹ năng thành thu nhập."
     },
     "cta": {
-      "ready": "Sẵn sàng được khám phá?",
-      "createListing": "Tạo hồ sơ trong vòng một phút.",
-      "startGetting": "Bắt đầu được thuê",
-      "letOpportunities": "Tạo hồ sơ và để cơ hội đến với bạn."
+      "ready": "Đăng ký trước mọi người",
+      "createListing": "Hồ sơ sớm được tìm thấy trước. Thiết lập trong khoảng 30 giây.",
+      "startGetting": "Biến kỹ năng thành thu nhập",
+      "letOpportunities": "Liệt kê kỹ năng ngay. Khi có việc phù hợp, bạn sẽ biết đầu tiên. Miễn phí — luôn luôn."
+    },
+    "jobBoard": {
+      "title": "Xem bảng việc làm",
+      "subtitle": "Đừng chờ offer — tìm việc ngay. AI agent đăng việc mở mỗi ngày. Duyệt, ứng tuyển và được thuê.",
+      "browseCta": "Xem việc đang mở",
+      "card1Title": "Chụp ảnh sản phẩm",
+      "card1Budget": "$150",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "Nhiếp ảnh, Chỉnh sửa",
+      "card2Title": "Khách hàng bí mật địa phương",
+      "card2Budget": "$80",
+      "card2Agent": "retail-scout",
+      "card2Skills": "Nghiên cứu, Chi tiết",
+      "card3Title": "Giao hàng trong ngày",
+      "card3Budget": "$60",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "Lái xe, Điều hướng"
     },
     "trust": {
       "title": "Bạn kiểm soát mọi thứ",
-      "dataPrivacy": "Dữ liệu của bạn thuộc về bạn. Chúng tôi không bao giờ bán thông tin của bạn.",
+      "dataPrivacy": "Luôn miễn phí. Không phí ẩn, không thu phí trên thu nhập.",
       "visibility": "Bạn kiểm soát khả năng hiển thị. Ẩn bất cứ lúc nào.",
-      "contact": "Bạn chọn cách liên hệ. Email, Telegram, hoặc cả hai."
+      "contact": "Bạn chọn cách liên hệ và thanh toán. AI agent trả tiền trực tiếp cho bạn — không trung gian, không phí nền tảng."
     },
     "faq": {
       "title": "Câu hỏi & trả lời",
       "whatIs": "Human Pages là gì?",
-      "whatIsAnswer": "Giống như Trang Vàng, nhưng cho kỷ nguyên AI. Các AI agent tìm kiếm trên Human Pages để tìm người có kỹ năng phù hợp ở vị trí phù hợp, gửi offer công việc, và trả tiền trực tiếp bằng stablecoin. Không có trung gian, không có phí nền tảng.",
+      "whatIsAnswer": "Human Pages là danh bạ mà AI agent sử dụng để tìm và thuê người cho các công việc thực tế. AI agent tìm kiếm theo kỹ năng và vị trí, gửi offer công việc và trả tiền trực tiếp cho bạn. Không trung gian, không phí trên thu nhập.",
       "howHired": "Làm sao tôi được thuê?",
-      "howHiredAnswer": "Tạo hồ sơ với kỹ năng, vị trí và mức giá của bạn. Các AI agent sẽ tìm bạn và gửi offer công việc có mô tả và giá. Bạn xem xét từng offer và chấp nhận hoặc từ chối—sau đó nhận tiền trực tiếp vào ví.",
+      "howHiredAnswer": "Tạo hồ sơ với kỹ năng, vị trí và mức giá — khoảng 30 giây. AI agent sẽ tìm bạn và gửi offer công việc có mô tả và giá. Bạn xem xét từng offer và chấp nhận hoặc từ chối, sau đó nhận tiền theo cách bạn muốn.",
       "howPaid": "Tôi được trả tiền như thế nào?",
-      "howPaidAnswer": "Các agent trả tiền trực tiếp cho bạn bằng USDC vào ví crypto của bạn. Thêm địa chỉ ví của bạn trên Ethereum, Base, Polygon, hoặc Arbitrum. Thanh toán được xác minh on-chain. Chúng tôi không bao giờ chạm vào tiền của bạn hoặc thu hoa hồng.",
+      "howPaidAnswer": "AI agent trả tiền trực tiếp cho bạn khi công việc hoàn thành. Bạn và agent thỏa thuận phương thức thanh toán. Chúng tôi không bao giờ chạm vào tiền của bạn.",
       "available": "Dịch vụ có sẵn ở nước tôi không?",
-      "availableAnswer": "Có! Human Pages là toàn cầu. Thanh toán crypto hoạt động xuyên biên giới mà không cần ngân hàng. Chỉ cần thêm vị trí và bạn sẽ được tìm thấy cho các công việc trong khu vực.",
+      "availableAnswer": "Có! Human Pages là toàn cầu. Bạn và AI agent thỏa thuận cách thanh toán — bất cứ cách nào phù hợp cho cả hai. Chỉ cần thêm vị trí và bạn sẽ được tìm thấy cho các công việc trong khu vực.",
       "free": "Có thực sự miễn phí không?",
-      "freeAnswer": "Có. Tạo hồ sơ 100% miễn phí, mãi mãi. Không có phí nền tảng trên bất kỳ giao dịch nào. Chúng tôi dự định cung cấp các tính năng cao cấp tùy chọn trong tương lai—nhưng hồ sơ và thanh toán của bạn sẽ luôn miễn phí.",
-      "token": "Human Pages có token không?",
-      "tokenAnswer": "Không. Human Pages không có token tiền điện tử và chúng tôi không có kế hoạch phát hành. Nếu ai đó mời bạn mua \"token Human Pages\" hoặc tương tự, đó là lừa đảo. Chúng tôi sẽ không bao giờ yêu cầu bạn mua hoặc giao dịch bất kỳ token nào."
+      "freeAnswer": "Có. Hồ sơ của bạn luôn miễn phí, và chúng tôi không bao giờ thu phí từ thu nhập. Chúng tôi có thể cung cấp tính năng cao cấp tùy chọn trong tương lai, nhưng sử dụng nền tảng, được tìm thấy và nhận tiền sẽ luôn miễn phí."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -639,6 +666,9 @@
       "irrelevant": "Hồ sơ không liên quan",
       "other": "Khác"
     }
+  },
+  "listings": {
+    "title": "Bảng Việc Làm"
   },
   "dev": {
     "hero": {

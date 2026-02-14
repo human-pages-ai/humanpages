@@ -103,23 +103,6 @@ const MOCK_PROFILES = [
   },
 ];
 
-const ROTATING_PHRASES = [
-  'do your laundry',
-  'perform a surgery',
-  'bake a cake',
-  'fight a fire',
-  'take a photo',
-  'build a house',
-  'walk your dog',
-  'deliver a baby',
-  'mow the lawn',
-  'pilot a plane',
-  'pick up groceries',
-  'rescue someone',
-  'make a delivery',
-  'assemble furniture',
-  'fix a leaky faucet',
-];
 
 /** Shared tick hook — drives both the headline and the profile card in sync */
 function useHeroTick() {
@@ -142,11 +125,14 @@ function useHeroTick() {
 
 /** Cycling "AI agents can't ___" headline */
 function RotatingHeadline({ tick, visible }: { tick: number; visible: boolean }) {
-  const phrase = ROTATING_PHRASES[tick % ROTATING_PHRASES.length];
+  const { t } = useTranslation();
+  const phrases = t('landing.hero.rotatingPhrases', { returnObjects: true }) as string[];
+  const prefix = t('landing.hero.rotatingPrefix');
+  const phrase = Array.isArray(phrases) ? phrases[tick % phrases.length] : '';
 
   return (
     <span className="block">
-      <span>AI agents can't </span>
+      <span>{prefix}</span>
       <span
         className={`inline-block transition-all duration-300 ${
           visible
@@ -155,7 +141,6 @@ function RotatingHeadline({ tick, visible }: { tick: number; visible: boolean })
         }`}
       >
         <span className="text-blue-600">{phrase}</span>
-        <span className="text-blue-600">.</span>
       </span>
     </span>
   );

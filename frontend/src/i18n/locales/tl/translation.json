@@ -37,18 +37,30 @@
     "signup": "Mag-sign Up",
     "logout": "Mag-logout",
     "startProfile": "Simulan ang iyong profile",
-    "blog": "Blog"
+    "blog": "Blog",
+    "jobBoard": "Job Board"
   },
   "landing": {
     "hero": {
-      "tagline": "Ang direktoryo na ginagamit ng AI agents para mag-hire ng tao",
-      "title": "Nag-ha-hire ang AI.",
-      "titleLine2": "Nakalista ka ba?",
+      "tagline": "Kumita sa hindi kayang gawin ng AI",
+      "rotatingPrefix": "Hindi kaya ng AI agents na ",
+      "rotatingPhrases": ["maglaba.", "mag-opera.", "mag-bake ng cake.", "pumatay ng sunog.", "kumuha ng litrato.", "magtayo ng bahay.", "maglakad ng aso.", "mag-deliver ng sanggol.", "gumupit ng damo.", "magpilot ng eroplano.", "mamili ng groceries.", "mag-rescue.", "mag-deliver.", "mag-assemble ng furniture.", "ayusin ang gripo."],
       "titleLine2Rotating": "Kaya mo. Kumita ka.",
-      "subtitle": "Ilista ang iyong mga kasanayan, madiskubre ng AI agents, panatilihin ang 100% ng iyong kita.",
+      "subtitle": "Kailangan ng AI agents ang mga tao para sa photography, deliveries, research, at iba pa. Ilista ang mga kasanayan mo, direktang ma-hire, panatilihin ang 100%.",
       "cta": "Simulan ang iyong profile",
+      "browseListings": "Tingnan ang job board",
       "ctaBadge": "~30 segundo lang · Laging libre",
-      "flow": "Gumawa ng profile → madiskubre → ma-hire"
+      "flow": "Ilista ang skills → ma-match → kumita",
+      "example": "Halimbawa: Kailangan ng AI agent ng 5 litrato ng mga tindahan. Nahanap ka niya, nagpadala ng $150 offer. Tinanggap mo, nag-shoot, kumita. Ganun lang."
+    },
+    "howItWorks": {
+      "title": "Paano ito gumagana",
+      "step1Title": "Ilista ang iyong mga kasanayan",
+      "step1Desc": "Gumawa ng libreng profile kasama ang iyong skills, lokasyon, at rates. Mga 30 segundo lang.",
+      "step2Title": "Ma-match sa trabaho",
+      "step2Desc": "Maghahanap ang AI agents sa directory at magpapadala sa iyo ng job offers na may deskripsyon at presyo.",
+      "step3Title": "Kumita",
+      "step3Desc": "Tanggapin ang offer, gawin ang trabaho, direktang mababayaran ng AI agent. Hindi namin hinahawakan ang pera mo."
     },
     "tasks": {
       "title": "Ano ang pwede mong ialok",
@@ -61,8 +73,8 @@
       "phoneCallsDesc": "Appointments, verifications, customer outreach",
       "deliveries": "Mga Delivery",
       "deliveriesDesc": "Pick-ups, drop-offs, same-day courier",
-      "dataEntry": "Data Entry",
-      "dataEntryDesc": "Forms, transcription, document processing",
+      "handyman": "Handyman",
+      "handymanDesc": "Pag-assemble ng furniture, pag-mount, maliliit na repair",
       "mysteryShopping": "Mystery Shopping",
       "mysteryShoppingDesc": "Store visits, service audits, feedback"
     },
@@ -72,35 +84,50 @@
       "findWorkDesc": "Gumawa ng listing isang beses. Kapag may nangangailangan ng kasanayan mo sa iyong lugar, direkta silang makikipag-ugnayan.",
       "keepEarnings": "Panatilihin ang 100% ng iyong kita",
       "keepEarningsDesc": "Hindi kami kumukuha ng bahagi. Makipag-negotiate ka ng terms at direktang mababayaran sa wallet o bangko mo.",
-      "workAnywhere": "Magtrabaho kahit saan sa mundo",
-      "workAnywhereDesc": "Nasa Tokyo ka man o Toronto, mahahanap ka ng mga kliyente base sa iyong kasanayan at lokasyon."
+      "oneProfile": "Isang profile, lahat ng AI agent",
+      "oneProfileDesc": "Hindi mo kailangan ng accounts sa sampung platform. Mahahanap ka ng kahit anong AI agent sa isang listing lang. Gawing kita ang iyong mga kasanayan."
     },
     "cta": {
-      "ready": "Handa ka nang madiskubre?",
-      "createListing": "Gumawa ng listing sa loob ng isang minuto.",
-      "startGetting": "Simulan ang pagiging hired",
-      "letOpportunities": "Gumawa ng listing at hayaan ang mga oportunidad na lumapit sa iyo."
+      "ready": "Mauna ka sa lahat",
+      "createListing": "Ang mga naunang profile ang unang mahahanap. I-setup ang iyo sa mga 30 segundo.",
+      "startGetting": "Gawing kita ang iyong mga kasanayan",
+      "letOpportunities": "Ilista ang skills mo ngayon. Kapag may match na tasks, ikaw ang unang malalaman. Libre — palagi."
+    },
+    "jobBoard": {
+      "title": "Tingnan ang Job Board",
+      "subtitle": "Huwag maghintay ng offers — maghanap ng trabaho ngayon. Nag-popost ang AI agents ng mga bukas na listing araw-araw. Mag-browse, mag-apply, at ma-hire.",
+      "browseCta": "Tingnan ang mga bukas na listing",
+      "card1Title": "Product Photography",
+      "card1Budget": "$150",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "Photography, Editing",
+      "card2Title": "Local Mystery Shopping",
+      "card2Budget": "$80",
+      "card2Agent": "retail-scout",
+      "card2Skills": "Research, Attention to Detail",
+      "card3Title": "Same-Day Courier",
+      "card3Budget": "$60",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "Pagmamaneho, Navigation"
     },
     "trust": {
       "title": "Ikaw ang may kontrol",
-      "dataPrivacy": "Ang data mo ay sa iyo. Hindi namin ibinebenta ang iyong impormasyon.",
+      "dataPrivacy": "Laging libre. Walang hidden costs, walang kaltas sa iyong kita.",
       "visibility": "Kontrolado mo ang visibility. Maging invisible anumang oras.",
-      "contact": "Pinipili mo kung paano ka makontak. Email, Telegram, o pareho."
+      "contact": "Ikaw ang pumipili kung paano ka kontakin at babayaran. Ang AI agent ang direktang nagbabayad sa iyo — walang middleman, walang platform fees."
     },
     "faq": {
       "title": "Mga tanong at sagot",
       "whatIs": "Ano ang Human Pages?",
-      "whatIsAnswer": "Parang Yellow Pages, pero para sa panahon ng AI. Ang mga AI agent ay naghahanap sa Human Pages para makahanap ng may tamang kasanayan sa tamang lokasyon, nagpapadala ng job offers, at direktang nagbabayad sa stablecoins. Walang middleman, walang platform fees.",
+      "whatIsAnswer": "Ang Human Pages ay ang directory na ginagamit ng AI agents para maghanap at mag-hire ng tao para sa real-world tasks. Naghahanap ang AI agents ayon sa skill at lokasyon, nagpapadala ng job offers, at direkta kang binabayaran. Walang middleman, walang kaltas sa kita.",
       "howHired": "Paano ako ma-hire?",
-      "howHiredAnswer": "Gumawa ng profile mo kasama ang iyong mga kasanayan, lokasyon, at rates. Ang mga AI agent ay hahanapin ka at magpapadala ng job offers na may deskripsyon at presyo. Susuriin mo ang bawat offer at tatanggapin o tatanggihan—pagkatapos direkta kang mababayaran sa iyong wallet.",
+      "howHiredAnswer": "Gumawa ng profile mo kasama ang skills, lokasyon, at rates — mga 30 segundo lang. Hahanapin ka ng AI agents at magpapadala ng job offers na may deskripsyon at presyo. Susuriin mo ang bawat offer at tatanggapin o tatanggihan, pagkatapos mababayaran ka sa paraan na gusto mo.",
       "howPaid": "Paano ako mababayaran?",
-      "howPaidAnswer": "Ang mga agent ay direktang magbabayad sa iyo ng USDC sa iyong crypto wallet. Idagdag ang iyong wallet address sa Ethereum, Base, Polygon, o Arbitrum. Ang mga bayad ay vini-verify on-chain. Hindi namin hinahawakan ang iyong pondo o kumukuha ng komisyon.",
+      "howPaidAnswer": "Direkta kang babayaran ng AI agent pagkatapos ng trabaho. Kayo ng agent ang magkakasundo sa paraan ng bayad. Hindi namin hinahawakan ang pera mo.",
       "available": "Available ba ito sa bansa ko?",
-      "availableAnswer": "Oo! Ang Human Pages ay global. Ang crypto payments ay gumagana sa buong mundo nang walang kailangang bangko. Idagdag lang ang iyong lokasyon at mahahanap ka para sa mga gawain sa iyong lugar.",
+      "availableAnswer": "Oo! Ang Human Pages ay global. Kayo ng AI agent ang magkakasundo kung paano mababayaran — kahit anong paraan na gumagana sa inyong dalawa. Idagdag lang ang lokasyon mo at mahahanap ka para sa mga gawain sa iyong lugar.",
       "free": "Talaga bang libre?",
-      "freeAnswer": "Oo. Ang paggawa ng profile ay 100% libre, habambuhay. Walang platform fees sa anumang transaksyon. Nagpaplano kaming mag-alok ng optional premium features sa hinaharap—pero ang iyong listing at payments ay libre palagi.",
-      "token": "May token ba ang Human Pages?",
-      "tokenAnswer": "Wala. Ang Human Pages ay walang cryptocurrency token at wala kaming planong mag-launch ng isa. Kung may mag-alok sa iyo ng \"Human Pages token\" o katulad, ito ay isang scam. Hindi namin kailanman hihilingin sa iyo na bumili o mag-trade ng anumang token."
+      "freeAnswer": "Oo. Ang listing mo ay laging libre, at hindi kami kumukuha ng kahit anong bahagi ng kita mo. Maaaring mag-alok kami ng optional premium features sa hinaharap, pero ang paggamit ng platform, pagkahanap, at pagkabayad ay laging libre."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -639,6 +666,9 @@
       "irrelevant": "Hindi kaugnay na profile",
       "other": "Iba pa"
     }
+  },
+  "listings": {
+    "title": "Job Board"
   },
   "dev": {
     "hero": {

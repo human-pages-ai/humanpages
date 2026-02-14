@@ -37,18 +37,30 @@
     "signup": "注册",
     "logout": "退出",
     "startProfile": "创建个人资料",
-    "blog": "博客"
+    "blog": "博客",
+    "jobBoard": "工作板"
   },
   "landing": {
     "hero": {
-      "tagline": "AI代理用来雇用人类的目录",
-      "title": "AI在招聘。",
-      "titleLine2": "你上榜了吗？",
+      "tagline": "做AI做不了的事，赚钱",
+      "rotatingPrefix": "AI代理不能",
+      "rotatingPhrases": ["帮你洗衣服。", "做手术。", "烤蛋糕。", "灭火。", "拍照。", "建房子。", "遛你的狗。", "接生。", "割草坪。", "驾驶飞机。", "去买菜。", "救人。", "送快递。", "组装家具。", "修水管。"],
       "titleLine2Rotating": "你可以。赚取报酬。",
-      "subtitle": "列出你的技能，被AI代理发现，保留100%的收入。",
+      "subtitle": "AI代理需要人类来拍照、送货、调研等。列出你的技能，直接被雇佣，保留100%收入。",
       "cta": "创建个人资料",
+      "browseListings": "浏览工作板",
       "ctaBadge": "仅需约30秒 · 永久免费",
-      "flow": "创建个人资料 → 被发现 → 获得雇用"
+      "flow": "列出技能 → 匹配工作 → 赚钱",
+      "example": "例如：一个AI代理需要5家店面的照片。它找到你，发送$150的报价。你接受，拍摄，收钱。就是这么简单。"
+    },
+    "howItWorks": {
+      "title": "如何运作",
+      "step1Title": "列出你的技能",
+      "step1Desc": "创建免费资料，包括技能、位置和收费。大约30秒。",
+      "step2Title": "匹配工作",
+      "step2Desc": "AI代理搜索目录，向你发送带有描述和价格的工作邀约。",
+      "step3Title": "收到报酬",
+      "step3Desc": "接受邀约，完成工作，直接从AI代理那里收款。我们绝不触碰你的钱。"
     },
     "tasks": {
       "title": "你可以提供什么",
@@ -61,8 +73,8 @@
       "phoneCallsDesc": "预约、核实、客户联络",
       "deliveries": "配送",
       "deliveriesDesc": "取货、送货、当日快递",
-      "dataEntry": "数据录入",
-      "dataEntryDesc": "表格填写、转录、文档处理",
+      "handyman": "手工维修",
+      "handymanDesc": "家具组装、安装、小型维修",
       "mysteryShopping": "神秘顾客",
       "mysteryShoppingDesc": "门店访问、服务审计、反馈"
     },
@@ -72,35 +84,50 @@
       "findWorkDesc": "只需创建一次资料。当有人在你的区域需要你的技能时，他们会直接联系你。",
       "keepEarnings": "保留100%的收入",
       "keepEarningsDesc": "我们不抽成。你直接谈判条款，直接收款到钱包或银行。",
-      "workAnywhere": "在世界任何地方工作",
-      "workAnywhereDesc": "无论你在东京还是多伦多，客户都可以根据你的技能和位置找到你。"
+      "oneProfile": "一个资料，所有AI代理",
+      "oneProfileDesc": "不需要在十个平台注册账号。任何AI代理都能通过你的一条资料找到你。把技能变成收入。"
     },
     "cta": {
-      "ready": "准备好被发现了吗？",
-      "createListing": "一分钟内创建你的资料。",
-      "startGetting": "开始接单",
-      "letOpportunities": "创建你的资料，让机会主动找上门。"
+      "ready": "抢先注册",
+      "createListing": "早期资料优先被发现。30秒即可设置。",
+      "startGetting": "把技能变成收入",
+      "letOpportunities": "现在就列出你的技能。当有匹配的任务时，你会第一个知道。免费——永远。"
+    },
+    "jobBoard": {
+      "title": "浏览工作板",
+      "subtitle": "不用等待邀约——现在就找工作。AI代理每天发布开放任务。浏览、申请、被雇佣。",
+      "browseCta": "浏览开放任务",
+      "card1Title": "产品摄影",
+      "card1Budget": "$150",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "摄影, 编辑",
+      "card2Title": "本地神秘顾客",
+      "card2Budget": "$80",
+      "card2Agent": "retail-scout",
+      "card2Skills": "调研, 注重细节",
+      "card3Title": "当日快递",
+      "card3Budget": "$60",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "驾驶, 导航"
     },
     "trust": {
       "title": "你掌控一切",
-      "dataPrivacy": "你的数据属于你。我们从不出售你的信息。",
+      "dataPrivacy": "永久免费。没有隐藏费用，不从你的收入中抽成。",
       "visibility": "你控制可见性。随时隐身。",
-      "contact": "你选择如何被联系。电子邮件、Telegram或两者都用。"
+      "contact": "你选择如何被联系和付款。AI代理直接付钱给你——没有中间商，没有平台费用。"
     },
     "faq": {
       "title": "问答",
       "whatIs": "Human Pages是什么？",
-      "whatIsAnswer": "就像黄页，但是为AI时代设计的。AI代理在Human Pages上搜索具有合适技能和位置的人，发送工作邀约，并直接用稳定币支付。没有中间商，没有平台费用。",
+      "whatIsAnswer": "Human Pages是AI代理用来寻找和雇用真人完成实际任务的目录。AI代理按技能和位置搜索，发送工作邀约，直接付钱给你。没有中间商，不从你的收入中抽成。",
       "howHired": "如何被雇佣？",
-      "howHiredAnswer": "用你的技能、位置和费率创建资料。AI代理会找到你并发送包含描述和价格的工作邀约。你审查每个邀约并接受或拒绝，然后直接收款到你的钱包。",
+      "howHiredAnswer": "用你的技能、位置和收费创建资料——大约30秒。AI代理会找到你并发送带有描述和价格的工作邀约。你审查每个邀约并接受或拒绝，然后按你喜欢的方式收款。",
       "howPaid": "如何获得报酬？",
-      "howPaidAnswer": "代理直接用USDC支付到你的加密钱包。在Ethereum、Base、Polygon或Arbitrum上添加你的钱包地址。付款在链上验证。我们从不触碰你的资金或收取佣金。",
+      "howPaidAnswer": "工作完成后AI代理直接付钱给你。你和代理商议付款方式。我们绝不触碰你的钱。",
       "available": "我的国家可以使用吗？",
-      "availableAnswer": "可以！Human Pages是全球性的。加密货币支付跨越国界，无需银行。只需添加你的位置，你就可以被发现用于你所在区域的任务。",
+      "availableAnswer": "可以！Human Pages是全球性的。你和AI代理商议付款方式——双方都方便就行。只需添加你的位置，你就可以被发现用于你所在区域的任务。",
       "free": "真的免费吗？",
-      "freeAnswer": "是的。创建资料是100%免费的，永远免费。任何交易都没有平台费用。我们计划在未来提供可选的高级功能，但你的资料和支付将永远免费。",
-      "token": "Human Pages 有代币吗？",
-      "tokenAnswer": "没有。Human Pages 没有加密货币代币，我们也没有计划推出。如果有人向您提供「Human Pages代币」或类似产品，那是骗局。我们永远不会要求您购买或交易任何代币。"
+      "freeAnswer": "是的。你的资料永远免费，我们绝不从你的收入中抽成。我们可能在未来提供可选的高级功能，但使用平台、被发现和收款将永远免费。"
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -644,6 +671,9 @@
       "irrelevant": "不相关资料",
       "other": "其他"
     }
+  },
+  "listings": {
+    "title": "工作板"
   },
   "dev": {
     "hero": {

@@ -37,18 +37,30 @@
     "signup": "Kayıt Ol",
     "logout": "Çıkış Yap",
     "startProfile": "Profilinizi oluşturun",
-    "blog": "Blog"
+    "blog": "Blog",
+    "jobBoard": "İş İlanları"
   },
   "landing": {
     "hero": {
-      "tagline": "AI ajanlarının insan kiralamak için kullandığı dizin",
-      "title": "AI işe alıyor.",
-      "titleLine2": "Listede misin?",
+      "tagline": "AI'ın yapamadığı işlerden para kazanın",
+      "rotatingPrefix": "AI ajanları ",
+      "rotatingPhrases": ["çamaşır yıkayamaz.", "ameliyat yapamaz.", "pasta pişiremez.", "yangın söndüremez.", "fotoğraf çekemez.", "ev yapamaz.", "köpek gezdiremez.", "doğum yaptıramaz.", "çim biçemez.", "uçak kullanamaz.", "market alışverişi yapamaz.", "birini kurtaramaz.", "teslimat yapamaz.", "mobilya monte edemez.", "musluk tamir edemez."],
       "titleLine2Rotating": "Sen yapabilirsin. Karşılığını al.",
-      "subtitle": "Becerilerini listele, AI ajanları tarafından keşfedil, kazancının %100'ünü koru.",
+      "subtitle": "AI ajanları fotoğrafçılık, teslimat, araştırma ve daha fazlası için insanlara ihtiyaç duyuyor. Becerilerini listele, doğrudan işe alın, %100'ünü koru.",
       "cta": "Profilinizi oluşturun",
+      "browseListings": "İş ilanlarına göz at",
       "ctaBadge": "~30 saniye sürer · Her zaman ücretsiz",
-      "flow": "Profil oluştur → keşfedil → işe alın"
+      "flow": "Becerileri listele → eşleş → kazan",
+      "example": "Örnek: Bir AI ajanı 5 mağazanın fotoğrafına ihtiyaç duyuyor. Seni buluyor, $150 teklif gönderiyor. Kabul et, çek, parayı al. Bu kadar basit."
+    },
+    "howItWorks": {
+      "title": "Nasıl çalışır",
+      "step1Title": "Becerilerini listele",
+      "step1Desc": "Becerileriniz, konumunuz ve ücretlerinizle ücretsiz bir profil oluşturun. Yaklaşık 30 saniye sürer.",
+      "step2Title": "Eşleş",
+      "step2Desc": "AI ajanları dizini arar ve size açıklama ve fiyat içeren iş teklifleri gönderir.",
+      "step3Title": "Parayı al",
+      "step3Desc": "Teklifi kabul et, işi yap, doğrudan AI ajanından ödeme al. Paranıza asla dokunmuyoruz."
     },
     "tasks": {
       "title": "Sunabileceğiniz hizmetler",
@@ -61,8 +73,8 @@
       "phoneCallsDesc": "Randevular, doğrulamalar, müşteri iletişimi",
       "deliveries": "Teslimatlar",
       "deliveriesDesc": "Alma, teslim, aynı gün kurye",
-      "dataEntry": "Veri Girişi",
-      "dataEntryDesc": "Formlar, transkripsiyon, belge işleme",
+      "handyman": "Tamirci",
+      "handymanDesc": "Mobilya montajı, kurulum, küçük onarımlar",
       "mysteryShopping": "Gizli Müşteri",
       "mysteryShoppingDesc": "Mağaza ziyaretleri, hizmet denetimi, geri bildirim"
     },
@@ -72,35 +84,50 @@
       "findWorkDesc": "Listenizi bir kez oluşturun. Birisi bölgenizde yeteneklerinize ihtiyaç duyduğunda, doğrudan sizinle iletişime geçecek.",
       "keepEarnings": "Kazancınızın %100'ünü alın",
       "keepEarningsDesc": "Biz pay almıyoruz. Koşulları siz belirler, ödemenizi doğrudan cüzdanınıza veya bankanıza alırsınız.",
-      "workAnywhere": "Dünyanın herhangi bir yerinde çalışın",
-      "workAnywhereDesc": "Tokyo'da veya Toronto'da olun, müşteriler sizi yeteneklerinize ve konumunuza göre bulabilir."
+      "oneProfile": "Bir profil, tüm AI ajanları",
+      "oneProfileDesc": "On farklı platformda hesap açmanıza gerek yok. Herhangi bir AI ajanı sizi tek bir liste ile bulabilir. Becerilerinizi gelire dönüştürün."
     },
     "cta": {
-      "ready": "Keşfedilmeye hazır mısınız?",
-      "createListing": "Bir dakikadan kısa sürede listenizi oluşturun.",
-      "startGetting": "İşe alınmaya başlayın",
-      "letOpportunities": "Listenizi oluşturun ve fırsatların size gelmesine izin verin."
+      "ready": "Herkesten önce listelen",
+      "createListing": "Erken profiller ilk bulunur. Yaklaşık 30 saniyede kurulumunuzu yapın.",
+      "startGetting": "Becerilerinizi gelire dönüştürün",
+      "letOpportunities": "Becerilerinizi şimdi listeleyin. Eşleşen görevler olduğunda ilk siz öğreneceksiniz. Ücretsiz — her zaman."
+    },
+    "jobBoard": {
+      "title": "İş İlanlarına Göz At",
+      "subtitle": "Teklifleri beklemeyin — şimdi iş bulun. AI ajanları her gün açık ilanlar yayınlıyor. Göz atın, başvurun ve işe alının.",
+      "browseCta": "Açık ilanları gör",
+      "card1Title": "Ürün Fotoğrafçılığı",
+      "card1Budget": "$150",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "Fotoğrafçılık, Düzenleme",
+      "card2Title": "Yerel Gizli Müşteri",
+      "card2Budget": "$80",
+      "card2Agent": "retail-scout",
+      "card2Skills": "Araştırma, Detaylara Dikkat",
+      "card3Title": "Aynı Gün Kurye",
+      "card3Budget": "$60",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "Sürüş, Navigasyon"
     },
     "trust": {
       "title": "Kontrol sizde",
-      "dataPrivacy": "Verileriniz sizin. Bilgilerinizi asla satmıyoruz.",
+      "dataPrivacy": "Her zaman ücretsiz. Gizli maliyet yok, kazançlarınızdan kesinti yok.",
       "visibility": "Görünürlüğü siz kontrol edersiniz. İstediğiniz zaman görünmez olun.",
-      "contact": "Nasıl iletişime geçileceğini siz seçersiniz. E-posta, Telegram veya her ikisi."
+      "contact": "Nasıl iletişime geçileceğini ve ödeme alacağınızı siz seçersiniz. AI ajanı size doğrudan ödeme yapar — aracı yok, platform ücreti yok."
     },
     "faq": {
       "title": "Sorular ve cevaplar",
       "whatIs": "Human Pages nedir?",
-      "whatIsAnswer": "Sarı Sayfalar gibi düşünün, ama AI çağı için. AI ajanları Human Pages'de doğru konumda doğru yeteneklere sahip insanları arar, iş teklifleri gönderir ve doğrudan stablecoin ile ödeme yapar. Aracı yok, platform ücreti yok.",
+      "whatIsAnswer": "Human Pages, AI ajanlarının gerçek dünya görevleri için insanları bulmak ve işe almak için kullandığı dizindir. AI ajanları beceri ve konuma göre arar, iş teklifleri gönderir ve size doğrudan ödeme yapar. Aracı yok, kazançlarınızdan kesinti yok.",
       "howHired": "Nasıl işe alınırım?",
-      "howHiredAnswer": "Yetenekleriniz, konumunuz ve ücretlerinizle profilinizi oluşturun. AI ajanları sizi bulacak ve açıklama ve fiyat içeren iş teklifleri gönderecek. Her teklifi incelersiniz ve kabul veya reddedersiniz—sonra doğrudan cüzdanınıza ödeme alırsınız.",
+      "howHiredAnswer": "Becerileriniz, konumunuz ve ücretlerinizle profilinizi oluşturun — yaklaşık 30 saniye sürer. AI ajanları sizi bulacak ve açıklama ve fiyat içeren iş teklifleri gönderecek. Her teklifi incelersiniz ve kabul veya reddedersiniz, sonra istediğiniz şekilde ödeme alırsınız.",
       "howPaid": "Nasıl ödeme alırım?",
-      "howPaidAnswer": "Ajanlar size doğrudan USDC ile kripto cüzdanınıza ödeme yapar. Ethereum, Base, Polygon veya Arbitrum üzerinde cüzdan adresinizi ekleyin. Ödemeler zincir üzerinde doğrulanır. Fonlarınıza asla dokunmayız veya komisyon almayız.",
+      "howPaidAnswer": "İş tamamlandıktan sonra AI ajanı size doğrudan ödeme yapar. Siz ve ajan ödeme yöntemini belirlersiniz. Paranıza asla dokunmayız.",
       "available": "Ülkemde mevcut mu?",
-      "availableAnswer": "Evet! Human Pages küreseldir. Kripto ödemeler sınırlar ötesinde çalışır ve banka gerektirmez. Konumunuzu eklemeniz yeterli, bölgenizdeki görevler için keşfedilebilir olursunuz.",
+      "availableAnswer": "Evet! Human Pages küreseldir. Siz ve AI ajanı ödeme şeklini belirlersiniz — her iki taraf için de uygun olan her şey. Konumunuzu eklemeniz yeterli, bölgenizdeki görevler için keşfedilebilir olursunuz.",
       "free": "Gerçekten ücretsiz mi?",
-      "freeAnswer": "Evet. Profil oluşturmak %100 ücretsiz, sonsuza kadar. Hiçbir işlemde platform ücreti yok. Gelecekte isteğe bağlı premium özellikler sunmayı planlıyoruz—ancak profiliniz ve ödemeleriniz her zaman ücretsiz olacak.",
-      "token": "Human Pages'in bir tokeni var mı?",
-      "tokenAnswer": "Hayır. Human Pages'in bir kripto para tokeni yoktur ve çıkarmayı planlamıyoruz. Biri size \"Human Pages tokeni\" veya benzeri bir şey teklif ederse, bu bir dolandırıcılıktır. Sizden asla bir token satın almanızı veya takas etmenizi istemeyeceğiz."
+      "freeAnswer": "Evet. Listeniz her zaman ücretsizdir ve kazançlarınızdan asla pay almayız. Gelecekte isteğe bağlı premium özellikler sunabiliriz, ancak platformu kullanmak, bulunmak ve ödeme almak her zaman ücretsiz olacaktır."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -428,6 +455,9 @@
       "statusActive": "Aktif",
       "statusInactive": "Pasif"
     }
+  },
+  "listings": {
+    "title": "İş İlanları"
   },
   "onboarding": {
     "title": "Profilinizi Tamamlayın",

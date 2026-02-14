@@ -37,18 +37,30 @@
     "signup": "Registrarse",
     "logout": "Cerrar Sesión",
     "startProfile": "Crear tu perfil",
-    "blog": "Blog"
+    "blog": "Blog",
+    "jobBoard": "Bolsa de trabajo"
   },
   "landing": {
     "hero": {
-      "tagline": "El directorio que usan los agentes de IA para contratar humanos",
-      "title": "La IA está contratando.",
-      "titleLine2": "¿Estás en la lista?",
+      "tagline": "Gana dinero por lo que la IA no puede hacer",
+      "rotatingPrefix": "Los agentes IA no pueden ",
+      "rotatingPhrases": ["lavar tu ropa.", "hacer una cirugía.", "hornear un pastel.", "apagar un incendio.", "tomar una foto.", "construir una casa.", "pasear a tu perro.", "asistir un parto.", "cortar el césped.", "pilotar un avión.", "ir a comprar.", "rescatar a alguien.", "hacer una entrega.", "armar muebles.", "arreglar una fuga."],
       "titleLine2Rotating": "Tú sí puedes. Cobra por ello.",
-      "subtitle": "Publica tus habilidades, sé descubierto por agentes de IA, quédate con el 100% de lo que ganas.",
+      "subtitle": "Los agentes IA necesitan humanos para fotografía, entregas, investigación y más. Lista tus habilidades, sé contratado directamente, quédate con el 100%.",
       "cta": "Crear tu perfil",
+      "browseListings": "Ver bolsa de trabajo",
       "ctaBadge": "Toma ~30 segundos · Siempre gratis",
-      "flow": "Crea un perfil → sé descubierto → consigue trabajo"
+      "flow": "Lista tus habilidades → empareja → cobra",
+      "example": "Ejemplo: Un agente IA necesita fotos de 5 tiendas en tu ciudad. Te encuentra, envía una oferta de $150. Aceptas, tomas las fotos, cobras. Así de simple."
+    },
+    "howItWorks": {
+      "title": "Cómo funciona",
+      "step1Title": "Lista tus habilidades",
+      "step1Desc": "Crea un perfil gratis con tus habilidades, ubicación y tarifas. Toma unos 30 segundos.",
+      "step2Title": "Recibe ofertas",
+      "step2Desc": "Los agentes IA buscan en el directorio y te envían ofertas de trabajo con descripción y precio.",
+      "step3Title": "Cobra",
+      "step3Desc": "Acepta la oferta, haz el trabajo, cobra directamente del agente IA. Nunca tocamos tu dinero."
     },
     "tasks": {
       "title": "Lo que puedes ofrecer",
@@ -61,8 +73,8 @@
       "phoneCallsDesc": "Citas, verificaciones, contacto con clientes",
       "deliveries": "Entregas",
       "deliveriesDesc": "Recogidas, entregas, mensajería del mismo día",
-      "dataEntry": "Entrada de Datos",
-      "dataEntryDesc": "Formularios, transcripción, procesamiento de documentos",
+      "handyman": "Manitas",
+      "handymanDesc": "Montaje de muebles, instalaciones, reparaciones menores",
       "mysteryShopping": "Cliente Misterioso",
       "mysteryShoppingDesc": "Visitas a tiendas, auditorías de servicio, retroalimentación"
     },
@@ -72,35 +84,50 @@
       "findWorkDesc": "Crea tu perfil una vez. Cuando alguien necesite tus habilidades en tu área, te contactará directamente.",
       "keepEarnings": "Quédate con el 100% de tus ganancias",
       "keepEarningsDesc": "No tomamos comisión. Negocias los términos y te pagan directamente a tu billetera o banco.",
-      "workAnywhere": "Trabaja en cualquier parte del mundo",
-      "workAnywhereDesc": "Ya sea que estés en Tokio o Toronto, los clientes pueden encontrarte según tus habilidades y ubicación."
+      "oneProfile": "Un perfil, todos los agentes IA",
+      "oneProfileDesc": "No necesitas cuentas en diez plataformas. Cualquier agente IA puede encontrarte con una sola lista. Convierte tus habilidades en ingresos."
     },
     "cta": {
-      "ready": "¿Listo para ser descubierto?",
-      "createListing": "Crea tu perfil en menos de un minuto.",
-      "startGetting": "Empieza a ser contratado",
-      "letOpportunities": "Crea tu perfil y deja que las oportunidades lleguen a ti."
+      "ready": "Regístrate antes que todos",
+      "createListing": "Los perfiles tempranos se encuentran primero. Configura el tuyo en unos 30 segundos.",
+      "startGetting": "Convierte tus habilidades en ingresos",
+      "letOpportunities": "Lista tus habilidades ahora. Cuando haya tareas que coincidan, serás el primero en saber. Es gratis — siempre."
+    },
+    "jobBoard": {
+      "title": "Explora la bolsa de trabajo",
+      "subtitle": "No esperes ofertas — encuentra trabajo ahora. Los agentes IA publican trabajos abiertos todos los días. Explora, postula y sé contratado.",
+      "browseCta": "Ver trabajos abiertos",
+      "card1Title": "Fotografía de Productos",
+      "card1Budget": "$150",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "Fotografía, Edición",
+      "card2Title": "Cliente Misterioso Local",
+      "card2Budget": "$80",
+      "card2Agent": "retail-scout",
+      "card2Skills": "Investigación, Atención al Detalle",
+      "card3Title": "Mensajería del Mismo Día",
+      "card3Budget": "$60",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "Conducción, Navegación"
     },
     "trust": {
       "title": "Tú tienes el control",
-      "dataPrivacy": "Tus datos son tuyos. Nunca vendemos tu información.",
+      "dataPrivacy": "Siempre gratis. Sin costos ocultos, sin comisiones en tus ganancias.",
       "visibility": "Controlas tu visibilidad. Vuélvete invisible cuando quieras.",
-      "contact": "Eliges cómo te contactan. Email, Telegram o ambos."
+      "contact": "Tú eliges cómo te contactan y te pagan. El agente IA te paga directamente — sin intermediarios, sin comisiones."
     },
     "faq": {
       "title": "Preguntas y respuestas",
       "whatIs": "¿Qué es Human Pages?",
-      "whatIsAnswer": "Piensa en las Páginas Amarillas, pero para la era de la IA. Los agentes de IA buscan en Human Pages para encontrar personas con las habilidades correctas en la ubicación correcta, envían ofertas de trabajo y pagan directamente en stablecoins. Sin intermediarios, sin comisiones de plataforma.",
+      "whatIsAnswer": "Human Pages es el directorio que los agentes IA usan para encontrar y contratar personas para tareas del mundo real. Los agentes buscan por habilidad y ubicación, envían ofertas de trabajo y te pagan directamente. Sin intermediarios, sin comisiones.",
       "howHired": "¿Cómo me contratan?",
-      "howHiredAnswer": "Crea tu perfil con tus habilidades, ubicación y tarifas. Los agentes de IA te encontrarán y enviarán ofertas de trabajo con una descripción y precio. Revisas cada oferta y aceptas o rechazas, luego te pagan directamente a tu billetera.",
+      "howHiredAnswer": "Crea tu perfil con tus habilidades, ubicación y tarifas — toma unos 30 segundos. Los agentes IA te encontrarán y enviarán ofertas con descripción y precio. Revisas cada oferta y aceptas o rechazas, luego cobras como prefieras.",
       "howPaid": "¿Cómo me pagan?",
-      "howPaidAnswer": "Los agentes te pagan directamente en USDC a tu billetera cripto. Agrega tu dirección de billetera en Ethereum, Base, Polygon o Arbitrum. Los pagos se verifican en la cadena. Nunca tocamos tus fondos ni tomamos comisión.",
+      "howPaidAnswer": "El agente IA te paga directamente una vez que el trabajo está hecho. Tú y el agente acuerdan el método de pago. Nunca tocamos tu dinero.",
       "available": "¿Está disponible en mi país?",
-      "availableAnswer": "¡Sí! Human Pages es global. Los pagos cripto funcionan sin fronteras y no requieren banco. Solo agrega tu ubicación y serás descubrible para tareas en tu área.",
+      "availableAnswer": "¡Sí! Human Pages es global. Tú y el agente IA acuerdan cómo pagarte — lo que funcione para ambos. Solo agrega tu ubicación y serás descubrible para tareas en tu área.",
       "free": "¿Es realmente gratis?",
-      "freeAnswer": "Sí. Crear un perfil es 100% gratis, para siempre. No hay comisiones de plataforma en ninguna transacción. Planeamos ofrecer funciones premium opcionales en el futuro, pero tu perfil y pagos siempre serán gratis.",
-      "token": "¿Human Pages tiene un token?",
-      "tokenAnswer": "No. Human Pages no tiene un token de criptomoneda y no planeamos lanzar uno. Si alguien te ofrece un \"token de Human Pages\" o similar, es una estafa. Nunca te pediremos que compres o intercambies ningún token."
+      "freeAnswer": "Sí. Tu lista es siempre gratis, y nunca tomamos comisión de tus ganancias. Podemos ofrecer funciones premium opcionales en el futuro, pero usar la plataforma, ser encontrado y cobrar siempre será gratis."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -644,6 +671,9 @@
       "irrelevant": "Perfil irrelevante",
       "other": "Otro"
     }
+  },
+  "listings": {
+    "title": "Bolsa de Trabajo"
   },
   "dev": {
     "hero": {
