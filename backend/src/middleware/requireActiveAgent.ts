@@ -35,7 +35,7 @@ export function requireActiveAgent(req: AgentAuthRequest, res: Response, next: N
     return res.status(403).json({
       error: 'Agent not activated',
       code: 'AGENT_PENDING',
-      message: 'Agent must be activated before performing this action. Tweet about us (free, 30-day access) or pay ($10, 90-day access).',
+      message: 'Agent must be activated before performing this action. Tweet about us (free, unlimited access) or pay ($10 USDC, 60-day PRO access).',
       activationUrl,
     });
   }

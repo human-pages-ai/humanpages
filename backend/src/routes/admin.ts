@@ -450,7 +450,7 @@ router.patch('/agents/:id', async (req: AuthRequest, res) => {
 
     const VALID_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED', 'BANNED'];
     const VALID_TIERS = ['BASIC', 'PRO'];
-    const TIER_DURATIONS: Record<string, number> = { BASIC: 30, PRO: 60 };
+    const TIER_DURATIONS: Record<string, number | null> = { BASIC: null, PRO: 60 };
 
     if (status !== undefined && !VALID_STATUSES.includes(status)) {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
@@ -475,8 +475,9 @@ router.patch('/agents/:id', async (req: AuthRequest, res) => {
       // Compute expiration from tier duration unless custom expiration is provided
       if (activationExpiresAt === undefined) {
         const tier = activationTier;
-        const days = TIER_DURATIONS[tier] || 30;
-        data.activationExpiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+        const days = TIER_DURATIONS[tier];
+        // BASIC: null = no expiry (subject to TOS). PRO: time-limited.
+        data.activationExpiresAt = days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : null;
       }
     }
 

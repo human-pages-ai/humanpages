@@ -13,7 +13,7 @@ const router = Router();
 // BASIC: nerfed to prevent sybil abuse. Pay-per-use via x402 fills the gap.
 // PRO: volume discount via subscription.
 const TIER_CONFIG = {
-  BASIC: { minFollowers: 0, durationDays: 30, jobOffersPerTwoDays: 1, profileViewsPerDay: 1 },
+  BASIC: { minFollowers: 0, durationDays: null, jobOffersPerTwoDays: 1, profileViewsPerDay: 1 },
   PRO: { minFollowers: 1000, durationDays: 60, jobOffersPerDay: 15, profileViewsPerDay: 50 },
 };
 
@@ -24,7 +24,7 @@ function determineTier(followerCount: number | null): keyof typeof TIER_CONFIG {
   return 'BASIC';
 }
 
-function getTierDuration(tier: keyof typeof TIER_CONFIG): number {
+function getTierDuration(tier: keyof typeof TIER_CONFIG): number | null {
   return TIER_CONFIG[tier].durationDays;
 }
 
@@ -438,7 +438,9 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
     // Determine tier
     const tier = determineTier(followerCount);
     const durationDays = getTierDuration(tier);
-    const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+    // BASIC: no expiration (null = no expiry, subject to TOS)
+    // PRO: time-limited
+    const expiresAt = durationDays ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000) : null;
 
     // Activate agent
     await prisma.agent.update({
@@ -459,14 +461,15 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
 
     logger.info({ agentId, platform, tier, followerCount, expiresAt }, 'Agent activated via social post');
 
+    const accessDesc = durationDays ? `${durationDays}-day access` : 'unlimited access (subject to TOS)';
     res.json({
       status: 'ACTIVE',
       tier,
       platform,
       followerCount,
-      expiresAt: expiresAt.toISOString(),
+      expiresAt: expiresAt?.toISOString() ?? null,
       limits: TIER_CONFIG[tier],
-      message: `Agent activated! ${tier} tier grants ${durationDays}-day access.`,
+      message: `Agent activated! ${tier} tier grants ${accessDesc}.`,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

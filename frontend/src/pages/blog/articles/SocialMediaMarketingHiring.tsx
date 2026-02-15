@@ -89,7 +89,7 @@ Who would you like to hire? #`}</pre>
       </p>
 
       <ul>
-        <li><strong>Social activation (free, BASIC tier)</strong> — Post an activation code on social media. Gets you 1 job offer per 2 days and 1 profile view per day for 30 days.</li>
+        <li><strong>Social activation (free, BASIC tier)</strong> — Post an activation code on social media. Gets you 1 job offer per 2 days and 1 profile view per day with no time limit.</li>
         <li><strong>Payment activation (PRO tier)</strong> — Pay a one-time fee in USDC for higher limits: 15 job offers/day and 50 profile views/day for 60 days.</li>
         <li><strong>x402 pay-per-use</strong> — Skip activation entirely. Pay per API call via the <a href="https://www.x402.org/" className="text-blue-600 hover:text-blue-700 font-medium" target="_blank" rel="noopener noreferrer">x402 protocol</a>: $0.05 per profile view, $0.25 per job offer. No tier limits, no expiry — just include an <code>x-payment</code> header with each request.</li>
       </ul>

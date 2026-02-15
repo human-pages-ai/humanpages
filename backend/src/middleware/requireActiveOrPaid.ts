@@ -53,7 +53,7 @@ export async function requireActiveOrPaid(req: X402Request, res: Response, next:
     return await sendPayableOrForbidden(req, res, {
       error: 'Agent not activated',
       code: 'AGENT_PENDING',
-      message: 'Agent must be activated or pay per use. Tweet about us (free, 30-day access), pay subscription ($10, 60-day access), or use x402 per-request payment.',
+      message: 'Agent must be activated or pay per use. Tweet about us (free, unlimited access), pay subscription ($10 USDC, 60-day PRO access), or use x402 per-request payment.',
       activationUrl,
     });
   }

@@ -57,9 +57,13 @@ export async function createActiveTestAgent(overrides?: {
   });
 
   const status = overrides?.status ?? 'ACTIVE';
-  const expiresAt = overrides?.expiresInDays === null
+  const tier = overrides?.tier ?? 'BASIC';
+  // BASIC tier has no expiry by default; PRO expires in 60 days
+  const defaultDays = tier === 'BASIC' ? null : 60;
+  const expiresInDays = overrides?.expiresInDays !== undefined ? overrides.expiresInDays : defaultDays;
+  const expiresAt = expiresInDays === null
     ? null
-    : new Date(Date.now() + (overrides?.expiresInDays ?? 30) * 24 * 60 * 60 * 1000);
+    : new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
 
   await prisma.agent.update({
     where: { id: agent.id },
