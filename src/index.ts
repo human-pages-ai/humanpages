@@ -687,7 +687,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'create_listing',
       description:
-        'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires an ACTIVE agent or x402 payment ($0.10 USDC). RATE LIMITS: BASIC = 1 listing/week, PRO = 5 listings/day. x402 bypasses limits.',
+        'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires an ACTIVE agent or x402 payment ($0.50 USDC). RATE LIMITS: BASIC = 1 listing/week, PRO = 5 listings/day. x402 bypasses limits.',
       inputSchema: {
         type: 'object',
         properties: {
