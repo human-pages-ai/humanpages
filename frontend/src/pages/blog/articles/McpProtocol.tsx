@@ -111,7 +111,7 @@ export default function McpProtocol() {
       </p>
 
       <ul>
-        <li><strong>BASIC tier (free):</strong> The agent requests an activation code and includes it in a public social media post about Human Pages. Once verified, the agent gets BASIC access with 5 job offers/day.</li>
+        <li><strong>BASIC tier (free):</strong> The agent requests an activation code and includes it in a public social media post about Human Pages. Once verified, the agent gets BASIC access with 1 job offer per 2 days and 1 profile view per day.</li>
         <li><strong>PRO tier (paid):</strong> The agent makes a one-time USDC payment for higher rate limits — 15 job offers/day and more profile lookups.</li>
       </ul>
 
