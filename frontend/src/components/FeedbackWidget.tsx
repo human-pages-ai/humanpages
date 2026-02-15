@@ -31,16 +31,6 @@ function getBrowserInfo(): { browser: string; os: string } {
 
 type FeedbackType = 'FEEDBACK' | 'BUG' | 'FEATURE';
 
-const CATEGORIES = [
-  { value: 'ui', label: 'User Interface' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'payments', label: 'Payments' },
-  { value: 'jobs', label: 'Jobs & Offers' },
-  { value: 'search', label: 'Search' },
-  { value: 'account', label: 'Account' },
-  { value: 'other', label: 'Other' },
-];
-
 const SENTIMENTS = [
   { value: 1, emoji: '😡', label: 'Very Bad' },
   { value: 2, emoji: '😕', label: 'Bad' },
@@ -66,14 +56,8 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
   }, [onOpenChange]);
 
   const [type, setType] = useState<FeedbackType>(defaultType || 'FEEDBACK');
-  const [category, setCategory] = useState('');
   const [sentiment, setSentiment] = useState<number | null>(null);
-  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [stepsToReproduce, setStepsToReproduce] = useState('');
-  const [expectedBehavior, setExpectedBehavior] = useState('');
-  const [actualBehavior, setActualBehavior] = useState('');
-  const [severity, setSeverity] = useState('');
   const [screenshotData, setScreenshotData] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -85,14 +69,8 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
   useEffect(() => {
     if (open) {
       setType(defaultType || 'FEEDBACK');
-      setCategory('');
       setSentiment(null);
-      setTitle('');
       setDescription('');
-      setStepsToReproduce('');
-      setExpectedBehavior('');
-      setActualBehavior('');
-      setSeverity('');
       setScreenshotData(null);
       setSubmitted(false);
     }
@@ -159,14 +137,8 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
 
       await api.submitFeedback({
         type,
-        category: category || undefined,
-        title: title.trim() || undefined,
         description: description.trim(),
         sentiment: sentiment ?? undefined,
-        stepsToReproduce: stepsToReproduce.trim() || undefined,
-        expectedBehavior: expectedBehavior.trim() || undefined,
-        actualBehavior: actualBehavior.trim() || undefined,
-        severity: (severity as any) || undefined,
         pageUrl: window.location.href,
         browser,
         os,
@@ -272,172 +244,44 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
 
           {/* Sentiment (only for FEEDBACK type) */}
           {type === 'FEEDBACK' && (
-            <div>
-              <label className="text-xs font-medium text-gray-600 mb-1.5 block">
-                {t('feedback.howDoYouFeel', 'How do you feel about HumanPages?')}
-              </label>
-              <div className="flex gap-2 justify-center">
-                {SENTIMENTS.map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => setSentiment(s.value)}
-                    className={`text-2xl p-2 rounded-lg transition-all ${
-                      sentiment === s.value
-                        ? 'bg-indigo-50 scale-110 ring-2 ring-indigo-200'
-                        : 'hover:bg-gray-50 opacity-60 hover:opacity-100'
-                    }`}
-                    title={s.label}
-                    aria-label={s.label}
-                  >
-                    {s.emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Category */}
-          <div>
-            <label htmlFor="fb-category" className="text-xs font-medium text-gray-600 mb-1 block">
-              {t('feedback.category', 'Category')}
-              <span className="text-gray-400 ml-1">({t('common.optional', 'optional')})</span>
-            </label>
-            <select
-              id="fb-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
-            >
-              <option value="">{t('feedback.selectCategory', 'Select a category...')}</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
+            <div className="flex gap-2 justify-center">
+              {SENTIMENTS.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => setSentiment(s.value)}
+                  className={`text-2xl p-2 rounded-lg transition-all ${
+                    sentiment === s.value
+                      ? 'bg-indigo-50 scale-110 ring-2 ring-indigo-200'
+                      : 'hover:bg-gray-50 opacity-60 hover:opacity-100'
+                  }`}
+                  title={s.label}
+                  aria-label={s.label}
+                >
+                  {s.emoji}
+                </button>
               ))}
-            </select>
-          </div>
-
-          {/* Title (for BUG and FEATURE) */}
-          {(type === 'BUG' || type === 'FEATURE') && (
-            <div>
-              <label htmlFor="fb-title" className="text-xs font-medium text-gray-600 mb-1 block">
-                {t('feedback.titleLabel', 'Title')}
-              </label>
-              <input
-                id="fb-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={type === 'BUG' ? t('feedback.bugTitlePlaceholder', 'Brief description of the issue...') : t('feedback.featureTitlePlaceholder', 'What would you like to see?')}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
-                maxLength={200}
-              />
             </div>
           )}
 
           {/* Description */}
           <div>
-            <label htmlFor="fb-description" className="text-xs font-medium text-gray-600 mb-1 block">
-              {type === 'BUG'
-                ? t('feedback.whatHappened', 'What happened?')
-                : type === 'FEATURE'
-                ? t('feedback.describeFeature', 'Describe your idea')
-                : t('feedback.tellUsMore', 'Tell us more')}
-              <span className="text-red-400 ml-0.5">*</span>
-            </label>
             <textarea
               id="fb-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={type === 'BUG'
-                ? t('feedback.bugDescPlaceholder', 'Describe what went wrong...')
+                ? t('feedback.bugDescPlaceholder', 'What went wrong? Include steps to reproduce if you can...')
                 : type === 'FEATURE'
-                ? t('feedback.featureDescPlaceholder', 'How would this help you?')
+                ? t('feedback.featureDescPlaceholder', 'What would you like to see and how would it help?')
                 : t('feedback.feedbackDescPlaceholder', 'Your thoughts, suggestions, or praise...')
               }
-              rows={3}
+              rows={4}
               required
               maxLength={5000}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
             />
           </div>
-
-          {/* Bug-specific fields */}
-          {type === 'BUG' && (
-            <>
-              <div>
-                <label htmlFor="fb-severity" className="text-xs font-medium text-gray-600 mb-1 block">
-                  {t('feedback.severity', 'Severity')}
-                  <span className="text-gray-400 ml-1">({t('common.optional', 'optional')})</span>
-                </label>
-                <div className="flex gap-2">
-                  {[
-                    { value: 'low', label: t('feedback.severityLow', 'Low'), color: 'bg-gray-100 text-gray-600 border-gray-200' },
-                    { value: 'medium', label: t('feedback.severityMedium', 'Medium'), color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-                    { value: 'high', label: t('feedback.severityHigh', 'High'), color: 'bg-orange-50 text-orange-700 border-orange-200' },
-                    { value: 'critical', label: t('feedback.severityCritical', 'Critical'), color: 'bg-red-50 text-red-700 border-red-200' },
-                  ].map((s) => (
-                    <button
-                      key={s.value}
-                      type="button"
-                      onClick={() => setSeverity(severity === s.value ? '' : s.value)}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md border transition-all ${
-                        severity === s.value ? s.color + ' ring-1 ring-offset-1' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="fb-steps" className="text-xs font-medium text-gray-600 mb-1 block">
-                  {t('feedback.stepsToReproduce', 'Steps to reproduce')}
-                  <span className="text-gray-400 ml-1">({t('common.optional', 'optional')})</span>
-                </label>
-                <textarea
-                  id="fb-steps"
-                  value={stepsToReproduce}
-                  onChange={(e) => setStepsToReproduce(e.target.value)}
-                  placeholder={t('feedback.stepsPlaceholder', '1. Go to...\n2. Click on...\n3. See error...')}
-                  rows={3}
-                  maxLength={2000}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="fb-expected" className="text-xs font-medium text-gray-600 mb-1 block">
-                    {t('feedback.expected', 'Expected')}
-                  </label>
-                  <textarea
-                    id="fb-expected"
-                    value={expectedBehavior}
-                    onChange={(e) => setExpectedBehavior(e.target.value)}
-                    placeholder={t('feedback.expectedPlaceholder', 'What should happen?')}
-                    rows={2}
-                    maxLength={1000}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="fb-actual" className="text-xs font-medium text-gray-600 mb-1 block">
-                    {t('feedback.actual', 'Actual')}
-                  </label>
-                  <textarea
-                    id="fb-actual"
-                    value={actualBehavior}
-                    onChange={(e) => setActualBehavior(e.target.value)}
-                    placeholder={t('feedback.actualPlaceholder', 'What happened instead?')}
-                    rows={2}
-                    maxLength={1000}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
-                  />
-                </div>
-              </div>
-            </>
-          )}
 
           {/* Screenshot */}
           <div>

@@ -1,11 +1,72 @@
 import { Router } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { requireAdmin } from '../middleware/adminAuth.js';
+import { requireAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 
 const router = Router();
 
+// ─── API-key routes (read-only, for CLI tooling) ───
+// These sit ABOVE the JWT middleware so they don't require a browser session.
+
+// GET /api/admin/ai/stats
+router.get('/ai/stats', apiKeyAdmin, async (_req, res) => {
+  try {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [usersTotal, usersVerified, usersLast7d, feedbackTotal, feedbackNew, humanReportsTotal, humanReportsPending, reportsTotal, reportsPending] = await Promise.all([
+      prisma.human.count(),
+      prisma.human.count({ where: { emailVerified: true } }),
+      prisma.human.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      prisma.feedback.count(),
+      prisma.feedback.count({ where: { status: 'NEW' } }),
+      prisma.humanReport.count(),
+      prisma.humanReport.count({ where: { status: 'PENDING' } }),
+      prisma.agentReport.count(),
+      prisma.agentReport.count({ where: { status: 'PENDING' } }),
+    ]);
+
+    res.json({
+      users: { total: usersTotal, verified: usersVerified, last7d: usersLast7d },
+      feedback: { total: feedbackTotal, new: feedbackNew },
+      humanReports: { total: humanReportsTotal, pending: humanReportsPending },
+      agentReports: { total: reportsTotal, pending: reportsPending },
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'AI admin stats error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/ai/activity
+router.get('/ai/activity', apiKeyAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
+
+    const [recentUsers, recentFeedback] = await Promise.all([
+      prisma.human.findMany({
+        select: { id: true, name: true, email: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      prisma.feedback.findMany({
+        where: { status: 'NEW' },
+        select: { id: true, type: true, category: true, title: true, description: true, severity: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+    ]);
+
+    res.json({ recentUsers, recentFeedback });
+  } catch (error) {
+    logger.error({ err: error }, 'AI admin activity error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── JWT-protected admin routes ───
 // All admin routes require authentication + admin check
 router.use(authenticateToken, requireAdmin);
 

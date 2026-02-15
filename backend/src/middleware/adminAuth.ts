@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from './auth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
@@ -10,6 +10,19 @@ function getAdminEmails(): Set<string> {
   return new Set(
     raw.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
   );
+}
+
+/**
+ * Checks X-Admin-API-Key header against AI_ADMIN_API_KEY env var.
+ * Use on select read-only admin routes to allow CLI/automation access.
+ */
+export function apiKeyAdmin(req: Request, res: Response, next: NextFunction) {
+  const key = req.headers['x-admin-api-key'] as string | undefined;
+  const expected = process.env.AI_ADMIN_API_KEY;
+  if (key && expected && key === expected) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Invalid API key' });
 }
 
 export async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {

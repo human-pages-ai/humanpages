@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { requireAdmin } from '../middleware/adminAuth.js';
+import { requireAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
 
 const router = Router();
 
@@ -166,6 +166,50 @@ router.get('/admin', authenticateToken, requireAdmin, async (req: AuthRequest, r
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin feedback list error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/feedback/admin/ai — List feedback via API key (read-only, for CLI tooling)
+router.get('/admin/ai', apiKeyAdmin, async (req: AuthRequest, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const status = req.query.status as string;
+    const type = req.query.type as string;
+
+    const where: any = {};
+    if (status && ['NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].includes(status)) {
+      where.status = status;
+    }
+    if (type && ['BUG', 'FEATURE', 'FEEDBACK'].includes(type)) {
+      where.type = type;
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.feedback.findMany({
+        where,
+        include: {
+          human: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.feedback.count({ where }),
+    ]);
+
+    // Strip screenshot data to keep responses small
+    const cleaned = items.map(({ screenshotData, ...rest }) => rest);
+
+    res.json({
+      feedback: cleaned,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'AI admin feedback list error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
