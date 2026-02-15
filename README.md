@@ -87,8 +87,8 @@ All accounts use password: `password123`
 
 | Tier | Job Offers | Profile Views | Activation | Duration |
 |------|-----------|---------------|------------|----------|
-| BASIC | 1 per 2 days | 1/day | Social post (free) | 30 days |
-| PRO | 15/day | 50/day | $10 USDC | 60 days |
+| BASIC | 1 per 2 days | 1/day | Social post (free) | Unlimited |
+| PRO | 15/day | 50/day | $5 USDC | 60 days |
 
 ### x402 Pay-Per-Use
 
