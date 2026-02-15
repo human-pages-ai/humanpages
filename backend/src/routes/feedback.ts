@@ -214,6 +214,31 @@ router.get('/admin/ai', apiKeyAdmin, async (req: AuthRequest, res) => {
   }
 });
 
+// PATCH /api/feedback/admin/ai/:id — Update feedback status/notes via API key
+router.patch('/admin/ai/:id', apiKeyAdmin, async (req: AuthRequest, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    const updateData: any = {};
+    if (status && ['NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].includes(status)) {
+      updateData.status = status;
+    }
+    if (adminNotes !== undefined) {
+      updateData.adminNotes = adminNotes;
+    }
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'Nothing to update' });
+    }
+    const feedback = await prisma.feedback.update({
+      where: { id: req.params.id },
+      data: updateData,
+    });
+    res.json(feedback);
+  } catch (error) {
+    logger.error({ err: error }, 'AI admin feedback update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PATCH /api/feedback/admin/:id — Update feedback status/notes
 router.patch('/admin/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
   try {
