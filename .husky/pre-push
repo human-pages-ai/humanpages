@@ -48,16 +48,19 @@ fi
 # Run all checks in parallel: type checks, backend tests, and E2E
 # The e2e command waits for servers inline before running playwright.
 # ------------------------------------------------------------------
-echo "Running all checks in parallel..."
+LOG="/tmp/human-pages-pre-push.log"
+echo "Running all checks in parallel... (log: $LOG)"
 npx concurrently --kill-others-on-fail \
   -n "tsc:be,tsc:fe,test,e2e" \
   "cd backend && npx tsc --noEmit" \
   "cd frontend && npx tsc --noEmit" \
   "cd backend && npm test" \
-  "i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3001/health >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3000 >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && npx playwright test --config e2e/playwright.config.ts"
+  "i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3001/health >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3000 >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && npx playwright test --config e2e/playwright.config.ts" \
+  >"$LOG" 2>&1
 
 if [ $? -ne 0 ]; then
-  echo "  One or more checks failed"
+  echo "  One or more checks failed — see $LOG"
+  tail -40 "$LOG"
   exit 1
 fi
 
