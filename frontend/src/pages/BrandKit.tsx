@@ -23,32 +23,28 @@ export default function BrandKit() {
   const SealIcon = ({ size = 160, bg = '#1e293b', h = '#e2e8f0' }: { size?: number; bg?: string; h?: string }) => (
     <svg width={size} height={size} viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
       <rect width="512" height="512" rx="102" fill={bg} />
-      <path d="M 148 82 L 148 428" stroke={h} strokeWidth="52" strokeLinecap="round" fill="none" />
-      <path d="M 148 260 C 148 260 196 195 268 195 C 340 195 358 255 358 290 L 358 428" stroke={h} strokeWidth="52" strokeLinecap="round" fill="none" />
-      <circle cx="400" cy="132" r="48" fill={bg} stroke={bg} strokeWidth="6" />
-      <circle cx="400" cy="132" r="40" fill="#2563eb" />
-      <path d="M 382 132 L 394 144 L 420 118" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M 140 78 L 140 432" stroke={h} strokeWidth="58" strokeLinecap="round" fill="none" />
+      <path d="M 140 260 C 140 260 192 190 270 190 C 346 190 364 254 364 294 L 364 432" stroke={h} strokeWidth="58" strokeLinecap="round" fill="none" />
+      <circle cx="406" cy="406" r="56" fill={bg} />
+      <circle cx="406" cy="406" r="46" fill="#2563eb" />
+      <path d="M 385 406 L 399 420 L 428 391" stroke="#fff" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 
   const ProfileIcon = ({ size = 160, bg = '#1e293b', h = '#e2e8f0' }: { size?: number; bg?: string; h?: string }) => (
     <svg width={size} height={size} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
       <circle cx="200" cy="200" r="200" fill={bg} />
-      <path d="M 130 92 L 130 312" stroke={h} strokeWidth="42" strokeLinecap="round" fill="none" />
-      <path d="M 130 204 C 130 204 162 164 206 164 C 250 164 262 204 262 228 L 262 312" stroke={h} strokeWidth="42" strokeLinecap="round" fill="none" />
-      <circle cx="310" cy="310" r="44" fill={bg} stroke={bg} strokeWidth="6" />
-      <circle cx="310" cy="310" r="36" fill="#2563eb" />
-      <path d="M 294 310 L 306 322 L 328 300" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M 112 62 L 112 338" stroke={h} strokeWidth="46" strokeLinecap="round" fill="none" />
+      <path d="M 112 204 C 112 204 152 148 214 148 C 276 148 290 200 290 232 L 290 338" stroke={h} strokeWidth="46" strokeLinecap="round" fill="none" />
+      <circle cx="322" cy="322" r="44" fill={bg} stroke={bg} strokeWidth="6" />
+      <circle cx="322" cy="322" r="36" fill="#2563eb" />
+      <path d="M 306 322 L 318 334 L 340 312" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 
   const Wordmark = ({ aiColor, humanColor, pagesColor }: { aiColor: string; humanColor: string; pagesColor: string }) => (
-    <svg viewBox="0 0 800 100" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto">
-      <path d="M 14 10 L 14 90" stroke={humanColor} strokeWidth="12" strokeLinecap="round" fill="none" />
-      <path d="M 14 52 C 14 52 28 36 46 36 C 64 36 70 50 70 58 L 70 90" stroke={humanColor} strokeWidth="12" strokeLinecap="round" fill="none" />
-      <circle cx="86" cy="16" r="13" fill="#2563eb" />
-      <path d="M 79 16 L 84 21 L 94 11" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <text x="112" y="68" fontFamily="system-ui, -apple-system, sans-serif" fontSize="50" fontWeight="700" letterSpacing="-1.5">
+    <svg viewBox="0 0 640 80" xmlns="http://www.w3.org/2000/svg" className="h-10 w-auto">
+      <text x="0" y="58" fontFamily="system-ui, -apple-system, sans-serif" fontSize="50" fontWeight="700" letterSpacing="-1.5">
         <tspan fill={humanColor}>human</tspan>
         <tspan fill={pagesColor}>pages</tspan>
         <tspan fill={aiColor}>.ai</tspan>

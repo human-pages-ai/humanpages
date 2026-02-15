@@ -9,18 +9,8 @@
   <rect width="1500" height="500" fill="url(#glow)"/>
   <rect width="1500" height="4" fill="#2563eb"/>
 
-  <!-- Logo seal -->
-  <circle cx="570" cy="220" r="58" fill="none" stroke="#2563eb" stroke-width="3.5"/>
-  <path d="M 554 194 L 554 252" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round" fill="none"/>
-  <path d="M 554 224 C 554 224 564 212 576 212 C 588 212 592 222 592 230 L 592 252" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round" fill="none"/>
-  <circle cx="608" cy="260" r="16" fill="#1e293b"/><circle cx="608" cy="260" r="13" fill="#2563eb"/>
-  <path d="M 601 260 L 606 265 L 616 255" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-
-  <!-- Wordmark: human (white) + pages (blue) + .ai (gray) -->
-  <text x="648" y="238" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="700" letter-spacing="-1.5">
+  <!-- Wordmark only, centered -->
+  <text x="750" y="265" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" letter-spacing="-2" text-anchor="middle">
     <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#64748b">.ai</tspan>
   </text>
-
-  <!-- Tagline -->
-  <text x="750" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#64748b" text-anchor="middle" letter-spacing="3">VERIFIED HUMANS FOR AI AGENTS</text>
 </svg>

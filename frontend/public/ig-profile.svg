@@ -8,21 +8,17 @@
   </defs>
   <rect width="1080" height="1080" fill="url(#glow)"/>
 
-  <!-- Ring -->
-  <circle cx="540" cy="420" r="230" fill="none" stroke="#2563eb" stroke-width="8"/>
-
   <!-- White h -->
-  <path d="M 462 270 L 462 575" stroke="#e2e8f0" stroke-width="62" stroke-linecap="round" fill="none"/>
-  <path d="M 462 425 C 462 425 510 370 570 370 C 630 370 645 420 645 455 L 645 575" stroke="#e2e8f0" stroke-width="62" stroke-linecap="round" fill="none"/>
+  <path d="M 340 180 L 340 700" stroke="#e2e8f0" stroke-width="80" stroke-linecap="round" fill="none"/>
+  <path d="M 340 445 C 340 445 410 340 510 340 C 610 340 640 420 640 480 L 640 700" stroke="#e2e8f0" stroke-width="80" stroke-linecap="round" fill="none"/>
 
-  <!-- Verified badge -->
-  <circle cx="720" cy="612" r="68" fill="#1e293b" stroke="#1e293b" stroke-width="10"/>
-  <circle cx="720" cy="612" r="58" fill="#2563eb"/>
-  <path d="M 695 612 L 712 629 L 747 594" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Verified badge bottom-right -->
+  <circle cx="740" cy="740" r="88" fill="#1e293b" stroke="#1e293b" stroke-width="12"/>
+  <circle cx="740" cy="740" r="74" fill="#2563eb"/>
+  <path d="M 710 740 L 730 760 L 772 718" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
-  <!-- Brand text: human (white) + pages (blue) + .ai (gray) -->
-  <text x="540" y="800" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" text-anchor="middle" letter-spacing="-1.5">
+  <!-- Brand text -->
+  <text x="540" y="890" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" text-anchor="middle" letter-spacing="-1.5">
     <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#64748b">.ai</tspan>
   </text>
-  <text x="540" y="860" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#64748b" text-anchor="middle" letter-spacing="6">VERIFIED HUMANS FOR AI</text>
 </svg>

@@ -1,12 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="102" fill="#1e293b"/>
-  <!-- Ring -->
-  <circle cx="248" cy="245" r="158" fill="none" stroke="#2563eb" stroke-width="10"/>
-  <!-- White h (single color) -->
-  <path d="M 195 142 L 195 358" stroke="#e2e8f0" stroke-width="48" stroke-linecap="round" fill="none"/>
-  <path d="M 195 252 C 195 252 228 212 270 212 C 312 212 324 250 324 276 L 324 358" stroke="#e2e8f0" stroke-width="48" stroke-linecap="round" fill="none"/>
-  <!-- Verified badge -->
-  <circle cx="393" cy="393" r="52" fill="#1e293b"/>
-  <circle cx="393" cy="393" r="42" fill="#2563eb"/>
-  <path d="M 374 393 L 387 406 L 414 379" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M 140 78 L 140 432" stroke="#e2e8f0" stroke-width="58" stroke-linecap="round" fill="none"/>
+  <path d="M 140 260 C 140 260 192 190 270 190 C 346 190 364 254 364 294 L 364 432" stroke="#e2e8f0" stroke-width="58" stroke-linecap="round" fill="none"/>
+  <circle cx="406" cy="406" r="56" fill="#1e293b"/>
+  <circle cx="406" cy="406" r="46" fill="#2563eb"/>
+  <path d="M 385 406 L 399 420 L 428 391" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

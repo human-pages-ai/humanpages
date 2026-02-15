@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
   <circle cx="200" cy="200" r="200" fill="#1e293b"/>
-  <circle cx="194" cy="192" r="118" fill="none" stroke="#2563eb" stroke-width="6"/>
-  <path d="M 154 115 L 154 275" stroke="#e2e8f0" stroke-width="35" stroke-linecap="round" fill="none"/>
-  <path d="M 154 197 C 154 197 178 166 210 166 C 242 166 250 196 250 216 L 250 275" stroke="#e2e8f0" stroke-width="35" stroke-linecap="round" fill="none"/>
-  <circle cx="302" cy="302" r="40" fill="#1e293b" stroke="#1e293b" stroke-width="6"/>
-  <circle cx="302" cy="302" r="32" fill="#2563eb"/>
-  <path d="M 288 302 L 298 312 L 318 292" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M 112 62 L 112 338" stroke="#e2e8f0" stroke-width="46" stroke-linecap="round" fill="none"/>
+  <path d="M 112 204 C 112 204 152 148 214 148 C 276 148 290 200 290 232 L 290 338" stroke="#e2e8f0" stroke-width="46" stroke-linecap="round" fill="none"/>
+  <circle cx="322" cy="322" r="44" fill="#1e293b" stroke="#1e293b" stroke-width="6"/>
+  <circle cx="322" cy="322" r="36" fill="#2563eb"/>
+  <path d="M 306 322 L 318 334 L 340 312" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
