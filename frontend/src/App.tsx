@@ -28,6 +28,7 @@ const JobDetail = lazy(() => import('./pages/JobDetail'));
 const ReportAgent = lazy(() => import('./pages/ReportAgent'));
 const JobBoard = lazy(() => import('./pages/JobBoard'));
 const ListingDetail = lazy(() => import('./pages/ListingDetail'));
+const BrandKit = lazy(() => import('./pages/BrandKit'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -204,6 +205,7 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/badge" element={<Badge />} />
       <Route path="/report" element={<ReportAgent />} />
+      <Route path="/brand" element={<BrandKit />} />
       <Route path="/listings" element={<JobBoard />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
       <Route path="/blog" element={<BlogIndex />} />

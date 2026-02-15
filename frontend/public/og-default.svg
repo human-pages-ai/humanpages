@@ -1,15 +1,36 @@
 <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#f8fafc"/>
-  <rect width="1200" height="6" fill="#2563eb"/>
+  <rect width="1200" height="630" fill="#1e293b"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <text x="600" y="240" font-family="system-ui, sans-serif" font-size="56" font-weight="700" text-anchor="middle">
-    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#94a3b8" font-weight="400">.ai</tspan>
+  <!-- Blue accent bar top -->
+  <rect width="1200" height="5" fill="#2563eb"/>
+
+  <!-- Logo icon -->
+  <circle cx="440" cy="230" r="52" fill="none" stroke="#2563eb" stroke-width="3.5"/>
+  <path d="M 426 206 L 426 262" stroke="#e2e8f0" stroke-width="13" stroke-linecap="round" fill="none"/>
+  <path d="M 426 234 C 426 234 435 225 445 225 C 455 225 459 233 459 239 L 459 262" stroke="#e2e8f0" stroke-width="13" stroke-linecap="round" fill="none"/>
+  <circle cx="477" cy="268" r="14" fill="#1e293b"/>
+  <circle cx="477" cy="268" r="11" fill="#2563eb"/>
+  <path d="M 471 268 L 475 272 L 484 263" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Wordmark: human (white) + pages (blue) + .ai (gray) -->
+  <text x="510" y="248" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="700" letter-spacing="-1.5">
+    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#64748b">.ai</tspan>
   </text>
 
-  <text x="600" y="310" font-family="system-ui, sans-serif" font-size="28" fill="#64748b" text-anchor="middle">Get Hired by AI Agents</text>
+  <!-- Tagline -->
+  <text x="600" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#94a3b8" text-anchor="middle">Get Hired by AI Agents</text>
 
-  <text x="600" y="370" font-family="system-ui, sans-serif" font-size="20" fill="#94a3b8" text-anchor="middle">List your skills. Get discovered. Get paid in USDC.</text>
+  <!-- Subtitle -->
+  <text x="600" y="390" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#64748b" text-anchor="middle">List your skills. Get discovered. Get paid in USDC.</text>
 
-  <rect y="590" width="1200" height="40" fill="#1e293b"/>
-  <text x="600" y="616" font-family="system-ui, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">humanpages.ai</text>
+  <!-- Bottom bar -->
+  <rect y="594" width="1200" height="36" fill="#0f172a"/>
+  <text x="600" y="618" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#475569" text-anchor="middle">humanpages.ai</text>
 </svg>

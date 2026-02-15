@@ -1,76 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
-  <rect width="1080" height="1080" rx="0" fill="#1e293b"/>
-
-  <!-- Subtle radial glow behind the h -->
-  <radialGradient id="glow" cx="50%" cy="42%" r="35%">
-    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.08"/>
-    <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
-  </radialGradient>
+  <rect width="1080" height="1080" fill="#1e293b"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="35%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
   <rect width="1080" height="1080" fill="url(#glow)"/>
 
-  <!-- === LEFT SIDE: Circuit / Machine traces === -->
-  <!-- Horizontal traces -->
-  <line x1="60" y1="200" x2="260" y2="200" stroke="#2563eb" stroke-width="2" opacity="0.15"/>
-  <line x1="60" y1="320" x2="200" y2="320" stroke="#2563eb" stroke-width="2" opacity="0.12"/>
-  <line x1="60" y1="440" x2="240" y2="440" stroke="#2563eb" stroke-width="2" opacity="0.10"/>
-  <line x1="60" y1="560" x2="180" y2="560" stroke="#2563eb" stroke-width="2" opacity="0.12"/>
-  <line x1="60" y1="680" x2="220" y2="680" stroke="#2563eb" stroke-width="2" opacity="0.10"/>
-  <line x1="60" y1="800" x2="260" y2="800" stroke="#2563eb" stroke-width="2" opacity="0.08"/>
+  <!-- Ring -->
+  <circle cx="540" cy="420" r="230" fill="none" stroke="#2563eb" stroke-width="8"/>
 
-  <!-- Vertical branches -->
-  <line x1="260" y1="200" x2="260" y2="140" stroke="#2563eb" stroke-width="2" opacity="0.15"/>
-  <circle cx="260" cy="136" r="4" fill="#2563eb" opacity="0.25"/>
-  <line x1="200" y1="320" x2="200" y2="260" stroke="#2563eb" stroke-width="2" opacity="0.12"/>
-  <circle cx="200" cy="256" r="3.5" fill="#2563eb" opacity="0.2"/>
-  <line x1="240" y1="440" x2="240" y2="500" stroke="#2563eb" stroke-width="2" opacity="0.10"/>
-  <circle cx="240" cy="504" r="3" fill="#2563eb" opacity="0.18"/>
-  <line x1="180" y1="560" x2="180" y2="620" stroke="#2563eb" stroke-width="2" opacity="0.12"/>
-  <circle cx="180" cy="624" r="3.5" fill="#2563eb" opacity="0.2"/>
-  <line x1="220" y1="680" x2="220" y2="740" stroke="#2563eb" stroke-width="2" opacity="0.10"/>
-  <circle cx="220" cy="744" r="3" fill="#2563eb" opacity="0.16"/>
-  <line x1="260" y1="800" x2="260" y2="860" stroke="#2563eb" stroke-width="2" opacity="0.08"/>
-  <circle cx="260" cy="864" r="4" fill="#2563eb" opacity="0.14"/>
+  <!-- White h -->
+  <path d="M 462 270 L 462 575" stroke="#e2e8f0" stroke-width="62" stroke-linecap="round" fill="none"/>
+  <path d="M 462 425 C 462 425 510 370 570 370 C 630 370 645 420 645 455 L 645 575" stroke="#e2e8f0" stroke-width="62" stroke-linecap="round" fill="none"/>
 
-  <!-- === RIGHT SIDE: Organic / Human curves === -->
-  <path d="M 820 140 Q 880 180 900 260" stroke="#60a5fa" stroke-width="2" opacity="0.15" fill="none"/>
-  <circle cx="900" cy="264" r="4" fill="#60a5fa" opacity="0.22"/>
-  <path d="M 840 320 Q 920 360 940 420" stroke="#60a5fa" stroke-width="2" opacity="0.12" fill="none"/>
-  <circle cx="940" cy="424" r="3.5" fill="#60a5fa" opacity="0.18"/>
-  <path d="M 800 480 Q 860 510 880 580" stroke="#60a5fa" stroke-width="2" opacity="0.10" fill="none"/>
-  <circle cx="880" cy="584" r="3" fill="#60a5fa" opacity="0.16"/>
-  <path d="M 860 620 Q 940 660 960 740" stroke="#60a5fa" stroke-width="2" opacity="0.12" fill="none"/>
-  <circle cx="960" cy="744" r="4" fill="#60a5fa" opacity="0.2"/>
-  <path d="M 820 760 Q 880 800 890 870" stroke="#60a5fa" stroke-width="2" opacity="0.10" fill="none"/>
-  <circle cx="890" cy="874" r="3.5" fill="#60a5fa" opacity="0.16"/>
-  <path d="M 850 880 Q 920 910 950 960" stroke="#60a5fa" stroke-width="2" opacity="0.08" fill="none"/>
+  <!-- Verified badge -->
+  <circle cx="720" cy="612" r="68" fill="#1e293b" stroke="#1e293b" stroke-width="10"/>
+  <circle cx="720" cy="612" r="58" fill="#2563eb"/>
+  <path d="M 695 612 L 712 629 L 747 594" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
-  <!-- === CENTER: The "h" letterform === -->
-  <!-- Left vertical stroke — straight / digital feel -->
-  <path d="M 390 240 L 390 730"
-        stroke="#2563eb" stroke-width="48" stroke-linecap="round" fill="none"/>
-
-  <!-- Arch and right leg — transitions from angular to organic curve -->
-  <path d="M 390 460 L 460 460 Q 540 460 580 500 Q 620 540 620 600 L 620 730"
-        stroke="url(#hGradient)" stroke-width="48" stroke-linecap="round" fill="none" stroke-linejoin="round"/>
-
-  <linearGradient id="hGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#2563eb"/>
-    <stop offset="100%" stop-color="#60a5fa"/>
-  </linearGradient>
-
-  <!-- Connection node at the junction -->
-  <circle cx="540" cy="460" r="8" fill="#60a5fa" opacity="0.5"/>
-  <circle cx="540" cy="460" r="4" fill="#93c5fd" opacity="0.8"/>
-
-  <!-- Small pulse rings around the node -->
-  <circle cx="540" cy="460" r="16" fill="none" stroke="#60a5fa" stroke-width="1" opacity="0.2"/>
-  <circle cx="540" cy="460" r="26" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.1"/>
-
-  <!-- === BRAND TEXT === -->
-  <text x="540" y="880" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" text-anchor="middle" letter-spacing="-1">
-    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan>
+  <!-- Brand text: human (white) + pages (blue) + .ai (gray) -->
+  <text x="540" y="800" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" text-anchor="middle" letter-spacing="-1.5">
+    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#64748b">.ai</tspan>
   </text>
-  <text x="540" y="930" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#64748b" text-anchor="middle" letter-spacing="6">
-    AI-TO-HUMAN MARKETPLACE
-  </text>
+  <text x="540" y="860" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#64748b" text-anchor="middle" letter-spacing="6">VERIFIED HUMANS FOR AI</text>
 </svg>

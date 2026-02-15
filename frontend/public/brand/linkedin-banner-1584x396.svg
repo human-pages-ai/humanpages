@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1584" height="396" viewBox="0 0 1584 396">
+  <rect width="1584" height="396" fill="#1e293b"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1584" height="396" fill="url(#glow)"/>
+  <rect width="1584" height="4" fill="#2563eb"/>
+
+  <!-- Logo seal -->
+  <circle cx="100" cy="198" r="52" fill="none" stroke="#2563eb" stroke-width="3"/>
+  <path d="M 86 172 L 86 228" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M 86 200 C 86 200 94 190 104 190 C 114 190 118 199 118 205 L 118 228" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <circle cx="134" cy="234" r="14" fill="#1e293b"/><circle cx="134" cy="234" r="11" fill="#2563eb"/>
+  <path d="M 128 234 L 132 238 L 141 229" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Wordmark: human (white) + pages (blue) + .ai (gray) -->
+  <text x="172" y="214" font-family="system-ui, -apple-system, sans-serif" font-size="50" font-weight="700" letter-spacing="-1.5">
+    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#64748b">.ai</tspan>
+  </text>
+
+  <!-- Right tagline -->
+  <text x="1504" y="204" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#64748b" text-anchor="end" letter-spacing="3">VERIFIED HUMANS FOR AI AGENTS</text>
+</svg>
