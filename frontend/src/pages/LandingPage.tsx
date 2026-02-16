@@ -201,35 +201,119 @@ function ProfileCardCarousel({ tick, visible: fade }: { tick: number; visible: b
   );
 }
 
-/** Mock ChatGPT-style conversation explaining Human Pages */
+/** Mock ChatGPT-style conversation with real-time typing effect */
 function MockChatConversation() {
-  const [visibleCount, setVisibleCount] = useState(0);
+  const [phase, setPhase] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
 
+  // Response 1 — segmented for inline bold
+  const r1Segs = [
+    { text: 'Human Pages is a directory where real people list their skills \u2014 and ', bold: false },
+    { text: 'AI agents hire them', bold: true },
+    { text: ' for tasks that need a human touch. Think \u201cYellow Pages\u201d for the AI age.', bold: false },
+  ];
+  const r1Len = r1Segs.reduce((n, s) => n + s.text.length, 0);
+
+  // Response 2 — line-by-line (first line = intro, rest = benefits)
+  const r2Lines = [
+    "Here\u2019s what you get:",
+    'AI agents find you and send job offers directly',
+    'Keep 100% of your earnings \u2014 zero platform fees',
+    'Get paid for photography, deliveries, calls, research & more',
+    'One profile works across all AI agent platforms',
+    'Full control over your visibility and privacy',
+  ];
+  const r2Text = r2Lines.join('\n');
+
+  /*
+   * Phase machine:
+   *  0 → (200ms)  → 1  show user msg 1
+   *  1 → (800ms)  → 2  typing dots, then start streaming response 1
+   *  2 → streaming → 3  stream response 1 char-by-char
+   *  3 → (800ms)  → 4  pause, show user msg 2 + typing dots
+   *  4 → (800ms)  → 5  start streaming response 2
+   *  5 → streaming → 6  done
+   */
   useEffect(() => {
-    const delays = [0, 1200, 3000, 4200];
-    const timers = delays.map((delay, i) =>
-      setTimeout(() => setVisibleCount(i + 1), delay)
-    );
-    return () => timers.forEach(clearTimeout);
-  }, []);
+    let t: ReturnType<typeof setTimeout>;
+    if (phase === 0) t = setTimeout(() => setPhase(1), 200);
+    else if (phase === 1) t = setTimeout(() => { setCharIdx(0); setPhase(2); }, 800);
+    else if (phase === 2) {
+      if (charIdx < r1Len) t = setTimeout(() => setCharIdx(i => i + 1), 18);
+      else t = setTimeout(() => setPhase(3), 800);
+    } else if (phase === 3) t = setTimeout(() => { setCharIdx(0); setPhase(4); }, 800);
+    else if (phase === 4) {
+      if (charIdx < r2Text.length) t = setTimeout(() => setCharIdx(i => i + 1), 18);
+      else setPhase(5);
+    }
+    return () => clearTimeout(t);
+  }, [phase, charIdx]);
 
-  const showTyping = visibleCount % 2 === 1 && visibleCount < 4;
-
+  // Shared elements
   const sparkle = (
     <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" />
     </svg>
   );
+  const cursor = (
+    <span
+      className="inline-block w-[3px] h-[14px] bg-slate-500 ml-0.5 align-text-bottom"
+      style={{ animation: 'blink 1s step-end infinite' }}
+    />
+  );
+
+  // Render response 1 with inline bold preserved during streaming
+  const renderR1 = (chars: number, showCursor: boolean) => {
+    let left = chars;
+    return (
+      <>
+        {r1Segs.map((seg, i) => {
+          if (left <= 0) return null;
+          const vis = seg.text.slice(0, left);
+          left -= seg.text.length;
+          return seg.bold
+            ? <strong key={i} className="text-slate-900">{vis}</strong>
+            : <span key={i}>{vis}</span>;
+        })}
+        {showCursor && cursor}
+      </>
+    );
+  };
+
+  // Render response 2 — intro + benefit lines with checkmarks
+  const renderR2 = (chars: number, showCursor: boolean) => {
+    const text = r2Text.slice(0, chars);
+    const lines = text.split('\n');
+    return (
+      <div className="space-y-1.5">
+        {lines.map((line, i) => {
+          const isLast = i === lines.length - 1 && showCursor;
+          if (i === 0) return <p key={i}>{line}{isLast && cursor}</p>;
+          return (
+            <div key={i} className="flex items-start gap-1.5">
+              <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{line}{isLast && cursor}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const showTyping = phase === 1 || phase === 3;
 
   return (
     <div className="relative w-full max-w-sm mx-auto">
       <style>{`
-        @keyframes chatFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .chat-msg { animation: chatFadeIn 0.3s ease-out both; }
+        @keyframes chatSlide { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg { animation: chatSlide 0.25s ease-out both; }
         @keyframes dotPulse { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-3px); } }
         .dot-1 { animation: dotPulse 1.4s infinite; }
         .dot-2 { animation: dotPulse 1.4s 0.2s infinite; }
         .dot-3 { animation: dotPulse 1.4s 0.4s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
       `}</style>
       {/* Glow */}
       <div className="absolute -inset-4 bg-gradient-to-br from-emerald-100 via-transparent to-blue-100 rounded-3xl blur-2xl opacity-60" />
@@ -247,7 +331,8 @@ function MockChatConversation() {
 
         {/* Messages */}
         <div className="px-4 py-3 space-y-3 bg-[#fafafa]">
-          {visibleCount >= 1 && (
+          {/* User question 1 */}
+          {phase >= 1 && (
             <div className="chat-msg flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
                 <span className="text-[10px] font-bold text-white">Y</span>
@@ -259,23 +344,37 @@ function MockChatConversation() {
             </div>
           )}
 
-          {visibleCount >= 2 && (
+          {/* AI response 1 — streams character by character */}
+          {phase >= 2 && phase !== 3 && (
             <div className="chat-msg flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
                 {sparkle}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-slate-500">ChatGPT</p>
-                <p className="text-[13px] text-slate-700 mt-0.5">
-                  Human Pages is a directory where real people list their skills — and{' '}
-                  <strong className="text-slate-900">AI agents hire them</strong> for tasks
-                  that need a human touch. Think &ldquo;Yellow Pages&rdquo; for the AI age.
+                <p className="text-[13px] text-slate-700 mt-0.5 leading-relaxed">
+                  {phase === 2 ? renderR1(charIdx, true) : renderR1(r1Len, false)}
+                </p>
+              </div>
+            </div>
+          )}
+          {/* Show completed response 1 once we move past it */}
+          {phase >= 3 && (
+            <div className="flex gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
+                {sparkle}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500">ChatGPT</p>
+                <p className="text-[13px] text-slate-700 mt-0.5 leading-relaxed">
+                  {renderR1(r1Len, false)}
                 </p>
               </div>
             </div>
           )}
 
-          {visibleCount >= 3 && (
+          {/* User question 2 */}
+          {phase >= 3 && (
             <div className="chat-msg flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
                 <span className="text-[10px] font-bold text-white">Y</span>
@@ -287,36 +386,22 @@ function MockChatConversation() {
             </div>
           )}
 
-          {visibleCount >= 4 && (
+          {/* AI response 2 — streams with checkmark benefits */}
+          {phase >= 4 && (
             <div className="chat-msg flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
                 {sparkle}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-slate-500">ChatGPT</p>
-                <div className="text-[13px] text-slate-700 mt-0.5 space-y-1.5">
-                  <p>Here&rsquo;s what you get:</p>
-                  <div className="space-y-1">
-                    {[
-                      'AI agents find you and send job offers directly',
-                      'Keep 100% of your earnings — zero platform fees',
-                      'Get paid for photography, deliveries, calls, research & more',
-                      'One profile works across all AI agent platforms',
-                      'Full control over your visibility and privacy',
-                    ].map((b) => (
-                      <div key={b} className="flex items-start gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{b}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="text-[13px] text-slate-700 mt-0.5 leading-relaxed">
+                  {phase === 4 ? renderR2(charIdx, true) : renderR2(r2Text.length, false)}
                 </div>
               </div>
             </div>
           )}
 
+          {/* Typing indicator (bouncing dots) */}
           {showTyping && (
             <div className="flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
