@@ -98,7 +98,7 @@ export default function StatusHeader({
           {/* Left: name + quick stats */}
           <div className="flex items-center gap-4 min-w-0">
             {/* Avatar circle */}
-            <div className="shrink-0 w-11 h-11 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-semibold">
+            <div className="shrink-0 w-11 h-11 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-semibold">
               {profile.name?.charAt(0)?.toUpperCase() || '?'}
             </div>
             <div className="min-w-0">
@@ -160,7 +160,7 @@ export default function StatusHeader({
 
       {/* Prominent completion banner */}
       {completeness < 100 && (
-        <div className="bg-indigo-600 rounded-lg shadow mt-3 p-4 sm:p-5">
+        <div className="bg-blue-600 rounded-lg shadow mt-3 p-4 sm:p-5">
           <button
             type="button"
             onClick={() => setShowChecklist(!showChecklist)}
@@ -169,13 +169,13 @@ export default function StatusHeader({
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-white">{t('onboarding.title')}</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-indigo-100">{completeness}%</span>
-                <svg className={`w-4 h-4 text-indigo-200 transition-transform ${showChecklist ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-sm font-bold text-blue-100">{completeness}%</span>
+                <svg className={`w-4 h-4 text-blue-200 transition-transform ${showChecklist ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
-            <div className="w-full h-2.5 bg-indigo-400/40 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-blue-400/40 rounded-full overflow-hidden">
               <div
                 className="h-full bg-white rounded-full transition-all duration-500"
                 style={{ width: `${completeness}%` }}
@@ -185,29 +185,29 @@ export default function StatusHeader({
 
           {/* Expandable completion checklist */}
           {showChecklist && (
-            <div className="mt-4 pt-3 border-t border-indigo-500/40">
+            <div className="mt-4 pt-3 border-t border-blue-500/40">
               <ul className="space-y-2">
                 {completionItems.map((item) => (
                   <li key={item.labelKey} className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
                       {item.complete ? (
-                        <svg className="w-4 h-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (
-                        <svg className="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <circle cx="12" cy="12" r="9" strokeWidth={2} />
                         </svg>
                       )}
-                      <span className={item.complete ? 'text-indigo-300 line-through' : 'text-white'}>
+                      <span className={item.complete ? 'text-blue-300 line-through' : 'text-white'}>
                         {getLabel(item.labelKey)}
                       </span>
-                      <span className="text-xs text-indigo-300">+{item.weight}%</span>
+                      <span className="text-xs text-blue-300">+{item.weight}%</span>
                     </span>
                     {!item.complete && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}
-                        className="text-white hover:text-indigo-200 text-xs font-medium bg-indigo-500 hover:bg-indigo-400 px-2.5 py-1 rounded-full transition-colors"
+                        className="text-white hover:text-blue-200 text-xs font-medium bg-blue-500 hover:bg-blue-400 px-2.5 py-1 rounded-full transition-colors"
                       >
                         {t('common.add')}
                       </button>

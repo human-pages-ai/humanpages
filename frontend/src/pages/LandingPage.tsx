@@ -50,8 +50,8 @@ const MOCK_PROFILES = [
     initial: 'M',
     name: 'Maria Santos',
     location: 'Manila, Philippines',
-    gradient: 'from-blue-600 to-indigo-600',
-    glow: 'from-blue-100 via-transparent to-indigo-100',
+    gradient: 'from-blue-500 to-cyan-600',
+    glow: 'from-blue-100 via-transparent to-cyan-100',
     skills: ['Photography', 'Research', 'Deliveries'],
     service: 'Local Photography',
     serviceDesc: 'Product shots, events, storefronts',
@@ -528,7 +528,7 @@ export default function LandingPage() {
         </section>
 
         {/* Mid CTA — early mover */}
-        <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 px-4">
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-700 px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
               {t('landing.cta.ready')}

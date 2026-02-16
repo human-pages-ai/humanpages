@@ -6,7 +6,7 @@ import type { AdminUserDetail as AdminUserDetailType } from '../../types/admin';
 const statusColors: Record<string, string> = {
   COMPLETED: 'bg-green-100 text-green-800',
   PAID: 'bg-blue-100 text-blue-800',
-  ACCEPTED: 'bg-indigo-100 text-indigo-800',
+  ACCEPTED: 'bg-blue-100 text-blue-800',
   PENDING: 'bg-yellow-100 text-yellow-800',
   REJECTED: 'bg-gray-100 text-gray-800',
   CANCELLED: 'bg-gray-100 text-gray-600',
@@ -54,7 +54,7 @@ export default function AdminUserDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/admin/users" className="text-indigo-600 hover:text-indigo-800 text-sm">&larr; Back to Users</Link>
+        <Link to="/admin/users" className="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Users</Link>
       </div>
 
       <div className="bg-white rounded-lg shadow p-5">
@@ -103,7 +103,7 @@ export default function AdminUserDetail() {
           {user.skills.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 mb-2">
               {user.skills.map((s) => (
-                <span key={s} className="px-2 py-0.5 text-xs bg-indigo-50 text-indigo-700 rounded-full">{s}</span>
+                <span key={s} className="px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded-full">{s}</span>
               ))}
             </div>
           ) : <p className="text-sm text-gray-400">No skills listed</p>}
@@ -129,12 +129,12 @@ export default function AdminUserDetail() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Section title="Social Links">
-          <Field label="LinkedIn" value={user.linkedinUrl && <a href={user.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{user.linkedinUrl}</a>} />
-          <Field label="Twitter" value={user.twitterUrl && <a href={user.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{user.twitterUrl}</a>} />
-          <Field label="GitHub" value={user.githubUrl && <a href={user.githubUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{user.githubUrl}</a>} />
-          <Field label="Instagram" value={user.instagramUrl && <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{user.instagramUrl}</a>} />
-          <Field label="YouTube" value={user.youtubeUrl && <a href={user.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{user.youtubeUrl}</a>} />
-          <Field label="Website" value={user.websiteUrl && <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{user.websiteUrl}</a>} />
+          <Field label="LinkedIn" value={user.linkedinUrl && <a href={user.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{user.linkedinUrl}</a>} />
+          <Field label="Twitter" value={user.twitterUrl && <a href={user.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{user.twitterUrl}</a>} />
+          <Field label="GitHub" value={user.githubUrl && <a href={user.githubUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{user.githubUrl}</a>} />
+          <Field label="Instagram" value={user.instagramUrl && <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{user.instagramUrl}</a>} />
+          <Field label="YouTube" value={user.youtubeUrl && <a href={user.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{user.youtubeUrl}</a>} />
+          <Field label="Website" value={user.websiteUrl && <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{user.websiteUrl}</a>} />
         </Section>
 
         <Section title="Referral & Affiliate">
@@ -207,7 +207,7 @@ export default function AdminUserDetail() {
               {user.jobs.map((j) => (
                 <tr key={j.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/jobs/${j.id}`)}>
                   <td className="py-1.5">
-                    <Link to={`/admin/jobs/${j.id}`} className="text-indigo-600 hover:underline">{j.title}</Link>
+                    <Link to={`/admin/jobs/${j.id}`} className="text-blue-600 hover:underline">{j.title}</Link>
                   </td>
                   <td className="py-1.5">
                     <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[j.status] || 'bg-gray-100 text-gray-800'}`}>
@@ -216,7 +216,7 @@ export default function AdminUserDetail() {
                   </td>
                   <td className="py-1.5 text-gray-600">
                     {j.registeredAgent ? (
-                      <Link to={`/admin/agents/${j.registeredAgent.id}`} className="text-indigo-600 hover:underline">{j.registeredAgent.name}</Link>
+                      <Link to={`/admin/agents/${j.registeredAgent.id}`} className="text-blue-600 hover:underline">{j.registeredAgent.name}</Link>
                     ) : j.agentName || 'Unknown'}
                   </td>
                   <td className="py-1.5 text-gray-600">${j.priceUsdc}</td>
@@ -237,7 +237,7 @@ export default function AdminUserDetail() {
               <div key={r.id} className="border border-gray-100 rounded p-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
-                  <Link to={`/admin/jobs/${r.jobId}`} className="text-xs text-indigo-600 hover:underline">View job</Link>
+                  <Link to={`/admin/jobs/${r.jobId}`} className="text-xs text-blue-600 hover:underline">View job</Link>
                   <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</span>
                 </div>
                 {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}

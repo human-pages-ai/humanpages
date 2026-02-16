@@ -105,13 +105,13 @@ export default function LanguageSwitcher() {
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
               className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                lang.code === i18n.language ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
+                lang.code === i18n.language ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
               }`}
             >
               <span className="text-lg">{lang.flag}</span>
               <span>{lang.name}</span>
               {lang.code === i18n.language && (
-                <svg className="w-4 h-4 ml-auto text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 ml-auto text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               )}

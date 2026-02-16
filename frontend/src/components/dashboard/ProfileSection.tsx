@@ -133,7 +133,7 @@ export default function ProfileSection({
         <h2 className="text-lg font-semibold">{t('dashboard.profile.title')}</h2>
         <button
           onClick={() => setEditingProfile(!editingProfile)}
-          className="text-indigo-600 hover:text-indigo-500 text-sm"
+          className="text-blue-600 hover:text-blue-500 text-sm"
         >
           {editingProfile ? t('common.cancel') : t('common.edit')}
         </button>
@@ -220,7 +220,7 @@ export default function ProfileSection({
                       ...profileForm,
                       locationGranularity: e.target.checked ? 'neighborhood' : 'city',
                     })}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
                     {t('dashboard.profile.showNeighborhood')}
@@ -256,8 +256,8 @@ export default function ProfileSection({
                   onClick={() => toggleEquipment(item)}
                   className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                     (profileForm.equipment || []).includes(item)
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
                   }`}
                 >
                   {item}
@@ -277,8 +277,8 @@ export default function ProfileSection({
                   onClick={() => toggleLanguage(lang)}
                   className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                     (profileForm.languages || []).includes(lang)
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
                   }`}
                 >
                   {lang}
@@ -306,7 +306,7 @@ export default function ProfileSection({
                 <button
                   type="button"
                   onClick={onScrollToWallets}
-                  className="text-sm text-indigo-600 hover:text-indigo-500 underline"
+                  className="text-sm text-blue-600 hover:text-blue-500 underline"
                 >
                   {t('dashboard.profile.connectWalletPrompt')}
                 </button>
@@ -321,7 +321,7 @@ export default function ProfileSection({
                       setProfileForm({ ...profileForm, paymentMethods: '' });
                     }
                   }}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">{t('dashboard.profile.alsoAcceptNonCrypto')}</span>
               </label>
@@ -432,7 +432,7 @@ export default function ProfileSection({
               onClick={() => {
                 onSaveProfile();
               }}
-              className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-500 font-medium"
             >
               {t('common.done')}
             </button>
@@ -535,7 +535,7 @@ export default function ProfileSection({
                     {profile.skills && profile.skills.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {profile.skills.map((skill) => (
-                          <span key={skill} className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs">
+                          <span key={skill} className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
                             {skill}
                           </span>
                         ))}

@@ -83,7 +83,7 @@ export default function JobsSection({
               onClick={() => setJobFilter(filter)}
               className={`px-3 py-1 text-sm rounded-md ${
                 jobFilter === filter
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -108,7 +108,7 @@ export default function JobsSection({
               </div>
               <button
                 onClick={handleCopyProfileUrl}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 {copiedProfileUrl ? (
                   <>
@@ -146,7 +146,7 @@ export default function JobsSection({
             <Link
               key={job.id}
               to={`/jobs/${job.id}`}
-              className="block border border-gray-200 rounded-lg p-3 hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors"
+              className="block border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1 min-w-0">

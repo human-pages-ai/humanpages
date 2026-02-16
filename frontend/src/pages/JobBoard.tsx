@@ -100,11 +100,11 @@ export default function JobBoard() {
           <div className="flex items-center gap-4 whitespace-nowrap">
             <LanguageSwitcher />
             {user ? (
-              <Link to="/dashboard" className="text-indigo-600 hover:text-indigo-800 font-medium">
+              <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
                 {t('nav.dashboard')}
               </Link>
             ) : (
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
+              <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
                 {t('nav.login')}
               </Link>
             )}
@@ -139,7 +139,7 @@ export default function JobBoard() {
                 value={skill}
                 onChange={(e) => updateFilter('skill', e.target.value)}
                 placeholder="e.g. photography"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -153,7 +153,7 @@ export default function JobBoard() {
                 value={category}
                 onChange={(e) => updateFilter('category', e.target.value)}
                 placeholder="e.g. research"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -165,7 +165,7 @@ export default function JobBoard() {
               <select
                 value={workMode}
                 onChange={(e) => updateFilter('workMode', e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All</option>
                 <option value="REMOTE">{t('listings.filters.remote')}</option>
@@ -184,7 +184,7 @@ export default function JobBoard() {
                 value={minBudget}
                 onChange={(e) => updateFilter('minBudget', e.target.value)}
                 placeholder="0"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -198,7 +198,7 @@ export default function JobBoard() {
                 value={maxBudget}
                 onChange={(e) => updateFilter('maxBudget', e.target.value)}
                 placeholder="10000"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function JobBoard() {
             <div className="mt-4 text-center">
               <button
                 onClick={clearFilters}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
                 {t('listings.filters.clearAll')}
               </button>
@@ -248,7 +248,7 @@ export default function JobBoard() {
 
                 {/* Title */}
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  <Link to={`/listings/${listing.id}`} className="hover:text-indigo-600">
+                  <Link to={`/listings/${listing.id}`} className="hover:text-blue-600">
                     {listing.title}
                   </Link>
                 </h2>
@@ -273,7 +273,7 @@ export default function JobBoard() {
                   <div className="mb-3">
                     <div className="flex flex-wrap gap-1">
                       {listing.requiredSkills.slice(0, 3).map((skill, idx) => (
-                        <span key={idx} className="inline-block bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded">
+                        <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
                           {skill}
                         </span>
                       ))}
@@ -316,7 +316,7 @@ export default function JobBoard() {
                 {/* View Details button */}
                 <Link
                   to={`/listings/${listing.id}`}
-                  className="block w-full text-center bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors"
+                  className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   {t('listings.card.viewDetails')}
                 </Link>
@@ -360,13 +360,13 @@ export default function JobBoard() {
 
         {/* CTA banner for non-logged-in users */}
         {!user && (
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 text-center">
-            <p className="text-lg font-medium text-indigo-900 mb-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+            <p className="text-lg font-medium text-blue-900 mb-2">
               Have skills? Create a profile and start getting paid.
             </p>
             <Link
               to="/signup"
-              className="inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-md hover:bg-indigo-700 transition-colors"
+              className="inline-block bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
             >
               {t('nav.signup')}
             </Link>

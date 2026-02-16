@@ -32,7 +32,7 @@ export default function ContactPrivacySection({
           checked={profileForm.hideContact}
           onChange={(e) => setProfileForm({ ...profileForm, hideContact: e.target.checked })}
           disabled={!editingProfile}
-          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
         <span className="text-sm">
           <span className="font-medium text-gray-900">{t('dashboard.profile.hideContact')}</span>

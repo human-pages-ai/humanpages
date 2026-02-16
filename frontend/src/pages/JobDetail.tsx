@@ -179,7 +179,7 @@ export default function JobDetail() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-gray-600">{t('errors.notFound')}</p>
-        <Link to="/dashboard" className="text-indigo-600 hover:text-indigo-800">{t('jobDetail.backToDashboard')}</Link>
+        <Link to="/dashboard" className="text-blue-600 hover:text-blue-800">{t('jobDetail.backToDashboard')}</Link>
       </div>
     );
   }
@@ -192,7 +192,7 @@ export default function JobDetail() {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Back link */}
-        <Link to="/dashboard" className="text-sm text-indigo-600 hover:text-indigo-800 mb-6 inline-flex items-center gap-1">
+        <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -252,7 +252,7 @@ export default function JobDetail() {
                         href={job.registeredAgent.websiteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-blue-600 hover:text-blue-800"
                       >
                         {new URL(job.registeredAgent.websiteUrl).hostname}
                       </a>
@@ -415,15 +415,15 @@ export default function JobDetail() {
                     <div
                       className={`max-w-[75%] rounded-lg px-4 py-2 ${
                         msg.senderType === 'human'
-                          ? 'bg-indigo-600 text-white'
+                          ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      <p className={`text-xs font-medium mb-1 ${msg.senderType === 'human' ? 'text-indigo-200' : 'text-gray-500'}`}>
+                      <p className={`text-xs font-medium mb-1 ${msg.senderType === 'human' ? 'text-blue-200' : 'text-gray-500'}`}>
                         {msg.senderType === 'human' ? t('jobDetail.you') : msg.senderName}
                       </p>
                       <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      <p className={`text-xs mt-1 ${msg.senderType === 'human' ? 'text-indigo-200' : 'text-gray-400'}`}>
+                      <p className={`text-xs mt-1 ${msg.senderType === 'human' ? 'text-blue-200' : 'text-gray-400'}`}>
                         {new Date(msg.createdAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -446,14 +446,14 @@ export default function JobDetail() {
                     }
                   }}
                   placeholder={t('jobDetail.messagePlaceholder')}
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={2}
                   maxLength={2000}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!messageText.trim() || sending}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed self-end"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed self-end"
                 >
                   {t('jobDetail.send')}
                 </button>

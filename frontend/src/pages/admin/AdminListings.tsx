@@ -58,12 +58,12 @@ export default function AdminListings() {
           placeholder="Search listings..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All statuses</option>
           <option value="OPEN">Open</option>
@@ -98,7 +98,7 @@ export default function AdminListings() {
               listings.map((l) => (
                 <tr key={l.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/listings/${l.id}`)}>
                   <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
-                    <Link to={`/admin/listings/${l.id}`} className="text-indigo-600 hover:text-indigo-800 hover:underline" onClick={(e) => e.stopPropagation()}>
+                    <Link to={`/admin/listings/${l.id}`} className="text-blue-600 hover:text-blue-800 hover:underline" onClick={(e) => e.stopPropagation()}>
                       {l.title}
                     </Link>
                   </td>
@@ -109,7 +109,7 @@ export default function AdminListings() {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {l.agent ? (
-                      <Link to={`/admin/agents/${l.agent.id}`} className="text-indigo-600 hover:text-indigo-800 hover:underline" onClick={(e) => e.stopPropagation()}>
+                      <Link to={`/admin/agents/${l.agent.id}`} className="text-blue-600 hover:text-blue-800 hover:underline" onClick={(e) => e.stopPropagation()}>
                         {l.agent.name}
                       </Link>
                     ) : '—'}

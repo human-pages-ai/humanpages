@@ -89,7 +89,7 @@ export default function AdminListingDetailPage() {
           <div>
             <p className="text-gray-500">Agent</p>
             {listing.agent ? (
-              <Link to={`/admin/agents/${listing.agent.id}`} className="text-indigo-600 hover:underline">
+              <Link to={`/admin/agents/${listing.agent.id}`} className="text-blue-600 hover:underline">
                 {listing.agent.name}
               </Link>
             ) : <p className="text-gray-400">—</p>}
@@ -161,7 +161,7 @@ export default function AdminListingDetailPage() {
               <div key={app.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <Link to={`/admin/users/${app.human.id}`} className="font-medium text-indigo-600 hover:underline">
+                    <Link to={`/admin/users/${app.human.id}`} className="font-medium text-blue-600 hover:underline">
                       {app.human.name}
                     </Link>
                     <p className="text-xs text-gray-500 mt-0.5">{app.human.email}</p>
@@ -178,7 +178,7 @@ export default function AdminListingDetailPage() {
                       {app.status}
                     </span>
                     {app.jobId && (
-                      <Link to={`/admin/jobs/${app.jobId}`} className="text-xs text-indigo-600 hover:underline">
+                      <Link to={`/admin/jobs/${app.jobId}`} className="text-xs text-blue-600 hover:underline">
                         View Job
                       </Link>
                     )}

@@ -13,7 +13,7 @@ const statusBadgeColors: Record<string, string> = {
 const jobStatusColors: Record<string, string> = {
   COMPLETED: 'bg-green-100 text-green-800',
   PAID: 'bg-blue-100 text-blue-800',
-  ACCEPTED: 'bg-indigo-100 text-indigo-800',
+  ACCEPTED: 'bg-blue-100 text-blue-800',
   PENDING: 'bg-yellow-100 text-yellow-800',
   REJECTED: 'bg-gray-100 text-gray-800',
   CANCELLED: 'bg-gray-100 text-gray-600',
@@ -102,7 +102,7 @@ export default function AdminAgentDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/admin/agents" className="text-indigo-600 hover:text-indigo-800 text-sm">&larr; Back to Agents</Link>
+        <Link to="/admin/agents" className="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Agents</Link>
       </div>
 
       <div className="bg-white rounded-lg shadow p-5">
@@ -117,7 +117,7 @@ export default function AdminAgentDetail() {
             </div>
             {agent.description && <p className="text-sm text-gray-600 mt-1">{agent.description}</p>}
             {agent.websiteUrl && (
-              <a href={agent.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline">{agent.websiteUrl}</a>
+              <a href={agent.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">{agent.websiteUrl}</a>
             )}
             {agent.contactEmail && <p className="text-sm text-gray-500 mt-1">{agent.contactEmail}</p>}
           </div>
@@ -135,7 +135,7 @@ export default function AdminAgentDetail() {
             <select
               value={editStatus}
               onChange={(e) => setEditStatus(e.target.value)}
-              className="block w-40 rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="block w-40 rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {['PENDING', 'ACTIVE', 'SUSPENDED', 'BANNED'].map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -147,7 +147,7 @@ export default function AdminAgentDetail() {
             <select
               value={editTier}
               onChange={(e) => setEditTier(e.target.value)}
-              className="block w-40 rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="block w-40 rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {['BASIC', 'PRO'].map((t) => (
                 <option key={t} value={t}>{t}</option>
@@ -157,7 +157,7 @@ export default function AdminAgentDetail() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -175,7 +175,7 @@ export default function AdminAgentDetail() {
           <Field label="Tier" value={agent.activationTier} />
           <Field label="Platform" value={agent.activationPlatform} />
           <Field label="Social post URL" value={agent.socialPostUrl && (
-            <a href={agent.socialPostUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">{agent.socialPostUrl}</a>
+            <a href={agent.socialPostUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{agent.socialPostUrl}</a>
           )} />
           <Field label="Social audience" value={agent.socialAccountSize} />
           <Field label="Activated at" value={agent.activatedAt && new Date(agent.activatedAt).toLocaleString()} />
@@ -212,7 +212,7 @@ export default function AdminAgentDetail() {
               {agent.jobs.map((j) => (
                 <tr key={j.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/jobs/${j.id}`)}>
                   <td className="py-1.5">
-                    <Link to={`/admin/jobs/${j.id}`} className="text-indigo-600 hover:underline">{j.title}</Link>
+                    <Link to={`/admin/jobs/${j.id}`} className="text-blue-600 hover:underline">{j.title}</Link>
                   </td>
                   <td className="py-1.5">
                     <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${jobStatusColors[j.status] || 'bg-gray-100 text-gray-800'}`}>
@@ -220,7 +220,7 @@ export default function AdminAgentDetail() {
                     </span>
                   </td>
                   <td className="py-1.5">
-                    <Link to={`/admin/users/${j.human.id}`} className="text-indigo-600 hover:underline">{j.human.name}</Link>
+                    <Link to={`/admin/users/${j.human.id}`} className="text-blue-600 hover:underline">{j.human.name}</Link>
                   </td>
                   <td className="py-1.5 text-gray-600">${j.priceUsdc}</td>
                   <td className="py-1.5 text-gray-400">{new Date(j.createdAt).toLocaleDateString()}</td>
@@ -248,7 +248,7 @@ export default function AdminAgentDetail() {
                 {r.description && <p className="text-sm text-gray-600 mt-1">{r.description}</p>}
                 <p className="text-xs text-gray-400 mt-1">
                   Reported by{' '}
-                  <Link to={`/admin/users/${r.reporter.id}`} className="text-indigo-600 hover:underline">
+                  <Link to={`/admin/users/${r.reporter.id}`} className="text-blue-600 hover:underline">
                     {r.reporter.name}
                   </Link>
                   {' '}({r.reporter.email})

@@ -59,8 +59,8 @@ export default function AvailabilitySection({
               disabled={saving}
               className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                 paymentPreferences.includes(opt.value)
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
               }`}
             >
               {t(opt.labelKey)}

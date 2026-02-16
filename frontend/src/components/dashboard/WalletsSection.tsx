@@ -180,16 +180,16 @@ export default function WalletsSection({
     return (
       <div className="text-xs text-gray-400">
         {t('dashboard.wallets.noWalletExtension')}{' '}
-        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">MetaMask</a>
+        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">MetaMask</a>
         {' '}{t('common.or').toLowerCase()}{' '}
-        <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 underline">Coinbase Wallet</a>
+        <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">Coinbase Wallet</a>
       </div>
     );
   };
 
   const renderBusy = () => (
     <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center gap-2">
-      <svg className="animate-spin h-4 w-4 text-indigo-600" viewBox="0 0 24 24">
+      <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
@@ -203,7 +203,7 @@ export default function WalletsSection({
         <button
           onClick={connectAndVerify}
           disabled={saving || step === 'busy'}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
           {t('dashboard.wallets.addWallet')}
         </button>
@@ -265,7 +265,7 @@ export default function WalletsSection({
                           />
                           <button
                             onClick={() => saveLabel(group.address)}
-                            className="text-indigo-600 hover:text-indigo-500 text-xs"
+                            className="text-blue-600 hover:text-blue-500 text-xs"
                           >
                             {t('common.save')}
                           </button>
@@ -283,7 +283,7 @@ export default function WalletsSection({
                           ) : null}
                           <button
                             onClick={() => startEditLabel(group.address, group.label)}
-                            className="text-gray-400 hover:text-indigo-600"
+                            className="text-gray-400 hover:text-blue-600"
                             aria-label={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
                             title={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
                           >
@@ -300,12 +300,12 @@ export default function WalletsSection({
                     {group.wallets.map((wallet) => (
                       <span
                         key={wallet.id}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
                       >
                         {networkDisplayName(wallet.network)}
                         <button
                           onClick={() => onDeleteWallet(wallet.id)}
-                          className="ml-0.5 text-indigo-400 hover:text-red-600"
+                          className="ml-0.5 text-blue-400 hover:text-red-600"
                           aria-label={`Remove ${wallet.network}`}
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,7 +326,7 @@ export default function WalletsSection({
                 <button
                   onClick={connectAndVerify}
                   disabled={saving}
-                  className="text-indigo-600 hover:text-indigo-500 text-sm"
+                  className="text-blue-600 hover:text-blue-500 text-sm"
                 >
                   {t('dashboard.wallets.addWallet')}
                 </button>

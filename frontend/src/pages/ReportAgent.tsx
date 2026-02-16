@@ -23,7 +23,7 @@ export default function ReportAgent() {
         <SEO title={t('report.title')} noindex />
         <div className="text-center">
           <p className="text-gray-600">{t('report.invalidToken')}</p>
-          <Link to="/" className="text-indigo-600 hover:underline mt-4 inline-block">
+          <Link to="/" className="text-blue-600 hover:underline mt-4 inline-block">
             {t('common.backHome')}
           </Link>
         </div>
@@ -79,7 +79,7 @@ export default function ReportAgent() {
           <div className="text-green-600 text-4xl mb-4">&#10003;</div>
           <h2 className="text-xl font-semibold mb-2">{t('report.submitted')}</h2>
           <p className="text-gray-600">{t('report.submittedDesc')}</p>
-          <Link to="/" className="text-indigo-600 hover:underline mt-6 inline-block">
+          <Link to="/" className="text-blue-600 hover:underline mt-6 inline-block">
             {t('common.backHome')}
           </Link>
         </div>
@@ -118,7 +118,7 @@ export default function ReportAgent() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">{t('report.selectReason')}</option>
                 {REASONS.map((r) => (
@@ -137,7 +137,7 @@ export default function ReportAgent() {
                 maxLength={1000}
                 rows={4}
                 placeholder={t('report.descriptionPlaceholder')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="text-xs text-gray-400 mt-1">{description.length}/1000</p>
             </div>

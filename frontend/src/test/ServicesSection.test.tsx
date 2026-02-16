@@ -424,8 +424,8 @@ describe('ServicesSection', () => {
       fireEvent.focus(catInput);
 
       const tutoringButton = screen.getByText('Tutoring');
-      expect(tutoringButton).toHaveClass('bg-indigo-50');
-      expect(tutoringButton).toHaveClass('text-indigo-700');
+      expect(tutoringButton).toHaveClass('bg-blue-50');
+      expect(tutoringButton).toHaveClass('text-blue-700');
     });
 
     it('closes dropdown when clicking outside', () => {

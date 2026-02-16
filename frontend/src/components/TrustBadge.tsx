@@ -230,7 +230,7 @@ function TrustBar({ label, value, max, description }: { label: string; value: nu
         <span className="w-20 text-xs text-gray-500 shrink-0">{label}</span>
         <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+            className="h-full bg-blue-500 rounded-full transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>

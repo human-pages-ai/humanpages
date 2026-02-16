@@ -83,7 +83,7 @@ export default function ListingDetail() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-gray-600">Listing not found</p>
-        <Link to="/listings" className="text-indigo-600 hover:text-indigo-800">
+        <Link to="/listings" className="text-blue-600 hover:text-blue-800">
           {t('common.back')} to listings
         </Link>
       </div>
@@ -108,11 +108,11 @@ export default function ListingDetail() {
           <div className="flex items-center gap-4 whitespace-nowrap">
             <LanguageSwitcher />
             {user ? (
-              <Link to="/dashboard" className="text-indigo-600 hover:text-indigo-800 font-medium">
+              <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
                 {t('nav.dashboard')}
               </Link>
             ) : (
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
+              <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
                 {t('nav.login')}
               </Link>
             )}
@@ -124,7 +124,7 @@ export default function ListingDetail() {
         {/* Back link */}
         <Link
           to="/listings"
-          className="text-sm text-indigo-600 hover:text-indigo-800 mb-6 inline-flex items-center gap-1"
+          className="text-sm text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center gap-1"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -183,7 +183,7 @@ export default function ListingDetail() {
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {listing.requiredSkills.map((skill, idx) => (
-                        <span key={idx} className="inline-block bg-indigo-50 text-indigo-700 text-sm px-3 py-1 rounded">
+                        <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded">
                           {skill}
                         </span>
                       ))}
@@ -262,7 +262,7 @@ export default function ListingDetail() {
                   <p className="text-gray-600 mb-4">{t('listings.detail.loginToApply')}</p>
                   <Link
                     to="/login"
-                    className="inline-block bg-indigo-600 text-white font-medium py-2 px-6 rounded-md hover:bg-indigo-700 transition-colors"
+                    className="inline-block bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
                   >
                     {t('nav.login')}
                   </Link>
@@ -306,7 +306,7 @@ export default function ListingDetail() {
                     placeholder={t('listings.detail.pitchPlaceholder')}
                     rows={4}
                     maxLength={500}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   />
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-xs text-gray-500">
@@ -315,7 +315,7 @@ export default function ListingDetail() {
                     <button
                       onClick={handleApply}
                       disabled={submitting || !pitch.trim()}
-                      className="bg-indigo-600 text-white font-medium py-2 px-6 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? t('listings.detail.submitting') : t('listings.detail.submitApplication')}
                     </button>

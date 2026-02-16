@@ -39,13 +39,13 @@ export default function PaymentPreferencesSection({
               disabled={saving || !isAvailable}
               className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
                 selected
-                  ? 'border-indigo-600 bg-indigo-50'
-                  : 'border-gray-200 bg-white hover:border-indigo-300'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-blue-300'
               }`}
             >
               <div className="flex items-center gap-2">
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                  selected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
+                  selected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
                 }`}>
                   {selected && (
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,7 +53,7 @@ export default function PaymentPreferencesSection({
                     </svg>
                   )}
                 </div>
-                <span className={`text-sm font-medium ${selected ? 'text-indigo-700' : 'text-gray-900'}`}>
+                <span className={`text-sm font-medium ${selected ? 'text-blue-700' : 'text-gray-900'}`}>
                   {t(opt.labelKey)}
                 </span>
               </div>

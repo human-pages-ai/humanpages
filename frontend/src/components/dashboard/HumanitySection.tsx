@@ -55,7 +55,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
           Verified Human Badge
@@ -91,7 +91,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
           <button
             onClick={handleVerify}
             disabled={verifying}
-            className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+            className="text-sm text-blue-600 hover:text-blue-500 font-medium"
           >
             {verifying ? 'Checking...' : 'Re-verify score'}
           </button>
@@ -109,7 +109,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
           </div>
           <p className="text-sm text-gray-600">
             Collect more stamps on{' '}
-            <a href="https://passport.gitcoin.co" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-500 underline">
+            <a href="https://passport.gitcoin.co" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 underline">
               Gitcoin Passport
             </a>
             {' '}to reach Silver (20+) and earn a verified badge.
@@ -117,7 +117,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
           <button
             onClick={handleVerify}
             disabled={verifying}
-            className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+            className="text-sm text-blue-600 hover:text-blue-500 font-medium"
           >
             {verifying ? 'Checking...' : 'Re-check my score'}
           </button>
@@ -126,7 +126,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
             Verify with{' '}
-            <a href="https://passport.gitcoin.co" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-500 underline">
+            <a href="https://passport.gitcoin.co" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 underline">
               Gitcoin Passport
             </a>
             {' '}to earn a verified badge on your profile. Collect stamps (social accounts, ENS, etc.) to build your score.
@@ -154,7 +154,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
             <button
               onClick={handleVerify}
               disabled={verifying}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {verifying ? (
                 <>

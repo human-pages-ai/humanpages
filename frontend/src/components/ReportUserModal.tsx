@@ -121,7 +121,7 @@ export default function ReportUserModal({ isOpen, onClose, targetUserId, targetU
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
             >
               <option value="">{t('reportUser.selectReason', 'Select a reason')}</option>
               {REASONS.map((r) => (
@@ -144,7 +144,7 @@ export default function ReportUserModal({ isOpen, onClose, targetUserId, targetU
               maxLength={1000}
               rows={4}
               placeholder={t('reportUser.descriptionPlaceholder', 'Describe what happened...')}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none"
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/1000</p>
           </div>

@@ -481,7 +481,7 @@ export default function Dashboard() {
                 <p className="font-medium text-sm">{t('toast.walletNudgeTitle')}</p>
                 <p className="text-xs text-gray-500 mt-1">{t('toast.walletNudgeDescription')}</p>
                 <button
-                  className="mt-2 text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                  className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-500"
                   onClick={() => {
                     toast.dismiss(toastObj.id);
                     setActiveTab('payments');

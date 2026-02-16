@@ -235,7 +235,7 @@ export default function AdminFeedback() {
                         }}
                         placeholder="Internal notes (auto-saves on blur)..."
                         rows={2}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none"
                       />
                     </div>
                   </div>

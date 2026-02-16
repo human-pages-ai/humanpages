@@ -13,8 +13,8 @@ function Toggle({ enabled, onToggle, saving }: { enabled: boolean; onToggle: () 
     <button
       onClick={onToggle}
       disabled={saving}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 ${
-        enabled ? 'bg-indigo-600' : 'bg-gray-200'
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+        enabled ? 'bg-blue-600' : 'bg-gray-200'
       }`}
       role="switch"
       aria-checked={enabled}

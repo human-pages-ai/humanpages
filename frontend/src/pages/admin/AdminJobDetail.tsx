@@ -6,7 +6,7 @@ import type { AdminJobDetail as AdminJobDetailType } from '../../types/admin';
 const statusColors: Record<string, string> = {
   COMPLETED: 'bg-green-100 text-green-800',
   PAID: 'bg-blue-100 text-blue-800',
-  ACCEPTED: 'bg-indigo-100 text-indigo-800',
+  ACCEPTED: 'bg-blue-100 text-blue-800',
   PENDING: 'bg-yellow-100 text-yellow-800',
   REJECTED: 'bg-gray-100 text-gray-800',
   CANCELLED: 'bg-gray-100 text-gray-600',
@@ -64,7 +64,7 @@ export default function AdminJobDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/admin/jobs" className="text-indigo-600 hover:text-indigo-800 text-sm">&larr; Back to Jobs</Link>
+        <Link to="/admin/jobs" className="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Jobs</Link>
       </div>
 
       <div className="bg-white rounded-lg shadow p-5">
@@ -89,7 +89,7 @@ export default function AdminJobDetail() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Section title="Human">
           <Field label="Name" value={
-            <Link to={`/admin/users/${job.human.id}`} className="text-indigo-600 hover:underline">{job.human.name}</Link>
+            <Link to={`/admin/users/${job.human.id}`} className="text-blue-600 hover:underline">{job.human.name}</Link>
           } />
           <Field label="Email" value={job.human.email} />
           {job.human.username && <Field label="Username" value={`@${job.human.username}`} />}
@@ -99,7 +99,7 @@ export default function AdminJobDetail() {
           {job.registeredAgent ? (
             <>
               <Field label="Name" value={
-                <Link to={`/admin/agents/${job.registeredAgent.id}`} className="text-indigo-600 hover:underline">{job.registeredAgent.name}</Link>
+                <Link to={`/admin/agents/${job.registeredAgent.id}`} className="text-blue-600 hover:underline">{job.registeredAgent.name}</Link>
               } />
               <Field label="Status" value={job.registeredAgent.status} />
               <Field label="Domain verified" value={job.registeredAgent.domainVerified ? 'Yes' : 'No'} />

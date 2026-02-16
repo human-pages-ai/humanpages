@@ -63,7 +63,7 @@ export default function ListingsSection({ skills }: Props) {
           </div>
           <Link
             to="/listings"
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            className="text-sm font-medium text-blue-600 hover:text-blue-500"
           >
             {t('listings.browse')} &rarr;
           </Link>
@@ -130,7 +130,7 @@ export default function ListingsSection({ skills }: Props) {
         ) : applications.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-sm text-gray-500 mb-3">{t('listings.myApplications.empty')}</p>
-            <Link to="/listings" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/listings" className="text-sm font-medium text-blue-600 hover:text-blue-500">
               {t('listings.browse')}
             </Link>
           </div>
@@ -141,7 +141,7 @@ export default function ListingsSection({ skills }: Props) {
                 <div className="min-w-0">
                   <Link
                     to={`/listings/${app.listingId}`}
-                    className="font-medium text-gray-900 text-sm hover:text-indigo-600 block truncate"
+                    className="font-medium text-gray-900 text-sm hover:text-blue-600 block truncate"
                   >
                     {app.listing?.title || 'Listing'}
                   </Link>
@@ -162,7 +162,7 @@ export default function ListingsSection({ skills }: Props) {
                   {app.status === 'OFFERED' && app.jobId && (
                     <Link
                       to={`/jobs/${app.jobId}`}
-                      className="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-500"
                     >
                       {t('listings.myApplications.viewJob')}
                     </Link>

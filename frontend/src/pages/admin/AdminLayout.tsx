@@ -12,7 +12,7 @@ const navItems = [
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return isActive
-    ? 'px-3 py-2 text-sm font-medium rounded-md bg-indigo-50 text-indigo-700'
+    ? 'px-3 py-2 text-sm font-medium rounded-md bg-blue-50 text-blue-700'
     : 'px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50';
 }
 

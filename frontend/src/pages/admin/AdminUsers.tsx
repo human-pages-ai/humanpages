@@ -55,12 +55,12 @@ export default function AdminUsers() {
           placeholder="Search by name, email, or username..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
           value={verified}
           onChange={(e) => setVerified(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All users</option>
           <option value="true">Verified</option>
@@ -103,7 +103,7 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <Link
                       to={`/admin/users/${u.id}`}
-                      className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {u.name}
@@ -121,7 +121,7 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-sm text-gray-500">
                     <button
                       onClick={() => navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${u.referralCode}`)}
-                      className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs"
+                      className="text-blue-600 hover:text-blue-800 hover:underline text-xs"
                       title={`${window.location.origin}/signup?ref=${u.referralCode}`}
                     >
                       Copy

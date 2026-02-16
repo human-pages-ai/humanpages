@@ -160,7 +160,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
   }
 
   const typeOptions = [
-    { value: 'FEEDBACK' as FeedbackType, icon: ChatBubbleOvalLeftIcon, label: t('feedback.typeFeedback', 'Feedback'), color: 'indigo' },
+    { value: 'FEEDBACK' as FeedbackType, icon: ChatBubbleOvalLeftIcon, label: t('feedback.typeFeedback', 'Feedback'), color: 'blue' },
     { value: 'BUG' as FeedbackType, icon: BugAntIcon, label: t('feedback.typeBug', 'Bug Report'), color: 'red' },
     { value: 'FEATURE' as FeedbackType, icon: LightBulbIcon, label: t('feedback.typeFeature', 'Feature Idea'), color: 'amber' },
   ];
@@ -169,7 +169,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
   const button = (
     <button
       onClick={() => setOpen(true)}
-      className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-2.5 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-200 group"
+      className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2.5 sm:p-3 shadow-lg hover:shadow-xl transition-all duration-200 group"
       aria-label={t('feedback.title', 'Send Feedback')}
       title={t('feedback.title', 'Send Feedback')}
     >
@@ -232,7 +232,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
                       ? 'bg-red-50 border-red-200 text-red-700'
                       : opt.color === 'amber'
                       ? 'bg-amber-50 border-amber-200 text-amber-700'
-                      : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                      : 'bg-blue-50 border-blue-200 text-blue-700'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
@@ -252,7 +252,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
                   onClick={() => setSentiment(s.value)}
                   className={`text-2xl p-2 rounded-lg transition-all ${
                     sentiment === s.value
-                      ? 'bg-indigo-50 scale-110 ring-2 ring-indigo-200'
+                      ? 'bg-blue-50 scale-110 ring-2 ring-blue-200'
                       : 'hover:bg-gray-50 opacity-60 hover:opacity-100'
                   }`}
                   title={s.label}
@@ -279,7 +279,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
               rows={4}
               required
               maxLength={5000}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none"
             />
           </div>
 
@@ -334,7 +334,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
           <button
             type="submit"
             disabled={submitting || !description.trim()}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-medium py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>

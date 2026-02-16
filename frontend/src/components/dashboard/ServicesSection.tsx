@@ -87,8 +87,8 @@ function CategoryCombobox({
                   setSearch('');
                   setOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 ${
-                  cat === value ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${
+                  cat === value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
                 }`}
               >
                 {cat}
@@ -143,7 +143,7 @@ export default function ServicesSection({
         <h2 className="text-lg font-semibold">{t('dashboard.services.title')}</h2>
         <button
           onClick={() => setShowServiceForm(!showServiceForm)}
-          className="text-indigo-600 hover:text-indigo-500 text-sm"
+          className="text-blue-600 hover:text-blue-500 text-sm"
         >
           {showServiceForm ? t('common.cancel') : t('dashboard.services.addService')}
         </button>
@@ -242,7 +242,7 @@ export default function ServicesSection({
               !serviceForm.category ||
               (!!serviceForm.priceMin && !serviceForm.priceUnit)
             }
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {t('dashboard.services.addService')}
           </button>
@@ -261,7 +261,7 @@ export default function ServicesSection({
             </div>
             <button
               onClick={() => setShowServiceForm(true)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               {t('dashboard.services.addService')}
             </button>
@@ -307,7 +307,7 @@ export default function ServicesSection({
           {!showServiceForm && (
             <button
               onClick={() => setShowServiceForm(true)}
-              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
             >
               + {t('dashboard.services.addAnother')}
             </button>

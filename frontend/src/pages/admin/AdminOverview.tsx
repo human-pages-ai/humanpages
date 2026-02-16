@@ -14,7 +14,7 @@ function StatCard({ label, value, sub, to }: { label: string; value: string | nu
 
   if (to) {
     return (
-      <Link to={to} className="bg-white rounded-lg shadow p-5 hover:ring-2 hover:ring-indigo-200 transition-all block">
+      <Link to={to} className="bg-white rounded-lg shadow p-5 hover:ring-2 hover:ring-blue-200 transition-all block">
         {content}
       </Link>
     );
@@ -42,7 +42,7 @@ function StatusBar({ data, colorMap, linkPrefix }: { data: Record<string, number
       <div className="flex flex-wrap gap-3 mt-2">
         {Object.entries(data).map(([status, count]) => (
           linkPrefix ? (
-            <Link key={status} to={`${linkPrefix}?status=${status}`} className="text-xs text-gray-500 hover:text-indigo-600">
+            <Link key={status} to={`${linkPrefix}?status=${status}`} className="text-xs text-gray-500 hover:text-blue-600">
               <span className={`inline-block w-2 h-2 rounded-full mr-1 ${colorMap[status] || 'bg-gray-300'}`} />
               {status}: {count}
             </Link>
@@ -75,7 +75,7 @@ const listingColors: Record<string, string> = {
 const jobColors: Record<string, string> = {
   COMPLETED: 'bg-green-500',
   PAID: 'bg-blue-500',
-  ACCEPTED: 'bg-indigo-400',
+  ACCEPTED: 'bg-blue-400',
   PENDING: 'bg-yellow-400',
   REJECTED: 'bg-gray-400',
   CANCELLED: 'bg-gray-300',
@@ -176,7 +176,7 @@ export default function AdminOverview() {
             {stats.affiliates.approved} approved <span className="text-sm font-normal text-gray-400">/ {stats.affiliates.total} total</span>
           </p>
         </div>
-        <a href="/admin/feedback" className="bg-white rounded-lg shadow p-5 hover:ring-2 hover:ring-indigo-200 transition-all block">
+        <a href="/admin/feedback" className="bg-white rounded-lg shadow p-5 hover:ring-2 hover:ring-blue-200 transition-all block">
           <p className="text-sm font-medium text-gray-500 mb-2">Feedback</p>
           <p className="text-xl font-semibold text-gray-900">{stats.feedback.total}</p>
           <p className="text-sm text-gray-400">{stats.feedback.new} new</p>

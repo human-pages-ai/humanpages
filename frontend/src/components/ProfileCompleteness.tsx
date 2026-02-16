@@ -136,12 +136,12 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{t('onboarding.title')}</h2>
-        <span className="text-2xl font-bold text-indigo-600">{percentage}%</span>
+        <span className="text-2xl font-bold text-blue-600">{percentage}%</span>
       </div>
 
       <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
         <div
-          className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+          className="bg-blue-600 h-3 rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -159,7 +159,7 @@ export default function ProfileCompleteness({ profile, onEditProfile, onAddServi
                 </span>
                 <button
                   onClick={() => handleItemClick(item)}
-                  className="text-indigo-600 hover:text-indigo-500 text-xs"
+                  className="text-blue-600 hover:text-blue-500 text-xs"
                 >
                   {t('common.add')}
                 </button>

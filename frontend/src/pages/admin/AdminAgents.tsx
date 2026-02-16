@@ -46,12 +46,12 @@ export default function AdminAgents() {
           placeholder="Search agents..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All statuses</option>
           <option value="ACTIVE">Active</option>
@@ -86,11 +86,11 @@ export default function AdminAgents() {
               agents.map((a) => (
                 <tr key={a.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/agents/${a.id}`)}>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    <Link to={`/admin/agents/${a.id}`} className="text-indigo-600 hover:text-indigo-800 hover:underline" onClick={(e) => e.stopPropagation()}>
+                    <Link to={`/admin/agents/${a.id}`} className="text-blue-600 hover:text-blue-800 hover:underline" onClick={(e) => e.stopPropagation()}>
                       {a.name}
                     </Link>
                     {a.websiteUrl && (
-                      <a href={a.websiteUrl} target="_blank" rel="noopener noreferrer" className="ml-1 text-indigo-500 text-xs" onClick={(e) => e.stopPropagation()}>link</a>
+                      <a href={a.websiteUrl} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 text-xs" onClick={(e) => e.stopPropagation()}>link</a>
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm">
