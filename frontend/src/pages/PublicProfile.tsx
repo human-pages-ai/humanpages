@@ -584,7 +584,7 @@ export default function PublicProfile() {
               {profile.contactEmail && (
                 <a
                   href={`mailto:${profile.contactEmail}?subject=Inquiry from Human Pages`}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

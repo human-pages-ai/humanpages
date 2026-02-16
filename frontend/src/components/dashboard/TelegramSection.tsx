@@ -50,7 +50,7 @@ export default function TelegramSection({
           <button
             onClick={onConnect}
             disabled={telegramLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-orange-500 disabled:opacity-50"
           >
             {telegramLoading ? t('dashboard.telegram.connecting') : t('dashboard.telegram.connect')}
           </button>

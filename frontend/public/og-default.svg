@@ -11,7 +11,7 @@
 
   <!-- Wordmark only, no icon -->
   <text x="600" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" letter-spacing="-2" text-anchor="middle">
-    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#64748b">.ai</tspan>
+    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#f97316">.ai</tspan>
   </text>
 
   <!-- Tagline -->

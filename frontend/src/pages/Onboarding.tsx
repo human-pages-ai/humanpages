@@ -218,7 +218,7 @@ export default function Onboarding() {
             <button
               onClick={handleSubmit}
               disabled={loading || (!!location.trim() && !locationChosen)}
-              className="w-full mt-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-4 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? t('onboarding.saving') : t('onboarding.completeProfile')}
             </button>

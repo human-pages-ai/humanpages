@@ -134,7 +134,7 @@ export default function AutomatedInfluencerOutreach() {
         </p>
         <Link
           to="/blog/social-media-marketing-hiring-process"
-          className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-block px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
         >
           Read the setup guide
         </Link>

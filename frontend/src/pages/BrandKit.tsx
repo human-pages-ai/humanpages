@@ -1,6 +1,6 @@
 export default function BrandKit() {
   const colors = [
-    { name: 'Slate (current)', dark: '#64748b', light: '#94a3b8' },
+    { name: 'Slate', dark: '#64748b', light: '#94a3b8' },
     { name: 'Emerald', dark: '#10b981', light: '#059669' },
     { name: 'Light Emerald', dark: '#34d399', light: '#10b981' },
     { name: 'Teal', dark: '#14b8a6', light: '#0d9488' },
@@ -9,7 +9,7 @@ export default function BrandKit() {
     { name: 'Bright Cyan', dark: '#22d3ee', light: '#06b6d4' },
     { name: 'Amber', dark: '#f59e0b', light: '#d97706' },
     { name: 'Orange', dark: '#fb923c', light: '#ea580c' },
-    { name: 'Deep Orange', dark: '#f97316', light: '#ea580c' },
+    { name: 'Deep Orange (current)', dark: '#f97316', light: '#ea580c' },
     { name: 'Red', dark: '#ef4444', light: '#dc2626' },
     { name: 'Rose', dark: '#f43f5e', light: '#e11d48' },
     { name: 'Pink', dark: '#ec4899', light: '#db2777' },
@@ -142,10 +142,10 @@ export default function BrandKit() {
           <h2 className="text-lg font-semibold text-blue-500 mb-6">Full Wordmark</h2>
           <div className="space-y-4">
             <div className="bg-slate-800 rounded-xl p-8">
-              <Wordmark humanColor="#e2e8f0" pagesColor="#2563eb" aiColor="#64748b" />
+              <Wordmark humanColor="#e2e8f0" pagesColor="#2563eb" aiColor="#f97316" />
             </div>
             <div className="bg-white rounded-xl p-8">
-              <Wordmark humanColor="#1e293b" pagesColor="#2563eb" aiColor="#94a3b8" />
+              <Wordmark humanColor="#1e293b" pagesColor="#2563eb" aiColor="#ea580c" />
             </div>
           </div>
         </section>

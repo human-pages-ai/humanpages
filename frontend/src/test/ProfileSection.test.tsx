@@ -281,11 +281,11 @@ describe('ProfileSection', () => {
       });
 
       const droneBtn = screen.getByText('drone');
-      expect(droneBtn).toHaveClass('bg-blue-600');
+      expect(droneBtn).toHaveClass('bg-orange-500');
       expect(droneBtn).toHaveClass('text-white');
 
       const carBtn = screen.getByText('car');
-      expect(carBtn).not.toHaveClass('bg-blue-600');
+      expect(carBtn).not.toHaveClass('bg-orange-500');
     });
 
     it('calls setProfileForm to add equipment when unselected item is clicked', async () => {
@@ -334,10 +334,10 @@ describe('ProfileSection', () => {
       });
 
       const englishBtn = screen.getByText('English');
-      expect(englishBtn).toHaveClass('bg-blue-600');
+      expect(englishBtn).toHaveClass('bg-orange-500');
 
       const germanBtn = screen.getByText('German');
-      expect(germanBtn).not.toHaveClass('bg-blue-600');
+      expect(germanBtn).not.toHaveClass('bg-orange-500');
     });
 
     it('calls setProfileForm to add a language when clicked', async () => {

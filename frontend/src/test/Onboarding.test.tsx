@@ -98,7 +98,7 @@ describe('Onboarding', () => {
     const skillButton = screen.getByRole('button', { name: 'Local Photography' });
     fireEvent.click(skillButton);
 
-    expect(skillButton.className).toContain('bg-blue-600');
+    expect(skillButton.className).toContain('bg-orange-500');
   });
 
   it('skip button navigates to dashboard', async () => {

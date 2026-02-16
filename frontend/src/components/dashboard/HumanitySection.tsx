@@ -154,7 +154,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
             <button
               onClick={handleVerify}
               disabled={verifying}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50"
             >
               {verifying ? (
                 <>

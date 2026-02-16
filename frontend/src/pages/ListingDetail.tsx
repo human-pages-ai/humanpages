@@ -262,7 +262,7 @@ export default function ListingDetail() {
                   <p className="text-gray-600 mb-4">{t('listings.detail.loginToApply')}</p>
                   <Link
                     to="/login"
-                    className="inline-block bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
+                    className="inline-block bg-orange-500 text-white font-medium py-2 px-6 rounded-md hover:bg-orange-600 transition-colors"
                   >
                     {t('nav.login')}
                   </Link>
@@ -315,7 +315,7 @@ export default function ListingDetail() {
                     <button
                       onClick={handleApply}
                       disabled={submitting || !pitch.trim()}
-                      className="bg-blue-600 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-orange-500 text-white font-medium py-2 px-6 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? t('listings.detail.submitting') : t('listings.detail.submitApplication')}
                     </button>

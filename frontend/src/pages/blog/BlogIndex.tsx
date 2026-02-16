@@ -103,7 +103,7 @@ export default function BlogIndex() {
             <Link to="/" className="text-sm text-slate-500 hover:text-slate-700">Humans</Link>
             <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700">Developers</Link>
             <Link to="/blog" className="text-sm font-medium text-slate-900">Blog</Link>
-            <Link to="/signup" className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            <Link to="/signup" className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors">
               Start your profile
             </Link>
           </div>

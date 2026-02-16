@@ -209,7 +209,7 @@ export default function DevelopersPage() {
             <LanguageSwitcher />
             <Link
               to="/signup?utm_source=dev_page"
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
             >
               {t('nav.startProfile')}
             </Link>
@@ -231,7 +231,7 @@ export default function DevelopersPage() {
           <div className="mt-8 flex gap-4">
             <button
               onClick={scrollToInstall}
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
             >
               {t('dev.hero.installBtn')}
             </button>
@@ -443,7 +443,7 @@ export default function DevelopersPage() {
             {/* PRO card */}
             <div className="p-6 bg-white rounded-xl border-2 border-blue-500 relative">
               {promo?.enabled && promo.remaining > 0 && (
-                <span className="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                <span className="absolute -top-3 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                   {t('dev.pricing.promoPromoPrice')}
                 </span>
               )}
@@ -611,17 +611,17 @@ export default function DevelopersPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 bg-blue-600">
+      <section className="py-16 px-4 bg-gradient-to-r from-orange-500 to-orange-600">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white">
             {t('dev.cta.title')}
           </h2>
-          <p className="mt-2 text-blue-100">
+          <p className="mt-2 text-orange-100">
             {t('dev.cta.subtitle')}
           </p>
           <Link
             to="/signup?utm_source=dev_page&utm_medium=cta"
-            className="mt-6 inline-block px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
+            className="mt-6 inline-block px-8 py-4 bg-white text-orange-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
           >
             {t('nav.startProfile')}
           </Link>

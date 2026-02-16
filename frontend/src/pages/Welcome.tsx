@@ -133,7 +133,7 @@ export default function Welcome() {
         <div className="space-y-3 mb-6">
           <button
             onClick={copyProfileLink}
-            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
           >
             {copied ? (
               <>
@@ -209,7 +209,7 @@ export default function Welcome() {
               <p className="text-sm text-blue-800 mb-3">{t('welcome.addServiceDesc')}</p>
               <button
                 onClick={() => navigate('/dashboard?addService=1')}
-                className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="w-full py-2.5 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors text-sm"
               >
                 {t('welcome.addServiceBtn')}
               </button>
