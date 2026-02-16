@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -45,66 +45,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-const MOCK_PROFILES = [
-  {
-    initial: 'M',
-    name: 'Maria Santos',
-    location: 'Manila, Philippines',
-    gradient: 'from-blue-500 to-cyan-600',
-    glow: 'from-blue-100 via-transparent to-cyan-100',
-    skills: ['Photography', 'Research', 'Deliveries'],
-    service: 'Local Photography',
-    serviceDesc: 'Product shots, events, storefronts',
-    rate: '$30/hr',
-  },
-  {
-    initial: 'J',
-    name: 'James Okonkwo',
-    location: 'Lagos, Nigeria',
-    gradient: 'from-emerald-600 to-teal-600',
-    glow: 'from-emerald-100 via-transparent to-teal-100',
-    skills: ['Phone Calls', 'Research', 'Mystery Shopping'],
-    service: 'Customer Outreach',
-    serviceDesc: 'Calls, verifications, lead gen',
-    rate: '$25/hr',
-  },
-  {
-    initial: 'S',
-    name: 'Sofia Reyes',
-    location: 'Mexico City, Mexico',
-    gradient: 'from-violet-600 to-purple-600',
-    glow: 'from-violet-100 via-transparent to-purple-100',
-    skills: ['Deliveries', 'Photography', 'Handyman'],
-    service: 'Same-Day Courier',
-    serviceDesc: 'Pick-ups, drop-offs, urgent deliveries',
-    rate: '$20/task',
-  },
-  {
-    initial: 'A',
-    name: 'Aisha Rahman',
-    location: 'Dhaka, Bangladesh',
-    gradient: 'from-amber-500 to-orange-600',
-    glow: 'from-amber-100 via-transparent to-orange-100',
-    skills: ['Research', 'Phone Calls', 'Translation'],
-    service: 'Market Research',
-    serviceDesc: 'Price checks, competitor analysis',
-    rate: '$15/hr',
-  },
-  {
-    initial: 'T',
-    name: 'Tyler Brooks',
-    location: 'Austin, TX',
-    gradient: 'from-rose-600 to-pink-600',
-    glow: 'from-rose-100 via-transparent to-pink-100',
-    skills: ['Handyman', 'Deliveries', 'Photography'],
-    service: 'Furniture Assembly',
-    serviceDesc: 'IKEA builds, mounting, repairs',
-    rate: '$45/hr',
-  },
-];
-
-
-/** Shared tick hook — drives both the headline and the profile card in sync */
+/** Shared tick hook — drives the rotating headline */
 function useHeroTick() {
   const [tick, setTick] = useState(0);
   const [visible, setVisible] = useState(true);
@@ -146,78 +87,38 @@ function RotatingHeadline({ tick, visible }: { tick: number; visible: boolean })
   );
 }
 
-/** Rotating profile card carousel for the hero */
-function ProfileCardCarousel({ tick, visible: fade }: { tick: number; visible: boolean }) {
-  const index = tick % MOCK_PROFILES.length;
-
-  const p = MOCK_PROFILES[index];
-
-  return (
-    <div className="relative w-full max-w-sm mx-auto">
-      {/* Glow */}
-      <div className={`absolute -inset-4 bg-gradient-to-br ${p.glow} rounded-3xl blur-2xl opacity-60 transition-all duration-500`} />
-      <div className={`relative bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden transition-opacity duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Header band */}
-        <div className={`h-16 bg-gradient-to-r ${p.gradient}`} />
-        {/* Avatar */}
-        <div className="px-6 -mt-8">
-          <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center">
-            <span className="text-2xl font-bold text-blue-600">{p.initial}</span>
-          </div>
-        </div>
-        <div className="px-6 pt-2 pb-5">
-          <h3 className="font-semibold text-slate-900 text-lg">{p.name}</h3>
-          <p className="text-sm text-slate-500">{p.location}</p>
-          <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            Available for work
-          </span>
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {p.skills.map((s) => (
-              <span key={s} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md">{s}</span>
-            ))}
-          </div>
-          <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-slate-900">{p.service}</p>
-                <p className="text-xs text-slate-500">{p.serviceDesc}</p>
-              </div>
-              <span className="text-sm font-semibold text-blue-600">{p.rate}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Dots */}
-      <div className="flex justify-center gap-1.5 mt-4">
-        {MOCK_PROFILES.map((_, i) => (
-          <div
-            key={i}
-            className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-blue-600 w-4' : 'bg-slate-300'}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Mock ChatGPT-style conversation with real-time typing effect */
+/** Mock AI chat — types in input, sends, AI "thinks" then streams, interactive follow-ups */
 function MockChatConversation() {
-  const [phase, setPhase] = useState(0);
+  const [step, setStep] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Response 1 — segmented for inline bold
+  // Follow-up state
+  const [completedFU, setCompletedFU] = useState<number[]>([]);
+  const [activeFU, setActiveFU] = useState<number | null>(null);
+  const [fuPhase, setFuPhase] = useState(-1); // -1 idle, 0 typing-input, 1 sent, 2 thinking, 3 streaming
+  const [fuCharIdx, setFuCharIdx] = useState(0);
+
+  // --- Speeds ---
+  const USER_SPEED = 50; // ms per char — human typing
+  const AI_SPEED = 20;   // ms per char — AI streaming
+
+  // --- User questions ---
+  const q1 = 'What is Human Pages?';
+  const q2 = 'What do I get by creating a profile?';
+  const q3 = 'How do I get started?';
+
+  // --- AI responses ---
   const r1Segs = [
-    { text: 'Human Pages is a directory where real people list their skills \u2014 and ', bold: false },
+    { text: 'Human Pages is a directory where real people list their real-world skills \u2014 and ', bold: false },
     { text: 'AI agents hire them', bold: true },
-    { text: ' for tasks that need a human touch. Think \u201cYellow Pages\u201d for the AI age.', bold: false },
+    { text: ' for tasks that need a human touch. Think of it as the \u201cYellow Pages\u201d for the AI age.', bold: false },
   ];
   const r1Len = r1Segs.reduce((n, s) => n + s.text.length, 0);
 
-  // Response 2 — line-by-line (first line = intro, rest = benefits)
   const r2Lines = [
     "Here\u2019s what you get:",
-    'AI agents find you and send job offers directly',
+    'AI agents discover you and send job offers directly',
     'Keep 100% of your earnings \u2014 zero platform fees',
     'Get paid for photography, deliveries, calls, research & more',
     'One profile works across all AI agent platforms',
@@ -225,49 +126,188 @@ function MockChatConversation() {
   ];
   const r2Text = r2Lines.join('\n');
 
+  const r3Segs = [
+    { text: 'It takes under 2 minutes! ', bold: true },
+    { text: 'Sign up, list your skills and location, and you\u2019re visible to AI agents worldwide. You\u2019ll start receiving offers as soon as agents need your skills nearby.', bold: false },
+  ];
+  const r3Len = r3Segs.reduce((n, s) => n + s.text.length, 0);
+
+  // --- Follow-up Q&As (triggered by suggestion clicks) ---
+  const FOLLOW_UPS = [
+    {
+      q: 'How do I get paid?',
+      segs: [
+        { text: 'You get paid in ', bold: false },
+        { text: 'USDC', bold: true },
+        { text: ' (a stablecoin pegged to the US dollar) directly to your wallet. No middleman, no delays. Human Pages charges ', bold: false },
+        { text: 'zero platform fees', bold: true },
+        { text: ' \u2014 you keep 100% of what you earn.', bold: false },
+      ],
+    },
+    {
+      q: 'What kind of tasks are there?',
+      segs: [
+        { text: 'Tasks that AI can\u2019t do on its own \u2014 like ', bold: false },
+        { text: 'local photography, same-day deliveries, phone calls, mystery shopping, handyman work', bold: true },
+        { text: ', in-person research, and more. If it needs a real human in a real place, it\u2019s on Human Pages.', bold: false },
+      ],
+    },
+    {
+      q: 'Is it free to join?',
+      segs: [
+        { text: 'Yes, completely free! ', bold: true },
+        { text: 'No subscription, no hidden fees, no commission. Create your profile, list your skills, and start receiving offers at no cost.', bold: false },
+      ],
+    },
+    {
+      q: 'Who actually hires me?',
+      segs: [
+        { text: 'AI agents', bold: true },
+        { text: ' do. These are autonomous software programs built by companies to get real-world tasks done. They browse Human Pages, find people with the right skills and location, and ', bold: false },
+        { text: 'send you job offers directly', bold: true },
+        { text: '.', bold: false },
+      ],
+    },
+    {
+      q: 'Where is it available?',
+      segs: [
+        { text: 'Worldwide! ', bold: true },
+        { text: 'Human Pages works in every country. You list your city and skills, and agents looking for someone in your area will find you. Most demand right now is in ', bold: false },
+        { text: 'the US, Philippines, India, Mexico, and Nigeria', bold: true },
+        { text: ' \u2014 but that\u2019s growing fast.', bold: false },
+      ],
+    },
+    {
+      q: 'Can I set my own rates?',
+      segs: [
+        { text: 'Absolutely. ', bold: true },
+        { text: 'You set your own hourly or per-task rate on your profile. Agents see your rate upfront and can accept it or negotiate. You\u2019re never locked into a price \u2014 ', bold: false },
+        { text: 'you\u2019re always in control', bold: true },
+        { text: '.', bold: false },
+      ],
+    },
+    {
+      q: 'How do I stay safe?',
+      segs: [
+        { text: 'You control everything. ', bold: true },
+        { text: 'Choose what info is visible, hide your profile anytime, and block unwanted contacts. Human Pages never shares your personal data with agents \u2014 they only see what ', bold: false },
+        { text: 'you choose to show', bold: true },
+        { text: '.', bold: false },
+      ],
+    },
+  ];
+
   /*
-   * Phase machine:
-   *  0 → (200ms)  → 1  show user msg 1
-   *  1 → (800ms)  → 2  typing dots, then start streaming response 1
-   *  2 → streaming → 3  stream response 1 char-by-char
-   *  3 → (800ms)  → 4  pause, show user msg 2 + typing dots
-   *  4 → (800ms)  → 5  start streaming response 2
-   *  5 → streaming → 6  done
+   * Step machine — user types in input, message sends, AI thinks then streams.
+   *  0  → 500ms   → 1   start typing Q1 in input
+   *  1  → typing   → 2   Q1 sent to chat
+   *  2  → 600ms   → 3   thinking
+   *  3  → 1500ms  → 4   stream R1
+   *  4  → stream   → 5   done R1
+   *  5  → 1000ms  → 6   type Q2
+   *  6  → typing   → 7   Q2 sent
+   *  7  → 600ms   → 8   thinking
+   *  8  → 2000ms  → 9   stream R2
+   *  9  → stream   → 10  done R2
+   * 10  → 1000ms  → 11  type Q3
+   * 11  → typing   → 12  Q3 sent
+   * 12  → 600ms   → 13  thinking
+   * 13  → 1200ms  → 14  stream R3
+   * 14  → stream   → 15  suggestions
    */
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
-    if (phase === 0) t = setTimeout(() => setPhase(1), 200);
-    else if (phase === 1) t = setTimeout(() => { setCharIdx(0); setPhase(2); }, 800);
-    else if (phase === 2) {
-      if (charIdx < r1Len) t = setTimeout(() => setCharIdx(i => i + 1), 18);
-      else t = setTimeout(() => setPhase(3), 800);
-    } else if (phase === 3) t = setTimeout(() => { setCharIdx(0); setPhase(4); }, 800);
-    else if (phase === 4) {
-      if (charIdx < r2Text.length) t = setTimeout(() => setCharIdx(i => i + 1), 18);
-      else setPhase(5);
+    switch (step) {
+      case 0:  t = setTimeout(() => { setCharIdx(0); setStep(1); }, 500); break;
+      case 1:  // typing Q1 in input
+        if (charIdx < q1.length) t = setTimeout(() => setCharIdx(i => i + 1), USER_SPEED);
+        else t = setTimeout(() => setStep(2), 300);
+        break;
+      case 2:  t = setTimeout(() => setStep(3), 600); break;
+      case 3:  t = setTimeout(() => { setCharIdx(0); setStep(4); }, 1500); break;
+      case 4:  // streaming R1
+        if (charIdx < r1Len) t = setTimeout(() => setCharIdx(i => i + 1), AI_SPEED);
+        else t = setTimeout(() => setStep(5), 800);
+        break;
+      case 5:  t = setTimeout(() => { setCharIdx(0); setStep(6); }, 1000); break;
+      case 6:  // typing Q2 in input
+        if (charIdx < q2.length) t = setTimeout(() => setCharIdx(i => i + 1), USER_SPEED);
+        else t = setTimeout(() => setStep(7), 300);
+        break;
+      case 7:  t = setTimeout(() => setStep(8), 600); break;
+      case 8:  t = setTimeout(() => { setCharIdx(0); setStep(9); }, 2000); break;
+      case 9:  // streaming R2
+        if (charIdx < r2Text.length) t = setTimeout(() => setCharIdx(i => i + 1), AI_SPEED);
+        else t = setTimeout(() => setStep(10), 800);
+        break;
+      case 10: t = setTimeout(() => { setCharIdx(0); setStep(11); }, 1000); break;
+      case 11: // typing Q3 in input
+        if (charIdx < q3.length) t = setTimeout(() => setCharIdx(i => i + 1), USER_SPEED);
+        else t = setTimeout(() => setStep(12), 300);
+        break;
+      case 12: t = setTimeout(() => setStep(13), 600); break;
+      case 13: t = setTimeout(() => { setCharIdx(0); setStep(14); }, 1200); break;
+      case 14: // streaming R3
+        if (charIdx < r3Len) t = setTimeout(() => setCharIdx(i => i + 1), AI_SPEED);
+        else t = setTimeout(() => setStep(15), 300);
+        break;
     }
     return () => clearTimeout(t);
-  }, [phase, charIdx]);
+  }, [step, charIdx]);
 
-  // Shared elements
-  const sparkle = (
-    <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" />
-    </svg>
-  );
+  // --- Follow-up animation ---
+  useEffect(() => {
+    if (activeFU === null || fuPhase < 0) return;
+    let t: ReturnType<typeof setTimeout>;
+    const fu = FOLLOW_UPS[activeFU];
+    const aLen = fu.segs.reduce((n, s) => n + s.text.length, 0);
+    switch (fuPhase) {
+      case 0: // typing in input
+        if (fuCharIdx < fu.q.length) t = setTimeout(() => setFuCharIdx(i => i + 1), USER_SPEED);
+        else t = setTimeout(() => setFuPhase(1), 300);
+        break;
+      case 1: // sent, pause
+        t = setTimeout(() => setFuPhase(2), 600);
+        break;
+      case 2: // thinking
+        t = setTimeout(() => { setFuCharIdx(0); setFuPhase(3); }, 1500);
+        break;
+      case 3: // streaming
+        if (fuCharIdx < aLen) t = setTimeout(() => setFuCharIdx(i => i + 1), AI_SPEED);
+        else {
+          const idx = activeFU;
+          setCompletedFU(prev => [...prev, idx]);
+          setActiveFU(null);
+          setFuPhase(-1);
+        }
+        break;
+    }
+    return () => clearTimeout(t);
+  }, [activeFU, fuPhase, fuCharIdx]);
+
+  // --- Auto-scroll ---
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [step, charIdx, fuPhase, fuCharIdx, completedFU.length]);
+
+  // --- Render helpers ---
+
   const cursor = (
     <span
-      className="inline-block w-[3px] h-[14px] bg-slate-500 ml-0.5 align-text-bottom"
+      className="inline-block w-[3px] h-4 bg-slate-500 ml-0.5 align-text-bottom"
       style={{ animation: 'blink 1s step-end infinite' }}
     />
   );
 
-  // Render response 1 with inline bold preserved during streaming
-  const renderR1 = (chars: number, showCursor: boolean) => {
+  type Seg = { text: string; bold: boolean };
+  const segLen = (segs: Seg[]) => segs.reduce((n, s) => n + s.text.length, 0);
+
+  const renderSegs = (segs: Seg[], chars: number, showCur: boolean) => {
     let left = chars;
     return (
       <>
-        {r1Segs.map((seg, i) => {
+        {segs.map((seg, i) => {
           if (left <= 0) return null;
           const vis = seg.text.slice(0, left);
           left -= seg.text.length;
@@ -275,23 +315,22 @@ function MockChatConversation() {
             ? <strong key={i} className="text-slate-900">{vis}</strong>
             : <span key={i}>{vis}</span>;
         })}
-        {showCursor && cursor}
+        {showCur && cursor}
       </>
     );
   };
 
-  // Render response 2 — intro + benefit lines with checkmarks
-  const renderR2 = (chars: number, showCursor: boolean) => {
+  const renderR2 = (chars: number, showCur: boolean) => {
     const text = r2Text.slice(0, chars);
     const lines = text.split('\n');
     return (
       <div className="space-y-1.5">
         {lines.map((line, i) => {
-          const isLast = i === lines.length - 1 && showCursor;
+          const isLast = i === lines.length - 1 && showCur;
           if (i === 0) return <p key={i}>{line}{isLast && cursor}</p>;
           return (
-            <div key={i} className="flex items-start gap-1.5">
-              <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div key={i} className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
               <span>{line}{isLast && cursor}</span>
@@ -302,126 +341,232 @@ function MockChatConversation() {
     );
   };
 
-  const showTyping = phase === 1 || phase === 3;
+  const aiAvatar = (
+    <div className="w-7 h-7 rounded-full bg-slate-800 flex-shrink-0 flex items-center justify-center mt-0.5">
+      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" />
+      </svg>
+    </div>
+  );
+
+  const userAvatar = (
+    <div className="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
+      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+      </svg>
+    </div>
+  );
+
+  const thinkingBubble = (
+    <div className="chat-msg flex gap-2.5">
+      {aiAvatar}
+      <div className="flex items-center gap-2 py-1">
+        <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-blue-500 animate-spin" />
+        <span className="text-sm text-slate-400 italic">Thinking...</span>
+      </div>
+    </div>
+  );
+
+  // --- Computed: what's being typed in the input field ---
+  const inputText =
+    step === 1 ? q1.slice(0, charIdx) :
+    step === 6 ? q2.slice(0, charIdx) :
+    step === 11 ? q3.slice(0, charIdx) :
+    (activeFU !== null && fuPhase === 0) ? FOLLOW_UPS[activeFU].q.slice(0, fuCharIdx) :
+    '';
+
+  // --- Computed: show suggestions when idle ---
+  const usedIdxs = new Set(completedFU);
+  const availableFU = FOLLOW_UPS.map((fu, i) => ({ ...fu, idx: i })).filter(f => !usedIdxs.has(f.idx)).slice(0, 3);
+  const showSuggestions = step >= 15 && activeFU === null && availableFU.length > 0;
+
+  const handleSuggestion = (idx: number) => {
+    setActiveFU(idx);
+    setFuPhase(0);
+    setFuCharIdx(0);
+  };
 
   return (
-    <div className="relative w-full max-w-sm mx-auto">
+    <div className="relative w-full max-w-lg mx-auto">
       <style>{`
         @keyframes chatSlide { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         .chat-msg { animation: chatSlide 0.25s ease-out both; }
-        @keyframes dotPulse { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-3px); } }
-        .dot-1 { animation: dotPulse 1.4s infinite; }
-        .dot-2 { animation: dotPulse 1.4s 0.2s infinite; }
-        .dot-3 { animation: dotPulse 1.4s 0.4s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .chat-scroll::-webkit-scrollbar { width: 4px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 4px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
       `}</style>
       {/* Glow */}
-      <div className="absolute -inset-4 bg-gradient-to-br from-emerald-100 via-transparent to-blue-100 rounded-3xl blur-2xl opacity-60" />
+      <div className="absolute -inset-4 bg-gradient-to-br from-blue-100 via-transparent to-violet-100 rounded-3xl blur-2xl opacity-60" />
       <div className="relative bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
         {/* Header */}
         <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-[#10a37f] flex items-center justify-center">
-            {sparkle}
+          <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" />
+            </svg>
           </div>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold text-slate-900">ChatGPT</p>
-            <p className="text-[11px] text-slate-400">GPT-4o</p>
-          </div>
+          <p className="text-sm font-semibold text-slate-900">AI Assistant</p>
         </div>
 
-        {/* Messages */}
-        <div className="px-4 py-3 space-y-3 bg-[#fafafa]">
-          {/* User question 1 */}
-          {phase >= 1 && (
+        {/* Scrollable messages */}
+        <div ref={scrollRef} className="chat-scroll px-4 py-3 space-y-3 bg-[#fafafa] max-h-[380px] overflow-y-auto">
+
+          {/* ── Q1 (appears after typing in input) ── */}
+          {step >= 2 && (
             <div className="chat-msg flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
-                <span className="text-[10px] font-bold text-white">Y</span>
-              </div>
+              {userAvatar}
               <div>
                 <p className="text-xs font-medium text-slate-500">You</p>
-                <p className="text-[13px] text-slate-800 mt-0.5">What is Human Pages?</p>
+                <p className="text-base text-slate-800 mt-0.5">{q1}</p>
               </div>
             </div>
           )}
 
-          {/* AI response 1 — streams character by character */}
-          {phase >= 2 && phase !== 3 && (
-            <div className="chat-msg flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
-                {sparkle}
-              </div>
+          {/* Thinking 1 */}
+          {step === 3 && thinkingBubble}
+
+          {/* ── A1 ── */}
+          {step >= 4 && (
+            <div className={step === 4 ? 'chat-msg flex gap-2.5' : 'flex gap-2.5'}>
+              {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">ChatGPT</p>
-                <p className="text-[13px] text-slate-700 mt-0.5 leading-relaxed">
-                  {phase === 2 ? renderR1(charIdx, true) : renderR1(r1Len, false)}
-                </p>
-              </div>
-            </div>
-          )}
-          {/* Show completed response 1 once we move past it */}
-          {phase >= 3 && (
-            <div className="flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
-                {sparkle}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">ChatGPT</p>
-                <p className="text-[13px] text-slate-700 mt-0.5 leading-relaxed">
-                  {renderR1(r1Len, false)}
+                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
+                  {step === 4 ? renderSegs(r1Segs, charIdx, true) : renderSegs(r1Segs, r1Len, false)}
                 </p>
               </div>
             </div>
           )}
 
-          {/* User question 2 */}
-          {phase >= 3 && (
+          {/* ── Q2 ── */}
+          {step >= 7 && (
             <div className="chat-msg flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
-                <span className="text-[10px] font-bold text-white">Y</span>
-              </div>
+              {userAvatar}
               <div>
                 <p className="text-xs font-medium text-slate-500">You</p>
-                <p className="text-[13px] text-slate-800 mt-0.5">What do I get by opening a profile?</p>
+                <p className="text-base text-slate-800 mt-0.5">{q2}</p>
               </div>
             </div>
           )}
 
-          {/* AI response 2 — streams with checkmark benefits */}
-          {phase >= 4 && (
-            <div className="chat-msg flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
-                {sparkle}
-              </div>
+          {/* Thinking 2 */}
+          {step === 8 && thinkingBubble}
+
+          {/* ── A2 (benefits) ── */}
+          {step >= 9 && (
+            <div className={step === 9 ? 'chat-msg flex gap-2.5' : 'flex gap-2.5'}>
+              {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">ChatGPT</p>
-                <div className="text-[13px] text-slate-700 mt-0.5 leading-relaxed">
-                  {phase === 4 ? renderR2(charIdx, true) : renderR2(r2Text.length, false)}
+                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <div className="text-base text-slate-700 mt-0.5 leading-relaxed">
+                  {step === 9 ? renderR2(charIdx, true) : renderR2(r2Text.length, false)}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Typing indicator (bouncing dots) */}
-          {showTyping && (
-            <div className="flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
-                {sparkle}
+          {/* ── Q3 ── */}
+          {step >= 12 && (
+            <div className="chat-msg flex gap-2.5">
+              {userAvatar}
+              <div>
+                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-base text-slate-800 mt-0.5">{q3}</p>
               </div>
-              <div className="flex items-center gap-1 py-1.5">
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full dot-1" />
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full dot-2" />
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full dot-3" />
+            </div>
+          )}
+
+          {/* Thinking 3 */}
+          {step === 13 && thinkingBubble}
+
+          {/* ── A3 ── */}
+          {step >= 14 && (
+            <div className={step === 14 ? 'chat-msg flex gap-2.5' : 'flex gap-2.5'}>
+              {aiAvatar}
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
+                  {step === 14 ? renderSegs(r3Segs, charIdx, true) : renderSegs(r3Segs, r3Len, false)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Completed follow-ups ── */}
+          {completedFU.flatMap(idx => [
+            <div key={`fu-q-${idx}`} className="flex gap-2.5">
+              {userAvatar}
+              <div>
+                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-base text-slate-800 mt-0.5">{FOLLOW_UPS[idx].q}</p>
+              </div>
+            </div>,
+            <div key={`fu-a-${idx}`} className="flex gap-2.5">
+              {aiAvatar}
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
+                  {renderSegs(FOLLOW_UPS[idx].segs, segLen(FOLLOW_UPS[idx].segs), false)}
+                </p>
+              </div>
+            </div>,
+          ])}
+
+          {/* ── Active follow-up ── */}
+          {activeFU !== null && fuPhase >= 1 && (
+            <div className="chat-msg flex gap-2.5">
+              {userAvatar}
+              <div>
+                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-base text-slate-800 mt-0.5">{FOLLOW_UPS[activeFU].q}</p>
+              </div>
+            </div>
+          )}
+          {activeFU !== null && fuPhase === 2 && thinkingBubble}
+          {activeFU !== null && fuPhase >= 3 && (
+            <div className="chat-msg flex gap-2.5">
+              {aiAvatar}
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
+                  {renderSegs(FOLLOW_UPS[activeFU].segs, fuCharIdx, true)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Learn more suggestions ── */}
+          {showSuggestions && (
+            <div className="chat-msg pt-2 pb-1">
+              <p className="text-xs font-medium text-slate-400 mb-2">Learn more</p>
+              <div className="flex flex-wrap gap-1.5">
+                {availableFU.map(fu => (
+                  <button
+                    key={fu.idx}
+                    onClick={() => handleSuggestion(fu.idx)}
+                    className="px-3 py-1.5 text-sm font-medium bg-white border border-slate-200 rounded-full text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-colors cursor-pointer"
+                  >
+                    {fu.q}
+                  </button>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        {/* Input (decorative) */}
-        <div className="px-3 pb-3 bg-[#fafafa]">
-          <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200">
-            <span className="text-[13px] text-slate-400 flex-1">Message ChatGPT...</span>
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-              <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Live input field — shows text being typed, then clears on send */}
+        <div className="px-3 pb-3 pt-2 bg-[#fafafa] border-t border-slate-100">
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-xl border border-slate-200">
+            {inputText ? (
+              <span className="text-base text-slate-800 flex-1">
+                {inputText}{cursor}
+              </span>
+            ) : (
+              <span className="text-base text-slate-400 flex-1">Ask anything...</span>
+            )}
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${inputText ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <svg className={`w-3.5 h-3.5 ${inputText ? 'text-white' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
             </div>
