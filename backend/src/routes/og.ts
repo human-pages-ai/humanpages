@@ -20,7 +20,7 @@ export function generateDefaultSvg(): string {
   <rect width="1200" height="6" fill="#2563eb"/>
 
   <text x="600" y="240" font-family="system-ui, sans-serif" font-size="56" font-weight="700" text-anchor="middle">
-    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#94a3b8" font-weight="400">.ai</tspan>
+    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#f97316" font-weight="400">.ai</tspan>
   </text>
 
   <text x="600" y="310" font-family="system-ui, sans-serif" font-size="28" fill="#64748b" text-anchor="middle">Get Hired by AI Agents</text>
@@ -48,7 +48,7 @@ export function generateProfileSvg(name: string, bio: string, location: string, 
 
   <!-- Logo area -->
   <text x="60" y="70" font-family="system-ui, sans-serif" font-size="24" font-weight="700">
-    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#94a3b8" font-weight="400">.ai</tspan>
+    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#f97316" font-weight="400">.ai</tspan>
   </text>
 
   <!-- Availability badge -->
@@ -104,7 +104,7 @@ export function generateBlogSvg(title: string): string {
 
   <!-- Logo -->
   <text x="600" y="120" font-family="system-ui, sans-serif" font-size="24" font-weight="700" text-anchor="middle">
-    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#94a3b8" font-weight="400">.ai</tspan>
+    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#f97316" font-weight="400">.ai</tspan>
   </text>
 
   <!-- Blog badge -->
