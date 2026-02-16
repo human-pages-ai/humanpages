@@ -193,7 +193,7 @@ function ProfileCardCarousel({ tick, visible: fade }: { tick: number; visible: b
         {MOCK_PROFILES.map((_, i) => (
           <div
             key={i}
-            className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-orange-500 w-4' : 'bg-slate-300'}`}
+            className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-blue-600 w-4' : 'bg-slate-300'}`}
           />
         ))}
       </div>
@@ -219,7 +219,7 @@ function JobOfferMockup() {
             <span className="text-xs text-slate-400">one-time task</span>
           </div>
           <div className="mt-4 flex gap-2">
-            <div className="flex-1 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg text-center">Accept</div>
+            <div className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg text-center">Accept</div>
             <div className="flex-1 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg text-center">Decline</div>
           </div>
           <p className="text-xs text-slate-400 mt-3 text-center">From: agent-47x · Paid on completion</p>
@@ -401,7 +401,7 @@ export default function LandingPage() {
                   <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white border-2 border-blue-100 shadow-sm mb-4 relative z-10">
                     <step.icon className="w-10 h-10 text-blue-600" />
                   </div>
-                  <div className="absolute -top-2 -right-2 md:top-0 md:right-auto md:left-1/2 md:ml-8 w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center z-20">
+                  <div className="absolute -top-2 -right-2 md:top-0 md:right-auto md:left-1/2 md:ml-8 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center z-20">
                     {i + 1}
                   </div>
                   <h3 className="font-semibold text-slate-900 text-lg">{step.title}</h3>
@@ -459,7 +459,7 @@ export default function LandingPage() {
             <div className="text-center">
               <Link
                 to="/listings"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/25"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
               >
                 {t('landing.jobBoard.browseCta')}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,17 +528,17 @@ export default function LandingPage() {
         </section>
 
         {/* Mid CTA — early mover */}
-        <section className="py-16 bg-gradient-to-r from-orange-500 to-orange-600 px-4">
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-700 px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
               {t('landing.cta.ready')}
             </h2>
-            <p className="mt-3 text-orange-100 text-lg">
+            <p className="mt-3 text-blue-100 text-lg">
               {t('landing.cta.createListing')}
             </p>
             <Link
               to="/signup"
-              className="mt-8 inline-block px-8 py-4 bg-white text-orange-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors shadow-lg"
+              className="mt-8 inline-block px-8 py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors shadow-lg"
             >
               {t('landing.hero.cta')}
             </Link>
