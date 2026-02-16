@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="1000" viewBox="0 0 3000 1000">
+  <rect width="3000" height="1000" fill="#1e293b"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="3000" height="1000" fill="url(#glow)"/>
+  <rect width="3000" height="4" fill="#2563eb"/>
+
+  <!-- Wordmark only, centered -->
+  <text x="1500" y="530" font-family="system-ui, -apple-system, sans-serif" font-size="144" font-weight="700" letter-spacing="-4" text-anchor="middle">
+    <tspan fill="#e2e8f0">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#f97316">.ai</tspan>
+  </text>
+</svg>
