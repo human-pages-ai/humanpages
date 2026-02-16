@@ -157,7 +157,7 @@ export default function AdminAgentDetail() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

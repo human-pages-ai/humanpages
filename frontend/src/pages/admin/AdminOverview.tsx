@@ -61,7 +61,7 @@ function StatusBar({ data, colorMap, linkPrefix }: { data: Record<string, number
 const agentColors: Record<string, string> = {
   ACTIVE: 'bg-green-500',
   PENDING: 'bg-yellow-400',
-  SUSPENDED: 'bg-orange-500',
+  SUSPENDED: 'bg-blue-600',
   BANNED: 'bg-red-500',
 };
 

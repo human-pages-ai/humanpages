@@ -242,7 +242,7 @@ export default function ServicesSection({
               !serviceForm.category ||
               (!!serviceForm.priceMin && !serviceForm.priceUnit)
             }
-            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {t('dashboard.services.addService')}
           </button>
@@ -261,7 +261,7 @@ export default function ServicesSection({
             </div>
             <button
               onClick={() => setShowServiceForm(true)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               {t('dashboard.services.addService')}
             </button>

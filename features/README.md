@@ -17,6 +17,7 @@ Planned features for post-launch implementation.
 | Transparency & Audit Trail | Medium | Planned | [transparency-audit.md](./transparency-audit.md) |
 | Graduated Trust & Repeat Relationships | Medium | Planned | [graduated-trust.md](./graduated-trust.md) |
 | ERC-8004 Reputation Compatibility | High | Data Layer Complete | [erc8004-compatibility.md](./erc8004-compatibility.md) |
+| Browser Auto-Detect Extension Download | Low | Planned | [browser-detect-extension.md](./browser-detect-extension.md) |
 
 ## How to Add a Feature
 

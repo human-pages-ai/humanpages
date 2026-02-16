@@ -164,13 +164,13 @@ export default function WalletsSection({
           <p className="text-sm text-gray-700">{t('dashboard.wallets.mobileWalletHint')}</p>
           <a
             href={deepLinks.metamask}
-            className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
+            className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
           >
             {t('dashboard.wallets.openInMetaMask')}
           </a>
           <a
             href={deepLinks.coinbase}
-            className="block w-full px-4 py-2 bg-orange-500 text-white text-center rounded-md hover:bg-orange-600"
+            className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
           >
             {t('dashboard.wallets.openInCoinbase')}
           </a>
@@ -203,7 +203,7 @@ export default function WalletsSection({
         <button
           onClick={connectAndVerify}
           disabled={saving || step === 'busy'}
-          className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
           {t('dashboard.wallets.addWallet')}
         </button>

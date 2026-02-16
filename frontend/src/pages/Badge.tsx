@@ -18,7 +18,7 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
   return (
     <button
       onClick={handleCopy}
-      className="px-3 py-1.5 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
+      className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
     >
       {copied ? 'Copied!' : label}
     </button>

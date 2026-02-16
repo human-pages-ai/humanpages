@@ -113,7 +113,7 @@ export default function OfferFiltersSection({
           <button
             onClick={onSaveFilters}
             disabled={saving}
-            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {saving ? t('dashboard.profile.saving') : t('dashboard.filters.saveFilters')}
           </button>

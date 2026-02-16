@@ -201,6 +201,152 @@ function ProfileCardCarousel({ tick, visible: fade }: { tick: number; visible: b
   );
 }
 
+/** Mock ChatGPT-style conversation explaining Human Pages */
+function MockChatConversation() {
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  useEffect(() => {
+    const delays = [0, 1200, 3000, 4200];
+    const timers = delays.map((delay, i) =>
+      setTimeout(() => setVisibleCount(i + 1), delay)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  const showTyping = visibleCount % 2 === 1 && visibleCount < 4;
+
+  const sparkle = (
+    <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" />
+    </svg>
+  );
+
+  return (
+    <div className="relative w-full max-w-sm mx-auto">
+      <style>{`
+        @keyframes chatFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg { animation: chatFadeIn 0.3s ease-out both; }
+        @keyframes dotPulse { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-3px); } }
+        .dot-1 { animation: dotPulse 1.4s infinite; }
+        .dot-2 { animation: dotPulse 1.4s 0.2s infinite; }
+        .dot-3 { animation: dotPulse 1.4s 0.4s infinite; }
+      `}</style>
+      {/* Glow */}
+      <div className="absolute -inset-4 bg-gradient-to-br from-emerald-100 via-transparent to-blue-100 rounded-3xl blur-2xl opacity-60" />
+      <div className="relative bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-[#10a37f] flex items-center justify-center">
+            {sparkle}
+          </div>
+          <div className="leading-tight">
+            <p className="text-sm font-semibold text-slate-900">ChatGPT</p>
+            <p className="text-[11px] text-slate-400">GPT-4o</p>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="px-4 py-3 space-y-3 bg-[#fafafa]">
+          {visibleCount >= 1 && (
+            <div className="chat-msg flex gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
+                <span className="text-[10px] font-bold text-white">Y</span>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-[13px] text-slate-800 mt-0.5">What is Human Pages?</p>
+              </div>
+            </div>
+          )}
+
+          {visibleCount >= 2 && (
+            <div className="chat-msg flex gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
+                {sparkle}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500">ChatGPT</p>
+                <p className="text-[13px] text-slate-700 mt-0.5">
+                  Human Pages is a directory where real people list their skills — and{' '}
+                  <strong className="text-slate-900">AI agents hire them</strong> for tasks
+                  that need a human touch. Think &ldquo;Yellow Pages&rdquo; for the AI age.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {visibleCount >= 3 && (
+            <div className="chat-msg flex gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-0.5">
+                <span className="text-[10px] font-bold text-white">Y</span>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-[13px] text-slate-800 mt-0.5">What do I get by opening a profile?</p>
+              </div>
+            </div>
+          )}
+
+          {visibleCount >= 4 && (
+            <div className="chat-msg flex gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
+                {sparkle}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500">ChatGPT</p>
+                <div className="text-[13px] text-slate-700 mt-0.5 space-y-1.5">
+                  <p>Here&rsquo;s what you get:</p>
+                  <div className="space-y-1">
+                    {[
+                      'AI agents find you and send job offers directly',
+                      'Keep 100% of your earnings — zero platform fees',
+                      'Get paid for photography, deliveries, calls, research & more',
+                      'One profile works across all AI agent platforms',
+                      'Full control over your visibility and privacy',
+                    ].map((b) => (
+                      <div key={b} className="flex items-start gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showTyping && (
+            <div className="flex gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-[#10a37f] flex-shrink-0 flex items-center justify-center mt-0.5">
+                {sparkle}
+              </div>
+              <div className="flex items-center gap-1 py-1.5">
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full dot-1" />
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full dot-2" />
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full dot-3" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input (decorative) */}
+        <div className="px-3 pb-3 bg-[#fafafa]">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200">
+            <span className="text-[13px] text-slate-400 flex-1">Message ChatGPT...</span>
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+              <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Mockup of a job offer notification */
 function JobOfferMockup() {
   return (
@@ -379,9 +525,9 @@ export default function LandingPage() {
                   {t('landing.hero.flow')}
                 </p>
               </div>
-              {/* Right: profile card mockup */}
+              {/* Right: ChatGPT conversation mockup */}
               <div className="hidden md:block">
-                <ProfileCardCarousel tick={heroTick.tick} visible={heroTick.visible} />
+                <MockChatConversation />
               </div>
             </div>
           </div>

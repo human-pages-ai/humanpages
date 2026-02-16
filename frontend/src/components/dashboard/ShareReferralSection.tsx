@@ -51,7 +51,7 @@ export default function ShareReferralSection({
               setTimeout(() => setCopiedProfile(false), 2000);
             }}
             aria-label={copiedProfile ? t('common.copied') : t('dashboard.copyProfileLink')}
-            className="shrink-0 px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+            className="shrink-0 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             {copiedProfile ? (
               <>

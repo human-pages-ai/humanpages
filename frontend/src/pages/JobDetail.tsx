@@ -453,7 +453,7 @@ export default function JobDetail() {
                 <button
                   onClick={sendMessage}
                   disabled={!messageText.trim() || sending}
-                  className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed self-end"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed self-end"
                 >
                   {t('jobDetail.send')}
                 </button>
