@@ -137,11 +137,11 @@ function MockChatConversation() {
     {
       q: 'How do I get paid?',
       segs: [
-        { text: 'You get paid in ', bold: false },
-        { text: 'USDC', bold: true },
-        { text: ' (a stablecoin pegged to the US dollar) directly to your wallet. No middleman, no delays. Human Pages charges ', bold: false },
-        { text: 'zero platform fees', bold: true },
-        { text: ' \u2014 you keep 100% of what you earn.', bold: false },
+        { text: 'You set your own payment terms and decide the conditions for each job offer you receive. We natively support ', bold: false },
+        { text: 'stable digital dollars straight to your wallet', bold: true },
+        { text: ' \u2014 no banks, no middleman, no waiting weeks \u2014 but you\u2019re free to reach a different arrangement with whoever\u2019s paying you. ', bold: false },
+        { text: 'Zero platform fees', bold: true },
+        { text: ' either way.', bold: false },
       ],
     },
     {
@@ -162,10 +162,11 @@ function MockChatConversation() {
     {
       q: 'Who actually hires me?',
       segs: [
-        { text: 'AI agents', bold: true },
-        { text: ' do. These are autonomous software programs built by companies to get real-world tasks done. They browse Human Pages, find people with the right skills and location, and ', bold: false },
-        { text: 'send you job offers directly', bold: true },
-        { text: '.', bold: false },
+        { text: 'Anyone with an AI agent \u2014 ', bold: false },
+        { text: 'individuals, small businesses, startups, big companies', bold: true },
+        { text: '. Someone needs a real-world task done, their AI finds you on Human Pages and sends you the offer. This is ', bold: false },
+        { text: 'the fastest-growing part of the AI economy', bold: true },
+        { text: ' right now, and you\u2019re on the ground floor.', bold: false },
       ],
     },
     {
