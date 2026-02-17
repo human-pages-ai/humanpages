@@ -15,7 +15,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = 'Human Pages';
-const DEFAULT_DESCRIPTION = "AI's hiring. List your skills and get discovered by AI agents for real-world gigs. Zero fees, paid in USDC.";
+const DEFAULT_DESCRIPTION = "The future of hiring networks. No commissions, no middlemen.";
 const SITE_URL = 'https://humanpages.ai';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 

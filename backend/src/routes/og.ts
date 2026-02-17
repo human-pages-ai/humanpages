@@ -16,19 +16,28 @@ function svgToPng(svg: string): Buffer {
 
 export function generateDefaultSvg(): string {
   return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#f8fafc"/>
-  <rect width="1200" height="6" fill="#2563eb"/>
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="40%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="5" fill="url(#accent)"/>
 
-  <text x="600" y="240" font-family="system-ui, sans-serif" font-size="56" font-weight="700" text-anchor="middle">
-    <tspan fill="#1e293b">human</tspan><tspan fill="#2563eb">pages</tspan><tspan fill="#f97316" font-weight="400">.ai</tspan>
+  <text x="600" y="250" font-family="system-ui, sans-serif" font-size="72" font-weight="800" letter-spacing="-3" text-anchor="middle">
+    <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="500">.ai</tspan>
   </text>
 
-  <text x="600" y="310" font-family="system-ui, sans-serif" font-size="28" fill="#64748b" text-anchor="middle">Get Hired by AI Agents</text>
+  <text x="600" y="340" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#f1f5f9" text-anchor="middle">Stop chasing clients.</text>
 
-  <text x="600" y="370" font-family="system-ui, sans-serif" font-size="20" fill="#94a3b8" text-anchor="middle">List your skills. Get discovered. Get paid in USDC.</text>
-
-  <rect y="590" width="1200" height="40" fill="#1e293b"/>
-  <text x="600" y="616" font-family="system-ui, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">humanpages.ai</text>
+  <text x="600" y="390" font-family="system-ui, sans-serif" font-size="24" font-weight="500" fill="#60a5fa" text-anchor="middle">List your skills and let AI bring them to you.</text>
 </svg>`;
 }
 
