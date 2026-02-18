@@ -137,6 +137,33 @@
       "contact": "Makipag-ugnayan"
     }
   },
+  "chat": {
+    "headerName": "AI Assistant",
+    "you": "Ikaw",
+    "thinking": "Nag-iisip...",
+    "inputPlaceholder": "Magtanong ng kahit ano...",
+    "learnMore": "Alamin pa",
+    "q1": "Ano ang Human Pages?",
+    "q2": "Ano ang makukuha ko sa paggawa ng profile?",
+    "q3": "Paano ako magsisimula?",
+    "a1": "Ang Human Pages ay isang direktoryo kung saan naglilista ang mga tunay na tao ng kanilang mga tunay na kasanayan — at **iniihire sila ng mga AI agent** para sa mga gawain na kailangan ng human touch. Isipin mo ito bilang \"Yellow Pages\" para sa panahon ng AI.",
+    "a2": "Narito ang makukuha mo:\nNahahanap ka ng mga AI agent at direktang nagpapadala ng mga job offer\nPanatilihin ang 100% ng iyong kita — zero platform fees\nKumita para sa photography, deliveries, tawag, research at iba pa\nIsang profile ang gumagana sa lahat ng AI agent platform\nBuong kontrol sa iyong visibility at privacy",
+    "a3": "**Wala pang 2 minuto!** Mag-sign up, ilista ang iyong mga kasanayan at lokasyon, at makikita ka na ng mga AI agent sa buong mundo. Magsisimula kang makatanggap ng mga offer kapag kailangan ng mga agent ang iyong kasanayan malapit sa iyo.",
+    "fu1q": "Paano ako mababayaran?",
+    "fu1a": "Ikaw ang nagtatakda ng sarili mong mga tuntunin sa pagbabayad at nagpapasya ng mga kondisyon para sa bawat job offer na matatanggap mo. Native naming sinusuportahan ang **stable digital dollars diretso sa iyong wallet** — walang bangko, walang middleman, walang ilang linggong paghihintay — pero libre kang makipagsundo ng ibang ayos sa magbabayad sa iyo. **Zero platform fees** sa anumang paraan.",
+    "fu2q": "Anong uri ng mga gawain ang meron?",
+    "fu2a": "Mga gawain na hindi kaya ng AI nang mag-isa — tulad ng **lokal na photography, same-day deliveries, tawag sa telepono, mystery shopping, handyman work**, in-person na pananaliksik, at iba pa. Kung kailangan ng tunay na tao sa tunay na lugar, nasa Human Pages ito.",
+    "fu3q": "Libre bang sumali?",
+    "fu3a": "**Oo, ganap na libre!** Walang subscription, walang hidden fees, walang komisyon. Gumawa ng profile, ilista ang iyong mga kasanayan, at magsimulang tumanggap ng mga offer nang walang bayad.",
+    "fu4q": "Sino talaga ang nag-hire sa akin?",
+    "fu4a": "Sinuman na may AI agent — **mga indibidwal, maliliit na negosyo, mga startup, malalaking kumpanya**. May isang taong kailangan ng gawain sa totoong mundo, hahanapin ka ng kanilang AI sa Human Pages at ipapadala ang offer. Ito ang **pinakamabilis na lumalagong bahagi ng AI economy** ngayon, at ikaw ay nasa simula pa lang.",
+    "fu5q": "Saan ito available?",
+    "fu5a": "**Sa buong mundo!** Gumagana ang Human Pages sa bawat bansa. Ilista ang iyong lungsod at kasanayan, at mahahanap ka ng mga agent na naghahanap ng tao sa iyong lugar. Ang pinakamaraming demand ngayon ay nasa **US, Pilipinas, India, Mexico, at Nigeria** — pero mabilis itong lumalaki.",
+    "fu6q": "Pwede ko bang itakda ang sarili kong rate?",
+    "fu6a": "**Syempre.** Ikaw ang nagtatakda ng iyong hourly o per-task rate sa iyong profile. Nakikita ng mga agent ang iyong rate nang maaga at maaari nilang tanggapin o makipag-negotiate. Hindi ka kailanman ma-lock sa isang presyo — **ikaw palagi ang may kontrol**.",
+    "fu7q": "Paano ako mananatiling ligtas?",
+    "fu7a": "**Ikaw ang kumokontrol sa lahat.** Piliin kung anong impormasyon ang makikita, itago ang iyong profile anumang oras, at i-block ang mga hindi gustong makipag-ugnayan. Hindi kailanman ibinabahagi ng Human Pages ang iyong personal na data sa mga agent — ang nakikita lamang nila ay ang **piniling ipakita mo**."
+  },
   "auth": {
     "signIn": "Mag-sign in",
     "signInTo": "Mag-sign in sa iyong account",

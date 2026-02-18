@@ -110,6 +110,33 @@
       "contact": "Contact"
     }
   },
+  "chat": {
+    "headerName": "Assistant IA",
+    "you": "Vous",
+    "thinking": "En train de réfléchir...",
+    "inputPlaceholder": "Posez n'importe quelle question...",
+    "learnMore": "En savoir plus",
+    "q1": "C'est quoi Human Pages ?",
+    "q2": "Qu'est-ce que je gagne à créer un profil ?",
+    "q3": "Comment je commence ?",
+    "a1": "Human Pages est un annuaire où de vraies personnes listent leurs compétences réelles — et des **agents IA les recrutent** pour des tâches qui nécessitent une touche humaine. Imaginez les \"Pages Jaunes\" pour l'ère de l'IA.",
+    "a2": "Voici ce que vous obtenez :\nLes agents IA vous découvrent et vous envoient des offres directement\nGardez 100 % de vos gains — zéro frais de plateforme\nSoyez payé pour de la photo, des livraisons, des appels, de la recherche et plus encore\nUn seul profil fonctionne sur toutes les plateformes d'agents IA\nContrôle total sur votre visibilité et votre vie privée",
+    "a3": "**Moins de 2 minutes !** Inscrivez-vous, listez vos compétences et votre localisation, et vous êtes visible par les agents IA du monde entier. Vous commencerez à recevoir des offres dès que des agents auront besoin de vos compétences près de chez vous.",
+    "fu1q": "Comment suis-je payé ?",
+    "fu1a": "Vous définissez vos propres conditions de paiement et décidez des modalités pour chaque offre reçue. Nous supportons nativement les **dollars numériques stables directement dans votre portefeuille** — sans banque, sans intermédiaire, sans attendre des semaines — mais vous êtes libre de trouver un autre arrangement avec celui qui vous paie. **Zéro frais de plateforme** dans tous les cas.",
+    "fu2q": "Quel genre de tâches y a-t-il ?",
+    "fu2a": "Des tâches que l'IA ne peut pas faire seule — comme de la **photographie locale, des livraisons le jour même, des appels téléphoniques, du client mystère, des petits travaux**, de la recherche en personne, et plus encore. Si ça demande un vrai humain dans un vrai endroit, c'est sur Human Pages.",
+    "fu3q": "C'est gratuit pour s'inscrire ?",
+    "fu3a": "**Oui, totalement gratuit !** Pas d'abonnement, pas de frais cachés, pas de commission. Créez votre profil, listez vos compétences et commencez à recevoir des offres sans rien payer.",
+    "fu4q": "Qui me recrute vraiment ?",
+    "fu4a": "Tous ceux qui ont un agent IA — **des particuliers, des petites entreprises, des startups, des grandes sociétés**. Quelqu'un a besoin d'une tâche faite dans le monde réel, son IA vous trouve sur Human Pages et vous envoie l'offre. C'est **la partie de l'économie IA qui croît le plus vite** en ce moment, et vous êtes aux premières loges.",
+    "fu5q": "C'est disponible où ?",
+    "fu5a": "**Partout dans le monde !** Human Pages fonctionne dans tous les pays. Vous listez votre ville et vos compétences, et les agents qui cherchent quelqu'un dans votre région vous trouveront. La demande est surtout forte aux **États-Unis, aux Philippines, en Inde, au Mexique et au Nigeria** — mais ça progresse vite.",
+    "fu6q": "Je peux fixer mes propres tarifs ?",
+    "fu6a": "**Absolument.** Vous définissez votre tarif horaire ou à la tâche sur votre profil. Les agents voient votre tarif en avance et peuvent l'accepter ou négocier. Vous n'êtes jamais bloqué sur un prix — **vous avez toujours le contrôle**.",
+    "fu7q": "Comment je reste en sécurité ?",
+    "fu7a": "**Vous contrôlez tout.** Choisissez quelles informations sont visibles, masquez votre profil à tout moment et bloquez les contacts indésirables. Human Pages ne partage jamais vos données personnelles avec les agents — ils ne voient que ce que **vous choisissez de montrer**."
+  },
   "auth": {
     "signIn": "Se connecter",
     "signInTo": "Connectez-vous à votre compte",

@@ -141,6 +141,33 @@
       "contact": "Contact"
     }
   },
+  "chat": {
+    "headerName": "AI Assistant",
+    "you": "You",
+    "thinking": "Thinking...",
+    "inputPlaceholder": "Ask anything...",
+    "learnMore": "Learn more",
+    "q1": "What is Human Pages?",
+    "q2": "What do I get by creating a profile?",
+    "q3": "How do I get started?",
+    "a1": "Human Pages is a directory where real people list their real-world skills — and **AI agents hire them** for tasks that need a human touch. Think of it as the \"Yellow Pages\" for the AI age.",
+    "a2": "Here's what you get:\nAI agents discover you and send job offers directly\nKeep 100% of your earnings — zero platform fees\nGet paid for photography, deliveries, calls, research & more\nOne profile works across all AI agent platforms\nFull control over your visibility and privacy",
+    "a3": "**It takes under 2 minutes!** Sign up, list your skills and location, and you're visible to AI agents worldwide. You'll start receiving offers as soon as agents need your skills nearby.",
+    "fu1q": "How do I get paid?",
+    "fu1a": "You set your own payment terms and decide the conditions for each job offer you receive. We natively support **stable digital dollars straight to your wallet** — no banks, no middleman, no waiting weeks — but you're free to reach a different arrangement with whoever's paying you. **Zero platform fees** either way.",
+    "fu2q": "What kind of tasks are there?",
+    "fu2a": "Tasks that AI can't do on its own — like **local photography, same-day deliveries, phone calls, mystery shopping, handyman work**, in-person research, and more. If it needs a real human in a real place, it's on Human Pages.",
+    "fu3q": "Is it free to join?",
+    "fu3a": "**Yes, completely free!** No subscription, no hidden fees, no commission. Create your profile, list your skills, and start receiving offers at no cost.",
+    "fu4q": "Who actually hires me?",
+    "fu4a": "Anyone with an AI agent — **individuals, small businesses, startups, big companies**. Someone needs a real-world task done, their AI finds you on Human Pages and sends you the offer. This is **the fastest-growing part of the AI economy** right now, and you're on the ground floor.",
+    "fu5q": "Where is it available?",
+    "fu5a": "**Worldwide!** Human Pages works in every country. You list your city and skills, and agents looking for someone in your area will find you. Most demand right now is in **the US, Philippines, India, Mexico, and Nigeria** — but that's growing fast.",
+    "fu6q": "Can I set my own rates?",
+    "fu6a": "**Absolutely.** You set your own hourly or per-task rate on your profile. Agents see your rate upfront and can accept it or negotiate. You're never locked into a price — **you're always in control**.",
+    "fu7q": "How do I stay safe?",
+    "fu7a": "**You control everything.** Choose what info is visible, hide your profile anytime, and block unwanted contacts. Human Pages never shares your personal data with agents — they only see what **you choose to show**."
+  },
   "auth": {
     "signIn": "Sign in",
     "signInTo": "Sign in to your account",

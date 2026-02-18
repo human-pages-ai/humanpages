@@ -87,8 +87,19 @@ function RotatingHeadline({ tick, visible }: { tick: number; visible: boolean })
   );
 }
 
+/** Parse **bold** markers into segments */
+function parseBold(str: string): { text: string; bold: boolean }[] {
+  const segs: { text: string; bold: boolean }[] = [];
+  const parts = str.split(/\*\*(.*?)\*\*/);
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i]) segs.push({ text: parts[i], bold: i % 2 === 1 });
+  }
+  return segs;
+}
+
 /** Mock AI chat — types in input, sends, AI "thinks" then streams, interactive follow-ups */
 function MockChatConversation() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -104,98 +115,28 @@ function MockChatConversation() {
   const AI_SPEED = 20;   // ms per char — AI streaming
 
   // --- User questions ---
-  const q1 = 'What is Human Pages?';
-  const q2 = 'What do I get by creating a profile?';
-  const q3 = 'How do I get started?';
+  const q1 = t('chat.q1');
+  const q2 = t('chat.q2');
+  const q3 = t('chat.q3');
 
   // --- AI responses ---
-  const r1Segs = [
-    { text: 'Human Pages is a directory where real people list their real-world skills \u2014 and ', bold: false },
-    { text: 'AI agents hire them', bold: true },
-    { text: ' for tasks that need a human touch. Think of it as the \u201cYellow Pages\u201d for the AI age.', bold: false },
-  ];
+  const r1Segs = parseBold(t('chat.a1'));
   const r1Len = r1Segs.reduce((n, s) => n + s.text.length, 0);
 
-  const r2Lines = [
-    "Here\u2019s what you get:",
-    'AI agents discover you and send job offers directly',
-    'Keep 100% of your earnings \u2014 zero platform fees',
-    'Get paid for photography, deliveries, calls, research & more',
-    'One profile works across all AI agent platforms',
-    'Full control over your visibility and privacy',
-  ];
-  const r2Text = r2Lines.join('\n');
+  const r2Text = t('chat.a2');
 
-  const r3Segs = [
-    { text: 'It takes under 2 minutes! ', bold: true },
-    { text: 'Sign up, list your skills and location, and you\u2019re visible to AI agents worldwide. You\u2019ll start receiving offers as soon as agents need your skills nearby.', bold: false },
-  ];
+  const r3Segs = parseBold(t('chat.a3'));
   const r3Len = r3Segs.reduce((n, s) => n + s.text.length, 0);
 
   // --- Follow-up Q&As (triggered by suggestion clicks) ---
   const FOLLOW_UPS = [
-    {
-      q: 'How do I get paid?',
-      segs: [
-        { text: 'You set your own payment terms and decide the conditions for each job offer you receive. We natively support ', bold: false },
-        { text: 'stable digital dollars straight to your wallet', bold: true },
-        { text: ' \u2014 no banks, no middleman, no waiting weeks \u2014 but you\u2019re free to reach a different arrangement with whoever\u2019s paying you. ', bold: false },
-        { text: 'Zero platform fees', bold: true },
-        { text: ' either way.', bold: false },
-      ],
-    },
-    {
-      q: 'What kind of tasks are there?',
-      segs: [
-        { text: 'Tasks that AI can\u2019t do on its own \u2014 like ', bold: false },
-        { text: 'local photography, same-day deliveries, phone calls, mystery shopping, handyman work', bold: true },
-        { text: ', in-person research, and more. If it needs a real human in a real place, it\u2019s on Human Pages.', bold: false },
-      ],
-    },
-    {
-      q: 'Is it free to join?',
-      segs: [
-        { text: 'Yes, completely free! ', bold: true },
-        { text: 'No subscription, no hidden fees, no commission. Create your profile, list your skills, and start receiving offers at no cost.', bold: false },
-      ],
-    },
-    {
-      q: 'Who actually hires me?',
-      segs: [
-        { text: 'Anyone with an AI agent \u2014 ', bold: false },
-        { text: 'individuals, small businesses, startups, big companies', bold: true },
-        { text: '. Someone needs a real-world task done, their AI finds you on Human Pages and sends you the offer. This is ', bold: false },
-        { text: 'the fastest-growing part of the AI economy', bold: true },
-        { text: ' right now, and you\u2019re on the ground floor.', bold: false },
-      ],
-    },
-    {
-      q: 'Where is it available?',
-      segs: [
-        { text: 'Worldwide! ', bold: true },
-        { text: 'Human Pages works in every country. You list your city and skills, and agents looking for someone in your area will find you. Most demand right now is in ', bold: false },
-        { text: 'the US, Philippines, India, Mexico, and Nigeria', bold: true },
-        { text: ' \u2014 but that\u2019s growing fast.', bold: false },
-      ],
-    },
-    {
-      q: 'Can I set my own rates?',
-      segs: [
-        { text: 'Absolutely. ', bold: true },
-        { text: 'You set your own hourly or per-task rate on your profile. Agents see your rate upfront and can accept it or negotiate. You\u2019re never locked into a price \u2014 ', bold: false },
-        { text: 'you\u2019re always in control', bold: true },
-        { text: '.', bold: false },
-      ],
-    },
-    {
-      q: 'How do I stay safe?',
-      segs: [
-        { text: 'You control everything. ', bold: true },
-        { text: 'Choose what info is visible, hide your profile anytime, and block unwanted contacts. Human Pages never shares your personal data with agents \u2014 they only see what ', bold: false },
-        { text: 'you choose to show', bold: true },
-        { text: '.', bold: false },
-      ],
-    },
+    { q: t('chat.fu1q'), segs: parseBold(t('chat.fu1a')) },
+    { q: t('chat.fu2q'), segs: parseBold(t('chat.fu2a')) },
+    { q: t('chat.fu3q'), segs: parseBold(t('chat.fu3a')) },
+    { q: t('chat.fu4q'), segs: parseBold(t('chat.fu4a')) },
+    { q: t('chat.fu5q'), segs: parseBold(t('chat.fu5a')) },
+    { q: t('chat.fu6q'), segs: parseBold(t('chat.fu6a')) },
+    { q: t('chat.fu7q'), segs: parseBold(t('chat.fu7a')) },
   ];
 
   /*
@@ -363,7 +304,7 @@ function MockChatConversation() {
       {aiAvatar}
       <div className="flex items-center gap-2 py-1">
         <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-blue-500 animate-spin" />
-        <span className="text-sm text-slate-400 italic">Thinking...</span>
+        <span className="text-sm text-slate-400 italic">{t('chat.thinking')}</span>
       </div>
     </div>
   );
@@ -407,7 +348,7 @@ function MockChatConversation() {
               <path d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-900">AI Assistant</p>
+          <p className="text-sm font-semibold text-slate-900">{t('chat.headerName')}</p>
         </div>
 
         {/* Scrollable messages */}
@@ -418,7 +359,7 @@ function MockChatConversation() {
             <div className="chat-msg flex gap-2.5">
               {userAvatar}
               <div>
-                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.you')}</p>
                 <p className="text-base text-slate-800 mt-0.5">{q1}</p>
               </div>
             </div>
@@ -432,7 +373,7 @@ function MockChatConversation() {
             <div className={step === 4 ? 'chat-msg flex gap-2.5' : 'flex gap-2.5'}>
               {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.headerName')}</p>
                 <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
                   {step === 4 ? renderSegs(r1Segs, charIdx, true) : renderSegs(r1Segs, r1Len, false)}
                 </p>
@@ -445,7 +386,7 @@ function MockChatConversation() {
             <div className="chat-msg flex gap-2.5">
               {userAvatar}
               <div>
-                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.you')}</p>
                 <p className="text-base text-slate-800 mt-0.5">{q2}</p>
               </div>
             </div>
@@ -459,7 +400,7 @@ function MockChatConversation() {
             <div className={step === 9 ? 'chat-msg flex gap-2.5' : 'flex gap-2.5'}>
               {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.headerName')}</p>
                 <div className="text-base text-slate-700 mt-0.5 leading-relaxed">
                   {step === 9 ? renderR2(charIdx, true) : renderR2(r2Text.length, false)}
                 </div>
@@ -472,7 +413,7 @@ function MockChatConversation() {
             <div className="chat-msg flex gap-2.5">
               {userAvatar}
               <div>
-                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.you')}</p>
                 <p className="text-base text-slate-800 mt-0.5">{q3}</p>
               </div>
             </div>
@@ -486,7 +427,7 @@ function MockChatConversation() {
             <div className={step === 14 ? 'chat-msg flex gap-2.5' : 'flex gap-2.5'}>
               {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.headerName')}</p>
                 <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
                   {step === 14 ? renderSegs(r3Segs, charIdx, true) : renderSegs(r3Segs, r3Len, false)}
                 </p>
@@ -499,14 +440,14 @@ function MockChatConversation() {
             <div key={`fu-q-${idx}`} className="flex gap-2.5">
               {userAvatar}
               <div>
-                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.you')}</p>
                 <p className="text-base text-slate-800 mt-0.5">{FOLLOW_UPS[idx].q}</p>
               </div>
             </div>,
             <div key={`fu-a-${idx}`} className="flex gap-2.5">
               {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.headerName')}</p>
                 <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
                   {renderSegs(FOLLOW_UPS[idx].segs, segLen(FOLLOW_UPS[idx].segs), false)}
                 </p>
@@ -519,7 +460,7 @@ function MockChatConversation() {
             <div className="chat-msg flex gap-2.5">
               {userAvatar}
               <div>
-                <p className="text-xs font-medium text-slate-500">You</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.you')}</p>
                 <p className="text-base text-slate-800 mt-0.5">{FOLLOW_UPS[activeFU].q}</p>
               </div>
             </div>
@@ -529,7 +470,7 @@ function MockChatConversation() {
             <div className="chat-msg flex gap-2.5">
               {aiAvatar}
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">AI Assistant</p>
+                <p className="text-xs font-medium text-slate-500">{t('chat.headerName')}</p>
                 <p className="text-base text-slate-700 mt-0.5 leading-relaxed">
                   {renderSegs(FOLLOW_UPS[activeFU].segs, fuCharIdx, true)}
                 </p>
@@ -540,7 +481,7 @@ function MockChatConversation() {
           {/* ── Learn more suggestions ── */}
           {showSuggestions && (
             <div className="chat-msg pt-2 pb-1">
-              <p className="text-xs font-medium text-slate-400 mb-2">Learn more</p>
+              <p className="text-xs font-medium text-slate-400 mb-2">{t('chat.learnMore')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {availableFU.map(fu => (
                   <button
@@ -564,7 +505,7 @@ function MockChatConversation() {
                 {inputText}{cursor}
               </span>
             ) : (
-              <span className="text-base text-slate-400 flex-1">Ask anything...</span>
+              <span className="text-base text-slate-400 flex-1">{t('chat.inputPlaceholder')}</span>
             )}
             <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${inputText ? 'bg-slate-800' : 'bg-slate-100'}`}>
               <svg className={`w-3.5 h-3.5 ${inputText ? 'text-white' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

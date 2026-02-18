@@ -137,6 +137,33 @@
       "contact": "İletişim"
     }
   },
+  "chat": {
+    "headerName": "AI Asistanı",
+    "you": "Siz",
+    "thinking": "Düşünüyorum...",
+    "inputPlaceholder": "Her şeyi sorabilirsiniz...",
+    "learnMore": "Daha fazla bilgi",
+    "q1": "Human Pages nedir?",
+    "q2": "Profil oluşturarak ne kazanırım?",
+    "q3": "Nasıl başlarım?",
+    "a1": "Human Pages, gerçek insanların gerçek dünya becerilerini listelediği bir dizindir — ve **AI ajanları onları insan dokunuşu gerektiren işler için işe alır**. AI çağının \"Sarı Sayfaları\" olarak düşünebilirsiniz.",
+    "a2": "Şunları elde edersiniz:\nAI ajanları sizi keşfeder ve doğrudan iş teklifleri gönderir\nKazancınızın %100'ünü alın — sıfır platform ücreti\nFotoğrafçılık, teslimat, telefon görüşmeleri, araştırma ve daha fazlası için ödeme alın\nBir profil tüm AI ajan platformlarında geçerlidir\nGörünürlük ve gizlilik üzerinde tam kontrol",
+    "a3": "**2 dakikadan az sürer!** Kaydolun, becerilerinizi ve konumunuzu listeleyin, dünyanın dört bir yanındaki AI ajanlarına görünür hale gelirsiniz. Yakınınızdaki ajanlar becerilerinize ihtiyaç duyduğunda teklifler gelmeye başlar.",
+    "fu1q": "Nasıl ödeme alırım?",
+    "fu1a": "Kendi ödeme koşullarınızı siz belirlersiniz ve aldığınız her iş teklifinin şartlarına siz karar verirsiniz. **Doğrudan cüzdanınıza stabil dijital dolar** desteği sunuyoruz — banka yok, aracı yok, haftalarca bekleme yok — ama ödeme yapan kişiyle farklı bir düzenlemeye de gidebilirsiniz. **Her iki durumda da sıfır platform ücreti.**",
+    "fu2q": "Ne tür işler var?",
+    "fu2a": "AI'ın tek başına yapamadığı işler — **yerel fotoğrafçılık, aynı gün teslimat, telefon görüşmeleri, gizli müşteri, usta işleri**, yüz yüze araştırma ve daha fazlası. Gerçek bir yerde gerçek bir insana ihtiyaç varsa, o iş Human Pages'dedir.",
+    "fu3q": "Katılmak ücretsiz mi?",
+    "fu3a": "**Evet, tamamen ücretsiz!** Abonelik yok, gizli ücret yok, komisyon yok. Profilinizi oluşturun, becerilerinizi listeleyin ve hiçbir maliyet olmadan teklif almaya başlayın.",
+    "fu4q": "Beni kim işe alıyor?",
+    "fu4a": "AI ajanı olan herkes — **bireyler, küçük işletmeler, girişimler, büyük şirketler**. Birinin yapılması gereken gerçek dünya görevi var, onların AI'ı sizi Human Pages'de buluyor ve teklif gönderiyor. Bu şu anda **AI ekonomisinin en hızlı büyüyen bölümü** ve siz tam zemin katta başlıyorsunuz.",
+    "fu5q": "Nereden kullanılabilir?",
+    "fu5a": "**Dünya genelinde!** Human Pages her ülkede çalışır. Şehrinizi ve becerilerinizi listeleyin; bölgenizdeki birini arayan ajanlar sizi bulur. Şu an en yüksek talep **ABD, Filipinler, Hindistan, Meksika ve Nijerya'da** — ama bu hızla büyüyor.",
+    "fu6q": "Kendi fiyatımı belirleyebilir miyim?",
+    "fu6a": "**Kesinlikle.** Profilinizde saatlik veya iş başına kendi ücretinizi siz belirlersiniz. Ajanlar ücretinizi önceden görür ve kabul edebilir ya da pazarlık yapabilir. Asla bir fiyata mahkûm kalmazsınız — **kontrolün hep sizde.**",
+    "fu7q": "Nasıl güvende kalırım?",
+    "fu7a": "**Her şey sizin kontrolünüzde.** Hangi bilgilerin görünür olacağını seçin, profilinizi istediğiniz zaman gizleyin ve istenmeyen kişileri engelleyin. Human Pages kişisel verilerinizi hiçbir zaman ajanlarla paylaşmaz — onlar yalnızca **sizin göstermeyi seçtiğinizi** görür."
+  },
   "auth": {
     "signIn": "Giriş yap",
     "signInTo": "Hesabınıza giriş yapın",

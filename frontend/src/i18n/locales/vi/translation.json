@@ -137,6 +137,33 @@
       "contact": "Liên hệ"
     }
   },
+  "chat": {
+    "headerName": "Trợ lý AI",
+    "you": "Bạn",
+    "thinking": "Đang suy nghĩ...",
+    "inputPlaceholder": "Hỏi bất cứ điều gì...",
+    "learnMore": "Tìm hiểu thêm",
+    "q1": "Human Pages là gì?",
+    "q2": "Tạo hồ sơ thì tôi được gì?",
+    "q3": "Tôi bắt đầu như thế nào?",
+    "a1": "Human Pages là một danh bạ nơi những người thật đăng kỹ năng thật của mình — và **các AI agent thuê họ cho những công việc cần bàn tay con người**. Hãy nghĩ đây là \"Trang Vàng\" cho thời đại AI.",
+    "a2": "Bạn nhận được:\nAI agent tìm thấy bạn và gửi lời mời việc trực tiếp\nGiữ 100% thu nhập — không phí nền tảng\nKiếm tiền từ nhiếp ảnh, giao hàng, gọi điện, nghiên cứu và nhiều hơn nữa\nMột hồ sơ hoạt động trên mọi nền tảng AI agent\nToàn quyền kiểm soát khả năng hiển thị và quyền riêng tư",
+    "a3": "**Chưa đến 2 phút!** Đăng ký, liệt kê kỹ năng và vị trí, và bạn sẽ hiển thị với AI agent trên toàn thế giới. Bạn sẽ bắt đầu nhận lời mời ngay khi agent cần kỹ năng của bạn gần đó.",
+    "fu1q": "Tôi được trả tiền như thế nào?",
+    "fu1a": "Bạn tự đặt điều khoản thanh toán và quyết định điều kiện cho mỗi lời mời việc bạn nhận. Chúng tôi hỗ trợ nội bộ **đô la kỹ thuật số ổn định thẳng vào ví của bạn** — không qua ngân hàng, không trung gian, không chờ hàng tuần — nhưng bạn hoàn toàn có thể thỏa thuận cách khác với người trả tiền. **Không phí nền tảng** trong mọi trường hợp.",
+    "fu2q": "Có những loại công việc nào?",
+    "fu2a": "Những việc AI không tự làm được — như **chụp ảnh tại địa phương, giao hàng trong ngày, gọi điện, khách hàng bí mật, thợ sửa nhà**, nghiên cứu trực tiếp và nhiều hơn nữa. Nếu cần người thật ở nơi thật, thì việc đó có trên Human Pages.",
+    "fu3q": "Tham gia có mất phí không?",
+    "fu3a": "**Có, hoàn toàn miễn phí!** Không đăng ký, không phí ẩn, không hoa hồng. Tạo hồ sơ, liệt kê kỹ năng và bắt đầu nhận lời mời mà không tốn gì.",
+    "fu4q": "Ai thực sự thuê tôi?",
+    "fu4a": "Bất kỳ ai có AI agent — **cá nhân, doanh nghiệp nhỏ, startup, công ty lớn**. Ai đó cần làm một việc ngoài đời thực, AI của họ tìm thấy bạn trên Human Pages và gửi lời mời. Đây là **phần phát triển nhanh nhất của kinh tế AI** ngay lúc này, và bạn đang ở vị trí đầu tiên.",
+    "fu5q": "Dịch vụ có ở đâu?",
+    "fu5a": "**Toàn thế giới!** Human Pages hoạt động ở mọi quốc gia. Bạn liệt kê thành phố và kỹ năng, agent tìm kiếm người trong khu vực của bạn sẽ tìm thấy bạn. Nhu cầu hiện tại nhiều nhất ở **Mỹ, Philippines, Ấn Độ, Mexico và Nigeria** — nhưng đang tăng nhanh.",
+    "fu6q": "Tôi có thể tự đặt giá không?",
+    "fu6a": "**Hoàn toàn được.** Bạn tự đặt mức giá theo giờ hoặc theo việc trên hồ sơ. Agent thấy giá của bạn trước và có thể chấp nhận hoặc thương lượng. Bạn không bao giờ bị ràng buộc vào một mức giá — **bạn luôn nắm quyền kiểm soát**.",
+    "fu7q": "Làm sao tôi an toàn?",
+    "fu7a": "**Bạn kiểm soát tất cả.** Chọn thông tin nào hiển thị, ẩn hồ sơ bất cứ lúc nào và chặn liên hệ không mong muốn. Human Pages không bao giờ chia sẻ dữ liệu cá nhân của bạn với agent — họ chỉ thấy những gì **bạn chọn hiển thị**."
+  },
   "auth": {
     "signIn": "Đăng nhập",
     "signInTo": "Đăng nhập vào tài khoản",

@@ -137,6 +137,33 @@
       "contact": "Contacto"
     }
   },
+  "chat": {
+    "headerName": "Asistente IA",
+    "you": "Tú",
+    "thinking": "Pensando...",
+    "inputPlaceholder": "Pregunta lo que quieras...",
+    "learnMore": "Saber más",
+    "q1": "¿Qué es Human Pages?",
+    "q2": "¿Qué obtengo al crear un perfil?",
+    "q3": "¿Cómo empiezo?",
+    "a1": "Human Pages es un directorio donde personas reales listan sus habilidades del mundo real — y **los agentes de IA las contratan** para tareas que necesitan un toque humano. Piénsalo como las \"Páginas Amarillas\" para la era de la IA.",
+    "a2": "Esto es lo que obtienes:\nLos agentes de IA te descubren y te envían ofertas de trabajo directamente\nQuédate con el 100% de tus ganancias — cero comisiones\nCobra por fotografía, entregas, llamadas, investigación y más\nUn perfil funciona en todas las plataformas de agentes de IA\nControl total sobre tu visibilidad y privacidad",
+    "a3": "**¡Toma menos de 2 minutos!** Regístrate, lista tus habilidades y ubicación, y serás visible para agentes de IA en todo el mundo. Empezarás a recibir ofertas en cuanto los agentes necesiten tus habilidades cerca.",
+    "fu1q": "¿Cómo me pagan?",
+    "fu1a": "Tú estableces tus propias condiciones de pago y decides los términos de cada oferta que recibes. Admitimos de forma nativa **dólares digitales estables directo a tu billetera** — sin bancos, sin intermediarios, sin esperar semanas — pero eres libre de llegar a un acuerdo diferente con quien te pague. **Cero comisiones** en cualquier caso.",
+    "fu2q": "¿Qué tipo de tareas hay?",
+    "fu2a": "Tareas que la IA no puede hacer sola — como **fotografía local, entregas el mismo día, llamadas telefónicas, cliente misterioso, trabajo de mantenimiento**, investigación presencial y más. Si necesita a un humano real en un lugar real, está en Human Pages.",
+    "fu3q": "¿Es gratis unirse?",
+    "fu3a": "**¡Sí, completamente gratis!** Sin suscripción, sin cargos ocultos, sin comisión. Crea tu perfil, lista tus habilidades y empieza a recibir ofertas sin costo alguno.",
+    "fu4q": "¿Quién me contrata exactamente?",
+    "fu4a": "Cualquiera que tenga un agente de IA — **personas, pequeños negocios, startups, grandes empresas**. Alguien necesita una tarea del mundo real, su IA te encuentra en Human Pages y te envía la oferta. Esta es **la parte de la economía IA que más crece** ahora mismo, y tú estás en la planta baja.",
+    "fu5q": "¿Dónde está disponible?",
+    "fu5a": "**¡En todo el mundo!** Human Pages funciona en todos los países. Listas tu ciudad y tus habilidades, y los agentes que busquen a alguien en tu área te encontrarán. La mayor demanda ahora mismo está en **EE. UU., Filipinas, India, México y Nigeria** — pero está creciendo rápido.",
+    "fu6q": "¿Puedo establecer mis propias tarifas?",
+    "fu6a": "**Absolutamente.** Tú fijas tu tarifa por hora o por tarea en tu perfil. Los agentes ven tu tarifa de antemano y pueden aceptarla o negociar. Nunca quedas atado a un precio — **tú siempre tienes el control**.",
+    "fu7q": "¿Cómo me mantengo seguro/a?",
+    "fu7a": "**Tú controlas todo.** Elige qué información es visible, oculta tu perfil cuando quieras y bloquea contactos no deseados. Human Pages nunca comparte tus datos personales con los agentes — solo ven lo que **tú eliges mostrar**."
+  },
   "auth": {
     "signIn": "Iniciar sesión",
     "signInTo": "Inicia sesión en tu cuenta",
