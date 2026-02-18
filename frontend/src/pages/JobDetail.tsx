@@ -167,25 +167,6 @@ export default function JobDetail() {
     }
   };
 
-  const handleDenyPayment = () => {
-    setConfirmDialog({
-      open: true,
-      title: t('jobDetail.confirmDenyPayment', 'Deny payment claim?'),
-      message: t('jobDetail.confirmDenyPaymentMessage', 'This will mark the job as disputed. Only deny if you did not receive the payment.'),
-      onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, open: false }));
-        try {
-          await api.denyPayment(id!, 'Payment not received');
-          posthog.capture('payment_denied', { jobId: id });
-          toast.success(t('toast.paymentDenied', 'Payment claim denied'));
-          await loadJob();
-        } catch (error: any) {
-          toast.error(error.message);
-        }
-      },
-    });
-  };
-
   const handleCancel = () => {
     setConfirmDialog({
       open: true,
@@ -528,10 +509,10 @@ export default function JobDetail() {
                     {t('jobDetail.confirmPayment', 'Confirm payment received')}
                   </button>
                   <button
-                    onClick={handleDenyPayment}
+                    onClick={handleDispute}
                     className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200"
                   >
-                    {t('jobDetail.denyPayment', 'Deny — I did not receive payment')}
+                    {t('jobDetail.disputeJob', 'Dispute')}
                   </button>
                   <button
                     onClick={handleCancel}

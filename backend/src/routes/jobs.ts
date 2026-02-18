@@ -1202,64 +1202,6 @@ router.patch('/:id/confirm-payment', authenticateToken, requireEmailVerified, as
   }
 });
 
-// Human denies the off-chain payment claim → DISPUTED
-router.patch('/:id/deny-payment', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
-  try {
-    const body = z.object({ reason: z.string().max(1000).optional() }).parse(req.body);
-
-    const job = await prisma.job.findUnique({
-      where: { id: req.params.id },
-    });
-
-    if (!job) {
-      return res.status(404).json({ error: 'Job not found' });
-    }
-
-    if (job.humanId !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
-
-    if (job.status !== 'PAYMENT_CLAIMED') {
-      return res.status(400).json({
-        error: 'No payment claim to deny',
-        reason: `Job must be in PAYMENT_CLAIMED status. Current: ${job.status}`,
-      });
-    }
-
-    const updated = await prisma.job.update({
-      where: { id: job.id },
-      data: {
-        status: 'DISPUTED',
-        disputedAt: new Date(),
-        disputeReason: body.reason || 'Payment claim denied by human',
-        disputedBy: 'HUMAN',
-        lastActionBy: 'HUMAN',
-      },
-    });
-
-    // Fire webhook
-    if (job.callbackUrl) {
-      fireWebhook(
-        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
-        'job.disputed',
-        { reason: body.reason, trigger: 'payment_claim_denied' },
-      );
-    }
-
-    res.json({
-      id: updated.id,
-      status: updated.status,
-      message: 'Payment claim denied. Job is now disputed.',
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
-    }
-    logger.error({ err: error }, 'Deny payment error');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // ===== CANCEL & DISPUTE =====
 
 // Cancel a job (either party, before money/work exchanged)
@@ -1359,9 +1301,8 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Allowed from: PAID, COMPLETED, PAUSED (money or work has been exchanged)
-    // PAYMENT_CLAIMED is handled by deny-payment endpoint for human
-    const allowed = ['PAID', 'COMPLETED', 'PAUSED'];
+    // Allowed from: PAYMENT_CLAIMED, PAID, COMPLETED, PAUSED (money or work has been exchanged)
+    const allowed = ['PAYMENT_CLAIMED', 'PAID', 'COMPLETED', 'PAUSED'];
     if (!allowed.includes(job.status)) {
       if (['PENDING', 'ACCEPTED'].includes(job.status)) {
         return res.status(400).json({

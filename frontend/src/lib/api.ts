@@ -285,9 +285,6 @@ export const api = {
   confirmPayment: (id: string) =>
     request<Job>(`/jobs/${id}/confirm-payment`, { method: 'PATCH' }),
 
-  denyPayment: (id: string, reason?: string) =>
-    request<Job>(`/jobs/${id}/deny-payment`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
-
   cancelJob: (id: string, reason?: string) =>
     request<Job>(`/jobs/${id}/cancel`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
 

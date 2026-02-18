@@ -4,9 +4,8 @@
  * Covers:
  *   - claim-payment: agent claims off-chain payment sent
  *   - confirm-payment: human confirms receipt
- *   - deny-payment: human denies → DISPUTED
  *   - cancel: either party backs out before money/work exchanged
- *   - dispute: either party flags issue after money/work exchanged
+ *   - dispute: either party flags issue after money/work exchanged (incl. PAYMENT_CLAIMED)
  *   - Milestone-based review gating (completedAt && paidAt)
  */
 
@@ -294,51 +293,6 @@ describe('PATCH /api/jobs/:id/confirm-payment', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// deny-payment
-// ═══════════════════════════════════════════════════════════════════════════
-
-describe('PATCH /api/jobs/:id/deny-payment', () => {
-  it('should transition PAYMENT_CLAIMED → DISPUTED', async () => {
-    const jobId = await createJob({ status: 'PAYMENT_CLAIMED' });
-
-    const res = await authRequest(human.token)
-      .patch(`/api/jobs/${jobId}/deny-payment`)
-      .send({ reason: 'Never received PayPal transfer' });
-
-    expect(res.status).toBe(200);
-    expect(res.body.status).toBe('DISPUTED');
-
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
-    expect(job!.disputedAt).toBeTruthy();
-    expect(job!.disputeReason).toBe('Never received PayPal transfer');
-    expect(job!.disputedBy).toBe('HUMAN');
-    expect(job!.lastActionBy).toBe('HUMAN');
-  });
-
-  it('should use default reason when none provided', async () => {
-    const jobId = await createJob({ status: 'PAYMENT_CLAIMED' });
-
-    const res = await authRequest(human.token)
-      .patch(`/api/jobs/${jobId}/deny-payment`)
-      .send({});
-
-    expect(res.status).toBe(200);
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
-    expect(job!.disputeReason).toBe('Payment claim denied by human');
-  });
-
-  it('should reject deny on non-PAYMENT_CLAIMED job', async () => {
-    const jobId = await createJob({ status: 'ACCEPTED' });
-
-    const res = await authRequest(human.token)
-      .patch(`/api/jobs/${jobId}/deny-payment`)
-      .send({});
-
-    expect(res.status).toBe(400);
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════════════
 // cancel
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -458,6 +412,23 @@ describe('PATCH /api/jobs/:id/cancel', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('PATCH /api/jobs/:id/dispute', () => {
+  it('should allow human to dispute PAYMENT_CLAIMED job (replaces deny-payment)', async () => {
+    const jobId = await createJob({ status: 'PAYMENT_CLAIMED' });
+
+    const res = await authRequest(human.token)
+      .patch(`/api/jobs/${jobId}/dispute`)
+      .send({ reason: 'Never received PayPal transfer' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('DISPUTED');
+
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    expect(job!.disputedAt).toBeTruthy();
+    expect(job!.disputeReason).toBe('Never received PayPal transfer');
+    expect(job!.disputedBy).toBe('HUMAN');
+    expect(job!.lastActionBy).toBe('HUMAN');
+  });
+
   it('should allow human to dispute PAID job', async () => {
     const jobId = await createJob({ status: 'PAID' });
 
