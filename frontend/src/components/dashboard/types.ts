@@ -142,6 +142,8 @@ export interface Job {
   lastUpdatedByAgent?: string;
   createdAt: string;
   acceptedAt?: string;
+  paymentTxHash?: string;
+  paymentNetwork?: string;
   paidAt?: string;
   completedAt?: string;
   review?: {

@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import { posthog } from '../lib/posthog';
 import { Job, JobMessage } from '../components/dashboard/types';
+import { getExplorerTxUrl } from '../lib/blockchain';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
@@ -335,6 +336,22 @@ export default function JobDetail() {
             {job.lastUpdatedByAgent && <span>{t('jobDetail.lastUpdated')}: {new Date(job.lastUpdatedByAgent).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
             {job.acceptedAt && <span>{t('jobDetail.accepted')}: {new Date(job.acceptedAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
             {job.paidAt && <span>{t('jobDetail.paid')}: {new Date(job.paidAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
+            {job.paymentTxHash && job.paymentNetwork && (() => {
+              const explorerUrl = getExplorerTxUrl(job.paymentNetwork, job.paymentTxHash);
+              return explorerUrl ? (
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                >
+                  {t('jobDetail.viewTransaction', 'View transaction')}
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              ) : null;
+            })()}
             {job.completedAt && <span>{t('jobDetail.completed')}: {new Date(job.completedAt).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
           </div>
 

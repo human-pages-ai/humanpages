@@ -609,6 +609,7 @@
     "updated": "Updated",
     "lastUpdated": "Last updated",
     "offerUpdated": "This offer has been updated by the agent",
+    "viewTransaction": "View transaction",
     "walletNudge": {
       "title": "Set up a wallet to get this job",
       "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",

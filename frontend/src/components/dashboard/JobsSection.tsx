@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Job, ReviewStats } from './types';
+import { getExplorerTxUrl } from '../../lib/blockchain';
 
 interface Props {
   jobs: Job[];
@@ -170,6 +171,21 @@ export default function JobsSection({
                 </div>
                 <div className="flex items-center gap-3 ml-3 shrink-0">
                   <span className="font-medium text-green-600 text-sm">${job.priceUsdc}</span>
+                  {job.paymentTxHash && job.paymentNetwork && (() => {
+                    const explorerUrl = getExplorerTxUrl(job.paymentNetwork, job.paymentTxHash);
+                    return explorerUrl ? (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(explorerUrl, '_blank', 'noopener,noreferrer'); }}
+                        className="text-blue-500 hover:text-blue-700"
+                        title={t('jobDetail.viewTransaction', 'View transaction')}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                    ) : null;
+                  })()}
                   {job.registeredAgent ? (
                     <span className="text-xs text-gray-500 hidden sm:inline">{job.registeredAgent.name}</span>
                   ) : job.agentName ? (
