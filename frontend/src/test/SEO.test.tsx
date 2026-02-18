@@ -57,8 +57,8 @@ describe('SEO Component', () => {
     renderWithProviders(<SEO />);
     await waitFor(() => {
       const description = getMetaContent('description');
-      expect(description).toContain("AI's hiring");
-      expect(description).toContain('real-world gigs');
+      expect(description).toContain('Stop chasing clients');
+      expect(description).toContain('let AI bring them to you');
     });
   });
 

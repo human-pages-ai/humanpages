@@ -35,9 +35,9 @@ export function generateDefaultSvg(): string {
     <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="500">.ai</tspan>
   </text>
 
-  <text x="600" y="340" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#f1f5f9" text-anchor="middle">Stop chasing clients.</text>
+  <text x="600" y="350" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="#f1f5f9" text-anchor="middle">Stop chasing clients.</text>
 
-  <text x="600" y="390" font-family="system-ui, sans-serif" font-size="24" font-weight="500" fill="#60a5fa" text-anchor="middle">List your skills and let AI bring them to you.</text>
+  <text x="600" y="420" font-family="system-ui, sans-serif" font-size="32" font-weight="500" fill="#60a5fa" text-anchor="middle">List your skills and let AI bring them to you.</text>
 </svg>`;
 }
 

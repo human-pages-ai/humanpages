@@ -234,8 +234,9 @@ describe('SEO Endpoints', () => {
     it('should generate valid default SVG', () => {
       const svg = generateDefaultSvg();
       expect(svg).toContain('<svg width="1200" height="630"');
-      expect(svg).toContain('humanpages.ai');
-      expect(svg).toContain('Get Hired by AI Agents');
+      expect(svg).toContain('>human</tspan>');
+      expect(svg).toContain('>pages</tspan>');
+      expect(svg).toContain('Stop chasing clients');
     });
 
     it('should generate blog SVG with title', () => {
