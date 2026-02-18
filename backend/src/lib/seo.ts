@@ -5,8 +5,8 @@ import path from 'path';
 const SITE_URL = process.env.FRONTEND_URL || 'https://humanpages.ai';
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
 const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
-const DEFAULT_TITLE = "AI's Hiring. Are You Listed?";
-const DEFAULT_DESCRIPTION = 'Stop chasing clients. List your skills and let AI bring them to you.';
+const DEFAULT_TITLE = "Human Pages";
+const DEFAULT_DESCRIPTION = 'The future of hiring networks. No commissions, no middlemen.';
 
 // Cache the index.html template
 let indexHtmlTemplate: string | null = null;
