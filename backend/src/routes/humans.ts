@@ -70,6 +70,7 @@ const fullHumanSelect = {
   linkedinUrl: true,
   twitterUrl: true,
   githubUrl: true,
+  facebookUrl: true,
   instagramUrl: true,
   youtubeUrl: true,
   websiteUrl: true,
@@ -148,9 +149,9 @@ const updateProfileSchema = z.object({
   locationLng: z.number().min(-180).max(180).optional().nullable(),
 
   // Capabilities
-  skills: z.array(z.string()).optional(),
-  equipment: z.array(z.string()).nullable().optional().transform(v => v ?? undefined),
-  languages: z.array(z.string()).nullable().optional().transform(v => v ?? undefined),
+  skills: z.array(z.string().max(100)).max(50).optional(),
+  equipment: z.array(z.string().max(100)).max(50).nullable().optional().transform(v => v ?? undefined),
+  languages: z.array(z.string().max(100)).max(30).nullable().optional().transform(v => v ?? undefined),
   preferredLanguage: z.enum(['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th']).optional(),
   isAvailable: z.boolean().optional(),
 
@@ -208,6 +209,10 @@ const updateProfileSchema = z.object({
   githubUrl: z.string().url().refine(
     (url) => isUrlFromDomain(url, ['github.com']),
     'Must be a GitHub URL'
+  ).optional().nullable(),
+  facebookUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['facebook.com', 'fb.com']),
+    'Must be a Facebook URL'
   ).optional().nullable(),
   instagramUrl: z.string().url().refine(
     (url) => isUrlFromDomain(url, ['instagram.com']),
@@ -734,28 +739,34 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Filter by rate range (search params are in USD, compare against USD estimate)
     if (minRate) {
-      where.minRateUsdEstimate = { gte: parseFloat(minRate as string) };
+      const minRateVal = parseFloat(minRate as string);
+      if (!isNaN(minRateVal) && isFinite(minRateVal)) {
+        where.minRateUsdEstimate = { gte: minRateVal };
+      }
     }
     if (maxRate) {
-      // Include humans with no rate set (negotiable) — they haven't set a floor
-      if (minRate) {
-        // Both min and max: rate must be in range (nulls excluded since they don't meet minRate)
-        where.minRateUsdEstimate = {
-          ...where.minRateUsdEstimate,
-          lte: parseFloat(maxRate as string),
-        };
-      } else {
-        // Only max: include humans whose rate is <= max OR who have no rate set
-        // Use AND to avoid clobbering any existing OR clause (e.g. location filter)
-        where.AND = [
-          ...(where.AND || []),
-          {
-            OR: [
-              { minRateUsdEstimate: { lte: parseFloat(maxRate as string) } },
-              { minRateUsdEstimate: null },
-            ],
-          },
-        ];
+      const maxRateVal = parseFloat(maxRate as string);
+      if (!isNaN(maxRateVal) && isFinite(maxRateVal)) {
+        // Include humans with no rate set (negotiable) — they haven't set a floor
+        if (where.minRateUsdEstimate) {
+          // Both min and max: rate must be in range (nulls excluded since they don't meet minRate)
+          where.minRateUsdEstimate = {
+            ...where.minRateUsdEstimate,
+            lte: maxRateVal,
+          };
+        } else {
+          // Only max: include humans whose rate is <= max OR who have no rate set
+          // Use AND to avoid clobbering any existing OR clause (e.g. location filter)
+          where.AND = [
+            ...(where.AND || []),
+            {
+              OR: [
+                { minRateUsdEstimate: { lte: maxRateVal } },
+                { minRateUsdEstimate: null },
+              ],
+            },
+          ];
+        }
       }
     }
 
@@ -822,11 +833,15 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       const centerLng = parseFloat(lng as string);
       const radiusKm = parseFloat(radius as string);
 
-      humans = humans.filter((h) => {
-        if (!h.locationLat || !h.locationLng) return false;
-        const dist = calculateDistance(centerLat, centerLng, h.locationLat, h.locationLng);
-        return dist <= radiusKm;
-      });
+      if (!isNaN(centerLat) && isFinite(centerLat) &&
+          !isNaN(centerLng) && isFinite(centerLng) &&
+          !isNaN(radiusKm) && isFinite(radiusKm) && radiusKm > 0) {
+        humans = humans.filter((h) => {
+          if (!h.locationLat || !h.locationLng) return false;
+          const dist = calculateDistance(centerLat, centerLng, h.locationLat, h.locationLng);
+          return dist <= radiusKm;
+        });
+      }
     }
 
     // Add reputation stats to each human using batch queries

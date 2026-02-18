@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import { verifyMessage } from 'viem';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
@@ -8,6 +9,18 @@ import { nonceStore } from '../lib/nonce-store.js';
 import { logger } from '../lib/logger.js';
 
 const router = Router();
+
+// Rate limit wallet creation: 20 per hour per user
+const walletCreateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many wallet operations. Limit: 20 per hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: AuthRequest) => req.userId || 'unknown',
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
 
 const EVM_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
@@ -58,7 +71,7 @@ router.post('/nonce', authenticateToken, async (req: AuthRequest, res) => {
 
 // Add a new wallet (with signature verification)
 // Creates wallet records for all supported EVM mainnet networks
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, walletCreateLimiter, async (req: AuthRequest, res) => {
   try {
     const { address, label, signature, nonce } = addWalletSchema.parse(req.body);
 

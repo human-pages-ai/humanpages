@@ -41,6 +41,7 @@ export interface Profile {
   linkedinUrl?: string;
   twitterUrl?: string;
   githubUrl?: string;
+  facebookUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;

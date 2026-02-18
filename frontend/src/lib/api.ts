@@ -21,6 +21,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!res.ok) {
+    // On 401, token is invalid/expired — clear it and redirect to login
+    if (res.status === 401 && token) {
+      localStorage.removeItem('token');
+      // Only redirect if not already on a public/auth page
+      const path = window.location.pathname;
+      if (!path.startsWith('/login') && !path.startsWith('/signup') && !path.startsWith('/forgot-password')) {
+        window.location.href = '/login';
+      }
+    }
     const error = await res.json().catch(() => ({ error: 'Request failed' }));
     throw new Error(error.error || error.message || `Request failed (${res.status})`);
   }
@@ -49,6 +58,7 @@ export interface PublicHuman {
   linkedinVerified?: boolean;
   twitterUrl?: string;
   githubUrl?: string;
+  facebookUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;

@@ -54,12 +54,12 @@ const TIER_LISTING_CONFIG: Record<string, { limit: number; windowMs: number }> =
 
 // Schema for creating a listing
 const createListingSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-  category: z.string().optional(),
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(5000),
+  category: z.string().max(100).optional(),
   budgetUsdc: z.number().min(5, 'Minimum budget is $5 USDC'),
-  requiredSkills: z.array(z.string()).default([]),
-  requiredEquipment: z.array(z.string()).default([]),
+  requiredSkills: z.array(z.string().max(100)).max(30).default([]),
+  requiredEquipment: z.array(z.string().max(100)).max(30).default([]),
   location: z.string().optional(),
   locationLat: z.number().min(-90).max(90).optional(),
   locationLng: z.number().min(-180).max(180).optional(),
@@ -71,7 +71,7 @@ const createListingSchema = z.object({
     const maxDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
     return date > now && date <= maxDate;
   }, 'expiresAt must be in the future and within 90 days'),
-  maxApplicants: z.number().int().min(1).optional(),
+  maxApplicants: z.number().int().min(1).max(10000).optional(),
   callbackUrl: z.string().url().optional(),
   callbackSecret: z.string().min(16).max(256).optional(),
 });

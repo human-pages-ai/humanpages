@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
 
 export interface AgentAuthRequest extends Request {
   agent?: {
@@ -44,7 +45,7 @@ export async function authenticateAgent(req: AgentAuthRequest, res: Response, ne
     prisma.agent.update({
       where: { id: agent.id },
       data: { lastActiveAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error({ err, agentId: agent.id }, 'Failed to update agent lastActiveAt'));
 
     req.agent = {
       id: agent.id,
@@ -91,7 +92,7 @@ export async function optionalAgentAuth(req: AgentAuthRequest, _res: Response, n
     prisma.agent.update({
       where: { id: agent.id },
       data: { lastActiveAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error({ err, agentId: agent.id }, 'Failed to update agent lastActiveAt'));
 
     req.agent = {
       id: agent.id,

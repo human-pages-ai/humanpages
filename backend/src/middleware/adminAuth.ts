@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { AuthRequest } from './auth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
@@ -19,7 +20,8 @@ function getAdminEmails(): Set<string> {
 export function apiKeyAdmin(req: Request, res: Response, next: NextFunction) {
   const key = req.headers['x-admin-api-key'] as string | undefined;
   const expected = process.env.AI_ADMIN_API_KEY;
-  if (key && expected && key === expected) {
+  if (key && expected && key.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(key), Buffer.from(expected))) {
     return next();
   }
   return res.status(401).json({ error: 'Invalid API key' });

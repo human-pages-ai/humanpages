@@ -187,6 +187,7 @@ model Human {
   linkedinUrl   String?
   twitterUrl    String?
   githubUrl     String?
+  facebookUrl   String?
   instagramUrl  String?
   youtubeUrl    String?
   websiteUrl    String?

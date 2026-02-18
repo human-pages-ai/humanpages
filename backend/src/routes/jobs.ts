@@ -66,10 +66,10 @@ const VALID_PAYMENT_PREFERENCES = ['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STRE
 const createJobSchema = z.object({
   humanId: z.string().min(1),
   agentId: z.string().min(1),
-  agentName: z.string().optional(),
-  title: z.string().min(1),
-  description: z.string().min(1),
-  category: z.string().optional(),
+  agentName: z.string().max(200).optional(),
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(5000),
+  category: z.string().max(100).optional(),
   priceUsdc: z.number().positive(),
   // Payment mode & timing
   paymentMode: z.enum(['ONE_TIME', 'STREAM']).optional().default('ONE_TIME'),
@@ -90,9 +90,9 @@ const createJobSchema = z.object({
 
 // Schema for updating a job offer (called by agents)
 const updateJobSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().min(1).optional(),
-  category: z.string().optional(),
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().min(1).max(5000).optional(),
+  category: z.string().max(100).optional(),
   priceUsdc: z.number().positive().optional(),
 }).refine(data => Object.values(data).some(v => v !== undefined), {
   message: 'At least one field must be provided',
@@ -695,6 +695,9 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
   }
 });
 
+// Valid job statuses for filtering
+const VALID_JOB_STATUSES = ['PENDING', 'ACCEPTED', 'PAID', 'STREAMING', 'PAUSED', 'COMPLETED', 'REJECTED'];
+
 // Get jobs for authenticated human
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -702,6 +705,12 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 
     const where: any = { humanId: req.userId };
     if (status) {
+      if (!VALID_JOB_STATUSES.includes(status)) {
+        return res.status(400).json({
+          error: 'Invalid status',
+          message: `Valid statuses: ${VALID_JOB_STATUSES.join(', ')}`,
+        });
+      }
       where.status = status;
     }
 
@@ -1559,6 +1568,17 @@ router.patch('/:id/stream-tick', authenticateAgent, requireActiveAgent, async (r
       jobId: job.id,
       token,
     });
+
+    // Verify the sender matches the registered stream sender address
+    if (job.streamSenderAddress && verification.from.toLowerCase() !== job.streamSenderAddress.toLowerCase()) {
+      return res.status(400).json({
+        error: 'Sender mismatch',
+        message: 'The transaction sender does not match the registered stream sender address.',
+        expectedSender: job.streamSenderAddress,
+        actualSender: verification.from,
+        hint: 'The payment must come from the same address used to start the stream.',
+      });
+    }
 
     // Update tick as VERIFIED
     await prisma.streamTick.update({

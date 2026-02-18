@@ -29,6 +29,7 @@ interface Props {
     linkedinUrl: string;
     twitterUrl: string;
     githubUrl: string;
+    facebookUrl: string;
     instagramUrl: string;
     youtubeUrl: string;
     websiteUrl: string;
@@ -391,6 +392,17 @@ export default function ProfileSection({
                 )}
               </div>
               <div>
+                <label htmlFor="profile-facebook" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.facebook')}</label>
+                <input
+                  id="profile-facebook"
+                  type="url"
+                  value={profileForm.facebookUrl}
+                  onChange={(e) => setProfileForm({ ...profileForm, facebookUrl: e.target.value })}
+                  placeholder="https://facebook.com/username"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
                 <label htmlFor="profile-instagram" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.instagram')}</label>
                 <input
                   id="profile-instagram"
@@ -460,7 +472,7 @@ export default function ProfileSection({
       ) : (
         (() => {
           const hasSocial = profile.linkedinUrl || profile.twitterUrl || profile.githubUrl ||
-            profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl;
+            profile.facebookUrl || profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl;
 
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -594,6 +606,12 @@ export default function ProfileSection({
                       <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300">
                         {t('dashboard.profile.github')}
+                      </a>
+                    )}
+                    {profile.facebookUrl && (
+                      <a href={profile.facebookUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
+                        {t('dashboard.profile.facebook')}
                       </a>
                     )}
                     {profile.instagramUrl && (
