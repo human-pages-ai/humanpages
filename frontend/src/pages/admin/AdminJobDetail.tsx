@@ -8,11 +8,12 @@ const statusColors: Record<string, string> = {
   PAID: 'bg-blue-100 text-blue-800',
   ACCEPTED: 'bg-blue-100 text-blue-800',
   PENDING: 'bg-yellow-100 text-yellow-800',
+  PAYMENT_CLAIMED: 'bg-orange-100 text-orange-800',
   REJECTED: 'bg-gray-100 text-gray-800',
   CANCELLED: 'bg-gray-100 text-gray-600',
   DISPUTED: 'bg-red-100 text-red-800',
   STREAMING: 'bg-purple-100 text-purple-800',
-  PAUSED: 'bg-orange-100 text-orange-800',
+  PAUSED: 'bg-amber-100 text-amber-800',
 };
 
 const tickStatusColors: Record<string, string> = {

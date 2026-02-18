@@ -369,7 +369,8 @@
         "PAID": "Ödendi",
         "COMPLETED": "Tamamlandı",
         "CANCELLED": "İptal Edildi",
-        "DISPUTED": "İtiraz Edildi"
+        "DISPUTED": "İtiraz Edildi",
+        "PAYMENT_CLAIMED": "Ödeme talep edildi"
       }
     },
     "profile": {
@@ -638,6 +639,10 @@
     "jobAccepted": "İş kabul edildi",
     "jobRejected": "İş reddedildi",
     "jobCompleted": "İş tamamlandı",
+    "paymentConfirmed": "Ödeme onaylandı",
+    "paymentDenied": "Ödeme reddedildi",
+    "jobCancelled": "İş iptal edildi",
+    "jobDisputed": "İş itirazda",
     "offerUpdated": "Teklif güncellendi",
     "telegramConnected": "Telegram bağlandı",
     "telegramDisconnected": "Telegram bağlantısı kesildi",

@@ -68,7 +68,7 @@ export default function JobDetail() {
   // Poll for new messages every 5s
   useEffect(() => {
     if (!id || !job) return;
-    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAID'];
+    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID'];
     if (!allowedStatuses.includes(job.status)) return;
 
     const interval = setInterval(loadMessages, 5000);
@@ -156,11 +156,80 @@ export default function JobDetail() {
     }
   };
 
+  const handleConfirmPayment = async () => {
+    try {
+      await api.confirmPayment(id!);
+      posthog.capture('payment_confirmed', { jobId: id });
+      toast.success(t('toast.paymentConfirmed', 'Payment confirmed'));
+      await loadJob();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDenyPayment = () => {
+    setConfirmDialog({
+      open: true,
+      title: t('jobDetail.confirmDenyPayment', 'Deny payment claim?'),
+      message: t('jobDetail.confirmDenyPaymentMessage', 'This will mark the job as disputed. Only deny if you did not receive the payment.'),
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        try {
+          await api.denyPayment(id!, 'Payment not received');
+          posthog.capture('payment_denied', { jobId: id });
+          toast.success(t('toast.paymentDenied', 'Payment claim denied'));
+          await loadJob();
+        } catch (error: any) {
+          toast.error(error.message);
+        }
+      },
+    });
+  };
+
+  const handleCancel = () => {
+    setConfirmDialog({
+      open: true,
+      title: t('jobDetail.confirmCancel', 'Cancel this job?'),
+      message: t('jobDetail.confirmCancelMessage', 'This will cancel the job. This action cannot be undone.'),
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        try {
+          await api.cancelJob(id!);
+          posthog.capture('job_cancelled', { jobId: id });
+          toast.success(t('toast.jobCancelled', 'Job cancelled'));
+          await loadJob();
+        } catch (error: any) {
+          toast.error(error.message);
+        }
+      },
+    });
+  };
+
+  const handleDispute = () => {
+    setConfirmDialog({
+      open: true,
+      title: t('jobDetail.confirmDispute', 'Dispute this job?'),
+      message: t('jobDetail.confirmDisputeMessage', 'This will flag the job as disputed. Use this if something went wrong with the payment or work.'),
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        try {
+          await api.disputeJob(id!, 'Dispute raised by human');
+          posthog.capture('job_disputed', { jobId: id });
+          toast.success(t('toast.jobDisputed', 'Job disputed'));
+          await loadJob();
+        } catch (error: any) {
+          toast.error(error.message);
+        }
+      },
+    });
+  };
+
   const getStatusBadge = (status: Job['status']) => {
     const styles: Record<Job['status'], string> = {
       PENDING: 'bg-yellow-100 text-yellow-700',
       ACCEPTED: 'bg-blue-100 text-blue-700',
       REJECTED: 'bg-gray-100 text-gray-700',
+      PAYMENT_CLAIMED: 'bg-orange-100 text-orange-700',
       PAID: 'bg-green-100 text-green-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       CANCELLED: 'bg-gray-100 text-gray-700',
@@ -170,7 +239,7 @@ export default function JobDetail() {
   };
 
   const isOwner = user && job && (job as any).humanId === user.id;
-  const canMessage = job && ['PENDING', 'ACCEPTED', 'PAID'].includes(job.status);
+  const canMessage = job && ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID'].includes(job.status);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
@@ -368,9 +437,50 @@ export default function JobDetail() {
             </div>
           )}
 
+          {/* Payment claim banner */}
+          {job.status === 'PAYMENT_CLAIMED' && job.paymentClaimMethod && (
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-orange-800">
+                    {t('jobDetail.paymentClaimed', 'The agent claims they sent payment')}
+                  </p>
+                  <p className="text-sm text-orange-700 mt-1">
+                    {t('jobDetail.paymentClaimMethod', 'Method')}: <span className="font-medium">{job.paymentClaimMethod}</span>
+                  </p>
+                  {job.paymentClaimNote && (
+                    <p className="text-sm text-orange-700 mt-1">
+                      {t('jobDetail.paymentClaimNote', 'Note')}: {job.paymentClaimNote}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Dispute/cancellation info banners */}
+          {job.status === 'DISPUTED' && job.disputeReason && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-medium text-red-800">{t('jobDetail.disputeReason', 'Dispute reason')}</p>
+              <p className="text-sm text-red-700 mt-1">{job.disputeReason}</p>
+              {job.disputedBy && <p className="text-xs text-red-500 mt-2">{t('jobDetail.raisedBy', 'Raised by')}: {job.disputedBy}</p>}
+            </div>
+          )}
+
+          {job.status === 'CANCELLED' && (
+            <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-sm font-medium text-gray-700">{t('jobDetail.jobCancelled', 'This job has been cancelled')}</p>
+              {job.cancelReason && <p className="text-sm text-gray-600 mt-1">{job.cancelReason}</p>}
+              {job.cancelledBy && <p className="text-xs text-gray-500 mt-2">{t('jobDetail.cancelledBy', 'Cancelled by')}: {job.cancelledBy}</p>}
+            </div>
+          )}
+
           {/* Action buttons */}
           {isOwner && (
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               {job.status === 'PENDING' && (
                 <>
                   <button
@@ -401,14 +511,58 @@ export default function JobDetail() {
                       </button>
                     </>
                   )}
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300"
+                  >
+                    {t('jobDetail.cancelJob', 'Cancel job')}
+                  </button>
+                </div>
+              )}
+              {job.status === 'PAYMENT_CLAIMED' && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={handleConfirmPayment}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                  >
+                    {t('jobDetail.confirmPayment', 'Confirm payment received')}
+                  </button>
+                  <button
+                    onClick={handleDenyPayment}
+                    className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200"
+                  >
+                    {t('jobDetail.denyPayment', 'Deny — I did not receive payment')}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300"
+                  >
+                    {t('jobDetail.cancelJob', 'Cancel job')}
+                  </button>
                 </div>
               )}
               {job.status === 'PAID' && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={handleComplete}
+                    className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700"
+                  >
+                    {t('dashboard.jobs.markComplete')}
+                  </button>
+                  <button
+                    onClick={handleDispute}
+                    className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200"
+                  >
+                    {t('jobDetail.disputeJob', 'Dispute')}
+                  </button>
+                </div>
+              )}
+              {job.status === 'COMPLETED' && !job.review && (
                 <button
-                  onClick={handleComplete}
-                  className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700"
+                  onClick={handleDispute}
+                  className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200"
                 >
-                  {t('dashboard.jobs.markComplete')}
+                  {t('jobDetail.disputeJob', 'Dispute')}
                 </button>
               )}
             </div>

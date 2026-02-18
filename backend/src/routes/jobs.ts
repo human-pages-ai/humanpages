@@ -696,7 +696,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
 });
 
 // Valid job statuses for filtering
-const VALID_JOB_STATUSES = ['PENDING', 'ACCEPTED', 'PAID', 'STREAMING', 'PAUSED', 'COMPLETED', 'REJECTED'];
+const VALID_JOB_STATUSES = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID', 'STREAMING', 'PAUSED', 'COMPLETED', 'REJECTED', 'CANCELLED', 'DISPUTED'];
 
 // Get jobs for authenticated human
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
@@ -757,6 +757,7 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
       data: {
         status: 'ACCEPTED',
         acceptedAt: new Date(),
+        lastActionBy: 'HUMAN',
       },
     });
 
@@ -820,7 +821,7 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
 
     const updated = await prisma.job.update({
       where: { id: job.id },
-      data: { status: 'REJECTED' },
+      data: { status: 'REJECTED', lastActionBy: 'HUMAN' },
     });
 
     // Fire webhook on rejection
@@ -922,8 +923,9 @@ router.patch('/:id/paid', async (req, res) => {
     });
 
     // Payment verified! Update job status
-    // If job is already COMPLETED (pay-after-completion flow), keep it COMPLETED
-    const newStatus = job.status === 'COMPLETED' ? 'COMPLETED' : 'PAID';
+    // For upon-completion flow: status goes to PAID (terminal — both milestones met)
+    // For upfront flow: status goes to PAID (intermediate — work not yet done)
+    const newStatus = 'PAID';
     const updated = await prisma.job.update({
       where: { id: job.id },
       data: {
@@ -932,6 +934,7 @@ router.patch('/:id/paid', async (req, res) => {
         paymentNetwork: networkLower,
         paymentAmount: new Decimal(verification.amount),
         paidAt: new Date(),
+        lastActionBy: 'AGENT',
       },
     });
 
@@ -1024,6 +1027,7 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       data: {
         status: 'COMPLETED',
         completedAt: new Date(),
+        lastActionBy: 'HUMAN',
       },
     });
 
@@ -1046,6 +1050,366 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
   }
 });
 
+// ===== OFF-CHAIN PAYMENT CLAIM FLOW =====
+
+const claimPaymentSchema = z.object({
+  method: z.string().min(1).max(100),  // "paypal", "venmo", "wise", "bank_transfer", etc.
+  note: z.string().max(1000).optional(), // Reference number, receipt link, freeform proof
+});
+
+// Agent claims they sent an off-chain payment (PayPal, Venmo, Wise, bank transfer, etc.)
+// ACCEPTED → PAYMENT_CLAIMED (upfront) or COMPLETED → PAYMENT_CLAIMED (upon-completion)
+router.patch('/:id/claim-payment', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const data = claimPaymentSchema.parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Must be the agent who created the offer
+    if (job.registeredAgentId !== req.agent!.id) {
+      return res.status(403).json({ error: 'Not authorized. Only the offering agent can claim payment.' });
+    }
+
+    // Prevent double path: if on-chain payment already recorded, reject
+    if (job.paymentTxHash) {
+      return res.status(400).json({
+        error: 'On-chain payment already recorded',
+        hint: 'This job was paid via crypto. Off-chain claim is not allowed.',
+      });
+    }
+
+    // Prevent re-claim: only one active claim per job
+    if (job.paymentClaimedAt) {
+      return res.status(400).json({
+        error: 'Payment already claimed',
+        hint: 'A payment claim is already pending. Wait for the human to confirm or deny.',
+      });
+    }
+
+    // Allowed from: ACCEPTED (upfront) or COMPLETED (upon-completion)
+    const allowedStatuses = ['ACCEPTED', 'COMPLETED'];
+    if (!allowedStatuses.includes(job.status)) {
+      return res.status(400).json({
+        error: 'Cannot claim payment',
+        reason: `Job must be in ACCEPTED or COMPLETED status. Current: ${job.status}`,
+      });
+    }
+
+    // For upfront: can claim from ACCEPTED
+    // For upon-completion: can only claim from COMPLETED
+    if (job.paymentTiming === 'upon_completion' && job.status !== 'COMPLETED') {
+      return res.status(400).json({
+        error: 'Cannot claim payment yet',
+        reason: 'This is an upon-completion job. The human must mark work as done first.',
+      });
+    }
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'PAYMENT_CLAIMED',
+        paymentClaimMethod: data.method,
+        paymentClaimNote: data.note || null,
+        paymentClaimedAt: new Date(),
+        lastActionBy: 'AGENT',
+      },
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.payment_claimed',
+        { method: data.method, note: data.note },
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: 'Payment claim recorded. Waiting for human to confirm receipt.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Claim payment error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Human confirms they received off-chain payment
+// PAYMENT_CLAIMED → PAID (upfront) or PAYMENT_CLAIMED → PAID (upon-completion, terminal)
+router.patch('/:id/confirm-payment', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (job.humanId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (job.status !== 'PAYMENT_CLAIMED') {
+      return res.status(400).json({
+        error: 'No payment claim to confirm',
+        reason: `Job must be in PAYMENT_CLAIMED status. Current: ${job.status}`,
+      });
+    }
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'PAID',
+        paidAt: new Date(),
+        paymentAmount: job.priceUsdc, // Trust-based: human confirmed the full amount
+        lastActionBy: 'HUMAN',
+      },
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.paid',
+        { method: 'off_chain', claimMethod: job.paymentClaimMethod },
+      );
+    }
+
+    trackServerEvent(job.humanId, 'payment_confirmed_offchain', {
+      jobId: job.id,
+      method: job.paymentClaimMethod,
+    }, req);
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: 'Payment confirmed. ' + (job.completedAt ? 'Job is fully settled.' : 'Work can begin.'),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Confirm payment error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Human denies the off-chain payment claim → DISPUTED
+router.patch('/:id/deny-payment', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+  try {
+    const body = z.object({ reason: z.string().max(1000).optional() }).parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (job.humanId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (job.status !== 'PAYMENT_CLAIMED') {
+      return res.status(400).json({
+        error: 'No payment claim to deny',
+        reason: `Job must be in PAYMENT_CLAIMED status. Current: ${job.status}`,
+      });
+    }
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'DISPUTED',
+        disputedAt: new Date(),
+        disputeReason: body.reason || 'Payment claim denied by human',
+        disputedBy: 'HUMAN',
+        lastActionBy: 'HUMAN',
+      },
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.disputed',
+        { reason: body.reason, trigger: 'payment_claim_denied' },
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: 'Payment claim denied. Job is now disputed.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Deny payment error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ===== CANCEL & DISPUTE =====
+
+// Cancel a job (either party, before money/work exchanged)
+router.patch('/:id/cancel', authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
+  try {
+    const body = z.object({ reason: z.string().max(1000).optional() }).parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Authorization: must be the human or the offering agent
+    const isHuman = req.senderType === 'human' && req.senderId === job.humanId;
+    const isAgent = req.senderType === 'agent' && req.senderId === job.registeredAgentId;
+    if (!isHuman && !isAgent) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Allowed-from statuses depend on who is cancelling
+    // Human: ACCEPTED, PAYMENT_CLAIMED, PAUSED
+    // Agent: PENDING (withdraw offer), ACCEPTED, PAYMENT_CLAIMED, PAUSED
+    const humanAllowed = ['ACCEPTED', 'PAYMENT_CLAIMED', 'PAUSED'];
+    const agentAllowed = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAUSED'];
+    const allowed = isHuman ? humanAllowed : agentAllowed;
+
+    if (!allowed.includes(job.status)) {
+      // Give helpful error for terminal / post-exchange statuses
+      if (['PAID', 'COMPLETED', 'STREAMING'].includes(job.status)) {
+        return res.status(400).json({
+          error: 'Cannot cancel after money or work has been exchanged',
+          hint: 'Use the dispute endpoint instead if something went wrong.',
+        });
+      }
+      return res.status(400).json({
+        error: `Cannot cancel job in ${job.status} status`,
+      });
+    }
+
+    const cancelledBy = isHuman ? 'HUMAN' : 'AGENT';
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'CANCELLED',
+        cancelledAt: new Date(),
+        cancelReason: body.reason || null,
+        cancelledBy,
+        lastActionBy: cancelledBy,
+      },
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.cancelled',
+        { cancelledBy, reason: body.reason },
+      );
+    }
+
+    const action = job.status === 'PENDING' && isAgent ? 'Offer withdrawn.' : 'Job cancelled.';
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: action,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Cancel job error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Dispute a job (either party, after money/work exchanged)
+router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
+  try {
+    const body = z.object({ reason: z.string().min(1).max(1000) }).parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Authorization: must be the human or the offering agent
+    const isHuman = req.senderType === 'human' && req.senderId === job.humanId;
+    const isAgent = req.senderType === 'agent' && req.senderId === job.registeredAgentId;
+    if (!isHuman && !isAgent) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Allowed from: PAID, COMPLETED, PAUSED (money or work has been exchanged)
+    // PAYMENT_CLAIMED is handled by deny-payment endpoint for human
+    const allowed = ['PAID', 'COMPLETED', 'PAUSED'];
+    if (!allowed.includes(job.status)) {
+      if (['PENDING', 'ACCEPTED'].includes(job.status)) {
+        return res.status(400).json({
+          error: 'Cannot dispute before money or work has been exchanged',
+          hint: 'Use the cancel endpoint to back out of the deal.',
+        });
+      }
+      return res.status(400).json({
+        error: `Cannot dispute job in ${job.status} status`,
+      });
+    }
+
+    const disputedBy = isHuman ? 'HUMAN' : 'AGENT';
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'DISPUTED',
+        disputedAt: new Date(),
+        disputeReason: body.reason,
+        disputedBy,
+        lastActionBy: disputedBy,
+      },
+    });
+
+    // Fire webhook
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.disputed',
+        { disputedBy, reason: body.reason },
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: 'Job is now disputed.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Dispute job error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Agent leaves a review (only for COMPLETED jobs)
 router.post('/:id/review', async (req, res) => {
   try {
@@ -1063,12 +1427,19 @@ router.post('/:id/review', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // CRITICAL: Only allow reviews for COMPLETED jobs
-    if (job.status !== 'COMPLETED') {
+    // CRITICAL: Reviews require both milestones — work done AND payment settled.
+    // This decouples review eligibility from status, supporting both upfront (COMPLETED terminal)
+    // and upon-completion (PAID terminal) flows correctly.
+    // Stream jobs use streamTotalPaid instead of paidAt, so check both.
+    const paymentSettled = job.paidAt || (job.paymentMode === 'STREAM' && job.streamTotalPaid && job.streamTotalPaid.toNumber() > 0);
+    if (!job.completedAt || !paymentSettled) {
+      const missing = [];
+      if (!job.completedAt) missing.push('work completion');
+      if (!paymentSettled) missing.push('payment');
       return res.status(400).json({
         error: 'Review rejected',
-        reason: `Cannot review job in ${job.status} status`,
-        hint: 'Reviews are only allowed after the job is marked as completed.',
+        reason: `Missing milestones: ${missing.join(' and ')}`,
+        hint: 'Reviews are only allowed after both work is completed and payment is confirmed.',
       });
     }
 

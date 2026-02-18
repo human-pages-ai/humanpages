@@ -282,6 +282,18 @@ export const api = {
   completeJob: (id: string) =>
     request<Job>(`/jobs/${id}/complete`, { method: 'PATCH' }),
 
+  confirmPayment: (id: string) =>
+    request<Job>(`/jobs/${id}/confirm-payment`, { method: 'PATCH' }),
+
+  denyPayment: (id: string, reason?: string) =>
+    request<Job>(`/jobs/${id}/deny-payment`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
+
+  cancelJob: (id: string, reason?: string) =>
+    request<Job>(`/jobs/${id}/cancel`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
+
+  disputeJob: (id: string, reason: string) =>
+    request<Job>(`/jobs/${id}/dispute`, { method: 'PATCH', body: JSON.stringify({ reason }) }),
+
   getJobMessages: (jobId: string) =>
     request<JobMessage[]>(`/jobs/${jobId}/messages`),
 

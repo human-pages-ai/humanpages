@@ -369,7 +369,8 @@
         "PAID": "Nabayaran",
         "COMPLETED": "Nakumpleto",
         "CANCELLED": "Kinansela",
-        "DISPUTED": "May Dispute"
+        "DISPUTED": "May Dispute",
+        "PAYMENT_CLAIMED": "Inangkin ang Bayad"
       }
     },
     "profile": {
@@ -635,6 +636,10 @@
     "jobAccepted": "Tinanggap ang trabaho",
     "jobRejected": "Tinanggihan ang trabaho",
     "jobCompleted": "Nakumpleto ang trabaho",
+    "paymentConfirmed": "Nakumpirma ang bayad",
+    "paymentDenied": "Tinanggihan ang bayad",
+    "jobCancelled": "Kinansela ang trabaho",
+    "jobDisputed": "May dispute ang trabaho",
     "offerUpdated": "Na-update ang alok",
     "telegramConnected": "Nakakonekta ang Telegram",
     "telegramDisconnected": "Nadiskonekta ang Telegram",

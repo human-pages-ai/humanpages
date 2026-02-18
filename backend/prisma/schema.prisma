@@ -224,19 +224,24 @@ model Human {
 }
 
 // Job status flow:
-// One-time: PENDING -> ACCEPTED -> PAID -> COMPLETED
+// One-time upfront (crypto):        PENDING -> ACCEPTED -> PAID -> COMPLETED
+// One-time upfront (off-chain):     PENDING -> ACCEPTED -> PAYMENT_CLAIMED -> PAID -> COMPLETED
+// One-time upon-completion (crypto): PENDING -> ACCEPTED -> COMPLETED -> PAID
+// One-time upon-completion (off-chain): PENDING -> ACCEPTED -> COMPLETED -> PAYMENT_CLAIMED -> PAID
 // Stream:   PENDING -> ACCEPTED -> STREAMING -> PAUSED -> COMPLETED
-// Can be REJECTED or CANCELLED at various stages
+// Cancel:   PENDING/ACCEPTED/PAYMENT_CLAIMED/PAUSED -> CANCELLED
+// Dispute:  PAYMENT_CLAIMED/PAID/COMPLETED/PAUSED -> DISPUTED
 enum JobStatus {
-  PENDING    // Agent created offer, waiting for human to accept
-  ACCEPTED   // Human accepted, waiting for payment
-  REJECTED   // Human rejected the offer
-  PAID       // Payment received, work can begin
-  STREAMING  // Stream payment active (Superfluid flow or micro-transfers)
-  PAUSED     // Stream paused (flow deleted or tick missed)
-  COMPLETED  // Work done, review unlocked
-  CANCELLED  // Cancelled by either party
-  DISPUTED   // Payment dispute
+  PENDING           // Agent created offer, waiting for human to accept
+  ACCEPTED          // Human accepted, waiting for payment
+  REJECTED          // Human rejected the offer
+  PAYMENT_CLAIMED   // Agent claims off-chain payment sent, awaiting human confirmation
+  PAID              // Payment verified (on-chain) or confirmed (off-chain)
+  STREAMING         // Stream payment active (Superfluid flow or micro-transfers)
+  PAUSED            // Stream paused (flow deleted or tick missed)
+  COMPLETED         // Work done
+  CANCELLED         // Cancelled by either party (before money/work exchanged)
+  DISPUTED          // Something went wrong (after money/work exchanged)
 }
 
 model Agent {
@@ -407,6 +412,24 @@ model Job {
   // Agent update tracking
   lastUpdatedByAgent DateTime?  // When the agent last updated the offer
   updateCount        Int        @default(0) // Number of times the offer was updated
+
+  // Off-chain payment claim (agent asserts they paid via PayPal/Venmo/Wise/etc.)
+  paymentClaimMethod  String?    // "paypal", "venmo", "wise", "bank_transfer", etc.
+  paymentClaimNote    String?    // Reference number, receipt link, freeform proof
+  paymentClaimedAt    DateTime?
+
+  // Cancellation tracking
+  cancelledAt     DateTime?
+  cancelReason    String?
+  cancelledBy     String?    // "AGENT" | "HUMAN"
+
+  // Dispute tracking
+  disputedAt      DateTime?
+  disputeReason   String?
+  disputedBy      String?    // "AGENT" | "HUMAN"
+
+  // Audit: who last moved the workflow forward
+  lastActionBy    String?    // "AGENT" | "HUMAN" | "SYSTEM"
 
   // Timestamps
   createdAt       DateTime  @default(now())

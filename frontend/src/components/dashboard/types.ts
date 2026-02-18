@@ -138,7 +138,7 @@ export interface Job {
   description: string;
   category?: string;
   priceUsdc: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PAYMENT_CLAIMED' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
   updateCount?: number;
   lastUpdatedByAgent?: string;
   createdAt: string;
@@ -147,6 +147,14 @@ export interface Job {
   paymentNetwork?: string;
   paidAt?: string;
   completedAt?: string;
+  paymentClaimMethod?: string;
+  paymentClaimNote?: string;
+  paymentClaimedAt?: string;
+  cancelledBy?: string;
+  cancelReason?: string;
+  disputedBy?: string;
+  disputeReason?: string;
+  paymentTiming?: string;
   review?: {
     id: string;
     rating: number;

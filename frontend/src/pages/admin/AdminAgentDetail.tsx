@@ -15,6 +15,7 @@ const jobStatusColors: Record<string, string> = {
   PAID: 'bg-blue-100 text-blue-800',
   ACCEPTED: 'bg-blue-100 text-blue-800',
   PENDING: 'bg-yellow-100 text-yellow-800',
+  PAYMENT_CLAIMED: 'bg-orange-100 text-orange-800',
   REJECTED: 'bg-gray-100 text-gray-800',
   CANCELLED: 'bg-gray-100 text-gray-600',
   DISPUTED: 'bg-red-100 text-red-800',

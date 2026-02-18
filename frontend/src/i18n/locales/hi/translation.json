@@ -369,7 +369,8 @@
         "PAID": "भुगतान हुआ",
         "COMPLETED": "पूर्ण",
         "CANCELLED": "रद्द",
-        "DISPUTED": "विवादित"
+        "DISPUTED": "विवादित",
+        "PAYMENT_CLAIMED": "भुगतान का दावा"
       }
     },
     "profile": {
@@ -635,6 +636,10 @@
     "jobAccepted": "कार्य स्वीकार किया गया",
     "jobRejected": "कार्य अस्वीकार किया गया",
     "jobCompleted": "कार्य पूरा हुआ",
+    "paymentConfirmed": "भुगतान की पुष्टि",
+    "paymentDenied": "भुगतान अस्वीकृत",
+    "jobCancelled": "कार्य रद्द",
+    "jobDisputed": "कार्य विवादित",
     "offerUpdated": "प्रस्ताव अपडेट किया गया",
     "telegramConnected": "टेलीग्राम जुड़ा",
     "telegramDisconnected": "टेलीग्राम डिस्कनेक्ट हुआ",

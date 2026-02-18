@@ -369,7 +369,8 @@
         "PAID": "已付款",
         "COMPLETED": "已完成",
         "CANCELLED": "已取消",
-        "DISPUTED": "争议中"
+        "DISPUTED": "争议中",
+        "PAYMENT_CLAIMED": "已申报付款"
       }
     },
     "profile": {
@@ -640,6 +641,10 @@
     "jobAccepted": "工作已接受",
     "jobRejected": "工作已拒绝",
     "jobCompleted": "工作已完成",
+    "paymentConfirmed": "已确认付款",
+    "paymentDenied": "已拒绝付款",
+    "jobCancelled": "工作已取消",
+    "jobDisputed": "工作存在争议",
     "offerUpdated": "报价已更新",
     "telegramConnected": "Telegram已连接",
     "telegramDisconnected": "Telegram已断开",

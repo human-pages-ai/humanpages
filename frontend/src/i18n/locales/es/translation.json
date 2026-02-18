@@ -369,7 +369,8 @@
         "PAID": "Pagado",
         "COMPLETED": "Completado",
         "CANCELLED": "Cancelado",
-        "DISPUTED": "Disputado"
+        "DISPUTED": "Disputado",
+        "PAYMENT_CLAIMED": "Pago reclamado"
       }
     },
     "profile": {
@@ -640,6 +641,10 @@
     "jobAccepted": "Trabajo aceptado",
     "jobRejected": "Trabajo rechazado",
     "jobCompleted": "Trabajo completado",
+    "paymentConfirmed": "Pago confirmado",
+    "paymentDenied": "Pago denegado",
+    "jobCancelled": "Trabajo cancelado",
+    "jobDisputed": "Trabajo en disputa",
     "offerUpdated": "Oferta actualizada",
     "telegramConnected": "Telegram conectado",
     "telegramDisconnected": "Telegram desconectado",
