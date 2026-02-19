@@ -49,7 +49,7 @@ describe('Admin API', () => {
     it('should return 403 for non-admin users', async () => {
       const res = await authRequest(regularUser.token).get('/api/admin/me');
       expect(res.status).toBe(403);
-      expect(res.body.error).toBe('Admin access required');
+      expect(res.body.error).toBe('Staff or admin access required');
     });
 
     it('should return 200 with isAdmin for admin users', async () => {
