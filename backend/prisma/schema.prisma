@@ -228,6 +228,7 @@ model Human {
   humanReportsGiven    HumanReport[] @relation("ReportsGiven")
   listingApplications ListingApplication[]
   postingCompletions PostingGroup[] @relation("PostingCompletions")
+  staffApiKey     StaffApiKey?
 
   // Indexes for fast agent search
   @@index([skills])
@@ -819,6 +820,17 @@ model ListingApplication {
 }
 
 // ===== POSTING QUEUE =====
+
+model StaffApiKey {
+  id           String   @id @default(cuid())
+  humanId      String   @unique
+  apiKeyPrefix String   @unique   // first 8 chars for O(1) lookup
+  apiKeyHash   String             // bcrypt hash of full key
+  createdBy    String             // admin who generated
+  createdAt    DateTime @default(now())
+
+  human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+}
 
 model AdCopy {
   id        String   @id @default(cuid())

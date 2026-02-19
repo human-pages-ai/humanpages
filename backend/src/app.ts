@@ -30,7 +30,15 @@ app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    // Allow: frontend, chrome extensions, no-origin (CLI/server-to-server)
+    if (!origin || origin === frontendUrl || origin.startsWith('chrome-extension://')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));

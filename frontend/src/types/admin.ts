@@ -367,3 +367,21 @@ export interface PaginatedResponse<T> {
   pagination: Pagination;
   [key: string]: T[] | Pagination;
 }
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  email: string;
+  role: 'STAFF' | 'ADMIN';
+  createdAt: string;
+  apiKeyStatus: 'active' | 'none';
+  apiKeyCreatedAt: string | null;
+  totalCompleted: number;
+  daily: Array<{ day: string; count: number }>;
+  hourly: Array<{ hour: number; count: number }>;
+}
+
+export interface GenerateApiKeyResponse {
+  apiKey: string;
+  prefix: string;
+}

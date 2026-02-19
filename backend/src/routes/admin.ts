@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
@@ -796,6 +798,168 @@ router.get('/listings/:id', async (req: AuthRequest, res) => {
     res.json(safeListing);
   } catch (error) {
     logger.error({ err: error }, 'Admin listing detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Staff Management ───
+
+// GET /api/admin/staff — List all STAFF/ADMIN users with API key status and posting stats
+router.get('/staff', async (req: AuthRequest, res) => {
+  try {
+    const staffUsers = await prisma.human.findMany({
+      where: { role: { in: ['STAFF', 'ADMIN'] } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        staffApiKey: {
+          select: { createdAt: true },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Get posting stats: total per staff member
+    const completionStats = await prisma.postingGroup.groupBy({
+      by: ['completedById'],
+      where: {
+        completedById: { not: null },
+        status: { in: ['POSTED', 'JOINED'] },
+      },
+      _count: true,
+    });
+
+    const statsMap = new Map<string, number>();
+    for (const s of completionStats) {
+      if (s.completedById) statsMap.set(s.completedById, s._count);
+    }
+
+    // Daily breakdown (last 30 days) via raw SQL
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const dailyRows = await prisma.$queryRaw<Array<{ completedById: string; day: string; count: bigint }>>`
+      SELECT "completedById", DATE("updatedAt") as day, COUNT(*)::bigint as count
+      FROM "PostingGroup"
+      WHERE "completedById" IS NOT NULL
+        AND status IN ('POSTED', 'JOINED')
+        AND "updatedAt" >= ${thirtyDaysAgo}
+      GROUP BY "completedById", DATE("updatedAt")
+      ORDER BY day DESC
+    `;
+
+    // Hourly activity via raw SQL
+    const hourlyRows = await prisma.$queryRaw<Array<{ completedById: string; hour: number; count: bigint }>>`
+      SELECT "completedById", EXTRACT(HOUR FROM "updatedAt")::int as hour, COUNT(*)::bigint as count
+      FROM "PostingGroup"
+      WHERE "completedById" IS NOT NULL
+        AND status IN ('POSTED', 'JOINED')
+      GROUP BY "completedById", EXTRACT(HOUR FROM "updatedAt")
+      ORDER BY hour
+    `;
+
+    // Build maps for daily and hourly
+    const dailyMap = new Map<string, Array<{ day: string; count: number }>>();
+    for (const row of dailyRows) {
+      const list = dailyMap.get(row.completedById) || [];
+      list.push({ day: String(row.day), count: Number(row.count) });
+      dailyMap.set(row.completedById, list);
+    }
+
+    const hourlyMap = new Map<string, Array<{ hour: number; count: number }>>();
+    for (const row of hourlyRows) {
+      const list = hourlyMap.get(row.completedById) || [];
+      list.push({ hour: row.hour, count: Number(row.count) });
+      hourlyMap.set(row.completedById, list);
+    }
+
+    const staff = staffUsers.map((u) => {
+      const effectiveRole = getEffectiveRole(u.email, u.role);
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: effectiveRole,
+        createdAt: u.createdAt,
+        apiKeyStatus: u.staffApiKey ? 'active' as const : 'none' as const,
+        apiKeyCreatedAt: u.staffApiKey?.createdAt ?? null,
+        totalCompleted: statsMap.get(u.id) || 0,
+        daily: dailyMap.get(u.id) || [],
+        hourly: hourlyMap.get(u.id) || [],
+      };
+    });
+
+    res.json({ staff });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin staff list error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/staff/:id/api-key — Generate a new API key for a staff/admin user
+router.post('/staff/:id/api-key', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.human.findUnique({
+      where: { id },
+      select: { email: true, role: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const effectiveRole = getEffectiveRole(user.email, user.role);
+    if (effectiveRole !== 'STAFF' && effectiveRole !== 'ADMIN') {
+      return res.status(400).json({ error: 'User must be STAFF or ADMIN to have an API key' });
+    }
+
+    // Generate key: "hp_" + 24 random hex bytes = 51 chars
+    const randomBytes = crypto.randomBytes(24).toString('hex');
+    const apiKey = `hp_${randomBytes}`;
+    const apiKeyPrefix = apiKey.substring(0, 8);
+    const apiKeyHash = await bcrypt.hash(apiKey, 12);
+
+    // Delete existing key if any, then create new (atomic rotation)
+    await prisma.$transaction([
+      prisma.staffApiKey.deleteMany({ where: { humanId: id } }),
+      prisma.staffApiKey.create({
+        data: {
+          humanId: id,
+          apiKeyPrefix,
+          apiKeyHash,
+          createdBy: req.userId!,
+        },
+      }),
+    ]);
+
+    logger.info({ adminId: req.userId, staffId: id }, 'Staff API key generated');
+    res.json({ apiKey, prefix: apiKeyPrefix });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff API key generation error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/staff/:id/api-key — Revoke a staff user's API key
+router.delete('/staff/:id/api-key', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await prisma.staffApiKey.deleteMany({
+      where: { humanId: id },
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ error: 'No API key found for this user' });
+    }
+
+    logger.info({ adminId: req.userId, staffId: id }, 'Staff API key revoked');
+    res.json({ message: 'API key revoked' });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff API key revocation error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

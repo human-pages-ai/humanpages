@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { requireStaffOrAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
+import { AuthRequest } from '../middleware/auth.js';
+import { requireStaffOrAdmin, apiKeyAdmin, jwtOrApiKey, requireStaffOrApiKey } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 
@@ -107,7 +107,7 @@ router.get('/stats', apiKeyAdmin, async (_req, res) => {
 // ─── Browser routes (JWT + staff/admin) ───
 
 // GET /api/admin/posting/groups — Paginated list with filters
-router.get('/groups', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+router.get('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
@@ -179,7 +179,7 @@ const patchGroupSchema = z.object({
 });
 
 // PATCH /api/admin/posting/groups/:id — Update status/notes/datePosted
-router.patch('/groups/:id', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+router.patch('/groups/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
   try {
     const parsed = patchGroupSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -234,7 +234,7 @@ router.patch('/groups/:id', authenticateToken, requireStaffOrAdmin, async (req: 
 });
 
 // GET /api/admin/posting/staff-stats — Staff productivity stats
-router.get('/staff-stats', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+router.get('/staff-stats', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
   try {
     const days = Math.min(90, Math.max(1, parseInt(req.query.days as string) || 7));
     const since = new Date();
@@ -311,7 +311,7 @@ router.get('/staff-stats', authenticateToken, requireStaffOrAdmin, async (req: A
 });
 
 // GET /api/admin/posting/ads — List all ad copy
-router.get('/ads', authenticateToken, requireStaffOrAdmin, async (_req, res) => {
+router.get('/ads', jwtOrApiKey, requireStaffOrApiKey, async (_req, res) => {
   try {
     const ads = await prisma.adCopy.findMany({
       orderBy: [{ adNumber: 'asc' }, { language: 'asc' }],
@@ -324,7 +324,7 @@ router.get('/ads', authenticateToken, requireStaffOrAdmin, async (_req, res) => 
 });
 
 // GET /api/admin/posting/ads/:id — Single ad copy
-router.get('/ads/:id', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+router.get('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
   try {
     const ad = await prisma.adCopy.findUnique({ where: { id: req.params.id } });
     if (!ad) {

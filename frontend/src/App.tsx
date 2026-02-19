@@ -44,6 +44,7 @@ const AdminJobDetailPage = lazy(() => import('./pages/admin/AdminJobDetail'));
 const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
 const AdminListingDetailPage = lazy(() => import('./pages/admin/AdminListingDetail'));
 const PostingQueue = lazy(() => import('./pages/admin/PostingQueue'));
+const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -274,6 +275,7 @@ function AppRoutes() {
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
         <Route path="posting" element={<PostingQueue />} />
+        <Route path="staff" element={<StaffManagement />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

@@ -9,6 +9,7 @@ const adminOnlyItems = [
   { to: '/admin/listings', label: 'Listings' },
   { to: '/admin/activity', label: 'Activity' },
   { to: '/admin/feedback', label: 'Feedback' },
+  { to: '/admin/staff', label: 'Staff' },
 ];
 
 const sharedItems = [

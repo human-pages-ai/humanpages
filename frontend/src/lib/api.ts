@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -499,6 +499,16 @@ export const api = {
     const query = days ? `?days=${days}` : '';
     return request<StaffStats>(`/admin/posting/staff-stats${query}`);
   },
+
+  // Staff Management
+  getStaffMembers: () =>
+    request<{ staff: StaffMember[] }>('/admin/staff'),
+
+  generateStaffApiKey: (userId: string) =>
+    request<GenerateApiKeyResponse>(`/admin/staff/${userId}/api-key`, { method: 'POST' }),
+
+  revokeStaffApiKey: (userId: string) =>
+    request<{ message: string }>(`/admin/staff/${userId}/api-key`, { method: 'DELETE' }),
 };
 
 // Referral Program types (included in profile response)
