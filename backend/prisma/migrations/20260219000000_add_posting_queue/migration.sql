@@ -5,11 +5,7 @@ CREATE TYPE "HumanRole" AS ENUM ('USER', 'STAFF', 'ADMIN');
 CREATE TYPE "PostingGroupStatus" AS ENUM ('PENDING', 'JOINED', 'POSTED', 'REJECTED', 'SKIPPED');
 
 -- AlterTable
-ALTER TABLE "Human" DROP COLUMN "foundingTier",
-ADD COLUMN     "role" "HumanRole" NOT NULL DEFAULT 'USER';
-
--- DropEnum
-DROP TYPE "FoundingTier";
+ALTER TABLE "Human" ADD COLUMN "role" "HumanRole" NOT NULL DEFAULT 'USER';
 
 -- CreateTable
 CREATE TABLE "AdCopy" (
