@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, Pagination } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -373,7 +373,7 @@ export const api = {
 
   // Admin
   checkAdmin: () =>
-    request<{ isAdmin: boolean }>('/admin/me'),
+    request<AdminMeResponse>('/admin/me'),
 
   getAdminStats: () =>
     request<AdminStats>('/admin/stats'),
@@ -467,6 +467,31 @@ export const api = {
 
   getAdminListing: (id: string) =>
     request<any>(`/admin/listings/${id}`),
+
+  // Posting Queue
+  getPostingGroups: (params: { page?: number; limit?: number; status?: string; language?: string; country?: string; adId?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.status) query.set('status', params.status);
+    if (params.language) query.set('language', params.language);
+    if (params.country) query.set('country', params.country);
+    if (params.adId) query.set('adId', params.adId);
+    const qs = query.toString();
+    return request<{ groups: PostingGroup[]; pagination: Pagination }>(`/admin/posting/groups${qs ? `?${qs}` : ''}`);
+  },
+
+  updatePostingGroup: (id: string, data: { status?: string; notes?: string | null; datePosted?: string | null }) =>
+    request<PostingGroup>(`/admin/posting/groups/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  getAdCopies: () =>
+    request<{ ads: AdCopy[] }>('/admin/posting/ads'),
+
+  getAdCopy: (id: string) =>
+    request<AdCopy>(`/admin/posting/ads/${id}`),
 };
 
 // Referral Program types (included in profile response)

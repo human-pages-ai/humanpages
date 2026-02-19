@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { FeedbackProvider, useFeedback } from './hooks/useFeedback';
+import { AdminRoleContext } from './hooks/useAdminRole';
 import ErrorBoundary from './components/ErrorBoundary';
 import LangWrapper from './components/LangWrapper';
 import { posthog } from './lib/posthog';
@@ -42,6 +43,7 @@ const AdminAgentDetailPage = lazy(() => import('./pages/admin/AdminAgentDetail')
 const AdminJobDetailPage = lazy(() => import('./pages/admin/AdminJobDetail'));
 const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
 const AdminListingDetailPage = lazy(() => import('./pages/admin/AdminListingDetail'));
+const PostingQueue = lazy(() => import('./pages/admin/PostingQueue'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -95,25 +97,44 @@ function HomeRoute() {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [roleState, setRoleState] = useState<{ isAdmin: boolean; isStaff: boolean } | null>(null);
 
   useEffect(() => {
     if (!loading && user) {
       api.checkAdmin()
-        .then(() => setIsAdmin(true))
-        .catch(() => setIsAdmin(false));
+        .then((res) => setRoleState({ isAdmin: res.isAdmin, isStaff: res.isStaff }))
+        .catch(() => setRoleState({ isAdmin: false, isStaff: false }));
     }
   }, [user, loading]);
 
-  if (loading || (user && isAdmin === null)) {
+  if (loading || (user && roleState === null)) {
     return <LoadingSpinner />;
   }
 
-  if (!user || isAdmin === false) {
+  if (!user || (!roleState?.isAdmin && !roleState?.isStaff)) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <AdminRoleContext.Provider value={roleState}>
+      {children}
+    </AdminRoleContext.Provider>
+  );
+}
+
+function AdminIndex() {
+  // Lazy import — we check role to decide what to render
+  const [roleState, setRoleState] = useState<{ isAdmin: boolean } | null>(null);
+
+  useEffect(() => {
+    api.checkAdmin()
+      .then((res) => setRoleState({ isAdmin: res.isAdmin }))
+      .catch(() => setRoleState({ isAdmin: false }));
+  }, []);
+
+  if (roleState === null) return <LoadingSpinner />;
+  if (!roleState.isAdmin) return <Navigate to="/admin/posting" replace />;
+  return <AdminOverview />;
 }
 
 function usePageView() {
@@ -241,7 +262,7 @@ function AppRoutes() {
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
 
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-        <Route index element={<AdminOverview />} />
+        <Route index element={<AdminIndex />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="users/:id" element={<AdminUserDetailPage />} />
         <Route path="agents" element={<AdminAgents />} />
@@ -252,6 +273,7 @@ function AppRoutes() {
         <Route path="listings/:id" element={<AdminListingDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
+        <Route path="posting" element={<PostingQueue />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

@@ -63,6 +63,20 @@ enum HumanStatus {
   BANNED
 }
 
+enum HumanRole {
+  USER
+  STAFF
+  ADMIN
+}
+
+enum PostingGroupStatus {
+  PENDING
+  JOINED
+  POSTED
+  REJECTED
+  SKIPPED
+}
+
 // How the agent activated their account
 enum ActivationMethod {
   SOCIAL
@@ -194,6 +208,7 @@ model Human {
 
   // ===== ABUSE TRACKING =====
   humanStatus     HumanStatus @default(ACTIVE) @map("status_human")
+  role            HumanRole   @default(USER)
   abuseScore      Int         @default(0)
   abuseStrikes    Int         @default(0)
 
@@ -800,4 +815,40 @@ model ListingApplication {
   @@unique([listingId, humanId])
   @@index([humanId])
   @@index([listingId, status])
+}
+
+// ===== POSTING QUEUE =====
+
+model AdCopy {
+  id        String   @id @default(cuid())
+  adNumber  Int
+  language  String
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  groups PostingGroup[]
+
+  @@unique([adNumber, language])
+}
+
+model PostingGroup {
+  id         String             @id @default(cuid())
+  name       String
+  url        String
+  adId       String
+  language   String
+  country    String
+  status     PostingGroupStatus @default(PENDING)
+  datePosted DateTime?
+  notes      String?            @db.VarChar(1000)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  ad AdCopy @relation(fields: [adId], references: [id])
+
+  @@index([status])
+  @@index([adId, language])
+  @@index([country])
 }

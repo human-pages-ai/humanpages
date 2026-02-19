@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { requireAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
+import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import postingRoutes from './posting.js';
 
 const router = Router();
 
@@ -66,14 +67,34 @@ router.get('/ai/activity', apiKeyAdmin, async (req, res) => {
   }
 });
 
-// ─── JWT-protected admin routes ───
-// All admin routes require authentication + admin check
-router.use(authenticateToken, requireAdmin);
+// ─── Posting queue routes (staff + admin) ───
+router.use('/posting', postingRoutes);
 
-// GET /api/admin/me — Confirm admin status (used by frontend to gate UI)
-router.get('/me', (_req, res) => {
-  res.json({ isAdmin: true });
+// GET /api/admin/me — Confirm role (used by frontend to gate UI)
+router.get('/me', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+  try {
+    const user = await prisma.human.findUnique({
+      where: { id: req.userId },
+      select: { email: true, role: true },
+    });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+    const role = getEffectiveRole(user.email, user.role);
+    res.json({
+      isAdmin: role === 'ADMIN',
+      isStaff: role === 'STAFF',
+      role,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin /me error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
+
+// ─── JWT-protected admin-only routes ───
+// All routes below require authentication + admin check
+router.use(authenticateToken, requireAdmin);
 
 // GET /api/admin/stats — Aggregate dashboard stats
 router.get('/stats', async (_req, res) => {

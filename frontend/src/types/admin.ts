@@ -305,6 +305,44 @@ export interface AdminJobDetail extends AdminJob {
   }>;
 }
 
+export interface AdminMeResponse {
+  isAdmin: boolean;
+  isStaff: boolean;
+  role: 'USER' | 'STAFF' | 'ADMIN';
+}
+
+export type PostingGroupStatus = 'PENDING' | 'JOINED' | 'POSTED' | 'REJECTED' | 'SKIPPED';
+
+export interface PostingGroup {
+  id: string;
+  name: string;
+  url: string;
+  adId: string;
+  language: string;
+  country: string;
+  status: PostingGroupStatus;
+  datePosted: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  ad: {
+    id: string;
+    adNumber: number;
+    language: string;
+    title: string;
+  };
+}
+
+export interface AdCopy {
+  id: string;
+  adNumber: number;
+  language: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Pagination {
   page: number;
   limit: number;
