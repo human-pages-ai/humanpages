@@ -5,6 +5,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import { sendStaffApiKeyEmail } from '../lib/email.js';
 import postingRoutes from './posting.js';
 
 const router = Router();
@@ -255,6 +256,7 @@ router.get('/users', async (req: AuthRequest, res) => {
           isAvailable: true,
           emailVerified: true,
           referralCode: true,
+          role: true,
           createdAt: true,
           lastActiveAt: true,
           _count: {
@@ -960,6 +962,92 @@ router.delete('/staff/:id/api-key', async (req: AuthRequest, res) => {
     res.json({ message: 'API key revoked' });
   } catch (error) {
     logger.error({ err: error }, 'Staff API key revocation error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/staff/:id/role — Promote user to STAFF or demote to USER
+router.patch('/staff/:id/role', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!role || !['USER', 'STAFF'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be USER or STAFF' });
+    }
+
+    if (id === req.userId) {
+      return res.status(400).json({ error: 'Cannot change your own role' });
+    }
+
+    const user = await prisma.human.findUnique({
+      where: { id },
+      select: { email: true, role: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent demoting env-based admins
+    const effectiveRole = getEffectiveRole(user.email, user.role);
+    if (effectiveRole === 'ADMIN') {
+      return res.status(400).json({ error: 'Cannot change role of an admin' });
+    }
+
+    if (role === 'USER' && user.role === 'STAFF') {
+      // Demoting: revoke API key + update role atomically
+      await prisma.$transaction([
+        prisma.staffApiKey.deleteMany({ where: { humanId: id } }),
+        prisma.human.update({ where: { id }, data: { role: 'USER' } }),
+      ]);
+      logger.info({ adminId: req.userId, staffId: id }, 'Staff demoted to USER (key revoked)');
+    } else {
+      // Promoting to STAFF (or idempotent set)
+      await prisma.human.update({ where: { id }, data: { role } });
+      logger.info({ adminId: req.userId, staffId: id, role }, 'User role updated');
+    }
+
+    res.json({ message: `Role updated to ${role}`, id, role });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff role update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/staff/:id/send-key — Email an API key to a staff member
+router.post('/staff/:id/send-key', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { apiKey } = req.body;
+
+    if (!apiKey) {
+      return res.status(400).json({ error: 'apiKey is required' });
+    }
+
+    const user = await prisma.human.findUnique({
+      where: { id },
+      select: { name: true, email: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const sent = await sendStaffApiKeyEmail({
+      staffName: user.name,
+      staffEmail: user.email,
+      apiKey,
+    });
+
+    if (!sent) {
+      return res.status(500).json({ error: 'Failed to send email — no email provider configured' });
+    }
+
+    logger.info({ adminId: req.userId, staffId: id }, 'Staff API key emailed');
+    res.json({ message: 'API key sent via email' });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff API key email error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

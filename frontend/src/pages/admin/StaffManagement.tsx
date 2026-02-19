@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { api } from '../../lib/api';
-import type { StaffMember } from '../../types/admin';
+import type { StaffMember, AdminUser } from '../../types/admin';
 
 export default function StaffManagement() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -11,10 +11,23 @@ export default function StaffManagement() {
   // Key generation modal state
   const [keyModal, setKeyModal] = useState<{ userId: string; apiKey: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Confirm revoke state
   const [revokeConfirm, setRevokeConfirm] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Remove staff confirm
+  const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
+
+  // Add staff modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<AdminUser[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [promoteLoading, setPromoteLoading] = useState<string | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,6 +50,8 @@ export default function StaffManagement() {
       const res = await api.generateStaffApiKey(userId);
       setKeyModal({ userId, apiKey: res.apiKey });
       setCopied(false);
+      setEmailSending(false);
+      setEmailSent(false);
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -58,11 +73,82 @@ export default function StaffManagement() {
     }
   }
 
+  async function handleRemoveStaff(userId: string) {
+    setActionLoading(userId);
+    try {
+      await api.updateStaffRole(userId, 'USER');
+      setRemoveConfirm(null);
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleEmailKey() {
+    if (!keyModal) return;
+    setEmailSending(true);
+    try {
+      await api.sendStaffApiKey(keyModal.userId, keyModal.apiKey);
+      setEmailSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setEmailSending(false);
+    }
+  }
+
   function copyKey() {
     if (keyModal) {
       navigator.clipboard.writeText(keyModal.apiKey);
       setCopied(true);
     }
+  }
+
+  // Add staff modal search
+  useEffect(() => {
+    if (!showAddModal) return;
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const res = await api.getAdminUsers({ search: searchQuery, limit: 20 });
+        // Filter to only show USER role (not already STAFF/ADMIN)
+        setSearchResults(res.users.filter((u: AdminUser) => u.role === 'USER'));
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(searchDebounceRef.current);
+  }, [searchQuery, showAddModal]);
+
+  async function handlePromote(userId: string) {
+    setPromoteLoading(userId);
+    try {
+      await api.updateStaffRole(userId, 'STAFF');
+      // Remove from search results
+      setSearchResults((prev) => prev.filter((u) => u.id !== userId));
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setPromoteLoading(null);
+    }
+  }
+
+  function openAddModal() {
+    setShowAddModal(true);
+    setSearchQuery('');
+    setSearchResults([]);
   }
 
   const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -71,6 +157,12 @@ export default function StaffManagement() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Staff Management</h2>
+        <button
+          onClick={openAddModal}
+          className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+        >
+          + Add Staff Member
+        </button>
       </div>
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -154,6 +246,32 @@ export default function StaffManagement() {
                               className="px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100"
                             >
                               Revoke
+                            </button>
+                          )
+                        )}
+                        {s.role === 'STAFF' && (
+                          removeConfirm === s.id ? (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleRemoveStaff(s.id)}
+                                disabled={actionLoading === s.id}
+                                className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => setRemoveConfirm(null)}
+                                className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setRemoveConfirm(s.id)}
+                              className="px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 rounded hover:bg-orange-100"
+                            >
+                              Remove
                             </button>
                           )
                         )}
@@ -255,6 +373,13 @@ export default function StaffManagement() {
             </div>
             <div className="flex gap-3 justify-end">
               <button
+                onClick={handleEmailKey}
+                disabled={emailSending || emailSent}
+                className="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 rounded-md hover:bg-indigo-100 disabled:opacity-50"
+              >
+                {emailSent ? 'Email Sent!' : emailSending ? 'Sending...' : 'Email to Staff'}
+              </button>
+              <button
                 onClick={copyKey}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
               >
@@ -265,6 +390,56 @@ export default function StaffManagement() {
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
               >
                 Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Staff Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAddModal(false)}>
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Staff Member</h3>
+            <input
+              type="text"
+              placeholder="Search users by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-3"
+            />
+            <div className="overflow-y-auto flex-1 min-h-0">
+              {searchLoading ? (
+                <p className="text-sm text-gray-500 text-center py-4">Searching...</p>
+              ) : searchQuery.trim() && searchResults.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No users found (or all matches are already staff)</p>
+              ) : (
+                <div className="space-y-1">
+                  {searchResults.map((u) => (
+                    <div key={u.id} className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-50">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{u.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                      </div>
+                      <button
+                        onClick={() => handlePromote(u.id)}
+                        disabled={promoteLoading === u.id}
+                        className="ml-3 px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {promoteLoading === u.id ? '...' : 'Promote to Staff'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end mt-4 pt-3 border-t border-gray-200">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Close
               </button>
             </div>
           </div>

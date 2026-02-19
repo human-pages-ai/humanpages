@@ -509,6 +509,18 @@ export const api = {
 
   revokeStaffApiKey: (userId: string) =>
     request<{ message: string }>(`/admin/staff/${userId}/api-key`, { method: 'DELETE' }),
+
+  updateStaffRole: (userId: string, role: 'USER' | 'STAFF') =>
+    request<{ message: string; id: string; role: string }>(`/admin/staff/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
+
+  sendStaffApiKey: (userId: string, apiKey: string) =>
+    request<{ message: string }>(`/admin/staff/${userId}/send-key`, {
+      method: 'POST',
+      body: JSON.stringify({ apiKey }),
+    }),
 };
 
 // Referral Program types (included in profile response)

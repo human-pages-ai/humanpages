@@ -1533,6 +1533,150 @@ To unsubscribe: ${unsubscribeUrl}
   });
 }
 
+// ===== STAFF API KEY EMAIL =====
+
+interface StaffApiKeyEmailData {
+  staffName: string;
+  staffEmail: string;
+  apiKey: string;
+}
+
+export async function sendStaffApiKeyEmail(data: StaffApiKeyEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info({ email: data.staffEmail }, 'No email provider configured, skipping staff API key email');
+    return false;
+  }
+
+  const textContent = `
+Hi ${data.staffName},
+
+You've been given a Staff API Key for the Human Pages posting queue extension.
+
+Your API Key:
+${data.apiKey}
+
+Setup instructions:
+1. Install the Human Pages Posting Queue Chrome extension
+2. Click the extension icon → Settings (or right-click → Options)
+3. Paste the API key above into the "Staff API Key" field
+4. Click "Test Connection" to verify it works
+5. Click "Save"
+
+Keep this key private — it gives access to the posting queue under your identity.
+
+---
+Human Pages — Staff Tools
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Your Staff API Key</title>
+  <style>
+    :root { color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-key-box { background-color: #1e2a4a !important; border-color: #2a2a4a !important; color: #e0e0f0 !important; }
+      .email-steps { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+      .email-steps li { color: #c8c8d8 !important; }
+    }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-key-box { background-color: #1e2a4a !important; border-color: #2a2a4a !important; color: #e0e0f0 !important; }
+    [data-ogsc] .email-steps { background-color: #1e2a4a !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-steps li { color: #c8c8d8 !important; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 520px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">Your Staff API Key</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: #44445a;">Hi ${data.staffName},</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">You've been given a Staff API Key for the Human Pages posting queue extension.</p>
+            </td>
+          </tr>
+          <!-- API Key Box -->
+          <tr>
+            <td style="padding: 0 40px 16px;">
+              <div class="email-key-box" style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-family: 'Courier New', Courier, monospace; font-size: 14px; word-break: break-all; color: #1e293b;">
+                ${data.apiKey}
+              </div>
+            </td>
+          </tr>
+          <!-- Setup Steps -->
+          <tr>
+            <td style="padding: 0 40px 16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-steps" style="background-color: #f8f8fc; border-radius: 8px; border: 1px solid #e2e2ea;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #374151;">Setup instructions:</p>
+                    <ol style="margin: 0; padding: 0 0 0 20px; font-size: 14px; line-height: 2; color: #44445a;">
+                      <li>Install the Human Pages Posting Queue Chrome extension</li>
+                      <li>Click the extension icon, then Settings (or right-click, then Options)</li>
+                      <li>Paste the API key above into the "Staff API Key" field</li>
+                      <li>Click "Test Connection" to verify it works</li>
+                      <li>Click "Save"</li>
+                    </ol>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Warning -->
+          <tr>
+            <td style="padding: 0 40px 24px;">
+              <p class="email-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: #8b8ba0;">Keep this key private — it gives access to the posting queue under your identity.</p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">Human Pages — Staff Tools</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.staffEmail,
+    subject: 'Your Human Pages Staff API Key',
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
   const hasResend = !!process.env.RESEND_API_KEY;

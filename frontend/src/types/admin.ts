@@ -50,6 +50,7 @@ export interface AdminUser {
   isAvailable: boolean;
   emailVerified: boolean;
   referralCode: string;
+  role: 'USER' | 'STAFF' | 'ADMIN';
   createdAt: string;
   lastActiveAt: string;
   _count: {
