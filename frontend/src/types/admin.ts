@@ -313,6 +313,8 @@ export interface AdminMeResponse {
 
 export type PostingGroupStatus = 'PENDING' | 'JOINED' | 'POSTED' | 'REJECTED' | 'SKIPPED';
 
+export type TaskType = 'fb_post' | 'yt_comment' | 'blog_comment';
+
 export interface PostingGroup {
   id: string;
   name: string;
@@ -323,6 +325,9 @@ export interface PostingGroup {
   status: PostingGroupStatus;
   datePosted: string | null;
   notes: string | null;
+  taskType: string;
+  campaign: string | null;
+  completedBy: { id: string; name: string } | null;
   createdAt: string;
   updatedAt: string;
   ad: {
@@ -331,6 +336,14 @@ export interface PostingGroup {
     language: string;
     title: string;
   };
+}
+
+export interface StaffStats {
+  period: { days: number; since: string };
+  totalPending: number;
+  totalCompleted: number;
+  staff: Array<{ staffId: string; staffName: string; staffEmail: string; completedCount: number }>;
+  daily: Array<{ completedById: string; day: string; count: number }>;
 }
 
 export interface AdCopy {

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../../lib/api';
-import type { PostingGroup, PostingGroupStatus, AdCopy, Pagination } from '../../types/admin';
+import { useAdminRole } from '../../hooks/useAdminRole';
+import type { PostingGroup, PostingGroupStatus, AdCopy, Pagination, StaffStats, TaskType } from '../../types/admin';
 
 const STATUS_OPTIONS: PostingGroupStatus[] = ['PENDING', 'JOINED', 'POSTED', 'REJECTED', 'SKIPPED'];
 
@@ -10,6 +11,25 @@ const STATUS_COLORS: Record<PostingGroupStatus, string> = {
   POSTED: 'bg-green-100 text-green-800',
   REJECTED: 'bg-red-100 text-red-800',
   SKIPPED: 'bg-gray-100 text-gray-800',
+};
+
+const TASK_TYPE_OPTIONS: { value: TaskType | ''; label: string }[] = [
+  { value: '', label: 'All Types' },
+  { value: 'fb_post', label: 'FB Post' },
+  { value: 'yt_comment', label: 'YouTube Comment' },
+  { value: 'blog_comment', label: 'Blog Comment' },
+];
+
+const TASK_TYPE_COLORS: Record<string, string> = {
+  fb_post: 'bg-blue-100 text-blue-800',
+  yt_comment: 'bg-red-100 text-red-800',
+  blog_comment: 'bg-purple-100 text-purple-800',
+};
+
+const TASK_TYPE_LABELS: Record<string, string> = {
+  fb_post: 'FB',
+  yt_comment: 'YT',
+  blog_comment: 'Blog',
 };
 
 const LANG_FLAGS: Record<string, string> = {
@@ -29,7 +49,15 @@ const LANG_FLAGS: Record<string, string> = {
   id: '\u{1F1EE}\u{1F1E9}',
 };
 
+const PERIOD_OPTIONS = [
+  { value: 7, label: '7 days' },
+  { value: 14, label: '14 days' },
+  { value: 30, label: '30 days' },
+];
+
 export default function PostingQueue() {
+  const { isAdmin } = useAdminRole();
+
   const [groups, setGroups] = useState<PostingGroup[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 50, total: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
@@ -39,6 +67,8 @@ export default function PostingQueue() {
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [filterLanguage, setFilterLanguage] = useState<string>('');
   const [filterCountry, setFilterCountry] = useState<string>('');
+  const [filterTaskType, setFilterTaskType] = useState<string>('');
+  const [filterCampaign, setFilterCampaign] = useState<string>('');
 
   // Ad copy modal
   const [selectedAd, setSelectedAd] = useState<AdCopy | null>(null);
@@ -50,6 +80,12 @@ export default function PostingQueue() {
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [editingNotesValue, setEditingNotesValue] = useState('');
 
+  // Staff performance
+  const [staffStatsOpen, setStaffStatsOpen] = useState(false);
+  const [staffStats, setStaffStats] = useState<StaffStats | null>(null);
+  const [staffStatsLoading, setStaffStatsLoading] = useState(false);
+  const [staffStatsPeriod, setStaffStatsPeriod] = useState(7);
+
   const fetchGroups = useCallback(async (page = 1) => {
     setLoading(true);
     try {
@@ -57,6 +93,8 @@ export default function PostingQueue() {
       if (filterStatus) params.status = filterStatus;
       if (filterLanguage) params.language = filterLanguage;
       if (filterCountry) params.country = filterCountry;
+      if (filterTaskType) params.taskType = filterTaskType;
+      if (filterCampaign) params.campaign = filterCampaign;
 
       const res = await api.getPostingGroups(params);
       setGroups(res.groups);
@@ -66,7 +104,7 @@ export default function PostingQueue() {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, filterLanguage, filterCountry]);
+  }, [filterStatus, filterLanguage, filterCountry, filterTaskType, filterCampaign]);
 
   // Fetch pending count separately
   const fetchPendingCount = useCallback(async () => {
@@ -76,10 +114,28 @@ export default function PostingQueue() {
     } catch {}
   }, []);
 
+  const fetchStaffStats = useCallback(async (days: number) => {
+    setStaffStatsLoading(true);
+    try {
+      const stats = await api.getStaffStats(days);
+      setStaffStats(stats);
+    } catch (err) {
+      console.error('Failed to fetch staff stats', err);
+    } finally {
+      setStaffStatsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchGroups(1);
     fetchPendingCount();
   }, [fetchGroups, fetchPendingCount]);
+
+  useEffect(() => {
+    if (staffStatsOpen) {
+      fetchStaffStats(staffStatsPeriod);
+    }
+  }, [staffStatsOpen, staffStatsPeriod, fetchStaffStats]);
 
   const handleStatusChange = async (groupId: string, newStatus: PostingGroupStatus) => {
     try {
@@ -132,6 +188,65 @@ export default function PostingQueue() {
 
   return (
     <div>
+      {/* Admin-only: Staff Performance panel */}
+      {isAdmin && (
+        <div className="mb-4 border border-gray-200 rounded-lg">
+          <button
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            onClick={() => setStaffStatsOpen(!staffStatsOpen)}
+          >
+            <span>Staff Performance</span>
+            <span className="text-gray-400">{staffStatsOpen ? '\u25B2' : '\u25BC'}</span>
+          </button>
+          {staffStatsOpen && (
+            <div className="px-4 pb-4 border-t border-gray-200">
+              <div className="flex items-center gap-3 mt-3 mb-3">
+                {PERIOD_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    className={`px-3 py-1 text-xs rounded-md border ${
+                      staffStatsPeriod === opt.value
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setStaffStatsPeriod(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                {staffStats && (
+                  <span className="text-xs text-gray-500 ml-auto">
+                    {staffStats.totalPending} pending | {staffStats.totalCompleted} completed
+                  </span>
+                )}
+              </div>
+              {staffStatsLoading ? (
+                <div className="text-sm text-gray-500 py-4 text-center">Loading...</div>
+              ) : staffStats && staffStats.staff.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-gray-500">Staff Name</th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-500">Tasks Completed</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {staffStats.staff.map((s) => (
+                      <tr key={s.staffId}>
+                        <td className="px-3 py-2">{s.staffName}</td>
+                        <td className="px-3 py-2 text-right font-medium">{s.completedCount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="text-sm text-gray-500 py-4 text-center">No completions in this period</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Stats bar */}
       <div className="mb-4 flex items-center gap-4">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 text-sm font-medium text-yellow-800">
@@ -154,6 +269,22 @@ export default function PostingQueue() {
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
+        <select
+          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+          value={filterTaskType}
+          onChange={(e) => setFilterTaskType(e.target.value)}
+        >
+          {TASK_TYPE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Campaign"
+          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-44"
+          value={filterCampaign}
+          onChange={(e) => setFilterCampaign(e.target.value)}
+        />
         <input
           type="text"
           placeholder="Language (e.g. en)"
@@ -187,6 +318,7 @@ export default function PostingQueue() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Status</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500">Type</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Group Name</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Link</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Ad #</th>
@@ -194,6 +326,7 @@ export default function PostingQueue() {
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Country</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Notes</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-500">Date Posted</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500">Done By</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
@@ -209,6 +342,11 @@ export default function PostingQueue() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <span className={`text-xs font-medium rounded px-2 py-0.5 ${TASK_TYPE_COLORS[group.taskType] || 'bg-gray-100 text-gray-800'}`}>
+                      {TASK_TYPE_LABELS[group.taskType] || group.taskType}
+                    </span>
                   </td>
                   <td className="px-3 py-2 max-w-[200px] truncate" title={group.name}>
                     {group.name}
@@ -268,6 +406,9 @@ export default function PostingQueue() {
                   </td>
                   <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
                     {group.datePosted ? new Date(group.datePosted).toLocaleDateString() : '-'}
+                  </td>
+                  <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
+                    {group.completedBy?.name || '-'}
                   </td>
                 </tr>
               ))}

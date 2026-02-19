@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -469,7 +469,7 @@ export const api = {
     request<any>(`/admin/listings/${id}`),
 
   // Posting Queue
-  getPostingGroups: (params: { page?: number; limit?: number; status?: string; language?: string; country?: string; adId?: string } = {}) => {
+  getPostingGroups: (params: { page?: number; limit?: number; status?: string; language?: string; country?: string; adId?: string; taskType?: string; campaign?: string } = {}) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
@@ -477,6 +477,8 @@ export const api = {
     if (params.language) query.set('language', params.language);
     if (params.country) query.set('country', params.country);
     if (params.adId) query.set('adId', params.adId);
+    if (params.taskType) query.set('taskType', params.taskType);
+    if (params.campaign) query.set('campaign', params.campaign);
     const qs = query.toString();
     return request<{ groups: PostingGroup[]; pagination: Pagination }>(`/admin/posting/groups${qs ? `?${qs}` : ''}`);
   },
@@ -492,6 +494,11 @@ export const api = {
 
   getAdCopy: (id: string) =>
     request<AdCopy>(`/admin/posting/ads/${id}`),
+
+  getStaffStats: (days?: number) => {
+    const query = days ? `?days=${days}` : '';
+    return request<StaffStats>(`/admin/posting/staff-stats${query}`);
+  },
 };
 
 // Referral Program types (included in profile response)

@@ -7,6 +7,8 @@ import { logger } from '../lib/logger.js';
 
 const router = Router();
 
+const VALID_TASK_TYPES = ['fb_post', 'yt_comment', 'blog_comment'] as const;
+
 // ─── CLI routes (API-key authenticated) ───
 
 const adCopySchema = z.object({
@@ -45,6 +47,8 @@ const groupSchema = z.object({
   adId: z.string().min(1),
   language: z.string().min(1).max(10),
   country: z.string().min(1).max(100),
+  taskType: z.enum(VALID_TASK_TYPES).default('fb_post'),
+  campaign: z.string().max(200).optional(),
 });
 
 const bulkGroupsSchema = z.array(groupSchema).min(1).max(500);
@@ -68,15 +72,19 @@ router.post('/groups', apiKeyAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/posting/stats — Counts by status + ad count
+// GET /api/admin/posting/stats — Counts by status + ad count + by type
 router.get('/stats', apiKeyAdmin, async (_req, res) => {
   try {
-    const [statusCounts, adCount] = await Promise.all([
+    const [statusCounts, adCount, typeCounts] = await Promise.all([
       prisma.postingGroup.groupBy({
         by: ['status'],
         _count: true,
       }),
       prisma.adCopy.count(),
+      prisma.postingGroup.groupBy({
+        by: ['taskType'],
+        _count: true,
+      }),
     ]);
 
     const byStatus: Record<string, number> = {};
@@ -84,7 +92,12 @@ router.get('/stats', apiKeyAdmin, async (_req, res) => {
       byStatus[g.status] = g._count;
     }
 
-    res.json({ groups: byStatus, adCount });
+    const byType: Record<string, number> = {};
+    for (const g of typeCounts) {
+      byType[g.taskType] = g._count;
+    }
+
+    res.json({ groups: byStatus, adCount, byType });
   } catch (error) {
     logger.error({ err: error }, 'Posting stats error');
     res.status(500).json({ error: 'Internal server error' });
@@ -102,6 +115,8 @@ router.get('/groups', authenticateToken, requireStaffOrAdmin, async (req: AuthRe
     const language = req.query.language as string;
     const country = req.query.country as string;
     const adId = req.query.adId as string;
+    const taskType = req.query.taskType as string;
+    const campaign = req.query.campaign as string;
 
     const where: any = {};
 
@@ -117,12 +132,19 @@ router.get('/groups', authenticateToken, requireStaffOrAdmin, async (req: AuthRe
     if (adId) {
       where.adId = adId;
     }
+    if (taskType && (VALID_TASK_TYPES as readonly string[]).includes(taskType)) {
+      where.taskType = taskType;
+    }
+    if (campaign) {
+      where.campaign = campaign;
+    }
 
     const [groups, total] = await Promise.all([
       prisma.postingGroup.findMany({
         where,
         include: {
           ad: { select: { id: true, adNumber: true, language: true, title: true } },
+          completedBy: { select: { id: true, name: true } },
         },
         orderBy: [
           { ad: { adNumber: 'asc' } },
@@ -177,6 +199,14 @@ router.patch('/groups/:id', authenticateToken, requireStaffOrAdmin, async (req: 
       if (parsed.data.status === 'POSTED' && !group.datePosted) {
         data.datePosted = new Date();
       }
+      // Track who completed the task
+      if (['POSTED', 'REJECTED', 'SKIPPED'].includes(parsed.data.status)) {
+        data.completedById = req.userId;
+      }
+      // Clear completedBy if reverting to non-terminal status
+      if (['PENDING', 'JOINED'].includes(parsed.data.status)) {
+        data.completedById = null;
+      }
     }
 
     if (parsed.data.notes !== undefined) {
@@ -192,12 +222,90 @@ router.patch('/groups/:id', authenticateToken, requireStaffOrAdmin, async (req: 
       data,
       include: {
         ad: { select: { id: true, adNumber: true, language: true, title: true } },
+        completedBy: { select: { id: true, name: true } },
       },
     });
 
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Posting group update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/posting/staff-stats — Staff productivity stats
+router.get('/staff-stats', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+  try {
+    const days = Math.min(90, Math.max(1, parseInt(req.query.days as string) || 7));
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const isAdmin = (req as any).effectiveRole === 'ADMIN';
+
+    // Build where clause - staff only see their own data
+    const completedWhere: any = {
+      completedById: isAdmin ? { not: null } : req.userId,
+      updatedAt: { gte: since },
+      status: { in: ['POSTED', 'REJECTED', 'SKIPPED'] },
+    };
+
+    const [totalPending, totalCompleted, staffGroups, dailyRaw] = await Promise.all([
+      prisma.postingGroup.count({ where: { status: 'PENDING' } }),
+      prisma.postingGroup.count({ where: completedWhere }),
+      prisma.postingGroup.groupBy({
+        by: ['completedById'],
+        where: completedWhere,
+        _count: true,
+      }),
+      // Raw SQL for daily breakdown
+      prisma.$queryRawUnsafe<Array<{ completedById: string; day: string; count: bigint }>>(
+        `SELECT "completedById", DATE("updatedAt") as day, COUNT(*)::bigint as count
+         FROM "PostingGroup"
+         WHERE "completedById" IS NOT NULL
+           AND "updatedAt" >= $1
+           AND "status" IN ('POSTED', 'REJECTED', 'SKIPPED')
+           ${!isAdmin ? `AND "completedById" = $2` : ''}
+         GROUP BY "completedById", DATE("updatedAt")
+         ORDER BY day DESC`,
+        ...(isAdmin ? [since] : [since, req.userId!])
+      ),
+    ]);
+
+    // Fetch staff names for the grouped results
+    const staffIds = staffGroups.map((g) => g.completedById!).filter(Boolean);
+    const staffUsers = staffIds.length > 0
+      ? await prisma.human.findMany({
+          where: { id: { in: staffIds } },
+          select: { id: true, name: true, email: true },
+        })
+      : [];
+    const staffMap = new Map(staffUsers.map((u) => [u.id, u]));
+
+    const staff = staffGroups.map((g) => {
+      const user = staffMap.get(g.completedById!);
+      return {
+        staffId: g.completedById!,
+        staffName: user?.name || 'Unknown',
+        staffEmail: user?.email || '',
+        completedCount: g._count,
+      };
+    }).sort((a, b) => b.completedCount - a.completedCount);
+
+    const daily = dailyRaw.map((d) => ({
+      completedById: d.completedById,
+      day: String(d.day),
+      count: Number(d.count),
+    }));
+
+    res.json({
+      period: { days, since: since.toISOString() },
+      totalPending,
+      totalCompleted,
+      staff,
+      daily,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff stats error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
