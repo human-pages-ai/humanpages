@@ -310,11 +310,12 @@ router.get('/staff-stats', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRe
   }
 });
 
-// GET /api/admin/posting/ads — List all ad copy
+// GET /api/admin/posting/ads — List all ad copy with group counts
 router.get('/ads', jwtOrApiKey, requireStaffOrApiKey, async (_req, res) => {
   try {
     const ads = await prisma.adCopy.findMany({
       orderBy: [{ adNumber: 'asc' }, { language: 'asc' }],
+      include: { _count: { select: { groups: true } } },
     });
     res.json({ ads });
   } catch (error) {
@@ -323,16 +324,100 @@ router.get('/ads', jwtOrApiKey, requireStaffOrApiKey, async (_req, res) => {
   }
 });
 
-// GET /api/admin/posting/ads/:id — Single ad copy
+// GET /api/admin/posting/ads/:id — Single ad copy with group count
 router.get('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
   try {
-    const ad = await prisma.adCopy.findUnique({ where: { id: req.params.id } });
+    const ad = await prisma.adCopy.findUnique({
+      where: { id: req.params.id },
+      include: { _count: { select: { groups: true } } },
+    });
     if (!ad) {
       return res.status(404).json({ error: 'Ad not found' });
     }
     res.json(ad);
   } catch (error) {
     logger.error({ err: error }, 'Posting ad detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+const adCopyUpdateSchema = z.object({
+  adNumber: z.number().int().positive().optional(),
+  language: z.string().min(1).max(10).optional(),
+  title: z.string().min(1).max(500).optional(),
+  body: z.string().min(1).optional(),
+});
+
+// PATCH /api/admin/posting/ads/:id — Update ad copy (admin only)
+router.patch('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
+  try {
+    const parsed = adCopyUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
+    const ad = await prisma.adCopy.findUnique({ where: { id: req.params.id } });
+    if (!ad) {
+      return res.status(404).json({ error: 'Ad not found' });
+    }
+
+    const updated = await prisma.adCopy.update({
+      where: { id: req.params.id },
+      data: parsed.data,
+      include: { _count: { select: { groups: true } } },
+    });
+
+    logger.info({ adId: req.params.id, changes: Object.keys(parsed.data) }, 'Admin updated ad copy');
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'Ad copy update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/posting/ads/create — Create new ad copy (admin only)
+router.post('/ads/create', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
+  try {
+    const parsed = adCopySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
+    const ad = await prisma.adCopy.create({
+      data: parsed.data,
+      include: { _count: { select: { groups: true } } },
+    });
+
+    logger.info({ adId: ad.id, adNumber: ad.adNumber, language: ad.language }, 'Admin created ad copy');
+    res.status(201).json(ad);
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'An ad with this number and language already exists' });
+    }
+    logger.error({ err: error }, 'Ad copy create error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/posting/ads/:id — Delete ad copy (admin only, only if no groups reference it)
+router.delete('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest, res) => {
+  try {
+    const ad = await prisma.adCopy.findUnique({
+      where: { id: req.params.id },
+      include: { _count: { select: { groups: true } } },
+    });
+    if (!ad) {
+      return res.status(404).json({ error: 'Ad not found' });
+    }
+    if (ad._count.groups > 0) {
+      return res.status(400).json({ error: `Cannot delete: ${ad._count.groups} groups still reference this ad. Reassign them first.` });
+    }
+
+    await prisma.adCopy.delete({ where: { id: req.params.id } });
+    logger.info({ adId: req.params.id, adNumber: ad.adNumber }, 'Admin deleted ad copy');
+    res.json({ message: 'Ad deleted' });
+  } catch (error) {
+    logger.error({ err: error }, 'Ad copy delete error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

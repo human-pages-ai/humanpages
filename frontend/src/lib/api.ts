@@ -495,6 +495,23 @@ export const api = {
   getAdCopy: (id: string) =>
     request<AdCopy>(`/admin/posting/ads/${id}`),
 
+  createAdCopy: (data: { adNumber: number; language: string; title: string; body: string }) =>
+    request<AdCopy>('/admin/posting/ads/create', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateAdCopy: (id: string, data: { adNumber?: number; language?: string; title?: string; body?: string }) =>
+    request<AdCopy>(`/admin/posting/ads/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteAdCopy: (id: string) =>
+    request<{ message: string }>(`/admin/posting/ads/${id}`, {
+      method: 'DELETE',
+    }),
+
   getStaffStats: (days?: number) => {
     const query = days ? `?days=${days}` : '';
     return request<StaffStats>(`/admin/posting/staff-stats${query}`);

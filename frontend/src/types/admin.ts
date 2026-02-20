@@ -355,6 +355,7 @@ export interface AdCopy {
   body: string;
   createdAt: string;
   updatedAt: string;
+  _count?: { groups: number };
 }
 
 export interface Pagination {

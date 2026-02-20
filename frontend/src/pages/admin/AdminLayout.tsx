@@ -14,6 +14,7 @@ const adminOnlyItems = [
 
 const sharedItems = [
   { to: '/admin/posting', label: 'Posting Queue' },
+  { to: '/admin/ad-copy', label: 'Ad Copy' },
 ];
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
