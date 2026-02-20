@@ -1,21 +1,28 @@
 {
   "name": "humanpages",
-  "version": "1.2.1",
+  "version": "1.2.2",
+  "mcpName": "io.github.human-pages-ai/humanpages",
   "description": "MCP Server for AI agents to discover and hire humans for real-world tasks via humanpages.ai",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "humanpages": "./dist/index.js"
+    "humanpages": "./dist/index.js",
+    "humanpages-http": "./dist/http.js"
   },
   "files": [
     "dist/index.js",
     "dist/index.d.ts",
+    "dist/tools.js",
+    "dist/tools.d.ts",
+    "dist/http.js",
+    "dist/http.d.ts",
     "README.md"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && node -e \"const fs=require('fs');const f='dist/index.js';const c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)\"",
     "start": "node dist/index.js",
+    "start:http": "node dist/http.js",
     "test": "vitest run",
     "prepublishOnly": "npm run build",
     "build:bundle": "cd bundle && npm install && cd .. && zip -r humans.mcpb bundle/*"
@@ -45,16 +52,18 @@
   "homepage": "https://humanpages.ai/dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/humanpages/humanpages"
+    "url": "https://github.com/human-pages-ai/humanpages.git"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "dotenv": "^16.4.1"
+    "dotenv": "^16.4.1",
+    "express": "^4.21.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^20.11.16",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
