@@ -19,7 +19,7 @@ const adCopySchema = z.object({
 });
 
 // POST /api/admin/posting/ads — Upsert ad copy
-router.post('/ads', apiKeyAdmin, async (req, res) => {
+router.post('/ads', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
   try {
     const parsed = adCopySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -54,7 +54,7 @@ const groupSchema = z.object({
 const bulkGroupsSchema = z.array(groupSchema).min(1).max(500);
 
 // POST /api/admin/posting/groups — Bulk add groups
-router.post('/groups', apiKeyAdmin, async (req, res) => {
+router.post('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
   try {
     const parsed = bulkGroupsSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -73,7 +73,7 @@ router.post('/groups', apiKeyAdmin, async (req, res) => {
 });
 
 // GET /api/admin/posting/stats — Counts by status + ad count + by type
-router.get('/stats', apiKeyAdmin, async (_req, res) => {
+router.get('/stats', jwtOrApiKey, requireStaffOrApiKey, async (_req, res) => {
   try {
     const [statusCounts, adCount, typeCounts] = await Promise.all([
       prisma.postingGroup.groupBy({
