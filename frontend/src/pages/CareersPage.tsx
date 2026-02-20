@@ -579,7 +579,7 @@ export default function CareersPage() {
         title="Careers"
         description="Join HumanPages — the AI-to-human marketplace. No CVs required. Work from anywhere, any time zone. We believe in results, not resumes."
         path="/careers"
-        ogImage="https://humanpages.ai/api/og/careers"
+        ogImage="https://humanpages.ai/api/og/careers?v=2"
       />
 
       {/* Nav */}

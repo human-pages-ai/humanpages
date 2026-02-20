@@ -93,7 +93,7 @@ describe('SEO Component', () => {
     await waitFor(() => {
       expect(getMetaContent('og:title', true)).toBe('Test Page | Human Pages');
       expect(getMetaContent('og:description', true)).toBe('Test description');
-      expect(getMetaContent('og:image', true)).toBe('https://humanpages.ai/api/og/default');
+      expect(getMetaContent('og:image', true)).toBe('https://humanpages.ai/api/og/default?v=2');
       expect(getMetaContent('og:url', true)).toBe('https://humanpages.ai');
       expect(getMetaContent('og:type', true)).toBe('website');
       expect(getMetaContent('og:site_name', true)).toBe('Human Pages');
@@ -124,7 +124,7 @@ describe('SEO Component', () => {
       expect(getMetaContent('twitter:card')).toBe('summary_large_image');
       expect(getMetaContent('twitter:title')).toBe('Test Page | Human Pages');
       expect(getMetaContent('twitter:description')).toBe('Test description');
-      expect(getMetaContent('twitter:image')).toBe('https://humanpages.ai/api/og/default');
+      expect(getMetaContent('twitter:image')).toBe('https://humanpages.ai/api/og/default?v=2');
     });
   });
 
