@@ -300,6 +300,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleUploadPhoto = async (file: File) => {
+    await api.uploadProfilePhoto(file);
+    await loadProfile();
+  };
+
+  const handleDeletePhoto = async () => {
+    await api.deleteProfilePhoto();
+    await loadProfile();
+  };
+
   const buildProfilePayload = (form: typeof profileForm) => ({
     name: form.name,
     bio: form.bio || null,
@@ -731,6 +741,8 @@ export default function Dashboard() {
                     autoSaving={autoSaving}
                     onSaveProfile={saveProfile}
                     onCheckUsername={checkUsernameAvailability}
+                    onUploadPhoto={handleUploadPhoto}
+                    onDeletePhoto={handleDeletePhoto}
                   />
                 </div>
 

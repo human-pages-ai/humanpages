@@ -8,6 +8,7 @@ import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { getApplyRedirect } from '../lib/applyIntent';
+import toast from 'react-hot-toast';
 
 const SKILL_SUGGESTIONS = [
   'Local Photography', 'Phone Calls', 'In-Person Verification',
@@ -164,7 +165,7 @@ export default function Onboarding() {
                           await api.importOAuthPhoto((oauthProvider || 'google') as 'google' | 'linkedin');
                           setPhotoDismissed(true);
                         } catch (err: any) {
-                          console.error('Failed to import photo:', err);
+                          toast.error(err.message || t('onboarding.photoImportFailed', 'Failed to import photo'));
                         } finally {
                           setPhotoImporting(false);
                         }

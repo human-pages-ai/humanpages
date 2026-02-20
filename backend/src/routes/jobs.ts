@@ -35,6 +35,7 @@ import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl, fireWebhook } from '../lib/webhook.js';
 import { convertToUsd } from '../lib/exchangeRates.js';
 import { starRatingToERC8004Value, buildFeedbackJSON, hashFeedbackJSON } from '../lib/erc8004.js';
+import { queueModeration } from '../lib/moderation.js';
 
 const router = Router();
 
@@ -348,6 +349,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         category: data.category,
         priceUsdc: new Decimal(data.priceUsdc),
         paymentMode: data.paymentMode,
+        moderationStatus: 'pending',
         paymentTiming: data.paymentMode === 'ONE_TIME' ? data.paymentTiming : null,
         // Stream fields
         ...(data.paymentMode === 'STREAM' ? {
@@ -362,6 +364,11 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         status: 'PENDING',
       },
     });
+
+    // Queue content moderation for the job posting
+    queueModeration('job_posting', job.id).catch((err) =>
+      logger.error({ err }, 'Failed to queue job moderation')
+    );
 
     const jobDetailUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/jobs/${job.id}`;
 

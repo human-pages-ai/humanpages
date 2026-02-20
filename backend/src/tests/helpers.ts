@@ -22,6 +22,7 @@ export interface TestAgent {
  */
 export async function cleanDatabase(): Promise<void> {
   // Delete in order respecting foreign key constraints
+  await prisma.moderationQueue.deleteMany();
   await prisma.feedback.deleteMany();
   await prisma.affiliateCredit.deleteMany();
   await prisma.affiliateReferral.deleteMany();

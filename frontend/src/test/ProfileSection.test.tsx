@@ -28,6 +28,13 @@ vi.mock('../components/LocationAutocomplete', () => ({
   ),
 }));
 
+// Mock ProfilePhoto — render a simple stub
+vi.mock('../components/dashboard/ProfilePhoto', () => ({
+  default: () => (
+    <div data-testid="profile-photo" />
+  ),
+}));
+
 // Mock PhoneInput — simple input that calls onChange with value.
 // Since ProfileSection lazy-loads PhoneInput, we need to mock the module
 // so that the lazy() import resolves to our mock.
@@ -106,6 +113,8 @@ function renderSection(overrides: Record<string, any> = {}) {
     autoSaving: false,
     onSaveProfile: vi.fn(),
     onCheckUsername: vi.fn().mockResolvedValue(true),
+    onUploadPhoto: vi.fn().mockResolvedValue(undefined),
+    onDeletePhoto: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
   const result = render(<ProfileSection {...props} />);

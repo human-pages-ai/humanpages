@@ -43,6 +43,7 @@ export interface AuthResponse {
   isNew?: boolean;
   requiresTerms?: boolean;
   provider?: string;
+  oauthPhotoUrl?: string;
 }
 
 export interface PublicHuman {
@@ -54,6 +55,7 @@ export interface PublicHuman {
   contactEmail?: string;
   telegram?: string;
   isAvailable: boolean;
+  profilePhotoUrl?: string;
   linkedinUrl?: string;
   linkedinVerified?: boolean;
   twitterUrl?: string;
@@ -424,6 +426,33 @@ export const api = {
 
   getAdminActivity: (limit?: number) =>
     request<{ activity: AdminActivity[] }>(`/admin/activity${limit ? `?limit=${limit}` : ''}`),
+
+  // Profile photos
+  uploadProfilePhoto: (file: File) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const token = getToken();
+    return fetch(`${API_BASE}/photos/upload`, {
+      method: 'POST',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(error.error || 'Upload failed');
+      }
+      return res.json() as Promise<{ profilePhotoUrl: string; profilePhotoStatus: string }>;
+    });
+  },
+
+  importOAuthPhoto: (provider: 'google' | 'linkedin') =>
+    request<{ profilePhotoUrl: string; profilePhotoStatus: string }>('/photos/import-oauth', {
+      method: 'POST',
+      body: JSON.stringify({ provider }),
+    }),
+
+  deleteProfilePhoto: () =>
+    request<{ message: string }>('/photos', { method: 'DELETE' }),
 
   // Listings (Job Board)
   getListings: (params: { page?: number; limit?: number; skill?: string; category?: string; workMode?: string; minBudget?: number; maxBudget?: number; lat?: number; lng?: number; radius?: number } = {}) => {
