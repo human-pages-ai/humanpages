@@ -15,6 +15,8 @@ import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 import { computeTrustScore } from '../lib/trustScore.js';
 import { qualifyAffiliateReferral, getReferralProgramData } from './affiliate.js';
+import { getProfilePhotoSignedUrl } from '../lib/storage.js';
+import { queueModeration } from '../lib/moderation.js';
 
 const router = Router();
 
@@ -49,6 +51,8 @@ const publicHumanSelect = {
   humanityScore: true,
   humanityProvider: true,
   humanityVerifiedAt: true,
+  profilePhotoKey: true,
+  profilePhotoStatus: true,
   lastActiveAt: true,
   createdAt: true,
   services: {
@@ -78,6 +82,20 @@ const fullHumanSelect = {
     select: { network: true, chain: true, address: true, label: true, isPrimary: true },
   },
 } as const;
+
+// Helper: generate signed photo URL and strip internal R2 key from response
+async function attachPhotoUrl(human: any): Promise<any> {
+  if (human.profilePhotoKey && ['approved', 'pending'].includes(human.profilePhotoStatus)) {
+    try {
+      human.profilePhotoUrl = await getProfilePhotoSignedUrl(human.profilePhotoKey);
+    } catch {
+      // If signed URL generation fails, just omit the photo
+    }
+  }
+  delete human.profilePhotoKey; // Never expose R2 keys to frontend
+  delete human.oauthPhotoUrl; // Never expose raw OAuth photo URLs
+  return human;
+}
 
 // Helper function to validate URL domain
 const isUrlFromDomain = (url: string, domains: string[]) => {
@@ -281,6 +299,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
     ]);
 
     const { passwordHash, emailVerificationToken, ...profile } = human;
+    await attachPhotoUrl(profile);
     res.json({ ...profile, reputation, trustScore, referralCount, referralProgram, hasPassword: !!passwordHash });
   } catch (error) {
     logger.error({ err: error }, 'Get profile error');
@@ -508,6 +527,7 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const { passwordHash, emailVerificationToken, ...profile } = human;
+    await attachPhotoUrl(profile);
     res.json({ ...profile, reputation, trustScore, hasPassword: !!passwordHash });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -883,8 +903,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     const vouchCountMap = new Map(vouchCounts.map((vc) => [vc.voucheeId, vc._count]));
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
-    const humansWithReputation = humans.map((h) => {
+    const humansWithReputation = await Promise.all(humans.map(async (h) => {
       const { locationLat, locationLng, ...rest } = h;
+      await attachPhotoUrl(rest);
       return {
         ...rest,
         vouchCount: vouchCountMap.get(h.id) || 0,
@@ -894,7 +915,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
         },
       };
-    });
+    }));
 
     // Track search in PostHog (pass req for country geolocation)
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
@@ -989,7 +1010,8 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
     }
 
     const reputation = await getReputationStats(human.id);
-    res.json(filterHiddenContact({ ...human, reputation }));
+    const profileWithPhoto = await attachPhotoUrl({ ...human });
+    res.json(filterHiddenContact({ ...profileWithPhoto, reputation }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -1025,6 +1047,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 
     const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
+    await attachPhotoUrl(rest);
     res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
     logger.error({ err: error }, 'Get human error');
@@ -1057,6 +1080,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
 
     const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
+    await attachPhotoUrl(rest);
     res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
     logger.error({ err: error }, 'Get human by username error');
@@ -1204,6 +1228,11 @@ router.post('/:id/report', authenticateToken, requireEmailVerified, humanReportL
       });
       logger.info({ reportedHumanId, reportCount: nonDismissedCount }, 'Human auto-suspended');
     }
+
+    // Queue content moderation for the report
+    queueModeration('human_report', report.id).catch((err) =>
+      logger.error({ err }, 'Failed to queue report moderation')
+    );
 
     trackServerEvent(reporterHumanId, 'human_reported', {
       reportedHumanId,

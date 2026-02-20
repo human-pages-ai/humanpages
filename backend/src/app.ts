@@ -21,7 +21,8 @@ import affiliateRoutes from './routes/affiliate.js';
 import adminRoutes from './routes/admin.js';
 import feedbackRoutes from './routes/feedback.js';
 import listingsRoutes from './routes/listings.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml } from './lib/seo.js';
+import photosRoutes from './routes/photos.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml } from './lib/seo.js';
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/feedback', express.json({ limit: '2mb' }), feedbackRoutes);
 app.use('/api/listings', listingsRoutes);
+app.use('/api/photos', photosRoutes);
 
 // Geo detection
 app.use('/api/geo', geoRoutes);
@@ -86,6 +88,26 @@ app.use(express.static(frontendDistPath, { index: false }));
 
 // Blog posts & Profile pages: inject dynamic meta tags for social sharing / SEO
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'];
+
+// Careers page: inject meta tags for social sharing (keeps "Stop chasing clients." OG image)
+app.get('/:lang/careers', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  const html = getCareersMetaHtml(req.params.lang);
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+app.get('/careers', (req, res, next) => {
+  const html = getCareersMetaHtml();
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
 
 app.get('/:lang/blog/:slug', (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();

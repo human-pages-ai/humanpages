@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Turnstile } from 'react-turnstile';
 import Link from '../components/LocalizedLink';
+import { getApplyRedirect } from '../lib/applyIntent';
 import { useAuth } from '../hooks/useAuth';
 import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -30,7 +31,9 @@ export default function Login() {
     try {
       await login(email, password, captchaToken);
       analytics.track('login_success', { method: 'email' });
-      navigate('/dashboard');
+      // Check localStorage for apply intent (set by careers page before redirect)
+      const applyRedirect = getApplyRedirect();
+      navigate(applyRedirect || '/dashboard');
     } catch (err: any) {
       setError(err.message || t('auth.loginFailed'));
     } finally {

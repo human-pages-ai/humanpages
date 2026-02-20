@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Profile } from './types';
 import LocationAutocomplete from '../LocationAutocomplete';
+import ProfilePhoto from './ProfilePhoto';
 
 interface Props {
   profile: Profile;
@@ -39,6 +40,8 @@ interface Props {
   autoSaving?: boolean;
   onSaveProfile: () => void;
   onCheckUsername?: (username: string) => Promise<boolean>;
+  onUploadPhoto: (file: File) => Promise<void>;
+  onDeletePhoto: () => Promise<void>;
 }
 
 export default function ProfileSection({
@@ -53,6 +56,8 @@ export default function ProfileSection({
   autoSaving,
   onSaveProfile,
   onCheckUsername,
+  onUploadPhoto,
+  onDeletePhoto,
 }: Props) {
   const { t } = useTranslation();
 
@@ -138,6 +143,17 @@ export default function ProfileSection({
         >
           {editingProfile ? t('common.cancel') : t('common.edit')}
         </button>
+      </div>
+
+      <div className="mb-4">
+        <ProfilePhoto
+          photoUrl={profile.profilePhotoUrl}
+          photoStatus={profile.profilePhotoStatus}
+          name={profile.name}
+          onUpload={onUploadPhoto}
+          onDelete={onDeletePhoto}
+          size="md"
+        />
       </div>
 
       {editingProfile ? (

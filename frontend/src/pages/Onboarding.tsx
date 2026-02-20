@@ -7,6 +7,8 @@ import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { getApplyRedirect } from '../lib/applyIntent';
+import toast from 'react-hot-toast';
 
 const SKILL_SUGGESTIONS = [
   'Local Photography', 'Phone Calls', 'In-Person Verification',
@@ -32,7 +34,22 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [showSkipWarning, setShowSkipWarning] = useState(false);
 
+  // OAuth photo import
+  const [oauthPhotoUrl, setOauthPhotoUrl] = useState<string | null>(null);
+  const [oauthProvider, setOauthProvider] = useState<string | null>(null);
+  const [photoImporting, setPhotoImporting] = useState(false);
+  const [photoDismissed, setPhotoDismissed] = useState(false);
+
   useEffect(() => {
+    // Check for OAuth photo URL stored during signup
+    const storedPhotoUrl = localStorage.getItem('oauthPhotoUrl');
+    const storedProvider = localStorage.getItem('oauthProvider');
+    if (storedPhotoUrl) {
+      setOauthPhotoUrl(storedPhotoUrl);
+      setOauthProvider(storedProvider);
+      localStorage.removeItem('oauthPhotoUrl');
+      localStorage.removeItem('oauthProvider');
+    }
     loadProfile();
   }, []);
 
@@ -84,7 +101,9 @@ export default function Onboarding() {
       });
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
-      navigate('/dashboard');
+      // Check if user was in the middle of a job application
+      const applyRedirect = getApplyRedirect();
+      navigate(applyRedirect || '/dashboard');
     } catch (error: any) {
       console.error('Failed to save profile:', error);
       setError(error.message || t('common.error'));
@@ -125,6 +144,49 @@ export default function Onboarding() {
             <p className="text-slate-600 mb-6">
               {t('onboarding.step2.subtitle')}
             </p>
+
+            {/* OAuth Photo Import Prompt */}
+            {oauthPhotoUrl && !photoDismissed && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-800 mb-3">
+                  {t('onboarding.useProviderPhoto', 'Use your profile photo?')}
+                </p>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={oauthPhotoUrl}
+                    alt=""
+                    className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={async () => {
+                        setPhotoImporting(true);
+                        try {
+                          await api.importOAuthPhoto((oauthProvider || 'google') as 'google' | 'linkedin');
+                          setPhotoDismissed(true);
+                        } catch (err: any) {
+                          toast.error(err.message || t('onboarding.photoImportFailed', 'Failed to import photo'));
+                        } finally {
+                          setPhotoImporting(false);
+                        }
+                      }}
+                      disabled={photoImporting}
+                      className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded disabled:opacity-50"
+                    >
+                      {photoImporting
+                        ? t('common.loading', 'Loading...')
+                        : t('onboarding.useThisPhoto', 'Use this photo')}
+                    </button>
+                    <button
+                      onClick={() => setPhotoDismissed(true)}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      {t('onboarding.skipPhoto', 'Skip for now')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Location */}
             <div className="mb-6">
@@ -244,7 +306,8 @@ export default function Onboarding() {
           setShowSkipWarning(false);
           analytics.track('onboarding_skip');
           posthog.capture('onboarding_skipped');
-          navigate('/dashboard');
+          const applyRedirect = getApplyRedirect();
+          navigate(applyRedirect || '/dashboard');
         }}
         onCancel={() => setShowSkipWarning(false)}
       />

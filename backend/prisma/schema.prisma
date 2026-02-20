@@ -197,6 +197,11 @@ model Human {
   humanityScore          Float?                     // 0-100 score
   humanityVerifiedAt     DateTime?
 
+  // Profile photo
+  profilePhotoKey    String?   // R2 object key: "photos/{userId}/{uuid}.webp"
+  profilePhotoStatus String    @default("none") // "none" | "pending" | "approved" | "rejected"
+  oauthPhotoUrl      String?   // Temporary: OAuth provider photo URL for import prompt
+
   // Social profiles for trust verification
   linkedinUrl   String?
   twitterUrl    String?
@@ -425,6 +430,9 @@ model Job {
   callbackSecret  String?   // HMAC-SHA256 secret for signing payloads
 
   status          JobStatus @default(PENDING)
+
+  // Content moderation
+  moderationStatus  String  @default("approved") // "pending" | "approved" | "rejected"
 
   // Agent update tracking
   lastUpdatedByAgent DateTime?  // When the agent last updated the offer
@@ -871,4 +879,21 @@ model PostingGroup {
   @@index([taskType])
   @@index([campaign])
   @@index([completedById, datePosted])
+}
+
+// ===== CONTENT MODERATION =====
+
+model ModerationQueue {
+  id           String    @id @default(cuid())
+  contentType  String    // "profile_photo" | "job_posting" | "human_report" | "agent_report"
+  contentId    String    // humanId (for photos), jobId, reportId
+  status       String    @default("pending") // "pending" | "approved" | "rejected" | "error"
+  result       Json?     // Full OpenAI moderation response for audit trail
+  errorMessage String?   // If status=error, why it failed
+  attempts     Int       @default(0)
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([contentType, contentId])
 }

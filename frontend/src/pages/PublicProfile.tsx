@@ -75,6 +75,7 @@ interface PublicHuman {
   humanityScore?: number;
   humanityProvider?: string;
   humanityVerifiedAt?: string;
+  profilePhotoUrl?: string;
   reputation?: {
     avgRating: number;
     reviewCount: number;
@@ -103,6 +104,7 @@ export default function PublicProfile() {
   const [copied, setCopied] = useState(false);
   const [showAllVouches, setShowAllVouches] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
 
   useEffect(() => {
     if (!id && !username) return;
@@ -223,7 +225,16 @@ export default function PublicProfile() {
           {/* Header */}
           <div className="bg-blue-600 px-6 py-8">
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex items-center gap-4">
+                {/* Profile photo or initials */}
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-blue-400 text-white font-bold text-xl flex items-center justify-center flex-shrink-0">
+                  {profile.profilePhotoUrl && !photoError ? (
+                    <img src={profile.profilePhotoUrl} alt={profile.name} className="w-full h-full object-cover" onError={() => setPhotoError(true)} />
+                  ) : (
+                    <span aria-hidden="true">{profile.name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
                 <h1 className="text-2xl font-bold text-white">{profile.name}</h1>
                 {profile.username && (
                   <p className="text-blue-200 text-sm mt-0.5">@{profile.username}</p>
@@ -237,6 +248,7 @@ export default function PublicProfile() {
                     {getDisplayLocation(profile)}
                   </p>
                 )}
+              </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span

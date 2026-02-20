@@ -96,6 +96,8 @@ export interface Profile {
   humanityScore?: number;
   humanityProvider?: string;
   humanityVerifiedAt?: string;
+  profilePhotoUrl?: string;
+  profilePhotoStatus?: 'none' | 'pending' | 'approved' | 'rejected';
   trustScore?: TrustScoreData;
   hasPassword?: boolean;
   emailVerified?: boolean;

@@ -30,6 +30,7 @@ const ReportAgent = lazy(() => import('./pages/ReportAgent'));
 const JobBoard = lazy(() => import('./pages/JobBoard'));
 const ListingDetail = lazy(() => import('./pages/ListingDetail'));
 const BrandKit = lazy(() => import('./pages/BrandKit'));
+const CareersPage = lazy(() => import('./pages/CareersPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -229,6 +230,7 @@ function AppRoutes() {
       <Route path="/badge" element={<Badge />} />
       <Route path="/report" element={<ReportAgent />} />
       <Route path="/brand" element={<BrandKit />} />
+      <Route path="/careers" element={<CareersPage />} />
       <Route path="/listings" element={<JobBoard />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
       <Route path="/blog" element={<BlogIndex />} />
@@ -260,6 +262,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/social-media-marketing-hiring-process" element={<LangWrapper><SocialMediaMarketingHiring /></LangWrapper>} />
       <Route path="/:lang/blog/automated-influencer-outreach" element={<LangWrapper><AutomatedInfluencerOutreach /></LangWrapper>} />
       <Route path="/:lang/blog/get-paid-social-media-promotion" element={<LangWrapper><GetPaidSocialMediaPromotion /></LangWrapper>} />
+      <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
 

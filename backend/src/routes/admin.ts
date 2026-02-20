@@ -20,7 +20,7 @@ router.get('/ai/stats', apiKeyAdmin, async (_req, res) => {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [usersTotal, usersVerified, usersLast7d, feedbackTotal, feedbackNew, humanReportsTotal, humanReportsPending, reportsTotal, reportsPending] = await Promise.all([
+    const [usersTotal, usersVerified, usersLast7d, feedbackTotal, feedbackNew, humanReportsTotal, humanReportsPending, reportsTotal, reportsPending, moderationPending, moderationRejected, moderationErrors] = await Promise.all([
       prisma.human.count(),
       prisma.human.count({ where: { emailVerified: true } }),
       prisma.human.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -30,6 +30,9 @@ router.get('/ai/stats', apiKeyAdmin, async (_req, res) => {
       prisma.humanReport.count({ where: { status: 'PENDING' } }),
       prisma.agentReport.count(),
       prisma.agentReport.count({ where: { status: 'PENDING' } }),
+      prisma.moderationQueue.count({ where: { status: 'pending' } }),
+      prisma.moderationQueue.count({ where: { status: 'rejected' } }),
+      prisma.moderationQueue.count({ where: { status: 'error' } }),
     ]);
 
     res.json({
@@ -37,6 +40,7 @@ router.get('/ai/stats', apiKeyAdmin, async (_req, res) => {
       feedback: { total: feedbackTotal, new: feedbackNew },
       humanReports: { total: humanReportsTotal, pending: humanReportsPending },
       agentReports: { total: reportsTotal, pending: reportsPending },
+      moderation: { pending: moderationPending, rejected: moderationRejected, errors: moderationErrors },
     });
   } catch (error) {
     logger.error({ err: error }, 'AI admin stats error');
@@ -1048,6 +1052,99 @@ router.post('/staff/:id/send-key', async (req: AuthRequest, res) => {
     res.json({ message: 'API key sent via email' });
   } catch (error) {
     logger.error({ err: error }, 'Staff API key email error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Moderation Queue ───
+
+// GET /api/admin/moderation — List moderation queue items
+router.get('/moderation', async (req: AuthRequest, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const status = req.query.status as string;
+    const contentType = req.query.contentType as string;
+
+    const where: any = {};
+    if (status && ['pending', 'approved', 'rejected', 'error'].includes(status)) {
+      where.status = status;
+    }
+    if (contentType) {
+      where.contentType = contentType;
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.moderationQueue.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.moderationQueue.count({ where }),
+    ]);
+
+    res.json({
+      items,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin moderation list error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/moderation/:id — Manual override of moderation decision
+router.patch('/moderation/:id', async (req: AuthRequest, res) => {
+  try {
+    const { status } = req.body;
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be "approved" or "rejected"' });
+    }
+
+    const item = await prisma.moderationQueue.findUnique({ where: { id: req.params.id } });
+    if (!item) {
+      return res.status(404).json({ error: 'Moderation item not found' });
+    }
+
+    // Update queue item
+    const updated = await prisma.moderationQueue.update({
+      where: { id: req.params.id },
+      data: { status, reviewedAt: new Date() },
+    });
+
+    // Update source record based on content type
+    if (item.contentType === 'profile_photo') {
+      await prisma.human.update({
+        where: { id: item.contentId },
+        data: { profilePhotoStatus: status },
+      }).catch(() => {}); // Source may have been deleted
+    } else if (item.contentType === 'job_posting') {
+      await prisma.job.update({
+        where: { id: item.contentId },
+        data: { moderationStatus: status },
+      }).catch(() => {});
+    } else if (item.contentType === 'human_report') {
+      if (status === 'rejected') {
+        await prisma.humanReport.update({
+          where: { id: item.contentId },
+          data: { status: 'DISMISSED' },
+        }).catch(() => {});
+      }
+    } else if (item.contentType === 'agent_report') {
+      if (status === 'rejected') {
+        await prisma.agentReport.update({
+          where: { id: item.contentId },
+          data: { status: 'DISMISSED' },
+        }).catch(() => {});
+      }
+    }
+
+    logger.info({ moderationId: req.params.id, status, contentType: item.contentType, adminId: req.userId }, 'Admin moderation override');
+
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin moderation override error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

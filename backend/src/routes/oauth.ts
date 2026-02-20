@@ -85,7 +85,7 @@ router.get('/google', async (req, res) => {
 
 // Cache Google profile info between the requiresTerms round-trip.
 // Key: OAuth state token → Google profile. Entries expire with the state (10 min).
-const pendingOAuthProfiles = new Map<string, { googleId: string; email: string; name: string }>();
+const pendingOAuthProfiles = new Map<string, { googleId: string; email: string; name: string; picture?: string }>();
 
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
@@ -112,11 +112,12 @@ router.post('/google/callback', async (req, res) => {
     let googleId: string;
     let email: string;
     let name: string;
+    let picture: string | undefined;
 
     const cached = pendingOAuthProfiles.get(state);
     if (cached) {
       // Second call after termsAccepted — code was already exchanged
-      ({ googleId, email, name } = cached);
+      ({ googleId, email, name, picture } = cached);
     } else {
       // First call — exchange the authorization code for tokens
       const { tokens } = await googleClient.getToken(code);
@@ -140,6 +141,7 @@ router.post('/google/callback', async (req, res) => {
       googleId = payload.sub!;
       email = payload.email;
       name = payload.name || email.split('@')[0];
+      picture = payload.picture || undefined;
     }
 
     // Account linking logic:
@@ -165,7 +167,7 @@ router.post('/google/callback', async (req, res) => {
         // New user - require terms acceptance before creating account
         if (!termsAccepted) {
           // Cache the profile so we don't need the code again
-          pendingOAuthProfiles.set(state, { googleId, email, name });
+          pendingOAuthProfiles.set(state, { googleId, email, name, picture });
           return res.json({ requiresTerms: true, provider: 'google' });
         }
 
@@ -192,6 +194,7 @@ router.post('/google/callback', async (req, res) => {
             referralCode: generateReferralCode(),
             termsAcceptedAt: new Date(),
             emailVerified: true, // OAuth email is verified by provider
+            oauthPhotoUrl: picture || null,
           },
         });
         isNew = true;
@@ -211,6 +214,7 @@ router.post('/google/callback', async (req, res) => {
       human: { id: human.id, email: human.email, name: human.name },
       token,
       isNew,
+      ...(isNew && picture ? { oauthPhotoUrl: picture } : {}),
     });
   } catch (error) {
     logger.error({ err: error }, 'Google OAuth error');
@@ -226,6 +230,7 @@ interface LinkedInProfile {
   linkedinId: string;
   email: string;
   name: string;
+  picture?: string;
 }
 
 async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<LinkedInProfile> {
@@ -263,6 +268,7 @@ async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<
     sub: string;
     email?: string;
     name?: string;
+    picture?: string;
   };
 
   if (!userInfo.sub || !userInfo.email) {
@@ -273,6 +279,7 @@ async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<
     linkedinId: userInfo.sub,
     email: userInfo.email,
     name: userInfo.name || userInfo.email.split('@')[0],
+    picture: userInfo.picture || undefined,
   };
 }
 
@@ -379,6 +386,7 @@ router.post('/linkedin/callback', async (req, res) => {
             referralCode: generateReferralCode(),
             termsAcceptedAt: new Date(),
             emailVerified: true,
+            oauthPhotoUrl: profile.picture || null,
           },
         });
         isNew = true;
@@ -396,6 +404,7 @@ router.post('/linkedin/callback', async (req, res) => {
       human: { id: human.id, email: human.email, name: human.name },
       token,
       isNew,
+      ...(isNew && profile.picture ? { oauthPhotoUrl: profile.picture } : {}),
     });
   } catch (error) {
     logger.error({ err: error }, 'LinkedIn OAuth error');

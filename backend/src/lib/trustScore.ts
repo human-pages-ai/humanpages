@@ -188,6 +188,7 @@ function computeProfileCompleteness(human: {
   contactEmail: string | null;
   telegram: string | null;
   whatsapp: string | null;
+  profilePhotoStatus?: string | null;
 }): number {
   const fields = [
     !!human.name,
@@ -195,6 +196,7 @@ function computeProfileCompleteness(human: {
     !!human.location,
     human.skills.length > 0,
     !!(human.contactEmail || human.telegram || human.whatsapp),
+    human.profilePhotoStatus === 'approved',
   ];
   return fields.filter(Boolean).length / fields.length;
 }
@@ -251,6 +253,7 @@ export async function computeTrustScore(humanId: string): Promise<TrustScore> {
         contactEmail: true,
         telegram: true,
         whatsapp: true,
+        profilePhotoStatus: true,
         createdAt: true,
         lastActiveAt: true,
         reviews: { select: { rating: true } },
@@ -375,6 +378,7 @@ export async function computeTrustScoresBatch(humanIds: string[]): Promise<Map<s
         contactEmail: true,
         telegram: true,
         whatsapp: true,
+        profilePhotoStatus: true,
         createdAt: true,
         lastActiveAt: true,
       },

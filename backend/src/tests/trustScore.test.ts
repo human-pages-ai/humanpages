@@ -280,6 +280,7 @@ describe('Trust Score — Pure Functions', () => {
         contactEmail: 'test@test.com',
         telegram: null,
         whatsapp: null,
+        profilePhotoStatus: 'approved',
       })).toBe(1);
     });
 
