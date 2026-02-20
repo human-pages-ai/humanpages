@@ -18,7 +18,6 @@ import {
   ArrowRightIcon,
   CheckCircleIcon,
   XMarkIcon,
-  EnvelopeIcon,
   UserCircleIcon,
   DocumentCheckIcon,
   HandThumbUpIcon,
@@ -574,7 +573,7 @@ export default function CareersPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       <SEO
         title="Careers"
         description="Join HumanPages — the AI-to-human marketplace. No CVs required. Work from anywhere, any time zone. We believe in results, not resumes."
@@ -591,7 +590,7 @@ export default function CareersPage() {
             onClick={scrollToPositions}
             className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors"
           >
-            View Roles
+            Apply Now
           </button>
         </div>
       </nav>
@@ -611,20 +610,15 @@ export default function CareersPage() {
             <p className="text-lg text-slate-600 mb-6 max-w-xl">
               HumanPages is the marketplace where AI agents hire real humans for real tasks. We're growing fast and looking for curious, driven people worldwide — we care about what you can do, not what's on your CV.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start items-center">
               <button
                 onClick={scrollToPositions}
                 className="px-6 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-600/25 transition-all hover:shadow-blue-600/40 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 active:translate-y-0"
               >
-                See Open Positions
+                Apply to Open Roles
                 <ArrowRightIcon className="w-4 h-4 inline ml-2" />
               </button>
-              <Link
-                to="/blog"
-                className="px-6 py-3 rounded-xl text-slate-700 font-medium border border-slate-200 hover:bg-slate-50 transition-colors text-center"
-              >
-                Read Our Blog
-              </Link>
+              <span className="text-sm text-slate-400">2-minute application · No CV needed</span>
             </div>
           </div>
           <div className="flex-1 flex justify-center">
@@ -645,11 +639,67 @@ export default function CareersPage() {
       </section>
 
       {/* ═══ How to Apply (Process visualization) ═══ */}
-      <section className="px-4 pb-16">
+      <section className="px-4 pb-12">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Applying takes 2 minutes</h2>
           <p className="text-slate-500 mb-8">No cover letter. No resume upload. Just tell us why you're excited.</p>
           <ProcessSteps />
+        </div>
+      </section>
+
+      {/* ═══ Open Positions (moved up — first actionable section) ═══ */}
+      <section ref={positionsRef} className="px-4 pb-16 scroll-mt-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">Open Positions</h2>
+            <p className="text-slate-500 max-w-lg mx-auto mb-6">
+              Find your fit. Every role is remote-first and open to people worldwide.
+            </p>
+            <CategoryFilter active={activeCategory} onChange={setActiveCategory} counts={categoryCounts} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPositions.map((pos) => (
+              <PositionCard key={pos.id} position={pos} onApply={handleApply} />
+            ))}
+            {/* Apply Anyway — always shown as the last card, visually differentiated */}
+            <div
+              id="position-general"
+              className="group bg-gradient-to-br from-slate-50 to-blue-50/50 rounded-2xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
+            >
+              <div className="p-6 flex-1">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    {GENERAL_APPLICATION.icon}
+                  </div>
+                  <span className="text-xs font-medium text-blue-500 bg-blue-50 px-2.5 py-1 rounded-full">
+                    {GENERAL_APPLICATION.tag}
+                  </span>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">Don't see your role?</h3>
+                <p className="text-sm text-slate-500 mb-4">{GENERAL_APPLICATION.tagline}</p>
+                <ul className="space-y-2">
+                  {GENERAL_APPLICATION.bullets.map((b, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                      <CheckCircleIcon className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="px-6 pb-6 pt-2">
+                <button
+                  onClick={() => {
+                    analytics.track('careers_apply_click', { position: 'general' });
+                    handleApply(GENERAL_APPLICATION);
+                  }}
+                  className="w-full py-3 px-4 rounded-xl text-white font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md shadow-orange-500/20 transition-all hover:shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 active:translate-y-0"
+                >
+                  Apply Anyway
+                  <ArrowRightIcon className="w-4 h-4 inline ml-2" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -682,7 +732,7 @@ export default function CareersPage() {
       </section>
 
       {/* ═══ Team Quotes ═══ */}
-      <section className="px-4 pb-16">
+      <section className="px-4 pb-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">From the team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -705,57 +755,18 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* ═══ Open Positions ═══ */}
-      <section ref={positionsRef} className="px-4 pb-20 scroll-mt-24">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 mb-3">Open Positions</h2>
-            <p className="text-slate-500 max-w-lg mx-auto mb-6">
-              Find your fit. Every role is remote-first and open to people worldwide.
-            </p>
-            <CategoryFilter active={activeCategory} onChange={setActiveCategory} counts={categoryCounts} />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPositions.map((pos) => (
-              <PositionCard key={pos.id} position={pos} onApply={handleApply} />
-            ))}
-          </div>
-
-          {/* Don't see your role? */}
-          <div className="mt-10 bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center">
-            <EnvelopeIcon className="w-8 h-8 text-slate-400 mx-auto mb-3" />
-            <h3 className="font-semibold text-slate-900 mb-1">Don't see your role?</h3>
-            <p className="text-sm text-slate-500 mb-4">
-              We hire for potential, not job titles. If you think you'd make this team better, we want to hear why.
-            </p>
-            <button
-              onClick={() => handleApply(GENERAL_APPLICATION)}
-              className="px-6 py-2.5 rounded-xl text-sm font-medium text-blue-600 border border-blue-200 hover:bg-blue-50 transition-colors"
-            >
-              Apply Anyway
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ Final CTA ═══ */}
-      <section className="px-4 pb-20">
-        <div className="max-w-3xl mx-auto bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 md:p-12 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to do meaningful work?</h2>
-          <p className="text-blue-100 mb-6 max-w-lg mx-auto">
-            Join a team that values what you can do, not where you've been. Your next chapter starts here.
-          </p>
-          <button
-            onClick={scrollToPositions}
-            className="px-8 py-3.5 rounded-xl font-semibold bg-white text-blue-700 hover:bg-blue-50 shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white text-lg active:translate-y-0"
-          >
-            View Open Positions
-            <ArrowRightIcon className="w-5 h-5 inline ml-2" />
-          </button>
-        </div>
-      </section>
-
       <Footer />
+
+      {/* ═══ Sticky Mobile Apply Bar ═══ */}
+      <div className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-white/95 backdrop-blur-sm border-t border-slate-200 px-4 py-3 safe-area-pb">
+        <button
+          onClick={scrollToPositions}
+          className="w-full py-3 px-4 rounded-xl text-white font-semibold bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg shadow-orange-500/25 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+        >
+          Apply to Open Roles
+          <span className="ml-2 text-orange-200 text-sm font-normal">2 min</span>
+        </button>
+      </div>
 
       {/* Apply Modal */}
       <ApplyModal position={selectedPosition} onClose={() => setSelectedPosition(null)} />
