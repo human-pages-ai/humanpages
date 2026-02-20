@@ -300,6 +300,10 @@ model Agent {
   // ===== ERC-8004 REPUTATION REGISTRY =====
   erc8004AgentId  Int?  @unique  // Sequential ID for ERC-8004 registry. See docs/ERC-8004-MAPPING.md
 
+  // ===== PROFILE PHOTO =====
+  profilePhotoKey    String?   // R2 object key: "photos/{agentId}/{uuid}.webp"
+  profilePhotoStatus String    @default("none") // "none" | "pending" | "approved" | "rejected"
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)
@@ -863,9 +867,10 @@ model PostingGroup {
   country       String
   status        PostingGroupStatus @default(PENDING)
   datePosted    DateTime?
-  notes         String?            @db.VarChar(1000)
+  notes         String?            @db.Text
   taskType      String             @default("fb_post")
   campaign      String?
+  priority      Int                @default(0)
   completedById String?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -878,6 +883,7 @@ model PostingGroup {
   @@index([country])
   @@index([taskType])
   @@index([campaign])
+  @@index([priority])
   @@index([completedById, datePosted])
 }
 
