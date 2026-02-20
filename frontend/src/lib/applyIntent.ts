@@ -34,19 +34,19 @@ const INTENT_TTL = 24 * 60 * 60 * 1000;
 export const POSITION_SKILL_HINTS: Record<string, string[]> = {
   'digital-marketer':     ['Social Media Management', 'Content Writing', 'SEO & SEM', 'Email Marketing'],
   'content-creator':      ['Content Writing', 'Video Production', 'Photo & Image Editing', 'Social Media Management'],
-  'virtual-assistant':    ['Email & Calendar Management', 'Data Entry', 'Scheduling', 'Document Management'],
-  'influencer-outreach':  ['Social Media Management', 'Cold Outreach', 'Community Management', 'Content Writing'],
+  'virtual-assistant':    ['Virtual Assistant', 'Email & Calendar Management', 'Data Entry', 'Scheduling'],
+  'influencer-outreach':  ['Social Media Management', 'Cold Outreach', 'Community Management', 'Influencer Marketing'],
   'customer-relations':   ['Customer Support', 'Chat & Email Support', 'Community Management'],
-  'community-manager':    ['Community Management', 'Social Media Management', 'Content Writing', 'Event Coordination'],
-  'graphic-designer':     ['Graphic Design', 'Photo & Image Editing', 'UI/UX Design', 'Prototyping & Wireframing'],
+  'community-manager':    ['Community Management', 'Social Media Management', 'Discord & Telegram Management', 'Event Planning'],
+  'graphic-designer':     ['Graphic Design', 'Photo & Image Editing', 'UI/UX Design', 'Logo Design'],
   'copywriter':           ['Copywriting', 'Content Writing', 'SEO & SEM', 'Proofreading & Editing'],
   'sales-development':    ['Sales & Lead Generation', 'Cold Outreach', 'Market Research'],
-  'software-engineer':    ['Software Development', 'QA & Bug Testing', 'Code Review', 'Technical Writing'],
-  'video-editor':         ['Video Production', 'Photo & Image Editing', 'Graphic Design', 'Content Writing'],
+  'software-engineer':    ['Software Development', 'Web Development', 'Code Review', 'QA & Bug Testing'],
+  'video-editor':         ['Video Production', 'Video Editing', 'Animation & Motion Graphics', 'Photo & Image Editing'],
   'general':              [],
   // Legacy IDs kept for backwards compat with stored intents
   'product-designer':     ['Graphic Design', 'Photo & Image Editing', 'UI/UX Design', 'Prototyping & Wireframing'],
-  'qa-tester':            ['QA & Bug Testing', 'Software Development', 'Technical Writing'],
+  'qa-tester':            ['QA & Bug Testing', 'Software Development', 'Code Review'],
 };
 
 export function setApplyIntent(positionId: string, positionTitle?: string): void {
