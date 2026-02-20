@@ -79,7 +79,7 @@ export default function ListingsSection({ skills }: Props) {
               <Link
                 key={listing.id}
                 to={`/listings/${listing.id}`}
-                className={`block p-4 rounded-lg border hover:shadow-md transition-shadow ${
+                className={`flex flex-col p-4 rounded-lg border hover:shadow-md transition-shadow ${
                   listing.isPro ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200'
                 }`}
               >
@@ -103,18 +103,20 @@ export default function ListingsSection({ skills }: Props) {
                     </>
                   )}
                 </div>
-                {listing.requiredSkills.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {listing.requiredSkills.slice(0, 3).map(skill => (
-                      <span key={skill} className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                    {listing.requiredSkills.length > 3 && (
-                      <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3}</span>
-                    )}
-                  </div>
-                )}
+                <div className="mt-auto pt-2">
+                  {listing.requiredSkills.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {listing.requiredSkills.slice(0, 3).map(skill => (
+                        <span key={skill} className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+                          {skill}
+                        </span>
+                      ))}
+                      {listing.requiredSkills.length > 3 && (
+                        <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </Link>
             ))}
           </div>
