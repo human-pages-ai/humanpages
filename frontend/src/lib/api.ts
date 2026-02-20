@@ -44,6 +44,7 @@ export interface AuthResponse {
   requiresTerms?: boolean;
   provider?: string;
   oauthPhotoUrl?: string;
+  linkedinHeadline?: string;
 }
 
 export interface PublicHuman {
@@ -567,6 +568,29 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ apiKey }),
     }),
+
+  // Career Applications
+  submitCareerApplication: (data: {
+    positionId: string;
+    positionTitle: string;
+    about: string;
+    portfolioUrl?: string;
+    availability: string;
+  }) =>
+    request<{ id: string; positionId: string; status: string; createdAt: string }>('/careers/apply', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getMyCareerApplications: () =>
+    request<Array<{
+      id: string;
+      positionId: string;
+      positionTitle: string;
+      status: string;
+      availability: string;
+      createdAt: string;
+    }>>('/careers/my-applications'),
 };
 
 // Referral Program types (included in profile response)

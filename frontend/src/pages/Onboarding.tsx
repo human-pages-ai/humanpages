@@ -6,18 +6,91 @@ import { analytics } from '../lib/analytics';
 import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { getApplyRedirect } from '../lib/applyIntent';
+import { getApplyIntent, clearApplyIntent } from '../lib/applyIntent';
 import toast from 'react-hot-toast';
 
-const SKILL_SUGGESTIONS = [
-  'Local Photography', 'Phone Calls', 'In-Person Verification',
-  'Package Pickup & Delivery', 'Document Notarization', 'Store Price Check',
-  'Restaurant Reservation', 'Apartment Viewing', 'Queue Waiting',
-  'Government Office Visit', 'Interpretation', 'Pet Care',
-  'Furniture Assembly', 'Tech Support Home Visit',
-  'Grocery Shopping', 'Event Attendance', 'Product Returns',
+// ─── Categorised skill suggestions ──────────────────────────────────────────
+// Covers both digital/remote work and local/physical tasks.
+// Names are kept short and agent-searchable.
+const SKILL_CATEGORIES: Record<string, string[]> = {
+  'Content & Writing': [
+    'Content Writing', 'Copywriting', 'Proofreading & Editing',
+    'Translation', 'Technical Writing',
+  ],
+  'Marketing & Sales': [
+    'Social Media Management', 'SEO & SEM', 'Email Marketing',
+    'Sales & Lead Generation', 'Cold Outreach', 'Market Research',
+  ],
+  'Design & Media': [
+    'Graphic Design', 'UI/UX Design', 'Photo & Image Editing',
+    'Video Production', 'Prototyping & Wireframing',
+  ],
+  'Development & QA': [
+    'Software Development', 'QA & Bug Testing', 'Code Review',
+  ],
+  'Admin & Support': [
+    'Customer Support', 'Chat & Email Support', 'Data Entry',
+    'Email & Calendar Management', 'Scheduling', 'Document Management',
+    'Community Management', 'Event Coordination',
+  ],
+  'Local Services': [
+    'Local Photography', 'Package Delivery', 'Shopping & Errands',
+    'In-Person Verification', 'Document Notarization', 'Pet Care',
+    'Furniture Assembly', 'In-Home Tech Support', 'Interpretation',
+  ],
+};
+
+// Exported for use in profile editing and backend validation
+export const SKILL_SUGGESTIONS = Object.values(SKILL_CATEGORIES).flat();
+
+// ─── LinkedIn headline → skill matching ─────────────────────────────────────
+// Maps keywords found in LinkedIn headlines to relevant platform skills.
+const HEADLINE_SKILL_MAP: [RegExp, string[]][] = [
+  [/marketing/i, ['Social Media Management', 'SEO & SEM', 'Email Marketing', 'Content Writing']],
+  [/software|developer|engineer|programming|coding/i, ['Software Development', 'Code Review', 'QA & Bug Testing']],
+  [/design|ux|ui|product design/i, ['UI/UX Design', 'Graphic Design', 'Prototyping & Wireframing']],
+  [/content|writer|copywriter|editor|journalist/i, ['Content Writing', 'Copywriting', 'Proofreading & Editing']],
+  [/sales|business development|account executive/i, ['Sales & Lead Generation', 'Cold Outreach', 'Market Research']],
+  [/support|customer|service|success/i, ['Customer Support', 'Chat & Email Support']],
+  [/community|social media/i, ['Community Management', 'Social Media Management']],
+  [/virtual assistant|admin|executive assistant|operations/i, ['Email & Calendar Management', 'Scheduling', 'Data Entry']],
+  [/video|photo|media|film/i, ['Video Production', 'Photo & Image Editing']],
+  [/qa|testing|quality/i, ['QA & Bug Testing', 'Software Development']],
+  [/translation|translator|interpreter|localization/i, ['Translation', 'Interpretation']],
+  [/data|analytics|research/i, ['Data Entry', 'Market Research']],
+  [/graphic/i, ['Graphic Design', 'Photo & Image Editing']],
+  [/seo/i, ['SEO & SEM', 'Content Writing']],
 ];
+
+function matchHeadlineToSkills(headline: string): string[] {
+  const matched = new Set<string>();
+  for (const [pattern, skills] of HEADLINE_SKILL_MAP) {
+    if (pattern.test(headline)) {
+      skills.forEach((s) => matched.add(s));
+    }
+  }
+  return Array.from(matched);
+}
+
+// Determine which categories should be expanded based on selected skills
+function getExpandedCategories(selectedSkills: string[]): Set<string> {
+  if (selectedSkills.length === 0) {
+    // Default: show first 2 categories
+    const cats = Object.keys(SKILL_CATEGORIES);
+    return new Set(cats.slice(0, 2));
+  }
+  const expanded = new Set<string>();
+  for (const [category, categorySkills] of Object.entries(SKILL_CATEGORIES)) {
+    if (categorySkills.some((s) => selectedSkills.includes(s))) {
+      expanded.add(category);
+    }
+  }
+  // Always show at least 1 category
+  if (expanded.size === 0) {
+    expanded.add(Object.keys(SKILL_CATEGORIES)[0]);
+  }
+  return expanded;
+}
 
 export default function Onboarding() {
   const { t } = useTranslation();
@@ -32,7 +105,11 @@ export default function Onboarding() {
   const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
   const [error, setError] = useState('');
-  const [showSkipWarning, setShowSkipWarning] = useState(false);
+
+  // Collapsible categories
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(Object.keys(SKILL_CATEGORIES).slice(0, 2))
+  );
 
   // OAuth photo import
   const [oauthPhotoUrl, setOauthPhotoUrl] = useState<string | null>(null);
@@ -50,6 +127,33 @@ export default function Onboarding() {
       localStorage.removeItem('oauthPhotoUrl');
       localStorage.removeItem('oauthProvider');
     }
+
+    // Collect skills to pre-select from multiple sources
+    const preSelectedSkills = new Set<string>();
+
+    // Source 1: Apply intent (e.g. user clicked "Apply" on Content Creator)
+    const intent = getApplyIntent();
+    if (intent?.suggestedSkills?.length) {
+      intent.suggestedSkills.forEach((s) => preSelectedSkills.add(s));
+    }
+
+    // Source 2: LinkedIn headline auto-matching
+    const linkedinHeadline = localStorage.getItem('linkedinHeadline');
+    if (linkedinHeadline) {
+      localStorage.removeItem('linkedinHeadline');
+      const headlineSkills = matchHeadlineToSkills(linkedinHeadline);
+      headlineSkills.forEach((s) => preSelectedSkills.add(s));
+    }
+
+    if (preSelectedSkills.size > 0) {
+      setSkills((prev) => {
+        const merged = new Set([...prev, ...preSelectedSkills]);
+        return Array.from(merged);
+      });
+      // Expand categories that contain pre-selected skills
+      setExpandedCategories(getExpandedCategories(Array.from(preSelectedSkills)));
+    }
+
     loadProfile();
   }, []);
 
@@ -73,18 +177,7 @@ export default function Onboarding() {
   const locationChosen = locationLat != null && locationLng != null;
 
   const handleSubmit = async () => {
-    if (!location.trim() && skills.length === 0) {
-      setError(t('onboarding.step2.errorBoth'));
-      return;
-    }
-    if (!location.trim()) {
-      setError(t('onboarding.step2.errorLocation'));
-      return;
-    }
-    if (location.trim() && !locationChosen) {
-      setError(t('onboarding.step2.errorLocationSelect'));
-      return;
-    }
+    // Only skills are required now — location is optional
     if (skills.length === 0) {
       setError(t('onboarding.step2.errorSkills'));
       return;
@@ -94,16 +187,34 @@ export default function Onboarding() {
     setLoading(true);
     try {
       await api.updateProfile({
-        location,
+        ...(location.trim() ? { location } : {}),
         ...(neighborhood ? { neighborhood } : {}),
         ...(locationLat != null && locationLng != null ? { locationLat, locationLng } : {}),
         skills,
       });
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
-      // Check if user was in the middle of a job application
-      const applyRedirect = getApplyRedirect();
-      navigate(applyRedirect || '/dashboard');
+
+      // Auto-submit career application if there's a pending apply intent
+      const intent = getApplyIntent();
+      if (intent) {
+        try {
+          await api.submitCareerApplication({
+            positionId: intent.positionId,
+            positionTitle: intent.positionTitle || intent.positionId,
+            about: `Excited to contribute as a ${intent.positionTitle || intent.positionId}.`,
+            availability: 'flexible',
+          });
+          clearApplyIntent();
+          toast.success(t('onboarding.applicationSubmitted', `Your application for ${intent.positionTitle || intent.positionId} has been submitted!`));
+        } catch (err) {
+          // Non-fatal: application submission failure shouldn't block onboarding
+          console.error('Auto-submit application failed:', err);
+          clearApplyIntent();
+        }
+      }
+
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Failed to save profile:', error);
       setError(error.message || t('common.error'));
@@ -123,6 +234,37 @@ export default function Onboarding() {
       setSkills([...skills, customSkill.trim()]);
       setCustomSkill('');
     }
+  };
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  };
+
+  const handleSkip = () => {
+    analytics.track('onboarding_skip');
+    posthog.capture('onboarding_skipped');
+
+    // Still auto-submit application on skip if intent exists
+    const intent = getApplyIntent();
+    if (intent) {
+      api.submitCareerApplication({
+        positionId: intent.positionId,
+        positionTitle: intent.positionTitle || intent.positionId,
+        about: `Excited to contribute as a ${intent.positionTitle || intent.positionId}.`,
+        availability: 'flexible',
+      }).catch(() => {}); // Fire and forget
+      clearApplyIntent();
+    }
+
+    navigate('/dashboard');
   };
 
   return (
@@ -188,11 +330,14 @@ export default function Onboarding() {
               </div>
             )}
 
-            {/* Location */}
+            {/* Location (optional) */}
             <div className="mb-6">
-              <label htmlFor="location-input" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="location-input" className="block text-sm font-medium text-slate-700 mb-1">
                 {t('onboarding.step2.location')}
               </label>
+              <p className="text-xs text-slate-400 mb-2">
+                {t('onboarding.step2.locationOptional', 'Optional — helps match you with local tasks')}
+              </p>
               <LocationAutocomplete
                 id="location-input"
                 value={location}
@@ -213,8 +358,8 @@ export default function Onboarding() {
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               {location.trim() && !locationChosen && (
-                <p className="mt-1 text-sm text-amber-600">
-                  {t('onboarding.step2.errorLocationSelect')}
+                <p className="mt-1 text-xs text-amber-500">
+                  {t('onboarding.step2.locationHint', 'Select a suggestion from the dropdown for accurate matching')}
                 </p>
               )}
             </div>
@@ -224,20 +369,49 @@ export default function Onboarding() {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 {t('onboarding.step2.skills')}
               </label>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {SKILL_SUGGESTIONS.map((skill) => (
-                  <button
-                    key={skill}
-                    onClick={() => toggleSkill(skill)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      skills.includes(skill)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
-                  >
-                    {skill}
-                  </button>
-                ))}
+              <div className="space-y-2 mb-3">
+                {Object.entries(SKILL_CATEGORIES).map(([category, categorySkills]) => {
+                  const isExpanded = expandedCategories.has(category);
+                  const selectedInCategory = categorySkills.filter((s) => skills.includes(s)).length;
+                  return (
+                    <div key={category}>
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(category)}
+                        className="flex items-center gap-2 w-full text-left py-1 group"
+                      >
+                        <span className="text-xs text-slate-400 transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                          ▸
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-hover:text-slate-700">
+                          {category}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {selectedInCategory > 0
+                            ? `${selectedInCategory} selected`
+                            : `${categorySkills.length} skills`}
+                        </span>
+                      </button>
+                      {isExpanded && (
+                        <div className="flex flex-wrap gap-2 mt-1 mb-2 pl-4">
+                          {categorySkills.map((skill) => (
+                            <button
+                              key={skill}
+                              onClick={() => toggleSkill(skill)}
+                              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                                skills.includes(skill)
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {skill}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Custom skill input */}
@@ -279,38 +453,22 @@ export default function Onboarding() {
 
             <button
               onClick={handleSubmit}
-              disabled={loading || (!!location.trim() && !locationChosen)}
+              disabled={loading}
               className="w-full mt-4 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? t('onboarding.saving') : t('onboarding.completeProfile')}
             </button>
           </div>
 
-          {/* Skip link */}
+          {/* Skip link — no warning dialog, just navigate */}
           <button
-            onClick={() => setShowSkipWarning(true)}
+            onClick={handleSkip}
             className="w-full mt-4 text-sm text-slate-500 hover:text-slate-700"
           >
             {t('onboarding.skipToDashboard')}
           </button>
         </div>
       </div>
-
-      <ConfirmDialog
-        open={showSkipWarning}
-        title={t('onboarding.skipWarning.title')}
-        message={t('onboarding.skipWarning.message')}
-        confirmLabel={t('onboarding.skipWarning.confirm')}
-        cancelLabel={t('onboarding.skipWarning.cancel')}
-        onConfirm={() => {
-          setShowSkipWarning(false);
-          analytics.track('onboarding_skip');
-          posthog.capture('onboarding_skipped');
-          const applyRedirect = getApplyRedirect();
-          navigate(applyRedirect || '/dashboard');
-        }}
-        onCancel={() => setShowSkipWarning(false)}
-      />
     </div>
   );
 }

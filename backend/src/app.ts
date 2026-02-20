@@ -21,6 +21,7 @@ import affiliateRoutes from './routes/affiliate.js';
 import adminRoutes from './routes/admin.js';
 import feedbackRoutes from './routes/feedback.js';
 import listingsRoutes from './routes/listings.js';
+import careersRoutes from './routes/careers.js';
 import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml } from './lib/seo.js';
@@ -82,6 +83,7 @@ app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/feedback', express.json({ limit: '2mb' }), feedbackRoutes);
 app.use('/api/listings', listingsRoutes);
+app.use('/api/careers', careersRoutes);
 app.use('/api/photos', photosRoutes);
 
 // Geo detection

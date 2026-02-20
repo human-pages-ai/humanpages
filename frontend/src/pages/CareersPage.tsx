@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Link from '../components/LocalizedLink';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
@@ -8,6 +7,8 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../hooks/useAuth';
 import { setApplyIntent, getApplyIntent, clearApplyIntent } from '../lib/applyIntent';
 import { analytics } from '../lib/analytics';
+import { posthog } from '../lib/posthog';
+import { api } from '../lib/api';
 import { POSITIONS, CATEGORIES, GENERAL_APPLICATION, type Position, type Category } from '../data/positions';
 import {
   GlobeAltIcon,
@@ -171,6 +172,165 @@ function TeamQuote({ quote, name, role }: { quote: string; name: string; role: s
   );
 }
 
+// ─── Referral Share Section (post-apply success) ─────────────────────────────
+
+function ReferralShareSection({ referralCode }: { referralCode: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!referralCode) return null;
+
+  const referralUrl = `${window.location.origin}/signup?ref=${referralCode}`;
+
+  const shareMessages = {
+    whatsapp: `Hey! Just applied to this really cool platform where AI agents actually hire people for real-world tasks. Thought you might be into it too 👀\n\n${referralUrl}`,
+    facebook: `Just discovered this platform where AI agents hire real humans for tasks — and I just applied to join. Pretty wild concept, check it out if you're curious!`,
+    linkedin: `Came across an interesting new platform — HumanPages connects AI agents with real people for tasks that need a human touch. Just applied, and thought my network might find it worth a look.`,
+  };
+
+  const shareLinks = {
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(shareMessages.whatsapp)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralUrl)}&quote=${encodeURIComponent(shareMessages.facebook)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralUrl)}`,
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(referralUrl);
+      setCopied(true);
+      analytics.track('careers_referral_copy', { source: 'apply_success' });
+      posthog.capture('careers_referral_link_copied');
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard may fail in some contexts */ }
+  };
+
+  const handleShare = (platform: string) => {
+    analytics.track('careers_referral_share', { platform, source: 'apply_success' });
+    posthog.capture('careers_referral_shared', { platform });
+  };
+
+  return (
+    <div
+      className={`mt-6 pt-6 border-t border-slate-100 transition-all duration-500 ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+    >
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <p className="text-sm font-semibold text-slate-900">Know someone who'd be a great fit?</p>
+          <p className="text-xs text-slate-500">Share your link and earn credits when friends sign up</p>
+        </div>
+
+        {/* Copy link */}
+        <div className="bg-blue-50/70 rounded-xl p-3 space-y-2">
+          <div className="flex gap-2">
+            <div className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 font-mono truncate">
+              {referralUrl}
+            </div>
+            <button
+              onClick={handleCopy}
+              className={`shrink-0 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-150 flex items-center gap-1.5 ${
+                copied
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {copied ? (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Social share buttons */}
+        <div className="grid grid-cols-3 gap-2">
+          <a
+            href={shareLinks.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => handleShare('whatsapp')}
+            className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-slate-200 hover:bg-emerald-50 hover:border-emerald-200 transition-colors group"
+          >
+            <svg className="w-4 h-4 text-slate-500 group-hover:text-emerald-600 transition-colors" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            <span className="text-xs text-slate-600 group-hover:text-emerald-700">WhatsApp</span>
+          </a>
+          <a
+            href={shareLinks.facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => handleShare('facebook')}
+            className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-200 transition-colors group"
+          >
+            <svg className="w-4 h-4 text-slate-500 group-hover:text-blue-600 transition-colors" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            <span className="text-xs text-slate-600 group-hover:text-blue-700">Facebook</span>
+          </a>
+          <a
+            href={shareLinks.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => handleShare('linkedin')}
+            className="flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-slate-200 hover:bg-sky-50 hover:border-sky-200 transition-colors group"
+          >
+            <svg className="w-4 h-4 text-slate-500 group-hover:text-sky-700 transition-colors" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            <span className="text-xs text-slate-600 group-hover:text-sky-800">LinkedIn</span>
+          </a>
+        </div>
+
+        {/* Reward tiers — compact */}
+        <div className="bg-gradient-to-br from-emerald-50/80 to-emerald-50/30 rounded-xl p-3">
+          <p className="text-[10px] font-medium text-emerald-800 uppercase tracking-wider mb-2">Reward milestones</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-1">
+              <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-bold text-white">10</span>
+              </div>
+              <span className="text-[11px] text-slate-700">credits / signup</span>
+            </div>
+            <div className="w-px h-4 bg-slate-200" />
+            <div className="flex items-center gap-1.5 flex-1 justify-center">
+              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-bold text-white">+50</span>
+              </div>
+              <span className="text-[11px] text-slate-700">at 10 referrals</span>
+            </div>
+            <div className="w-px h-4 bg-slate-200" />
+            <div className="flex items-center gap-1.5 flex-1 justify-end">
+              <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-bold text-white">+500</span>
+              </div>
+              <span className="text-[11px] text-slate-700">at 100 referrals</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Apply Modal ─────────────────────────────────────────────────────────────
 
 type ApplyStep = 'intro' | 'form' | 'success';
@@ -181,11 +341,11 @@ interface ApplyModalProps {
 }
 
 function ApplyModal({ position, onClose }: ApplyModalProps) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { user, loginWithLinkedIn, loginWithGoogle } = useAuth();
   const [step, setStep] = useState<ApplyStep>('intro');
   const [formData, setFormData] = useState({ about: '', portfolio: '', availability: 'flexible' });
   const [submitting, setSubmitting] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const firstFocusRef = useRef<HTMLButtonElement>(null);
 
@@ -196,6 +356,19 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
       setFormData({ about: '', portfolio: '', availability: 'flexible' });
     }
   }, [position, user]);
+
+  // Fetch referral code when success step is reached
+  useEffect(() => {
+    if (step === 'success' && user) {
+      api.getProfile()
+        .then((profile) => {
+          if (profile.referralCode) {
+            setReferralCode(profile.referralCode);
+          }
+        })
+        .catch(() => { /* silently fail — referral section just won't show */ });
+    }
+  }, [step, user]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -245,19 +418,29 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
 
   if (!position) return null;
 
-  const handleSignupRedirect = () => {
-    setApplyIntent(position.id, position.title);
-    analytics.track('careers_apply_signup_redirect', { position: position.id });
-    navigate('/signup');
-  };
-
   const handleSubmit = async () => {
     setSubmitting(true);
     analytics.track('careers_apply_submit', { position: position.id, availability: formData.availability });
-    // TODO: Replace with real API call — POST /api/applications
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    setStep('success');
+    try {
+      await api.submitCareerApplication({
+        positionId: position.id,
+        positionTitle: position.title,
+        about: formData.about,
+        portfolioUrl: formData.portfolio || undefined,
+        availability: formData.availability,
+      });
+      setStep('success');
+    } catch (err: any) {
+      // If duplicate application, still show success (they already applied)
+      if (err?.message?.includes('Unique constraint')) {
+        setStep('success');
+      } else {
+        analytics.track('careers_apply_submit', { position: position.id, error: err?.message, failed: true });
+        // Stay on form step so user can retry
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const charCount = formData.about.length;
@@ -295,32 +478,32 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
           {/* Step: Intro (not logged in) */}
           {step === 'intro' && (
             <div className="space-y-5">
-              <p className="text-slate-600">
-                To apply, you'll need a free HumanPages profile. It takes less than a minute — use Google or LinkedIn to sign up instantly.
+              <p className="text-slate-600 text-sm">
+                Sign up in seconds to apply. Your skills will be matched automatically.
               </p>
-              <div className="bg-blue-50/70 rounded-xl p-4 space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
-                  <div><span className="text-sm font-medium text-blue-900">Create your free profile</span><span className="text-sm text-blue-700"> — 30 seconds</span></div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
-                  <div><span className="text-sm font-medium text-blue-900">Set up your profile</span><span className="text-sm text-blue-700"> — tell us your skills</span></div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
-                  <div><span className="text-sm font-medium text-blue-900">Finish your application</span><span className="text-sm text-blue-700"> — one simple question</span></div>
-                </div>
-              </div>
-              <p className="text-xs text-slate-400">
-                Get interrupted? No worries — your application is saved for 24 hours. Just come back to this page to pick up where you left off.
-              </p>
+              {/* LinkedIn — PRIMARY */}
               <button
-                onClick={handleSignupRedirect}
-                className="w-full py-3 px-4 rounded-xl text-white font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                onClick={() => {
+                  setApplyIntent(position.id, position.title);
+                  analytics.track('careers_apply_signup_redirect', { position: position.id, method: 'linkedin' });
+                  loginWithLinkedIn();
+                }}
+                className="w-full py-3 px-4 rounded-xl text-white font-semibold bg-[#0A66C2] hover:bg-[#004182] shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2"
               >
-                Create Profile & Apply
-                <ArrowRightIcon className="w-4 h-4 inline ml-2" />
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                Continue with LinkedIn
+              </button>
+              {/* Google — secondary */}
+              <button
+                onClick={() => {
+                  setApplyIntent(position.id, position.title);
+                  analytics.track('careers_apply_signup_redirect', { position: position.id, method: 'google' });
+                  loginWithGoogle();
+                }}
+                className="w-full py-3 px-4 rounded-xl text-slate-700 font-semibold bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Continue with Google
               </button>
               <p className="text-center text-sm text-slate-500">
                 Already have an account?{' '}
@@ -439,6 +622,9 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
                   Browse more positions
                 </button>
               </div>
+
+              {/* Referral sharing — slides in after success */}
+              <ReferralShareSection referralCode={referralCode} />
             </div>
           )}
         </div>
@@ -523,6 +709,7 @@ function CategoryFilter({ active, onChange, counts }: {
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function CareersPage() {
+  const { user, loginWithLinkedIn, loginWithGoogle } = useAuth();
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
   const positionsRef = useRef<HTMLDivElement>(null);
@@ -610,7 +797,7 @@ export default function CareersPage() {
             <p className="text-lg text-slate-600 mb-6 max-w-xl">
               HumanPages is the marketplace where AI agents hire real humans for real tasks. We're growing fast and looking for curious, driven people worldwide — we care about what you can do, not what's on your CV.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start items-center">
+            <div className="flex flex-col gap-3 justify-center md:justify-start items-center md:items-start">
               <button
                 onClick={scrollToPositions}
                 className="px-6 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-600/25 transition-all hover:shadow-blue-600/40 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 active:translate-y-0"
@@ -618,7 +805,36 @@ export default function CareersPage() {
                 Apply to Open Roles
                 <ArrowRightIcon className="w-4 h-4 inline ml-2" />
               </button>
-              <span className="text-sm text-slate-400">2-minute application · No CV needed</span>
+              {!user && (
+                <div className="flex flex-col items-center md:items-start gap-2 mt-1">
+                  <span className="text-xs text-slate-400">Or sign up in 10 seconds:</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setApplyIntent('general', 'General Application');
+                        analytics.track('careers_hero_signup', { method: 'linkedin' });
+                        loginWithLinkedIn();
+                      }}
+                      className="px-4 py-2 rounded-lg text-white text-sm font-medium bg-[#0A66C2] hover:bg-[#004182] transition-colors flex items-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                      LinkedIn
+                    </button>
+                    <button
+                      onClick={() => {
+                        setApplyIntent('general', 'General Application');
+                        analytics.track('careers_hero_signup', { method: 'google' });
+                        loginWithGoogle();
+                      }}
+                      className="px-4 py-2 rounded-lg text-slate-600 text-sm font-medium bg-white border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                      Google
+                    </button>
+                  </div>
+                </div>
+              )}
+              {user && <span className="text-sm text-slate-400">2-minute application · No CV needed</span>}
             </div>
           </div>
           <div className="flex-1 flex justify-center">
@@ -638,16 +854,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* ═══ How to Apply (Process visualization) ═══ */}
-      <section className="px-4 pb-12">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Applying takes 2 minutes</h2>
-          <p className="text-slate-500 mb-8">No cover letter. No resume upload. Just tell us why you're excited.</p>
-          <ProcessSteps />
-        </div>
-      </section>
-
-      {/* ═══ Open Positions (moved up — first actionable section) ═══ */}
+      {/* ═══ Open Positions (moved up — first actionable section after trust banner) ═══ */}
       <section ref={positionsRef} className="px-4 pb-16 scroll-mt-24">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-8">
@@ -700,6 +907,15 @@ export default function CareersPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ═══ How to Apply (Process visualization — below positions for those who need convincing) ═══ */}
+      <section className="px-4 pb-12">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Applying takes 2 minutes</h2>
+          <p className="text-slate-500 mb-8">No cover letter. No resume upload. Just tell us why you're excited.</p>
+          <ProcessSteps />
         </div>
       </section>
 

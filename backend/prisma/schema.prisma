@@ -167,6 +167,7 @@ model Human {
   // OAuth fields
   googleId          String?  @unique
   linkedinId        String?  @unique
+  linkedinHeadline  String?  // LinkedIn professional headline (e.g. "Software Engineer at Acme")
   linkedinVerified  Boolean  @default(false)
   githubId          String?  @unique
   githubVerified    Boolean  @default(false)
@@ -232,6 +233,7 @@ model Human {
   humanReportsReceived HumanReport[] @relation("ReportsReceived")
   humanReportsGiven    HumanReport[] @relation("ReportsGiven")
   listingApplications ListingApplication[]
+  careerApplications  CareerApplication[]
   postingCompletions PostingGroup[] @relation("PostingCompletions")
   staffApiKey     StaffApiKey?
 
@@ -829,6 +831,46 @@ model ListingApplication {
   @@unique([listingId, humanId])
   @@index([humanId])
   @@index([listingId, status])
+}
+
+// ===== CAREERS PAGE APPLICATIONS =====
+// Internal team applications from /careers (NOT agent job-board listings).
+// Stored separately from ListingApplication which is for agent-created posts.
+
+enum CareerApplicationStatus {
+  PENDING
+  REVIEWED
+  CONTACTED
+  REJECTED
+  HIRED
+}
+
+model CareerApplication {
+  id              String                   @id @default(cuid())
+  humanId         String
+  human           Human                    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  positionId      String                   // e.g. "content-creator", "software-engineer", "general"
+  positionTitle   String                   // Snapshot at submission time
+
+  about           String                   @db.VarChar(500)  // "What excites you about this role?"
+  portfolioUrl    String?                  @db.VarChar(500)  // Optional link to work
+  availability    String                   @default("flexible") // "flexible" | "part-time" | "full-time"
+
+  status          CareerApplicationStatus  @default(PENDING)
+  adminNotes      String?                  @db.VarChar(2000)
+
+  // Fraud / abuse prevention
+  ipAddress       String?
+  userAgent       String?
+
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@unique([humanId, positionId])  // One application per position per person
+  @@index([status])
+  @@index([positionId])
+  @@index([createdAt])
 }
 
 // ===== POSTING QUEUE =====

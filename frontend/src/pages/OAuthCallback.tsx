@@ -46,10 +46,18 @@ export default function OAuthCallback() {
         localStorage.setItem('oauthPhotoUrl', result.oauthPhotoUrl);
         localStorage.setItem('oauthProvider', oauthProvider);
       }
+      // Store LinkedIn headline for skill auto-matching on onboarding
+      if (result.linkedinHeadline) {
+        localStorage.setItem('linkedinHeadline', result.linkedinHeadline);
+      }
       // New users always go through onboarding first.
       // If there's an apply intent in localStorage, Onboarding will chain to /careers after.
       window.location.href = '/onboarding';
     } else {
+      // Store LinkedIn headline for existing users too (in case they revisit onboarding)
+      if (result.linkedinHeadline) {
+        localStorage.setItem('linkedinHeadline', result.linkedinHeadline);
+      }
       // Existing users: check if they have a pending apply intent
       const applyRedirect = getApplyRedirect();
       window.location.href = applyRedirect || '/dashboard';

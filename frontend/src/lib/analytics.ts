@@ -19,7 +19,10 @@ type EventName =
   | 'affiliate_link_copy'
   | 'careers_apply_click'
   | 'careers_apply_signup_redirect'
-  | 'careers_apply_submit';
+  | 'careers_apply_submit'
+  | 'careers_referral_copy'
+  | 'careers_referral_share'
+  | 'careers_hero_signup';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

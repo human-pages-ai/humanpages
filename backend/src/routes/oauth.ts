@@ -231,6 +231,7 @@ interface LinkedInProfile {
   email: string;
   name: string;
   picture?: string;
+  headline?: string;
 }
 
 async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<LinkedInProfile> {
@@ -275,11 +276,27 @@ async function exchangeLinkedInCode(code: string, redirectUri: string): Promise<
     throw new Error('LinkedIn profile missing required fields');
   }
 
+  // Try to fetch headline from LinkedIn Profile API (works with existing 'profile' scope)
+  let headline: string | undefined;
+  try {
+    const profileRes = await fetch('https://api.linkedin.com/v2/me?projection=(localizedHeadline)', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    if (profileRes.ok) {
+      const profileData = await profileRes.json() as { localizedHeadline?: string };
+      headline = profileData.localizedHeadline || undefined;
+    }
+  } catch (err) {
+    // Non-fatal: headline is a nice-to-have for skill matching
+    logger.warn({ err }, 'Failed to fetch LinkedIn headline (non-fatal)');
+  }
+
   return {
     linkedinId: userInfo.sub,
     email: userInfo.email,
     name: userInfo.name || userInfo.email.split('@')[0],
     picture: userInfo.picture || undefined,
+    headline,
   };
 }
 
@@ -381,6 +398,7 @@ router.post('/linkedin/callback', async (req, res) => {
             email: profile.email,
             name: profile.name,
             linkedinId: profile.linkedinId,
+            linkedinHeadline: profile.headline || null,
             contactEmail: profile.email,
             referredBy: validReferrerId,
             referralCode: generateReferralCode(),
@@ -394,6 +412,13 @@ router.post('/linkedin/callback', async (req, res) => {
         trackServerEvent(human.id, 'user_signed_up_server', { method: 'linkedin' }, req);
       }
     } else {
+      // Existing user — update headline if we got a fresh one
+      if (profile.headline && human) {
+        await prisma.human.update({
+          where: { id: human.id },
+          data: { linkedinHeadline: profile.headline },
+        }).catch(() => {}); // Non-fatal
+      }
       await consumeOAuthState(state);
       pendingLinkedInProfiles.delete(state);
     }
@@ -405,6 +430,7 @@ router.post('/linkedin/callback', async (req, res) => {
       token,
       isNew,
       ...(isNew && profile.picture ? { oauthPhotoUrl: profile.picture } : {}),
+      ...(profile.headline ? { linkedinHeadline: profile.headline } : {}),
     });
   } catch (error) {
     logger.error({ err: error }, 'LinkedIn OAuth error');

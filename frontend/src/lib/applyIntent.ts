@@ -19,16 +19,39 @@ const APPLY_INTENT_KEY = 'hp_apply_intent';
 interface ApplyIntent {
   positionId: string;
   positionTitle?: string;
+  suggestedSkills?: string[];
   timestamp: number;
 }
 
 /** 24 hours in milliseconds */
 const INTENT_TTL = 24 * 60 * 60 * 1000;
 
+/**
+ * Maps each careers-page position to relevant onboarding skills.
+ * When a user applies for a role before signing up, these skills
+ * are pre-selected on the onboarding page so they don't have to hunt.
+ */
+export const POSITION_SKILL_HINTS: Record<string, string[]> = {
+  'digital-marketer':     ['Social Media Management', 'Content Writing', 'SEO & SEM', 'Email Marketing'],
+  'content-creator':      ['Content Writing', 'Video Production', 'Photo & Image Editing', 'Social Media Management'],
+  'virtual-assistant':    ['Email & Calendar Management', 'Data Entry', 'Scheduling', 'Document Management'],
+  'influencer-outreach':  ['Social Media Management', 'Cold Outreach', 'Community Management', 'Content Writing'],
+  'customer-relations':   ['Customer Support', 'Chat & Email Support', 'Community Management'],
+  'community-manager':    ['Community Management', 'Social Media Management', 'Content Writing', 'Event Coordination'],
+  'product-designer':     ['UI/UX Design', 'Graphic Design', 'Prototyping & Wireframing'],
+  'copywriter':           ['Copywriting', 'Content Writing', 'SEO & SEM', 'Proofreading & Editing'],
+  'sales-development':    ['Sales & Lead Generation', 'Cold Outreach', 'Market Research'],
+  'software-engineer':    ['Software Development', 'QA & Bug Testing', 'Code Review', 'Technical Writing'],
+  'qa-tester':            ['QA & Bug Testing', 'Software Development', 'Technical Writing'],
+  'general':              [],
+};
+
 export function setApplyIntent(positionId: string, positionTitle?: string): void {
+  const suggestedSkills = POSITION_SKILL_HINTS[positionId] || [];
   localStorage.setItem(APPLY_INTENT_KEY, JSON.stringify({
     positionId,
     positionTitle,
+    suggestedSkills,
     timestamp: Date.now(),
   }));
 }

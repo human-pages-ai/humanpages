@@ -11,6 +11,9 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
+// Mock scrollIntoView (not available in jsdom)
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
