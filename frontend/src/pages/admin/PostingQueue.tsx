@@ -61,6 +61,7 @@ export default function PostingQueue() {
   const [groups, setGroups] = useState<PostingGroup[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 50, total: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
 
   // Filters
@@ -99,8 +100,9 @@ export default function PostingQueue() {
       const res = await api.getPostingGroups(params);
       setGroups(res.groups);
       setPagination(res.pagination);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch groups', err);
+      setError(err.message || 'Failed to fetch groups');
     } finally {
       setLoading(false);
     }
@@ -306,6 +308,12 @@ export default function PostingQueue() {
           Apply
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (

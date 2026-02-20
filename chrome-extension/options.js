@@ -10,22 +10,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-document.getElementById('save').addEventListener('click', () => {
-  const apiUrl = document.getElementById('apiUrl').value.replace(/\/+$/, '') || DEFAULTS.apiUrl;
-  const apiKey = document.getElementById('apiKey').value.trim();
+function saveSettings() {
+  return new Promise((resolve) => {
+    const apiUrl = document.getElementById('apiUrl').value.replace(/\/+$/, '') || DEFAULTS.apiUrl;
+    const apiKey = document.getElementById('apiKey').value.trim();
 
-  chrome.storage.sync.set({ apiUrl, apiKey }, () => {
-    // Clean up legacy jwtToken from old installs
-    chrome.storage.sync.remove('jwtToken');
-    const msg = document.getElementById('savedMsg');
-    msg.classList.add('show');
-    setTimeout(() => msg.classList.remove('show'), 2000);
+    chrome.storage.sync.set({ apiUrl, apiKey }, () => {
+      // Clean up legacy jwtToken from old installs
+      chrome.storage.sync.remove('jwtToken');
+      resolve({ apiUrl, apiKey });
+    });
   });
+}
+
+document.getElementById('save').addEventListener('click', async () => {
+  await saveSettings();
+  const msg = document.getElementById('savedMsg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
 });
 
 document.getElementById('testBtn').addEventListener('click', async () => {
   const result = document.getElementById('testResult');
-  const apiUrl = document.getElementById('apiUrl').value.replace(/\/+$/, '') || DEFAULTS.apiUrl;
   const apiKey = document.getElementById('apiKey').value.trim();
 
   if (!apiKey) {
@@ -35,13 +41,16 @@ document.getElementById('testBtn').addEventListener('click', async () => {
     return;
   }
 
+  // Save first, then test — so the sidepanel picks up the key immediately
+  const saved = await saveSettings();
+
   result.className = 'loading';
-  result.textContent = 'Testing connection...';
+  result.textContent = 'Saving & testing connection...';
   result.style.display = 'block';
 
   try {
-    const res = await fetch(`${apiUrl}/api/admin/posting/groups?status=PENDING&limit=1`, {
-      headers: { 'X-Admin-API-Key': apiKey },
+    const res = await fetch(`${saved.apiUrl}/api/admin/posting/groups?status=PENDING&limit=1`, {
+      headers: { 'X-Admin-API-Key': saved.apiKey },
     });
 
     if (res.ok) {
