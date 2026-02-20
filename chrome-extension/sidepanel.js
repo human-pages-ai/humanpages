@@ -155,7 +155,10 @@ async function apiFetch(path, options = {}) {
 
 // ─── Auth error ───
 function showAuthError() {
-  els.authError.hidden = false;
+  // Only show if there's genuinely no API key configured
+  if (!config.apiKey) {
+    els.authError.hidden = false;
+  }
 }
 function hideAuthError() {
   els.authError.hidden = true;
@@ -664,10 +667,15 @@ els.addGroupBtn.addEventListener('click', async () => {
     const payload = { name, url, adId, language, country, taskType: 'fb_post' };
     if (campaign) payload.campaign = campaign;
 
-    await apiFetch('/groups', {
+    const result = await apiFetch('/groups', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+
+    if (result.skipped > 0 && result.created === 0) {
+      showAddResult('Already in queue — skipped.', true);
+      return;
+    }
 
     showAddResult(`Added "${name}" to queue!`, false);
 

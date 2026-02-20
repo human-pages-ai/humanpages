@@ -194,15 +194,15 @@ body {
 }
 .add-btn {
   width: 100%;
-  padding: 9px;
+  padding: 14px;
   background: #2563eb;
   color: #fff;
   border: none;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: 8px;
   transition: background 0.15s;
 }
 .add-btn:hover {

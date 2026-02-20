@@ -861,7 +861,7 @@ model AdCopy {
 model PostingGroup {
   id            String             @id @default(cuid())
   name          String
-  url           String
+  url           String             @unique
   adId          String
   language      String
   country       String

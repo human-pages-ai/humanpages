@@ -66,12 +66,18 @@ router.post('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
     }
 
     const created = [];
+    const skipped = [];
     for (const item of parsed.data) {
+      const existing = await prisma.postingGroup.findFirst({ where: { url: item.url } });
+      if (existing) {
+        skipped.push(item.url);
+        continue;
+      }
       const group = await prisma.postingGroup.create({ data: item });
       created.push(group);
     }
 
-    res.json({ created: created.length, groups: created });
+    res.json({ created: created.length, skipped: skipped.length, groups: created });
   } catch (error) {
     logger.error({ err: error }, 'Posting groups create error');
     res.status(500).json({ error: 'Internal server error' });
@@ -183,6 +189,7 @@ const patchGroupSchema = z.object({
   status: z.enum(['PENDING', 'JOINED', 'POSTED', 'REJECTED', 'SKIPPED']).optional(),
   notes: z.string().nullable().optional(),
   datePosted: z.string().datetime().nullable().optional(),
+  priority: z.number().int().min(0).max(100).optional(),
 });
 
 // PATCH /api/admin/posting/groups/:id — Update status/notes/datePosted
@@ -222,6 +229,10 @@ router.patch('/groups/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthR
 
     if (parsed.data.datePosted !== undefined) {
       data.datePosted = parsed.data.datePosted ? new Date(parsed.data.datePosted) : null;
+    }
+
+    if (parsed.data.priority !== undefined) {
+      data.priority = parsed.data.priority;
     }
 
     const updated = await prisma.postingGroup.update({
