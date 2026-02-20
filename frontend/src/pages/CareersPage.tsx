@@ -731,29 +731,31 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* ═══ Team Quotes ═══ */}
+      {/* ═══ Team Quotes — hidden until team members approve ═══ */}
+      {false && (
       <section className="px-4 pb-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">From the team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <TeamQuote
-              quote="I joined with zero startup experience and was leading a project within a month. They actually mean it when they say results over resumes."
-              name="Sarah M."
-              role="Digital Marketer"
+              quote="I joined with no startup experience and they gave me real responsibility from day one. They actually mean it when they say results over resumes."
+              name="Angel"
+              role="Virtual Assistant"
             />
             <TeamQuote
-              quote="The flexibility is real — I work from Lisbon and my schedule is my own. What matters is that things get done."
-              name="Carlos R."
-              role="Software Engineer"
+              quote="The flexibility is real — I set my own schedule and work on my own terms. What matters is that things get done."
+              name="Mikee"
+              role="Virtual Assistant"
             />
             <TeamQuote
-              quote="The weekly knowledge sessions alone made me 10x better at my craft. Everyone shares openly."
-              name="Priya K."
-              role="Content Creator"
+              quote="I've grown so much since joining. Everyone shares openly and you're always learning something new."
+              name="Ash"
+              role="Virtual Assistant"
             />
           </div>
         </div>
       </section>
+      )}
 
       <Footer />
 
