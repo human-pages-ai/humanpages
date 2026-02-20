@@ -49,25 +49,31 @@ const groupSchema = z.object({
   country: z.string().min(1).max(100),
   taskType: z.enum(VALID_TASK_TYPES).default('fb_post'),
   campaign: z.string().max(200).optional(),
+  notes: z.string().optional(),
+  priority: z.number().int().min(0).max(100).default(0),
 });
 
 const bulkGroupsSchema = z.array(groupSchema).min(1).max(500);
 
-// POST /api/admin/posting/groups — Bulk add groups
+// POST /api/admin/posting/groups — Add groups (single object or array)
 router.post('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
   try {
-    const parsed = bulkGroupsSchema.safeParse(req.body);
+    // Accept both a single object and an array
+    const input = Array.isArray(req.body) ? req.body : [req.body];
+    const parsed = bulkGroupsSchema.safeParse(input);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
     }
 
-    const result = await prisma.postingGroup.createMany({
-      data: parsed.data,
-    });
+    const created = [];
+    for (const item of parsed.data) {
+      const group = await prisma.postingGroup.create({ data: item });
+      created.push(group);
+    }
 
-    res.json({ created: result.count });
+    res.json({ created: created.length, groups: created });
   } catch (error) {
-    logger.error({ err: error }, 'Posting groups bulk create error');
+    logger.error({ err: error }, 'Posting groups create error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -147,6 +153,7 @@ router.get('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest
           completedBy: { select: { id: true, name: true } },
         },
         orderBy: [
+          { priority: 'desc' },
           { ad: { adNumber: 'asc' } },
           { language: 'asc' },
           { country: 'asc' },
@@ -174,7 +181,7 @@ router.get('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest
 
 const patchGroupSchema = z.object({
   status: z.enum(['PENDING', 'JOINED', 'POSTED', 'REJECTED', 'SKIPPED']).optional(),
-  notes: z.string().max(1000).nullable().optional(),
+  notes: z.string().nullable().optional(),
   datePosted: z.string().datetime().nullable().optional(),
 });
 

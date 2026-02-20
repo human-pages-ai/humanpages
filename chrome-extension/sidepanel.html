@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Posting Queue</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Auth error banner -->
+  <div id="authError" class="auth-error" hidden>
+    <span>Not authenticated.</span>
+    <a href="#" id="openSettings">Open Settings</a>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="progressBar" class="progress-bar" hidden>
+    <div class="progress-stats">
+      <span id="progressText">0 / 0 posted</span>
+      <span id="sessionText" class="session-text"></span>
+    </div>
+    <div class="progress-track">
+      <div id="progressFill" class="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <select id="filterTaskType">
+      <option value="fb_post">FB Post</option>
+      <option value="">All Types</option>
+      <option value="yt_comment">YT Comment</option>
+      <option value="blog_comment">Blog Comment</option>
+    </select>
+    <select id="filterLanguage">
+      <option value="">All Languages</option>
+    </select>
+    <select id="filterCountry">
+      <option value="">All Countries</option>
+    </select>
+    <input type="text" id="filterCampaign" placeholder="Campaign">
+  </div>
+
+  <!-- Main content area -->
+  <div id="loading" class="loading">Loading...</div>
+  <div id="emptyState" class="empty-state" hidden>
+    <div class="empty-icon">&#10003;</div>
+    <div class="empty-title">All done!</div>
+    <div class="empty-sub">No pending groups match your filters.</div>
+  </div>
+
+  <!-- Add Group section -->
+  <div id="addGroupSection" class="add-group-section">
+    <div class="add-group-header" id="addGroupToggle">
+      <span class="add-group-title">+ Add to Queue</span>
+      <span class="add-group-chevron" id="addGroupChevron">&#9660;</span>
+    </div>
+    <div class="add-group-body collapsed" id="addGroupBody">
+      <div class="add-field">
+        <label for="addUrl">URL</label>
+        <input type="text" id="addUrl" placeholder="https://facebook.com/groups/...">
+      </div>
+      <div class="add-field">
+        <label for="addName">Name</label>
+        <input type="text" id="addName" placeholder="Group name">
+      </div>
+      <div class="add-field">
+        <label for="addLanguage">Language</label>
+        <select id="addLanguage">
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="tl">Filipino</option>
+          <option value="hi">Hindi</option>
+          <option value="vi">Vietnamese</option>
+        </select>
+      </div>
+      <div class="add-field">
+        <label for="addAd">Ad Copy</label>
+        <select id="addAd"></select>
+      </div>
+      <div class="add-field-row">
+        <div class="add-field">
+          <label for="addCountry">Country</label>
+          <input type="text" id="addCountry" value="Global" placeholder="Country">
+        </div>
+        <div class="add-field">
+          <label for="addCampaign">Campaign</label>
+          <input type="text" id="addCampaign" placeholder="Optional">
+        </div>
+      </div>
+      <button class="add-btn" id="addGroupBtn">Add to Queue</button>
+      <div id="addResult" class="add-result" hidden></div>
+    </div>
+  </div>
+
+  <!-- Current group card -->
+  <div id="groupCard" class="group-card" hidden>
+    <div class="group-header">
+      <div class="group-meta">
+        <span class="badge badge-type" id="groupType"></span>
+        <span class="badge badge-lang" id="groupLang"></span>
+        <span class="badge badge-country" id="groupCountry"></span>
+        <span class="badge badge-campaign" id="groupCampaign"></span>
+      </div>
+      <div class="group-position" id="groupPosition"></div>
+    </div>
+
+    <h2 class="group-name" id="groupName"></h2>
+
+    <!-- Anti-spam warning -->
+    <div id="spamWarning" class="spam-warning" hidden>
+      <span class="spam-icon">&#9888;</span>
+      <span id="spamText"></span>
+    </div>
+
+    <a id="groupUrl" class="open-group-btn" href="#" target="_blank" rel="noopener noreferrer">
+      Open Group in New Tab
+    </a>
+
+    <!-- Suggested reply section (yt_comment) -->
+    <div id="replySection" class="reply-section" hidden>
+      <div class="reply-header">
+        <span class="reply-label">Suggested Reply</span>
+        <span class="reply-score" id="replyScore"></span>
+      </div>
+      <pre class="reply-body" id="replyBody"></pre>
+      <button class="copy-btn" id="copyReplyBtn">Copy Reply</button>
+    </div>
+
+    <!-- Ad copy section -->
+    <div class="ad-section" id="adSection">
+      <div class="ad-header">
+        <span class="ad-label">Ad Copy</span>
+        <span class="ad-number" id="adNumber"></span>
+      </div>
+      <div class="ad-title" id="adTitle"></div>
+      <pre class="ad-body" id="adBody"></pre>
+      <button class="copy-btn" id="copyBtn">Copy Ad Text</button>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes-section">
+      <input type="text" id="notesInput" placeholder="Notes (optional)">
+    </div>
+
+    <!-- Action buttons -->
+    <div class="actions">
+      <button class="action-btn btn-posted" id="btnPosted">Posted</button>
+      <button class="action-btn btn-skip" id="btnSkip">Skip</button>
+      <button class="action-btn btn-reject" id="btnReject">Reject</button>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

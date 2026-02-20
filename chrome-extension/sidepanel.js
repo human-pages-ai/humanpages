@@ -9,6 +9,71 @@ let adCache = {};
 let sessionPosted = 0;
 let totalPosted = 0;
 let totalGroups = 0;
+let allAds = []; // cached ad copies for the add-group form
+
+// ─── Keyword → Ad Number mapping ───
+const AD_KEYWORD_MAP = [
+  { keywords: ['freelanc', 'upwork', 'fiverr', 'gig', 'self-employ', 'independ', 'contractor'], adNumber: 109 },
+  { keywords: ['tech', 'developer', 'software', 'engineer', 'programming', 'coding', 'devops', 'fullstack', 'frontend', 'backend', 'data.?sci'], adNumber: 101 },
+  { keywords: ['design', 'graphic', 'ui', 'ux', 'creative', 'illustrat', 'photoshop', 'figma', 'canva'], adNumber: 102 },
+  { keywords: ['market', 'seo', 'social.?media', 'content', 'digital.?market', 'growth', 'brand', 'ads', 'ppc', 'copywrite'], adNumber: 103 },
+  { keywords: ['writ', 'blog', 'author', 'journal', 'editor', 'copy'], adNumber: 104 },
+  { keywords: ['virtual.?assist', '\\bva\\b', 'admin.?assist', 'executive.?assist'], adNumber: 105 },
+  { keywords: ['hr', 'human.?resource', 'recruit', 'hiring', 'talent', 'headhunt', 'staffing'], adNumber: 106 },
+  { keywords: ['mom', 'parent', 'sahm', 'wahm', 'working.?mom', 'working.?parent', 'family'], adNumber: 107 },
+  { keywords: ['startup', 'entrepreneur', 'founder', 'solopreneur', 'small.?bus', 'bootstrap'], adNumber: 108 },
+  { keywords: ['video', 'youtube', 'editor', 'filmmaker', 'vlog', 'motion', 'animation'], adNumber: 110 },
+  { keywords: ['account', 'bookkeep', 'financ', 'tax', 'cpa', 'audit'], adNumber: 111 },
+  { keywords: ['job', 'career', 'employ', 'hire', 'work', 'remote', 'resume', 'cv', 'interview'], adNumber: 100 },
+];
+
+const FALLBACK_AD_NUMBER = 100;
+
+// ─── Keyword → Country/City mapping ───
+const COUNTRY_KEYWORD_MAP = [
+  // Countries
+  { keywords: ['philippines', 'filipino', 'pinoy', 'pinay', 'pilipinas', 'manila', 'cebu', 'davao', 'makati', 'quezon'], country: 'Philippines' },
+  { keywords: ['nigeria', 'nigerian', 'naija', 'lagos', 'abuja'], country: 'Nigeria' },
+  { keywords: ['vietnam', 'vietnamese', 'hanoi', 'saigon', 'ho.?chi.?minh'], country: 'Vietnam' },
+  { keywords: ['mexico', 'mexican', 'mexic', 'cdmx', 'guadalajara', 'monterrey'], country: 'Mexico' },
+  { keywords: ['india', 'indian', 'mumbai', 'delhi', 'bangalore', 'bengaluru', 'hyderabad', 'chennai', 'kolkata', 'pune'], country: 'India' },
+  { keywords: ['pakistan', 'pakistani', 'karachi', 'lahore', 'islamabad'], country: 'Pakistan' },
+  { keywords: ['bangladesh', 'bangladeshi', 'dhaka', 'chittagong'], country: 'Bangladesh' },
+  { keywords: ['kenya', 'kenyan', 'nairobi', 'mombasa'], country: 'Kenya' },
+  { keywords: ['south.?africa', 'johannesburg', 'cape.?town', 'durban', 'pretoria'], country: 'South Africa' },
+  { keywords: ['ghana', 'ghanaian', 'accra', 'kumasi'], country: 'Ghana' },
+  { keywords: ['egypt', 'egyptian', 'cairo', 'alexandria'], country: 'Egypt' },
+  { keywords: ['turkey', 'turkish', 'istanbul', 'ankara', 'izmir', 'turkiye'], country: 'Turkey' },
+  { keywords: ['indonesia', 'indonesian', 'jakarta', 'bali', 'surabaya'], country: 'Indonesia' },
+  { keywords: ['thailand', 'thai', 'bangkok', 'chiang.?mai', 'phuket'], country: 'Thailand' },
+  { keywords: ['brazil', 'brazilian', 'brasil', 'sao.?paulo', 'rio'], country: 'Brazil' },
+  { keywords: ['colombia', 'colombian', 'bogota', 'medellin', 'cali'], country: 'Colombia' },
+  { keywords: ['argentina', 'argentin', 'buenos.?aires'], country: 'Argentina' },
+  { keywords: ['canada', 'canadian', 'toronto', 'vancouver', 'montreal', 'calgary', 'ottawa'], country: 'Canada' },
+  { keywords: ['australia', 'australian', 'aussie', 'sydney', 'melbourne', 'brisbane', 'perth'], country: 'Australia' },
+  { keywords: ['uk', 'united.?kingdom', 'british', 'london', 'manchester', 'birmingham', 'scotland', 'wales', 'england'], country: 'UK' },
+  { keywords: ['usa', 'united.?states', 'america', 'new.?york', 'los.?angeles', 'chicago', 'houston', 'phoenix', 'dallas', 'san.?francisco', 'seattle', 'austin', 'denver', 'boston', 'atlanta', 'miami'], country: 'USA' },
+  { keywords: ['germany', 'german', 'berlin', 'munich', 'hamburg', 'frankfurt'], country: 'Germany' },
+  { keywords: ['france', 'french', 'paris', 'lyon', 'marseille'], country: 'France' },
+  { keywords: ['spain', 'spanish', 'madrid', 'barcelona', 'valencia'], country: 'Spain' },
+  { keywords: ['italy', 'italian', 'rome', 'milan', 'naples'], country: 'Italy' },
+  { keywords: ['netherlands', 'dutch', 'amsterdam', 'rotterdam'], country: 'Netherlands' },
+  { keywords: ['poland', 'polish', 'warsaw', 'krakow'], country: 'Poland' },
+  { keywords: ['romania', 'romanian', 'bucharest'], country: 'Romania' },
+  { keywords: ['ukraine', 'ukrainian', 'kyiv', 'kiev'], country: 'Ukraine' },
+  { keywords: ['japan', 'japanese', 'tokyo', 'osaka'], country: 'Japan' },
+  { keywords: ['korea', 'korean', 'seoul', 'busan'], country: 'South Korea' },
+  { keywords: ['singapore', 'singaporean'], country: 'Singapore' },
+  { keywords: ['malaysia', 'malaysian', 'kuala.?lumpur'], country: 'Malaysia' },
+  { keywords: ['dubai', 'uae', 'abu.?dhabi', 'emirates'], country: 'UAE' },
+  { keywords: ['saudi', 'riyadh', 'jeddah'], country: 'Saudi Arabia' },
+  { keywords: ['israel', 'israeli', 'tel.?aviv', 'jerusalem'], country: 'Israel' },
+  // Broad region fallbacks
+  { keywords: ['africa', 'african'], country: 'Africa' },
+  { keywords: ['asia', 'asian'], country: 'Asia' },
+  { keywords: ['latin.?america', 'latam'], country: 'Latin America' },
+  { keywords: ['europe', 'european'], country: 'Europe' },
+];
 
 // ─── DOM refs ───
 const $ = (id) => document.getElementById(id);
@@ -40,10 +105,28 @@ const els = {
   adTitle: $('adTitle'),
   adBody: $('adBody'),
   copyBtn: $('copyBtn'),
+  replySection: $('replySection'),
+  replyScore: $('replyScore'),
+  replyBody: $('replyBody'),
+  copyReplyBtn: $('copyReplyBtn'),
+  adSection: $('adSection'),
   notesInput: $('notesInput'),
   btnPosted: $('btnPosted'),
   btnSkip: $('btnSkip'),
   btnReject: $('btnReject'),
+  // Add Group form
+  addGroupSection: $('addGroupSection'),
+  addGroupToggle: $('addGroupToggle'),
+  addGroupChevron: $('addGroupChevron'),
+  addGroupBody: $('addGroupBody'),
+  addUrl: $('addUrl'),
+  addName: $('addName'),
+  addLanguage: $('addLanguage'),
+  addAd: $('addAd'),
+  addCountry: $('addCountry'),
+  addCampaign: $('addCampaign'),
+  addGroupBtn: $('addGroupBtn'),
+  addResult: $('addResult'),
 };
 
 // ─── API helper ───
@@ -196,6 +279,7 @@ async function showCurrentGroup() {
   // Name & URL
   els.groupName.textContent = group.name;
   els.groupUrl.href = group.url;
+  els.groupUrl.textContent = group.taskType === 'yt_comment' ? 'Open Video in New Tab' : 'Open Group in New Tab';
 
   // Anti-spam check
   if (group.datePosted) {
@@ -209,6 +293,24 @@ async function showCurrentGroup() {
     }
   } else {
     els.spamWarning.hidden = true;
+  }
+
+  // For yt_comment tasks: show notes as the suggested reply prominently
+  const isYtComment = group.taskType === 'yt_comment';
+
+  if (isYtComment && group.notes) {
+    // Extract the suggested comment from notes (first section before metadata)
+    const notesText = group.notes;
+    const commentMatch = notesText.match(/^SUGGESTED COMMENT:\n([\s\S]*?)(?:\n\n[A-Z]|$)/);
+    const suggestedReply = commentMatch ? commentMatch[1].trim() : notesText.split('\n\nLLM REASON:')[0].split('\n\nRECENT VIDEOS:')[0].split('\n\nEMAIL:')[0].trim();
+
+    els.replySection.hidden = false;
+    els.replyBody.textContent = suggestedReply;
+    els.replyScore.textContent = group.priority ? `Score ${group.priority}/10` : '';
+    els.copyReplyBtn.textContent = 'Copy Reply';
+    els.copyReplyBtn.classList.remove('copied');
+  } else {
+    els.replySection.hidden = true;
   }
 
   // Ad copy
@@ -232,41 +334,43 @@ async function showCurrentGroup() {
   els.copyBtn.textContent = 'Copy Ad Text';
   els.copyBtn.classList.remove('copied');
 
-  // Clear notes
-  els.notesInput.value = group.notes || '';
+  // Clear notes (for yt_comment don't show raw notes in the input)
+  els.notesInput.value = isYtComment ? '' : (group.notes || '');
 
   // Enable buttons
   setButtonsEnabled(true);
 }
 
-// ─── Copy ad text ───
-els.copyBtn.addEventListener('click', async () => {
-  const text = els.adBody.textContent;
-  if (!text) return;
-
+// ─── Generic copy helper ───
+async function copyToClipboard(text, btn, defaultLabel) {
   try {
     await navigator.clipboard.writeText(text);
-    els.copyBtn.textContent = 'Copied!';
-    els.copyBtn.classList.add('copied');
-    setTimeout(() => {
-      els.copyBtn.textContent = 'Copy Ad Text';
-      els.copyBtn.classList.remove('copied');
-    }, 2000);
   } catch {
-    // Fallback
     const textarea = document.createElement('textarea');
     textarea.value = text;
     document.body.appendChild(textarea);
     textarea.select();
     document.execCommand('copy');
     document.body.removeChild(textarea);
-    els.copyBtn.textContent = 'Copied!';
-    els.copyBtn.classList.add('copied');
-    setTimeout(() => {
-      els.copyBtn.textContent = 'Copy Ad Text';
-      els.copyBtn.classList.remove('copied');
-    }, 2000);
   }
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = defaultLabel;
+    btn.classList.remove('copied');
+  }, 2000);
+}
+
+// ─── Copy ad text ───
+els.copyBtn.addEventListener('click', () => {
+  const text = els.adBody.textContent;
+  if (text) copyToClipboard(text, els.copyBtn, 'Copy Ad Text');
+});
+
+// ─── Copy suggested reply ───
+els.copyReplyBtn.addEventListener('click', () => {
+  const text = els.replyBody.textContent;
+  if (text) copyToClipboard(text, els.copyReplyBtn, 'Copy Reply');
 });
 
 // ─── Action buttons ───
@@ -386,6 +490,202 @@ els.openSettings.addEventListener('click', (e) => {
   chrome.runtime.openOptionsPage();
 });
 
+// ─── Add Group: keyword matching ───
+function matchAdNumber(slug) {
+  const text = slug.toLowerCase();
+  for (const entry of AD_KEYWORD_MAP) {
+    for (const kw of entry.keywords) {
+      if (new RegExp(kw, 'i').test(text)) {
+        return entry.adNumber;
+      }
+    }
+  }
+  return FALLBACK_AD_NUMBER;
+}
+
+function matchCountry(slug) {
+  const text = slug.toLowerCase();
+  for (const entry of COUNTRY_KEYWORD_MAP) {
+    for (const kw of entry.keywords) {
+      if (new RegExp(kw, 'i').test(text)) {
+        return entry.country;
+      }
+    }
+  }
+  return 'Global';
+}
+
+function slugFromUrl(url) {
+  try {
+    const match = url.match(/facebook\.com\/groups\/([^/?#]+)/);
+    return match ? match[1] : '';
+  } catch {
+    return '';
+  }
+}
+
+function nameFromSlug(slug) {
+  return slug
+    .replace(/[._-]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+}
+
+// ─── Add Group: toggle collapse ───
+els.addGroupToggle.addEventListener('click', () => {
+  els.addGroupBody.classList.toggle('collapsed');
+  els.addGroupChevron.classList.toggle('open');
+});
+
+// ─── Add Group: load ads for dropdown ───
+async function loadAdsForForm() {
+  try {
+    const data = await apiFetch('/ads');
+    allAds = data.ads || [];
+    updateAdDropdown();
+  } catch {
+    // Non-critical — dropdown will be empty
+  }
+}
+
+function updateAdDropdown() {
+  const lang = els.addLanguage.value;
+  const slug = slugFromUrl(els.addUrl.value);
+  const suggestedAdNumber = matchAdNumber(slug);
+
+  // Filter ads by selected language
+  const filtered = allAds.filter((ad) => ad.language === lang);
+
+  els.addAd.innerHTML = '';
+  let bestMatch = null;
+
+  for (const ad of filtered) {
+    const opt = document.createElement('option');
+    opt.value = ad.id;
+    opt.textContent = `#${ad.adNumber} — ${ad.title}`;
+    els.addAd.appendChild(opt);
+
+    if (ad.adNumber === suggestedAdNumber && !bestMatch) {
+      bestMatch = ad.id;
+    }
+  }
+
+  // If no exact match, try the fallback ad number
+  if (!bestMatch) {
+    const fallback = filtered.find((ad) => ad.adNumber === FALLBACK_AD_NUMBER);
+    if (fallback) bestMatch = fallback.id;
+  }
+
+  // Select the best match, or first available
+  if (bestMatch) {
+    els.addAd.value = bestMatch;
+  }
+}
+
+// Re-filter ads when language changes
+els.addLanguage.addEventListener('change', updateAdDropdown);
+
+// ─── Add Group: detect tab URL ───
+async function detectTabUrl() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.url) return;
+
+    const slug = slugFromUrl(tab.url);
+    if (slug) {
+      // Auto-fill and expand the form when on a FB group page
+      els.addUrl.value = tab.url.split('?')[0];
+      els.addName.value = nameFromSlug(slug);
+      els.addCountry.value = matchCountry(slug);
+      els.addGroupBody.classList.remove('collapsed');
+      els.addGroupChevron.classList.add('open');
+      updateAdDropdown();
+    }
+  } catch {
+    // Non-critical — form stays collapsed, user can still open manually
+  }
+}
+
+// Re-suggest ad when URL is manually edited
+let urlDebounce;
+els.addUrl.addEventListener('input', () => {
+  clearTimeout(urlDebounce);
+  urlDebounce = setTimeout(() => {
+    const slug = slugFromUrl(els.addUrl.value);
+    if (slug) {
+      if (!els.addName.value.trim()) {
+        els.addName.value = nameFromSlug(slug);
+      }
+      els.addCountry.value = matchCountry(slug);
+    }
+    updateAdDropdown();
+  }, 300);
+});
+
+// Listen for tab switches and URL changes
+chrome.tabs.onActivated.addListener(() => detectTabUrl());
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  if (changeInfo.url || changeInfo.status === 'complete') {
+    detectTabUrl();
+  }
+});
+
+// ─── Add Group: submit ───
+function showAddResult(message, isError) {
+  els.addResult.hidden = false;
+  els.addResult.textContent = message;
+  els.addResult.className = `add-result ${isError ? 'error' : 'success'}`;
+  if (!isError) {
+    setTimeout(() => { els.addResult.hidden = true; }, 4000);
+  }
+}
+
+els.addGroupBtn.addEventListener('click', async () => {
+  const url = els.addUrl.value.trim();
+  const name = els.addName.value.trim();
+  const adId = els.addAd.value;
+  const language = els.addLanguage.value;
+  const country = els.addCountry.value.trim() || 'Global';
+  const campaign = els.addCampaign.value.trim();
+
+  if (!url || !name) {
+    showAddResult('URL and name are required.', true);
+    return;
+  }
+  if (!adId) {
+    showAddResult('Please select an ad copy.', true);
+    return;
+  }
+
+  els.addGroupBtn.disabled = true;
+  els.addGroupBtn.textContent = 'Adding...';
+
+  try {
+    const payload = { name, url, adId, language, country, taskType: 'fb_post' };
+    if (campaign) payload.campaign = campaign;
+
+    await apiFetch('/groups', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    showAddResult(`Added "${name}" to queue!`, false);
+
+    // Reset form fields (keep URL and language)
+    els.addName.value = '';
+    els.addCountry.value = 'Global';
+    els.addCampaign.value = '';
+
+    // Refresh the queue below
+    fetchGroups();
+  } catch (err) {
+    showAddResult(`Failed: ${err.message}`, true);
+  } finally {
+    els.addGroupBtn.disabled = false;
+    els.addGroupBtn.textContent = 'Add to Queue';
+  }
+});
+
 // ─── Init ───
 async function init() {
   await loadConfig();
@@ -396,7 +696,13 @@ async function init() {
     return;
   }
 
-  await populateFilters();
+  // Load ads for add-group form and detect current tab in parallel
+  await Promise.all([
+    loadAdsForForm(),
+    detectTabUrl(),
+    populateFilters(),
+  ]);
+
   await fetchGroups();
 }
 
