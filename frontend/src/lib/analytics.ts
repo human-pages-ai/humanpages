@@ -16,7 +16,10 @@ type EventName =
   | 'profile_view'
   | 'login_success'
   | 'affiliate_applied'
-  | 'affiliate_link_copy';
+  | 'affiliate_link_copy'
+  | 'careers_apply_click'
+  | 'careers_apply_signup_redirect'
+  | 'careers_apply_submit';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

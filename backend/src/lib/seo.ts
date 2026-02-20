@@ -222,6 +222,54 @@ export function getBlogMetaHtml(slug: string, lang?: string): string | null {
   return modifiedHtml;
 }
 
+export function getCareersMetaHtml(lang?: string): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  const title = 'Careers | Human Pages';
+  const description = 'Join HumanPages — the AI-to-human marketplace. No CVs required. Work from anywhere, any time zone. We believe in results, not resumes.';
+  const ogImage = `${SITE_URL}/api/og/careers`;
+  const unprefixedPath = '/careers';
+  const canonicalUrl = lang && lang !== 'en'
+    ? `${SITE_URL}/${lang}${unprefixedPath}`
+    : `${SITE_URL}${unprefixedPath}`;
+
+  const hreflangTags = buildHreflangTags(unprefixedPath);
+
+  const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
+    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${description}" />
+    <meta name="twitter:image" content="${ogImage}" />
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Careers at HumanPages",
+      "description": description,
+      "url": canonicalUrl,
+      "publisher": { "@type": "Organization", "name": "Human Pages", "url": SITE_URL },
+    })}</script>`;
+
+  let modifiedHtml = html;
+  modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+
+  return modifiedHtml;
+}
+
 // Clear template cache (useful for development)
 export function clearTemplateCache() {
   indexHtmlTemplate = null;

@@ -129,8 +129,41 @@ export function generateBlogSvg(title: string): string {
 </svg>`;
 }
 
+export function generateCareersSvg(): string {
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="40%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="5" fill="url(#accent)"/>
+
+  <text x="600" y="200" font-family="system-ui, sans-serif" font-size="72" font-weight="800" letter-spacing="-3" text-anchor="middle">
+    <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="500">.ai</tspan>
+  </text>
+
+  <rect x="510" y="230" width="180" height="36" rx="18" fill="#f97316" opacity="0.9"/>
+  <text x="600" y="254" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">WE'RE HIRING</text>
+
+  <text x="600" y="340" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="#f1f5f9" text-anchor="middle">Stop chasing clients.</text>
+
+  <text x="600" y="410" font-family="system-ui, sans-serif" font-size="32" font-weight="500" fill="#60a5fa" text-anchor="middle">Join us and build the future of human-AI work.</text>
+
+  <text x="600" y="540" font-family="system-ui, sans-serif" font-size="20" font-weight="400" fill="#94a3b8" text-anchor="middle">No CVs required · Remote · Any time zone · Freelance or full-time</text>
+</svg>`;
+}
+
 // Cache default PNG in memory
 let defaultPngCache: Buffer | null = null;
+let careersPngCache: Buffer | null = null;
 
 // Default OG image (served as PNG)
 router.get('/default', (req, res) => {
@@ -142,6 +175,21 @@ router.get('/default', (req, res) => {
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
     res.send(defaultPngCache);
+  } catch (error) {
+    res.status(500).send('Error generating image');
+  }
+});
+
+// Careers OG image (served as PNG)
+router.get('/careers', (req, res) => {
+  try {
+    if (!careersPngCache) {
+      const svg = generateCareersSvg();
+      careersPngCache = svgToPng(svg);
+    }
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
+    res.send(careersPngCache);
   } catch (error) {
     res.status(500).send('Error generating image');
   }

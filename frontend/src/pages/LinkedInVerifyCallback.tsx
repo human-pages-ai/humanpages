@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
+import { getApplyRedirect } from '../lib/applyIntent';
 
 export default function LinkedInVerifyCallback() {
   const { t } = useTranslation();
@@ -34,7 +35,8 @@ export default function LinkedInVerifyCallback() {
 
     api.linkedinVerifyCallback(code, storedState)
       .then(() => {
-        navigate('/dashboard?linkedinVerified=true', { replace: true });
+        const applyRedirect = getApplyRedirect();
+        navigate(applyRedirect || '/dashboard?linkedinVerified=true', { replace: true });
       })
       .catch((err) => {
         setError(err.message || 'LinkedIn verification failed');

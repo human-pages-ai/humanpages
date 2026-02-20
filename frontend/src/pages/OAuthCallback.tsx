@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
+import { getApplyRedirect } from '../lib/applyIntent';
 
 export default function OAuthCallback() {
   const { t } = useTranslation();
@@ -40,9 +41,18 @@ export default function OAuthCallback() {
     localStorage.setItem('token', result.token);
     if (result.isNew) {
       analytics.track('signup_complete', { method: oauthProvider });
+      // Store OAuth photo URL for import prompt on onboarding page
+      if (result.oauthPhotoUrl) {
+        localStorage.setItem('oauthPhotoUrl', result.oauthPhotoUrl);
+        localStorage.setItem('oauthProvider', oauthProvider);
+      }
+      // New users always go through onboarding first.
+      // If there's an apply intent in localStorage, Onboarding will chain to /careers after.
       window.location.href = '/onboarding';
     } else {
-      window.location.href = '/dashboard';
+      // Existing users: check if they have a pending apply intent
+      const applyRedirect = getApplyRedirect();
+      window.location.href = applyRedirect || '/dashboard';
     }
   };
 

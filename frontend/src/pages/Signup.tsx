@@ -46,6 +46,8 @@ export default function Signup() {
     try {
       await signup(email, password, name, termsAccepted, captchaToken);
       analytics.track('signup_complete', { method: 'email' });
+      // Always go through onboarding for new users.
+      // If there's an apply intent in localStorage, Onboarding will chain to /careers after.
       navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || t('auth.signupFailed'));
