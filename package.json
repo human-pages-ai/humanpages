@@ -13,6 +13,8 @@
     "test": "cd backend && npm test",
     "test:watch": "cd backend && npm run test:watch",
     "test:e2e": "npx playwright test --config e2e/playwright.config.ts",
+    "git:safe": "sh scripts/git-safe.sh",
+    "git:unlock": "sh scripts/git-unlock.sh --force",
     "prepare": "husky"
   },
   "devDependencies": {

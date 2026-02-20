@@ -1,13 +1,19 @@
 import { prisma } from './prisma.js';
 import { logger } from './logger.js';
-import { moderateImage, moderateText, isModerationEnabled } from './moderation.js';
+import { moderateImage, moderateText, isModerationEnabled, OpenAIRateLimitError } from './moderation.js';
 import { getR2ObjectBuffer } from './storage.js';
+import { fireWebhook } from './webhook.js';
+import { sendModerationDelayEmail } from './email.js';
 
 const POLL_INTERVAL = 10_000; // 10 seconds
 const MAX_ATTEMPTS = 3;
 const BATCH_SIZE = 5;
+const DEFAULT_RATE_LIMIT_BACKOFF_MS = 60_000; // 1 minute fallback
+const DELAY_NOTIFICATION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes — send email after this
 
 let intervalId: NodeJS.Timeout | null = null;
+/** When set, the worker skips processing until this timestamp. */
+let rateLimitBackoffUntil: number = 0;
 
 export function startModerationWorker(): void {
   if (!isModerationEnabled()) {
@@ -26,6 +32,17 @@ export function stopModerationWorker(): void {
 }
 
 async function processModerationQueue(): Promise<void> {
+  // If we're backing off due to a rate limit, skip processing but still check for delayed items
+  if (Date.now() < rateLimitBackoffUntil) {
+    const remainingSec = Math.ceil((rateLimitBackoffUntil - Date.now()) / 1000);
+    logger.debug({ remainingSec }, 'Moderation worker backing off (OpenAI rate limit)');
+    // Still notify humans about delays even while backed off
+    await checkDelayedItems().catch((err) =>
+      logger.error({ err }, 'Failed to check delayed moderation items'),
+    );
+    return;
+  }
+
   try {
     const items = await prisma.moderationQueue.findMany({
       where: {
@@ -42,6 +59,21 @@ async function processModerationQueue(): Promise<void> {
       try {
         await processItem(item);
       } catch (err) {
+        // On rate limit, pause the entire worker — no point hammering the API
+        if (err instanceof OpenAIRateLimitError) {
+          const backoffMs = err.retryAfterSeconds
+            ? err.retryAfterSeconds * 1000
+            : DEFAULT_RATE_LIMIT_BACKOFF_MS;
+          rateLimitBackoffUntil = Date.now() + backoffMs;
+          logger.warn(
+            { backoffMs, itemId: item.id },
+            'OpenAI rate limit reached — pausing moderation worker',
+          );
+          // Don't increment attempts for rate limits; it's not the item's fault
+          // Still check for delayed notifications before returning
+          break;
+        }
+
         logger.error({ err, itemId: item.id, contentType: item.contentType }, 'Failed to process moderation item');
 
         await prisma.moderationQueue.update({
@@ -57,6 +89,11 @@ async function processModerationQueue(): Promise<void> {
   } catch (err) {
     logger.error({ err }, 'Moderation worker queue processing error');
   }
+
+  // Always check for items that have been pending too long and notify humans
+  await checkDelayedItems().catch((err) =>
+    logger.error({ err }, 'Failed to check delayed moderation items'),
+  );
 }
 
 async function processItem(item: { id: string; contentType: string; contentId: string }): Promise<void> {
@@ -126,7 +163,16 @@ async function processProfilePhoto(item: { id: string; contentId: string }): Pro
 async function processJobPosting(item: { id: string; contentId: string }): Promise<void> {
   const job = await prisma.job.findUnique({
     where: { id: item.contentId },
-    select: { title: true, description: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      priceUsdc: true,
+      humanId: true,
+      status: true,
+      callbackUrl: true,
+      callbackSecret: true,
+    },
   });
 
   if (!job) {
@@ -150,6 +196,12 @@ async function processJobPosting(item: { id: string; contentId: string }): Promi
       data: { moderationStatus: newStatus },
     }),
   ]);
+
+  // Notify agent via webhook that moderation is complete
+  fireWebhook(job, 'job.moderation_complete', {
+    moderationStatus: newStatus,
+    flagged: result.flagged,
+  });
 
   logger.info({ jobId: item.contentId, flagged: result.flagged }, 'Job posting moderation complete');
 }
@@ -241,5 +293,83 @@ async function processAgentReport(item: { id: string; contentId: string }): Prom
       where: { id: item.id },
       data: { status: 'approved', result: result as any, reviewedAt: new Date() },
     });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Delay notifications — send a friendly email when moderation takes too long
+// ---------------------------------------------------------------------------
+
+async function checkDelayedItems(): Promise<void> {
+  const threshold = new Date(Date.now() - DELAY_NOTIFICATION_THRESHOLD_MS);
+
+  // Find job_posting items that have been pending too long and haven't been notified yet
+  const delayedItems = await prisma.moderationQueue.findMany({
+    where: {
+      status: 'pending',
+      contentType: 'job_posting',
+      createdAt: { lt: threshold },
+      notifiedAt: null,
+    },
+    take: 10,
+  });
+
+  if (delayedItems.length === 0) return;
+
+  for (const item of delayedItems) {
+    try {
+      const job = await prisma.job.findUnique({
+        where: { id: item.contentId },
+        select: {
+          id: true,
+          title: true,
+          humanId: true,
+          human: {
+            select: {
+              name: true,
+              email: true,
+              contactEmail: true,
+              emailNotifications: true,
+              preferredLanguage: true,
+            },
+          },
+        },
+      });
+
+      if (!job) {
+        // Job was deleted — skip notification, mark as notified to avoid re-checking
+        await prisma.moderationQueue.update({
+          where: { id: item.id },
+          data: { notifiedAt: new Date() },
+        });
+        continue;
+      }
+
+      const human = job.human;
+      const email = human.contactEmail || human.email;
+
+      if (email && human.emailNotifications) {
+        const jobDetailUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/jobs/${job.id}`;
+
+        await sendModerationDelayEmail({
+          humanName: human.name,
+          humanEmail: email,
+          humanId: job.humanId,
+          jobTitle: job.title,
+          jobDetailUrl,
+          language: human.preferredLanguage ?? undefined,
+        });
+
+        logger.info({ jobId: job.id, humanId: job.humanId }, 'Sent moderation delay notification email');
+      }
+
+      // Mark as notified regardless of email preference — prevents re-checking
+      await prisma.moderationQueue.update({
+        where: { id: item.id },
+        data: { notifiedAt: new Date() },
+      });
+    } catch (err) {
+      logger.error({ err, itemId: item.id }, 'Failed to send moderation delay notification');
+    }
   }
 }

@@ -1677,6 +1677,142 @@ Human Pages — Staff Tools
   });
 }
 
+// --- Moderation Delay Notification ---
+
+interface ModerationDelayEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  jobTitle: string;
+  jobDetailUrl: string;
+  language?: string;
+}
+
+export async function sendModerationDelayEmail(data: ModerationDelayEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping moderation delay email');
+    return false;
+  }
+
+  const t = getTranslator(data.language || 'en');
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+
+  const textContent = `
+Hi ${data.humanName},
+
+A job offer for "${data.jobTitle}" was recently sent to you and is currently being reviewed by our content safety system.
+
+This usually takes just a moment, but it's taking a little longer than usual right now. Your offer should be ready shortly — no action needed on your end.
+
+You can check the status anytime:
+${data.jobDetailUrl}
+
+Thanks for your patience!
+
+---
+Human Pages — Get hired for real-world tasks
+
+To unsubscribe from email notifications: ${unsubscribeUrl}
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Your job offer is being reviewed</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style>
+    :root { color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .email-bg { background-color: #1a1a2e !important; }
+      .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+      .email-heading { color: #f0f0f5 !important; }
+      .email-body { color: #c8c8d8 !important; }
+      .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+      .email-muted { color: #8888a8 !important; }
+      .email-link { color: #818cf8 !important; }
+      .email-divider { border-top-color: #2a2a4a !important; }
+    }
+    u ~ div .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-bg { background-color: #1a1a2e !important; }
+    [data-ogsc] .email-card { background-color: #16213e !important; border-color: #2a2a4a !important; }
+    [data-ogsc] .email-heading { color: #f0f0f5 !important; }
+    [data-ogsc] .email-body { color: #c8c8d8 !important; }
+    [data-ogsc] .email-btn { background-color: #6366f1 !important; border-color: #6366f1 !important; }
+    [data-ogsc] .email-muted { color: #8888a8 !important; }
+    [data-ogsc] .email-link { color: #818cf8 !important; }
+    [data-ogsc] .email-divider { border-top-color: #2a2a4a !important; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background-color: #f0f0f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" class="email-card" style="max-width: 480px; width: 100%; background-color: #fefefe; border-radius: 12px; border: 1px solid #e2e2ea; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <h1 class="email-heading" style="margin: 0; font-size: 22px; font-weight: 600; color: #1e1e2f; line-height: 1.4;">Your job offer is being reviewed</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">Hi ${data.humanName},</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">A job offer for <strong>"${data.jobTitle}"</strong> was sent to you and is currently being reviewed by our content safety system.</p>
+              <p class="email-body" style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #44445a;">This usually takes just a moment, but it's taking a little longer than usual right now. Your offer should be ready shortly — no action needed on your end.</p>
+            </td>
+          </tr>
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding: 8px 40px 24px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${data.jobDetailUrl}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" fill="t">
+                <v:fill type="tile" color="#4F46E5" />
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">Check status</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${data.jobDetailUrl}" target="_blank" class="email-btn" style="display: inline-block; background-color: #4F46E5; color: #fefefe; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 36px; border-radius: 8px; line-height: 1.5; mso-hide: all; border: 2px solid #4F46E5;">Check status</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr class="email-divider" style="border: none; border-top: 1px solid #e2e2ea; margin: 0;">
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px;">
+              <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">Human Pages — Get hired for real-world tasks</p>
+              <p class="email-muted" style="margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; text-decoration: underline;">Unsubscribe</a> from email notifications</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: data.humanEmail,
+    subject: `${data.humanName}, your job offer is being reviewed`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
   const hasResend = !!process.env.RESEND_API_KEY;

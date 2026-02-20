@@ -22,7 +22,7 @@ export default function BlogPost({ title, date, readingTime, description, slug, 
         title={title}
         description={description}
         path={`/blog/${slug}`}
-        ogImage={`https://humanpages.ai/api/og/blog/${slug}?v=2`}
+        ogImage={`https://humanpages.ai/api/og/blog/${slug}`}
         ogType="article"
         jsonLd={{
           "@context": "https://schema.org",

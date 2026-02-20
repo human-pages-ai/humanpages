@@ -898,6 +898,7 @@ model ModerationQueue {
   errorMessage String?   // If status=error, why it failed
   attempts     Int       @default(0)
   reviewedAt   DateTime?
+  notifiedAt   DateTime? // When delay notification was sent to human (prevents duplicates)
   createdAt    DateTime  @default(now())
 
   @@index([status, createdAt])

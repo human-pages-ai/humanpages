@@ -4,9 +4,7 @@ import path from 'path';
 
 const SITE_URL = process.env.FRONTEND_URL || 'https://humanpages.ai';
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
-// Bump this when OG images change to bust Meta/Instagram CDN cache
-const OG_VERSION = 2;
-const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default?v=${OG_VERSION}`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 const DEFAULT_TITLE = "Human Pages";
 const DEFAULT_DESCRIPTION = 'The future of hiring networks. No commissions, no middlemen.';
 
@@ -69,7 +67,7 @@ export async function getProfileMetaHtml(humanId: string, lang?: string): Promis
       human.bio
         || `${human.name} on Human Pages${displayLocation ? ` in ${displayLocation}` : ''}${human.skills.length > 0 ? ` - ${human.skills.slice(0, 3).join(', ')}` : ''}`
     );
-    const ogImage = `${SITE_URL}/api/og/${humanId}?v=${OG_VERSION}`;
+    const ogImage = `${SITE_URL}/api/og/${humanId}`;
     const unprefixedPath = `/humans/${humanId}`;
     const canonicalUrl = lang && lang !== 'en'
       ? `${SITE_URL}/${lang}${unprefixedPath}`
@@ -179,7 +177,7 @@ export function getBlogMetaHtml(slug: string, lang?: string): string | null {
 
   const title = escapeHtml(`${post.title} | Human Pages`);
   const description = escapeHtml(post.description);
-  const ogImage = `${SITE_URL}/api/og/blog/${slug}?v=${OG_VERSION}`;
+  const ogImage = `${SITE_URL}/api/og/blog/${slug}`;
   const unprefixedPath = `/blog/${slug}`;
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`
@@ -230,7 +228,7 @@ export function getCareersMetaHtml(lang?: string): string | null {
 
   const title = 'Careers | Human Pages';
   const description = 'Join HumanPages — the AI-to-human marketplace. No CVs required. Work from anywhere, any time zone. We believe in results, not resumes.';
-  const ogImage = `${SITE_URL}/api/og/careers?v=${OG_VERSION}`;
+  const ogImage = `${SITE_URL}/api/og/careers`;
   const unprefixedPath = '/careers';
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`

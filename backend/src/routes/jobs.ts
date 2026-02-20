@@ -35,7 +35,7 @@ import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl, fireWebhook } from '../lib/webhook.js';
 import { convertToUsd } from '../lib/exchangeRates.js';
 import { starRatingToERC8004Value, buildFeedbackJSON, hashFeedbackJSON } from '../lib/erc8004.js';
-import { queueModeration } from '../lib/moderation.js';
+import { queueModeration, isModerationEnabled } from '../lib/moderation.js';
 
 const router = Router();
 
@@ -433,10 +433,26 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
     const windowHours = config.windowMs / (60 * 60 * 1000);
     const windowLabel = windowHours >= 48 ? `${windowHours / 24} days` : `${windowHours} hours`;
 
+    // When moderation is disabled (e.g. dev), queueModeration auto-approves synchronously.
+    // Reflect the actual state in the response so agents don't poll unnecessarily.
+    const moderationActive = isModerationEnabled();
+
     res.status(201).json({
       id: job.id,
       status: job.status,
-      message: 'Job offer created. Waiting for human to accept.',
+      moderationStatus: moderationActive ? 'pending' : 'approved',
+      message: moderationActive
+        ? 'Job offer created and under review. The human will be notified once approved.'
+        : 'Job offer created. Waiting for human to accept.',
+      ...(moderationActive ? {
+        moderation: {
+          status: 'pending',
+          estimatedSeconds: 30,
+          poll: `GET /api/jobs/${job.id}`,
+          pollIntervalSeconds: 15,
+          webhookEvent: 'job.moderation_complete',
+        },
+      } : {}),
       ...(req.x402Paid ? { paidVia: 'x402' } : {
         rateLimit: {
           remaining: config.limit - recentOfferCount - 1,
@@ -516,7 +532,16 @@ router.get('/:id', async (req, res) => {
 
     // Strip callbackSecret from response to prevent leaking
     const { callbackSecret, streamTicks, ...safeJob } = job;
-    res.json({ ...safeJob, ...(streamSummary ? { streamSummary } : {}) });
+
+    // Add human-readable moderation hint for API consumers (agents, frontends)
+    const moderationHints: Record<string, string> = {
+      pending: 'Content is under review. This typically completes within a few minutes.',
+      approved: 'Content approved. Visible to the human.',
+      rejected: 'Content was flagged by moderation and is not visible to the human.',
+    };
+    const moderationHint = moderationHints[safeJob.moderationStatus] || '';
+
+    res.json({ ...safeJob, _moderationHint: moderationHint, ...(streamSummary ? { streamSummary } : {}) });
   } catch (error) {
     logger.error({ err: error }, 'Get job error');
     res.status(500).json({ error: 'Internal server error' });

@@ -17,9 +17,7 @@ interface SEOProps {
 const SITE_NAME = 'Human Pages';
 const DEFAULT_DESCRIPTION = "The future of hiring networks. No commissions, no middlemen.";
 const SITE_URL = 'https://humanpages.ai';
-// Bump this when OG images change to bust Meta/Instagram CDN cache
-export const OG_VERSION = 2;
-const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default?v=${OG_VERSION}`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 
 function getLangUrl(langCode: string, pagePath: string): string {
   if (langCode === 'en') return `${SITE_URL}${pagePath}`;

@@ -1,0 +1,48 @@
+#!/bin/sh
+# git-unlock — Remove stale .git lock files
+#
+# Checks if .git/index.lock exists AND is stale (the process that created it
+# is no longer running, or the file is older than the threshold).
+#
+# Usage:
+#   ./scripts/git-unlock.sh          # Run manually
+#   source scripts/git-unlock.sh     # Auto-clean in a hook/wrapper
+#
+# Install as a git alias:
+#   git config --global alias.unlock '!sh scripts/git-unlock.sh'
+#
+# Then just:  git unlock
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+LOCK_FILE="$REPO_ROOT/.git/index.lock"
+
+# How old (in minutes) before we consider a lock stale
+STALE_THRESHOLD_MINUTES=1
+
+if [ ! -f "$LOCK_FILE" ]; then
+  exit 0
+fi
+
+# Check if lock is stale by age
+if [ "$(uname)" = "Darwin" ]; then
+  # macOS: stat -f %m gives modification time in epoch seconds
+  LOCK_AGE_SEC=$(( $(date +%s) - $(stat -f %m "$LOCK_FILE") ))
+else
+  # Linux: stat -c %Y gives modification time in epoch seconds
+  LOCK_AGE_SEC=$(( $(date +%s) - $(stat -c %Y "$LOCK_FILE") ))
+fi
+
+STALE_THRESHOLD_SEC=$(( STALE_THRESHOLD_MINUTES * 60 ))
+
+if [ "$LOCK_AGE_SEC" -gt "$STALE_THRESHOLD_SEC" ]; then
+  echo "git-unlock: Removing stale .git/index.lock (${LOCK_AGE_SEC}s old)"
+  rm -f "$LOCK_FILE"
+elif [ "$1" = "--force" ]; then
+  echo "git-unlock: Force-removing .git/index.lock (${LOCK_AGE_SEC}s old)"
+  rm -f "$LOCK_FILE"
+else
+  echo "git-unlock: Lock file exists but is only ${LOCK_AGE_SEC}s old (threshold: ${STALE_THRESHOLD_SEC}s). Use --force to remove anyway."
+  exit 1
+fi
