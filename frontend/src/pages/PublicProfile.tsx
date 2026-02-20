@@ -174,8 +174,8 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title={profile.name}
-        description={profile.bio || `${profile.name} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
+        title={profile.name || profile.username || 'Profile'}
+        description={profile.bio || `${profile.name || profile.username || 'Profile'} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
         ogImage={`https://humanpages.ai/api/og/${profile.id}`}
         ogType="profile"
         path={`/humans/${profile.id}`}
@@ -229,13 +229,13 @@ export default function PublicProfile() {
                 {/* Profile photo or initials */}
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-blue-400 text-white font-bold text-xl flex items-center justify-center flex-shrink-0">
                   {profile.profilePhotoUrl && !photoError ? (
-                    <img src={profile.profilePhotoUrl} alt={profile.name} className="w-full h-full object-cover" onError={() => setPhotoError(true)} />
+                    <img src={profile.profilePhotoUrl} alt={profile.name || ''} className="w-full h-full object-cover" onError={() => setPhotoError(true)} />
                   ) : (
-                    <span aria-hidden="true">{profile.name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}</span>
+                    <span aria-hidden="true">{(profile.name || profile.username || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}</span>
                   )}
                 </div>
                 <div>
-                <h1 className="text-2xl font-bold text-white">{profile.name}</h1>
+                <h1 className="text-2xl font-bold text-white">{profile.name || profile.username || t('publicProfile.anonymous')}</h1>
                 {profile.username && (
                   <p className="text-blue-200 text-sm mt-0.5">@{profile.username}</p>
                 )}
@@ -292,11 +292,11 @@ export default function PublicProfile() {
                   {(showAllVouches ? profile.vouches : profile.vouches.slice(0, 3)).map((v) => (
                     <div key={v.id} className="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg">
                       <div className="shrink-0 w-7 h-7 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-medium">
-                        {v.voucher.name.charAt(0).toUpperCase()}
+                        {(v.voucher.name || v.voucher.username || '?').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 text-sm">{v.voucher.name}</span>
+                          <span className="font-medium text-gray-900 text-sm">{v.voucher.name || v.voucher.username}</span>
                           <span className="text-xs text-gray-400">
                             {new Date(v.createdAt).toLocaleDateString(i18n.language, { month: 'short', year: 'numeric' })}
                           </span>
@@ -649,7 +649,7 @@ export default function PublicProfile() {
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
           targetUserId={profile.id}
-          targetUserName={profile.name}
+          targetUserName={profile.name || profile.username || ''}
         />
       )}
 

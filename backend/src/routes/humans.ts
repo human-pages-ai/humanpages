@@ -29,6 +29,7 @@ const TIER_PROFILE_LIMITS: Record<string, number> = {
 // Public select fields (no contact info, no wallets)
 const publicHumanSelect = {
   id: true,
+  name: true,
   username: true,
   bio: true,
   location: true,
@@ -1030,7 +1031,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, username: true } },
+            voucher: { select: { id: true, name: true, username: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -1067,7 +1068,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, username: true } },
+            voucher: { select: { id: true, name: true, username: true } },
           },
           orderBy: { createdAt: 'desc' },
         },

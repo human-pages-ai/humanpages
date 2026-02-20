@@ -22,6 +22,7 @@ import adminRoutes from './routes/admin.js';
 import feedbackRoutes from './routes/feedback.js';
 import listingsRoutes from './routes/listings.js';
 import photosRoutes from './routes/photos.js';
+import agentPhotosRoutes from './routes/agentPhotos.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml } from './lib/seo.js';
 
 const app = express();
@@ -29,7 +30,18 @@ const app = express();
 // Trust first proxy (nginx/ALB) so X-Forwarded-For is used for rate limiting
 app.set('trust proxy', 1);
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://static.cloudflareinsights.com", "https://us-assets.i.posthog.com"],
+      connectSrc: ["'self'", "https://us.i.posthog.com", "https://us-assets.i.posthog.com"],
+      imgSrc: ["'self'", "data:", "https://*.r2.cloudflarestorage.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'"],
+    },
+  },
+}));
 app.use(cors({
   origin: (origin, callback) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -63,6 +75,7 @@ app.use('/api/wallets', walletsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/agents/activate', agentActivationRoutes);
+app.use('/api/agents/photos', agentPhotosRoutes);
 app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/affiliate', affiliateRoutes);
