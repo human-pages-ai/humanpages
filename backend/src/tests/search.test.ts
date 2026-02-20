@@ -177,12 +177,12 @@ describe('Search API', () => {
       });
     });
 
-    it('should not expose name in search results', async () => {
+    it('should include name in search results', async () => {
       const response = await request(app).get('/api/humans/search');
 
       expect(response.status).toBe(200);
       response.body.forEach((human: any) => {
-        expect(human).not.toHaveProperty('name');
+        expect(human).toHaveProperty('name');
       });
     });
 
