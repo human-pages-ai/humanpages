@@ -38,12 +38,15 @@ export const POSITION_SKILL_HINTS: Record<string, string[]> = {
   'influencer-outreach':  ['Social Media Management', 'Cold Outreach', 'Community Management', 'Content Writing'],
   'customer-relations':   ['Customer Support', 'Chat & Email Support', 'Community Management'],
   'community-manager':    ['Community Management', 'Social Media Management', 'Content Writing', 'Event Coordination'],
-  'product-designer':     ['UI/UX Design', 'Graphic Design', 'Prototyping & Wireframing'],
+  'graphic-designer':     ['Graphic Design', 'Photo & Image Editing', 'UI/UX Design', 'Prototyping & Wireframing'],
   'copywriter':           ['Copywriting', 'Content Writing', 'SEO & SEM', 'Proofreading & Editing'],
   'sales-development':    ['Sales & Lead Generation', 'Cold Outreach', 'Market Research'],
   'software-engineer':    ['Software Development', 'QA & Bug Testing', 'Code Review', 'Technical Writing'],
-  'qa-tester':            ['QA & Bug Testing', 'Software Development', 'Technical Writing'],
+  'video-editor':         ['Video Production', 'Photo & Image Editing', 'Graphic Design', 'Content Writing'],
   'general':              [],
+  // Legacy IDs kept for backwards compat with stored intents
+  'product-designer':     ['Graphic Design', 'Photo & Image Editing', 'UI/UX Design', 'Prototyping & Wireframing'],
+  'qa-tester':            ['QA & Bug Testing', 'Software Development', 'Technical Writing'],
 };
 
 export function setApplyIntent(positionId: string, positionTitle?: string): void {

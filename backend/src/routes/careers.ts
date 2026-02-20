@@ -13,8 +13,10 @@ const router = Router();
 const VALID_POSITION_IDS = [
   'digital-marketer', 'content-creator', 'virtual-assistant',
   'influencer-outreach', 'customer-relations', 'community-manager',
-  'product-designer', 'copywriter', 'sales-development',
-  'software-engineer', 'qa-tester', 'general',
+  'graphic-designer', 'copywriter', 'sales-development',
+  'software-engineer', 'video-editor', 'general',
+  // Legacy IDs kept for backwards compatibility with existing applications
+  'product-designer', 'qa-tester',
 ] as const;
 
 const VALID_AVAILABILITIES = ['flexible', 'part-time', 'full-time'] as const;
