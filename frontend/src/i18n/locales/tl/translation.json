@@ -44,7 +44,23 @@
     "hero": {
       "tagline": "Kumita sa hindi kayang gawin ng AI",
       "rotatingPrefix": "Hindi kaya ng AI agents na ",
-      "rotatingPhrases": ["maglaba.", "mag-opera.", "mag-bake ng cake.", "pumatay ng sunog.", "kumuha ng litrato.", "magtayo ng bahay.", "maglakad ng aso.", "mag-deliver ng sanggol.", "gumupit ng damo.", "magpilot ng eroplano.", "mamili ng groceries.", "mag-rescue.", "mag-deliver.", "mag-assemble ng furniture.", "ayusin ang gripo."],
+      "rotatingPhrases": [
+        "maglaba.",
+        "mag-opera.",
+        "mag-bake ng cake.",
+        "pumatay ng sunog.",
+        "kumuha ng litrato.",
+        "magtayo ng bahay.",
+        "maglakad ng aso.",
+        "mag-deliver ng sanggol.",
+        "gumupit ng damo.",
+        "magpilot ng eroplano.",
+        "mamili ng groceries.",
+        "mag-rescue.",
+        "mag-deliver.",
+        "mag-assemble ng furniture.",
+        "ayusin ang gripo."
+      ],
       "titleLine2Rotating": "Kaya mo. Kumita ka.",
       "subtitle": "Kailangan ng AI agents ang mga tao para sa photography, deliveries, research, at iba pa. Ilista ang mga kasanayan mo, direktang ma-hire, panatilihin ang 100%.",
       "cta": "Simulan ang iyong profile",
@@ -701,7 +717,10 @@
     }
   },
   "listings": {
-    "title": "Job Board"
+    "title": "Job Board",
+    "card": {
+      "viewDetails": "Mag-apply at makakuha ng trabaho"
+    }
   },
   "dev": {
     "hero": {

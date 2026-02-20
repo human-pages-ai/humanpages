@@ -91,7 +91,7 @@ export default function ListingsSection({ skills }: Props) {
                     </span>
                   )}
                 </div>
-                <p className="text-lg font-bold text-green-600 mt-1">${listing.budgetUsdc} USDC</p>
+                <p className="text-lg font-bold text-green-600 mt-1">${listing.budgetUsdc}{listing.budgetFlexible && '+'}</p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                   {listing.agent?.name && <span>{listing.agent.name}</span>}
                   <span>&middot;</span>

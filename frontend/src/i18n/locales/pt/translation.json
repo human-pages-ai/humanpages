@@ -705,5 +705,10 @@
       "title": "Precisa de humanos no seu diretório?",
       "subtitle": "Compartilhe o link de cadastro com sua comunidade para aumentar a oferta."
     }
+  },
+  "listings": {
+    "card": {
+      "viewDetails": "Candidate-se e consiga trabalho"
+    }
   }
 }

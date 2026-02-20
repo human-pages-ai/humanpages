@@ -136,7 +136,17 @@ export default function ListingDetail() {
           {/* Left column - Main content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Main card */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              {/* Cover image */}
+              {listing.imageUrl && (
+                <img
+                  src={listing.imageUrl}
+                  alt={listing.title}
+                  className="w-full h-56 object-cover"
+                />
+              )}
+
+              <div className="p-6">
               {/* PRO badge */}
               {listing.isPro && (
                 <div className="mb-3">
@@ -154,9 +164,11 @@ export default function ListingDetail() {
               {/* Budget */}
               <div className="mb-6">
                 <p className="text-3xl font-bold text-green-600">
-                  ${listing.budgetUsdc}
-                  <span className="text-lg font-normal text-gray-500"> USDC</span>
+                  ${listing.budgetUsdc}{listing.budgetFlexible && '+'}
                 </p>
+                {listing.budgetFlexible && (
+                  <p className="text-sm text-gray-500 mt-1">Budget is negotiable</p>
+                )}
               </div>
 
               {/* Description */}
@@ -248,6 +260,7 @@ export default function ListingDetail() {
                   </div>
                 </div>
               </div>
+              </div>{/* close p-6 wrapper */}
             </div>
 
             {/* Apply section */}

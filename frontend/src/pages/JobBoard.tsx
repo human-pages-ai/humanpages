@@ -177,7 +177,7 @@ export default function JobBoard() {
             {/* Budget min */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Min Budget (USDC)
+                Min Budget ($)
               </label>
               <input
                 type="number"
@@ -191,7 +191,7 @@ export default function JobBoard() {
             {/* Budget max */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Budget (USDC)
+                Max Budget ($)
               </label>
               <input
                 type="number"
@@ -236,100 +236,116 @@ export default function JobBoard() {
         {!loading && listings.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {listings.map((listing) => (
-              <div key={listing.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6">
-                {/* PRO badge */}
-                {listing.isPro && (
-                  <div className="mb-3">
-                    <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded">
-                      {t('listings.card.proAgent')}
-                    </span>
-                  </div>
-                )}
-
-                {/* Title */}
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  <Link to={`/listings/${listing.id}`} className="hover:text-blue-600">
-                    {listing.title}
+              <div key={listing.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col overflow-hidden">
+                {/* Cover image */}
+                {listing.imageUrl && (
+                  <Link to={`/listings/${listing.id}`}>
+                    <img
+                      src={listing.imageUrl}
+                      alt={listing.title}
+                      className="w-full h-40 object-cover"
+                      loading="lazy"
+                    />
                   </Link>
-                </h2>
-
-                {/* Budget */}
-                <p className="text-2xl font-bold text-green-600 mb-3">
-                  ${listing.budgetUsdc}
-                  <span className="text-sm font-normal text-gray-500"> USDC</span>
-                </p>
-
-                {/* Category */}
-                {listing.category && (
-                  <div className="mb-3">
-                    <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                      {listing.category}
-                    </span>
-                  </div>
                 )}
 
-                {/* Required skills */}
-                {listing.requiredSkills.length > 0 && (
-                  <div className="mb-3">
-                    <div className="flex flex-wrap gap-1">
-                      {listing.requiredSkills.slice(0, 3).map((skill, idx) => (
-                        <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
-                          {skill}
-                        </span>
-                      ))}
-                      {listing.requiredSkills.length > 3 && (
-                        <span className="inline-block text-xs text-gray-500 px-1">
-                          +{listing.requiredSkills.length - 3}
-                        </span>
-                      )}
+                <div className="p-6 flex flex-col flex-1">
+                  {/* PRO badge */}
+                  {listing.isPro && (
+                    <div className="mb-3">
+                      <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded">
+                        {t('listings.card.proAgent')}
+                      </span>
                     </div>
-                  </div>
-                )}
-
-                {/* Location + work mode */}
-                <div className="text-sm text-gray-600 mb-3">
-                  {listing.workMode && (
-                    <span className="mr-2">
-                      {listing.workMode === 'REMOTE' && t('listings.filters.remote')}
-                      {listing.workMode === 'ONSITE' && t('listings.filters.onsite')}
-                      {listing.workMode === 'HYBRID' && t('listings.filters.hybrid')}
-                    </span>
                   )}
-                  {listing.location && <span>{listing.location}</span>}
-                </div>
 
-                {/* Application count + expiry */}
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                  <span>{listing._count?.applications || 0} {t('listings.card.applicants')}</span>
-                  <span>
-                    {t('listings.card.expires')}: {formatTimeUntil(listing.expiresAt)}
-                  </span>
-                </div>
+                  {/* Title */}
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                    <Link to={`/listings/${listing.id}`} className="hover:text-blue-600">
+                      {listing.title}
+                    </Link>
+                  </h2>
 
-                {/* Agent name */}
-                {listing.agent && (
-                  <p className="text-sm text-gray-600 mb-4">
-                    {t('listings.detail.postedBy')}: <span className="font-medium">{listing.agent.name}</span>
+                  {/* Budget */}
+                  <p className="text-2xl font-bold text-green-600 mb-3">
+                    ${listing.budgetUsdc}{listing.budgetFlexible && '+'}
                   </p>
-                )}
 
-                {/* View Details button */}
-                <Link
-                  to={`/listings/${listing.id}`}
-                  className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  {t('listings.card.viewDetails')}
-                </Link>
+                  {/* Category */}
+                  {listing.category && (
+                    <div className="mb-3">
+                      <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        {listing.category}
+                      </span>
+                    </div>
+                  )}
 
-                {/* Report link (logged-in only) */}
-                {user && listing.agent && (
-                  <button
-                    onClick={() => setReportTarget({ agentId: listing.agent!.id, agentName: listing.agent!.name })}
-                    className="mt-2 w-full text-xs text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    {t('reportAgent.reportThis', 'Report this listing')}
-                  </button>
-                )}
+                  {/* Required skills */}
+                  {listing.requiredSkills.length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-1">
+                        {listing.requiredSkills.slice(0, 3).map((skill, idx) => (
+                          <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
+                            {skill}
+                          </span>
+                        ))}
+                        {listing.requiredSkills.length > 3 && (
+                          <span className="inline-block text-xs text-gray-500 px-1">
+                            +{listing.requiredSkills.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Location + work mode */}
+                  <div className="text-sm text-gray-600 mb-3">
+                    {listing.workMode && (
+                      <span className="mr-2">
+                        {listing.workMode === 'REMOTE' && t('listings.filters.remote')}
+                        {listing.workMode === 'ONSITE' && t('listings.filters.onsite')}
+                        {listing.workMode === 'HYBRID' && t('listings.filters.hybrid')}
+                      </span>
+                    )}
+                    {listing.location && <span>{listing.location}</span>}
+                  </div>
+
+                  {/* Application count + expiry */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                    <span>{listing._count?.applications || 0} {t('listings.card.applicants')}</span>
+                    <span>
+                      {t('listings.card.expires')}: {formatTimeUntil(listing.expiresAt)}
+                    </span>
+                  </div>
+
+                  {/* Agent name */}
+                  {listing.agent && (
+                    <p className="text-sm text-gray-600 mb-4">
+                      {t('listings.detail.postedBy')}: <span className="font-medium">{listing.agent.name}</span>
+                    </p>
+                  )}
+
+                  {/* Spacer to push button to bottom */}
+                  <div className="mt-auto">
+                    {/* Apply & Get Hired button */}
+                    <Link
+                      to={`/listings/${listing.id}`}
+                      className="block w-full text-center bg-green-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      {t('listings.card.viewDetails')}
+                    </Link>
+
+                    {/* Report link (logged-in only) */}
+                    {user && listing.agent && (
+                      <button
+                        onClick={() => setReportTarget({ agentId: listing.agent!.id, agentName: listing.agent!.name })}
+                        className="mt-2 w-full text-xs text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        {t('reportAgent.reportThis', 'Report this listing')}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

@@ -44,7 +44,23 @@
     "hero": {
       "tagline": "AI'ın yapamadığı işlerden para kazanın",
       "rotatingPrefix": "AI ajanları ",
-      "rotatingPhrases": ["çamaşır yıkayamaz.", "ameliyat yapamaz.", "pasta pişiremez.", "yangın söndüremez.", "fotoğraf çekemez.", "ev yapamaz.", "köpek gezdiremez.", "doğum yaptıramaz.", "çim biçemez.", "uçak kullanamaz.", "market alışverişi yapamaz.", "birini kurtaramaz.", "teslimat yapamaz.", "mobilya monte edemez.", "musluk tamir edemez."],
+      "rotatingPhrases": [
+        "çamaşır yıkayamaz.",
+        "ameliyat yapamaz.",
+        "pasta pişiremez.",
+        "yangın söndüremez.",
+        "fotoğraf çekemez.",
+        "ev yapamaz.",
+        "köpek gezdiremez.",
+        "doğum yaptıramaz.",
+        "çim biçemez.",
+        "uçak kullanamaz.",
+        "market alışverişi yapamaz.",
+        "birini kurtaramaz.",
+        "teslimat yapamaz.",
+        "mobilya monte edemez.",
+        "musluk tamir edemez."
+      ],
       "titleLine2Rotating": "Sen yapabilirsin. Karşılığını al.",
       "subtitle": "AI ajanları fotoğrafçılık, teslimat, araştırma ve daha fazlası için insanlara ihtiyaç duyuyor. Becerilerini listele, doğrudan işe alın, %100'ünü koru.",
       "cta": "Profilinizi oluşturun",
@@ -486,7 +502,10 @@
     }
   },
   "listings": {
-    "title": "İş İlanları"
+    "title": "İş İlanları",
+    "card": {
+      "viewDetails": "Başvur ve işe alın"
+    }
   },
   "onboarding": {
     "title": "Profilinizi Tamamlayın",

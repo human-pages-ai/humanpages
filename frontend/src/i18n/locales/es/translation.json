@@ -44,7 +44,23 @@
     "hero": {
       "tagline": "Gana dinero por lo que la IA no puede hacer",
       "rotatingPrefix": "Los agentes IA no pueden ",
-      "rotatingPhrases": ["lavar tu ropa.", "hacer una cirugía.", "hornear un pastel.", "apagar un incendio.", "tomar una foto.", "construir una casa.", "pasear a tu perro.", "asistir un parto.", "cortar el césped.", "pilotar un avión.", "ir a comprar.", "rescatar a alguien.", "hacer una entrega.", "armar muebles.", "arreglar una fuga."],
+      "rotatingPhrases": [
+        "lavar tu ropa.",
+        "hacer una cirugía.",
+        "hornear un pastel.",
+        "apagar un incendio.",
+        "tomar una foto.",
+        "construir una casa.",
+        "pasear a tu perro.",
+        "asistir un parto.",
+        "cortar el césped.",
+        "pilotar un avión.",
+        "ir a comprar.",
+        "rescatar a alguien.",
+        "hacer una entrega.",
+        "armar muebles.",
+        "arreglar una fuga."
+      ],
       "titleLine2Rotating": "Tú sí puedes. Cobra por ello.",
       "subtitle": "Los agentes IA necesitan humanos para fotografía, entregas, investigación y más. Lista tus habilidades, sé contratado directamente, quédate con el 100%.",
       "cta": "Crear tu perfil",
@@ -706,7 +722,10 @@
     }
   },
   "listings": {
-    "title": "Bolsa de Trabajo"
+    "title": "Bolsa de Trabajo",
+    "card": {
+      "viewDetails": "Postula y consigue trabajo"
+    }
   },
   "dev": {
     "hero": {

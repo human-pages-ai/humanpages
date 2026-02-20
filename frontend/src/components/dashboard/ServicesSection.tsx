@@ -43,16 +43,27 @@ function CategoryCombobox({
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
+        // When closing, check if the typed search exactly matches a category (case-insensitive)
+        if (search) {
+          const exactMatch = SERVICE_CATEGORIES.find(
+            (c) => c.toLowerCase() === search.toLowerCase()
+          );
+          if (exactMatch) {
+            onChange(exactMatch);
+          }
+          // If no match, revert to whatever value was previously selected
+          // (don't clear the actual value — just reset the search input)
+        }
         setOpen(false);
         setSearch('');
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [search, onChange]);
 
   const filtered = SERVICE_CATEGORIES.filter((c) =>
-    c.toLowerCase().includes((search || value).toLowerCase())
+    c.toLowerCase().includes((open && search !== '' ? search : value).toLowerCase())
   );
 
   return (
@@ -64,6 +75,8 @@ function CategoryCombobox({
         onChange={(e) => {
           setSearch(e.target.value);
           if (!open) setOpen(true);
+          // If user clears the text while a value was selected, don't clear the value
+          // (they need to pick a new one or close the dropdown to revert)
         }}
         onFocus={() => {
           setOpen(true);

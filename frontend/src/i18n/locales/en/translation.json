@@ -950,7 +950,7 @@
       "apply": "Apply",
       "applied": "Applied",
       "closed": "Closed",
-      "viewDetails": "View Details",
+      "viewDetails": "Apply & Get Hired",
       "proAgent": "PRO Agent",
       "proTooltip": "This agent has completed {{count}} jobs and pays within {{hours}}h on average"
     },

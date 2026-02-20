@@ -110,6 +110,9 @@ async function processItem(item: { id: string; contentType: string; contentId: s
     case 'agent_report':
       await processAgentReport(item);
       break;
+    case 'listing_image':
+      await processListingImage(item);
+      break;
     default:
       logger.warn({ contentType: item.contentType }, 'Unknown moderation content type');
       await prisma.moderationQueue.update({
@@ -294,6 +297,46 @@ async function processAgentReport(item: { id: string; contentId: string }): Prom
       data: { status: 'approved', result: result as any, reviewedAt: new Date() },
     });
   }
+}
+
+async function processListingImage(item: { id: string; contentId: string }): Promise<void> {
+  const listing = await prisma.listing.findUnique({
+    where: { id: item.contentId },
+    select: { imageKey: true },
+  });
+
+  if (!listing?.imageKey) {
+    await prisma.moderationQueue.update({
+      where: { id: item.id },
+      data: { status: 'approved', reviewedAt: new Date(), errorMessage: 'Image deleted or no key' },
+    });
+    return;
+  }
+
+  const imageBuffer = await getR2ObjectBuffer(listing.imageKey);
+  if (!imageBuffer) {
+    await prisma.moderationQueue.update({
+      where: { id: item.id },
+      data: { status: 'error', errorMessage: 'Image not found in R2' },
+    });
+    return;
+  }
+
+  const result = await moderateImage(imageBuffer);
+  const newStatus = result.flagged ? 'rejected' : 'approved';
+
+  await prisma.$transaction([
+    prisma.moderationQueue.update({
+      where: { id: item.id },
+      data: { status: newStatus, result: result as any, reviewedAt: new Date() },
+    }),
+    prisma.listing.update({
+      where: { id: item.contentId },
+      data: { imageStatus: newStatus },
+    }),
+  ]);
+
+  logger.info({ listingId: item.contentId, flagged: result.flagged }, 'Listing image moderation complete');
 }
 
 // ---------------------------------------------------------------------------

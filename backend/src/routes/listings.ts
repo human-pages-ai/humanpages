@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
 import rateLimit from 'express-rate-limit';
+import multer from 'multer';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
@@ -14,6 +15,10 @@ import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl, deliverWebhook } from '../lib/webhook.js';
 import { sendJobOfferEmail } from '../lib/email.js';
+import { processProfileImage, uploadProfilePhoto, getProfilePhotoSignedUrl, deleteProfilePhoto } from '../lib/storage.js';
+import { queueModeration, moderateText } from '../lib/moderation.js';
+import { generateListingCover } from '../lib/listingCovers.js';
+import sharp from 'sharp';
 
 const router = Router();
 
@@ -45,6 +50,19 @@ const applyRateLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
+// Multer: memory storage, 2MB limit, images only
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, and WebP images are allowed'));
+    }
+  },
+});
+
 // Tier-based listing limits with per-tier windows
 const TIER_LISTING_CONFIG: Record<string, { limit: number; windowMs: number }> = {
   BASIC: { limit: 1, windowMs: 7 * 24 * 60 * 60 * 1000 }, // 1 per 7 days
@@ -57,7 +75,8 @@ const createListingSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   category: z.string().max(100).optional(),
-  budgetUsdc: z.number().min(5, 'Minimum budget is $5 USDC'),
+  budgetUsdc: z.number().min(5, 'Minimum budget is $5'),
+  budgetFlexible: z.boolean().optional().default(false),
   requiredSkills: z.array(z.string().max(100)).max(30).default([]),
   requiredEquipment: z.array(z.string().max(100)).max(30).default([]),
   location: z.string().optional(),
@@ -159,6 +178,7 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
         description: data.description,
         category: data.category,
         budgetUsdc: new Decimal(data.budgetUsdc),
+        budgetFlexible: data.budgetFlexible,
         requiredSkills: data.requiredSkills,
         requiredEquipment: data.requiredEquipment || [],
         location: data.location,
@@ -174,6 +194,18 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
         status: 'OPEN',
       },
     });
+
+    // Generate default SVG cover image (free, no moderation needed)
+    try {
+      const coverBuffer = await generateListingCover(data.title, data.category);
+      const coverKey = await uploadProfilePhoto(listing.id, coverBuffer);
+      await prisma.listing.update({
+        where: { id: listing.id },
+        data: { imageKey: coverKey, imageStatus: 'approved' },
+      });
+    } catch (coverErr) {
+      logger.warn({ err: coverErr, listingId: listing.id }, 'Failed to generate default listing cover');
+    }
 
     // Track listing creation
     trackServerEvent(agent.id, 'listing_created', {
@@ -359,14 +391,21 @@ router.get('/', browseRateLimiter, async (req, res) => {
       agentStats.map(s => [s.agentId, { completedJobs: s.completedJobs, avgRating: s.avgRating, avgPaymentSpeedHours: s.avgPaymentSpeedHours }])
     );
 
-    // Format response
-    const formattedListings = filteredListings.map((listing) => {
-      const { callbackSecret, ...safeListing } = listing as any;
-      return {
-        ...safeListing,
-        agentReputation: agentStatsMap[listing.agentId] || { completedJobs: 0, avgRating: null, avgPaymentSpeedHours: null },
-      };
-    });
+    // Format response with signed image URLs
+    const formattedListings = await Promise.all(
+      filteredListings.map(async (listing) => {
+        const { callbackSecret, imageKey, ...safeListing } = listing as any;
+        let imageUrl: string | null = null;
+        if (imageKey && listing.imageStatus === 'approved') {
+          imageUrl = await getProfilePhotoSignedUrl(imageKey);
+        }
+        return {
+          ...safeListing,
+          imageUrl,
+          agentReputation: agentStatsMap[listing.agentId] || { completedJobs: 0, avgRating: null, avgPaymentSpeedHours: null },
+        };
+      })
+    );
 
     res.json({
       listings: formattedListings,
@@ -500,11 +539,16 @@ router.get('/:id', async (req, res) => {
       }
     }
 
-    // Strip callbackSecret
-    const { callbackSecret, ...safeListing } = listing as any;
+    // Strip callbackSecret, resolve image URL
+    const { callbackSecret, imageKey, ...safeListing } = listing as any;
+    let imageUrl: string | null = null;
+    if (imageKey && listing.imageStatus === 'approved') {
+      imageUrl = await getProfilePhotoSignedUrl(imageKey);
+    }
 
     res.json({
       ...safeListing,
+      imageUrl,
       agentReputation: {
         completedJobs,
         avgRating,
@@ -819,6 +863,146 @@ router.post('/:id/applications/:appId/offer', authenticateAgent, requireActiveAg
     logger.error({ err: error }, 'Make offer error');
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// POST /:id/image - Upload a custom listing cover image
+router.post('/:id/image', authenticateAgent, requireActiveAgent, imageUpload.single('image'), async (req: AgentAuthRequest, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    const listing = await prisma.listing.findUnique({ where: { id: req.params.id } });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    if (listing.agentId !== req.agent!.id) {
+      return res.status(403).json({ error: 'Not authorized', message: 'You can only upload images for your own listings.' });
+    }
+
+    // Process: resize to 600x400 landscape cover, WebP
+    let processed: Buffer;
+    try {
+      processed = await sharp(req.file.buffer)
+        .rotate()
+        .resize(600, 400, { fit: 'cover', position: 'centre' })
+        .withMetadata({ orientation: undefined })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch {
+      return res.status(400).json({ error: 'Invalid image file.' });
+    }
+
+    // Delete old image if exists
+    if (listing.imageKey) {
+      await deleteProfilePhoto(listing.imageKey);
+    }
+
+    // Upload to R2
+    const key = await uploadProfilePhoto(listing.id, processed);
+
+    // Update DB
+    await prisma.listing.update({
+      where: { id: listing.id },
+      data: { imageKey: key, imageStatus: 'pending' },
+    });
+
+    // Queue moderation
+    await queueModeration('listing_image', listing.id);
+
+    const imageUrl = await getProfilePhotoSignedUrl(key);
+    res.json({ imageUrl, imageStatus: 'pending' });
+  } catch (error) {
+    logger.error({ err: error }, 'Listing image upload error');
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
+// POST /:id/generate-image - AI-generate a listing cover image via DALL-E
+router.post('/:id/generate-image', x402PaymentCheck('listing_image_generate'), authenticateAgent, requireActiveOrPaid, async (req: X402Request, res) => {
+  try {
+    const listing = await prisma.listing.findUnique({ where: { id: req.params.id } });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    if (listing.agentId !== req.agent!.id) {
+      return res.status(403).json({ error: 'Not authorized', message: 'You can only generate images for your own listings.' });
+    }
+
+    // Moderate the listing text first (prevent generating images from harmful prompts)
+    const textResult = await moderateText(`${listing.title} ${listing.description}`);
+    if (textResult.flagged) {
+      return res.status(400).json({
+        error: 'Content flagged',
+        message: 'Listing text was flagged by moderation. Cannot generate image.',
+      });
+    }
+
+    // Build safe DALL-E prompt
+    const prompt = `Professional, clean illustration for a job listing titled "${listing.title.substring(0, 100)}". Style: modern flat design, abstract, no text or words in the image, suitable for a job board thumbnail. Vibrant but professional colors.`;
+
+    // Call OpenAI DALL-E
+    const OpenAI = (await import('openai')).default;
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 2, timeout: 60_000 });
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt,
+      n: 1,
+      size: '1024x1024',
+      response_format: 'b64_json',
+    });
+
+    const b64 = response.data?.[0]?.b64_json;
+    if (!b64) {
+      return res.status(500).json({ error: 'Image generation failed' });
+    }
+
+    // Process to 600x400 WebP
+    const imageBuffer = Buffer.from(b64, 'base64');
+    const processed = await sharp(imageBuffer)
+      .resize(600, 400, { fit: 'cover', position: 'centre' })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // Delete old image if exists
+    if (listing.imageKey) {
+      await deleteProfilePhoto(listing.imageKey);
+    }
+
+    // Upload to R2
+    const key = await uploadProfilePhoto(listing.id, processed);
+
+    // Update DB
+    await prisma.listing.update({
+      where: { id: listing.id },
+      data: { imageKey: key, imageStatus: 'pending' },
+    });
+
+    // Queue moderation on the generated image
+    await queueModeration('listing_image', listing.id);
+
+    const imageUrl = await getProfilePhotoSignedUrl(key);
+
+    trackServerEvent(req.agent!.id, 'listing_image_generated', {
+      listingId: listing.id,
+      method: 'dalle',
+    }, req);
+
+    res.json({ imageUrl, imageStatus: 'pending', method: 'dalle' });
+  } catch (error) {
+    logger.error({ err: error }, 'Listing image generation error');
+    res.status(500).json({ error: 'Failed to generate image' });
+  }
+});
+
+// Handle multer errors for image uploads
+router.use((err: any, _req: any, res: any, next: any) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 2MB.' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  if (err?.message?.includes('Only JPEG')) {
+    return res.status(400).json({ error: 'Only JPEG, PNG, and WebP images are allowed' });
+  }
+  next(err);
 });
 
 // DELETE /:id - Cancel listing

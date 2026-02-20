@@ -44,7 +44,23 @@
     "hero": {
       "tagline": "Kiếm tiền từ những gì AI không thể làm",
       "rotatingPrefix": "AI agent không thể ",
-      "rotatingPhrases": ["giặt đồ cho bạn.", "phẫu thuật.", "nướng bánh.", "chữa cháy.", "chụp ảnh.", "xây nhà.", "dắt chó đi dạo.", "đỡ đẻ.", "cắt cỏ.", "lái máy bay.", "đi mua đồ.", "cứu người.", "giao hàng.", "lắp ráp nội thất.", "sửa ống nước."],
+      "rotatingPhrases": [
+        "giặt đồ cho bạn.",
+        "phẫu thuật.",
+        "nướng bánh.",
+        "chữa cháy.",
+        "chụp ảnh.",
+        "xây nhà.",
+        "dắt chó đi dạo.",
+        "đỡ đẻ.",
+        "cắt cỏ.",
+        "lái máy bay.",
+        "đi mua đồ.",
+        "cứu người.",
+        "giao hàng.",
+        "lắp ráp nội thất.",
+        "sửa ống nước."
+      ],
       "titleLine2Rotating": "Bạn có thể. Hãy kiếm tiền.",
       "subtitle": "AI agent cần con người cho nhiếp ảnh, giao hàng, nghiên cứu và nhiều hơn nữa. Liệt kê kỹ năng, được thuê trực tiếp, giữ 100% thu nhập.",
       "cta": "Tạo hồ sơ của bạn",
@@ -701,7 +717,10 @@
     }
   },
   "listings": {
-    "title": "Bảng Việc Làm"
+    "title": "Bảng Việc Làm",
+    "card": {
+      "viewDetails": "Ứng tuyển và được tuyển dụng"
+    }
   },
   "dev": {
     "hero": {

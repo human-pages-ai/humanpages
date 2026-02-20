@@ -233,6 +233,12 @@ async function autoApprove(contentType: string, contentId: string): Promise<void
         data: { moderationStatus: 'approved' },
       });
       break;
+    case 'listing_image':
+      await prisma.listing.update({
+        where: { id: contentId },
+        data: { imageStatus: 'approved' },
+      });
+      break;
     // Reports don't need auto-approval — they stay PENDING for admin review
     default:
       break;

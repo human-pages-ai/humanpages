@@ -223,6 +223,7 @@ export interface Listing {
   description: string;
   category?: string;
   budgetUsdc: string;
+  budgetFlexible?: boolean;
   requiredSkills: string[];
   requiredEquipment: string[];
   location?: string;
@@ -234,6 +235,7 @@ export interface Listing {
   expiresAt: string;
   maxApplicants?: number;
   isPro: boolean;
+  imageUrl?: string;
   createdAt: string;
   agent?: {
     id: string;

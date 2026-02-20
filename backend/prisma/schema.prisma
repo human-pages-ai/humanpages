@@ -798,6 +798,10 @@ model Listing {
   expiresAt        DateTime
   maxApplicants    Int?
   isPro            Boolean       @default(false) // Denormalized from agent tier at creation time
+  budgetFlexible   Boolean       @default(false) // If true, budget is negotiable (shown as "$X+")
+
+  imageKey         String?       // R2 object key for listing cover image
+  imageStatus      String        @default("none") // none | pending | approved | rejected
 
   callbackUrl      String?
   callbackSecret   String?
