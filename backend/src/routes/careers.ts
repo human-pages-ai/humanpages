@@ -49,7 +49,7 @@ router.post(
   requireEmailVerified,
   async (req, res) => {
     const authReq = req as AuthRequest;
-    const humanId = authReq.user!.id;
+    const humanId = authReq.userId!;
 
     // Validate body
     const parsed = applySchema.safeParse(req.body);
@@ -120,7 +120,7 @@ router.get(
   authenticateToken,
   async (req, res) => {
     const authReq = req as AuthRequest;
-    const humanId = authReq.user!.id;
+    const humanId = authReq.userId!;
 
     try {
       const applications = await prisma.careerApplication.findMany({
