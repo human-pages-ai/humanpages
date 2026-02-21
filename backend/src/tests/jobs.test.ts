@@ -145,6 +145,7 @@ describe('Jobs API - Mutual Handshake', () => {
         data: {
           humanId,
           agentId: 'test-agent',
+          registeredAgentId: agentId,
           title: 'Test Job',
           description: 'Test Description',
           priceUsdc: 100,
@@ -194,6 +195,7 @@ describe('Jobs API - Mutual Handshake', () => {
         data: {
           humanId,
           agentId: 'test-agent',
+          registeredAgentId: agentId,
           title: 'Test Job',
           description: 'Test Description',
           priceUsdc: 100,
@@ -272,6 +274,7 @@ describe('Jobs API - Mutual Handshake', () => {
         data: {
           humanId,
           agentId: 'test-agent',
+          registeredAgentId: agentId,
           title: 'Test Job',
           description: 'Test Description',
           priceUsdc: 100,
@@ -284,6 +287,7 @@ describe('Jobs API - Mutual Handshake', () => {
     it('should REJECT review for PENDING job', async () => {
       const res = await request(app)
         .post(`/api/jobs/${jobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 1, comment: 'Bad!' });
 
       expect(res.status).toBe(400);
@@ -297,6 +301,7 @@ describe('Jobs API - Mutual Handshake', () => {
 
       const res = await request(app)
         .post(`/api/jobs/${jobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 1, comment: 'Bad!' });
 
       expect(res.status).toBe(400);
@@ -320,6 +325,7 @@ describe('Jobs API - Mutual Handshake', () => {
       // Try to review before completion
       const res = await request(app)
         .post(`/api/jobs/${jobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 1, comment: 'Bad!' });
 
       expect(res.status).toBe(400);
@@ -348,6 +354,7 @@ describe('Jobs API - Mutual Handshake', () => {
       // Now review should work
       const res = await request(app)
         .post(`/api/jobs/${jobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 5, comment: 'Great work!' });
 
       expect(res.status).toBe(201);
@@ -375,11 +382,13 @@ describe('Jobs API - Mutual Handshake', () => {
       // First review
       await request(app)
         .post(`/api/jobs/${jobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 5, comment: 'Great!' });
 
       // Try second review
       const res = await request(app)
         .post(`/api/jobs/${jobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 1, comment: 'Changed my mind!' });
 
       expect(res.status).toBe(400);
@@ -1022,6 +1031,7 @@ describe('Jobs API - Mutual Handshake', () => {
       // 5. Review
       const reviewRes = await request(app)
         .post(`/api/jobs/${lifecycleJobId}/review`)
+        .set('X-Agent-Key', agentApiKey)
         .send({ rating: 5, comment: 'Perfect end-to-end!' });
       expect(reviewRes.status).toBe(201);
       expect(reviewRes.body.rating).toBe(5);

@@ -210,6 +210,7 @@ describe('Flow: Complete Job Lifecycle', () => {
     // ─── Step 10: Agent leaves review ──────────────────────────────────
     const reviewRes = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 5, comment: 'Perfect photos, delivered ahead of schedule!' });
 
     expect(reviewRes.status).toBe(201);
@@ -317,12 +318,14 @@ describe('Flow: Complete Job Lifecycle', () => {
     // First review
     const review1 = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 5, comment: 'Great!' });
     expect(review1.status).toBe(201);
 
     // Second review — should fail
     const review2 = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 1, comment: 'Changed my mind!' });
     expect(review2.status).toBe(400);
     expect(review2.body.error).toContain('already been reviewed');

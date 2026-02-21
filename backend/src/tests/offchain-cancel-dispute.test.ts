@@ -595,6 +595,7 @@ describe('Review gating: milestone-based', () => {
     // Review should work
     const reviewRes = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 5, comment: 'Great work!' });
 
     expect(reviewRes.status).toBe(201);
@@ -612,6 +613,7 @@ describe('Review gating: milestone-based', () => {
 
     const reviewRes = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 4, comment: 'Good' });
 
     expect(reviewRes.status).toBe(400);
@@ -631,6 +633,7 @@ describe('Review gating: milestone-based', () => {
     // Job is PAID but not COMPLETED
     const reviewRes = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 3 });
 
     expect(reviewRes.status).toBe(400);
@@ -654,6 +657,7 @@ describe('Review gating: milestone-based', () => {
 
     const reviewRes = await request(app)
       .post(`/api/jobs/${jobId}/review`)
+      .set('X-Agent-Key', agent.apiKey)
       .send({ rating: 5, comment: 'Excellent!' });
 
     expect(reviewRes.status).toBe(201);
