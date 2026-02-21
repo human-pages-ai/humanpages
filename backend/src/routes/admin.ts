@@ -481,7 +481,7 @@ router.get('/users/:id', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const referralCount = await prisma.human.count({ where: { referredBy: user.referralCode } });
+    const referralCount = await prisma.human.count({ where: { referredBy: user.id } });
 
     res.json({ ...user, referralCount });
   } catch (error) {

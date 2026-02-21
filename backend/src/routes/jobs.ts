@@ -1384,7 +1384,7 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
 });
 
 // Agent leaves a review (only for COMPLETED jobs)
-router.post('/:id/review', async (req, res) => {
+router.post('/:id/review', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
   try {
     const data = reviewSchema.parse(req.body);
 
@@ -1392,12 +1392,17 @@ router.post('/:id/review', async (req, res) => {
       where: { id: req.params.id },
       include: {
         review: true,
-        registeredAgent: { select: { erc8004AgentId: true } },
+        registeredAgent: { select: { id: true, erc8004AgentId: true } },
       },
     });
 
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Only the agent assigned to this job can leave a review
+    if (!job.registeredAgentId || job.registeredAgentId !== req.agent!.id) {
+      return res.status(403).json({ error: 'Only the assigned agent can review this job' });
     }
 
     // CRITICAL: Reviews require both milestones — work done AND payment settled.

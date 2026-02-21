@@ -28,7 +28,7 @@ export default function Welcome() {
   const getProfileUrl = () => {
     const baseUrl = window.location.origin;
     if (profile?.username) {
-      return `${baseUrl}/humans/${profile.username}`;
+      return `${baseUrl}/u/${profile.username}`;
     }
     return `${baseUrl}/humans/${profile?.id}`;
   };

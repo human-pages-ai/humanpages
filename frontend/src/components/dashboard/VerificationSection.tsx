@@ -111,7 +111,8 @@ export default function VerificationSection({ profile, onProfileUpdate }: Verifi
   const handleConnectLinkedin = async () => {
     setConnectingLinkedin(true);
     try {
-      const { url } = await api.getLinkedInVerifyUrl();
+      const { url, state } = await api.getLinkedInVerifyUrl();
+      sessionStorage.setItem('linkedin_verify_state', state);
       window.location.href = url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to connect LinkedIn');
@@ -132,7 +133,8 @@ export default function VerificationSection({ profile, onProfileUpdate }: Verifi
   const handleConnectGithub = async () => {
     setConnectingGithub(true);
     try {
-      const { url } = await api.getGitHubVerifyUrl();
+      const { url, state } = await api.getGitHubVerifyUrl();
+      sessionStorage.setItem('github_verify_state', state);
       window.location.href = url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to connect GitHub');
