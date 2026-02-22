@@ -242,7 +242,7 @@ describe('Auth API', () => {
 
       const res = await request(app).get(`/api/auth/verify-email?token=${verificationToken}`);
       expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('emailVerified=true');
+      expect(res.headers.location).toContain('/email-verified');
 
       // Verify the user is now verified
       const human = await prisma.human.findUnique({ where: { id: user.id } });
