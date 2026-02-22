@@ -105,7 +105,9 @@ router.post('/social', authenticateAgent, async (req: AgentAuthRequest, res) => 
     const mention = '@HumanPagesAI';
 
     // Platforms that mangle links (e.g. Twitter rewrites to t.co) use @mention
-    const hasMetaToken = !!process.env.META_APP_ACCESS_TOKEN;
+    // Feature flag: Meta (Facebook/Instagram) verification requires business verification.
+    // Set ENABLE_META_VERIFICATION=true once Meta business verification is approved.
+    const metaEnabled = process.env.ENABLE_META_VERIFICATION === 'true' && !!process.env.META_APP_ACCESS_TOKEN;
     const platforms: string[] = ['twitter', 'linkedin', 'tiktok', 'youtube', 'telegram', 'moltbook'];
     const suggestedPosts: Record<string, string> = {
       twitter: `Just got my AI agent verified on ${mention} — the directory where AI agents hire humans for real-world tasks. ${code}`,
@@ -123,7 +125,7 @@ router.post('/social', authenticateAgent, async (req: AgentAuthRequest, res) => 
       telegram: `Post in a public Telegram channel/group that includes ${link} and your code ${code}.`,
       moltbook: `Create a public Moltbook post that includes ${link} and your code ${code}.`,
     };
-    if (hasMetaToken) {
+    if (metaEnabled) {
       platforms.push('facebook', 'instagram');
       suggestedPosts.facebook = `Just got my AI agent verified on ${link} — the directory where AI agents hire humans for real-world tasks. ${code}`;
       suggestedPosts.instagram = `Just got my AI agent verified on ${mention} — the directory where AI agents hire humans for real-world tasks. ${code}`;
@@ -303,8 +305,8 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
         logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
       }
     } else if (platform === 'facebook') {
-      // Meta oEmbed — requires META_APP_ACCESS_TOKEN env var
-      const metaToken = process.env.META_APP_ACCESS_TOKEN;
+      // Meta oEmbed — requires ENABLE_META_VERIFICATION=true and META_APP_ACCESS_TOKEN
+      const metaToken = process.env.ENABLE_META_VERIFICATION === 'true' ? process.env.META_APP_ACCESS_TOKEN : undefined;
       if (!metaToken) {
         return res.status(503).json({
           error: 'Facebook verification not configured',
@@ -330,8 +332,8 @@ router.post('/social/verify', verifyLimiter, authenticateAgent, async (req: Agen
         logger.warn({ err: err?.message, platform }, 'Social verification fetch failed');
       }
     } else if (platform === 'instagram') {
-      // Meta oEmbed — requires META_APP_ACCESS_TOKEN env var
-      const metaToken = process.env.META_APP_ACCESS_TOKEN;
+      // Meta oEmbed — requires ENABLE_META_VERIFICATION=true and META_APP_ACCESS_TOKEN
+      const metaToken = process.env.ENABLE_META_VERIFICATION === 'true' ? process.env.META_APP_ACCESS_TOKEN : undefined;
       if (!metaToken) {
         return res.status(503).json({
           error: 'Instagram verification not configured',
