@@ -2,13 +2,13 @@ VIDEO PRODUCTION NOTES
 ======================
 
 Format: Vertical 9:16 for Reels/TikTok, 1:1 square version for FB feed
-Captions on ALL dialogue (most people watch without sound)
-Text overlays plus voiceover simultaneously
-Movement/cuts every 2-3 seconds to retain attention
-Use real Filipino freelancers, not stock footage
-Sound design: sharp transitions, notification sounds, light background music
-Color grading: warm and bright (Script 3), punchy and bold (Scripts 1-2)
-End card: HumanPages.ai/careers plus @Human Pages
+Captions on all dialogue (most people watch muted)
+Text overlays with voiceover
+Quick cuts every 2-3 seconds
+Real Filipino freelancers only, no stock footage
+Sound: sharp transitions, notification pings, light background music
+Color: warm and bright (Script 3), bold and punchy (Scripts 1-2)
+End card: HumanPages.ai/careers plus Human Pages
 
 POSTING STRATEGY
 ================

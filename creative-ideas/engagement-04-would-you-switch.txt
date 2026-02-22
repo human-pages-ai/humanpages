@@ -1,20 +1,13 @@
-scenario:
-
-CURRENT: You earn 25k/month through an agency. They take 20-40%. You actually get 15-20k.
-ALTERNATIVE: You earn 20k/month direct hire (no commission). You actually get 20k.
+scenario: you're making 25k/month through an agency and they take 20-40%, so you actually pocket 15-20k. then someone offers you direct hire at 20k/month with zero commission. you actually get 20k.
 
 would you switch?
 
-because the math says yes. but there's more to it:
-- losing the "middle" can feel scary
-- your agency probably does some useful stuff (finding clients, handling disputes)
-- direct hire means more responsibility on you
+the math obviously says yes. but real life is messier than math.
 
-a lot of people know commission is bad but aren't ready to go direct yet.
+losing that "middle person" feels risky. your agency probably handles stuff like finding clients or dealing with disputes. going direct means you're doing that. more responsibility, more moving parts, no safety net.
 
-so honestly:
-- would you switch?
-- what would make you comfortable with it?
-- what would a platform need to offer?
+plus a lot of people know commission is terrible but still aren't ready to cut the cord yet.
 
-thoughts? 👇
+so real question: would you switch? what would actually make you comfortable with direct hire? what would a platform need to offer you to feel safe going independent?
+
+thoughts?

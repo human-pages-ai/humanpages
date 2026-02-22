@@ -9,25 +9,24 @@ Text on screen: Ever bought a car from a dealership?
 Voiceover: "You know that feeling?"
 
 [3-10s] PROBLEM
-Visual: Split screen. Left: FB Marketplace, clean, direct. Right: Dealership, fancy showroom, lots of staff.
-Text on screen: FB Marketplace: You sell direct
+Visual: Split screen. Left: FB Marketplace listing. Right: Dealership lot, fancy showroom, lots of staff.
+Text on screen: FB Marketplace: Sell your own car
 Text on screen: Dealership: Middleman adds 40% markup
-Voiceover: "Same car. Same seller. But the dealership markup is insane."
+Voiceover: "Same car. Same seller. But the dealership version is way more expensive."
 
 [10-25s] TRANSITION
 Visual: Animation. Client on one side, freelancer on other. Old way: Agency in middle (gets crossed out). New way: Direct arrow.
 Text on screen: Old way: Client > Agency > You (You get 30-40%)
 Text on screen: HumanPages way: Client > You (You get 100%)
-Voiceover: "Fiverr, Upwork, those agencies? They're the dealership. Taking a cut just for connecting you."
-Voiceover: "HumanPages is FB Marketplace for freelancers. Direct. No commission."
+Voiceover: "Fiverr, Upwork, those agency sites. They're basically the dealership. They sit in the middle taking a cut just for introducing you."
+Voiceover: "Human Pages is more like Facebook Marketplace. You connect with clients directly."
 
 [25-32s] PROOF
-Visual: Testimonial clips. Freelancer: "I make more now."
-Text on screen: Trusted by service providers in the Philippines
-Voiceover: "People are already switching."
+Visual: Testimonial clips. Freelancer: "I make more here."
+Text on screen: People are using it.
+Voiceover: "It's working."
 
 [32-55s] CTA
 Visual: Hand opening HumanPages app. Job listings appear.
-Text on screen: Stop paying the dealership
 Text on screen: HumanPages.ai/careers
-Voiceover: "Your next client is waiting, and this time, you keep everything."
+Voiceover: "Cut out the middleman. That's the whole idea."

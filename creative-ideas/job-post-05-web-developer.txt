@@ -1,17 +1,23 @@
-We are hiring a Web Developer
+Hiring: Web Developer
 
-Human Pages (@Human Pages), AI marketplace startup, US-based.
+Human Pages (@Human Pages) is an AI marketplace, US-based, fully remote.
 
 Type: Full-time or Part-time | Remote | Async-first
 
-Build and ship features independently
-Clean, maintainable code (React, Node, TypeScript preferred)
-Work directly with the product team
-Communication matters more than years of experience
-Comfortable with fast-moving startup pace
+Here's what the role is:
+- Build and ship features independently
+- Write clean, maintainable code (React, Node, TypeScript preferred but not required)
+- Collaborate directly with the product team
+- Move fast in a startup environment
 
-Competitive hourly rate + performance bonuses.
+What matters most:
+- Communication skills matter more than years on the resume
+- You can work async and don't need constant supervision
+- You're comfortable with things moving quickly
+
+Compensation:
+Competitive hourly rate + performance bonuses
 Zero platform fees.
 
-Apply: HumanPages.ai/careers
-Or DM me with your GitHub / portfolio.
+Interested? Apply: HumanPages.ai/careers
+Or DM me your GitHub or portfolio.

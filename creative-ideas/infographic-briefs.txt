@@ -4,50 +4,50 @@ Human Pages Social Media Campaign
 
 1. "Where Does Your Money Go?"
 Visual: Stacked bar chart. $100 flowing through different platforms. Fiverr: freelancer gets $80. Upwork: $80-90. VA Agency: $35-50. Human Pages: $100. HP bar is full green, others show money bleeding out in red.
-Message: "On other platforms, middlemen profit. On Human Pages, only YOU profit."
-CTA: HumanPages.ai/careers, Zero commission, 100% yours
+Message: Middlemen make money on other platforms. You make money on Human Pages.
+CTA: HumanPages.ai/careers
 
 2. "Your Hidden Opportunity Cost"
-Visual: Calendar/yearly breakdown. Top: Annual earnings $12k. Bottom: What platforms took. Giant red X over the difference ($1,200-2,400). Money flying away.
-Message: "Every hour you work, your commission loss grows. Over a career, it's a house."
-CTA: Stop losing money > HumanPages.ai/careers
+Visual: Calendar/yearly breakdown. Top: Annual earnings $12k. Bottom: What platforms took ($1,200-2,400). Red X showing the gap.
+Message: $1,200-2,400 a year. That's real money you're losing.
+CTA: HumanPages.ai/careers
 
 3. "FB Marketplace vs. Dealership"
-Visual: Split screen. LEFT: Fancy dealership (= Upwork/agencies), middleman in suit, 20-50% markup, complicated. RIGHT: FB Marketplace (= Human Pages), direct connection, no markup, simple.
-Message: "Why deal with a middleman when you can go direct?"
-CTA: Go direct. Get paid 100%. HumanPages.ai/careers
+Visual: Split screen. LEFT: Fancy dealership (= Upwork/agencies), middleman, 20-50% markup, complicated. RIGHT: FB Marketplace (= Human Pages), direct, simple.
+Message: Direct connection. No middleman.
+CTA: HumanPages.ai/careers
 
 4. "The VA Salary Truth"
 Visual: Money flow pyramid. Client pays $1,600/month > Agency takes $800-1,000 > VA gets $600-800. Money shrinks at each layer.
-Message: "The agency earns more than you, but YOU do the work."
-CTA: Cut out the middleman > HumanPages.ai/careers
+Message: The agency makes more than the person actually doing the work.
+CTA: HumanPages.ai/careers
 
 5. "The 5-Year Wealth Gap"
-Visual: Two diverging paths over 5 years. Path A (with platform fees): total kept $61,600. Path B (Human Pages, 0%): total kept $77,000. Difference: $15,400 MORE.
-Message: "Same work. $15,400 difference. The only variable is who takes a cut."
+Visual: Two diverging paths over 5 years. Path A (with platform fees): $61,600 kept. Path B (Human Pages): $77,000 kept. Difference: $15,400.
+Message: Same work. Different platform. $15k difference.
 CTA: HumanPages.ai/careers
 
 6. "Transparency Receipt"
-Visual: Two receipts side by side. Upwork receipt: confusing, multiple deduction lines (commission, platform fee, processing, conversion). Human Pages receipt: clean, one line, $500 service = $500 received.
-Message: "No hidden charges. Nothing to decipher."
-CTA: Clear pricing. Full earnings. HumanPages.ai/careers
+Visual: Two receipts side by side. Upwork receipt: multiple deduction lines. Human Pages receipt: clean, $500 service = $500 received.
+Message: No hidden charges.
+CTA: HumanPages.ai/careers
 
 7. "Day 1 vs. Day 365"
-Visual: Before/After timeline. Day 1 (old platform): "Please lower your rate," earnings $1,200/month with deductions. Day 365 (Human Pages): Direct client messages, $1,500/month clean, no asterisks.
-Message: "Within a year, the difference is real. Not just money, confidence."
+Visual: Before/After timeline. Day 1: client negotiating down the rate, $1,200/month with deductions. Day 365: direct work, $1,500/month clean.
+Message: Year one, the difference is obvious.
 CTA: HumanPages.ai/careers
 
 8. "The Numbers"
-Visual: Large bold numbers, color gradient (red = high cuts, green = HP). Fiverr 20%, Upwork 10-20%, VA Agency 40-65%, Modeling 30-50%, Grab 25-30%, Human Pages 0%. Add annual loss for $15k earner next to each.
-Message: "The industry profits FROM you. Human Pages profits WITH you."
+Visual: Large numbers, color gradient (red = high cuts, green = HP). Fiverr 20%, Upwork 10-20%, VA Agency 40-65%, Modeling 30-50%, Grab 25-30%, Human Pages 0%. Show annual loss for $15k earner next to each.
+Message: The industry takes from you. Human Pages doesn't.
 CTA: HumanPages.ai/careers
 
 9. "You Deserve Control"
-Visual: Two hierarchies. Traditional: algorithm decides visibility, platform controls your reach, you're a commodity. Human Pages: YOU control your profile, clients find you directly, you're a professional.
-Message: "You're not a product. You're not an algorithm. You're a professional."
-CTA: Reclaim control > HumanPages.ai/careers
+Visual: Two hierarchies. Traditional: algorithm decides visibility, platform controls reach. Human Pages: you control profile, clients find you directly.
+Message: Your profile isn't algorithm bait.
+CTA: HumanPages.ai/careers
 
 10. "$6,240/year" (Quick Math Card)
-Visual: Simple calculator graphic. Input: VA earning $8/hr but getting $5/hr through agency. Difference: $3/hr x 8 hrs x 260 days = $6,240/year LOST. Big bold number with money flying away.
-Message: "You're working full-time. You deserve full pay."
-CTA: Keep every dollar > HumanPages.ai/careers
+Visual: Calculator graphic. VA earning $8/hr, getting $5/hr through agency. Difference: $3/hr x 8 hrs x 260 days = $6,240/year lost.
+Message: Working full-time? You should get paid full-time.
+CTA: HumanPages.ai/careers

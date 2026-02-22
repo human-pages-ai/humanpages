@@ -27,13 +27,11 @@ Voiceover: "That's the difference. Your money, no questions."
 
 [32-40s] PROOF
 Visual: Montage. Different Filipino freelancers checking phones, smiling.
-Text on screen: Thousands of Filipino freelancers are already here.
-Voiceover: "It's real. And it's for you."
+Text on screen: People are already using it.
+Voiceover: "It's actually happening."
 
 [40-50s] CTA
 Visual: Hand holding phone. HumanPages app opening. Job listing appears.
-Text on screen: Your next client is waiting
-Text on screen: HumanPages. Direct. Fair. Yours.
 Text on screen: HumanPages.ai/careers
-Voiceover: "Full pay. No surprises. Just you and your work."
+Voiceover: "If this sounds better than what you've got now, go check it out."
 Visual: Sunrise over Manila skyline. Logo. Fade to white.
