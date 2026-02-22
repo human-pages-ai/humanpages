@@ -21,7 +21,8 @@ export async function requireEmailVerified(req: AuthRequest, res: Response, next
     }
 
     next();
-  } catch {
+  } catch (err) {
+    console.error('requireEmailVerified error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -57,7 +58,8 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
       (req as any).log = (req as any).log.child({ userId: payload.userId });
     }
     next();
-  } catch {
+  } catch (err) {
+    console.error('authenticateToken error:', err);
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 }
