@@ -735,6 +735,11 @@
     "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
     "walletNudgeAction": "Set Up"
   },
+  "emailVerifiedPage": {
+    "title": "Email Verified!",
+    "message": "Your email has been verified successfully. You now have full access to your account.",
+    "goToDashboard": "Go to Dashboard"
+  },
   "notFound": {
     "title": "Page not found",
     "message": "The page you're looking for doesn't exist or has been moved.",

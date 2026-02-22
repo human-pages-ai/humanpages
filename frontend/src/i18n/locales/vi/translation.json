@@ -669,6 +669,11 @@
     "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
     "walletNudgeAction": "Set Up"
   },
+  "emailVerifiedPage": {
+    "title": "Xác minh email thành công",
+    "message": "Email của bạn đã được xác minh thành công. Bạn hiện có toàn quyền truy cập vào tài khoản.",
+    "goToDashboard": "Đi đến Bảng điều khiển"
+  },
   "notFound": {
     "title": "Không tìm thấy trang",
     "message": "Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.",

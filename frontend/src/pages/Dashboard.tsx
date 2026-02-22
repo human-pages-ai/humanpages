@@ -127,11 +127,6 @@ export default function Dashboard() {
     loadTelegramStatus();
 
     // Handle query param toasts
-    if (searchParams.get('emailVerified') === 'true') {
-      toast.success(t('toast.emailVerified'));
-      searchParams.delete('emailVerified');
-      setSearchParams(searchParams, { replace: true });
-    }
     if (searchParams.get('unsubscribed') === 'true') {
       toast.success(t('toast.preferencesSaved'));
       searchParams.delete('unsubscribed');
@@ -150,6 +145,24 @@ export default function Dashboard() {
       loadProfile();
     }
   }, []);
+
+  // Poll for email verification when unverified (user may verify on another device)
+  useEffect(() => {
+    if (!profile || profile.emailVerified !== false) return;
+    const interval = setInterval(async () => {
+      try {
+        const data = await api.getProfile();
+        if (data.emailVerified) {
+          setProfile(prev => prev ? { ...prev, emailVerified: true } : prev);
+          toast.success(t('toast.emailVerified'));
+          clearInterval(interval);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [profile?.emailVerified]);
 
   const loadProfile = async () => {
     try {

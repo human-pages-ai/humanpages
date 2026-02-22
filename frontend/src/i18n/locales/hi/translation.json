@@ -668,6 +668,11 @@
     "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
     "walletNudgeAction": "Set Up"
   },
+  "emailVerifiedPage": {
+    "title": "ईमेल सत्यापित",
+    "message": "आपका ईमेल सफलतापूर्वक सत्यापित हो गया है। अब आपके पास अपने खाते का पूरा एक्सेस है।",
+    "goToDashboard": "डैशबोर्ड पर जाएं"
+  },
   "notFound": {
     "title": "पेज नहीं मिला",
     "message": "आप जो पेज ढूंढ रहे हैं वह मौजूद नहीं है या स्थानांतरित कर दिया गया है।",

@@ -352,7 +352,7 @@ router.get('/verify-email', async (req, res) => {
       data: { emailVerified: true, emailVerificationToken: null },
     });
 
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerified=true`);
+    res.redirect(`${process.env.FRONTEND_URL}/email-verified`);
   } catch (error) {
     logger.error({ err: error }, 'Verify email error');
     res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);

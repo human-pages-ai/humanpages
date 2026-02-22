@@ -32,6 +32,7 @@ const JobBoard = lazy(() => import('./pages/JobBoard'));
 const ListingDetail = lazy(() => import('./pages/ListingDetail'));
 const BrandKit = lazy(() => import('./pages/BrandKit'));
 const CareersPage = lazy(() => import('./pages/CareersPage'));
+const EmailVerified = lazy(() => import('./pages/EmailVerified'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -240,6 +241,7 @@ function AppRoutes() {
         }
       />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/email-verified" element={<EmailVerified />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/badge" element={<Badge />} />

@@ -675,6 +675,11 @@
     "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
     "walletNudgeAction": "Set Up"
   },
+  "emailVerifiedPage": {
+    "title": "E-posta Dogrulandı",
+    "message": "E-postanız başarıyla doğrulandı. Artık hesabınıza tam erişiminiz var.",
+    "goToDashboard": "Panele Git"
+  },
   "notFound": {
     "title": "Sayfa bulunamadı",
     "message": "Aradığınız sayfa mevcut değil veya taşınmış.",

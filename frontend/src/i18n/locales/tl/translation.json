@@ -669,6 +669,11 @@
     "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
     "walletNudgeAction": "Set Up"
   },
+  "emailVerifiedPage": {
+    "title": "Na-verify na ang Email",
+    "message": "Matagumpay na na-verify ang iyong email. Mayroon ka nang ganap na access sa iyong account.",
+    "goToDashboard": "Pumunta sa Dashboard"
+  },
   "notFound": {
     "title": "Hindi natagpuan ang pahina",
     "message": "Ang pahina na hinahanap mo ay hindi umiiral o inilipat na.",
