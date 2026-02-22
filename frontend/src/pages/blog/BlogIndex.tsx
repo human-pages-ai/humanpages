@@ -17,6 +17,13 @@ export default function BlogIndex() {
 
   const articles: Article[] = [
     {
+      title: 'How to Build a Free AI Agent That Hires Real People',
+      slug: 'build-ai-agent-that-hires-people',
+      date: 'February 22, 2026',
+      excerpt: 'Build a Telegram bot that finds freelancers, sends job offers, and manages work for you. Free LLM, free hosting, full code included. Wallet setup, USDC on-ramps, and LLM upgrade path all covered.',
+      readingTime: '10 min',
+    },
+    {
       title: 'How to Hire Social Media Marketers with an AI Agent (CLI Tool)',
       slug: 'social-media-marketing-hiring-process',
       date: 'February 11, 2026',

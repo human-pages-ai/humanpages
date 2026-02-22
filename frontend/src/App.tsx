@@ -254,7 +254,7 @@ function AppRoutes() {
       <Route path="/blog/social-media-marketing-hiring-process" element={<SocialMediaMarketingHiring />} />
       <Route path="/blog/automated-influencer-outreach" element={<AutomatedInfluencerOutreach />} />
       <Route path="/blog/get-paid-social-media-promotion" element={<GetPaidSocialMediaPromotion />} />
-      <Route path="/blog/set-up-profile-five-minutes" element={<SetUpProfileFiveMinutes />} />
+      <Route path="/blog/build-ai-agent-that-hires-people" element={<SetUpProfileFiveMinutes />} />
 
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
@@ -274,7 +274,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/social-media-marketing-hiring-process" element={<LangWrapper><SocialMediaMarketingHiring /></LangWrapper>} />
       <Route path="/:lang/blog/automated-influencer-outreach" element={<LangWrapper><AutomatedInfluencerOutreach /></LangWrapper>} />
       <Route path="/:lang/blog/get-paid-social-media-promotion" element={<LangWrapper><GetPaidSocialMediaPromotion /></LangWrapper>} />
-      <Route path="/:lang/blog/set-up-profile-five-minutes" element={<LangWrapper><SetUpProfileFiveMinutes /></LangWrapper>} />
+      <Route path="/:lang/blog/build-ai-agent-that-hires-people" element={<LangWrapper><SetUpProfileFiveMinutes /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
