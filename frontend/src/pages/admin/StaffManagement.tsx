@@ -1,6 +1,75 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { api } from '../../lib/api';
-import type { StaffMember, AdminUser } from '../../types/admin';
+import type { StaffMember, AdminUser, StaffCapability } from '../../types/admin';
+import { STAFF_CAPABILITIES } from '../../types/admin';
+
+const CAP_LABELS: Record<StaffCapability, string> = {
+  CONTENT_REVIEWER: 'Content Reviewer',
+  POSTER: 'Poster',
+  ANALYST: 'Analyst',
+  CREATIVE: 'Creative',
+  GROUP_MANAGER: 'Group Manager',
+};
+
+function CapabilitiesEditor({ member, onSaved }: { member: StaffMember; onSaved: (caps: StaffCapability[]) => void }) {
+  const [selected, setSelected] = useState<StaffCapability[]>(member.capabilities);
+  const [saving, setSaving] = useState(false);
+  const changed = JSON.stringify([...selected].sort()) !== JSON.stringify([...member.capabilities].sort());
+
+  if (member.role === 'ADMIN') {
+    return (
+      <div className="text-sm text-gray-500 italic">Admin has all capabilities</div>
+    );
+  }
+
+  const toggle = (cap: StaffCapability) => {
+    setSelected((prev) =>
+      prev.includes(cap) ? prev.filter((c) => c !== cap) : [...prev, cap]
+    );
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await api.updateStaffCapabilities(member.id, selected);
+      onSaved(res.capabilities);
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">Capabilities</h4>
+      <div className="flex flex-wrap gap-2">
+        {STAFF_CAPABILITIES.map((cap) => (
+          <button
+            key={cap}
+            onClick={() => toggle(cap)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              selected.includes(cap)
+                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {CAP_LABELS[cap]}
+          </button>
+        ))}
+      </div>
+      {changed && (
+        <button
+          onClick={save}
+          disabled={saving}
+          className="mt-2 px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {saving ? 'Saving...' : 'Save Capabilities'}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function StaffManagement() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -282,6 +351,14 @@ export default function StaffManagement() {
                     <tr>
                       <td colSpan={7} className="px-4 py-4 bg-gray-50">
                         <div className="space-y-4">
+                          {/* Capabilities */}
+                          <CapabilitiesEditor
+                            member={s}
+                            onSaved={(caps) => {
+                              setStaff((prev) => prev.map((m) => m.id === s.id ? { ...m, capabilities: caps } : m));
+                            }}
+                          />
+
                           {/* Stats Summary */}
                           <div className="flex gap-6 text-sm">
                             <div>
