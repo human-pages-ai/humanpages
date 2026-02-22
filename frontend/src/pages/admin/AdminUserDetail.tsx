@@ -166,6 +166,7 @@ export default function AdminUserDetail() {
                     {app.status}
                   </span>
                   <span className="text-xs text-gray-400">{app.availability}</span>
+                  {user.location && <span className="text-xs text-gray-400">{user.location}</span>}
                   <span className="ml-auto text-xs text-gray-400">{new Date(app.createdAt).toLocaleDateString()}</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">{app.about}</p>

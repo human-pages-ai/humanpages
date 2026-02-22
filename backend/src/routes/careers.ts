@@ -125,20 +125,29 @@ router.get(
     const humanId = authReq.userId!;
 
     try {
-      const applications = await prisma.careerApplication.findMany({
-        where: { humanId },
-        select: {
-          id: true,
-          positionId: true,
-          positionTitle: true,
-          status: true,
-          availability: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      const [applications, human] = await Promise.all([
+        prisma.careerApplication.findMany({
+          where: { humanId },
+          select: {
+            id: true,
+            positionId: true,
+            positionTitle: true,
+            status: true,
+            availability: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.human.findUnique({
+          where: { id: humanId },
+          select: { location: true },
+        }),
+      ]);
 
-      return res.json(applications);
+      return res.json(applications.map((app) => ({
+        ...app,
+        location: human?.location ?? null,
+      })));
     } catch (err: any) {
       logger.error({ err, humanId }, 'Failed to fetch career applications');
       return res.status(500).json({ error: 'Failed to load applications.' });
