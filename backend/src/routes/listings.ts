@@ -13,6 +13,7 @@ import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
+import { createOpenAIClient } from '../lib/openai-keys.js';
 import { isAllowedUrl, deliverWebhook } from '../lib/webhook.js';
 import { sendJobOfferEmail } from '../lib/email.js';
 import { processProfileImage, uploadProfilePhoto, getProfilePhotoSignedUrl, deleteProfilePhoto } from '../lib/storage.js';
@@ -937,9 +938,8 @@ router.post('/:id/generate-image', x402PaymentCheck('listing_image_generate'), a
     // Build safe DALL-E prompt
     const prompt = `Professional, clean illustration for a job listing titled "${listing.title.substring(0, 100)}". Style: modern flat design, abstract, no text or words in the image, suitable for a job board thumbnail. Vibrant but professional colors.`;
 
-    // Call OpenAI DALL-E
-    const OpenAI = (await import('openai')).default;
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 2, timeout: 60_000 });
+    // Call OpenAI DALL-E (uses round-robin key rotation)
+    const openai = createOpenAIClient({ maxRetries: 2, timeout: 60_000 });
     const response = await openai.images.generate({
       model: 'dall-e-3',
       prompt,

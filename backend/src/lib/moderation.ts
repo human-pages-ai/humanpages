@@ -1,7 +1,8 @@
-import OpenAI, { APIError, RateLimitError } from 'openai';
+import { APIError, RateLimitError } from 'openai';
 import leoProfanity from 'leo-profanity';
 import { prisma } from './prisma.js';
 import { logger } from './logger.js';
+import { createOpenAIClient, hasOpenAIKey } from './openai-keys.js';
 
 export interface ModerationResult {
   flagged: boolean;
@@ -27,30 +28,19 @@ export class OpenAIRateLimitError extends Error {
   }
 }
 
-// Lazy-initialized OpenAI client
-let openaiClient: OpenAI | null = null;
-
-function getOpenAI(): OpenAI {
-  if (!openaiClient) {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
-    }
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      // The SDK retries 429 and 5xx errors automatically with exponential backoff.
-      // Default is 2 retries; bump to 3 for resilience in a background worker context.
-      maxRetries: 3,
-      timeout: 30_000, // 30s per-request timeout
-    });
-  }
-  return openaiClient;
+/**
+ * Get an OpenAI client for moderation calls.
+ * Uses round-robin key rotation when multiple comma-separated keys are configured.
+ */
+function getOpenAI() {
+  return createOpenAIClient({ maxRetries: 3, timeout: 30_000 });
 }
 
 /**
  * Check if moderation is configured (has OpenAI API key).
  */
 export function isModerationEnabled(): boolean {
-  return !!process.env.OPENAI_API_KEY;
+  return hasOpenAIKey();
 }
 
 /**
