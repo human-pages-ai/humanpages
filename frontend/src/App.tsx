@@ -248,6 +248,7 @@ function AppRoutes() {
       <Route path="/report" element={<ReportAgent />} />
       <Route path="/brand" element={<BrandKit />} />
       <Route path="/careers" element={<CareersPage />} />
+      <Route path="/careers/apply/:positionId" element={<CareersPage />} />
       <Route path="/listings" element={<JobBoard />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
       <Route path="/blog" element={<BlogIndex />} />
@@ -286,6 +287,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/moltbook-agent-survival-guide" element={<LangWrapper><MoltbookSurvivalGuide /></LangWrapper>} />
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
+      <Route path="/:lang/careers/apply/:positionId" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
 

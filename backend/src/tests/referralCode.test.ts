@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { generateReferralCode } from '../lib/referralCode.js';
 
 describe('generateReferralCode', () => {
-  it('should generate an 8-character code', () => {
+  it('should generate a 6-character code', () => {
     const code = generateReferralCode();
-    expect(code).toHaveLength(8);
+    expect(code).toHaveLength(6);
   });
 
   it('should only use URL-safe, readable characters', () => {
@@ -22,7 +22,7 @@ describe('generateReferralCode', () => {
     for (let i = 0; i < 1000; i++) {
       codes.add(generateReferralCode());
     }
-    // With 8 chars from a 55-char alphabet (~47 bits of entropy),
+    // With 6 chars from a 54-char alphabet (~31 bits of entropy),
     // 1000 codes should all be unique
     expect(codes.size).toBe(1000);
   });

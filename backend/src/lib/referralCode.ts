@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; // No 0/O/I/l/1 for readability
-const CODE_LENGTH = 8;
+const CODE_LENGTH = 6;
 
 /**
  * Generate a short, URL-friendly referral code.

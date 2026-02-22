@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import Link from '../components/LocalizedLink';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
@@ -22,6 +23,7 @@ import {
   UserCircleIcon,
   DocumentCheckIcon,
   HandThumbUpIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline';
 
 // ─── Inline SVG Illustrations ────────────────────────────────────────────────
@@ -635,7 +637,20 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
 
 // ─── Position Card ───────────────────────────────────────────────────────────
 
-function PositionCard({ position, onApply }: { position: Position; onApply: (p: Position) => void }) {
+function PositionCard({ position, onApply, referralCode }: { position: Position; onApply: (p: Position) => void; referralCode?: string }) {
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyApplyLink = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const base = `${window.location.origin}/careers/apply/${position.id}`;
+    const url = referralCode ? `${base}?ref=${referralCode}` : base;
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      analytics.track('careers_copy_apply_link', { position: position.id, hasRef: !!referralCode });
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  }, [position.id, referralCode]);
+
   return (
     <div
       id={`position-${position.id}`}
@@ -646,9 +661,22 @@ function PositionCard({ position, onApply }: { position: Position; onApply: (p: 
           <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
             {position.icon}
           </div>
-          <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full">
-            {position.tag}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={copyApplyLink}
+              title="Copy apply link"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              {linkCopied ? (
+                <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <LinkIcon className="w-4 h-4" />
+              )}
+            </button>
+            <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full">
+              {position.tag}
+            </span>
+          </div>
         </div>
         <h3 className="text-lg font-semibold text-slate-900 mb-1">{position.title}</h3>
         <p className="text-sm text-slate-500 mb-4">{position.tagline}</p>
@@ -710,9 +738,26 @@ function CategoryFilter({ active, onChange, counts }: {
 
 export default function CareersPage() {
   const { user, loginWithLinkedIn, loginWithGoogle } = useAuth();
+  const { positionId: routePositionId } = useParams<{ positionId?: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [activeCategory, setActiveCategory] = useState<Category>('All');
+  const [userReferralCode, setUserReferralCode] = useState<string | null>(null);
   const positionsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch referral code for logged-in users (used for shareable apply links)
+  useEffect(() => {
+    if (user) {
+      api.getProfile()
+        .then((profile) => {
+          if (profile.referralCode) {
+            setUserReferralCode(profile.referralCode);
+          }
+        })
+        .catch(() => { /* silently fail */ });
+    }
+  }, [user]);
 
   // Category counts
   const categoryCounts = CATEGORIES.reduce((acc, cat) => {
@@ -724,9 +769,33 @@ export default function CareersPage() {
     ? POSITIONS
     : POSITIONS.filter(p => p.category === activeCategory);
 
-  // Resume apply intent from localStorage or URL param on mount
+  // Capture referral code from ?ref= param (works on both /careers and /careers/apply/:id)
   useEffect(() => {
-    // 1. Check localStorage (survives OAuth, onboarding, refreshes)
+    const ref = searchParams.get('ref');
+    if (ref) {
+      localStorage.setItem('referrer_id', ref);
+    }
+  }, [searchParams]);
+
+  // Resume apply intent from route params, localStorage, or query param on mount
+  useEffect(() => {
+    // 1. Check route param (deep link: /careers/apply/software-engineer)
+    if (routePositionId) {
+      const allPositions = [...POSITIONS, GENERAL_APPLICATION];
+      const match = allPositions.find((p) => p.id === routePositionId);
+      if (match) {
+        setSelectedPosition(match);
+        analytics.track('careers_deeplink_landed', {
+          positionId: routePositionId,
+          hasRef: !!searchParams.get('ref'),
+        });
+        // Clean URL to /careers (keep search params for ref capture above)
+        navigate('/careers', { replace: true });
+        return;
+      }
+    }
+
+    // 2. Check localStorage (survives OAuth, onboarding, refreshes)
     const intent = getApplyIntent();
     if (intent) {
       const match = POSITIONS.find((p) => p.id === intent.positionId);
@@ -737,7 +806,7 @@ export default function CareersPage() {
       }
     }
 
-    // 2. Fallback: check URL param (direct links like /careers?apply=software-engineer)
+    // 3. Fallback: check URL param (legacy links like /careers?apply=software-engineer)
     const params = new URLSearchParams(window.location.search);
     const applyId = params.get('apply');
     if (applyId) {
@@ -749,7 +818,7 @@ export default function CareersPage() {
         window.history.replaceState({}, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
       }
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleApply = useCallback((position: Position) => {
     setSelectedPosition(position);
@@ -866,7 +935,7 @@ export default function CareersPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPositions.map((pos) => (
-              <PositionCard key={pos.id} position={pos} onApply={handleApply} />
+              <PositionCard key={pos.id} position={pos} onApply={handleApply} referralCode={userReferralCode ?? undefined} />
             ))}
             {/* Apply Anyway — always shown as the last card, visually differentiated */}
             <div

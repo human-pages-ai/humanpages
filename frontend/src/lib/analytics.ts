@@ -22,7 +22,9 @@ type EventName =
   | 'careers_apply_submit'
   | 'careers_referral_copy'
   | 'careers_referral_share'
-  | 'careers_hero_signup';
+  | 'careers_hero_signup'
+  | 'careers_copy_apply_link'
+  | 'careers_deeplink_landed';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;
