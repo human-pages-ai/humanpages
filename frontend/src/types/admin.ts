@@ -420,4 +420,50 @@ export interface StaffClockOverview {
   clockedInSince: string | null;
   todayHours: number;
   weekHours: number;
+  staffDailyRate: number | null;
+  staffDailyHours: number | null;
+}
+
+export interface StaffPayment {
+  id: string;
+  humanId: string;
+  amountUsd: string;
+  paymentDate: string;
+  notes: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  human: { name: string };
+  createdBy: { name: string };
+}
+
+export interface HoursAdjustment {
+  id: string;
+  humanId: string;
+  date: string;
+  minutes: number;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewedById: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  human: { name: string; email: string };
+  reviewedBy: { name: string } | null;
+}
+
+export interface StaffBalance {
+  humanId: string;
+  name: string;
+  email: string;
+  staffDailyRate: number;
+  staffDailyHours: number;
+  hourlyRate: number;
+  workedMinutes: number;
+  workedHours: number;
+  earned: number;
+  paid: number;
+  owed: number;
+  from: string;
+  to: string;
 }

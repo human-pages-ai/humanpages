@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -623,6 +623,81 @@ export const api = {
 
   getAllStaffClock: () =>
     request<{ staff: StaffClockOverview[] }>('/admin/time-tracking/all-staff'),
+
+  // Staff Rate Config
+  setStaffRate: (data: { humanId: string; staffDailyRate?: number; staffDailyHours?: number }) =>
+    request<{ id: string; name: string; staffDailyRate: number | null; staffDailyHours: number | null }>('/admin/time-tracking/rate', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  // Staff Payments
+  createPayment: (data: { humanId: string; amountUsd: number; paymentDate: string; notes?: string }) =>
+    request<StaffPayment>('/admin/time-tracking/payments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getPayments: (params: { page?: number; limit?: number; humanId?: string; from?: string; to?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.humanId) query.set('humanId', params.humanId);
+    if (params.from) query.set('from', params.from);
+    if (params.to) query.set('to', params.to);
+    const qs = query.toString();
+    return request<{ payments: StaffPayment[]; pagination: Pagination }>(`/admin/time-tracking/payments${qs ? `?${qs}` : ''}`);
+  },
+
+  updatePayment: (id: string, data: { amountUsd?: number; paymentDate?: string; notes?: string }) =>
+    request<StaffPayment>(`/admin/time-tracking/payments/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deletePayment: (id: string) =>
+    request<{ deleted: boolean }>(`/admin/time-tracking/payments/${id}`, { method: 'DELETE' }),
+
+  // Hours Adjustments
+  createAdjustment: (data: { date: string; minutes: number; reason: string }) =>
+    request<HoursAdjustment>('/admin/time-tracking/adjustments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getAdjustments: (params: { page?: number; limit?: number; humanId?: string; status?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.humanId) query.set('humanId', params.humanId);
+    if (params.status) query.set('status', params.status);
+    const qs = query.toString();
+    return request<{ adjustments: HoursAdjustment[]; pagination: Pagination }>(`/admin/time-tracking/adjustments${qs ? `?${qs}` : ''}`);
+  },
+
+  reviewAdjustment: (id: string, status: 'APPROVED' | 'REJECTED') =>
+    request<HoursAdjustment>(`/admin/time-tracking/adjustments/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  // Balance
+  getBalance: (params: { humanId?: string; from?: string; to?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.humanId) query.set('humanId', params.humanId);
+    if (params.from) query.set('from', params.from);
+    if (params.to) query.set('to', params.to);
+    const qs = query.toString();
+    return request<StaffBalance>(`/admin/time-tracking/balance${qs ? `?${qs}` : ''}`);
+  },
+
+  getAllStaffBalances: (params: { from?: string; to?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.from) query.set('from', params.from);
+    if (params.to) query.set('to', params.to);
+    const qs = query.toString();
+    return request<{ balances: StaffBalance[] }>(`/admin/time-tracking/balance/all-staff${qs ? `?${qs}` : ''}`);
+  },
 };
 
 // Referral Program types (included in profile response)

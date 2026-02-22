@@ -218,6 +218,10 @@ model Human {
   abuseScore      Int         @default(0)
   abuseStrikes    Int         @default(0)
 
+  // ===== STAFF PAY CONFIG =====
+  staffDailyRate   Decimal? @db.Decimal(10, 2) // e.g. $25/day
+  staffDailyHours  Float?   // e.g. 8 hours/day (quota)
+
   // Relations
   wallets       Wallet[]
   services      Service[]
@@ -237,6 +241,10 @@ model Human {
   postingCompletions PostingGroup[] @relation("PostingCompletions")
   staffApiKey     StaffApiKey?
   timeEntries     TimeEntry[]
+  staffPayments   StaffPayment[]
+  hoursAdjustments HoursAdjustment[]
+  paymentsCreated StaffPayment[] @relation("PaymentCreator")
+  adjustmentsReviewed HoursAdjustment[] @relation("AdjustmentReviewer")
 
   // Indexes for fast agent search
   @@index([skills])
@@ -904,6 +912,49 @@ model TimeEntry {
   human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
 
   @@index([humanId, clockIn])
+}
+
+// ===== STAFF PAYMENT & HOURS ADJUSTMENT =====
+
+enum AdjustmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model StaffPayment {
+  id          String   @id @default(cuid())
+  humanId     String
+  amountUsd   Decimal  @db.Decimal(10, 2)
+  paymentDate DateTime
+  notes       String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  human     Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  createdBy Human @relation("PaymentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([humanId, paymentDate])
+}
+
+model HoursAdjustment {
+  id           String           @id @default(cuid())
+  humanId      String
+  date         DateTime
+  minutes      Int
+  reason       String
+  status       AdjustmentStatus @default(PENDING)
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  human      Human  @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  reviewedBy Human? @relation("AdjustmentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([humanId, date])
+  @@index([status])
 }
 
 model AdCopy {

@@ -1813,6 +1813,75 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
   });
 }
 
+// ===== STAFF PAYMENT OWED NOTIFICATION =====
+
+interface PaymentOwedEmailData {
+  staffName: string;
+  staffEmail: string;
+  hoursWorked: number;
+  earnedAmount: number;
+  totalPaid: number;
+  owedAmount: number;
+}
+
+export async function sendPaymentOwedEmail(data: PaymentOwedEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+    logger.info('No email provider configured, skipping payment owed email');
+    return false;
+  }
+
+  const textContent = `
+Staff Payment Alert
+
+Staff: ${data.staffName} (${data.staffEmail})
+Hours worked this month: ${data.hoursWorked.toFixed(1)}h
+Earned: $${data.earnedAmount.toFixed(2)}
+Total paid: $${data.totalPaid.toFixed(2)}
+Remaining owed: $${data.owedAmount.toFixed(2)}
+
+---
+Human Pages — Internal Staff Notification
+  `.trim();
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Staff Payment Alert</title></head>
+<body style="margin:0;padding:0;background:#f0f0f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f5;">
+    <tr><td align="center" style="padding:40px 20px;">
+      <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#fefefe;border-radius:12px;border:1px solid #e2e2ea;">
+        <tr><td style="padding:32px 40px 24px;">
+          <h1 style="margin:0;font-size:20px;font-weight:600;color:#1e1e2f;">Staff Payment Alert</h1>
+        </td></tr>
+        <tr><td style="padding:0 40px 24px;">
+          <table width="100%" cellpadding="8" cellspacing="0" style="font-size:14px;color:#44445a;border-collapse:collapse;">
+            <tr><td style="border-bottom:1px solid #eee;"><strong>Staff</strong></td><td style="border-bottom:1px solid #eee;">${data.staffName} (${data.staffEmail})</td></tr>
+            <tr><td style="border-bottom:1px solid #eee;"><strong>Hours this month</strong></td><td style="border-bottom:1px solid #eee;">${data.hoursWorked.toFixed(1)}h</td></tr>
+            <tr><td style="border-bottom:1px solid #eee;"><strong>Earned</strong></td><td style="border-bottom:1px solid #eee;">$${data.earnedAmount.toFixed(2)}</td></tr>
+            <tr><td style="border-bottom:1px solid #eee;"><strong>Total paid</strong></td><td style="border-bottom:1px solid #eee;">$${data.totalPaid.toFixed(2)}</td></tr>
+            <tr><td><strong style="color:#dc2626;">Remaining owed</strong></td><td><strong style="color:#dc2626;">$${data.owedAmount.toFixed(2)}</strong></td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e2ea;margin:0;"></td></tr>
+        <tr><td style="padding:24px 40px 32px;">
+          <p style="margin:0;font-size:12px;color:#8b8ba0;">Human Pages — Internal Staff Notification</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  return sendEmail({
+    to: 'hello@humanpages.ai',
+    subject: `Payment owed: $${data.owedAmount.toFixed(2)} to ${data.staffName}`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
   const hasResend = !!process.env.RESEND_API_KEY;

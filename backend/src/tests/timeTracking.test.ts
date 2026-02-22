@@ -10,9 +10,12 @@ vi.mock('../lib/email.js', () => ({
   sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
   sendVerificationEmail: vi.fn(() => Promise.resolve()),
   sendJobOfferEmail: vi.fn(() => Promise.resolve()),
+  sendPaymentOwedEmail: vi.fn(() => Promise.resolve()),
 }));
 
 async function cleanTimeTrackingData() {
+  await prisma.hoursAdjustment.deleteMany();
+  await prisma.staffPayment.deleteMany();
   await prisma.timeEntry.deleteMany();
   await prisma.staffApiKey.deleteMany();
   await prisma.human.deleteMany();
@@ -482,6 +485,432 @@ describe('Time Tracking API', () => {
         .get('/api/admin/time-tracking/entries');
       expect(entriesRes.body.entries).toHaveLength(1);
       expect(entriesRes.body.entries[0].notes).toBe('Done for today');
+    });
+  });
+
+  // ===== RATE CONFIG =====
+  describe('PATCH /api/admin/time-tracking/rate', () => {
+    it('should return 403 for non-admin', async () => {
+      const res = await authRequest(staffUser.token)
+        .patch('/api/admin/time-tracking/rate')
+        .send({ humanId: staffUser.id, staffDailyRate: 25, staffDailyHours: 8 });
+      expect(res.status).toBe(403);
+    });
+
+    it('should set staff daily rate and hours', async () => {
+      const res = await authRequest(adminUser.token)
+        .patch('/api/admin/time-tracking/rate')
+        .send({ humanId: staffUser.id, staffDailyRate: 25, staffDailyHours: 8 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.staffDailyRate).toBe(25);
+      expect(res.body.staffDailyHours).toBe(8);
+    });
+
+    it('should require humanId', async () => {
+      const res = await authRequest(adminUser.token)
+        .patch('/api/admin/time-tracking/rate')
+        .send({ staffDailyRate: 25 });
+      expect(res.status).toBe(400);
+    });
+
+    it('should require at least one field', async () => {
+      const res = await authRequest(adminUser.token)
+        .patch('/api/admin/time-tracking/rate')
+        .send({ humanId: staffUser.id });
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ===== PAYMENTS =====
+  describe('Staff Payments', () => {
+    describe('POST /api/admin/time-tracking/payments', () => {
+      it('should return 403 for non-admin', async () => {
+        const res = await authRequest(staffUser.token)
+          .post('/api/admin/time-tracking/payments')
+          .send({ humanId: staffUser.id, amountUsd: 50, paymentDate: '2026-02-22' });
+        expect(res.status).toBe(403);
+      });
+
+      it('should create a payment', async () => {
+        const res = await authRequest(adminUser.token)
+          .post('/api/admin/time-tracking/payments')
+          .send({ humanId: staffUser.id, amountUsd: 50, paymentDate: '2026-02-22', notes: 'PayPal transfer' });
+
+        expect(res.status).toBe(201);
+        expect(Number(res.body.amountUsd)).toBe(50);
+        expect(res.body.notes).toBe('PayPal transfer');
+        expect(res.body.humanId).toBe(staffUser.id);
+        expect(res.body.createdById).toBe(adminUser.id);
+      });
+
+      it('should validate required fields', async () => {
+        const res = await authRequest(adminUser.token)
+          .post('/api/admin/time-tracking/payments')
+          .send({ humanId: staffUser.id });
+        expect(res.status).toBe(400);
+      });
+    });
+
+    describe('GET /api/admin/time-tracking/payments', () => {
+      it('should return own payments for staff', async () => {
+        await prisma.staffPayment.create({
+          data: { humanId: staffUser.id, amountUsd: 50, paymentDate: new Date(), createdById: adminUser.id },
+        });
+        await prisma.staffPayment.create({
+          data: { humanId: adminUser.id, amountUsd: 100, paymentDate: new Date(), createdById: adminUser.id },
+        });
+
+        const res = await authRequest(staffUser.token)
+          .get('/api/admin/time-tracking/payments');
+
+        expect(res.status).toBe(200);
+        expect(res.body.payments).toHaveLength(1);
+        expect(Number(res.body.payments[0].amountUsd)).toBe(50);
+      });
+
+      it('should allow admin to filter by humanId', async () => {
+        await prisma.staffPayment.create({
+          data: { humanId: staffUser.id, amountUsd: 50, paymentDate: new Date(), createdById: adminUser.id },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .get(`/api/admin/time-tracking/payments?humanId=${staffUser.id}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.payments).toHaveLength(1);
+      });
+    });
+
+    describe('PATCH /api/admin/time-tracking/payments/:id', () => {
+      it('should update a payment', async () => {
+        const payment = await prisma.staffPayment.create({
+          data: { humanId: staffUser.id, amountUsd: 50, paymentDate: new Date(), createdById: adminUser.id },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .patch(`/api/admin/time-tracking/payments/${payment.id}`)
+          .send({ amountUsd: 75, notes: 'Updated amount' });
+
+        expect(res.status).toBe(200);
+        expect(Number(res.body.amountUsd)).toBe(75);
+        expect(res.body.notes).toBe('Updated amount');
+      });
+
+      it('should return 403 for non-admin', async () => {
+        const payment = await prisma.staffPayment.create({
+          data: { humanId: staffUser.id, amountUsd: 50, paymentDate: new Date(), createdById: adminUser.id },
+        });
+
+        const res = await authRequest(staffUser.token)
+          .patch(`/api/admin/time-tracking/payments/${payment.id}`)
+          .send({ amountUsd: 75 });
+        expect(res.status).toBe(403);
+      });
+    });
+
+    describe('DELETE /api/admin/time-tracking/payments/:id', () => {
+      it('should delete a payment', async () => {
+        const payment = await prisma.staffPayment.create({
+          data: { humanId: staffUser.id, amountUsd: 50, paymentDate: new Date(), createdById: adminUser.id },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .delete(`/api/admin/time-tracking/payments/${payment.id}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.deleted).toBe(true);
+
+        const deleted = await prisma.staffPayment.findUnique({ where: { id: payment.id } });
+        expect(deleted).toBeNull();
+      });
+
+      it('should return 404 for non-existent payment', async () => {
+        const res = await authRequest(adminUser.token)
+          .delete('/api/admin/time-tracking/payments/nonexistent');
+        expect(res.status).toBe(404);
+      });
+    });
+  });
+
+  // ===== HOURS ADJUSTMENTS =====
+  describe('Hours Adjustments', () => {
+    describe('POST /api/admin/time-tracking/adjustments', () => {
+      it('should create an adjustment request', async () => {
+        const res = await authRequest(staffUser.token)
+          .post('/api/admin/time-tracking/adjustments')
+          .send({ date: '2026-02-20', minutes: 60, reason: 'Forgot to clock in' });
+
+        expect(res.status).toBe(201);
+        expect(res.body.minutes).toBe(60);
+        expect(res.body.reason).toBe('Forgot to clock in');
+        expect(res.body.status).toBe('PENDING');
+        expect(res.body.humanId).toBe(staffUser.id);
+      });
+
+      it('should validate required fields', async () => {
+        const res = await authRequest(staffUser.token)
+          .post('/api/admin/time-tracking/adjustments')
+          .send({ date: '2026-02-20' });
+        expect(res.status).toBe(400);
+      });
+
+      it('should reject non-positive minutes', async () => {
+        const res = await authRequest(staffUser.token)
+          .post('/api/admin/time-tracking/adjustments')
+          .send({ date: '2026-02-20', minutes: -30, reason: 'test' });
+        expect(res.status).toBe(400);
+      });
+    });
+
+    describe('GET /api/admin/time-tracking/adjustments', () => {
+      it('should return own adjustments for staff', async () => {
+        await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'Test' },
+        });
+        await prisma.hoursAdjustment.create({
+          data: { humanId: adminUser.id, date: new Date(), minutes: 30, reason: 'Test' },
+        });
+
+        const res = await authRequest(staffUser.token)
+          .get('/api/admin/time-tracking/adjustments');
+
+        expect(res.status).toBe(200);
+        expect(res.body.adjustments).toHaveLength(1);
+        expect(res.body.adjustments[0].minutes).toBe(60);
+      });
+
+      it('should return all adjustments for admin', async () => {
+        await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'Test' },
+        });
+        await prisma.hoursAdjustment.create({
+          data: { humanId: adminUser.id, date: new Date(), minutes: 30, reason: 'Test' },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .get('/api/admin/time-tracking/adjustments');
+
+        expect(res.status).toBe(200);
+        expect(res.body.adjustments).toHaveLength(2);
+      });
+
+      it('should filter by status', async () => {
+        await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'Test', status: 'PENDING' },
+        });
+        await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 30, reason: 'Approved one', status: 'APPROVED' },
+        });
+
+        const res = await authRequest(staffUser.token)
+          .get('/api/admin/time-tracking/adjustments?status=PENDING');
+
+        expect(res.status).toBe(200);
+        expect(res.body.adjustments).toHaveLength(1);
+        expect(res.body.adjustments[0].minutes).toBe(60);
+      });
+    });
+
+    describe('PATCH /api/admin/time-tracking/adjustments/:id', () => {
+      it('should approve an adjustment', async () => {
+        const adj = await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'Forgot clock in' },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .patch(`/api/admin/time-tracking/adjustments/${adj.id}`)
+          .send({ status: 'APPROVED' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe('APPROVED');
+        expect(res.body.reviewedById).toBe(adminUser.id);
+        expect(res.body.reviewedAt).toBeDefined();
+      });
+
+      it('should reject an adjustment', async () => {
+        const adj = await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'Forgot clock in' },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .patch(`/api/admin/time-tracking/adjustments/${adj.id}`)
+          .send({ status: 'REJECTED' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe('REJECTED');
+      });
+
+      it('should return 403 for non-admin', async () => {
+        const adj = await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'test' },
+        });
+
+        const res = await authRequest(staffUser.token)
+          .patch(`/api/admin/time-tracking/adjustments/${adj.id}`)
+          .send({ status: 'APPROVED' });
+        expect(res.status).toBe(403);
+      });
+
+      it('should validate status value', async () => {
+        const adj = await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: new Date(), minutes: 60, reason: 'test' },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .patch(`/api/admin/time-tracking/adjustments/${adj.id}`)
+          .send({ status: 'INVALID' });
+        expect(res.status).toBe(400);
+      });
+    });
+  });
+
+  // ===== BALANCE =====
+  describe('Balance', () => {
+    describe('GET /api/admin/time-tracking/balance', () => {
+      it('should compute balance correctly', async () => {
+        // Set rate: $25/day, 8h/day → $3.125/h
+        await prisma.human.update({
+          where: { id: staffUser.id },
+          data: { staffDailyRate: 25, staffDailyHours: 8 },
+        });
+
+        // Create a 2-hour time entry this month
+        const now = new Date();
+        const twoHoursAgo = new Date(now.getTime() - 2 * 3600000);
+        await prisma.timeEntry.create({
+          data: { humanId: staffUser.id, clockIn: twoHoursAgo, clockOut: now, duration: 120 },
+        });
+
+        // Create approved 30-minute adjustment
+        await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: now, minutes: 30, reason: 'Forgot', status: 'APPROVED' },
+        });
+
+        // Create a pending adjustment (should not count)
+        await prisma.hoursAdjustment.create({
+          data: { humanId: staffUser.id, date: now, minutes: 60, reason: 'Pending one', status: 'PENDING' },
+        });
+
+        // Log a $5 payment
+        await prisma.staffPayment.create({
+          data: { humanId: staffUser.id, amountUsd: 5, paymentDate: now, createdById: adminUser.id },
+        });
+
+        const res = await authRequest(staffUser.token)
+          .get('/api/admin/time-tracking/balance');
+
+        expect(res.status).toBe(200);
+        expect(res.body.staffDailyRate).toBe(25);
+        expect(res.body.staffDailyHours).toBe(8);
+        expect(res.body.hourlyRate).toBeCloseTo(3.125, 2);
+        // 120 + 30 = 150 minutes = 2.5 hours
+        expect(res.body.workedMinutes).toBe(150);
+        expect(res.body.workedHours).toBeCloseTo(2.5, 1);
+        // earned = 2.5 * 3.125 = 7.8125 → 7.81
+        expect(res.body.earned).toBeCloseTo(7.81, 1);
+        expect(res.body.paid).toBe(5);
+        // owed = 7.81 - 5 = 2.81
+        expect(res.body.owed).toBeCloseTo(2.81, 1);
+      });
+
+      it('should return zero balance when no rate configured', async () => {
+        const res = await authRequest(staffUser.token)
+          .get('/api/admin/time-tracking/balance');
+
+        expect(res.status).toBe(200);
+        expect(res.body.hourlyRate).toBe(0);
+        expect(res.body.earned).toBe(0);
+        expect(res.body.owed).toBe(0);
+      });
+
+      it('should allow admin to check another staff balance', async () => {
+        await prisma.human.update({
+          where: { id: staffUser.id },
+          data: { staffDailyRate: 20, staffDailyHours: 8 },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .get(`/api/admin/time-tracking/balance?humanId=${staffUser.id}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.humanId).toBe(staffUser.id);
+        expect(res.body.staffDailyRate).toBe(20);
+      });
+    });
+
+    describe('GET /api/admin/time-tracking/balance/all-staff', () => {
+      it('should return 403 for non-admin', async () => {
+        const res = await authRequest(staffUser.token)
+          .get('/api/admin/time-tracking/balance/all-staff');
+        expect(res.status).toBe(403);
+      });
+
+      it('should return balances for all staff', async () => {
+        await prisma.human.update({
+          where: { id: staffUser.id },
+          data: { staffDailyRate: 25, staffDailyHours: 8 },
+        });
+
+        const res = await authRequest(adminUser.token)
+          .get('/api/admin/time-tracking/balance/all-staff');
+
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.balances)).toBe(true);
+        expect(res.body.balances.length).toBeGreaterThanOrEqual(1);
+
+        const staffBalance = res.body.balances.find((b: any) => b.humanId === staffUser.id);
+        expect(staffBalance).toBeDefined();
+        expect(staffBalance.staffDailyRate).toBe(25);
+      });
+    });
+  });
+
+  // ===== FULL PAYMENT WORKFLOW =====
+  describe('Full payment workflow', () => {
+    it('should set rate → log hours → request adjustment → approve → check balance → pay', async () => {
+      // 1. Admin sets rate
+      const rateRes = await authRequest(adminUser.token)
+        .patch('/api/admin/time-tracking/rate')
+        .send({ humanId: staffUser.id, staffDailyRate: 40, staffDailyHours: 8 });
+      expect(rateRes.status).toBe(200);
+
+      // 2. Staff clocks in and out (1 hour)
+      const oneHourAgo = new Date(Date.now() - 3600000);
+      await prisma.timeEntry.create({
+        data: { humanId: staffUser.id, clockIn: oneHourAgo, clockOut: new Date(), duration: 60 },
+      });
+
+      // 3. Staff requests 30 min adjustment
+      const adjRes = await authRequest(staffUser.token)
+        .post('/api/admin/time-tracking/adjustments')
+        .send({ date: new Date().toISOString(), minutes: 30, reason: 'Worked offline' });
+      expect(adjRes.status).toBe(201);
+
+      // 4. Admin approves adjustment
+      const approveRes = await authRequest(adminUser.token)
+        .patch(`/api/admin/time-tracking/adjustments/${adjRes.body.id}`)
+        .send({ status: 'APPROVED' });
+      expect(approveRes.status).toBe(200);
+
+      // 5. Check balance: 90 min = 1.5h, rate = $5/h → earned = $7.50, paid = $0, owed = $7.50
+      const balanceRes = await authRequest(staffUser.token)
+        .get('/api/admin/time-tracking/balance');
+      expect(balanceRes.body.workedMinutes).toBe(90);
+      expect(balanceRes.body.hourlyRate).toBe(5);
+      expect(balanceRes.body.earned).toBe(7.5);
+      expect(balanceRes.body.owed).toBe(7.5);
+
+      // 6. Admin logs payment of $5
+      const payRes = await authRequest(adminUser.token)
+        .post('/api/admin/time-tracking/payments')
+        .send({ humanId: staffUser.id, amountUsd: 5, paymentDate: new Date().toISOString() });
+      expect(payRes.status).toBe(201);
+
+      // 7. Check balance again: owed = $2.50
+      const balanceRes2 = await authRequest(staffUser.token)
+        .get('/api/admin/time-tracking/balance');
+      expect(balanceRes2.body.owed).toBe(2.5);
     });
   });
 });
