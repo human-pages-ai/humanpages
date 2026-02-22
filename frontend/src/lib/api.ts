@@ -129,6 +129,7 @@ export const api = {
 
   // Profile
   getProfile: () => request<Profile>('/humans/me'),
+  getReferralCode: () => request<{ referralCode: string }>('/humans/me/referral-code'),
 
   updateProfile: (data: Record<string, unknown>) =>
     request<Profile>('/humans/me', {

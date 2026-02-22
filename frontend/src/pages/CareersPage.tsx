@@ -746,14 +746,12 @@ export default function CareersPage() {
   const [userReferralCode, setUserReferralCode] = useState<string | null>(null);
   const positionsRef = useRef<HTMLDivElement>(null);
 
-  // Fetch referral code for logged-in users (used for shareable apply links)
+  // Fetch referral code for logged-in users (lightweight, no side-effects)
   useEffect(() => {
     if (user) {
-      api.getProfile()
-        .then((profile) => {
-          if (profile.referralCode) {
-            setUserReferralCode(profile.referralCode);
-          }
+      api.getReferralCode()
+        .then(({ referralCode }) => {
+          if (referralCode) setUserReferralCode(referralCode);
         })
         .catch(() => { /* silently fail */ });
     }
@@ -769,16 +767,14 @@ export default function CareersPage() {
     ? POSITIONS
     : POSITIONS.filter(p => p.category === activeCategory);
 
-  // Capture referral code from ?ref= param (works on both /careers and /careers/apply/:id)
+  // Handle deep links, referral capture, and apply intent on mount
   useEffect(() => {
+    // Capture referral code from ?ref= FIRST (before any navigation)
     const ref = searchParams.get('ref');
     if (ref) {
       localStorage.setItem('referrer_id', ref);
     }
-  }, [searchParams]);
 
-  // Resume apply intent from route params, localStorage, or query param on mount
-  useEffect(() => {
     // 1. Check route param (deep link: /careers/apply/software-engineer)
     if (routePositionId) {
       const allPositions = [...POSITIONS, GENERAL_APPLICATION];
@@ -787,9 +783,9 @@ export default function CareersPage() {
         setSelectedPosition(match);
         analytics.track('careers_deeplink_landed', {
           positionId: routePositionId,
-          hasRef: !!searchParams.get('ref'),
+          hasRef: !!ref,
         });
-        // Clean URL to /careers (keep search params for ref capture above)
+        // Clean URL to /careers after ref is captured
         navigate('/careers', { replace: true });
         return;
       }

@@ -309,6 +309,21 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 
+// Lightweight endpoint: just the referral code (no side-effects, no heavy joins)
+router.get('/me/referral-code', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.userId },
+      select: { referralCode: true },
+    });
+    if (!human) return res.status(404).json({ error: 'User not found' });
+    res.json({ referralCode: human.referralCode });
+  } catch (error) {
+    logger.error({ err: error }, 'Get referral code error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get current user's vouches (given and received)
 router.get('/me/vouches', authenticateToken, async (req: AuthRequest, res) => {
   try {
