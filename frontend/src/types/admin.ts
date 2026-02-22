@@ -208,6 +208,18 @@ export interface AdminUserDetail extends AdminUser {
     createdAt: string;
     reporter: { id: string; name: string; email: string };
   }>;
+  careerApplications: Array<{
+    id: string;
+    positionId: string;
+    positionTitle: string;
+    about: string;
+    portfolioUrl: string | null;
+    availability: string;
+    status: string;
+    adminNotes: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   affiliate: {
     id: string;
     status: string;
@@ -223,6 +235,7 @@ export interface AdminUserDetail extends AdminUser {
     services: number;
     vouchesGiven: number;
     vouchesReceived: number;
+    careerApplications: number;
   };
 }
 

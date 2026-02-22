@@ -153,6 +153,36 @@ export default function AdminUserDetail() {
         </Section>
       </div>
 
+      <Section title={`Career Applications (${user._count.careerApplications})`}>
+        {user.careerApplications.length === 0 ? (
+          <p className="text-sm text-gray-400">No career applications</p>
+        ) : (
+          <div className="space-y-3">
+            {user.careerApplications.map((app) => (
+              <div key={app.id} className="border border-gray-100 rounded p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-900">{app.positionTitle}</span>
+                  <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[app.status] || 'bg-gray-100 text-gray-800'}`}>
+                    {app.status}
+                  </span>
+                  <span className="text-xs text-gray-400">{app.availability}</span>
+                  <span className="ml-auto text-xs text-gray-400">{new Date(app.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">{app.about}</p>
+                {app.portfolioUrl && (
+                  <a href={app.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                    {app.portfolioUrl}
+                  </a>
+                )}
+                {app.adminNotes && (
+                  <p className="text-xs text-amber-700 bg-amber-50 rounded p-1.5 mt-2">Notes: {app.adminNotes}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
       <Section title="Wallets">
         {user.wallets.length === 0 ? (
           <p className="text-sm text-gray-400">No wallets</p>
