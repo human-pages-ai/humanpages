@@ -1,0 +1,36 @@
+VIDEO SCRIPT: "The Math" (45 seconds)
+Format: Vertical 9:16 (Reels/TikTok)
+
+---
+
+[0-3s] HOOK
+Visual: Close-up of phone calculator app. Numbers flying.
+Text on screen: THE MATH NOBODY TALKS ABOUT
+Voiceover: "Let me show you something."
+
+[3-12s] PROBLEM
+Visual: Split screen. Left: client pays $500 for a VA. Right: money flowing through middlemen.
+Text on screen: Client pays: $500
+Text on screen: VA agency keeps: 60-70%
+Text on screen: You actually get: $150-200
+Voiceover: "You do the work. An agency takes home $300. For what? Sending you a Slack message?"
+Text on screen: That's not a partnership. That's a tax.
+
+[12-27s] SOLUTION
+Visual: HumanPages dashboard. Earnings counter going up. Money flowing directly to account.
+Text on screen: HumanPages: Direct to you
+Text on screen: You get: 100% of what clients pay
+Text on screen: No middleman. No commission.
+Voiceover: "That same $500 job? You keep all of it. No agency. No markup. Just direct."
+Visual: Checkmark animation. Cash register sound.
+
+[27-32s] PROOF
+Visual: Quick cuts of testimonial shots, earnings screenshots.
+Text on screen: Join Filipino freelancers already earning more.
+Voiceover: "Real people. Real earnings. No filter."
+
+[32-45s] CTA
+Visual: App icon bounces. Finger taps.
+Text on screen: Stop losing 50% of your income
+Text on screen: HumanPages.ai/careers
+Voiceover: "Your next job is waiting. Keep it all."
