@@ -8,6 +8,8 @@ import { logger } from '../lib/logger.js';
 import { sendStaffApiKeyEmail } from '../lib/email.js';
 import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
+import contentRoutes from './content.js';
+import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 
 const router = Router();
 
@@ -75,6 +77,9 @@ router.get('/ai/activity', apiKeyAdmin, async (req, res) => {
   }
 });
 
+// ─── Content pipeline routes (API key + staff + admin) ───
+router.use('/content', contentRoutes);
+
 // ─── Posting queue routes (staff + admin) ───
 router.use('/posting', postingRoutes);
 
@@ -86,7 +91,7 @@ router.get('/me', authenticateToken, requireStaffOrAdmin, async (req: AuthReques
   try {
     const user = await prisma.human.findUnique({
       where: { id: req.userId },
-      select: { email: true, role: true },
+      select: { email: true, role: true, capabilities: true },
     });
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
@@ -96,9 +101,103 @@ router.get('/me', authenticateToken, requireStaffOrAdmin, async (req: AuthReques
       isAdmin: role === 'ADMIN',
       isStaff: role === 'STAFF',
       role,
+      capabilities: getEffectiveCapabilities(role, user.capabilities),
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin /me error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── API-key routes for staff capabilities ───
+
+// GET /api/admin/ai/staff — List all staff with capabilities (API key auth)
+router.get('/ai/staff', apiKeyAdmin, async (_req, res) => {
+  try {
+    const staffUsers = await prisma.human.findMany({
+      where: { role: { in: ['STAFF', 'ADMIN'] } },
+      select: { id: true, name: true, email: true, role: true, capabilities: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const staff = staffUsers.map((u) => {
+      const effectiveRole = getEffectiveRole(u.email, u.role);
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: effectiveRole,
+        capabilities: getEffectiveCapabilities(effectiveRole, u.capabilities),
+      };
+    });
+    res.json({ staff });
+  } catch (error) {
+    logger.error({ err: error }, 'AI staff list error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/ai/staff/:id/capabilities — Set capabilities (API key auth)
+router.patch('/ai/staff/:id/capabilities', apiKeyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { capabilities } = req.body;
+    if (!Array.isArray(capabilities)) {
+      return res.status(400).json({ error: 'capabilities must be an array' });
+    }
+    const invalid = capabilities.filter((c: string) => !isValidCapability(c));
+    if (invalid.length > 0) {
+      return res.status(400).json({ error: `Unknown capabilities: ${invalid.join(', ')}. Valid: ${STAFF_CAPABILITIES.join(', ')}` });
+    }
+    const user = await prisma.human.findUnique({ where: { id }, select: { role: true } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role !== 'STAFF' && user.role !== 'ADMIN') {
+      return res.status(400).json({ error: 'User must be STAFF or ADMIN' });
+    }
+    const updated = await prisma.human.update({
+      where: { id },
+      data: { capabilities },
+      select: { id: true, capabilities: true },
+    });
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'AI staff capabilities update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Task summary route (staff + admin) ───
+
+// GET /api/admin/tasks/summary — Role-filtered task counts
+router.get('/tasks/summary', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {
+  try {
+    const user = await prisma.human.findUnique({
+      where: { id: req.userId },
+      select: { email: true, role: true, capabilities: true },
+    });
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    const role = getEffectiveRole(user.email, user.role);
+    const capabilities = getEffectiveCapabilities(role, user.capabilities);
+
+    const summary: Record<string, number> = {};
+    const counts = await Promise.all([
+      capabilities.includes('CONTENT_REVIEWER')
+        ? prisma.contentItem.count({ where: { status: { in: ['DRAFT', 'REVIEW'] } } })
+        : null,
+      capabilities.includes('POSTER')
+        ? prisma.postingGroup.count({ where: { status: 'PENDING' } })
+        : null,
+    ]);
+
+    if (capabilities.includes('CONTENT_REVIEWER')) summary.CONTENT_REVIEWER = counts[0] ?? 0;
+    if (capabilities.includes('POSTER')) summary.POSTER = counts[1] ?? 0;
+    if (capabilities.includes('ANALYST')) summary.ANALYST = 0;
+    if (capabilities.includes('CREATIVE')) summary.CREATIVE = 0;
+    if (capabilities.includes('GROUP_MANAGER')) summary.GROUP_MANAGER = 0;
+
+    res.json({ capabilities, summary });
+  } catch (error) {
+    logger.error({ err: error }, 'Task summary error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -824,6 +923,7 @@ router.get('/staff', async (req: AuthRequest, res) => {
         name: true,
         email: true,
         role: true,
+        capabilities: true,
         createdAt: true,
         staffApiKey: {
           select: { createdAt: true },
@@ -891,6 +991,7 @@ router.get('/staff', async (req: AuthRequest, res) => {
         name: u.name,
         email: u.email,
         role: effectiveRole,
+        capabilities: getEffectiveCapabilities(effectiveRole, u.capabilities),
         createdAt: u.createdAt,
         apiKeyStatus: u.staffApiKey ? 'active' as const : 'none' as const,
         apiKeyCreatedAt: u.staffApiKey?.createdAt ?? null,
@@ -1019,6 +1120,51 @@ router.patch('/staff/:id/role', async (req: AuthRequest, res) => {
     res.json({ message: `Role updated to ${role}`, id, role });
   } catch (error) {
     logger.error({ err: error }, 'Staff role update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/staff/:id/capabilities — View capabilities for a staff member
+router.get('/staff/:id/capabilities', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const user = await prisma.human.findUnique({
+      where: { id },
+      select: { email: true, role: true, capabilities: true },
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const effectiveRole = getEffectiveRole(user.email, user.role);
+    res.json({ capabilities: getEffectiveCapabilities(effectiveRole, user.capabilities) });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff capabilities get error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/staff/:id/capabilities — Set capabilities for a staff member
+router.patch('/staff/:id/capabilities', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { capabilities } = req.body;
+    if (!Array.isArray(capabilities)) {
+      return res.status(400).json({ error: 'capabilities must be an array' });
+    }
+    const invalid = capabilities.filter((c: string) => !isValidCapability(c));
+    if (invalid.length > 0) {
+      return res.status(400).json({ error: `Unknown capabilities: ${invalid.join(', ')}. Valid: ${STAFF_CAPABILITIES.join(', ')}` });
+    }
+    const user = await prisma.human.findUnique({ where: { id }, select: { email: true, role: true } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const updated = await prisma.human.update({
+      where: { id },
+      data: { capabilities },
+      select: { id: true, capabilities: true },
+    });
+    const effectiveRole = getEffectiveRole(user.email, user.role);
+    res.json({ id: updated.id, capabilities: getEffectiveCapabilities(effectiveRole, updated.capabilities) });
+  } catch (error) {
+    logger.error({ err: error }, 'Staff capabilities update error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

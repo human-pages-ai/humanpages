@@ -46,9 +46,12 @@ const AdminJobDetailPage = lazy(() => import('./pages/admin/AdminJobDetail'));
 const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
 const AdminListingDetailPage = lazy(() => import('./pages/admin/AdminListingDetail'));
 const PostingQueue = lazy(() => import('./pages/admin/PostingQueue'));
+const ContentManager = lazy(() => import('./pages/admin/ContentManager'));
+const DynamicBlogPost = lazy(() => import('./pages/blog/DynamicBlogPost'));
 const AdminAdCopy = lazy(() => import('./pages/admin/AdminAdCopy'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
+const TaskCentral = lazy(() => import('./pages/admin/TaskCentral'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -60,6 +63,7 @@ const SocialMediaMarketingHiring = lazy(() => import('./pages/blog/articles/Soci
 const AutomatedInfluencerOutreach = lazy(() => import('./pages/blog/articles/AutomatedInfluencerOutreach'));
 const GetPaidSocialMediaPromotion = lazy(() => import('./pages/blog/articles/GetPaidSocialMediaPromotion'));
 const SetUpProfileFiveMinutes = lazy(() => import('./pages/blog/articles/SetUpProfileFiveMinutes'));
+const MoltbookSurvivalGuide = lazy(() => import('./pages/blog/articles/MoltbookSurvivalGuide'));
 const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
 
 function LoadingSpinner() {
@@ -103,13 +107,13 @@ function HomeRoute() {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const [roleState, setRoleState] = useState<{ isAdmin: boolean; isStaff: boolean } | null>(null);
+  const [roleState, setRoleState] = useState<{ isAdmin: boolean; isStaff: boolean; capabilities: import('./types/admin').StaffCapability[] } | null>(null);
 
   useEffect(() => {
     if (!loading && user) {
       api.checkAdmin()
-        .then((res) => setRoleState({ isAdmin: res.isAdmin, isStaff: res.isStaff }))
-        .catch(() => setRoleState({ isAdmin: false, isStaff: false }));
+        .then((res) => setRoleState({ isAdmin: res.isAdmin, isStaff: res.isStaff, capabilities: res.capabilities }))
+        .catch(() => setRoleState({ isAdmin: false, isStaff: false, capabilities: [] }));
     }
   }, [user, loading]);
 
@@ -139,7 +143,7 @@ function AdminIndex() {
   }, []);
 
   if (roleState === null) return <LoadingSpinner />;
-  if (!roleState.isAdmin) return <Navigate to="/admin/time-tracking" replace />;
+  if (!roleState.isAdmin) return <Navigate to="/admin/tasks" replace />;
   return <AdminOverview />;
 }
 
@@ -255,6 +259,8 @@ function AppRoutes() {
       <Route path="/blog/automated-influencer-outreach" element={<AutomatedInfluencerOutreach />} />
       <Route path="/blog/get-paid-social-media-promotion" element={<GetPaidSocialMediaPromotion />} />
       <Route path="/blog/build-ai-agent-that-hires-people" element={<SetUpProfileFiveMinutes />} />
+      <Route path="/blog/moltbook-agent-survival-guide" element={<MoltbookSurvivalGuide />} />
+      <Route path="/blog/:slug" element={<DynamicBlogPost />} />
 
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
@@ -275,6 +281,8 @@ function AppRoutes() {
       <Route path="/:lang/blog/automated-influencer-outreach" element={<LangWrapper><AutomatedInfluencerOutreach /></LangWrapper>} />
       <Route path="/:lang/blog/get-paid-social-media-promotion" element={<LangWrapper><GetPaidSocialMediaPromotion /></LangWrapper>} />
       <Route path="/:lang/blog/build-ai-agent-that-hires-people" element={<LangWrapper><SetUpProfileFiveMinutes /></LangWrapper>} />
+      <Route path="/:lang/blog/moltbook-agent-survival-guide" element={<LangWrapper><MoltbookSurvivalGuide /></LangWrapper>} />
+      <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
@@ -291,7 +299,9 @@ function AppRoutes() {
         <Route path="listings/:id" element={<AdminListingDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
+        <Route path="tasks" element={<TaskCentral />} />
         <Route path="time-tracking" element={<StaffDashboard />} />
+        <Route path="content" element={<ContentManager />} />
         <Route path="posting" element={<PostingQueue />} />
         <Route path="ad-copy" element={<AdminAdCopy />} />
         <Route path="staff" element={<StaffManagement />} />

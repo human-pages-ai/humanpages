@@ -306,10 +306,57 @@ export interface AdminJobDetail extends AdminJob {
   }>;
 }
 
+export const STAFF_CAPABILITIES = [
+  'CONTENT_REVIEWER',
+  'POSTER',
+  'ANALYST',
+  'CREATIVE',
+  'GROUP_MANAGER',
+] as const;
+
+export type StaffCapability = (typeof STAFF_CAPABILITIES)[number];
+
 export interface AdminMeResponse {
   isAdmin: boolean;
   isStaff: boolean;
   role: 'USER' | 'STAFF' | 'ADMIN';
+  capabilities: StaffCapability[];
+}
+
+// ===== Content Pipeline =====
+export type ContentStatus = 'DRAFT' | 'REVIEW' | 'APPROVED' | 'PUBLISHED' | 'REJECTED';
+export type ContentPlatform = 'TWITTER' | 'LINKEDIN' | 'BLOG';
+
+export interface ContentItem {
+  id: string;
+  sourceTitle: string;
+  sourceUrl: string | null;
+  source: string | null;
+  relevanceScore: number | null;
+  whyUs: string | null;
+  platform: ContentPlatform;
+  tweetDraft: string | null;
+  linkedinSnippet: string | null;
+  blogTitle: string | null;
+  blogSlug: string | null;
+  blogBody: string | null;
+  blogExcerpt: string | null;
+  blogReadingTime: string | null;
+  metaDescription: string | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+  publishedUrl: string | null;
+  publishError: string | null;
+  manualInstructions: string | null;
+  approvedById: string | null;
+  approvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContentStats {
+  byStatus: Record<string, number>;
+  byPlatform: Record<string, Record<string, number>>;
 }
 
 export type PostingGroupStatus = 'PENDING' | 'JOINED' | 'POSTED' | 'REJECTED' | 'SKIPPED';
@@ -375,12 +422,18 @@ export interface StaffMember {
   name: string;
   email: string;
   role: 'STAFF' | 'ADMIN';
+  capabilities: StaffCapability[];
   createdAt: string;
   apiKeyStatus: 'active' | 'none';
   apiKeyCreatedAt: string | null;
   totalCompleted: number;
   daily: Array<{ day: string; count: number }>;
   hourly: Array<{ hour: number; count: number }>;
+}
+
+export interface TaskSummary {
+  capabilities: StaffCapability[];
+  summary: Partial<Record<StaffCapability, number>>;
 }
 
 export interface GenerateApiKeyResponse {

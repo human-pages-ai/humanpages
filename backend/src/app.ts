@@ -24,6 +24,7 @@ import listingsRoutes from './routes/listings.js';
 import careersRoutes from './routes/careers.js';
 import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
+import blogApiRoutes from './routes/blog.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml } from './lib/seo.js';
 
 const app = express();
@@ -81,6 +82,7 @@ app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/blog', blogApiRoutes);
 app.use('/api/feedback', express.json({ limit: '2mb' }), feedbackRoutes);
 app.use('/api/listings', listingsRoutes);
 app.use('/api/careers', careersRoutes);
@@ -124,21 +126,29 @@ app.get('/careers', (req, res, next) => {
   next();
 });
 
-app.get('/:lang/blog/:slug', (req, res, next) => {
+app.get('/:lang/blog/:slug', async (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
-  const html = getBlogMetaHtml(req.params.slug, req.params.lang);
-  if (html) {
-    res.set('Content-Type', 'text/html');
-    return res.send(html);
+  try {
+    const html = await getBlogMetaHtml(req.params.slug, req.params.lang);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
   }
   next();
 });
 
-app.get('/blog/:slug', (req, res, next) => {
-  const html = getBlogMetaHtml(req.params.slug);
-  if (html) {
-    res.set('Content-Type', 'text/html');
-    return res.send(html);
+app.get('/blog/:slug', async (req, res, next) => {
+  try {
+    const html = await getBlogMetaHtml(req.params.slug);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
   }
   next();
 });

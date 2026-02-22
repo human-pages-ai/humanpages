@@ -168,15 +168,35 @@ const BLOG_POSTS: Record<string, { title: string; description: string; date: str
   },
 };
 
-export function getBlogMetaHtml(slug: string, lang?: string): string | null {
+export async function getBlogMetaHtml(slug: string, lang?: string): Promise<string | null> {
   const html = getIndexHtml();
   if (!html) return null;
 
-  const post = BLOG_POSTS[slug];
-  if (!post) return null;
+  // Check hardcoded posts first, then DB
+  let postTitle: string;
+  let postDescription: string;
+  let postDate: string;
 
-  const title = escapeHtml(`${post.title} | Human Pages`);
-  const description = escapeHtml(post.description);
+  const hardcoded = BLOG_POSTS[slug];
+  if (hardcoded) {
+    postTitle = hardcoded.title;
+    postDescription = hardcoded.description;
+    postDate = hardcoded.date;
+  } else {
+    // Query DB for dynamic content items
+    const dbPost = await prisma.contentItem.findFirst({
+      where: { blogSlug: slug, platform: 'BLOG', status: 'PUBLISHED' },
+      select: { blogTitle: true, blogExcerpt: true, metaDescription: true, publishedAt: true, createdAt: true },
+    });
+    if (!dbPost || !dbPost.blogTitle) return null;
+
+    postTitle = dbPost.blogTitle;
+    postDescription = dbPost.metaDescription || dbPost.blogExcerpt || '';
+    postDate = (dbPost.publishedAt || dbPost.createdAt).toISOString().slice(0, 10);
+  }
+
+  const title = escapeHtml(`${postTitle} | Human Pages`);
+  const description = escapeHtml(postDescription);
   const ogImage = `${SITE_URL}/api/og/blog/${slug}`;
   const unprefixedPath = `/blog/${slug}`;
   const canonicalUrl = lang && lang !== 'en'
@@ -202,9 +222,9 @@ export function getBlogMetaHtml(slug: string, lang?: string): string | null {
     <script type="application/ld+json">${JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Article",
-      "headline": post.title,
-      "description": post.description,
-      "datePublished": post.date,
+      "headline": postTitle,
+      "description": postDescription,
+      "datePublished": postDate,
       "image": ogImage,
       "url": canonicalUrl,
       "author": { "@type": "Organization", "name": "Human Pages" },

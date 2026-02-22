@@ -218,6 +218,9 @@ model Human {
   abuseScore      Int         @default(0)
   abuseStrikes    Int         @default(0)
 
+  // ===== STAFF CAPABILITIES =====
+  capabilities    String[] @default([]) // CONTENT_REVIEWER, POSTER, ANALYST, CREATIVE, GROUP_MANAGER
+
   // ===== STAFF PAY CONFIG =====
   staffDailyRate   Decimal? @db.Decimal(10, 2) // e.g. $25/day
   staffDailyHours  Float?   // e.g. 8 hours/day (quota)
@@ -998,6 +1001,56 @@ model PostingGroup {
   @@index([campaign])
   @@index([priority])
   @@index([completedById, datePosted])
+}
+
+// ===== CONTENT PIPELINE =====
+// Blog engine → dashboard content items for review, approval, and publishing.
+// One ContentItem per platform per source topic (a trending topic = up to 3 rows).
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+}
+
+enum ContentPlatform {
+  TWITTER
+  LINKEDIN
+  BLOG
+}
+
+model ContentItem {
+  id              String          @id @default(cuid())
+  sourceTitle     String
+  sourceUrl       String?
+  source          String?
+  relevanceScore  Int?
+  whyUs           String?         @db.Text
+  platform        ContentPlatform
+  tweetDraft      String?         @db.Text
+  linkedinSnippet String?         @db.Text
+  blogTitle       String?
+  blogSlug        String?         @unique
+  blogBody        String?         @db.Text
+  blogExcerpt     String?         @db.VarChar(500)
+  blogReadingTime String?
+  metaDescription String?         @db.VarChar(300)
+  status          ContentStatus   @default(DRAFT)
+  publishedAt     DateTime?
+  publishedUrl    String?
+  publishError    String?
+  manualInstructions String?      @db.Text
+  approvedById    String?
+  approvedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([platform, status])
+  @@index([blogSlug])
+  @@index([createdAt])
 }
 
 // ===== CONTENT MODERATION =====

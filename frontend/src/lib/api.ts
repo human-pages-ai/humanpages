@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -569,6 +569,20 @@ export const api = {
       body: JSON.stringify({ apiKey }),
     }),
 
+  // Staff Capabilities
+  getStaffCapabilities: (userId: string) =>
+    request<{ capabilities: StaffCapability[] }>(`/admin/staff/${userId}/capabilities`),
+
+  updateStaffCapabilities: (userId: string, capabilities: StaffCapability[]) =>
+    request<{ id: string; capabilities: StaffCapability[] }>(`/admin/staff/${userId}/capabilities`, {
+      method: 'PATCH',
+      body: JSON.stringify({ capabilities }),
+    }),
+
+  // Task Summary
+  getTaskSummary: () =>
+    request<TaskSummary>('/admin/tasks/summary'),
+
   // Career Applications
   submitCareerApplication: (data: {
     positionId: string;
@@ -698,6 +712,54 @@ export const api = {
     const qs = query.toString();
     return request<{ balances: StaffBalance[] }>(`/admin/time-tracking/balance/all-staff${qs ? `?${qs}` : ''}`);
   },
+
+  // Content Pipeline
+  getContentItems: (params: { page?: number; limit?: number; status?: string; platform?: string; search?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.status) query.set('status', params.status);
+    if (params.platform) query.set('platform', params.platform);
+    if (params.search) query.set('search', params.search);
+    const qs = query.toString();
+    return request<{ items: ContentItem[]; pagination: Pagination }>(`/admin/content${qs ? `?${qs}` : ''}`);
+  },
+
+  getContentStats: () =>
+    request<ContentStats>('/admin/content/stats'),
+
+  getContentItem: (id: string) =>
+    request<ContentItem>(`/admin/content/${id}`),
+
+  updateContentItem: (id: string, data: Partial<ContentItem>) =>
+    request<ContentItem>(`/admin/content/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  approveContent: (id: string) =>
+    request<ContentItem>(`/admin/content/${id}/approve`, { method: 'PATCH' }),
+
+  rejectContent: (id: string) =>
+    request<ContentItem>(`/admin/content/${id}/reject`, { method: 'PATCH' }),
+
+  publishContent: (id: string) =>
+    request<ContentItem>(`/admin/content/${id}/publish`, { method: 'POST' }),
+
+  deleteContent: (id: string) =>
+    request<{ message: string }>(`/admin/content/${id}`, { method: 'DELETE' }),
+
+  // Public Blog API
+  getBlogPosts: (params: { page?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    const qs = query.toString();
+    return request<{ posts: Array<{ id: string; blogTitle: string; blogSlug: string; blogExcerpt: string; blogReadingTime: string; publishedAt: string; createdAt: string }>; pagination: Pagination }>(`/blog/posts${qs ? `?${qs}` : ''}`);
+  },
+
+  getBlogPost: (slug: string) =>
+    request<{ id: string; blogTitle: string; blogSlug: string; blogBody: string; blogExcerpt: string; blogReadingTime: string; metaDescription: string; sourceTitle: string; sourceUrl: string; publishedAt: string; createdAt: string }>(`/blog/posts/${slug}`),
 };
 
 // Referral Program types (included in profile response)

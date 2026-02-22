@@ -13,7 +13,9 @@ const adminOnlyItems = [
 ];
 
 const sharedItems = [
+  { to: '/admin/tasks', label: 'Task Central' },
   { to: '/admin/time-tracking', label: 'Time Tracking' },
+  { to: '/admin/content', label: 'Content' },
   { to: '/admin/posting', label: 'Posting Queue' },
   { to: '/admin/ad-copy', label: 'Ad Copy' },
 ];

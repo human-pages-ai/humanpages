@@ -1,8 +1,10 @@
 
+import { useState, useEffect } from 'react';
 import Link from '../../components/LocalizedLink';
 import Logo from '../../components/Logo';
 import SEO from '../../components/SEO';
 import Footer from '../../components/Footer';
+import { api } from '../../lib/api';
 
 interface Article {
   title: string;
@@ -13,9 +15,32 @@ interface Article {
 }
 
 export default function BlogIndex() {
+  const [dynamicArticles, setDynamicArticles] = useState<Article[]>([]);
 
+  useEffect(() => {
+    api.getBlogPosts({ limit: 50 })
+      .then((res) => {
+        setDynamicArticles(
+          res.posts.map((p) => ({
+            title: p.blogTitle || 'Untitled',
+            slug: p.blogSlug || '',
+            date: new Date(p.publishedAt || p.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+            excerpt: p.blogExcerpt || '',
+            readingTime: p.blogReadingTime || '5 min',
+          }))
+        );
+      })
+      .catch(() => {}); // Silently fail — hardcoded articles still show
+  }, []);
 
-  const articles: Article[] = [
+  const hardcodedArticles: Article[] = [
+    {
+      title: 'How to Build a Moltbook Agent That Won\'t Get Banned',
+      slug: 'moltbook-agent-survival-guide',
+      date: 'February 22, 2026',
+      excerpt: 'Most Moltbook agents die within 24 hours. Verification challenges, rate limits, and zero engagement kill them. Here\'s how to build one that survives, with full working code and a verification solver.',
+      readingTime: '12 min',
+    },
     {
       title: 'How to Build a Free AI Agent That Hires Real People',
       slug: 'build-ai-agent-that-hires-people',
@@ -87,6 +112,13 @@ export default function BlogIndex() {
       readingTime: '6 min',
     },
   ];
+
+  // Merge dynamic + hardcoded, dedup by slug, sort by date descending
+  const hardcodedSlugs = new Set(hardcodedArticles.map((a) => a.slug));
+  const uniqueDynamic = dynamicArticles.filter((a) => !hardcodedSlugs.has(a.slug));
+  const articles = [...uniqueDynamic, ...hardcodedArticles].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
