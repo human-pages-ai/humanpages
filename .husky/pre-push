@@ -29,6 +29,15 @@ trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' INT TERM
 trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' EXIT
 
 # ------------------------------------------------------------------
+# Regenerate Prisma client so type checks match the latest schema
+# ------------------------------------------------------------------
+echo "  Regenerating Prisma client..."
+if ! (cd backend && npx prisma generate); then
+  echo "  WARNING: prisma generate failed — type checks may report false errors"
+  echo "  Run 'cd backend && npx prisma generate' manually if tsc fails"
+fi
+
+# ------------------------------------------------------------------
 # Start dev servers (if needed) — they boot while checks run
 # ------------------------------------------------------------------
 if curl -sf http://localhost:3001/health >/dev/null 2>&1 && curl -sf http://localhost:3000 >/dev/null 2>&1; then
