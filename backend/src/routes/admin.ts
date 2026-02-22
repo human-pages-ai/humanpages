@@ -7,6 +7,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendStaffApiKeyEmail } from '../lib/email.js';
 import postingRoutes from './posting.js';
+import timeTrackingRoutes from './timeTracking.js';
 
 const router = Router();
 
@@ -76,6 +77,9 @@ router.get('/ai/activity', apiKeyAdmin, async (req, res) => {
 
 // ─── Posting queue routes (staff + admin) ───
 router.use('/posting', postingRoutes);
+
+// ─── Time tracking routes (staff + admin) ───
+router.use('/time-tracking', timeTrackingRoutes);
 
 // GET /api/admin/me — Confirm role (used by frontend to gate UI)
 router.get('/me', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {

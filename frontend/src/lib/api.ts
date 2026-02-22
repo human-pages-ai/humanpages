@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -591,6 +591,38 @@ export const api = {
       availability: string;
       createdAt: string;
     }>>('/careers/my-applications'),
+
+  // Time Tracking
+  getClockStatus: () =>
+    request<ClockStatus>('/admin/time-tracking/status'),
+
+  clockIn: () =>
+    request<ClockStatus>('/admin/time-tracking/clock-in', { method: 'POST' }),
+
+  clockOut: (notes?: string) =>
+    request<{ clockedIn: boolean; entry: TimeEntry }>('/admin/time-tracking/clock-out', {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    }),
+
+  getTimeEntries: (params: { page?: number; limit?: number; from?: string; to?: string; humanId?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.from) query.set('from', params.from);
+    if (params.to) query.set('to', params.to);
+    if (params.humanId) query.set('humanId', params.humanId);
+    const qs = query.toString();
+    return request<{ entries: TimeEntry[]; pagination: Pagination }>(`/admin/time-tracking/entries${qs ? `?${qs}` : ''}`);
+  },
+
+  getHoursSummary: (humanId?: string) => {
+    const qs = humanId ? `?humanId=${humanId}` : '';
+    return request<HoursSummary>(`/admin/time-tracking/summary${qs}`);
+  },
+
+  getAllStaffClock: () =>
+    request<{ staff: StaffClockOverview[] }>('/admin/time-tracking/all-staff'),
 };
 
 // Referral Program types (included in profile response)

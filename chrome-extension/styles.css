@@ -14,6 +14,86 @@ body {
   padding: 12px;
 }
 
+/* Clock section */
+.clock-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.clock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.clock-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.clock-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.clock-dot-in {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+.clock-dot-out {
+  background: #d1d5db;
+}
+.clock-status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+.clock-elapsed {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+  color: #111827;
+}
+.clock-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.clock-today {
+  font-size: 11px;
+  color: #6b7280;
+}
+.clock-toggle-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.clock-btn-in {
+  background: #22c55e;
+  color: #fff;
+}
+.clock-btn-in:hover {
+  background: #16a34a;
+}
+.clock-btn-out {
+  background: #ef4444;
+  color: #fff;
+}
+.clock-btn-out:hover {
+  background: #dc2626;
+}
+.clock-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Auth error */
 .auth-error {
   background: #fef2f2;

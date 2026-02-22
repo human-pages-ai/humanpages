@@ -236,6 +236,7 @@ model Human {
   careerApplications  CareerApplication[]
   postingCompletions PostingGroup[] @relation("PostingCompletions")
   staffApiKey     StaffApiKey?
+  timeEntries     TimeEntry[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -884,6 +885,21 @@ model StaffApiKey {
   createdAt    DateTime @default(now())
 
   human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+}
+
+model TimeEntry {
+  id        String    @id @default(cuid())
+  humanId   String
+  clockIn   DateTime  @default(now())
+  clockOut  DateTime?
+  duration  Int?      // minutes, computed on clock-out
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([humanId, clockIn])
 }
 
 model AdCopy {

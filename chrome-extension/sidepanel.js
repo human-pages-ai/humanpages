@@ -79,6 +79,14 @@ const COUNTRY_KEYWORD_MAP = [
 const $ = (id) => document.getElementById(id);
 
 const els = {
+  // Clock
+  clockSection: $('clockSection'),
+  clockDot: $('clockDot'),
+  clockStatusText: $('clockStatusText'),
+  clockElapsed: $('clockElapsed'),
+  clockTodayHours: $('clockTodayHours'),
+  clockToggleBtn: $('clockToggleBtn'),
+  // Auth
   authError: $('authError'),
   openSettings: $('openSettings'),
   progressBar: $('progressBar'),
@@ -152,6 +160,108 @@ async function apiFetch(path, options = {}) {
 
   return res.json();
 }
+
+// ─── Clock API helper ───
+async function clockApiFetch(path, options = {}) {
+  const url = `${config.apiUrl}/api/admin/time-tracking${path}`;
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (config.apiKey) {
+    headers['X-Admin-API-Key'] = config.apiKey;
+  }
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ─── Clock state ───
+let clockedIn = false;
+let clockInTime = null;
+let clockElapsedInterval = null;
+
+function startElapsedTimer() {
+  stopElapsedTimer();
+  const update = () => {
+    if (!clockInTime) return;
+    const diff = Math.floor((Date.now() - new Date(clockInTime).getTime()) / 1000);
+    const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+    const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+    const s = (diff % 60).toString().padStart(2, '0');
+    els.clockElapsed.textContent = `${h}:${m}:${s}`;
+  };
+  update();
+  clockElapsedInterval = setInterval(update, 1000);
+}
+
+function stopElapsedTimer() {
+  if (clockElapsedInterval) {
+    clearInterval(clockElapsedInterval);
+    clockElapsedInterval = null;
+  }
+  els.clockElapsed.textContent = '';
+}
+
+function updateClockUI() {
+  els.clockDot.className = clockedIn ? 'clock-dot clock-dot-in' : 'clock-dot clock-dot-out';
+  els.clockStatusText.textContent = clockedIn ? 'Clocked In' : 'Clocked Out';
+  els.clockToggleBtn.textContent = clockedIn ? 'Clock Out' : 'Clock In';
+  els.clockToggleBtn.className = clockedIn
+    ? 'clock-toggle-btn clock-btn-out'
+    : 'clock-toggle-btn clock-btn-in';
+
+  if (clockedIn) {
+    startElapsedTimer();
+  } else {
+    stopElapsedTimer();
+  }
+}
+
+async function fetchClockStatus() {
+  try {
+    const data = await clockApiFetch('/status');
+    clockedIn = data.clockedIn;
+    clockInTime = data.since;
+    updateClockUI();
+    els.clockSection.hidden = false;
+  } catch {
+    // Non-critical — hide clock section
+  }
+}
+
+async function fetchTodayHours() {
+  try {
+    const data = await clockApiFetch('/summary');
+    els.clockTodayHours.textContent = `Today: ${data.today.hours}h`;
+  } catch {
+    // Non-critical
+  }
+}
+
+async function toggleClock() {
+  els.clockToggleBtn.disabled = true;
+  try {
+    if (clockedIn) {
+      await clockApiFetch('/clock-out', { method: 'POST', body: JSON.stringify({}) });
+      clockedIn = false;
+      clockInTime = null;
+    } else {
+      const data = await clockApiFetch('/clock-in', { method: 'POST' });
+      clockedIn = true;
+      clockInTime = data.since;
+    }
+    updateClockUI();
+    fetchTodayHours();
+  } catch (err) {
+    // If already clocked in/out, just refresh status
+    await fetchClockStatus();
+  } finally {
+    els.clockToggleBtn.disabled = false;
+  }
+}
+
+els.clockToggleBtn.addEventListener('click', toggleClock);
 
 // ─── Auth error ───
 function showAuthError() {
@@ -704,8 +814,10 @@ async function init() {
     return;
   }
 
-  // Load ads for add-group form and detect current tab in parallel
+  // Load clock status, ads for add-group form, and detect current tab in parallel
   await Promise.all([
+    fetchClockStatus(),
+    fetchTodayHours(),
     loadAdsForForm(),
     detectTabUrl(),
     populateFilters(),

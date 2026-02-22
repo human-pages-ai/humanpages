@@ -13,6 +13,7 @@ const adminOnlyItems = [
 ];
 
 const sharedItems = [
+  { to: '/admin/time-tracking', label: 'Time Tracking' },
   { to: '/admin/posting', label: 'Posting Queue' },
   { to: '/admin/ad-copy', label: 'Ad Copy' },
 ];

@@ -387,3 +387,37 @@ export interface GenerateApiKeyResponse {
   apiKey: string;
   prefix: string;
 }
+
+export interface ClockStatus {
+  clockedIn: boolean;
+  since: string | null;
+  entryId: string | null;
+}
+
+export interface TimeEntry {
+  id: string;
+  humanId: string;
+  clockIn: string;
+  clockOut: string | null;
+  duration: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HoursSummary {
+  today: { minutes: number; hours: number };
+  week: { minutes: number; hours: number };
+  month: { minutes: number; hours: number };
+}
+
+export interface StaffClockOverview {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  clockedIn: boolean;
+  clockedInSince: string | null;
+  todayHours: number;
+  weekHours: number;
+}

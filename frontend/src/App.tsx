@@ -48,6 +48,7 @@ const AdminListingDetailPage = lazy(() => import('./pages/admin/AdminListingDeta
 const PostingQueue = lazy(() => import('./pages/admin/PostingQueue'));
 const AdminAdCopy = lazy(() => import('./pages/admin/AdminAdCopy'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
+const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -58,6 +59,7 @@ const TrustModelsHumanAgent = lazy(() => import('./pages/blog/articles/TrustMode
 const SocialMediaMarketingHiring = lazy(() => import('./pages/blog/articles/SocialMediaMarketingHiring'));
 const AutomatedInfluencerOutreach = lazy(() => import('./pages/blog/articles/AutomatedInfluencerOutreach'));
 const GetPaidSocialMediaPromotion = lazy(() => import('./pages/blog/articles/GetPaidSocialMediaPromotion'));
+const SetUpProfileFiveMinutes = lazy(() => import('./pages/blog/articles/SetUpProfileFiveMinutes'));
 const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
 
 function LoadingSpinner() {
@@ -137,7 +139,7 @@ function AdminIndex() {
   }, []);
 
   if (roleState === null) return <LoadingSpinner />;
-  if (!roleState.isAdmin) return <Navigate to="/admin/posting" replace />;
+  if (!roleState.isAdmin) return <Navigate to="/admin/time-tracking" replace />;
   return <AdminOverview />;
 }
 
@@ -252,6 +254,7 @@ function AppRoutes() {
       <Route path="/blog/social-media-marketing-hiring-process" element={<SocialMediaMarketingHiring />} />
       <Route path="/blog/automated-influencer-outreach" element={<AutomatedInfluencerOutreach />} />
       <Route path="/blog/get-paid-social-media-promotion" element={<GetPaidSocialMediaPromotion />} />
+      <Route path="/blog/set-up-profile-five-minutes" element={<SetUpProfileFiveMinutes />} />
 
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
@@ -271,6 +274,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/social-media-marketing-hiring-process" element={<LangWrapper><SocialMediaMarketingHiring /></LangWrapper>} />
       <Route path="/:lang/blog/automated-influencer-outreach" element={<LangWrapper><AutomatedInfluencerOutreach /></LangWrapper>} />
       <Route path="/:lang/blog/get-paid-social-media-promotion" element={<LangWrapper><GetPaidSocialMediaPromotion /></LangWrapper>} />
+      <Route path="/:lang/blog/set-up-profile-five-minutes" element={<LangWrapper><SetUpProfileFiveMinutes /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/privacy" element={<LangWrapper><PrivacyPolicy /></LangWrapper>} />
       <Route path="/:lang/terms" element={<LangWrapper><TermsOfUse /></LangWrapper>} />
@@ -287,6 +291,7 @@ function AppRoutes() {
         <Route path="listings/:id" element={<AdminListingDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
+        <Route path="time-tracking" element={<StaffDashboard />} />
         <Route path="posting" element={<PostingQueue />} />
         <Route path="ad-copy" element={<AdminAdCopy />} />
         <Route path="staff" element={<StaffManagement />} />
