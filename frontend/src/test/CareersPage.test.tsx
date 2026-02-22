@@ -15,6 +15,9 @@ const mockGetApplyIntent = vi.fn();
 const mockClearApplyIntent = vi.fn();
 const mockSubmitCareerApplication = vi.fn();
 const mockGetProfile = vi.fn();
+const mockGetReferralCode = vi.fn();
+let mockParams: Record<string, string> = {};
+let mockSearchParamsValues: Record<string, string> = {};
 
 vi.mock('../hooks/useAuth', () => ({
   useAuth: () => mockUseAuthReturn,
@@ -32,6 +35,7 @@ vi.mock('../lib/api', () => ({
   api: {
     submitCareerApplication: (...args: any[]) => mockSubmitCareerApplication(...args),
     getProfile: () => mockGetProfile(),
+    getReferralCode: () => mockGetReferralCode(),
   },
 }));
 
@@ -46,6 +50,11 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useParams: () => mockParams,
+    useSearchParams: () => {
+      const params = new URLSearchParams(mockSearchParamsValues);
+      return [params] as const;
+    },
   };
 });
 
@@ -88,6 +97,9 @@ beforeEach(() => {
   mockGetApplyIntent.mockReturnValue(null);
   mockSubmitCareerApplication.mockResolvedValue({});
   mockGetProfile.mockResolvedValue(mockProfile);
+  mockGetReferralCode.mockResolvedValue({ referralCode: 'TEST123' });
+  mockParams = {};
+  mockSearchParamsValues = {};
   mockUseAuthReturn = {
     user: null,
     loading: false,
@@ -99,6 +111,7 @@ beforeEach(() => {
   };
   // Reset URL
   window.history.replaceState({}, '', '/careers');
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -488,7 +501,12 @@ describe('CareersPage — referral sharing after application', () => {
       expect(screen.getByText(/know someone who'd be a great fit/i)).toBeInTheDocument();
     });
 
-    const copyBtn = screen.getByRole('button', { name: /copy/i });
+    // Find the "Copy" button inside the dialog's referral section (not position card link buttons)
+    const dialog = screen.getByRole('dialog');
+    const copyBtn = Array.from(dialog.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === 'Copy'
+    )!;
+    expect(copyBtn).toBeTruthy();
     await user.click(copyBtn);
 
     // The copy handler calls writeText, then tracks analytics on success.
@@ -510,10 +528,14 @@ describe('CareersPage — referral sharing after application', () => {
     const user = await submitApplication();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
+      expect(screen.getByText(/know someone who'd be a great fit/i)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /copy/i }));
+    const dialog = screen.getByRole('dialog');
+    const copyBtn = Array.from(dialog.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.trim() === 'Copy'
+    )!;
+    await user.click(copyBtn);
 
     await waitFor(() => {
       expect(screen.getByText(/copied!/i)).toBeInTheDocument();
@@ -616,5 +638,128 @@ describe('CareersPage — referral sharing after application', () => {
 
     await new Promise((r) => setTimeout(r, 600));
     expect(screen.queryByText(/know someone who'd be a great fit/i)).not.toBeInTheDocument();
+  });
+});
+
+// ─── Deep Link & Referral Tracking ─────────────────────────────────────────
+
+describe('CareersPage — deep links', () => {
+  it('opens apply modal when positionId route param matches a position', async () => {
+    mockParams = { positionId: POSITIONS[0].id };
+
+    renderWithProviders(<CareersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+    expect(screen.getAllByText(POSITIONS[0].title).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('navigates to /careers after handling deep link', async () => {
+    mockParams = { positionId: POSITIONS[0].id };
+
+    renderWithProviders(<CareersPage />);
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/careers', { replace: true });
+    });
+  });
+
+  it('tracks careers_deeplink_landed analytics event', async () => {
+    mockParams = { positionId: POSITIONS[0].id };
+
+    renderWithProviders(<CareersPage />);
+
+    await waitFor(() => {
+      expect(mockTrack).toHaveBeenCalledWith('careers_deeplink_landed', {
+        positionId: POSITIONS[0].id,
+        hasRef: false,
+      });
+    });
+  });
+
+  it('tracks hasRef: true when ref param is present', async () => {
+    mockParams = { positionId: POSITIONS[0].id };
+    mockSearchParamsValues = { ref: 'AbC3x2' };
+
+    renderWithProviders(<CareersPage />);
+
+    await waitFor(() => {
+      expect(mockTrack).toHaveBeenCalledWith('careers_deeplink_landed', {
+        positionId: POSITIONS[0].id,
+        hasRef: true,
+      });
+    });
+  });
+
+  it('handles general application deep link', async () => {
+    mockParams = { positionId: 'general' };
+
+    renderWithProviders(<CareersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+  });
+
+  it('ignores invalid positionId in route param', () => {
+    mockParams = { positionId: 'nonexistent-role' };
+
+    renderWithProviders(<CareersPage />);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('CareersPage — referral capture', () => {
+  it('stores ref param in localStorage as referrer_id', () => {
+    mockSearchParamsValues = { ref: 'AbC3x2' };
+
+    renderWithProviders(<CareersPage />);
+
+    expect(localStorage.getItem('referrer_id')).toBe('AbC3x2');
+  });
+
+  it('stores ref param even without a deep link positionId', () => {
+    mockSearchParamsValues = { ref: 'XyZ9k4' };
+
+    renderWithProviders(<CareersPage />);
+
+    expect(localStorage.getItem('referrer_id')).toBe('XyZ9k4');
+  });
+
+  it('does not set referrer_id when no ref param present', () => {
+    renderWithProviders(<CareersPage />);
+
+    expect(localStorage.getItem('referrer_id')).toBeNull();
+  });
+});
+
+describe('CareersPage — copy apply link', () => {
+  it('renders copy link button on each position card', () => {
+    renderWithProviders(<CareersPage />);
+
+    // Each position card should have a link icon button with title "Copy apply link"
+    const copyButtons = screen.getAllByTitle('Copy apply link');
+    expect(copyButtons.length).toBe(POSITIONS.length);
+  });
+
+  it('fetches referral code via lightweight endpoint for logged-in users', async () => {
+    mockUseAuthReturn = {
+      ...mockUseAuthReturn,
+      user: { id: 'u1', email: 'test@test.com', name: 'Test' },
+    };
+
+    renderWithProviders(<CareersPage />);
+
+    await waitFor(() => {
+      expect(mockGetReferralCode).toHaveBeenCalled();
+    });
+  });
+
+  it('does NOT fetch referral code for anonymous users', () => {
+    renderWithProviders(<CareersPage />);
+
+    expect(mockGetReferralCode).not.toHaveBeenCalled();
   });
 });
