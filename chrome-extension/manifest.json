@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Human Pages Posting Queue",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Streamline Facebook group posting from the Human Pages posting queue",
   "permissions": [
     "sidePanel",

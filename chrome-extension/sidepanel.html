@@ -6,6 +6,18 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Update banner -->
+  <div id="updateBanner" class="update-banner" hidden>
+    <div id="updateStep1" class="update-step">
+      <span>Update <strong id="updateVersion"></strong> available</span>
+      <button id="updateBtn" class="update-btn">Download Update</button>
+    </div>
+    <div id="updateStep2" class="update-step" hidden>
+      <span class="update-instructions">Extract zip to your extension folder (replace all files), then:</span>
+      <button id="reloadBtn" class="update-btn update-btn-reload">Reload Extension</button>
+    </div>
+  </div>
+
   <!-- Auth error banner -->
   <div id="authError" class="auth-error" hidden>
     <span>Not authenticated.</span>
@@ -162,6 +174,7 @@
     <!-- Action buttons -->
     <div class="actions">
       <button class="action-btn btn-posted" id="btnPosted">Posted</button>
+      <button class="action-btn btn-joined" id="btnJoined">Awaiting Approval</button>
       <button class="action-btn btn-skip" id="btnSkip">Skip</button>
       <button class="action-btn btn-reject" id="btnReject">Reject</button>
     </div>

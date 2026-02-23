@@ -120,6 +120,7 @@ const els = {
   adSection: $('adSection'),
   notesInput: $('notesInput'),
   btnPosted: $('btnPosted'),
+  btnJoined: $('btnJoined'),
   btnSkip: $('btnSkip'),
   btnReject: $('btnReject'),
   // Add Group form
@@ -408,22 +409,56 @@ async function showCurrentGroup() {
     els.spamWarning.hidden = true;
   }
 
-  // For yt_comment tasks: show notes as the suggested reply prominently
+  // For yt_comment tasks: parse STEP 1 / STEP 2 notes format
   const isYtComment = group.taskType === 'yt_comment';
 
   if (isYtComment && group.notes) {
-    // Extract the suggested comment from notes (first section before metadata)
-    const notesText = group.notes;
-    const commentMatch = notesText.match(/^SUGGESTED COMMENT:\n([\s\S]*?)(?:\n\n[A-Z]|$)/);
-    const suggestedReply = commentMatch ? commentMatch[1].trim() : notesText.split('\n\nLLM REASON:')[0].split('\n\nRECENT VIDEOS:')[0].split('\n\nEMAIL:')[0].trim();
+    const notesText = group.notes.trim();
+
+    // Parse STEP 1 / STEP 2 format
+    const step1Match = notesText.match(/STEP\s*1:\s*\n([\s\S]*?)(?=\n\s*\nSTEP\s*2:|$)/i);
+    const step2Match = notesText.match(/STEP\s*2:\s*\n([\s\S]*?)$/i);
+
+    const step1Text = step1Match ? step1Match[1].trim() : notesText.trim();
+    const step2Text = step2Match ? step2Match[1].trim() : null;
 
     els.replySection.hidden = false;
-    els.replyBody.textContent = suggestedReply;
     els.replyScore.textContent = group.priority ? `Score ${group.priority}/10` : '';
-    els.copyReplyBtn.textContent = 'Copy Reply';
+
+    // Show step 1 — relabel the existing button
+    els.copyReplyBtn.textContent = 'Copy Step 1';
     els.copyReplyBtn.classList.remove('copied');
+    // Store step 1 text in dataset for copy handler
+    els.copyReplyBtn.dataset.stepText = step1Text;
+
+    // Create or update step 2 button
+    let step2Btn = document.getElementById('copyStep2Btn');
+    if (step2Text) {
+      if (!step2Btn) {
+        step2Btn = document.createElement('button');
+        step2Btn.id = 'copyStep2Btn';
+        step2Btn.className = 'copy-btn';
+        els.copyReplyBtn.parentNode.insertBefore(step2Btn, els.copyReplyBtn.nextSibling);
+        step2Btn.addEventListener('click', () => {
+          const text = step2Btn.dataset.stepText;
+          if (text) copyToClipboard(text, step2Btn, 'Copy Step 2');
+        });
+      }
+      step2Btn.textContent = 'Copy Step 2';
+      step2Btn.classList.remove('copied');
+      step2Btn.dataset.stepText = step2Text;
+      step2Btn.hidden = false;
+
+      // Show both steps in the reply body for readability
+      els.replyBody.textContent = `STEP 1:\n${step1Text}\n\nSTEP 2:\n${step2Text}`;
+    } else {
+      if (step2Btn) step2Btn.hidden = true;
+      els.replyBody.textContent = step1Text;
+    }
   } else {
     els.replySection.hidden = true;
+    const step2Btn = document.getElementById('copyStep2Btn');
+    if (step2Btn) step2Btn.hidden = true;
   }
 
   // Ad copy
@@ -443,9 +478,12 @@ async function showCurrentGroup() {
     els.adBody.textContent = '';
   }
 
-  // Reset copy button
-  els.copyBtn.textContent = 'Copy Ad Text';
-  els.copyBtn.classList.remove('copied');
+  // For yt_comment: hide Copy Ad Text (ad body is instructions only)
+  els.copyBtn.hidden = isYtComment;
+  if (!isYtComment) {
+    els.copyBtn.textContent = 'Copy Ad Text';
+    els.copyBtn.classList.remove('copied');
+  }
 
   // Clear notes (for yt_comment don't show raw notes in the input)
   els.notesInput.value = isYtComment ? '' : (group.notes || '');
@@ -480,15 +518,18 @@ els.copyBtn.addEventListener('click', () => {
   if (text) copyToClipboard(text, els.copyBtn, 'Copy Ad Text');
 });
 
-// ─── Copy suggested reply ───
+// ─── Copy step 1 (or legacy reply) ───
 els.copyReplyBtn.addEventListener('click', () => {
-  const text = els.replyBody.textContent;
-  if (text) copyToClipboard(text, els.copyReplyBtn, 'Copy Reply');
+  // Use stored step text if available, fall back to replyBody content
+  const text = els.copyReplyBtn.dataset.stepText || els.replyBody.textContent;
+  const label = els.copyReplyBtn.textContent.startsWith('Copy Step') ? 'Copy Step 1' : 'Copy Reply';
+  if (text) copyToClipboard(text, els.copyReplyBtn, label);
 });
 
 // ─── Action buttons ───
 function setButtonsEnabled(enabled) {
   els.btnPosted.disabled = !enabled;
+  els.btnJoined.disabled = !enabled;
   els.btnSkip.disabled = !enabled;
   els.btnReject.disabled = !enabled;
 }
@@ -533,6 +574,7 @@ async function markGroup(status) {
 }
 
 els.btnPosted.addEventListener('click', () => markGroup('POSTED'));
+els.btnJoined.addEventListener('click', () => markGroup('JOINED'));
 els.btnSkip.addEventListener('click', () => markGroup('SKIPPED'));
 els.btnReject.addEventListener('click', () => markGroup('REJECTED'));
 
@@ -804,6 +846,69 @@ els.addGroupBtn.addEventListener('click', async () => {
   }
 });
 
+// ─── Update banner ───
+async function checkUpdateBanner() {
+  try {
+    const { updateAvailable } = await chrome.storage.local.get('updateAvailable');
+    const banner = document.getElementById('updateBanner');
+    const versionEl = document.getElementById('updateVersion');
+    if (updateAvailable) {
+      versionEl.textContent = `v${updateAvailable}`;
+      banner.hidden = false;
+    } else {
+      banner.hidden = true;
+    }
+  } catch {
+    // Non-critical
+  }
+}
+
+document.getElementById('updateBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('updateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Downloading...';
+
+  try {
+    const url = `${config.apiUrl}/api/admin/posting/extension/download`;
+    const headers = {};
+    if (config.apiKey) headers['X-Admin-API-Key'] = config.apiKey;
+
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error('Download failed');
+
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'human-pages-extension.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+
+    // Show step 2
+    document.getElementById('updateStep1').hidden = true;
+    document.getElementById('updateStep2').hidden = false;
+  } catch {
+    btn.textContent = 'Download failed';
+    setTimeout(() => {
+      btn.textContent = 'Download Update';
+      btn.disabled = false;
+    }, 3000);
+  }
+});
+
+document.getElementById('reloadBtn').addEventListener('click', () => {
+  chrome.runtime.reload();
+});
+
+// Listen for update flag changes from background
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.updateAvailable) {
+    checkUpdateBanner();
+  }
+});
+
 // ─── Init ───
 async function init() {
   await loadConfig();
@@ -821,6 +926,7 @@ async function init() {
     loadAdsForForm(),
     detectTabUrl(),
     populateFilters(),
+    checkUpdateBanner(),
   ]);
 
   await fetchGroups();

@@ -94,6 +94,52 @@ body {
   cursor: not-allowed;
 }
 
+/* Update banner */
+.update-banner {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.update-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.update-instructions {
+  font-size: 11px;
+  line-height: 1.4;
+}
+.update-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.update-btn:hover {
+  background: #1d4ed8;
+}
+.update-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.update-btn-reload {
+  background: #22c55e;
+}
+.update-btn-reload:hover {
+  background: #16a34a;
+}
+
 /* Auth error */
 .auth-error {
   background: #fef2f2;
@@ -519,7 +565,7 @@ body {
 /* Action buttons */
 .actions {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
   gap: 8px;
 }
 .action-btn {
@@ -545,6 +591,10 @@ body {
 .btn-skip {
   background: #e5e7eb;
   color: #374151;
+}
+.btn-joined {
+  background: #fef3c7;
+  color: #92400e;
 }
 .btn-reject {
   background: #fecaca;

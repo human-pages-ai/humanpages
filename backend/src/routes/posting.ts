@@ -1,11 +1,46 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
 import { AuthRequest } from '../middleware/auth.js';
 import { requireStaffOrAdmin, apiKeyAdmin, jwtOrApiKey, requireStaffOrApiKey } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 
 const router = Router();
+
+// ─── Extension distribution ───
+
+const EXTENSION_DIR = path.join(process.cwd(), 'data', 'extension');
+const EXTENSION_VERSION_FILE = path.join(EXTENSION_DIR, 'version.json');
+const EXTENSION_ZIP_FILE = path.join(EXTENSION_DIR, 'chrome-extension.zip');
+
+// GET /api/admin/posting/extension/version — Check for updates (no auth needed for lightweight check)
+router.get('/extension/version', jwtOrApiKey, requireStaffOrApiKey, (_req, res) => {
+  try {
+    if (!fs.existsSync(EXTENSION_VERSION_FILE)) {
+      return res.status(404).json({ error: 'No extension published yet' });
+    }
+    const info = JSON.parse(fs.readFileSync(EXTENSION_VERSION_FILE, 'utf-8'));
+    res.json(info);
+  } catch (error) {
+    logger.error({ err: error }, 'Extension version check error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/posting/extension/download — Download latest extension zip
+router.get('/extension/download', jwtOrApiKey, requireStaffOrApiKey, (_req, res) => {
+  try {
+    if (!fs.existsSync(EXTENSION_ZIP_FILE)) {
+      return res.status(404).json({ error: 'No extension zip found' });
+    }
+    res.download(EXTENSION_ZIP_FILE, 'human-pages-extension.zip');
+  } catch (error) {
+    logger.error({ err: error }, 'Extension download error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 const VALID_TASK_TYPES = ['fb_post', 'yt_comment', 'blog_comment'] as const;
 
