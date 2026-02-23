@@ -100,6 +100,13 @@ enum ReportStatus {
   DISMISSED
 }
 
+// Idle alert lifecycle
+enum IdleAlertStatus {
+  ACTIVE
+  RESOLVED
+  DISMISSED
+}
+
 // Email notification delivery mode
 enum EmailDigestMode {
   REALTIME
@@ -250,6 +257,8 @@ model Human {
   adjustmentsReviewed HoursAdjustment[] @relation("AdjustmentReviewer")
   scheduleAssigned  PublicationSchedule[] @relation("ScheduleAssigned")
   scheduleCompleted PublicationSchedule[] @relation("ScheduleCompleted")
+  staffActivities   StaffActivity[]
+  idleAlerts        IdleAlert[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -1207,4 +1216,39 @@ model ModerationQueue {
 
   @@index([status, createdAt])
   @@index([contentType, contentId])
+}
+
+// ===== STAFF PRODUCTIVITY TRACKING =====
+
+model StaffActivity {
+  id         String   @id @default(cuid())
+  humanId    String
+  actionType String   // posting_posted, content_approved, clock_in, etc.
+  entityType String?  // PostingGroup, ContentItem, TimeEntry
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([humanId, createdAt])
+  @@index([createdAt])
+}
+
+model IdleAlert {
+  id            String          @id @default(cuid())
+  humanId       String
+  status        IdleAlertStatus @default(ACTIVE)
+  idleSince     DateTime
+  idleMinutes   Int
+  resolvedAt    DateTime?
+  dismissedById String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  human Human @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([humanId, status])
+  @@index([createdAt])
 }

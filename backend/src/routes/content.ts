@@ -4,6 +4,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireStaffOrAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import { logStaffActivity } from '../lib/activity-logger.js';
 import { publishContent } from '../lib/social-publish.js';
 
 const router = Router();
@@ -276,6 +277,17 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
     });
 
     logger.info({ contentId: req.params.id, userId: req.userId }, 'Content approved');
+
+    if (req.userId) {
+      logStaffActivity({
+        humanId: req.userId,
+        actionType: 'content_approved',
+        entityType: 'ContentItem',
+        entityId: req.params.id,
+        metadata: { platform: item.platform, sourceTitle: item.sourceTitle },
+      });
+    }
+
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content approve error');
@@ -295,6 +307,17 @@ router.patch('/:id/reject', async (req: AuthRequest, res) => {
     });
 
     logger.info({ contentId: req.params.id, userId: req.userId }, 'Content rejected');
+
+    if (req.userId) {
+      logStaffActivity({
+        humanId: req.userId,
+        actionType: 'content_rejected',
+        entityType: 'ContentItem',
+        entityId: req.params.id,
+        metadata: { platform: item.platform, sourceTitle: item.sourceTitle },
+      });
+    }
+
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content reject error');
@@ -337,6 +360,17 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
     });
 
     logger.info({ contentId: req.params.id, platform: item.platform, success: result.success }, 'Content publish attempt');
+
+    if (req.userId && (result.success || result.manualInstructions)) {
+      logStaffActivity({
+        humanId: req.userId,
+        actionType: 'content_published',
+        entityType: 'ContentItem',
+        entityId: req.params.id,
+        metadata: { platform: item.platform, sourceTitle: item.sourceTitle },
+      });
+    }
+
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content publish error');

@@ -617,6 +617,52 @@ export interface VideoConcept {
   nanoDir: string | null;
 }
 
+// ===== Staff Productivity Tracking =====
+
+export interface StaffProductivityEntry {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'idle' | 'offline';
+  clockedInSince: string | null;
+  lastActivityAt: string | null;
+  idleMinutes: number;
+  todayTaskCount: number;
+  workedMinutesToday: number;
+  tasksPerHour: number;
+}
+
+export interface StaffActivityEvent {
+  id: string;
+  humanId: string;
+  humanName: string;
+  actionType: string;
+  entityType: string | null;
+  entityId: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface IdleAlertEntry {
+  id: string;
+  humanId: string;
+  humanName: string;
+  status?: string;
+  idleSince: string;
+  idleMinutes: number;
+  resolvedAt?: string | null;
+  dismissedById?: string | null;
+  createdAt: string;
+}
+
+export interface ProductivityDashboardData {
+  staff: StaffProductivityEntry[];
+  activityFeed: StaffActivityEvent[];
+  idleAlerts: IdleAlertEntry[];
+  config: { idleThresholdMinutes: number };
+}
+
 export interface StaffBalance {
   humanId: string;
   name: string;

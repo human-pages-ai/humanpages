@@ -4,6 +4,8 @@ import { jwtOrApiKey, requireStaffOrApiKey } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendPaymentOwedEmail } from '../lib/email.js';
+import { logStaffActivity } from '../lib/activity-logger.js';
+import { resolveIdleAlerts } from '../lib/idle-worker.js';
 
 const router = Router();
 
@@ -59,6 +61,13 @@ router.post('/clock-in', async (req: AuthRequest, res) => {
       data: { humanId },
     });
 
+    logStaffActivity({
+      humanId,
+      actionType: 'clock_in',
+      entityType: 'TimeEntry',
+      entityId: entry.id,
+    });
+
     res.json({
       clockedIn: true,
       since: entry.clockIn,
@@ -96,6 +105,17 @@ router.post('/clock-out', async (req: AuthRequest, res) => {
       where: { id: openEntry.id },
       data: { clockOut, duration, notes },
     });
+
+    logStaffActivity({
+      humanId,
+      actionType: 'clock_out',
+      entityType: 'TimeEntry',
+      entityId: entry.id,
+      metadata: { duration },
+    });
+
+    // Auto-resolve any active idle alerts on clock-out
+    resolveIdleAlerts(humanId).catch(() => {});
 
     res.json({
       clockedIn: false,

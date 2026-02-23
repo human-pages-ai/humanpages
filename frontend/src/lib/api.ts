@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -845,6 +845,31 @@ export const api = {
 
   markPublished: (id: string, data: { publishedUrl?: string; platformMeta?: Record<string, unknown> }) =>
     request<ScheduleEntry>(`/admin/schedule/${id}/mark-published`, { method: 'POST', body: JSON.stringify(data) }),
+
+  // Staff Productivity
+  getProductivityDashboard: () =>
+    request<ProductivityDashboardData>('/admin/productivity/dashboard'),
+
+  getProductivityAlerts: (params: { page?: number; limit?: number; status?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.status) query.set('status', params.status);
+    const qs = query.toString();
+    return request<{ alerts: IdleAlertEntry[]; pagination: Pagination }>(`/admin/productivity/alerts${qs ? `?${qs}` : ''}`);
+  },
+
+  dismissIdleAlert: (id: string) =>
+    request<IdleAlertEntry>(`/admin/productivity/alerts/${id}/dismiss`, { method: 'PATCH' }),
+
+  getProductivityActivity: (params: { page?: number; limit?: number; humanId?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.humanId) query.set('humanId', params.humanId);
+    const qs = query.toString();
+    return request<{ activities: StaffActivityEvent[]; pagination: Pagination }>(`/admin/productivity/activity${qs ? `?${qs}` : ''}`);
+  },
 };
 
 // Referral Program types (included in profile response)

@@ -6,6 +6,7 @@ import { AuthRequest } from '../middleware/auth.js';
 import { requireStaffOrAdmin, apiKeyAdmin, jwtOrApiKey, requireStaffOrApiKey } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import { logStaffActivity } from '../lib/activity-logger.js';
 
 const router = Router();
 
@@ -278,6 +279,18 @@ router.patch('/groups/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthR
         completedBy: { select: { id: true, name: true } },
       },
     });
+
+    // Log staff activity for terminal status changes
+    if (req.userId && parsed.data.status && ['POSTED', 'REJECTED', 'SKIPPED'].includes(parsed.data.status)) {
+      const actionMap: Record<string, string> = { POSTED: 'posting_posted', REJECTED: 'posting_rejected', SKIPPED: 'posting_skipped' };
+      logStaffActivity({
+        humanId: req.userId,
+        actionType: actionMap[parsed.data.status],
+        entityType: 'PostingGroup',
+        entityId: updated.id,
+        metadata: { groupName: updated.name, taskType: updated.taskType },
+      });
+    }
 
     res.json(updated);
   } catch (error) {

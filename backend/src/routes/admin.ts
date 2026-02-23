@@ -12,6 +12,7 @@ import contentRoutes from './content.js';
 import videoConceptRoutes from './videoConcepts.js';
 import videoRoutes from './videos.js';
 import scheduleRoutes from './schedule.js';
+import productivityRoutes from './productivity.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 
 const router = Router();
@@ -213,6 +214,9 @@ router.get('/tasks/summary', authenticateToken, requireStaffOrAdmin, async (req:
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// ─── Productivity routes (admin-only, SSE stream has its own auth) ───
+router.use('/productivity', authenticateToken, requireAdmin, productivityRoutes);
 
 // ─── JWT-protected admin-only routes ───
 // All routes below require authentication + admin check

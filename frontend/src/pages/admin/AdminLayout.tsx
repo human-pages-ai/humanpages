@@ -13,6 +13,7 @@ const adminOnlyItems = [
   { to: '/admin/videos', label: 'Videos' },
   { to: '/admin/schedule', label: 'Schedule' },
   { to: '/admin/staff', label: 'Staff' },
+  { to: '/admin/productivity', label: 'Productivity' },
 ];
 
 const sharedItems = [
