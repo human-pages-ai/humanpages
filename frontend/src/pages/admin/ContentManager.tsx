@@ -55,10 +55,21 @@ export default function ContentManager() {
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
+  const checkLinkedInAdvisory = (item: ContentItem) => {
+    if (item.platform !== 'LINKEDIN') return;
+    const siblingBlog = items.find(
+      (i) => i.platform === 'BLOG' && i.sourceTitle === item.sourceTitle && i.status !== 'PUBLISHED'
+    );
+    if (siblingBlog) {
+      toast('This LinkedIn post links to your blog. Make sure the blog post is also published.', { icon: '\u26A0\uFE0F', duration: 6000 });
+    }
+  };
+
   const handleApprove = async (id: string) => {
     try {
       const updated = await api.approveContent(id);
       toast.success('Content approved');
+      checkLinkedInAdvisory(updated);
       setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
       if (selectedItem?.id === id) setSelectedItem(updated);
       fetchItems();
@@ -77,6 +88,7 @@ export default function ContentManager() {
 
   const handlePublish = async (id: string) => {
     try {
+      const item = items.find((i) => i.id === id);
       const updated = await api.publishContent(id);
       if (updated.publishError) {
         toast.error(`Publish failed: ${updated.publishError}`);
@@ -85,6 +97,7 @@ export default function ContentManager() {
       } else {
         toast.success('Published successfully!');
       }
+      if (item) checkLinkedInAdvisory(item);
       setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
       if (selectedItem?.id === id) setSelectedItem(updated);
       fetchItems();
@@ -346,6 +359,28 @@ function ContentDetailModal({
               <p className="text-sm text-gray-600 mt-2 italic">{item.whyUs}</p>
             )}
           </div>
+
+          {/* Featured toggle (BLOG items only) */}
+          {item.platform === 'BLOG' && (
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={item.isFeatured}
+                  onChange={async () => {
+                    try {
+                      const updated = await api.updateContentItem(item.id, { isFeatured: !item.isFeatured });
+                      onUpdate(updated);
+                      toast.success(updated.isFeatured ? 'Marked as featured' : 'Removed from featured');
+                    } catch (e: any) { toast.error(e.message); }
+                  }}
+                />
+                <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-blue-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+              </label>
+              <span className="text-sm text-gray-700">Featured on blog</span>
+            </div>
+          )}
 
           {/* Content editor */}
           <div>

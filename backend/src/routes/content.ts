@@ -23,6 +23,7 @@ const ingestItemSchema = z.object({
   blogBody: z.string().optional().nullable(),
   blogExcerpt: z.string().optional().nullable(),
   blogReadingTime: z.string().optional().nullable(),
+  isFeatured: z.boolean().optional(),
 });
 
 const ingestSchema = z.object({
@@ -234,6 +235,7 @@ const updateSchema = z.object({
   blogExcerpt: z.string().optional(),
   blogReadingTime: z.string().optional(),
   metaDescription: z.string().optional(),
+  isFeatured: z.boolean().optional(),
   status: z.enum(['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED']).optional(),
 }).strict();
 

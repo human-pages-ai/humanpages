@@ -356,6 +356,7 @@ export interface ContentItem {
   blogExcerpt: string | null;
   blogReadingTime: string | null;
   metaDescription: string | null;
+  isFeatured: boolean;
   status: ContentStatus;
   publishedAt: string | null;
   publishedUrl: string | null;

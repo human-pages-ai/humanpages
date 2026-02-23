@@ -756,7 +756,7 @@ export const api = {
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
     const qs = query.toString();
-    return request<{ posts: Array<{ id: string; blogTitle: string; blogSlug: string; blogExcerpt: string; blogReadingTime: string; publishedAt: string; createdAt: string }>; pagination: Pagination }>(`/blog/posts${qs ? `?${qs}` : ''}`);
+    return request<{ posts: Array<{ id: string; blogTitle: string; blogSlug: string; blogExcerpt: string; blogReadingTime: string; isFeatured: boolean; publishedAt: string; createdAt: string }>; pagination: Pagination }>(`/blog/posts${qs ? `?${qs}` : ''}`);
   },
 
   getBlogPost: (slug: string) =>
