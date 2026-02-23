@@ -67,7 +67,7 @@ describe('Referral Program API', () => {
 
       const human = await prisma.human.findUnique({ where: { id: user.id } });
       expect(human!.referralCode).toBeDefined();
-      expect(human!.referralCode.length).toBe(8);
+      expect(human!.referralCode.length).toBe(6);
       expect(human!.referralCode).not.toBe('');
     });
 
@@ -87,7 +87,7 @@ describe('Referral Program API', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.referralCode).toBeDefined();
-      expect(res.body.referralCode.length).toBe(8);
+      expect(res.body.referralCode.length).toBe(6);
     });
   });
 
