@@ -248,6 +248,8 @@ model Human {
   hoursAdjustments HoursAdjustment[]
   paymentsCreated StaffPayment[] @relation("PaymentCreator")
   adjustmentsReviewed HoursAdjustment[] @relation("AdjustmentReviewer")
+  scheduleAssigned  PublicationSchedule[] @relation("ScheduleAssigned")
+  scheduleCompleted PublicationSchedule[] @relation("ScheduleCompleted")
 
   // Indexes for fast agent search
   @@index([skills])
@@ -1045,6 +1047,7 @@ model ContentItem {
   manualInstructions String?      @db.Text
   approvedById    String?
   approvedAt      DateTime?
+  schedule        PublicationSchedule[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -1052,6 +1055,140 @@ model ContentItem {
   @@index([platform, status])
   @@index([blogSlug])
   @@index([createdAt])
+}
+
+// ===== VIDEO PIPELINE =====
+
+enum VideoTier {
+  NANO
+  DRAFT
+  FINAL
+}
+
+enum VideoStatus {
+  GENERATING
+  DRAFT
+  READY
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+model Video {
+  id               String       @id @default(cuid())
+  title            String
+  slug             String       @unique
+  description      String?      @db.Text
+  conceptSnapshot  Json         // frozen concept (title, body, frontmatter, brief)
+  scriptSnapshot   Json?        // frozen VideoScript JSON
+  tier             VideoTier    @default(NANO)
+  status           VideoStatus  @default(GENERATING)
+  durationSeconds  Float?
+  aspectRatio      String       @default("9:16")
+  videoR2Key       String?      // "videos/{id}/final.mp4"
+  thumbnailR2Key   String?      // "videos/{id}/thumb.webp"
+  estimatedCostUsd Float?
+  conceptSlug      String?      // link back to pipeline concept
+  generatedAt      DateTime?
+  assets           VideoAsset[]
+  schedule         PublicationSchedule[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([status])
+  @@index([tier])
+  @@index([conceptSlug])
+}
+
+model VideoAsset {
+  id          String   @id @default(cuid())
+  videoId     String
+  r2Key       String
+  assetType   String   // "video" | "thumbnail" | "scene_image" | "scene_clip" | "audio"
+  filename    String
+  contentType String
+  fileSize    Int?
+  sceneNumber Int?
+  createdAt   DateTime @default(now())
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([assetType])
+}
+
+// ===== UNIFIED PUBLICATION SCHEDULE =====
+// One model for all content types: videos, blog posts, tweets, LinkedIn posts, image posts, etc.
+
+enum PublishPlatform {
+  TIKTOK
+  YOUTUBE
+  INSTAGRAM
+  LINKEDIN
+  TWITTER
+  FACEBOOK
+  BLOG
+}
+
+enum PublishContentType {
+  VIDEO
+  ARTICLE
+  SHORT_POST
+  IMAGE_POST
+}
+
+enum PublicationStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+model PublicationSchedule {
+  id             String   @id @default(cuid())
+
+  // Polymorphic content reference (exactly one should be set, or standalone)
+  videoId        String?
+  video          Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  contentItemId  String?
+  contentItem    ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  // Standalone post fields (for image posts, ad hoc social)
+  title          String?
+  body           String?  @db.Text
+  imageR2Key     String?
+
+  platform       PublishPlatform
+  contentType    PublishContentType
+
+  // Schedule
+  scheduledAt    DateTime?   // future: when to publish
+  publishedAt    DateTime?   // past: when actually published
+
+  // Auto vs manual
+  isAuto         Boolean  @default(false) // true = auto-publish via API
+
+  // Result
+  status         PublicationStatus @default(DRAFT)
+  publishedUrl   String?
+  errorMessage   String?
+  platformMeta   Json?    // platform-specific IDs/metadata
+
+  // Who
+  assignedToId   String?  // for manual items, who should do it
+  assignedTo     Human?   @relation("ScheduleAssigned", fields: [assignedToId], references: [id], onDelete: SetNull)
+  completedById  String?  // who actually did it
+  completedBy    Human?   @relation("ScheduleCompleted", fields: [completedById], references: [id], onDelete: SetNull)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([platform, status])
+  @@index([videoId])
+  @@index([contentItemId])
 }
 
 // ===== CONTENT MODERATION =====

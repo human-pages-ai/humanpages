@@ -519,6 +519,90 @@ export interface HoursAdjustment {
   reviewedBy: { name: string } | null;
 }
 
+// ===== Videos (R2-backed) =====
+export type VideoTier = 'NANO' | 'DRAFT' | 'FINAL';
+export type VideoStatusType = 'GENERATING' | 'DRAFT' | 'READY' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
+
+export interface VideoItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  tier: VideoTier;
+  status: VideoStatusType;
+  durationSeconds: number | null;
+  aspectRatio: string;
+  thumbnailUrl: string | null;
+  estimatedCostUsd: number | null;
+  conceptSlug: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count: { assets: number; schedule: number };
+}
+
+export interface VideoAssetItem {
+  id: string;
+  videoId: string;
+  r2Key: string;
+  assetType: string;
+  filename: string;
+  contentType: string;
+  fileSize: number | null;
+  sceneNumber: number | null;
+  url: string | null;
+  createdAt: string;
+}
+
+export interface VideoDetail extends VideoItem {
+  conceptSnapshot: Record<string, unknown>;
+  scriptSnapshot: Record<string, unknown> | null;
+  videoUrl: string | null;
+  videoR2Key: string | null;
+  thumbnailR2Key: string | null;
+  generatedAt: string | null;
+  assets: VideoAssetItem[];
+  schedule: ScheduleEntry[];
+}
+
+// ===== Publication Schedule =====
+export type PublishPlatform = 'TIKTOK' | 'YOUTUBE' | 'INSTAGRAM' | 'LINKEDIN' | 'TWITTER' | 'FACEBOOK' | 'BLOG';
+export type PublishContentType = 'VIDEO' | 'ARTICLE' | 'SHORT_POST' | 'IMAGE_POST';
+export type PublicationStatusType = 'DRAFT' | 'SCHEDULED' | 'PUBLISHING' | 'PUBLISHED' | 'FAILED' | 'CANCELLED';
+
+export interface ScheduleEntry {
+  id: string;
+  videoId: string | null;
+  contentItemId: string | null;
+  title: string | null;
+  body: string | null;
+  imageR2Key: string | null;
+  imageUrl: string | null;
+  platform: PublishPlatform;
+  contentType: PublishContentType;
+  scheduledAt: string | null;
+  publishedAt: string | null;
+  isAuto: boolean;
+  status: PublicationStatusType;
+  publishedUrl: string | null;
+  errorMessage: string | null;
+  platformMeta: Record<string, unknown> | null;
+  assignedToId: string | null;
+  completedById: string | null;
+  assignedTo: { id: string; name: string } | null;
+  completedBy: { id: string; name: string } | null;
+  video: { id: string; title: string; slug: string; tier?: VideoTier; thumbnailUrl?: string | null } | null;
+  contentItem: { id: string; sourceTitle: string; platform: string; blogTitle?: string | null } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScheduleStats {
+  byStatus: Record<string, number>;
+  byPlatform: Record<string, number>;
+  byContentType: Record<string, number>;
+  upcoming: number;
+}
+
 // ===== Video Concepts =====
 export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done';
 

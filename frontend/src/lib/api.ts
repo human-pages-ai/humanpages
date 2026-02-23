@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -798,6 +798,53 @@ export const api = {
 
   getVideoConceptOutputs: (slug: string) =>
     request<{ slug: string; outputs: { tier: string; files: string[] }[] }>(`/admin/video-concepts/${slug}/outputs`),
+
+  // Videos (R2-backed)
+  getVideos: (params?: { page?: number; limit?: number; status?: string; tier?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set('page', String(params.page));
+    if (params?.limit) sp.set('limit', String(params.limit));
+    if (params?.status) sp.set('status', params.status);
+    if (params?.tier) sp.set('tier', params.tier);
+    return request<{ videos: VideoItem[]; pagination: Pagination }>(`/admin/videos?${sp}`);
+  },
+
+  getVideo: (id: string) =>
+    request<VideoDetail>(`/admin/videos/${id}`),
+
+  updateVideo: (id: string, data: Record<string, unknown>) =>
+    request<VideoItem>(`/admin/videos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  deleteVideo: (id: string) =>
+    request<{ message: string }>(`/admin/videos/${id}`, { method: 'DELETE' }),
+
+  // Publication Schedule
+  getSchedule: (params?: { page?: number; limit?: number; platform?: string; status?: string; contentType?: string; from?: string; to?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set('page', String(params.page));
+    if (params?.limit) sp.set('limit', String(params.limit));
+    if (params?.platform) sp.set('platform', params.platform);
+    if (params?.status) sp.set('status', params.status);
+    if (params?.contentType) sp.set('contentType', params.contentType);
+    if (params?.from) sp.set('from', params.from);
+    if (params?.to) sp.set('to', params.to);
+    return request<{ entries: ScheduleEntry[]; pagination: Pagination }>(`/admin/schedule?${sp}`);
+  },
+
+  getScheduleStats: () =>
+    request<ScheduleStats>('/admin/schedule/stats'),
+
+  createScheduleEntry: (data: Record<string, unknown>) =>
+    request<ScheduleEntry>('/admin/schedule', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateScheduleEntry: (id: string, data: Record<string, unknown>) =>
+    request<ScheduleEntry>(`/admin/schedule/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  deleteScheduleEntry: (id: string) =>
+    request<{ message: string }>(`/admin/schedule/${id}`, { method: 'DELETE' }),
+
+  markPublished: (id: string, data: { publishedUrl?: string; platformMeta?: Record<string, unknown> }) =>
+    request<ScheduleEntry>(`/admin/schedule/${id}/mark-published`, { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // Referral Program types (included in profile response)

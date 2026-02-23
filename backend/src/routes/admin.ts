@@ -10,6 +10,8 @@ import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
 import videoConceptRoutes from './videoConcepts.js';
+import videoRoutes from './videos.js';
+import scheduleRoutes from './schedule.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 
 const router = Router();
@@ -83,6 +85,12 @@ router.use('/content', contentRoutes);
 
 // ─── Video concepts routes (API key + admin) ───
 router.use('/video-concepts', videoConceptRoutes);
+
+// ─── Video management routes (API key + admin) ───
+router.use('/videos', videoRoutes);
+
+// ─── Publication schedule routes (API key + admin) ───
+router.use('/schedule', scheduleRoutes);
 
 // ─── Posting queue routes (staff + admin) ───
 router.use('/posting', postingRoutes);

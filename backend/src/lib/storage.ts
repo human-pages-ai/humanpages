@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
 import crypto from 'crypto';
@@ -128,6 +128,73 @@ export async function deleteProfilePhoto(key: string): Promise<void> {
   } catch (err) {
     logger.error({ err, key }, 'Failed to delete photo from R2');
     // Don't throw — orphaned objects are acceptable
+  }
+}
+
+// ===== Generic R2 helpers (video assets, etc.) =====
+
+/**
+ * Generate a presigned PUT URL for direct upload to R2.
+ */
+export async function generatePresignedUploadUrl(
+  key: string,
+  contentType: string,
+  expiresIn = 3600,
+): Promise<string> {
+  const url = await getSignedUrl(
+    getR2Client(),
+    new PutObjectCommand({ Bucket: getBucket(), Key: key, ContentType: contentType }),
+    { expiresIn },
+  );
+  return url;
+}
+
+/**
+ * Generate a presigned GET URL for any R2 object.
+ */
+export async function getSignedDownloadUrl(key: string, expiresIn = 3600): Promise<string | null> {
+  if (!key) return null;
+  try {
+    const url = await getSignedUrl(
+      getR2Client(),
+      new GetObjectCommand({ Bucket: getBucket(), Key: key }),
+      { expiresIn },
+    );
+    return url;
+  } catch (err) {
+    logger.error({ err, key }, 'Failed to generate signed download URL');
+    return null;
+  }
+}
+
+/**
+ * Check if an object exists in R2 and return its metadata.
+ */
+export async function headObject(key: string): Promise<{ contentLength: number; contentType: string } | null> {
+  try {
+    const res = await getR2Client().send(new HeadObjectCommand({ Bucket: getBucket(), Key: key }));
+    return {
+      contentLength: res.ContentLength ?? 0,
+      contentType: res.ContentType ?? 'application/octet-stream',
+    };
+  } catch (err: any) {
+    if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Delete any R2 object by key. Idempotent.
+ */
+export async function deleteR2Object(key: string): Promise<void> {
+  if (!key) return;
+  try {
+    await getR2Client().send(new DeleteObjectCommand({ Bucket: getBucket(), Key: key }));
+    logger.info({ key }, 'R2 object deleted');
+  } catch (err) {
+    logger.error({ err, key }, 'Failed to delete R2 object');
   }
 }
 
