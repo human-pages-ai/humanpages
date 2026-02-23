@@ -22,3 +22,9 @@ test-results/
 scripts/job-posting/
 agents/
 research/
+.merge-backup/.env.backup
+backend/package-lock.json
+backend/package.json
+backend/prisma/migrations/20260222092235_init/migration.sql
+frontend/package-lock.json
+frontend/package.json
