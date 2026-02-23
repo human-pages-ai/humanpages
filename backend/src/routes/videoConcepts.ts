@@ -9,8 +9,9 @@ import { logger } from '../lib/logger.js';
 const router = Router();
 
 // ─── Path resolution ───
+// __dirname = backend/src/routes (or backend/dist/routes) → up 4 to projects/
 const VIDEO_PIPELINE_DIR = process.env.VIDEO_PIPELINE_DIR
-  || path.resolve(process.cwd(), '../video-pipeline');
+  || path.resolve(__dirname, '..', '..', '..', '..', 'video-pipeline');
 const CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'concepts');
 const STATUS_FILE = path.join(CONCEPTS_DIR, 'status.json');
 const DATA_CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'data', 'concepts');
