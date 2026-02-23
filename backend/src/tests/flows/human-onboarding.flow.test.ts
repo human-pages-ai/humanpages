@@ -71,7 +71,7 @@ describe('Flow: Human Onboarding — Full User Journey', () => {
       .get(`/api/auth/verify-email?token=${verificationToken}`);
 
     expect(verifyRes.status).toBe(302);
-    expect(verifyRes.headers.location).toContain('emailVerified=true');
+    expect(verifyRes.headers.location).toContain('/email-verified');
 
     // Confirm DB state
     const verifiedUser = await prisma.human.findUnique({ where: { id: userId } });
