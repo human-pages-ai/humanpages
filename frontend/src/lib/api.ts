@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -761,6 +761,43 @@ export const api = {
 
   getBlogPost: (slug: string) =>
     request<{ id: string; blogTitle: string; blogSlug: string; blogBody: string; blogExcerpt: string; blogReadingTime: string; metaDescription: string; sourceTitle: string; sourceUrl: string; publishedAt: string; createdAt: string }>(`/blog/posts/${slug}`),
+
+  // Video Concepts
+  getVideoConcepts: () =>
+    request<{ concepts: VideoConcept[] }>('/admin/video-concepts'),
+
+  getVideoConcept: (slug: string) =>
+    request<VideoConcept>(`/admin/video-concepts/${slug}`),
+
+  createVideoConcept: (data: { title: string; slug?: string; duration?: string; style?: string; body: string }) =>
+    request<VideoConcept>('/admin/video-concepts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateVideoConcept: (slug: string, data: { title?: string; duration?: string; style?: string; body?: string }) =>
+    request<VideoConcept>(`/admin/video-concepts/${slug}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteVideoConcept: (slug: string) =>
+    request<{ message: string }>(`/admin/video-concepts/${slug}`, { method: 'DELETE' }),
+
+  previewVideoConcept: (slug: string) =>
+    request<{ message: string; pid: number }>(`/admin/video-concepts/${slug}/preview`, { method: 'POST' }),
+
+  approveVideoConcept: (slug: string, tier: string = 'draft') =>
+    request<{ slug: string; status: string; approvedTier: string }>(`/admin/video-concepts/${slug}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ tier }),
+    }),
+
+  produceVideoConcept: (slug: string) =>
+    request<{ message: string; pid: number }>(`/admin/video-concepts/${slug}/produce`, { method: 'POST' }),
+
+  getVideoConceptOutputs: (slug: string) =>
+    request<{ slug: string; outputs: { tier: string; files: string[] }[] }>(`/admin/video-concepts/${slug}/outputs`),
 };
 
 // Referral Program types (included in profile response)

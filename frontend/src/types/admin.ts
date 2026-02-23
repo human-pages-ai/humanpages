@@ -518,6 +518,20 @@ export interface HoursAdjustment {
   reviewedBy: { name: string } | null;
 }
 
+// ===== Video Concepts =====
+export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done';
+
+export interface VideoConcept {
+  slug: string;
+  title: string;
+  status: VideoConceptStatus;
+  duration: string;
+  style: string;
+  body: string;
+  approvedTier: string | null;
+  nanoDir: string | null;
+}
+
 export interface StaffBalance {
   humanId: string;
   name: string;

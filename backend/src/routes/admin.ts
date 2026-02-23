@@ -9,6 +9,7 @@ import { sendStaffApiKeyEmail } from '../lib/email.js';
 import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
+import videoConceptRoutes from './videoConcepts.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 
 const router = Router();
@@ -79,6 +80,9 @@ router.get('/ai/activity', apiKeyAdmin, async (req, res) => {
 
 // ─── Content pipeline routes (API key + staff + admin) ───
 router.use('/content', contentRoutes);
+
+// ─── Video concepts routes (API key + admin) ───
+router.use('/video-concepts', videoConceptRoutes);
 
 // ─── Posting queue routes (staff + admin) ───
 router.use('/posting', postingRoutes);

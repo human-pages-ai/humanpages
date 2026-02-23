@@ -50,6 +50,7 @@ const PostingQueue = lazy(() => import('./pages/admin/PostingQueue'));
 const ContentManager = lazy(() => import('./pages/admin/ContentManager'));
 const DynamicBlogPost = lazy(() => import('./pages/blog/DynamicBlogPost'));
 const AdminAdCopy = lazy(() => import('./pages/admin/AdminAdCopy'));
+const AdminVideoConcepts = lazy(() => import('./pages/admin/AdminVideoConcepts'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
 const TaskCentral = lazy(() => import('./pages/admin/TaskCentral'));
@@ -308,6 +309,7 @@ function AppRoutes() {
         <Route path="content" element={<ContentManager />} />
         <Route path="posting" element={<PostingQueue />} />
         <Route path="ad-copy" element={<AdminAdCopy />} />
+        <Route path="video" element={<AdminVideoConcepts />} />
         <Route path="staff" element={<StaffManagement />} />
       </Route>
 
