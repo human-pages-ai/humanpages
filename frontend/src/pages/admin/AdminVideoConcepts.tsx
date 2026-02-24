@@ -90,12 +90,15 @@ function JobQueueTable() {
   const [logJobId, setLogJobId] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [fetchError, setFetchError] = useState('');
+
   const fetchJobs = useCallback(async () => {
     try {
       const res = await api.getVideoJobs();
       setJobs(res.jobs);
-    } catch {
-      // silent — table is supplemental
+      setFetchError('');
+    } catch (err: any) {
+      setFetchError(err.message || 'Failed to load jobs');
     } finally {
       setLoading(false);
     }
@@ -125,8 +128,8 @@ function JobQueueTable() {
     }
   };
 
-  if (loading) return null;
-  if (jobs.length === 0) return null;
+  if (loading) return <div className="mb-6 text-sm text-gray-400">Loading job queue...</div>;
+  if (fetchError) return <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">Job queue error: {fetchError}</div>;
 
   return (
     <div className="mb-8">
@@ -147,6 +150,9 @@ function JobQueueTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
+            {jobs.length === 0 && (
+              <tr><td colSpan={9} className="px-4 py-6 text-center text-gray-400 text-sm">No jobs in queue. Preview or produce a concept to see jobs here.</td></tr>
+            )}
             {jobs.map(job => {
               const isExpanded = expandedJobId === job.id;
               const steps = job.stepJobs || [];
