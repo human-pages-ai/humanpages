@@ -514,6 +514,12 @@ export const api = {
     return request<{ groups: PostingGroup[]; pagination: Pagination }>(`/admin/posting/groups${qs ? `?${qs}` : ''}`);
   },
 
+  createPostingGroup: (data: { name: string; url: string; adId: string; language: string; country: string; taskType: string; campaign?: string }) =>
+    request<{ created: number; skipped: number; groups: PostingGroup[] }>('/admin/posting/groups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   updatePostingGroup: (id: string, data: { status?: string; notes?: string | null; datePosted?: string | null }) =>
     request<PostingGroup>(`/admin/posting/groups/${id}`, {
       method: 'PATCH',

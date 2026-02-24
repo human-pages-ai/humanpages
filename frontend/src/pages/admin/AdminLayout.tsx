@@ -23,6 +23,7 @@ const sharedItems = [
   { to: '/admin/time-tracking', label: 'Time Tracking' },
   { to: '/admin/content', label: 'Content' },
   { to: '/admin/posting', label: 'Posting Queue' },
+  { to: '/admin/posting/work', label: 'Work Mode' },
   { to: '/admin/ad-copy', label: 'Ad Copy' },
 ];
 

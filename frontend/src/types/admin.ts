@@ -378,7 +378,7 @@ export interface ContentStats {
 
 export type PostingGroupStatus = 'PENDING' | 'JOINED' | 'POSTED' | 'REJECTED' | 'SKIPPED';
 
-export type TaskType = 'fb_post' | 'yt_comment' | 'blog_comment';
+export type TaskType = 'fb_post' | 'yt_comment' | 'yt_reply' | 'blog_comment';
 
 export interface PostingGroup {
   id: string;

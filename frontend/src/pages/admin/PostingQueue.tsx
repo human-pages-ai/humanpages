@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useAdminRole } from '../../hooks/useAdminRole';
 import type { PostingGroup, PostingGroupStatus, AdCopy, Pagination, StaffStats, TaskType } from '../../types/admin';
@@ -17,18 +18,21 @@ const TASK_TYPE_OPTIONS: { value: TaskType | ''; label: string }[] = [
   { value: '', label: 'All Types' },
   { value: 'fb_post', label: 'FB Post' },
   { value: 'yt_comment', label: 'YouTube Comment' },
+  { value: 'yt_reply', label: 'YouTube Reply' },
   { value: 'blog_comment', label: 'Blog Comment' },
 ];
 
 const TASK_TYPE_COLORS: Record<string, string> = {
   fb_post: 'bg-blue-100 text-blue-800',
   yt_comment: 'bg-red-100 text-red-800',
+  yt_reply: 'bg-orange-100 text-orange-800',
   blog_comment: 'bg-purple-100 text-purple-800',
 };
 
 const TASK_TYPE_LABELS: Record<string, string> = {
   fb_post: 'FB',
   yt_comment: 'YT',
+  yt_reply: 'YT Reply',
   blog_comment: 'Blog',
 };
 
@@ -257,6 +261,12 @@ export default function PostingQueue() {
         <div className="text-sm text-gray-500">
           {pagination.total} total groups matching filters
         </div>
+        <Link
+          to="/admin/posting/work"
+          className="ml-auto px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg"
+        >
+          Start Working
+        </Link>
       </div>
 
       {/* Filter bar */}
