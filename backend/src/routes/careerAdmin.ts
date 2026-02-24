@@ -176,6 +176,31 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// PATCH /bulk-status — Bulk update status (MUST be before /:id to avoid Express matching "bulk-status" as :id)
+router.patch('/bulk-status', async (req, res) => {
+  try {
+    const { ids, status } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a non-empty array' });
+    }
+    if (!status || !['PENDING', 'REVIEWED', 'CONTACTED', 'REJECTED', 'HIRED'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const result = await prisma.careerApplication.updateMany({
+      where: { id: { in: ids } },
+      data: { status },
+    });
+
+    logger.info({ count: result.count, status }, 'Career applications bulk status update');
+    res.json({ updated: result.count });
+  } catch (error) {
+    logger.error({ err: error }, 'Career applications bulk update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PATCH /:id — Update application status and admin notes
 router.patch('/:id', async (req, res) => {
   try {
@@ -211,31 +236,6 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Application not found' });
     }
     logger.error({ err: error }, 'Career application update error');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// PATCH /bulk-status — Bulk update status
-router.patch('/bulk-status', async (req, res) => {
-  try {
-    const { ids, status } = req.body;
-
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ error: 'ids must be a non-empty array' });
-    }
-    if (!status || !['PENDING', 'REVIEWED', 'CONTACTED', 'REJECTED', 'HIRED'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
-    }
-
-    const result = await prisma.careerApplication.updateMany({
-      where: { id: { in: ids } },
-      data: { status },
-    });
-
-    logger.info({ count: result.count, status }, 'Career applications bulk status update');
-    res.json({ updated: result.count });
-  } catch (error) {
-    logger.error({ err: error }, 'Career applications bulk update error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
