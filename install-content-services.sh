@@ -27,7 +27,7 @@
 set -euo pipefail
 
 SYSTEMD_DIR="$HOME/.config/systemd/user"
-PROJECTS="$HOME/projects"
+PROJECTS="/opt"
 
 ACTION="${1:-install}"
 
@@ -213,11 +213,11 @@ echo "  Status:          $0 status"
 echo "  Stop all:        $0 stop"
 echo "  Run all now:     $0 run"
 echo "  Run one now:     $0 run reply-engine.service"
-echo "  Manual video:    ~/projects/video-pipeline/run-video.sh --concept 'your idea'"
+echo "  Manual video:    /opt/video-pipeline/run-video.sh --concept 'your idea'"
 echo ""
 echo "Logs:"
-echo "  Reply engine:    tail -f ~/projects/reply-engine/logs/nightly.log"
-echo "  Blog engine:     tail -f ~/projects/blog-engine/logs/nightly.log"
-echo "  YouTube:         tail -f ~/projects/youtube-outreach/logs/nightly-systemd.log"
-echo "  Video pipeline:  tail -f ~/projects/video-pipeline/logs/nightly.log"
-echo "  Photo pipeline:  tail -f ~/projects/photo-pipeline/logs/batch.log"
+echo "  Reply engine:    tail -f /opt/reply-engine/logs/nightly.log"
+echo "  Blog engine:     tail -f /opt/blog-engine/logs/nightly.log"
+echo "  YouTube:         tail -f /opt/youtube-outreach/logs/nightly-systemd.log"
+echo "  Video pipeline:  tail -f /opt/video-pipeline/logs/nightly.log"
+echo "  Photo pipeline:  tail -f /opt/photo-pipeline/logs/batch.log"
