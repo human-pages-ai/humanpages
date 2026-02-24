@@ -635,6 +635,11 @@ export interface VideoJob {
   pipelineStep: string | null;
   progressPct: number | null;
   logTail: string | null;
+  stepNumber: number | null;
+  stepName: string | null;
+  parentJobId: string | null;
+  stepOutput: string | null;
+  stepJobs?: VideoJob[];
   createdAt: string;
 }
 

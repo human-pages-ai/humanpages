@@ -1159,11 +1159,19 @@ model VideoJob {
   pipelineStep   String?
   progressPct    Int?
   outputDir      String?
+  stepNumber     Int?
+  stepName       String?
+  parentJobId    String?
+  stepOutput     String?        @db.Text
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
+  parentJob      VideoJob?      @relation("JobSteps", fields: [parentJobId], references: [id])
+  stepJobs       VideoJob[]     @relation("JobSteps")
+
   @@index([status, createdAt])
   @@index([conceptSlug, status])
+  @@index([parentJobId])
 }
 
 // ===== UNIFIED PUBLICATION SCHEDULE =====

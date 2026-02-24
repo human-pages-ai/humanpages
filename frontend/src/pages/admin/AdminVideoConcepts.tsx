@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
-import type { VideoConcept, VideoConceptStatus, VideoJob } from '../../types/admin';
+import type { VideoConcept, VideoConceptStatus, VideoJob, VideoJobStatus } from '../../types/admin';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 
@@ -13,6 +13,14 @@ const STATUS_BADGES: Record<VideoConceptStatus, { label: string; cls: string }> 
   final_done: { label: 'Final Done', cls: 'bg-green-100 text-green-700' },
 };
 
+const JOB_STATUS_COLORS: Record<VideoJobStatus, { bg: string; text: string; dot: string }> = {
+  PENDING: { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-400' },
+  RUNNING: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  COMPLETED: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  FAILED: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' },
+};
+
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -21,29 +29,261 @@ function slugify(title: string): string {
     .slice(0, 80);
 }
 
-function JobStatusIndicator({ job, onCancel, onClick }: { job: VideoJob; onCancel: () => void; onClick?: () => void }) {
-  if (job.status === 'PENDING') {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-amber-600 cursor-pointer" onClick={onClick}>
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+function StatusBadge({ status }: { status: VideoJobStatus }) {
+  const colors = JOB_STATUS_COLORS[status] || JOB_STATUS_COLORS.PENDING;
+  const isActive = status === 'RUNNING' || status === 'PENDING';
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${colors.bg} ${colors.text}`}>
+      {isActive && (
+        <span className="relative flex h-1.5 w-1.5">
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colors.dot} opacity-75`} />
+          <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${colors.dot}`} />
         </span>
-        Queued...
-        <button onClick={(e) => { e.stopPropagation(); onCancel(); }} className="ml-1 text-gray-400 hover:text-red-500 text-xs">&times;</button>
-      </span>
-    );
-  }
-  if (job.status === 'RUNNING') {
+      )}
+      {status}
+    </span>
+  );
+}
+
+function StepDots({ parentJob }: { parentJob: VideoJob }) {
+  const steps = parentJob.stepJobs || [];
+  const tier = parentJob.tier;
+  const totalSteps = tier === 'nano' ? 2 : 5;
+  const stepNames = ['script', 'images', 'animate', 'voiceover', 'compose'];
+
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: totalSteps }, (_, i) => {
+        const stepNum = i + 1;
+        const step = steps.find(s => s.stepNumber === stepNum);
+        let color = 'bg-gray-300'; // not started
+        let title = `Step ${stepNum}: ${stepNames[i]} (pending)`;
+        if (step) {
+          if (step.status === 'COMPLETED') { color = 'bg-green-500'; title = `Step ${stepNum}: ${stepNames[i]} (done)`; }
+          else if (step.status === 'RUNNING') { color = 'bg-blue-500'; title = `Step ${stepNum}: ${stepNames[i]} (running)`; }
+          else if (step.status === 'FAILED') { color = 'bg-red-500'; title = `Step ${stepNum}: ${stepNames[i]} (failed)`; }
+          else if (step.status === 'CANCELLED') { color = 'bg-gray-400'; title = `Step ${stepNum}: ${stepNames[i]} (cancelled)`; }
+          else if (step.status === 'PENDING') { color = 'bg-amber-400'; title = `Step ${stepNum}: ${stepNames[i]} (queued)`; }
+        }
+        return <span key={stepNum} className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} title={title} />;
+      })}
+    </div>
+  );
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ── Job Queue Table ────────────────────────────────────
+
+function JobQueueTable() {
+  const [jobs, setJobs] = useState<VideoJob[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [logJobId, setLogJobId] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchJobs = useCallback(async () => {
+    try {
+      const res = await api.getVideoJobs();
+      setJobs(res.jobs);
+    } catch {
+      // silent — table is supplemental
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+
+  // Auto-refresh every 5s if any active jobs
+  useEffect(() => {
+    const hasActive = jobs.some(j => j.status === 'RUNNING' || j.status === 'PENDING');
+    if (hasActive) {
+      pollRef.current = setInterval(fetchJobs, 5000);
+    } else if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [jobs, fetchJobs]);
+
+  const handleCancel = async (jobId: string) => {
+    try {
+      await api.cancelVideoJob(jobId);
+      toast.success('Job cancelled');
+      fetchJobs();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  if (loading) return null;
+  if (jobs.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      <h3 className="text-lg font-semibold text-gray-900 mb-3">Job Queue</h3>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-8"></th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Concept</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Steps</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Started</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {jobs.map(job => {
+              const isExpanded = expandedJobId === job.id;
+              const steps = job.stepJobs || [];
+              return (
+                <React.Fragment key={job.id}>
+                  <tr
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
+                  >
+                    <td className="px-4 py-2 text-gray-400 text-xs">
+                      {steps.length > 0 ? (isExpanded ? '▼' : '▶') : ''}
+                    </td>
+                    <td className="px-4 py-2 text-sm font-mono text-gray-700">{job.conceptSlug}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{job.jobType}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{job.tier}</td>
+                    <td className="px-4 py-2"><StatusBadge status={job.status} /></td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all ${
+                              job.status === 'FAILED' ? 'bg-red-500' :
+                              job.status === 'COMPLETED' ? 'bg-green-500' : 'bg-blue-500'
+                            }`}
+                            style={{ width: `${job.progressPct || 0}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500">{job.progressPct || 0}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2"><StepDots parentJob={job} /></td>
+                    <td className="px-4 py-2 text-xs text-gray-500">{timeAgo(job.createdAt)}</td>
+                    <td className="px-4 py-2 text-right">
+                      {(job.status === 'RUNNING' || job.status === 'PENDING') && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleCancel(job.id); }}
+                          className="text-xs text-red-500 hover:text-red-700"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  {isExpanded && steps.map(step => (
+                    <React.Fragment key={step.id}>
+                      <tr
+                        className="bg-gray-50/50 hover:bg-gray-100/50 cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); setLogJobId(logJobId === step.id ? null : step.id); }}
+                      >
+                        <td className="px-4 py-1.5"></td>
+                        <td className="px-4 py-1.5 text-xs text-gray-500 pl-8">
+                          Step {step.stepNumber}
+                        </td>
+                        <td className="px-4 py-1.5 text-xs text-gray-600">{step.stepName}</td>
+                        <td className="px-4 py-1.5"></td>
+                        <td className="px-4 py-1.5"><StatusBadge status={step.status} /></td>
+                        <td className="px-4 py-1.5 text-xs text-gray-500">
+                          {step.status === 'FAILED' && step.errorMessage && (
+                            <span className="text-red-600" title={step.errorMessage}>
+                              {step.errorMessage.slice(0, 50)}{step.errorMessage.length > 50 ? '...' : ''}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-1.5 text-xs text-gray-400">
+                          {step.completedAt ? timeAgo(step.completedAt) : ''}
+                        </td>
+                        <td className="px-4 py-1.5"></td>
+                        <td className="px-4 py-1.5 text-right text-xs text-gray-400">
+                          {(step.logTail || step.status === 'RUNNING') ? (logJobId === step.id ? 'hide logs' : 'logs') : ''}
+                        </td>
+                      </tr>
+                      {logJobId === step.id && (
+                        <StepLogPanel job={step} onClose={() => setLogJobId(null)} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function StepLogPanel({ job, onClose }: { job: VideoJob; onClose: () => void }) {
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [job.logTail]);
+
+  return (
+    <tr>
+      <td colSpan={9} className="p-0">
+        <div className="mx-8 my-2 rounded-lg border border-gray-700 bg-gray-900 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <span>Step {job.stepNumber}: <span className="text-gray-200">{job.stepName}</span></span>
+              {job.claimedAt && <span>Started: <span className="text-gray-200">{new Date(job.claimedAt).toLocaleTimeString()}</span></span>}
+              {job.completedAt && <span>Completed: <span className="text-gray-200">{new Date(job.completedAt).toLocaleTimeString()}</span></span>}
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-white text-sm px-2">&times;</button>
+          </div>
+          {job.status === 'FAILED' && job.errorMessage && (
+            <div className="px-4 py-2 bg-red-900/50 border-b border-red-800 text-red-300 text-sm">
+              <strong>Error:</strong> {job.errorMessage}
+            </div>
+          )}
+          <div className="max-h-64 overflow-y-auto">
+            <pre className="px-4 py-3 text-xs text-gray-300 font-mono whitespace-pre-wrap leading-relaxed">
+              {job.logTail || '(no logs yet)'}
+              <div ref={logEndRef} />
+            </pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ── Per-concept job indicator (existing) ──────────────────
+
+function JobStatusIndicator({ job, onCancel, onClick }: { job: VideoJob; onCancel: () => void; onClick?: () => void }) {
+  if (job.status === 'PENDING' || job.status === 'RUNNING') {
     const step = job.pipelineStep || 'starting';
     const pct = job.progressPct != null ? ` ${job.progressPct}%` : '';
+    const isQueued = job.status === 'PENDING';
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-blue-600 cursor-pointer hover:text-blue-800" onClick={onClick}>
+      <span className={`inline-flex items-center gap-1.5 text-sm ${isQueued ? 'text-amber-600' : 'text-blue-600'} cursor-pointer hover:opacity-80`} onClick={onClick}>
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isQueued ? 'bg-amber-400' : 'bg-blue-400'} opacity-75`} />
+          <span className={`relative inline-flex rounded-full h-2 w-2 ${isQueued ? 'bg-amber-500' : 'bg-blue-500'}`} />
         </span>
-        {step}{pct}
+        {isQueued ? 'Queued...' : `${step}${pct}`}
+        <button onClick={(e) => { e.stopPropagation(); onCancel(); }} className="ml-1 text-gray-400 hover:text-red-500 text-xs">&times;</button>
       </span>
     );
   }
@@ -75,7 +315,6 @@ function LogPanel({ job, onClose }: { job: VideoJob; onClose: () => void }) {
     <tr>
       <td colSpan={6} className="p-0">
         <div className="mx-4 my-2 rounded-lg border border-gray-700 bg-gray-900 overflow-hidden">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
             <div className="flex items-center gap-3 text-xs text-gray-400">
               <span>Job: <span className="text-gray-200 font-mono">{job.id.slice(0, 12)}</span></span>
@@ -86,15 +325,11 @@ function LogPanel({ job, onClose }: { job: VideoJob; onClose: () => void }) {
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-white text-sm px-2">&times;</button>
           </div>
-
-          {/* Error banner */}
           {job.status === 'FAILED' && job.errorMessage && (
             <div className="px-4 py-2 bg-red-900/50 border-b border-red-800 text-red-300 text-sm">
               <strong>Error:</strong> {job.errorMessage}
             </div>
           )}
-
-          {/* Log content */}
           <div className="max-h-64 overflow-y-auto">
             <pre className="px-4 py-3 text-xs text-gray-300 font-mono whitespace-pre-wrap leading-relaxed">
               {job.logTail || '(no logs yet)'}
@@ -106,6 +341,8 @@ function LogPanel({ job, onClose }: { job: VideoJob; onClose: () => void }) {
     </tr>
   );
 }
+
+// ── Main component ────────────────────────────────────────
 
 export default function AdminVideoConcepts() {
   const [concepts, setConcepts] = useState<VideoConcept[]>([]);
@@ -356,7 +593,10 @@ export default function AdminVideoConcepts() {
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
       )}
 
-      {/* Table */}
+      {/* Job Queue Table */}
+      <JobQueueTable />
+
+      {/* Concepts Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

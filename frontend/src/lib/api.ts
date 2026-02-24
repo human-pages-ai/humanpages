@@ -773,6 +773,9 @@ export const api = {
     request<{ id: string; blogTitle: string; blogSlug: string; blogBody: string; blogExcerpt: string; blogReadingTime: string; metaDescription: string; sourceTitle: string; sourceUrl: string; publishedAt: string; createdAt: string }>(`/blog/posts/${slug}`),
 
   // Video Concepts
+  getVideoJobs: () =>
+    request<{ jobs: VideoJob[] }>('/admin/video-concepts/jobs'),
+
   getVideoConcepts: () =>
     request<{ concepts: VideoConcept[] }>('/admin/video-concepts'),
 

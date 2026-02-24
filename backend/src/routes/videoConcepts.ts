@@ -117,11 +117,32 @@ function slugify(title: string): string {
 
 // ─── Job endpoints (before /:slug to avoid collision) ───
 
+// GET /jobs — List recent parent jobs with step children
+router.get('/jobs', async (_req, res) => {
+  try {
+    const jobs = await prisma.videoJob.findMany({
+      where: { parentJobId: null },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        stepJobs: { orderBy: { stepNumber: 'asc' } },
+      },
+    });
+    res.json({ jobs });
+  } catch (error) {
+    logger.error({ err: error }, 'Video jobs list error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /job/:jobId — Get single job status
 router.get('/job/:jobId', async (req, res) => {
   try {
     const job = await prisma.videoJob.findUnique({
       where: { id: req.params.jobId },
+      include: {
+        stepJobs: { orderBy: { stepNumber: 'asc' } },
+      },
     });
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
@@ -133,7 +154,7 @@ router.get('/job/:jobId', async (req, res) => {
   }
 });
 
-// POST /job/:jobId/cancel — Cancel a pending job
+// POST /job/:jobId/cancel — Cancel a job (parent cascades to step children)
 router.post('/job/:jobId/cancel', async (req, res) => {
   try {
     const job = await prisma.videoJob.findUnique({
@@ -142,13 +163,24 @@ router.post('/job/:jobId/cancel', async (req, res) => {
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
-    if (job.status !== 'PENDING') {
+    if (job.status !== 'PENDING' && job.status !== 'RUNNING') {
       return res.status(400).json({ error: `Cannot cancel job with status ${job.status}` });
     }
+    const now = new Date();
     const updated = await prisma.videoJob.update({
       where: { id: job.id },
-      data: { status: 'CANCELLED', completedAt: new Date() },
+      data: { status: 'CANCELLED', completedAt: now },
     });
+    // If this is a parent job, also cancel PENDING step children
+    if (!job.parentJobId) {
+      await prisma.videoJob.updateMany({
+        where: {
+          parentJobId: job.id,
+          status: 'PENDING',
+        },
+        data: { status: 'CANCELLED', completedAt: now },
+      });
+    }
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Video job cancel error');
@@ -361,7 +393,7 @@ router.delete('/:slug', async (req, res) => {
   }
 });
 
-// POST /:slug/preview — Queue a nano preview job
+// POST /:slug/preview — Queue a nano preview job (parent + step 1)
 router.post('/:slug/preview', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -376,11 +408,12 @@ router.post('/:slug/preview', async (req, res) => {
       return res.status(404).json({ error: 'Concept not found' });
     }
 
-    // Check for existing PENDING/RUNNING preview job
+    // Check for existing PENDING/RUNNING preview parent job
     const existing = await prisma.videoJob.findFirst({
       where: {
         conceptSlug: slug,
         jobType: 'PREVIEW',
+        parentJobId: null,
         status: { in: ['PENDING', 'RUNNING'] },
       },
     });
@@ -391,16 +424,31 @@ router.post('/:slug/preview', async (req, res) => {
       });
     }
 
-    const job = await prisma.videoJob.create({
+    // Create parent job (RUNNING) + step 1 (PENDING)
+    const parent = await prisma.videoJob.create({
       data: {
         conceptSlug: slug,
         jobType: 'PREVIEW',
         tier: 'nano',
+        status: 'RUNNING',
+        pipelineStep: 'queued',
+        progressPct: 0,
       },
     });
 
-    logger.info({ slug, jobId: job.id }, 'Video concept preview job queued');
-    res.json({ message: `Preview queued for '${slug}'`, jobId: job.id });
+    await prisma.videoJob.create({
+      data: {
+        conceptSlug: slug,
+        jobType: 'PREVIEW',
+        tier: 'nano',
+        stepNumber: 1,
+        stepName: 'script',
+        parentJobId: parent.id,
+      },
+    });
+
+    logger.info({ slug, jobId: parent.id }, 'Video concept preview job queued');
+    res.json({ message: `Preview queued for '${slug}'`, jobId: parent.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept preview error');
     res.status(500).json({ error: 'Internal server error' });
@@ -440,7 +488,7 @@ router.post('/:slug/approve', async (req, res) => {
   }
 });
 
-// POST /:slug/produce — Queue a production job
+// POST /:slug/produce — Queue a production job (parent + step 1)
 router.post('/:slug/produce', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -455,11 +503,12 @@ router.post('/:slug/produce', async (req, res) => {
 
     const tier = status[slug].approved_tier || 'draft';
 
-    // Check for existing PENDING/RUNNING produce job
+    // Check for existing PENDING/RUNNING produce parent job
     const existing = await prisma.videoJob.findFirst({
       where: {
         conceptSlug: slug,
         jobType: 'PRODUCE',
+        parentJobId: null,
         status: { in: ['PENDING', 'RUNNING'] },
       },
     });
@@ -470,16 +519,31 @@ router.post('/:slug/produce', async (req, res) => {
       });
     }
 
-    const job = await prisma.videoJob.create({
+    // Create parent job (RUNNING) + step 1 (PENDING)
+    const parent = await prisma.videoJob.create({
       data: {
         conceptSlug: slug,
         jobType: 'PRODUCE',
         tier,
+        status: 'RUNNING',
+        pipelineStep: 'queued',
+        progressPct: 0,
       },
     });
 
-    logger.info({ slug, jobId: job.id, tier }, 'Video concept produce job queued');
-    res.json({ message: `Production queued for '${slug}'`, jobId: job.id });
+    await prisma.videoJob.create({
+      data: {
+        conceptSlug: slug,
+        jobType: 'PRODUCE',
+        tier,
+        stepNumber: 1,
+        stepName: 'script',
+        parentJobId: parent.id,
+      },
+    });
+
+    logger.info({ slug, jobId: parent.id, tier }, 'Video concept produce job queued');
+    res.json({ message: `Production queued for '${slug}'`, jobId: parent.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept produce error');
     res.status(500).json({ error: 'Internal server error' });
