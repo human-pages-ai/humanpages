@@ -59,7 +59,7 @@ async function cropImage(imageSrc: string, pixelCrop: Area): Promise<File> {
     canvas.toBlob(
       (b) => (b ? resolve(b) : reject(new Error('Canvas export failed'))),
       'image/webp',
-      0.9,
+      0.75,
     );
   });
 
