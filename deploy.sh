@@ -39,6 +39,23 @@ deactivate
 echo "Video pipeline dependencies installed"
 
 echo ""
+echo "=== Deploying Photo Pipeline ==="
+cd /opt/photo-pipeline
+git pull
+
+# Create venv if it doesn't exist
+if [ ! -d "venv" ]; then
+  echo "Creating Python venv..."
+  python3 -m venv venv
+fi
+
+source venv/bin/activate
+pip install -q -r requirements.txt
+deactivate
+
+echo "Photo pipeline dependencies installed"
+
+echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"
