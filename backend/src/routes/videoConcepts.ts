@@ -15,6 +15,7 @@ const VIDEO_PIPELINE_DIR = process.env.VIDEO_PIPELINE_DIR
 const CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'concepts');
 const STATUS_FILE = path.join(CONCEPTS_DIR, 'status.json');
 const DATA_CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'data', 'concepts');
+const PYTHON_BIN = path.join(VIDEO_PIPELINE_DIR, 'venv', 'bin', 'python3');
 
 // ─── Auth: jwtOrApiKey, then require admin for JWT users ───
 router.use(jwtOrApiKey);
@@ -335,16 +336,20 @@ router.post('/:slug/preview', async (req, res) => {
       return res.status(404).json({ error: 'Concept not found' });
     }
 
-    // Spawn in background
-    const child = spawn('python3', ['concept.py', '--preview', slug], {
+    // Spawn in background with logging
+    const logDir = path.join(VIDEO_PIPELINE_DIR, 'logs');
+    await fs.mkdir(logDir, { recursive: true });
+    const logPath = path.join(logDir, `preview-${slug}.log`);
+    const logFh = await fs.open(logPath, 'w');
+    const child = spawn(PYTHON_BIN, ['concept.py', '--preview', slug], {
       cwd: VIDEO_PIPELINE_DIR,
-      stdio: 'ignore',
+      stdio: ['ignore', logFh.fd, logFh.fd],
       detached: true,
     });
     child.unref();
 
-    logger.info({ slug, pid: child.pid }, 'Video concept preview spawned');
-    res.json({ message: `Preview started for '${slug}'`, pid: child.pid });
+    logger.info({ slug, pid: child.pid, log: logPath }, 'Video concept preview spawned');
+    res.json({ message: `Preview started for '${slug}'`, pid: child.pid, log: logPath });
   } catch (error) {
     logger.error({ err: error }, 'Video concept preview error');
     res.status(500).json({ error: 'Internal server error' });
@@ -397,16 +402,20 @@ router.post('/:slug/produce', async (req, res) => {
       return res.status(404).json({ error: 'Concept not found in status' });
     }
 
-    // Spawn in background
-    const child = spawn('python3', ['concept.py', '--produce'], {
+    // Spawn in background with logging
+    const logDir = path.join(VIDEO_PIPELINE_DIR, 'logs');
+    await fs.mkdir(logDir, { recursive: true });
+    const logPath = path.join(logDir, `produce-${slug}.log`);
+    const logFh = await fs.open(logPath, 'w');
+    const child = spawn(PYTHON_BIN, ['concept.py', '--produce'], {
       cwd: VIDEO_PIPELINE_DIR,
-      stdio: 'ignore',
+      stdio: ['ignore', logFh.fd, logFh.fd],
       detached: true,
     });
     child.unref();
 
-    logger.info({ slug, pid: child.pid }, 'Video concept produce spawned');
-    res.json({ message: `Production started`, pid: child.pid });
+    logger.info({ slug, pid: child.pid, log: logPath }, 'Video concept produce spawned');
+    res.json({ message: `Production started`, pid: child.pid, log: logPath });
   } catch (error) {
     logger.error({ err: error }, 'Video concept produce error');
     res.status(500).json({ error: 'Internal server error' });
