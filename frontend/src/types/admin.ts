@@ -620,6 +620,23 @@ export interface VideoConcept {
   nanoDir: string | null;
 }
 
+export type VideoJobType = 'PREVIEW' | 'PRODUCE';
+export type VideoJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface VideoJob {
+  id: string;
+  conceptSlug: string;
+  jobType: VideoJobType;
+  tier: string;
+  status: VideoJobStatus;
+  claimedAt: string | null;
+  completedAt: string | null;
+  errorMessage: string | null;
+  pipelineStep: string | null;
+  progressPct: number | null;
+  createdAt: string;
+}
+
 // ===== Photo Concepts =====
 export type PhotoConceptStatus = 'new' | 'approved' | 'rendered' | 'rejected';
 

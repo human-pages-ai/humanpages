@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
-import type { VideoConcept, VideoConceptStatus } from '../../types/admin';
+import type { VideoConcept, VideoConceptStatus, VideoJob } from '../../types/admin';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 
@@ -21,10 +21,50 @@ function slugify(title: string): string {
     .slice(0, 80);
 }
 
+function JobStatusIndicator({ job, onCancel }: { job: VideoJob; onCancel: () => void }) {
+  if (job.status === 'PENDING') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-amber-600">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+        </span>
+        Queued...
+        <button onClick={onCancel} className="ml-1 text-gray-400 hover:text-red-500 text-xs">&times;</button>
+      </span>
+    );
+  }
+  if (job.status === 'RUNNING') {
+    const step = job.pipelineStep || 'starting';
+    const pct = job.progressPct != null ? ` ${job.progressPct}%` : '';
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-blue-600">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+        </span>
+        {step}{pct}
+      </span>
+    );
+  }
+  if (job.status === 'FAILED') {
+    return (
+      <span className="text-sm text-red-600 cursor-help" title={job.errorMessage || 'Unknown error'}>
+        Failed
+      </span>
+    );
+  }
+  return null;
+}
+
 export default function AdminVideoConcepts() {
   const [concepts, setConcepts] = useState<VideoConcept[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Active jobs: slug -> latest active job
+  const [activeJobs, setActiveJobs] = useState<Record<string, VideoJob>>({});
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Modal state
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -56,6 +96,51 @@ export default function AdminVideoConcepts() {
   }, []);
 
   useEffect(() => { fetchConcepts(); }, [fetchConcepts]);
+
+  // Poll active jobs every 3s
+  useEffect(() => {
+    const jobIds = Object.values(activeJobs)
+      .filter(j => j.status === 'PENDING' || j.status === 'RUNNING')
+      .map(j => j.id);
+
+    if (jobIds.length === 0) {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+      return;
+    }
+
+    const poll = async () => {
+      const updates: Record<string, VideoJob> = { ...activeJobs };
+      let anyCompleted = false;
+
+      for (const jobId of jobIds) {
+        try {
+          const job = await api.getVideoJob(jobId);
+          updates[job.conceptSlug] = job;
+          if (job.status === 'COMPLETED') {
+            anyCompleted = true;
+          }
+        } catch {
+          // Job may have been deleted, remove from tracking
+        }
+      }
+
+      setActiveJobs(updates);
+      if (anyCompleted) {
+        fetchConcepts();
+      }
+    };
+
+    pollTimerRef.current = setInterval(poll, 3000);
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [activeJobs, fetchConcepts]);
 
   const openCreate = () => {
     setFormData({ title: '', slug: '', duration: '30-45', style: '', body: '' });
@@ -146,8 +231,11 @@ export default function AdminVideoConcepts() {
 
   const handlePreview = async (slug: string) => {
     try {
-      await api.previewVideoConcept(slug);
-      toast.success(`Preview started for '${slug}'`);
+      const res = await api.previewVideoConcept(slug);
+      toast.success(`Preview queued for '${slug}'`);
+      // Track the job
+      const job = await api.getVideoJob(res.jobId);
+      setActiveJobs(prev => ({ ...prev, [slug]: job }));
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -167,8 +255,26 @@ export default function AdminVideoConcepts() {
 
   const handleProduce = async (slug: string) => {
     try {
-      await api.produceVideoConcept(slug);
-      toast.success('Production started');
+      const res = await api.produceVideoConcept(slug);
+      toast.success('Production queued');
+      const job = await api.getVideoJob(res.jobId);
+      setActiveJobs(prev => ({ ...prev, [slug]: job }));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleCancelJob = async (slug: string) => {
+    const job = activeJobs[slug];
+    if (!job) return;
+    try {
+      await api.cancelVideoJob(job.id);
+      toast.success('Job cancelled');
+      setActiveJobs(prev => {
+        const next = { ...prev };
+        delete next[slug];
+        return next;
+      });
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -213,6 +319,8 @@ export default function AdminVideoConcepts() {
           <tbody className="divide-y divide-gray-200">
             {concepts.map((c) => {
               const badge = STATUS_BADGES[c.status] || STATUS_BADGES.new;
+              const activeJob = activeJobs[c.slug];
+              const hasActiveJob = activeJob && (activeJob.status === 'PENDING' || activeJob.status === 'RUNNING');
               return (
                 <tr key={c.slug} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-mono text-gray-700">{c.slug}</td>
@@ -224,30 +332,39 @@ export default function AdminVideoConcepts() {
                   <td className="px-4 py-3 text-sm text-gray-500">{c.duration || '—'}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openView(c)} className="text-blue-600 hover:text-blue-800 text-sm">View</button>
-                      <button onClick={() => openEdit(c)} className="text-gray-600 hover:text-gray-800 text-sm">Edit</button>
-                      {c.status === 'new' && (
-                        <button onClick={() => handlePreview(c.slug)} className="text-indigo-600 hover:text-indigo-800 text-sm">Preview</button>
-                      )}
-                      {c.status === 'nano_done' && (
-                        <button onClick={() => { setApproveSlug(c.slug); setApproveTier('draft'); }} className="text-yellow-600 hover:text-yellow-800 text-sm">Approve</button>
-                      )}
-                      {c.status === 'approved' && (
-                        <button onClick={() => handleProduce(c.slug)} className="text-green-600 hover:text-green-800 text-sm">Produce</button>
-                      )}
-                      {deleteConfirm === c.slug ? (
-                        <span className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleDelete(c.slug)}
-                            disabled={deleting}
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                          >
-                            {deleting ? '...' : 'Confirm'}
-                          </button>
-                          <button onClick={() => setDeleteConfirm(null)} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
-                        </span>
+                      {hasActiveJob ? (
+                        <JobStatusIndicator job={activeJob} onCancel={() => handleCancelJob(c.slug)} />
                       ) : (
-                        <button onClick={() => setDeleteConfirm(c.slug)} className="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                        <>
+                          {activeJob?.status === 'FAILED' && (
+                            <JobStatusIndicator job={activeJob} onCancel={() => {}} />
+                          )}
+                          <button onClick={() => openView(c)} className="text-blue-600 hover:text-blue-800 text-sm">View</button>
+                          <button onClick={() => openEdit(c)} className="text-gray-600 hover:text-gray-800 text-sm">Edit</button>
+                          {c.status === 'new' && (
+                            <button onClick={() => handlePreview(c.slug)} className="text-indigo-600 hover:text-indigo-800 text-sm">Preview</button>
+                          )}
+                          {c.status === 'nano_done' && (
+                            <button onClick={() => { setApproveSlug(c.slug); setApproveTier('draft'); }} className="text-yellow-600 hover:text-yellow-800 text-sm">Approve</button>
+                          )}
+                          {c.status === 'approved' && (
+                            <button onClick={() => handleProduce(c.slug)} className="text-green-600 hover:text-green-800 text-sm">Produce</button>
+                          )}
+                          {deleteConfirm === c.slug ? (
+                            <span className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDelete(c.slug)}
+                                disabled={deleting}
+                                className="text-red-600 hover:text-red-800 text-sm font-medium"
+                              >
+                                {deleting ? '...' : 'Confirm'}
+                              </button>
+                              <button onClick={() => setDeleteConfirm(null)} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
+                            </span>
+                          ) : (
+                            <button onClick={() => setDeleteConfirm(c.slug)} className="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>

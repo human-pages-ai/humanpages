@@ -43,6 +43,9 @@ deactivate
 
 echo "Video pipeline dependencies installed"
 
+# Restart video worker if running
+systemctl --user restart video-worker 2>/dev/null || true
+
 echo ""
 echo "=== Deploying Photo Pipeline ==="
 cd /opt/photo-pipeline

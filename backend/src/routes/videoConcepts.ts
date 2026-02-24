@@ -1,11 +1,10 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
-import fsSync from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
 import { jwtOrApiKey, requireAdmin } from '../middleware/adminAuth.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
+import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
@@ -16,7 +15,6 @@ const VIDEO_PIPELINE_DIR = process.env.VIDEO_PIPELINE_DIR
 const CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'concepts');
 const STATUS_FILE = path.join(CONCEPTS_DIR, 'status.json');
 const DATA_CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'data', 'concepts');
-const PYTHON_BIN = path.join(VIDEO_PIPELINE_DIR, 'venv', 'bin', 'python3');
 
 // ─── Auth: jwtOrApiKey, then require admin for JWT users ───
 router.use(jwtOrApiKey);
@@ -116,6 +114,47 @@ function slugify(title: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
 }
+
+// ─── Job endpoints (before /:slug to avoid collision) ───
+
+// GET /job/:jobId — Get single job status
+router.get('/job/:jobId', async (req, res) => {
+  try {
+    const job = await prisma.videoJob.findUnique({
+      where: { id: req.params.jobId },
+    });
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    res.json(job);
+  } catch (error) {
+    logger.error({ err: error }, 'Video job get error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /job/:jobId/cancel — Cancel a pending job
+router.post('/job/:jobId/cancel', async (req, res) => {
+  try {
+    const job = await prisma.videoJob.findUnique({
+      where: { id: req.params.jobId },
+    });
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    if (job.status !== 'PENDING') {
+      return res.status(400).json({ error: `Cannot cancel job with status ${job.status}` });
+    }
+    const updated = await prisma.videoJob.update({
+      where: { id: job.id },
+      data: { status: 'CANCELLED', completedAt: new Date() },
+    });
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'Video job cancel error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // ─── Endpoints ───
 
@@ -322,7 +361,7 @@ router.delete('/:slug', async (req, res) => {
   }
 });
 
-// POST /:slug/preview — Trigger nano preview (spawns background process)
+// POST /:slug/preview — Queue a nano preview job
 router.post('/:slug/preview', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -337,20 +376,31 @@ router.post('/:slug/preview', async (req, res) => {
       return res.status(404).json({ error: 'Concept not found' });
     }
 
-    // Spawn in background with logging
-    const logDir = path.join(VIDEO_PIPELINE_DIR, 'logs');
-    await fs.mkdir(logDir, { recursive: true });
-    const logPath = path.join(logDir, `preview-${slug}.log`);
-    const logFd = fsSync.openSync(logPath, 'w');
-    const child = spawn(PYTHON_BIN, ['concept.py', '--preview', slug], {
-      cwd: VIDEO_PIPELINE_DIR,
-      stdio: ['ignore', logFd, logFd],
-      detached: true,
+    // Check for existing PENDING/RUNNING preview job
+    const existing = await prisma.videoJob.findFirst({
+      where: {
+        conceptSlug: slug,
+        jobType: 'PREVIEW',
+        status: { in: ['PENDING', 'RUNNING'] },
+      },
     });
-    child.unref();
+    if (existing) {
+      return res.status(409).json({
+        error: 'A preview job is already queued or running',
+        jobId: existing.id,
+      });
+    }
 
-    logger.info({ slug, pid: child.pid, log: logPath }, 'Video concept preview spawned');
-    res.json({ message: `Preview started for '${slug}'`, pid: child.pid, log: logPath });
+    const job = await prisma.videoJob.create({
+      data: {
+        conceptSlug: slug,
+        jobType: 'PREVIEW',
+        tier: 'nano',
+      },
+    });
+
+    logger.info({ slug, jobId: job.id }, 'Video concept preview job queued');
+    res.json({ message: `Preview queued for '${slug}'`, jobId: job.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept preview error');
     res.status(500).json({ error: 'Internal server error' });
@@ -390,7 +440,7 @@ router.post('/:slug/approve', async (req, res) => {
   }
 });
 
-// POST /:slug/produce — Trigger production (spawns background process)
+// POST /:slug/produce — Queue a production job
 router.post('/:slug/produce', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -403,22 +453,54 @@ router.post('/:slug/produce', async (req, res) => {
       return res.status(404).json({ error: 'Concept not found in status' });
     }
 
-    // Spawn in background with logging
-    const logDir = path.join(VIDEO_PIPELINE_DIR, 'logs');
-    await fs.mkdir(logDir, { recursive: true });
-    const logPath = path.join(logDir, `produce-${slug}.log`);
-    const logFd = fsSync.openSync(logPath, 'w');
-    const child = spawn(PYTHON_BIN, ['concept.py', '--produce'], {
-      cwd: VIDEO_PIPELINE_DIR,
-      stdio: ['ignore', logFd, logFd],
-      detached: true,
-    });
-    child.unref();
+    const tier = status[slug].approved_tier || 'draft';
 
-    logger.info({ slug, pid: child.pid, log: logPath }, 'Video concept produce spawned');
-    res.json({ message: `Production started`, pid: child.pid, log: logPath });
+    // Check for existing PENDING/RUNNING produce job
+    const existing = await prisma.videoJob.findFirst({
+      where: {
+        conceptSlug: slug,
+        jobType: 'PRODUCE',
+        status: { in: ['PENDING', 'RUNNING'] },
+      },
+    });
+    if (existing) {
+      return res.status(409).json({
+        error: 'A production job is already queued or running',
+        jobId: existing.id,
+      });
+    }
+
+    const job = await prisma.videoJob.create({
+      data: {
+        conceptSlug: slug,
+        jobType: 'PRODUCE',
+        tier,
+      },
+    });
+
+    logger.info({ slug, jobId: job.id, tier }, 'Video concept produce job queued');
+    res.json({ message: `Production queued for '${slug}'`, jobId: job.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept produce error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /:slug/jobs — List recent jobs for a concept
+router.get('/:slug/jobs', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!isValidSlug(slug)) {
+      return res.status(400).json({ error: 'Invalid slug' });
+    }
+    const jobs = await prisma.videoJob.findMany({
+      where: { conceptSlug: slug },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    res.json({ jobs });
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept jobs list error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

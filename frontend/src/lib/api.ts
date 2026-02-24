@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -789,7 +789,7 @@ export const api = {
     request<{ message: string }>(`/admin/video-concepts/${slug}`, { method: 'DELETE' }),
 
   previewVideoConcept: (slug: string) =>
-    request<{ message: string; pid: number }>(`/admin/video-concepts/${slug}/preview`, { method: 'POST' }),
+    request<{ message: string; jobId: string }>(`/admin/video-concepts/${slug}/preview`, { method: 'POST' }),
 
   approveVideoConcept: (slug: string, tier: string = 'draft') =>
     request<{ slug: string; status: string; approvedTier: string }>(`/admin/video-concepts/${slug}/approve`, {
@@ -798,10 +798,19 @@ export const api = {
     }),
 
   produceVideoConcept: (slug: string) =>
-    request<{ message: string; pid: number }>(`/admin/video-concepts/${slug}/produce`, { method: 'POST' }),
+    request<{ message: string; jobId: string }>(`/admin/video-concepts/${slug}/produce`, { method: 'POST' }),
 
   getVideoConceptOutputs: (slug: string) =>
     request<{ slug: string; outputs: { tier: string; files: string[] }[] }>(`/admin/video-concepts/${slug}/outputs`),
+
+  getVideoConceptJobs: (slug: string) =>
+    request<{ jobs: VideoJob[] }>(`/admin/video-concepts/${slug}/jobs`),
+
+  getVideoJob: (jobId: string) =>
+    request<VideoJob>(`/admin/video-concepts/job/${jobId}`),
+
+  cancelVideoJob: (jobId: string) =>
+    request<VideoJob>(`/admin/video-concepts/job/${jobId}/cancel`, { method: 'POST' }),
 
   // Photo Concepts
   getPhotoConcepts: () =>

@@ -1131,6 +1131,41 @@ model VideoAsset {
   @@index([assetType])
 }
 
+// ===== VIDEO JOB QUEUE =====
+
+enum VideoJobType {
+  PREVIEW
+  PRODUCE
+}
+
+enum VideoJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model VideoJob {
+  id             String         @id @default(cuid())
+  conceptSlug    String
+  jobType        VideoJobType
+  tier           String         @default("nano")
+  status         VideoJobStatus @default(PENDING)
+  claimedAt      DateTime?
+  completedAt    DateTime?
+  errorMessage   String?        @db.Text
+  logTail        String?        @db.Text
+  pipelineStep   String?
+  progressPct    Int?
+  outputDir      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@index([conceptSlug, status])
+}
+
 // ===== UNIFIED PUBLICATION SCHEDULE =====
 // One model for all content types: videos, blog posts, tweets, LinkedIn posts, image posts, etc.
 
