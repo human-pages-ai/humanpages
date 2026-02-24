@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -802,6 +802,69 @@ export const api = {
 
   getVideoConceptOutputs: (slug: string) =>
     request<{ slug: string; outputs: { tier: string; files: string[] }[] }>(`/admin/video-concepts/${slug}/outputs`),
+
+  // Photo Concepts
+  getPhotoConcepts: () =>
+    request<{ concepts: PhotoConcept[] }>('/admin/photo-concepts'),
+
+  getPhotoConcept: (slug: string) =>
+    request<PhotoConcept>(`/admin/photo-concepts/${slug}`),
+
+  createPhotoConcept: (data: Record<string, unknown>) =>
+    request<PhotoConcept>('/admin/photo-concepts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updatePhotoConcept: (slug: string, data: Record<string, unknown>) =>
+    request<PhotoConcept>(`/admin/photo-concepts/${slug}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deletePhotoConcept: (slug: string) =>
+    request<{ message: string }>(`/admin/photo-concepts/${slug}`, { method: 'DELETE' }),
+
+  approvePhotoConcept: (slug: string) =>
+    request<{ slug: string; status: string }>(`/admin/photo-concepts/${slug}/approve`, { method: 'POST' }),
+
+  renderPhotoConcept: (slug: string) =>
+    request<{ message: string; pid: number }>(`/admin/photo-concepts/${slug}/render`, { method: 'POST' }),
+
+  generatePhotoBatch: (count: number = 10) =>
+    request<{ message: string; pid: number }>('/admin/photo-concepts/generate-batch', {
+      method: 'POST',
+      body: JSON.stringify({ count }),
+    }),
+
+  getPhotoConceptOutputs: (slug: string) =>
+    request<{ slug: string; outputs: { platform: string; files: string[] }[] }>(`/admin/photo-concepts/${slug}/outputs`),
+
+  // Career Applications (Admin)
+  getCareerApplications: (params?: { page?: number; limit?: number; status?: string; positionId?: string; search?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set('page', String(params.page));
+    if (params?.limit) sp.set('limit', String(params.limit));
+    if (params?.status) sp.set('status', params.status);
+    if (params?.positionId) sp.set('positionId', params.positionId);
+    if (params?.search) sp.set('search', params.search);
+    return request<{ applications: CareerApplication[]; pagination: Pagination; stats: CareerApplicationStats }>(`/admin/career-applications?${sp}`);
+  },
+
+  getCareerApplication: (id: string) =>
+    request<CareerApplication>(`/admin/career-applications/${id}`),
+
+  updateCareerApplication: (id: string, data: { status?: string; adminNotes?: string }) =>
+    request<CareerApplication>(`/admin/career-applications/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  bulkUpdateCareerApplications: (ids: string[], status: string) =>
+    request<{ updated: number }>('/admin/career-applications/bulk-status', {
+      method: 'PATCH',
+      body: JSON.stringify({ ids, status }),
+    }),
 
   // Videos (R2-backed)
   getVideos: (params?: { page?: number; limit?: number; status?: string; tier?: string }) => {

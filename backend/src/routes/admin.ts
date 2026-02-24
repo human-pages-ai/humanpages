@@ -10,6 +10,8 @@ import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
 import videoConceptRoutes from './videoConcepts.js';
+import photoConceptRoutes from './photoConcepts.js';
+import careerAdminRoutes from './careerAdmin.js';
 import videoRoutes from './videos.js';
 import scheduleRoutes from './schedule.js';
 import productivityRoutes from './productivity.js';
@@ -86,6 +88,12 @@ router.use('/content', contentRoutes);
 
 // ─── Video concepts routes (API key + admin) ───
 router.use('/video-concepts', videoConceptRoutes);
+
+// ─── Photo concepts routes (API key + admin) ───
+router.use('/photo-concepts', photoConceptRoutes);
+
+// ─── Career applications admin routes (API key + admin) ───
+router.use('/career-applications', careerAdminRoutes);
 
 // ─── Video management routes (API key + admin) ───
 router.use('/videos', videoRoutes);

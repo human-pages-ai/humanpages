@@ -620,6 +620,75 @@ export interface VideoConcept {
   nanoDir: string | null;
 }
 
+// ===== Photo Concepts =====
+export type PhotoConceptStatus = 'new' | 'approved' | 'rendered' | 'rejected';
+
+export interface PhotoConcept {
+  slug: string;
+  title: string;
+  status: PhotoConceptStatus;
+  postType: string;
+  targetPlatforms: string[];
+  concept: string;
+  tone: string;
+  imagePrompt?: string;
+  imageStyle?: string;
+  captionText?: string;
+  bodyText?: string;
+  topText?: string;
+  bottomText?: string;
+  statValue?: string;
+  statLabel?: string;
+  quoteText?: string;
+  quoteAttribution?: string;
+  jobTitle?: string;
+  jobDescription?: string;
+  jobBudget?: string;
+  pillar?: string;
+  hashtags?: string[];
+  fontStyle?: string;
+  accentColor?: string;
+  needsImage?: boolean;
+  createdAt: string;
+}
+
+// ===== Career Applications =====
+export type CareerApplicationStatus = 'PENDING' | 'REVIEWED' | 'CONTACTED' | 'REJECTED' | 'HIRED';
+
+export interface CareerApplication {
+  id: string;
+  positionId: string;
+  positionTitle: string;
+  about: string;
+  portfolioUrl: string | null;
+  availability: string;
+  status: CareerApplicationStatus;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  human: {
+    id: string;
+    name: string;
+    email: string;
+    location: string | null;
+    username: string | null;
+    bio?: string | null;
+    skills?: string[];
+    linkedinUrl?: string | null;
+    githubUrl?: string | null;
+    websiteUrl?: string | null;
+    linkedinVerified?: boolean;
+    githubVerified?: boolean;
+  };
+}
+
+export interface CareerApplicationStats {
+  total: number;
+  pending: number;
+  byStatus: Record<string, number>;
+  byPosition: Record<string, number>;
+}
+
 // ===== Staff Productivity Tracking =====
 
 export interface StaffProductivityEntry {

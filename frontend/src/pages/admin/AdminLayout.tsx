@@ -12,6 +12,8 @@ const adminOnlyItems = [
   { to: '/admin/video', label: 'Concepts' },
   { to: '/admin/videos', label: 'Videos' },
   { to: '/admin/schedule', label: 'Schedule' },
+  { to: '/admin/photos', label: 'Photos' },
+  { to: '/admin/careers', label: 'Careers' },
   { to: '/admin/staff', label: 'Staff' },
   { to: '/admin/productivity', label: 'Productivity' },
 ];
