@@ -11,6 +11,7 @@ const router = Router();
 // ─── Path resolution ───
 const PHOTO_PIPELINE_DIR = process.env.PHOTO_PIPELINE_DIR
   || path.resolve(__dirname, '..', '..', '..', '..', 'photo-pipeline');
+const PYTHON_BIN = path.join(PHOTO_PIPELINE_DIR, 'venv', 'bin', 'python3');
 const DATA_DIR = path.join(PHOTO_PIPELINE_DIR, 'data');
 const STATUS_FILE = path.join(DATA_DIR, 'photo_status.json');
 const BATCH_FILE = path.join(PHOTO_PIPELINE_DIR, 'suggested_batch.json');
@@ -90,7 +91,7 @@ async function loadBatch(): Promise<any[]> {
 /** Run the Python assessment scorer on a concept and return scores. */
 async function assessConcept(concept: any): Promise<{ score: number; verdict: string } | null> {
   return new Promise((resolve) => {
-    const child = spawn('python3', ['-c', `
+    const child = spawn(PYTHON_BIN, ['-c', `
 import json, sys
 sys.path.insert(0, '.')
 from schemas.post import PostScript
@@ -213,7 +214,7 @@ router.post('/generate-batch', async (req, res) => {
   try {
     const count = Math.min(50, Math.max(1, req.body.count || 10));
 
-    const child = spawn('python3', ['batch_concepts.py', '--count', String(count)], {
+    const child = spawn(PYTHON_BIN, ['batch_concepts.py', '--count', String(count)], {
       cwd: PHOTO_PIPELINE_DIR,
       stdio: 'ignore',
       detached: true,
@@ -573,7 +574,7 @@ router.post('/:slug/render', async (req, res) => {
     }
 
     // Use --concept with the title, --tier for quality
-    const child = spawn('python3', [
+    const child = spawn(PYTHON_BIN, [
       'pipeline.py',
       '--concept', conceptData.concept || conceptData.title,
       '--tier', tier,

@@ -13,7 +13,7 @@
 #
 # Prerequisites:
 #   - Node.js 20+ (via nvm)
-#   - Python 3.10+ (for video-pipeline)
+#   - Python 3.10+ (for video-pipeline and photo-pipeline)
 #   - Claude Max subscription (logged in via `claude`)
 #   - .env file in each project directory (see PROD.md in each repo)
 #
@@ -31,8 +31,8 @@ PROJECTS="$HOME/projects"
 
 ACTION="${1:-install}"
 
-ALL_TIMERS="reply-engine.timer youtube-nightly.timer blog-nightly.timer video-nightly.timer video-batch.timer"
-ALL_SERVICES="reply-engine.service youtube-nightly.service blog-nightly.service video-nightly.service video-batch.service"
+ALL_TIMERS="reply-engine.timer youtube-nightly.timer blog-nightly.timer video-nightly.timer video-batch.timer photo-batch.timer"
+ALL_SERVICES="reply-engine.service youtube-nightly.service blog-nightly.service video-nightly.service video-batch.service photo-batch.service"
 
 # ── Status ──────────────────────────────────────────────────
 if [ "$ACTION" = "status" ]; then
@@ -83,6 +83,7 @@ echo "  1:00 AM — Reply engine (13-platform social scan)"
 echo "  2:00 AM — Blog engine (trending content → drafts)"
 echo "  3:00 AM — YouTube outreach (channel discovery → comments)"
 echo "  4:00 AM — Video batch (generate 15 nano concepts for review)"
+echo "  5:00 AM — Photo batch (generate 20 meme/post concepts for review)"
 echo ""
 
 mkdir -p "$SYSTEMD_DIR"
@@ -92,6 +93,7 @@ mkdir -p "$PROJECTS/reply-engine/logs"
 mkdir -p "$PROJECTS/youtube-outreach/logs"
 mkdir -p "$PROJECTS/blog-engine/logs"
 mkdir -p "$PROJECTS/video-pipeline/logs"
+mkdir -p "$PROJECTS/photo-pipeline/logs"
 
 # ── Install dependencies ──────────────────────────────────
 echo "── Installing dependencies ──"
@@ -103,15 +105,20 @@ for dir in reply-engine blog-engine youtube-outreach; do
     fi
 done
 
-if [ -f "$PROJECTS/video-pipeline/requirements.txt" ]; then
-    echo "  video-pipeline: pip install..."
-    (cd "$PROJECTS/video-pipeline" && pip install -q -r requirements.txt 2>&1 | tail -1)
-fi
+for pydir in video-pipeline photo-pipeline; do
+    if [ -f "$PROJECTS/$pydir/requirements.txt" ]; then
+        echo "  $pydir: setting up venv + pip install..."
+        if [ ! -d "$PROJECTS/$pydir/venv" ]; then
+            python3 -m venv "$PROJECTS/$pydir/venv"
+        fi
+        (cd "$PROJECTS/$pydir" && venv/bin/pip install -q -r requirements.txt 2>&1 | tail -1)
+    fi
+done
 
 # ── Check .env files ──────────────────────────────────────
 echo ""
 echo "── Checking .env files ──"
-for dir in reply-engine blog-engine youtube-outreach video-pipeline; do
+for dir in reply-engine blog-engine youtube-outreach video-pipeline photo-pipeline; do
     if [ -f "$PROJECTS/$dir/.env" ]; then
         echo "  $dir: .env found"
     else
@@ -172,6 +179,16 @@ else
     echo "  SKIP: video-batch not found"
 fi
 
+# 6. Photo Pipeline — 5 AM (batch concept generation)
+if [ -f "$PROJECTS/photo-pipeline/photo-batch.service" ]; then
+    echo "── Photo Batch (5 AM) ──"
+    ln -sf "$PROJECTS/photo-pipeline/photo-batch.service" "$SYSTEMD_DIR/photo-batch.service"
+    ln -sf "$PROJECTS/photo-pipeline/photo-batch.timer" "$SYSTEMD_DIR/photo-batch.timer"
+    echo "  Linked"
+else
+    echo "  SKIP: photo-pipeline not found"
+fi
+
 # Reload and enable
 echo ""
 echo "── Enabling timers ──"
@@ -203,3 +220,4 @@ echo "  Reply engine:    tail -f ~/projects/reply-engine/logs/nightly.log"
 echo "  Blog engine:     tail -f ~/projects/blog-engine/logs/nightly.log"
 echo "  YouTube:         tail -f ~/projects/youtube-outreach/logs/nightly-systemd.log"
 echo "  Video pipeline:  tail -f ~/projects/video-pipeline/logs/nightly.log"
+echo "  Photo pipeline:  tail -f ~/projects/photo-pipeline/logs/batch.log"
