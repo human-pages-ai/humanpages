@@ -1170,6 +1170,7 @@ enum VideoJobStatus {
   COMPLETED
   FAILED
   CANCELLED
+  CHECKPOINT
 }
 
 model VideoJob {

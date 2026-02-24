@@ -830,6 +830,27 @@ export const api = {
   cancelVideoJob: (jobId: string) =>
     request<VideoJob>(`/admin/video-concepts/job/${jobId}/cancel`, { method: 'POST' }),
 
+  continueVideoConcept: (slug: string) =>
+    request<{ message: string; jobId: string }>(`/admin/video-concepts/${slug}/continue`, { method: 'POST' }),
+
+  regenerateSceneImage: (slug: string, tier: string, sceneNum: number) =>
+    request<{ success: boolean; scene: number }>(
+      `/admin/video-concepts/${slug}/regenerate-image/${tier}/${sceneNum}`,
+      { method: 'POST' }
+    ),
+
+  getVideoConceptCostEstimate: (slug: string, tier: string) =>
+    request<{ tier: string; numScenes: number; totalDuration: number; total: number; totalWithRetries: number;
+      breakdown: { images: number; video: number; voiceover: number } }>(
+      `/admin/video-concepts/${slug}/cost-estimate/${tier}`
+    ),
+
+  updateVideoConceptScript: (slug: string, tier: string, script: VideoScriptData) =>
+    request<{ success: boolean }>(`/admin/video-concepts/${slug}/script/${tier}`, {
+      method: 'PUT',
+      body: JSON.stringify(script),
+    }),
+
   // Photo Concepts
   getPhotoConcepts: () =>
     request<{ concepts: PhotoConcept[] }>('/admin/photo-concepts'),

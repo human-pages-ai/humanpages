@@ -12,6 +12,10 @@ const STATUS_BADGES: Record<VideoConceptStatus, { label: string; cls: string }> 
   approved: { label: 'Approved', cls: 'bg-yellow-100 text-yellow-700' },
   draft_done: { label: 'Draft Done', cls: 'bg-green-100 text-green-700' },
   final_done: { label: 'Final Done', cls: 'bg-green-100 text-green-700' },
+  draft_images_ready: { label: 'Draft Images Ready', cls: 'bg-purple-100 text-purple-700' },
+  final_images_ready: { label: 'Final Images Ready', cls: 'bg-purple-100 text-purple-700' },
+  draft_in_production: { label: 'Draft Producing', cls: 'bg-blue-100 text-blue-700' },
+  final_in_production: { label: 'Final Producing', cls: 'bg-blue-100 text-blue-700' },
 };
 
 const JOB_STATUS_COLORS: Record<VideoJobStatus, { bg: string; text: string; dot: string }> = {
@@ -20,6 +24,7 @@ const JOB_STATUS_COLORS: Record<VideoJobStatus, { bg: string; text: string; dot:
   COMPLETED: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
   FAILED: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
   CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' },
+  CHECKPOINT: { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
 };
 
 function slugify(title: string): string {
@@ -32,7 +37,7 @@ function slugify(title: string): string {
 
 function StatusBadge({ status }: { status: VideoJobStatus }) {
   const colors = JOB_STATUS_COLORS[status] || JOB_STATUS_COLORS.PENDING;
-  const isActive = status === 'RUNNING' || status === 'PENDING';
+  const isActive = status === 'RUNNING' || status === 'PENDING' || status === 'CHECKPOINT';
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${colors.bg} ${colors.text}`}>
       {isActive && (
@@ -65,6 +70,7 @@ function StepDots({ parentJob }: { parentJob: VideoJob }) {
           else if (step.status === 'FAILED') { color = 'bg-red-500'; title = `Step ${stepNum}: ${stepNames[i]} (failed)`; }
           else if (step.status === 'CANCELLED') { color = 'bg-gray-400'; title = `Step ${stepNum}: ${stepNames[i]} (cancelled)`; }
           else if (step.status === 'PENDING') { color = 'bg-amber-400'; title = `Step ${stepNum}: ${stepNames[i]} (queued)`; }
+          else if (step.status === 'CHECKPOINT') { color = 'bg-purple-500'; title = `Step ${stepNum}: ${stepNames[i]} (checkpoint)`; }
         }
         return <span key={stepNum} className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} title={title} />;
       })}
@@ -109,7 +115,7 @@ function JobQueueTable() {
 
   // Auto-refresh every 5s if any active jobs
   useEffect(() => {
-    const hasActive = jobs.some(j => j.status === 'RUNNING' || j.status === 'PENDING');
+    const hasActive = jobs.some(j => j.status === 'RUNNING' || j.status === 'PENDING' || j.status === 'CHECKPOINT');
     if (hasActive) {
       pollRef.current = setInterval(fetchJobs, 5000);
     } else if (pollRef.current) {
@@ -291,6 +297,16 @@ function JobStatusIndicator({ job, onCancel, onClick }: { job: VideoJob; onCance
         </span>
         {isQueued ? 'Queued...' : `${step}${pct}`}
         <button onClick={(e) => { e.stopPropagation(); onCancel(); }} className="ml-1 text-gray-400 hover:text-red-500 text-xs">&times;</button>
+      </span>
+    );
+  }
+  if (job.status === 'CHECKPOINT') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-purple-600 cursor-pointer hover:opacity-80" onClick={onClick}>
+        <span className="relative flex h-2 w-2">
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+        </span>
+        Images Ready
       </span>
     );
   }
@@ -630,6 +646,8 @@ export default function AdminVideoConcepts() {
 
   // Storyboard review
   const [reviewSlug, setReviewSlug] = useState<string | null>(null);
+  const [reviewMode, setReviewMode] = useState<'review' | 'checkpoint'>('review');
+  const [reviewTier, setReviewTier] = useState<string>('nano');
 
   const fetchConcepts = useCallback(async () => {
     setLoading(true);
@@ -649,7 +667,7 @@ export default function AdminVideoConcepts() {
   // Poll active jobs every 3s
   useEffect(() => {
     const jobIds = Object.values(activeJobs)
-      .filter(j => j.status === 'PENDING' || j.status === 'RUNNING')
+      .filter(j => j.status === 'PENDING' || j.status === 'RUNNING' || j.status === 'CHECKPOINT')
       .map(j => j.id);
 
     if (jobIds.length === 0) {
@@ -668,7 +686,7 @@ export default function AdminVideoConcepts() {
         try {
           const job = await api.getVideoJob(jobId);
           updates[job.conceptSlug] = job;
-          if (job.status === 'COMPLETED') {
+          if (job.status === 'COMPLETED' || job.status === 'CHECKPOINT') {
             anyCompleted = true;
           }
         } catch {
@@ -814,6 +832,24 @@ export default function AdminVideoConcepts() {
     }
   };
 
+  const handleContinue = async (slug: string) => {
+    try {
+      const res = await api.continueVideoConcept(slug);
+      toast.success('Production resumed');
+      const job = await api.getVideoJob(res.jobId);
+      setActiveJobs(prev => ({ ...prev, [slug]: job }));
+      await fetchConcepts();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const openCheckpointReview = (slug: string, tier: string) => {
+    setReviewSlug(slug);
+    setReviewMode('checkpoint');
+    setReviewTier(tier);
+  };
+
   const handleCancelJob = async (slug: string) => {
     const job = activeJobs[slug];
     if (!job) return;
@@ -899,6 +935,7 @@ export default function AdminVideoConcepts() {
                       const badge = STATUS_BADGES[c.status] || STATUS_BADGES.new;
                       const activeJob = activeJobs[c.slug];
                       const hasActiveJob = activeJob && (activeJob.status === 'PENDING' || activeJob.status === 'RUNNING');
+                      const isCheckpoint = activeJob && activeJob.status === 'CHECKPOINT';
                       const toggleLogs = () => setExpandedJob(prev => prev === c.slug ? null : c.slug);
                       return (
                         <React.Fragment key={c.slug}>
@@ -922,16 +959,27 @@ export default function AdminVideoConcepts() {
                                   {activeJob?.status === 'COMPLETED' && (
                                     <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
                                   )}
+                                  {isCheckpoint && (
+                                    <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
+                                  )}
                                   <button onClick={() => openView(c)} className="text-blue-600 hover:text-blue-800 text-sm">View</button>
                                   <button onClick={() => openEdit(c)} className="text-gray-600 hover:text-gray-800 text-sm">Edit</button>
                                   {c.status === 'new' && (
                                     <button onClick={() => handlePreview(c.slug)} className="text-indigo-600 hover:text-indigo-800 text-sm">Preview</button>
                                   )}
                                   {c.status === 'nano_done' && (
-                                    <button onClick={() => setReviewSlug(c.slug)} className="text-yellow-600 hover:text-yellow-800 text-sm font-medium">Review</button>
+                                    <button onClick={() => { setReviewSlug(c.slug); setReviewMode('review'); setReviewTier('nano'); }} className="text-yellow-600 hover:text-yellow-800 text-sm font-medium">Review</button>
                                   )}
                                   {c.status === 'approved' && (
                                     <button onClick={() => handleProduce(c.slug)} className="text-green-600 hover:text-green-800 text-sm">Produce</button>
+                                  )}
+                                  {(c.status === 'draft_images_ready' || c.status === 'final_images_ready') && (
+                                    <button
+                                      onClick={() => openCheckpointReview(c.slug, c.status.replace('_images_ready', ''))}
+                                      className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                                    >
+                                      Review Images
+                                    </button>
                                   )}
                                   {deleteConfirm === c.slug ? (
                                     <span className="flex items-center gap-1">
@@ -973,10 +1021,12 @@ export default function AdminVideoConcepts() {
       {reviewSlug && (
         <StoryboardViewer
           slug={reviewSlug}
-          tier="nano"
+          tier={reviewTier}
+          mode={reviewMode}
           onClose={() => setReviewSlug(null)}
           onApprove={handleStoryboardApprove}
           onReject={handleStoryboardReject}
+          onContinue={handleContinue}
         />
       )}
 

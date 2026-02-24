@@ -636,7 +636,8 @@ export interface VideoScriptData {
 }
 
 // ===== Video Concepts =====
-export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done';
+export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done'
+  | 'draft_images_ready' | 'final_images_ready' | 'draft_in_production' | 'final_in_production';
 
 export interface VideoConcept {
   slug: string;
@@ -650,7 +651,7 @@ export interface VideoConcept {
 }
 
 export type VideoJobType = 'PREVIEW' | 'PRODUCE';
-export type VideoJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type VideoJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'CHECKPOINT';
 
 export interface VideoJob {
   id: string;

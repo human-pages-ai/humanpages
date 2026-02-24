@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
+import { execFile } from 'child_process';
 import { jwtOrApiKey, requireAdmin } from '../middleware/adminAuth.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
@@ -15,6 +16,28 @@ const VIDEO_PIPELINE_DIR = process.env.VIDEO_PIPELINE_DIR
 const CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'concepts');
 const STATUS_FILE = path.join(CONCEPTS_DIR, 'status.json');
 const DATA_CONCEPTS_DIR = path.join(VIDEO_PIPELINE_DIR, 'data', 'concepts');
+
+// ─── Pricing — synced with video-pipeline/schemas/pipeline.py ───
+const PRICING = {
+  images: {
+    flux_schnell: 0.003,       // $/image (fixed)
+    flux_pro_per_mp: 0.04,     // $/megapixel
+  },
+  video: {
+    kling: 0.07,               // $/second
+    hailuo_512p: 0.017,        // $/second
+    runway: 0.05,              // $/second
+  },
+} as const;
+
+const TIER_PROVIDERS = {
+  nano:  { image: 'flux_schnell', hookVideo: null, fillVideo: null },
+  draft: { image: 'flux_schnell', hookVideo: 'kling', fillVideo: 'hailuo_512p' },
+  final: { image: 'flux_pro',     hookVideo: 'kling', fillVideo: 'kling' },
+} as const;
+
+// In-memory set to prevent concurrent regen on same scene
+const regenInProgress = new Set<string>();
 
 // ─── Auth: jwtOrApiKey, then require admin for JWT users ───
 router.use(jwtOrApiKey);
@@ -163,7 +186,7 @@ router.post('/job/:jobId/cancel', async (req, res) => {
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
-    if (job.status !== 'PENDING' && job.status !== 'RUNNING') {
+    if (!['PENDING', 'RUNNING', 'CHECKPOINT'].includes(job.status)) {
       return res.status(400).json({ error: `Cannot cancel job with status ${job.status}` });
     }
     const now = new Date();
@@ -488,7 +511,7 @@ router.post('/:slug/approve', async (req, res) => {
   }
 });
 
-// POST /:slug/produce — Queue a production job (parent + step 1)
+// POST /:slug/produce — Queue a production job (reuses nano script if available)
 router.post('/:slug/produce', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -503,13 +526,13 @@ router.post('/:slug/produce', async (req, res) => {
 
     const tier = status[slug].approved_tier || 'draft';
 
-    // Check for existing PENDING/RUNNING produce parent job
+    // Check for existing PENDING/RUNNING/CHECKPOINT produce parent job
     const existing = await prisma.videoJob.findFirst({
       where: {
         conceptSlug: slug,
         jobType: 'PRODUCE',
         parentJobId: null,
-        status: { in: ['PENDING', 'RUNNING'] },
+        status: { in: ['PENDING', 'RUNNING', 'CHECKPOINT'] },
       },
     });
     if (existing) {
@@ -519,7 +542,25 @@ router.post('/:slug/produce', async (req, res) => {
       });
     }
 
-    // Create parent job (RUNNING) + step 1 (PENDING)
+    // Try to reuse nano script
+    const nanoScriptPath = path.join(DATA_CONCEPTS_DIR, slug, 'nano', 'script.json');
+    let startStep = 1;
+    let startStepName = 'script';
+
+    try {
+      await fs.access(nanoScriptPath);
+      // Copy nano script to production tier dir
+      const tierDir = path.join(DATA_CONCEPTS_DIR, slug, tier);
+      await fs.mkdir(tierDir, { recursive: true });
+      await fs.copyFile(nanoScriptPath, path.join(tierDir, 'script.json'));
+      startStep = 2;
+      startStepName = 'images';
+      logger.info({ slug, tier }, 'Reusing nano script for production');
+    } catch {
+      // No nano script — start from step 1
+    }
+
+    // Create parent job (RUNNING) + first step (PENDING)
     const parent = await prisma.videoJob.create({
       data: {
         conceptSlug: slug,
@@ -536,13 +577,13 @@ router.post('/:slug/produce', async (req, res) => {
         conceptSlug: slug,
         jobType: 'PRODUCE',
         tier,
-        stepNumber: 1,
-        stepName: 'script',
+        stepNumber: startStep,
+        stepName: startStepName,
         parentJobId: parent.id,
       },
     });
 
-    logger.info({ slug, jobId: parent.id, tier }, 'Video concept produce job queued');
+    logger.info({ slug, jobId: parent.id, tier, startStep }, 'Video concept produce job queued');
     res.json({ message: `Production queued for '${slug}'`, jobId: parent.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept produce error');
@@ -677,6 +718,231 @@ router.post('/:slug/reject', async (req, res) => {
     res.json({ slug, status: 'new' });
   } catch (error) {
     logger.error({ err: error }, 'Video concept reject error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /:slug/continue — Resume production from CHECKPOINT
+router.post('/:slug/continue', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!isValidSlug(slug)) {
+      return res.status(400).json({ error: 'Invalid slug' });
+    }
+
+    // Find the CHECKPOINT parent job for this slug
+    const parentJob = await prisma.videoJob.findFirst({
+      where: {
+        conceptSlug: slug,
+        parentJobId: null,
+        status: 'CHECKPOINT',
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { stepJobs: true },
+    });
+
+    if (!parentJob) {
+      return res.status(404).json({ error: 'No checkpoint job found' });
+    }
+
+    // Guard: reject if any step is currently RUNNING
+    const runningStep = parentJob.stepJobs?.find(s => s.status === 'RUNNING');
+    if (runningStep) {
+      return res.status(409).json({ error: 'A step is already running', stepNumber: runningStep.stepNumber });
+    }
+
+    const tier = parentJob.tier;
+    const stepNames: Record<number, string> = { 1: 'script', 2: 'images', 3: 'animate', 4: 'voiceover', 5: 'compose' };
+
+    // Derive next step from last COMPLETED step
+    const completedSteps = (parentJob.stepJobs || [])
+      .filter(s => s.status === 'COMPLETED')
+      .sort((a, b) => (b.stepNumber || 0) - (a.stepNumber || 0));
+    const lastCompletedStep = completedSteps[0]?.stepNumber || 2;
+    const nextStep = lastCompletedStep + 1;
+
+    if (nextStep > 5) {
+      return res.status(400).json({ error: 'No more steps to run' });
+    }
+
+    // Create next step job under same parent
+    await prisma.videoJob.create({
+      data: {
+        conceptSlug: slug,
+        jobType: parentJob.jobType,
+        tier,
+        stepNumber: nextStep,
+        stepName: stepNames[nextStep],
+        parentJobId: parentJob.id,
+      },
+    });
+
+    // Set parent back to RUNNING
+    const stepPct: Record<number, number> = { 3: 40, 4: 60, 5: 80 };
+    await prisma.videoJob.update({
+      where: { id: parentJob.id },
+      data: {
+        status: 'RUNNING',
+        pipelineStep: `step ${nextStep}: ${stepNames[nextStep]}`,
+        progressPct: stepPct[nextStep] || 40,
+      },
+    });
+
+    // Update concept status
+    const status = await loadStatus();
+    if (status[slug]) {
+      status[slug].status = `${tier}_in_production`;
+      await saveStatus(status);
+    }
+
+    res.json({ message: `Resumed production for '${slug}'`, jobId: parentJob.id });
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept continue error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /:slug/regenerate-image/:tier/:sceneNum — Regenerate one scene image
+router.post('/:slug/regenerate-image/:tier/:sceneNum', async (req, res) => {
+  const { slug, tier, sceneNum } = req.params;
+  if (!isValidSlug(slug)) return res.status(400).json({ error: 'Invalid slug' });
+  if (!['nano', 'draft', 'final'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
+  const num = parseInt(sceneNum, 10);
+  if (isNaN(num) || num < 1 || num > 20) return res.status(400).json({ error: 'Invalid scene number' });
+
+  const lockKey = `${slug}:${tier}:${num}`;
+  if (regenInProgress.has(lockKey)) {
+    return res.status(409).json({ error: 'Regeneration already in progress for this scene' });
+  }
+
+  const scriptPath = path.join(DATA_CONCEPTS_DIR, slug, tier, 'script.json');
+  try { await fs.access(scriptPath); } catch {
+    return res.status(404).json({ error: 'Script not found for this tier' });
+  }
+
+  // Delete existing image so step2 regenerates it
+  const imagePath = path.join(DATA_CONCEPTS_DIR, slug, tier, 'images', `scene_${String(num).padStart(2, '0')}.png`);
+  try { await fs.unlink(imagePath); } catch { /* may not exist */ }
+
+  regenInProgress.add(lockKey);
+  const pythonScript = path.join(VIDEO_PIPELINE_DIR, 'regenerate_scene.py');
+  const venvPython = path.join(VIDEO_PIPELINE_DIR, 'venv', 'bin', 'python3');
+
+  execFile(venvPython, [pythonScript, slug, tier, String(num)], {
+    cwd: VIDEO_PIPELINE_DIR,
+    timeout: 120000,
+    env: { ...process.env, PYTHONPATH: VIDEO_PIPELINE_DIR },
+  }, (error, stdout, stderr) => {
+    regenInProgress.delete(lockKey);
+    if (error) {
+      logger.error({ slug, tier, sceneNum: num, error: stderr }, 'Regenerate image failed');
+      return res.status(500).json({ error: 'Image regeneration failed', detail: stderr.slice(-500) });
+    }
+    try {
+      const result = JSON.parse(stdout);
+      if (result.error) {
+        return res.status(400).json({ error: result.error });
+      }
+      res.json({ success: true, scene: num });
+    } catch {
+      res.json({ success: true, scene: num });
+    }
+  });
+});
+
+// GET /:slug/cost-estimate/:tier — Estimate production cost
+router.get('/:slug/cost-estimate/:tier', async (req, res) => {
+  try {
+    const { slug, tier } = req.params;
+    if (!['nano', 'draft', 'final'].includes(tier)) {
+      return res.status(400).json({ error: 'Invalid tier' });
+    }
+    const providers = TIER_PROVIDERS[tier as keyof typeof TIER_PROVIDERS];
+
+    // Read script.json (try production tier first, then nano)
+    let numScenes = 0, totalDuration = 0;
+    let scriptFound = false;
+    for (const t of [tier, 'nano']) {
+      try {
+        const scriptPath = path.join(DATA_CONCEPTS_DIR, slug, t, 'script.json');
+        const script = JSON.parse(await fs.readFile(scriptPath, 'utf8'));
+        numScenes = script.scenes?.length || 8;
+        totalDuration = script.total_duration_seconds || 40;
+        scriptFound = true;
+        break;
+      } catch { /* try next */ }
+    }
+    if (!scriptFound) {
+      return res.status(404).json({ error: 'No script found — run a preview first' });
+    }
+
+    const avgClipSec = totalDuration / numScenes;
+
+    // Image cost
+    let imageCost = 0;
+    if (providers.image === 'flux_schnell') {
+      imageCost = numScenes * PRICING.images.flux_schnell;
+    } else {
+      imageCost = numScenes * Math.ceil(1080 * 1920 / 1e6) * PRICING.images.flux_pro_per_mp;
+    }
+
+    // Video cost
+    let videoCost = 0;
+    if (providers.hookVideo && providers.fillVideo) {
+      const hookRate = PRICING.video[providers.hookVideo as keyof typeof PRICING.video] || 0;
+      const fillRate = PRICING.video[providers.fillVideo as keyof typeof PRICING.video] || 0;
+      videoCost = avgClipSec * hookRate + (numScenes - 1) * avgClipSec * fillRate;
+    }
+
+    const total = imageCost + videoCost;
+    res.json({
+      tier,
+      numScenes,
+      totalDuration,
+      breakdown: { images: +imageCost.toFixed(3), video: +videoCost.toFixed(2), voiceover: 0 },
+      total: +total.toFixed(2),
+      totalWithRetries: +(total * 1.5).toFixed(2),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept cost estimate error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /:slug/script/:tier — Save edited script
+router.put('/:slug/script/:tier', async (req, res) => {
+  try {
+    const { slug, tier } = req.params;
+    if (!isValidSlug(slug)) return res.status(400).json({ error: 'Invalid slug' });
+    if (!['nano', 'draft', 'final'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
+
+    const script = req.body;
+    if (!script || !script.title || !script.scenes || !Array.isArray(script.scenes) || script.scenes.length === 0) {
+      return res.status(400).json({ error: 'Invalid script: must have title and at least one scene' });
+    }
+    for (const scene of script.scenes) {
+      if (typeof scene.scene_number !== 'number' || typeof scene.duration_seconds !== 'number') {
+        return res.status(400).json({ error: 'Invalid scene: missing scene_number or duration_seconds' });
+      }
+    }
+
+    const tierDir = path.join(DATA_CONCEPTS_DIR, slug, tier);
+    const scriptPath = path.join(tierDir, 'script.json');
+
+    await fs.mkdir(tierDir, { recursive: true });
+
+    // Backup existing script before overwriting
+    try {
+      await fs.access(scriptPath);
+      const backupPath = path.join(tierDir, `script.${Date.now()}.bak.json`);
+      await fs.copyFile(scriptPath, backupPath);
+    } catch { /* no existing script to back up */ }
+
+    await fs.writeFile(scriptPath, JSON.stringify(script, null, 2));
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept save script error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
