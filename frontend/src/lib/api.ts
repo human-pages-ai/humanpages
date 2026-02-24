@@ -828,8 +828,20 @@ export const api = {
   approvePhotoConcept: (slug: string) =>
     request<{ slug: string; status: string }>(`/admin/photo-concepts/${slug}/approve`, { method: 'POST' }),
 
-  renderPhotoConcept: (slug: string) =>
-    request<{ message: string; pid: number }>(`/admin/photo-concepts/${slug}/render`, { method: 'POST' }),
+  renderPhotoConcept: (slug: string, tier: string = 'final') =>
+    request<{ message: string; pid: number; slug: string }>(`/admin/photo-concepts/${slug}/render`, {
+      method: 'POST',
+      body: JSON.stringify({ tier }),
+    }),
+
+  rejectPhotoConcept: (slug: string) =>
+    request<{ slug: string; status: string }>(`/admin/photo-concepts/${slug}/reject`, { method: 'POST' }),
+
+  assessPhotoConcept: (slug: string) =>
+    request<{ slug: string; score: number; verdict: string }>(`/admin/photo-concepts/${slug}/assess`, { method: 'POST' }),
+
+  assessAllPhotoConcepts: () =>
+    request<{ message: string; total: number }>('/admin/photo-concepts/assess-all', { method: 'POST' }),
 
   generatePhotoBatch: (count: number = 10) =>
     request<{ message: string; pid: number }>('/admin/photo-concepts/generate-batch', {

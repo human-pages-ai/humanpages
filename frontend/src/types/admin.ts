@@ -649,6 +649,8 @@ export interface PhotoConcept {
   fontStyle?: string;
   accentColor?: string;
   needsImage?: boolean;
+  assessmentScore?: number | null;
+  assessmentVerdict?: string | null;
   createdAt: string;
 }
 

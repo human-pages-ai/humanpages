@@ -1,8 +1,7 @@
-'use client';
-
 import { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
+import type { CareerApplication, CareerApplicationStats } from '../../types/admin';
 import {
   MagnifyingGlassIcon,
   CheckIcon,
@@ -13,40 +12,6 @@ import {
   LinkIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-
-interface CareerApplication {
-  id: string;
-  positionId: string;
-  positionTitle: string;
-  about: string;
-  portfolioUrl: string | null;
-  availability: string;
-  status: 'PENDING' | 'REVIEWED' | 'CONTACTED' | 'REJECTED' | 'HIRED';
-  adminNotes: string | null;
-  createdAt: string;
-  updatedAt: string;
-  human: {
-    id: string;
-    name: string;
-    email: string;
-    location: string | null;
-    username: string | null;
-    bio?: string | null;
-    skills?: string[];
-    linkedinUrl?: string | null;
-    githubUrl?: string | null;
-    websiteUrl?: string | null;
-    linkedinVerified?: boolean;
-    githubVerified?: boolean;
-  };
-}
-
-interface CareerApplicationStats {
-  total: number;
-  pending: number;
-  byStatus: Record<string, number>;
-  byPosition: Record<string, number>;
-}
 
 interface PaginationData {
   page: number;
