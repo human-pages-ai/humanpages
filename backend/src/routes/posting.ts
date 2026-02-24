@@ -43,7 +43,7 @@ router.get('/extension/download', jwtOrApiKey, requireStaffOrApiKey, (_req, res)
   }
 });
 
-const VALID_TASK_TYPES = ['fb_post', 'yt_comment', 'blog_comment'] as const;
+const VALID_TASK_TYPES = ['fb_post', 'yt_comment', 'yt_reply', 'blog_comment'] as const;
 
 // ─── CLI routes (API-key authenticated) ───
 
