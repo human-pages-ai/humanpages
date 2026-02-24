@@ -19,7 +19,7 @@
  *   node scripts/inject-all-secrets.mjs --dry-run         # show what would be written
  */
 
-import { writeFileSync, existsSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
@@ -164,15 +164,40 @@ async function main() {
 
     const envPath = join(config.dir, '.env');
 
+    // Merge: preserve existing keys that this script doesn't manage
+    const managedKeys = new Set(lines.map(l => l.split('=')[0]));
+    let preservedLines = [];
+    if (existsSync(envPath)) {
+      const existing = readFileSync(envPath, 'utf-8').split('\n');
+      for (const line of existing) {
+        if (!line.trim() || line.startsWith('#')) continue;
+        const key = line.split('=')[0];
+        if (!managedKeys.has(key)) {
+          preservedLines.push(line);
+        }
+      }
+    }
+
+    const finalLines = [...lines, ...preservedLines];
+
     if (dryRun) {
       console.log(`  Would write ${lines.length} secret(s) to ${envPath}:`);
       for (const line of lines) {
         const [key] = line.split('=');
         console.log(`    ${key}=***`);
       }
+      if (preservedLines.length) {
+        console.log(`  Would preserve ${preservedLines.length} existing key(s):`);
+        for (const line of preservedLines) {
+          console.log(`    ${line.split('=')[0]}=***`);
+        }
+      }
     } else {
-      writeFileSync(envPath, lines.join('\n') + '\n', { mode: 0o600 });
+      writeFileSync(envPath, finalLines.join('\n') + '\n', { mode: 0o600 });
       console.log(`  Wrote ${lines.length} secret(s) to ${envPath} (mode 600)`);
+      if (preservedLines.length) {
+        console.log(`  Preserved ${preservedLines.length} existing key(s): ${preservedLines.map(l => l.split('=')[0]).join(', ')}`);
+      }
     }
 
     totalWritten++;
