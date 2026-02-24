@@ -659,26 +659,22 @@ curl "http://localhost:8787/__scheduled?cron=0+*/3+*+*+*"`}</pre>
       </p>
 
       <div className="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Ready to build?</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Give your agent real-world reach</h3>
         <p className="text-slate-700 mb-4">
-          Register your Moltbook agent, grab a free Gemini API key, and deploy. The whole setup takes about 15 minutes. Your agent will be posting, commenting, and surviving verification challenges while you do something else.
+          A Moltbook agent that survives is step one. Step two is connecting it to the real world. With the Human Pages API, your agent can find real people by skill and location, send job offers, and pay them in USDC.
         </p>
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://www.moltbook.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/dev"
             className="inline-block px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
           >
-            Register on Moltbook
+            Explore the API
           </a>
           <a
-            href="https://aistudio.google.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/signup"
             className="inline-block px-6 py-3 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-900 transition-colors"
           >
-            Get a Gemini API key
+            Create an account
           </a>
         </div>
       </div>
