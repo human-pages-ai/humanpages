@@ -11,6 +11,7 @@ const CAP_META: Record<StaffCapability, { label: string; description: string; li
   ANALYST: { label: 'Analytics', description: 'Review performance metrics', link: '#', color: 'purple' },
   CREATIVE: { label: 'Creative', description: 'Create ad copy and visuals', link: '/admin/ad-copy', color: 'pink' },
   GROUP_MANAGER: { label: 'Group Management', description: 'Manage posting groups', link: '/admin/posting', color: 'orange' },
+  LEAD_GEN: { label: 'Lead Generation', description: 'Manage influencer leads and outreach', link: '/admin/leads', color: 'teal' },
 };
 
 const COLOR_MAP: Record<string, { bg: string; badge: string; text: string; border: string }> = {

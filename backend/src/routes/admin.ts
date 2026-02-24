@@ -15,6 +15,7 @@ import careerAdminRoutes from './careerAdmin.js';
 import videoRoutes from './videos.js';
 import scheduleRoutes from './schedule.js';
 import productivityRoutes from './productivity.js';
+import leadRoutes from './leads.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 
 const router = Router();
@@ -100,6 +101,9 @@ router.use('/videos', videoRoutes);
 
 // ─── Publication schedule routes (API key + admin) ───
 router.use('/schedule', scheduleRoutes);
+
+// ─── Lead generation routes (API key + LEAD_GEN capability + admin) ───
+router.use('/leads', leadRoutes);
 
 // ─── Posting queue routes (staff + admin) ───
 router.use('/posting', postingRoutes);

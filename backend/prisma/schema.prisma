@@ -100,6 +100,31 @@ enum ReportStatus {
   DISMISSED
 }
 
+// Lead status lifecycle
+enum LeadStatus {
+  NEW
+  VERIFIED
+  OUTREACH_READY
+  CONTACTED
+  REPLIED
+  ENGAGED
+  CONVERTED
+  REJECTED
+  STALE
+  BLOCKED
+}
+
+// How the lead was discovered
+enum LeadSource {
+  MANUAL
+  CSV_IMPORT
+  PODCAST_MINE
+  CONFERENCE
+  PUBLICATION
+  CATEGORY_SCAN
+  REFERRAL
+}
+
 // Idle alert lifecycle
 enum IdleAlertStatus {
   ACTIVE
@@ -259,6 +284,7 @@ model Human {
   scheduleCompleted PublicationSchedule[] @relation("ScheduleCompleted")
   staffActivities   StaffActivity[]
   idleAlerts        IdleAlert[]
+  assignedLeads     InfluencerLead[] @relation("LeadAssignment")
 
   // Indexes for fast agent search
   @@index([skills])
@@ -1299,4 +1325,69 @@ model IdleAlert {
   @@index([status])
   @@index([humanId, status])
   @@index([createdAt])
+}
+
+model InfluencerLead {
+  id             String     @id @default(cuid())
+
+  // Core info
+  name           String
+  platforms      String[]   @default([])
+  handle         String?
+  followers      String?
+  email          String?
+  phone          String?
+  contactUrl     String?
+  focusAreas     String?
+  whyRelevant    String?
+  notes          String?
+
+  // Classification
+  list           String     // e.g. "ai-agents-futureofwork", "hr", "tech"
+  country        String?
+  language       String?
+
+  // Deduplication
+  dedupeKey      String     @unique
+
+  // Source tracking
+  source         LeadSource @default(CSV_IMPORT)
+  sourceDetail   String?
+  sourceUrl      String?
+
+  // Status
+  status         LeadStatus @default(NEW)
+
+  // Outreach
+  outreachMessage  String?
+  outreachSentAt   DateTime?
+  outreachChannel  String?
+  lastContactAt    DateTime?
+  responseNotes    String?
+
+  // Activity monitoring
+  lastActivityAt      DateTime?
+  lastActivityUrl     String?
+  activityCheckedAt   DateTime?
+
+  // Pipeline metadata
+  pipelinePhase    String?
+  pipelineRunId    String?
+  competitorCleared Boolean @default(false)
+
+  // Admin
+  assignedToId   String?
+  assignedTo     Human?   @relation("LeadAssignment", fields: [assignedToId], references: [id])
+  adminNotes     String?
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([list])
+  @@index([source])
+  @@index([assignedToId])
+  @@index([createdAt])
+  @@index([list, status])
 }

@@ -325,6 +325,7 @@ export const STAFF_CAPABILITIES = [
   'ANALYST',
   'CREATIVE',
   'GROUP_MANAGER',
+  'LEAD_GEN',
 ] as const;
 
 export type StaffCapability = (typeof STAFF_CAPABILITIES)[number];
@@ -786,6 +787,56 @@ export interface ProductivityDashboardData {
   activityFeed: StaffActivityEvent[];
   idleAlerts: IdleAlertEntry[];
   config: { idleThresholdMinutes: number };
+}
+
+// ===== Lead Generation =====
+export type LeadStatus = 'NEW' | 'VERIFIED' | 'OUTREACH_READY' | 'CONTACTED' | 'REPLIED' | 'ENGAGED' | 'CONVERTED' | 'REJECTED' | 'STALE' | 'BLOCKED';
+export type LeadSource = 'MANUAL' | 'CSV_IMPORT' | 'PODCAST_MINE' | 'CONFERENCE' | 'PUBLICATION' | 'CATEGORY_SCAN' | 'REFERRAL';
+
+export interface InfluencerLead {
+  id: string;
+  name: string;
+  platforms: string[];
+  handle: string | null;
+  followers: string | null;
+  email: string | null;
+  phone: string | null;
+  contactUrl: string | null;
+  focusAreas: string | null;
+  whyRelevant: string | null;
+  notes: string | null;
+  list: string;
+  country: string | null;
+  language: string | null;
+  dedupeKey: string;
+  source: LeadSource;
+  sourceDetail: string | null;
+  sourceUrl: string | null;
+  status: LeadStatus;
+  outreachMessage: string | null;
+  outreachSentAt: string | null;
+  outreachChannel: string | null;
+  lastContactAt: string | null;
+  responseNotes: string | null;
+  lastActivityAt: string | null;
+  lastActivityUrl: string | null;
+  activityCheckedAt: string | null;
+  pipelinePhase: string | null;
+  pipelineRunId: string | null;
+  competitorCleared: boolean;
+  assignedToId: string | null;
+  assignedTo: { id: string; name: string } | null;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeadStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byList: Record<string, number>;
+  bySource: Record<string, number>;
+  recentlyAdded: number;
 }
 
 export interface StaffBalance {

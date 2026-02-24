@@ -64,6 +64,17 @@ deactivate
 echo "Photo pipeline dependencies installed"
 
 echo ""
+echo "=== Deploying Lead Gen Pipeline ==="
+if [ -d /opt/lead-gen-pipeline ]; then
+  cd /opt/lead-gen-pipeline
+  git pull
+  npm install --no-fund --no-audit
+  echo "Lead gen pipeline dependencies installed"
+else
+  echo "SKIP: /opt/lead-gen-pipeline not found"
+fi
+
+echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"

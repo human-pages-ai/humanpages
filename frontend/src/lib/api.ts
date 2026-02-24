@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -975,6 +975,48 @@ export const api = {
     if (params.humanId) query.set('humanId', params.humanId);
     const qs = query.toString();
     return request<{ activities: StaffActivityEvent[]; pagination: Pagination }>(`/admin/productivity/activity${qs ? `?${qs}` : ''}`);
+  },
+
+  // ─── Lead Generation ───
+  getLeadStats: () => request<LeadStats>('/admin/leads/stats'),
+
+  getLeads: (params: { page?: number; limit?: number; search?: string; status?: string; list?: string; source?: string; assignedTo?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.status) query.set('status', params.status);
+    if (params.list) query.set('list', params.list);
+    if (params.source) query.set('source', params.source);
+    if (params.assignedTo) query.set('assignedTo', params.assignedTo);
+    const qs = query.toString();
+    return request<{ leads: InfluencerLead[]; pagination: Pagination }>(`/admin/leads${qs ? `?${qs}` : ''}`);
+  },
+
+  getLead: (id: string) => request<InfluencerLead>(`/admin/leads/${id}`),
+
+  createLead: (data: Record<string, unknown>) => request<InfluencerLead>('/admin/leads', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateLead: (id: string, data: Record<string, unknown>) => request<InfluencerLead>(`/admin/leads/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  updateLeadStatus: (id: string, status: string) => request<InfluencerLead>(`/admin/leads/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  assignLead: (id: string, assignedToId: string | null) => request<InfluencerLead>(`/admin/leads/${id}/assign`, { method: 'PATCH', body: JSON.stringify({ assignedToId }) }),
+
+  deleteLead: (id: string) => request<{ deleted: boolean }>(`/admin/leads/${id}`, { method: 'DELETE' }),
+
+  exportLeads: (params: { list?: string; status?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.list) query.set('list', params.list);
+    if (params.status) query.set('status', params.status);
+    const qs = query.toString();
+    const token = getToken();
+    return fetch(`${API_BASE}/admin/leads/export${qs ? `?${qs}` : ''}`, {
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+    }).then(res => {
+      if (!res.ok) throw new Error('Export failed');
+      return res.blob();
+    });
   },
 };
 
