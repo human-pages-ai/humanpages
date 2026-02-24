@@ -147,10 +147,11 @@ ${item.blogBody}
 
 Requirements:
 - 800-1200 words, markdown format
-- Bold specific opening line that hooks immediately
+- Specific opening line that hooks immediately (no bold/italic formatting on the opener)
 - Subheadings (##) every 200-300 words
 - At least one concrete Human Pages scenario
 - End with a thought-provoking conclusion, not a sales pitch
+- Never start a paragraph with bold text. Use bold sparingly and only mid-sentence for emphasis.
 
 ${HUMANIZER_RULES}
 
