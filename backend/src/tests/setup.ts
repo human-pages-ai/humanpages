@@ -6,8 +6,13 @@ import { prisma } from '../lib/prisma.js';
 const dbName = process.env.TEST_DB_NAME!;
 const adminUrl = 'postgresql://humans:humans_secret@localhost:5432/postgres';
 
-// Create an ephemeral database for this test run, push schema, tear down after
+// Track whether the DB has been created in this worker process.
+// setupFiles hooks run per test file, but we only need to create the DB once.
+let dbReady = false;
+
 beforeAll(async () => {
+  if (dbReady) return;
+
   const client = new Client({ connectionString: adminUrl });
   await client.connect();
   try {
@@ -24,7 +29,12 @@ beforeAll(async () => {
       await client.query(`DROP DATABASE IF EXISTS "${row.datname}"`).catch(() => {});
     }
 
-    // Create the ephemeral database for this run
+    // Terminate any lingering connections, then create fresh DB
+    await client.query(`
+      SELECT pg_terminate_backend(pid)
+      FROM pg_stat_activity
+      WHERE datname = $1 AND pid <> pg_backend_pid()
+    `, [dbName]);
     await client.query(`DROP DATABASE IF EXISTS "${dbName}"`);
     await client.query(`CREATE DATABASE "${dbName}"`);
   } finally {
@@ -41,25 +51,15 @@ beforeAll(async () => {
     console.error('Failed to sync test database:', error);
     throw error;
   }
+
+  dbReady = true;
 });
 
-// Drop ephemeral database after all tests
+// Disconnect Prisma after each file (it reconnects lazily on next use).
+// The DB itself persists across files — data cleanup is handled by
+// cleanDatabase() in each test's beforeEach.
 afterAll(async () => {
   await prisma.$disconnect();
-
-  const client = new Client({ connectionString: adminUrl });
-  await client.connect();
-  try {
-    // Terminate any lingering connections to our DB
-    await client.query(`
-      SELECT pg_terminate_backend(pid)
-      FROM pg_stat_activity
-      WHERE datname = $1 AND pid <> pg_backend_pid()
-    `, [dbName]);
-    await client.query(`DROP DATABASE IF EXISTS "${dbName}"`);
-  } finally {
-    await client.end();
-  }
 });
 
 // Re-export prisma for tests
