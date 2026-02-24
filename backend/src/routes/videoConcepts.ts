@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 import { jwtOrApiKey, requireAdmin } from '../middleware/adminAuth.js';
@@ -340,10 +341,10 @@ router.post('/:slug/preview', async (req, res) => {
     const logDir = path.join(VIDEO_PIPELINE_DIR, 'logs');
     await fs.mkdir(logDir, { recursive: true });
     const logPath = path.join(logDir, `preview-${slug}.log`);
-    const logFh = await fs.open(logPath, 'w');
+    const logFd = fsSync.openSync(logPath, 'w');
     const child = spawn(PYTHON_BIN, ['concept.py', '--preview', slug], {
       cwd: VIDEO_PIPELINE_DIR,
-      stdio: ['ignore', logFh.fd, logFh.fd],
+      stdio: ['ignore', logFd, logFd],
       detached: true,
     });
     child.unref();
@@ -406,10 +407,10 @@ router.post('/:slug/produce', async (req, res) => {
     const logDir = path.join(VIDEO_PIPELINE_DIR, 'logs');
     await fs.mkdir(logDir, { recursive: true });
     const logPath = path.join(logDir, `produce-${slug}.log`);
-    const logFh = await fs.open(logPath, 'w');
+    const logFd = fsSync.openSync(logPath, 'w');
     const child = spawn(PYTHON_BIN, ['concept.py', '--produce'], {
       cwd: VIDEO_PIPELINE_DIR,
-      stdio: ['ignore', logFh.fd, logFh.fd],
+      stdio: ['ignore', logFd, logFd],
       detached: true,
     });
     child.unref();
