@@ -1058,6 +1058,9 @@ model ContentItem {
   manualInstructions String?      @db.Text
   approvedById    String?
   approvedAt      DateTime?
+  rejectionReason String?         @db.Text
+  rejectedById    String?
+  rejectedAt      DateTime?
   schedule        PublicationSchedule[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt

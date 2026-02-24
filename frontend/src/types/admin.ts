@@ -364,6 +364,9 @@ export interface ContentItem {
   manualInstructions: string | null;
   approvedById: string | null;
   approvedAt: string | null;
+  rejectionReason: string | null;
+  rejectedById: string | null;
+  rejectedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

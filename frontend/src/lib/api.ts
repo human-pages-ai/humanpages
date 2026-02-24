@@ -742,8 +742,11 @@ export const api = {
   approveContent: (id: string) =>
     request<ContentItem>(`/admin/content/${id}/approve`, { method: 'PATCH' }),
 
-  rejectContent: (id: string) =>
-    request<ContentItem>(`/admin/content/${id}/reject`, { method: 'PATCH' }),
+  rejectContent: (id: string, reason: string) =>
+    request<ContentItem>(`/admin/content/${id}/reject`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reason }),
+    }),
 
   publishContent: (id: string) =>
     request<ContentItem>(`/admin/content/${id}/publish`, { method: 'POST' }),

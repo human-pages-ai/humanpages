@@ -23,12 +23,22 @@ const PLATFORM_COLORS: Record<ContentPlatform, string> = {
   BLOG: 'bg-emerald-100 text-emerald-700',
 };
 
+const REJECTION_CHIPS = [
+  'Off-brand tone',
+  'Topic not relevant',
+  'Too generic',
+  'Factually inaccurate',
+  'Already covered',
+  'Poor quality',
+];
+
 export default function ContentManager() {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [stats, setStats] = useState<ContentStats | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
@@ -76,12 +86,17 @@ export default function ContentManager() {
     } catch (e: any) { toast.error(e.message); }
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = (id: string) => {
+    setRejectingId(id);
+  };
+
+  const handleRejectConfirm = async (id: string, reason: string) => {
     try {
-      const updated = await api.rejectContent(id);
+      const updated = await api.rejectContent(id, reason);
       toast.success('Content rejected');
       setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
       if (selectedItem?.id === id) setSelectedItem(updated);
+      setRejectingId(null);
       fetchItems();
     } catch (e: any) { toast.error(e.message); }
   };
@@ -250,6 +265,14 @@ export default function ContentManager() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Rejection Reason Modal */}
+      {rejectingId && (
+        <RejectionReasonModal
+          onConfirm={(reason) => handleRejectConfirm(rejectingId, reason)}
+          onCancel={() => setRejectingId(null)}
+        />
       )}
 
       {/* Detail Panel (Modal) */}
@@ -497,6 +520,19 @@ function ContentDetailModal({
             </div>
           )}
 
+          {/* Rejection info */}
+          {item.status === 'REJECTED' && item.rejectionReason && (
+            <div className="bg-red-50 rounded-md p-3">
+              <div className="text-sm font-medium text-red-700">Rejection Reason</div>
+              <div className="text-sm text-red-600 mt-1">{item.rejectionReason}</div>
+              {item.rejectedAt && (
+                <div className="text-xs text-red-400 mt-1">
+                  Rejected {new Date(item.rejectedAt).toLocaleString()}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Manual instructions */}
           {item.manualInstructions && (
             <div className="bg-amber-50 rounded-md p-3">
@@ -544,6 +580,63 @@ function ContentDetailModal({
               Delete
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RejectionReasonModal({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: (reason: string) => void;
+  onCancel: () => void;
+}) {
+  const [reason, setReason] = useState('');
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center" onClick={onCancel}>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Content</h3>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {REJECTION_CHIPS.map((chip) => (
+            <button
+              key={chip}
+              onClick={() => setReason((prev) => prev ? `${prev}. ${chip}` : chip)}
+              className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Why is this being rejected?"
+          className="w-full h-24 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
+          autoFocus
+        />
+
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(reason)}
+            disabled={!reason.trim()}
+            className="px-4 py-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Reject
+          </button>
         </div>
       </div>
     </div>

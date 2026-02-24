@@ -106,6 +106,49 @@ router.post('/ingest', apiKeyAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/content/feedback — pipeline fetches recent rejection feedback (API-key auth)
+router.get('/feedback', apiKeyAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    let since: Date;
+
+    if (req.query.since) {
+      since = new Date(req.query.since as string);
+      if (isNaN(since.getTime())) {
+        return res.status(400).json({ error: 'Invalid "since" date' });
+      }
+    } else {
+      since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
+    }
+
+    const items = await prisma.contentItem.findMany({
+      where: {
+        status: 'REJECTED',
+        rejectionReason: { not: null },
+        rejectedAt: { gte: since },
+      },
+      orderBy: { rejectedAt: 'desc' },
+      take: limit,
+      select: {
+        sourceTitle: true,
+        source: true,
+        platform: true,
+        rejectionReason: true,
+        blogTitle: true,
+        blogSlug: true,
+        tweetDraft: true,
+        linkedinSnippet: true,
+        rejectedAt: true,
+      },
+    });
+
+    res.json({ rejections: items });
+  } catch (error) {
+    logger.error({ err: error }, 'Content feedback error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ─── JWT staff/admin auth (dashboard) ───
 
 router.use(authenticateToken, requireStaffOrAdmin);
@@ -295,18 +338,32 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
   }
 });
 
-// PATCH /api/admin/content/:id/reject — set REJECTED
+// PATCH /api/admin/content/:id/reject — set REJECTED with reason
+const rejectSchema = z.object({
+  reason: z.string().min(1, 'Rejection reason is required'),
+});
+
 router.patch('/:id/reject', async (req: AuthRequest, res) => {
   try {
+    const parsed = rejectSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
     const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Content item not found' });
 
     const updated = await prisma.contentItem.update({
       where: { id: req.params.id },
-      data: { status: 'REJECTED' },
+      data: {
+        status: 'REJECTED',
+        rejectionReason: parsed.data.reason,
+        rejectedById: req.userId || null,
+        rejectedAt: new Date(),
+      },
     });
 
-    logger.info({ contentId: req.params.id, userId: req.userId }, 'Content rejected');
+    logger.info({ contentId: req.params.id, userId: req.userId, reason: parsed.data.reason }, 'Content rejected');
 
     if (req.userId) {
       logStaffActivity({
@@ -314,7 +371,7 @@ router.patch('/:id/reject', async (req: AuthRequest, res) => {
         actionType: 'content_rejected',
         entityType: 'ContentItem',
         entityId: req.params.id,
-        metadata: { platform: item.platform, sourceTitle: item.sourceTitle },
+        metadata: { platform: item.platform, sourceTitle: item.sourceTitle, reason: parsed.data.reason },
       });
     }
 
