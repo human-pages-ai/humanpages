@@ -56,7 +56,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use(pinoHttp({
   logger,
   autoLogging: {
@@ -81,6 +81,7 @@ app.use('/api/agents/photos', agentPhotosRoutes);
 app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/affiliate', affiliateRoutes);
+app.use('/api/admin/content', express.json({ limit: '2mb' }));
 app.use('/api/admin', adminRoutes);
 app.use('/api/blog', blogApiRoutes);
 app.use('/api/feedback', express.json({ limit: '2mb' }), feedbackRoutes);
