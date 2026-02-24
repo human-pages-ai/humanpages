@@ -138,6 +138,7 @@ export default function PostingWorkMode() {
   const [groups, setGroups] = useState<PostingGroup[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [sessionPosted, setSessionPosted] = useState(0);
   const [totalPosted, setTotalPosted] = useState(0);
@@ -177,6 +178,7 @@ export default function PostingWorkMode() {
   // ─── Fetch groups ───
   const fetchGroups = useCallback(async () => {
     setLoading(true);
+    setFetchError('');
     try {
       const params: Record<string, string> = { status: 'PENDING', limit: '100' };
       if (filterTaskType) params.taskType = filterTaskType;
@@ -184,16 +186,10 @@ export default function PostingWorkMode() {
       if (filterCountry) params.country = filterCountry;
       if (filterCampaign) params.campaign = filterCampaign;
 
-      const [pendingRes, postedRes, allRes] = await Promise.all([
-        api.getPostingGroups(params as any),
-        api.getPostingGroups({ status: 'POSTED', limit: 1, taskType: filterTaskType || undefined } as any),
-        api.getPostingGroups({ limit: 1, taskType: filterTaskType || undefined } as any),
-      ]);
-
+      // Primary fetch — must succeed
+      const pendingRes = await api.getPostingGroups(params as any);
       setGroups(pendingRes.groups);
       setCurrentIndex(0);
-      setTotalPosted(postedRes.pagination.total);
-      setTotalGroups(allRes.pagination.total);
 
       // Discover available languages/countries for filter dropdowns
       const langs = new Set<string>();
@@ -204,8 +200,17 @@ export default function PostingWorkMode() {
       }
       setAvailableLanguages([...langs].sort());
       setAvailableCountries([...countries].sort());
-    } catch {
-      // ignore
+
+      // Secondary counts — non-blocking (don't break the page if these fail)
+      Promise.all([
+        api.getPostingGroups({ status: 'POSTED', limit: 1, taskType: filterTaskType || undefined } as any),
+        api.getPostingGroups({ limit: 1, taskType: filterTaskType || undefined } as any),
+      ]).then(([postedRes, allRes]) => {
+        setTotalPosted(postedRes.pagination.total);
+        setTotalGroups(allRes.pagination.total);
+      }).catch(() => {});
+    } catch (err: any) {
+      setFetchError(err?.message || 'Failed to load tasks');
     } finally {
       setLoading(false);
     }
@@ -431,6 +436,17 @@ export default function PostingWorkMode() {
       {/* Task Card */}
       {loading ? (
         <div className="text-center py-12 text-gray-500">Loading tasks...</div>
+      ) : fetchError ? (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <h3 className="text-lg font-semibold text-red-700 mb-1">Failed to load tasks</h3>
+          <p className="text-sm text-red-600 mb-3">{fetchError}</p>
+          <button
+            onClick={fetchGroups}
+            className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200"
+          >
+            Retry
+          </button>
+        </div>
       ) : !currentGroup ? (
         <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
           <h3 className="text-lg font-semibold text-gray-700 mb-1">All caught up!</h3>
