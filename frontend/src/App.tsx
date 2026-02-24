@@ -54,7 +54,6 @@ const AdminAdCopy = lazy(() => import('./pages/admin/AdminAdCopy'));
 const AdminVideoConcepts = lazy(() => import('./pages/admin/AdminVideoConcepts'));
 const AdminPhotoConcepts = lazy(() => import('./pages/admin/AdminPhotoConcepts'));
 const AdminCareerApplications = lazy(() => import('./pages/admin/AdminCareerApplications'));
-const AdminVideos = lazy(() => import('./pages/admin/AdminVideos'));
 const AdminSchedule = lazy(() => import('./pages/admin/AdminSchedule'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffProductivity = lazy(() => import('./pages/admin/StaffProductivity'));
@@ -319,7 +318,6 @@ function AppRoutes() {
         <Route path="video" element={<AdminVideoConcepts />} />
         <Route path="photos" element={<AdminPhotoConcepts />} />
         <Route path="careers" element={<AdminCareerApplications />} />
-        <Route path="videos" element={<AdminVideos />} />
         <Route path="schedule" element={<AdminSchedule />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="productivity" element={<StaffProductivity />} />

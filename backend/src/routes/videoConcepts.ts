@@ -601,4 +601,84 @@ router.get('/:slug/outputs', async (req, res) => {
   }
 });
 
+// GET /:slug/image/:tier/:filename — Serve scene image from disk
+router.get('/:slug/image/:tier/:filename', async (req, res) => {
+  try {
+    const { slug, tier, filename } = req.params;
+    if (!isValidSlug(slug)) {
+      return res.status(400).json({ error: 'Invalid slug' });
+    }
+    if (!['nano', 'draft', 'final'].includes(tier)) {
+      return res.status(400).json({ error: 'Invalid tier' });
+    }
+    if (!/^scene_\d{2}\.png$/.test(filename)) {
+      return res.status(400).json({ error: 'Invalid filename' });
+    }
+
+    const filePath = path.join(DATA_CONCEPTS_DIR, slug, tier, 'images', filename);
+    try {
+      await fs.access(filePath);
+    } catch {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.sendFile(filePath);
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept image error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /:slug/script/:tier — Return parsed script.json
+router.get('/:slug/script/:tier', async (req, res) => {
+  try {
+    const { slug, tier } = req.params;
+    if (!isValidSlug(slug)) {
+      return res.status(400).json({ error: 'Invalid slug' });
+    }
+    if (!['nano', 'draft', 'final'].includes(tier)) {
+      return res.status(400).json({ error: 'Invalid tier' });
+    }
+
+    const scriptPath = path.join(DATA_CONCEPTS_DIR, slug, tier, 'script.json');
+    let data: string;
+    try {
+      data = await fs.readFile(scriptPath, 'utf-8');
+    } catch {
+      return res.status(404).json({ error: 'Script not found' });
+    }
+
+    res.json(JSON.parse(data));
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept script error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /:slug/reject — Reset concept to 'new'
+router.post('/:slug/reject', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!isValidSlug(slug)) {
+      return res.status(400).json({ error: 'Invalid slug' });
+    }
+
+    const status = await loadStatus();
+    if (!status[slug]) {
+      return res.status(404).json({ error: 'Concept not found in status' });
+    }
+
+    status[slug].status = 'new';
+    status[slug].approved_tier = null;
+    await saveStatus(status);
+
+    res.json({ slug, status: 'new' });
+  } catch (error) {
+    logger.error({ err: error }, 'Video concept reject error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

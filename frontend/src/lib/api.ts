@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -811,6 +811,15 @@ export const api = {
 
   getVideoConceptOutputs: (slug: string) =>
     request<{ slug: string; outputs: { tier: string; files: string[] }[] }>(`/admin/video-concepts/${slug}/outputs`),
+
+  getVideoConceptScript: (slug: string, tier: string) =>
+    request<VideoScriptData>(`/admin/video-concepts/${slug}/script/${tier}`),
+
+  getVideoConceptImageUrl: (slug: string, tier: string, filename: string) =>
+    `/api/admin/video-concepts/${slug}/image/${tier}/${filename}`,
+
+  rejectVideoConcept: (slug: string) =>
+    request<{ slug: string; status: string }>(`/admin/video-concepts/${slug}/reject`, { method: 'POST' }),
 
   getVideoConceptJobs: (slug: string) =>
     request<{ jobs: VideoJob[] }>(`/admin/video-concepts/${slug}/jobs`),

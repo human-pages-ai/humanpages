@@ -606,6 +606,34 @@ export interface ScheduleStats {
   upcoming: number;
 }
 
+// ===== Video Script (Storyboard) =====
+export interface VideoScene {
+  scene_number: number;
+  duration_seconds: number;
+  shot_type: string;
+  camera_motion: string;
+  setting: string;
+  image_prompt: string;
+  motion_prompt: string;
+  overlay_text: string | null;
+  dialogue: string | null;
+  narration: string | null;
+  sound_effect: string | null;
+  transition_in: string;
+  transition_out: string;
+}
+
+export interface VideoScriptData {
+  title: string;
+  concept: string;
+  total_duration_seconds: number;
+  visual_style: string;
+  music_mood: string;
+  color_palette: string;
+  characters: Array<{ name: string; description: string }>;
+  scenes: VideoScene[];
+}
+
 // ===== Video Concepts =====
 export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done';
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
-import type { VideoConcept, VideoConceptStatus, VideoJob, VideoJobStatus } from '../../types/admin';
+import type { VideoConcept, VideoConceptStatus, VideoJob, VideoJobStatus, VideoItem, VideoDetail, VideoTier, VideoStatusType } from '../../types/admin';
+import StoryboardViewer from './video/StoryboardViewer';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 
@@ -348,9 +349,262 @@ function LogPanel({ job, onClose }: { job: VideoJob; onClose: () => void }) {
   );
 }
 
+// ── Videos Tab (absorbed from AdminVideos) ────────────────
+
+const VIDEO_TIER_COLORS: Record<VideoTier, string> = {
+  NANO: 'bg-gray-100 text-gray-700',
+  DRAFT: 'bg-yellow-100 text-yellow-800',
+  FINAL: 'bg-green-100 text-green-800',
+};
+
+const VIDEO_STATUS_COLORS: Record<VideoStatusType, string> = {
+  GENERATING: 'bg-blue-100 text-blue-700',
+  DRAFT: 'bg-gray-100 text-gray-700',
+  READY: 'bg-green-100 text-green-700',
+  SCHEDULED: 'bg-indigo-100 text-indigo-700',
+  PUBLISHED: 'bg-emerald-100 text-emerald-700',
+  ARCHIVED: 'bg-red-100 text-red-700',
+};
+
+function VideoBadge({ label, className }: { label: string; className: string }) {
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${className}`}>
+      {label}
+    </span>
+  );
+}
+
+function VideoDetailModal({ videoId, onClose }: { videoId: string; onClose: () => void }) {
+  const [video, setVideo] = useState<VideoDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getVideo(videoId).then(setVideo).catch(console.error).finally(() => setLoading(false));
+  }, [videoId]);
+
+  const shell = (children: React.ReactNode) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-end mb-2">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+
+  if (loading) return shell(<p className="text-gray-500">Loading...</p>);
+  if (!video) return shell(<p className="text-red-500">Video not found</p>);
+
+  const concept = video.conceptSnapshot as Record<string, string> || {};
+  const script = video.scriptSnapshot as Record<string, unknown> | null;
+  const scenes = (Array.isArray(script?.scenes) ? script.scenes : []) as Array<Record<string, unknown>>;
+
+  return shell(
+    <div className="space-y-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">{video.title}</h2>
+          <p className="text-sm text-gray-500 mt-1">{video.slug}</p>
+        </div>
+        <div className="flex gap-2">
+          <VideoBadge label={video.tier} className={VIDEO_TIER_COLORS[video.tier]} />
+          <VideoBadge label={video.status} className={VIDEO_STATUS_COLORS[video.status]} />
+        </div>
+      </div>
+      {video.videoUrl && (
+        <div className="rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-96 mx-auto">
+          <video src={video.videoUrl} controls className="w-full h-full object-contain" />
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div><span className="text-gray-500">Duration:</span> {video.durationSeconds ? `${video.durationSeconds}s` : 'N/A'}</div>
+        <div><span className="text-gray-500">Aspect Ratio:</span> {video.aspectRatio}</div>
+        <div><span className="text-gray-500">Est. Cost:</span> {video.estimatedCostUsd ? `$${video.estimatedCostUsd.toFixed(2)}` : 'N/A'}</div>
+        <div><span className="text-gray-500">Assets:</span> {video.assets.length}</div>
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Concept Snapshot</h3>
+        <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-2">
+          {concept.title && <p><span className="font-medium">Title:</span> {String(concept.title)}</p>}
+          {concept.body && <p className="text-gray-600 whitespace-pre-wrap">{String(concept.body).slice(0, 500)}{String(concept.body).length > 500 ? '...' : ''}</p>}
+        </div>
+      </div>
+      {scenes.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Script ({scenes.length} scenes)</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {scenes.map((scene, i) => (
+              <div key={i} className="bg-gray-50 rounded p-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium">Scene {(scene.scene_number as number) || i + 1}</span>
+                  <span className="text-gray-500">{scene.duration_seconds as number}s &middot; {scene.shot_type as string}</span>
+                </div>
+                {scene.setting ? <p className="text-gray-600 mt-1">{String(scene.setting)}</p> : null}
+                {scene.dialogue ? <p className="text-gray-700 mt-1 italic">&ldquo;{String(scene.dialogue)}&rdquo;</p> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {video.assets.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Assets</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {video.assets.map((a) => (
+              <div key={a.id} className="bg-gray-50 rounded p-2 text-xs">
+                <p className="font-medium truncate">{a.filename}</p>
+                <p className="text-gray-500">{a.assetType}{a.sceneNumber != null ? ` (scene ${a.sceneNumber})` : ''}</p>
+                {a.fileSize && <p className="text-gray-400">{(a.fileSize / 1024).toFixed(0)} KB</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideosTab() {
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [tierFilter, setTierFilter] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    api.getVideos({
+      page,
+      status: statusFilter || undefined,
+      tier: tierFilter || undefined,
+    })
+      .then((res) => {
+        setVideos(res.videos);
+        setTotalPages(res.pagination.totalPages);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [page, statusFilter, tierFilter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleStatusChange = async (id: string, status: VideoStatusType) => {
+    try {
+      await api.updateVideo(id, { status });
+      load();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <div className="flex gap-3">
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+        >
+          <option value="">All Statuses</option>
+          {(['GENERATING', 'DRAFT', 'READY', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED'] as const).map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={tierFilter}
+          onChange={(e) => { setTierFilter(e.target.value); setPage(1); }}
+          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+        >
+          <option value="">All Tiers</option>
+          {(['NANO', 'DRAFT', 'FINAL'] as const).map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <p className="text-gray-500 text-sm">Loading...</p>
+      ) : videos.length === 0 ? (
+        <p className="text-gray-500 text-sm">No videos found.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Video</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Tier</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Duration</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Assets</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Created</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {videos.map((v) => (
+                <tr key={v.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedId(v.id)}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {v.thumbnailUrl ? (
+                        <img src={v.thumbnailUrl} alt="" className="w-12 h-16 object-cover rounded" />
+                      ) : (
+                        <div className="w-12 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">N/A</div>
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-900 truncate max-w-xs">{v.title}</p>
+                        <p className="text-gray-500 text-xs">{v.slug}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3"><VideoBadge label={v.tier} className={VIDEO_TIER_COLORS[v.tier]} /></td>
+                  <td className="px-4 py-3"><VideoBadge label={v.status} className={VIDEO_STATUS_COLORS[v.status]} /></td>
+                  <td className="px-4 py-3 text-gray-600">{v.durationSeconds ? `${v.durationSeconds}s` : '-'}</td>
+                  <td className="px-4 py-3 text-gray-600">{v._count.assets}</td>
+                  <td className="px-4 py-3 text-gray-500">{new Date(v.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value=""
+                      onChange={(e) => handleStatusChange(v.id, e.target.value as VideoStatusType)}
+                      className="border border-gray-300 rounded px-2 py-1 text-xs"
+                    >
+                      <option value="" disabled>Set status...</option>
+                      <option value="READY">Ready</option>
+                      <option value="ARCHIVED">Archive</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 text-sm rounded border disabled:opacity-50">Prev</button>
+          <span className="px-3 py-1 text-sm text-gray-600">Page {page} of {totalPages}</span>
+          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 text-sm rounded border disabled:opacity-50">Next</button>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedId && <VideoDetailModal videoId={selectedId} onClose={() => setSelectedId(null)} />}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────
 
+type TabId = 'pipeline' | 'videos';
+
 export default function AdminVideoConcepts() {
+  const [tab, setTab] = useState<TabId>('pipeline');
   const [concepts, setConcepts] = useState<VideoConcept[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -374,9 +628,8 @@ export default function AdminVideoConcepts() {
   // Expanded log viewer
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
-  // Approve modal
-  const [approveSlug, setApproveSlug] = useState<string | null>(null);
-  const [approveTier, setApproveTier] = useState('draft');
+  // Storyboard review
+  const [reviewSlug, setReviewSlug] = useState<string | null>(null);
 
   const fetchConcepts = useCallback(async () => {
     setLoading(true);
@@ -537,16 +790,14 @@ export default function AdminVideoConcepts() {
     }
   };
 
-  const handleApprove = async () => {
-    if (!approveSlug) return;
-    try {
-      await api.approveVideoConcept(approveSlug, approveTier);
-      toast.success(`Approved '${approveSlug}' for ${approveTier} tier`);
-      setApproveSlug(null);
-      await fetchConcepts();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
+  const handleStoryboardApprove = async (slug: string, tier: string) => {
+    await api.approveVideoConcept(slug, tier);
+    await fetchConcepts();
+  };
+
+  const handleStoryboardReject = async (slug: string) => {
+    await api.rejectVideoConcept(slug);
+    await fetchConcepts();
   };
 
   const handleProduce = async (slug: string) => {
@@ -576,147 +827,154 @@ export default function AdminVideoConcepts() {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-12 text-gray-500">Loading video concepts...</div>;
-  }
-
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Video Concepts</h2>
-          <p className="text-sm text-gray-500 mt-1">{concepts.length} concept{concepts.length !== 1 ? 's' : ''} total</p>
-        </div>
-        <button
-          onClick={openCreate}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
-        >
-          + New Concept
-        </button>
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 mb-6 border-b border-gray-200">
+        {([['pipeline', 'Pipeline'], ['videos', 'Videos']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === id
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+      {/* Videos tab */}
+      {tab === 'videos' && <VideosTab />}
+
+      {/* Pipeline tab */}
+      {tab === 'pipeline' && (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Video Concepts</h2>
+              <p className="text-sm text-gray-500 mt-1">{concepts.length} concept{concepts.length !== 1 ? 's' : ''} total</p>
+            </div>
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+            >
+              + New Concept
+            </button>
+          </div>
+
+          {loading && (
+            <div className="text-center py-12 text-gray-500">Loading video concepts...</div>
+          )}
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+          )}
+
+          {!loading && (
+            <>
+              {/* Job Queue Table */}
+              <JobQueueTable />
+
+              {/* Concepts Table */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {concepts.map((c) => {
+                      const badge = STATUS_BADGES[c.status] || STATUS_BADGES.new;
+                      const activeJob = activeJobs[c.slug];
+                      const hasActiveJob = activeJob && (activeJob.status === 'PENDING' || activeJob.status === 'RUNNING');
+                      const toggleLogs = () => setExpandedJob(prev => prev === c.slug ? null : c.slug);
+                      return (
+                        <React.Fragment key={c.slug}>
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm font-mono text-gray-700">{c.slug}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">{c.title}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${badge.cls}`}>{badge.label}</span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{c.approvedTier || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{c.duration || '—'}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {hasActiveJob ? (
+                                <JobStatusIndicator job={activeJob} onCancel={() => handleCancelJob(c.slug)} onClick={toggleLogs} />
+                              ) : (
+                                <>
+                                  {activeJob?.status === 'FAILED' && (
+                                    <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
+                                  )}
+                                  {activeJob?.status === 'COMPLETED' && (
+                                    <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
+                                  )}
+                                  <button onClick={() => openView(c)} className="text-blue-600 hover:text-blue-800 text-sm">View</button>
+                                  <button onClick={() => openEdit(c)} className="text-gray-600 hover:text-gray-800 text-sm">Edit</button>
+                                  {c.status === 'new' && (
+                                    <button onClick={() => handlePreview(c.slug)} className="text-indigo-600 hover:text-indigo-800 text-sm">Preview</button>
+                                  )}
+                                  {c.status === 'nano_done' && (
+                                    <button onClick={() => setReviewSlug(c.slug)} className="text-yellow-600 hover:text-yellow-800 text-sm font-medium">Review</button>
+                                  )}
+                                  {c.status === 'approved' && (
+                                    <button onClick={() => handleProduce(c.slug)} className="text-green-600 hover:text-green-800 text-sm">Produce</button>
+                                  )}
+                                  {deleteConfirm === c.slug ? (
+                                    <span className="flex items-center gap-1">
+                                      <button
+                                        onClick={() => handleDelete(c.slug)}
+                                        disabled={deleting}
+                                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                      >
+                                        {deleting ? '...' : 'Confirm'}
+                                      </button>
+                                      <button onClick={() => setDeleteConfirm(null)} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
+                                    </span>
+                                  ) : (
+                                    <button onClick={() => setDeleteConfirm(c.slug)} className="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                        {expandedJob === c.slug && activeJob && (
+                          <LogPanel job={activeJob} onClose={() => setExpandedJob(null)} />
+                        )}
+                        </React.Fragment>
+                      );
+                    })}
+                    {concepts.length === 0 && (
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500 text-sm">No concepts found. Create one to get started.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </>
       )}
 
-      {/* Job Queue Table */}
-      <JobQueueTable />
-
-      {/* Concepts Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {concepts.map((c) => {
-              const badge = STATUS_BADGES[c.status] || STATUS_BADGES.new;
-              const activeJob = activeJobs[c.slug];
-              const hasActiveJob = activeJob && (activeJob.status === 'PENDING' || activeJob.status === 'RUNNING');
-              const toggleLogs = () => setExpandedJob(prev => prev === c.slug ? null : c.slug);
-              return (
-                <React.Fragment key={c.slug}>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-mono text-gray-700">{c.slug}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">{c.title}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${badge.cls}`}>{badge.label}</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{c.approvedTier || '—'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{c.duration || '—'}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {hasActiveJob ? (
-                        <JobStatusIndicator job={activeJob} onCancel={() => handleCancelJob(c.slug)} onClick={toggleLogs} />
-                      ) : (
-                        <>
-                          {activeJob?.status === 'FAILED' && (
-                            <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
-                          )}
-                          {activeJob?.status === 'COMPLETED' && (
-                            <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
-                          )}
-                          <button onClick={() => openView(c)} className="text-blue-600 hover:text-blue-800 text-sm">View</button>
-                          <button onClick={() => openEdit(c)} className="text-gray-600 hover:text-gray-800 text-sm">Edit</button>
-                          {c.status === 'new' && (
-                            <button onClick={() => handlePreview(c.slug)} className="text-indigo-600 hover:text-indigo-800 text-sm">Preview</button>
-                          )}
-                          {c.status === 'nano_done' && (
-                            <button onClick={() => { setApproveSlug(c.slug); setApproveTier('draft'); }} className="text-yellow-600 hover:text-yellow-800 text-sm">Approve</button>
-                          )}
-                          {c.status === 'approved' && (
-                            <button onClick={() => handleProduce(c.slug)} className="text-green-600 hover:text-green-800 text-sm">Produce</button>
-                          )}
-                          {deleteConfirm === c.slug ? (
-                            <span className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleDelete(c.slug)}
-                                disabled={deleting}
-                                className="text-red-600 hover:text-red-800 text-sm font-medium"
-                              >
-                                {deleting ? '...' : 'Confirm'}
-                              </button>
-                              <button onClick={() => setDeleteConfirm(null)} className="text-gray-400 hover:text-gray-600 text-sm">Cancel</button>
-                            </span>
-                          ) : (
-                            <button onClick={() => setDeleteConfirm(c.slug)} className="text-red-400 hover:text-red-600 text-sm">Delete</button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-                {expandedJob === c.slug && activeJob && (
-                  <LogPanel job={activeJob} onClose={() => setExpandedJob(null)} />
-                )}
-                </React.Fragment>
-              );
-            })}
-            {concepts.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500 text-sm">No concepts found. Create one to get started.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Approve Modal */}
-      {approveSlug && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setApproveSlug(null)}>
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Approve &ldquo;{approveSlug}&rdquo;</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Production Tier</label>
-                <select
-                  value={approveTier}
-                  onChange={(e) => setApproveTier(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="draft">Draft (~$1)</option>
-                  <option value="final">Final (~$5)</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button onClick={() => setApproveSlug(null)} className="px-4 py-2 text-gray-600 text-sm hover:text-gray-800">Cancel</button>
-                <button
-                  onClick={handleApprove}
-                  className="px-4 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600"
-                >
-                  Approve
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Storyboard Viewer */}
+      {reviewSlug && (
+        <StoryboardViewer
+          slug={reviewSlug}
+          tier="nano"
+          onClose={() => setReviewSlug(null)}
+          onApprove={handleStoryboardApprove}
+          onReject={handleStoryboardReject}
+        />
       )}
 
       {/* Create / Edit / View Modal */}
