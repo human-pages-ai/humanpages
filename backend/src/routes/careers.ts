@@ -27,6 +27,7 @@ const applySchema = z.object({
   about:         z.string().min(1).max(500).transform((s) => s.trim()),
   portfolioUrl:  z.string().url().max(500).optional().or(z.literal('')).transform((s) => s || null),
   availability:  z.enum(VALID_AVAILABILITIES).default('flexible'),
+  utmSource:     z.string().max(100).optional(),
 });
 
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
@@ -62,7 +63,7 @@ router.post(
       });
     }
 
-    const { positionId, positionTitle, about, portfolioUrl, availability } = parsed.data;
+    const { positionId, positionTitle, about, portfolioUrl, availability, utmSource } = parsed.data;
 
     // Capture IP + UA for fraud prevention (never exposed to frontend)
     const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null;
@@ -79,6 +80,7 @@ router.post(
           positionTitle,
           ipAddress,
           userAgent,
+          utmSource,
           status: 'PENDING', // Reset status on re-apply
         },
         create: {
@@ -90,6 +92,7 @@ router.post(
           availability,
           ipAddress,
           userAgent,
+          utmSource,
         },
       });
 
@@ -98,6 +101,7 @@ router.post(
         positionId,
         availability,
         hasPortfolio: !!portfolioUrl,
+        utmSource: utmSource || undefined,
       });
 
       logger.info({ humanId, positionId, applicationId: application.id }, 'Career application submitted');

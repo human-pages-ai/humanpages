@@ -887,6 +887,8 @@ model CareerApplication {
   status          CareerApplicationStatus  @default(PENDING)
   adminNotes      String?                  @db.VarChar(2000)
 
+  utmSource       String?                  // Recruiter attribution (from ?utm_source=)
+
   // Fraud / abuse prevention
   ipAddress       String?
   userAgent       String?

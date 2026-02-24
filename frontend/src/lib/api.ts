@@ -591,6 +591,7 @@ export const api = {
     about: string;
     portfolioUrl?: string;
     availability: string;
+    utmSource?: string;
   }) =>
     request<{ id: string; positionId: string; status: string; createdAt: string }>('/careers/apply', {
       method: 'POST',

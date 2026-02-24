@@ -430,6 +430,7 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
         about: formData.about,
         portfolioUrl: formData.portfolio || undefined,
         availability: formData.availability,
+        utmSource: sessionStorage.getItem('utm_source') || undefined,
       });
       setStep('success');
     } catch (err: any) {
@@ -773,6 +774,11 @@ export default function CareersPage() {
     const ref = searchParams.get('ref');
     if (ref) {
       localStorage.setItem('referrer_id', ref);
+    }
+
+    const utmSource = searchParams.get('utm_source');
+    if (utmSource) {
+      sessionStorage.setItem('utm_source', utmSource);
     }
 
     // 1. Check route param (deep link: /careers/apply/software-engineer)
