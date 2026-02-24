@@ -792,6 +792,9 @@ export default function AdminVideoConcepts() {
 
   const handleStoryboardApprove = async (slug: string, tier: string) => {
     await api.approveVideoConcept(slug, tier);
+    const res = await api.produceVideoConcept(slug);
+    const job = await api.getVideoJob(res.jobId);
+    setActiveJobs(prev => ({ ...prev, [slug]: job }));
     await fetchConcepts();
   };
 

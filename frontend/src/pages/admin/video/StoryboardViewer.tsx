@@ -138,7 +138,7 @@ export default function StoryboardViewer({ slug, tier = 'nano', onClose, onAppro
     setActing(true);
     try {
       await onApprove(slug, approvalTier);
-      toast.success(`Approved "${slug}" for ${approvalTier} tier`);
+      toast.success(`Approved "${slug}" — ${approvalTier} production queued`);
       onClose();
     } catch (err: any) {
       toast.error(err.message);
@@ -218,14 +218,14 @@ export default function StoryboardViewer({ slug, tier = 'nano', onClose, onAppro
                 disabled={acting}
                 className="px-4 py-2 text-sm font-medium bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50"
               >
-                {acting ? 'Processing...' : 'Approve as Draft'}
+                {acting ? 'Queuing...' : 'Produce Draft'}
               </button>
               <button
                 onClick={() => handleApprove('final')}
                 disabled={acting}
                 className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                {acting ? 'Processing...' : 'Approve as Final'}
+                {acting ? 'Queuing...' : 'Produce Final'}
               </button>
             </div>
           </div>
