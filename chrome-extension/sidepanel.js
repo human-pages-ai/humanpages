@@ -392,6 +392,9 @@ async function showCurrentGroup() {
   // Position
   els.groupPosition.textContent = `${currentIndex + 1} of ${groups.length}`;
 
+  // For yt_comment / yt_reply tasks: show single comment/reply text
+  const isYt = group.taskType === 'yt_comment' || group.taskType === 'yt_reply';
+
   // Name & URL
   els.groupName.textContent = group.name;
   els.groupUrl.href = group.url;
@@ -410,9 +413,6 @@ async function showCurrentGroup() {
   } else {
     els.spamWarning.hidden = true;
   }
-
-  // For yt_comment / yt_reply tasks: show single comment/reply text
-  const isYt = group.taskType === 'yt_comment' || group.taskType === 'yt_reply';
 
   if (isYt && group.notes) {
     els.replySection.hidden = false;
