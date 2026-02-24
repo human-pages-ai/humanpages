@@ -440,7 +440,7 @@ body {
   background: #dbeafe;
 }
 
-/* Suggested reply section (yt_comment) */
+/* YouTube comment/reply section */
 .reply-section {
   border: 1px solid #a7f3d0;
   border-radius: 8px;
@@ -465,6 +465,15 @@ body {
   font-size: 11px;
   color: #059669;
   font-weight: 600;
+}
+.reply-context {
+  font-size: 11px;
+  color: #065f46;
+  background: #d1fae5;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-style: italic;
 }
 .reply-body {
   font-size: 13px;

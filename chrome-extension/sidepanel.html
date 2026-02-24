@@ -58,6 +58,7 @@
       <option value="fb_post">FB Post</option>
       <option value="">All Types</option>
       <option value="yt_comment">YT Comment</option>
+      <option value="yt_reply">YT Reply</option>
       <option value="blog_comment">Blog Comment</option>
     </select>
     <select id="filterLanguage">
@@ -145,14 +146,15 @@
       Open Group in New Tab
     </a>
 
-    <!-- Suggested reply section (yt_comment) -->
+    <!-- YouTube comment/reply section -->
     <div id="replySection" class="reply-section" hidden>
       <div class="reply-header">
-        <span class="reply-label">Suggested Reply</span>
+        <span class="reply-label" id="replyLabel">YouTube Comment</span>
         <span class="reply-score" id="replyScore"></span>
       </div>
+      <div id="replyContext" class="reply-context" hidden></div>
       <pre class="reply-body" id="replyBody"></pre>
-      <button class="copy-btn" id="copyReplyBtn">Copy Reply</button>
+      <button class="copy-btn" id="copyReplyBtn">Copy</button>
     </div>
 
     <!-- Ad copy section -->

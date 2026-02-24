@@ -114,7 +114,9 @@ const els = {
   adBody: $('adBody'),
   copyBtn: $('copyBtn'),
   replySection: $('replySection'),
+  replyLabel: $('replyLabel'),
   replyScore: $('replyScore'),
+  replyContext: $('replyContext'),
   replyBody: $('replyBody'),
   copyReplyBtn: $('copyReplyBtn'),
   adSection: $('adSection'),
@@ -376,7 +378,7 @@ async function showCurrentGroup() {
   els.emptyState.hidden = true;
 
   // Meta badges
-  const TYPE_LABELS = { fb_post: 'FB Post', yt_comment: 'YT Comment', blog_comment: 'Blog Comment' };
+  const TYPE_LABELS = { fb_post: 'FB Post', yt_comment: 'YT Comment', yt_reply: 'YT Reply', blog_comment: 'Blog Comment' };
   els.groupType.textContent = TYPE_LABELS[group.taskType] || group.taskType;
   els.groupLang.textContent = group.language.toUpperCase();
   els.groupCountry.textContent = group.country;
@@ -393,7 +395,7 @@ async function showCurrentGroup() {
   // Name & URL
   els.groupName.textContent = group.name;
   els.groupUrl.href = group.url;
-  els.groupUrl.textContent = group.taskType === 'yt_comment' ? 'Open Video in New Tab' : 'Open Group in New Tab';
+  els.groupUrl.textContent = isYt ? 'Open Video in New Tab' : 'Open Group in New Tab';
 
   // Anti-spam check
   if (group.datePosted) {
@@ -409,56 +411,32 @@ async function showCurrentGroup() {
     els.spamWarning.hidden = true;
   }
 
-  // For yt_comment tasks: parse STEP 1 / STEP 2 notes format
-  const isYtComment = group.taskType === 'yt_comment';
+  // For yt_comment / yt_reply tasks: show single comment/reply text
+  const isYt = group.taskType === 'yt_comment' || group.taskType === 'yt_reply';
 
-  if (isYtComment && group.notes) {
-    const notesText = group.notes.trim();
-
-    // Parse STEP 1 / STEP 2 format
-    const step1Match = notesText.match(/STEP\s*1:\s*\n([\s\S]*?)(?=\n\s*\nSTEP\s*2:|$)/i);
-    const step2Match = notesText.match(/STEP\s*2:\s*\n([\s\S]*?)$/i);
-
-    const step1Text = step1Match ? step1Match[1].trim() : notesText.trim();
-    const step2Text = step2Match ? step2Match[1].trim() : null;
-
+  if (isYt && group.notes) {
     els.replySection.hidden = false;
     els.replyScore.textContent = group.priority ? `Score ${group.priority}/10` : '';
 
-    // Show step 1 — relabel the existing button
-    els.copyReplyBtn.textContent = 'Copy Step 1';
-    els.copyReplyBtn.classList.remove('copied');
-    // Store step 1 text in dataset for copy handler
-    els.copyReplyBtn.dataset.stepText = step1Text;
-
-    // Create or update step 2 button
-    let step2Btn = document.getElementById('copyStep2Btn');
-    if (step2Text) {
-      if (!step2Btn) {
-        step2Btn = document.createElement('button');
-        step2Btn.id = 'copyStep2Btn';
-        step2Btn.className = 'copy-btn';
-        els.copyReplyBtn.parentNode.insertBefore(step2Btn, els.copyReplyBtn.nextSibling);
-        step2Btn.addEventListener('click', () => {
-          const text = step2Btn.dataset.stepText;
-          if (text) copyToClipboard(text, step2Btn, 'Copy Step 2');
-        });
-      }
-      step2Btn.textContent = 'Copy Step 2';
-      step2Btn.classList.remove('copied');
-      step2Btn.dataset.stepText = step2Text;
-      step2Btn.hidden = false;
-
-      // Show both steps in the reply body for readability
-      els.replyBody.textContent = `STEP 1:\n${step1Text}\n\nSTEP 2:\n${step2Text}`;
+    if (group.taskType === 'yt_reply') {
+      els.replyLabel.textContent = 'YouTube Reply';
+      const findMatch = group.notes.match(/FIND COMMENT:\s*\n([\s\S]*?)(?=\n\s*\nYOUR REPLY:)/i);
+      const replyMatch = group.notes.match(/YOUR REPLY:\s*\n([\s\S]*?)$/i);
+      els.replyContext.textContent = findMatch
+        ? 'Find and reply to: ' + findMatch[1].trim()
+        : '';
+      els.replyContext.hidden = !findMatch;
+      els.replyBody.textContent = replyMatch ? replyMatch[1].trim() : group.notes;
     } else {
-      if (step2Btn) step2Btn.hidden = true;
-      els.replyBody.textContent = step1Text;
+      els.replyLabel.textContent = 'YouTube Comment';
+      els.replyContext.hidden = true;
+      els.replyBody.textContent = group.notes.trim();
     }
+
+    els.copyReplyBtn.textContent = 'Copy';
+    els.copyReplyBtn.classList.remove('copied');
   } else {
     els.replySection.hidden = true;
-    const step2Btn = document.getElementById('copyStep2Btn');
-    if (step2Btn) step2Btn.hidden = true;
   }
 
   // Ad copy
@@ -478,15 +456,15 @@ async function showCurrentGroup() {
     els.adBody.textContent = '';
   }
 
-  // For yt_comment: hide Copy Ad Text (ad body is instructions only)
-  els.copyBtn.hidden = isYtComment;
-  if (!isYtComment) {
+  // For yt tasks: hide Copy Ad Text (ad body is instructions only)
+  els.copyBtn.hidden = isYt;
+  if (!isYt) {
     els.copyBtn.textContent = 'Copy Ad Text';
     els.copyBtn.classList.remove('copied');
   }
 
-  // Clear notes (for yt_comment don't show raw notes in the input)
-  els.notesInput.value = isYtComment ? '' : (group.notes || '');
+  // Clear notes (for yt tasks don't show raw notes in the input)
+  els.notesInput.value = isYt ? '' : (group.notes || '');
 
   // Enable buttons
   setButtonsEnabled(true);
@@ -518,12 +496,10 @@ els.copyBtn.addEventListener('click', () => {
   if (text) copyToClipboard(text, els.copyBtn, 'Copy Ad Text');
 });
 
-// ─── Copy step 1 (or legacy reply) ───
+// ─── Copy comment/reply text ───
 els.copyReplyBtn.addEventListener('click', () => {
-  // Use stored step text if available, fall back to replyBody content
-  const text = els.copyReplyBtn.dataset.stepText || els.replyBody.textContent;
-  const label = els.copyReplyBtn.textContent.startsWith('Copy Step') ? 'Copy Step 1' : 'Copy Reply';
-  if (text) copyToClipboard(text, els.copyReplyBtn, label);
+  const text = els.replyBody.textContent;
+  if (text) copyToClipboard(text, els.copyReplyBtn, 'Copy');
 });
 
 // ─── Action buttons ───
