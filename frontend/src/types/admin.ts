@@ -634,6 +634,7 @@ export interface VideoJob {
   errorMessage: string | null;
   pipelineStep: string | null;
   progressPct: number | null;
+  logTail: string | null;
   createdAt: string;
 }
 

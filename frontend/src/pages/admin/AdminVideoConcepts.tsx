@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import type { VideoConcept, VideoConceptStatus, VideoJob } from '../../types/admin';
@@ -21,16 +21,16 @@ function slugify(title: string): string {
     .slice(0, 80);
 }
 
-function JobStatusIndicator({ job, onCancel }: { job: VideoJob; onCancel: () => void }) {
+function JobStatusIndicator({ job, onCancel, onClick }: { job: VideoJob; onCancel: () => void; onClick?: () => void }) {
   if (job.status === 'PENDING') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-amber-600">
+      <span className="inline-flex items-center gap-1.5 text-sm text-amber-600 cursor-pointer" onClick={onClick}>
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
         </span>
         Queued...
-        <button onClick={onCancel} className="ml-1 text-gray-400 hover:text-red-500 text-xs">&times;</button>
+        <button onClick={(e) => { e.stopPropagation(); onCancel(); }} className="ml-1 text-gray-400 hover:text-red-500 text-xs">&times;</button>
       </span>
     );
   }
@@ -38,7 +38,7 @@ function JobStatusIndicator({ job, onCancel }: { job: VideoJob; onCancel: () => 
     const step = job.pipelineStep || 'starting';
     const pct = job.progressPct != null ? ` ${job.progressPct}%` : '';
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-blue-600">
+      <span className="inline-flex items-center gap-1.5 text-sm text-blue-600 cursor-pointer hover:text-blue-800" onClick={onClick}>
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
@@ -49,12 +49,62 @@ function JobStatusIndicator({ job, onCancel }: { job: VideoJob; onCancel: () => 
   }
   if (job.status === 'FAILED') {
     return (
-      <span className="text-sm text-red-600 cursor-help" title={job.errorMessage || 'Unknown error'}>
+      <span className="text-sm text-red-600 cursor-pointer hover:text-red-800" onClick={onClick} title={job.errorMessage || 'Unknown error'}>
         Failed
       </span>
     );
   }
+  if (job.status === 'COMPLETED') {
+    return (
+      <button onClick={onClick} className="text-xs text-gray-400 hover:text-gray-600">
+        Logs
+      </button>
+    );
+  }
   return null;
+}
+
+function LogPanel({ job, onClose }: { job: VideoJob; onClose: () => void }) {
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [job.logTail]);
+
+  return (
+    <tr>
+      <td colSpan={6} className="p-0">
+        <div className="mx-4 my-2 rounded-lg border border-gray-700 bg-gray-900 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <span>Job: <span className="text-gray-200 font-mono">{job.id.slice(0, 12)}</span></span>
+              <span>Type: <span className="text-gray-200">{job.jobType}</span></span>
+              <span>Tier: <span className="text-gray-200">{job.tier}</span></span>
+              {job.claimedAt && <span>Started: <span className="text-gray-200">{new Date(job.claimedAt).toLocaleTimeString()}</span></span>}
+              {job.completedAt && <span>Completed: <span className="text-gray-200">{new Date(job.completedAt).toLocaleTimeString()}</span></span>}
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-white text-sm px-2">&times;</button>
+          </div>
+
+          {/* Error banner */}
+          {job.status === 'FAILED' && job.errorMessage && (
+            <div className="px-4 py-2 bg-red-900/50 border-b border-red-800 text-red-300 text-sm">
+              <strong>Error:</strong> {job.errorMessage}
+            </div>
+          )}
+
+          {/* Log content */}
+          <div className="max-h-64 overflow-y-auto">
+            <pre className="px-4 py-3 text-xs text-gray-300 font-mono whitespace-pre-wrap leading-relaxed">
+              {job.logTail || '(no logs yet)'}
+              <div ref={logEndRef} />
+            </pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
 }
 
 export default function AdminVideoConcepts() {
@@ -77,6 +127,9 @@ export default function AdminVideoConcepts() {
   // Delete state
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Expanded log viewer
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   // Approve modal
   const [approveSlug, setApproveSlug] = useState<string | null>(null);
@@ -321,8 +374,10 @@ export default function AdminVideoConcepts() {
               const badge = STATUS_BADGES[c.status] || STATUS_BADGES.new;
               const activeJob = activeJobs[c.slug];
               const hasActiveJob = activeJob && (activeJob.status === 'PENDING' || activeJob.status === 'RUNNING');
+              const toggleLogs = () => setExpandedJob(prev => prev === c.slug ? null : c.slug);
               return (
-                <tr key={c.slug} className="hover:bg-gray-50">
+                <React.Fragment key={c.slug}>
+                <tr className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-mono text-gray-700">{c.slug}</td>
                   <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">{c.title}</td>
                   <td className="px-4 py-3 text-sm">
@@ -333,11 +388,14 @@ export default function AdminVideoConcepts() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {hasActiveJob ? (
-                        <JobStatusIndicator job={activeJob} onCancel={() => handleCancelJob(c.slug)} />
+                        <JobStatusIndicator job={activeJob} onCancel={() => handleCancelJob(c.slug)} onClick={toggleLogs} />
                       ) : (
                         <>
                           {activeJob?.status === 'FAILED' && (
-                            <JobStatusIndicator job={activeJob} onCancel={() => {}} />
+                            <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
+                          )}
+                          {activeJob?.status === 'COMPLETED' && (
+                            <JobStatusIndicator job={activeJob} onCancel={() => {}} onClick={toggleLogs} />
                           )}
                           <button onClick={() => openView(c)} className="text-blue-600 hover:text-blue-800 text-sm">View</button>
                           <button onClick={() => openEdit(c)} className="text-gray-600 hover:text-gray-800 text-sm">Edit</button>
@@ -369,6 +427,10 @@ export default function AdminVideoConcepts() {
                     </div>
                   </td>
                 </tr>
+                {expandedJob === c.slug && activeJob && (
+                  <LogPanel job={activeJob} onClose={() => setExpandedJob(null)} />
+                )}
+                </React.Fragment>
               );
             })}
             {concepts.length === 0 && (
