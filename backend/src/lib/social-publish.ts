@@ -8,6 +8,8 @@ interface ContentItem {
   linkedinSnippet: string | null;
   blogSlug: string | null;
   blogTitle: string | null;
+  blogBody: string | null;
+  publishedUrl: string | null;
 }
 
 interface PublishResult {
@@ -176,6 +178,161 @@ function generateLinkedInManualInstructions(text: string): string {
 ${text}
 ---
 4. Click "Post"`;
+}
+
+// ─── Cross-posting to external blog platforms ───
+
+export interface CrosspostResult {
+  success: boolean;
+  url?: string;
+  externalId?: string;
+  error?: string;
+  manualInstructions?: string;
+}
+
+export async function crosspostToDevTo(
+  item: ContentItem,
+  tags?: string[],
+): Promise<CrosspostResult> {
+  const apiKey = process.env.DEVTO_API_KEY;
+
+  if (!apiKey) {
+    return {
+      success: false,
+      manualInstructions: generateDevToManualInstructions(item),
+    };
+  }
+
+  try {
+    const body = {
+      article: {
+        title: item.blogTitle || item.blogSlug || 'Untitled',
+        body_markdown: item.blogBody || '',
+        published: true,
+        canonical_url: item.publishedUrl || undefined,
+        tags: (tags || ['ai', 'hiring', 'web3']).slice(0, 4),
+      },
+    };
+
+    const resp = await fetch('https://dev.to/api/articles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': apiKey,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      logger.error({ status: resp.status, body: errText }, 'Dev.to API error');
+      return { success: false, error: `Dev.to API ${resp.status}: ${errText.slice(0, 200)}` };
+    }
+
+    const data: any = await resp.json();
+    return {
+      success: true,
+      url: data.url,
+      externalId: String(data.id),
+    };
+  } catch (e: any) {
+    logger.error({ err: e }, 'Dev.to crosspost failed');
+    return { success: false, error: e.message };
+  }
+}
+
+export async function crosspostToHashnode(
+  item: ContentItem,
+): Promise<CrosspostResult> {
+  const apiKey = process.env.HASHNODE_API_KEY;
+  const publicationId = process.env.HASHNODE_PUBLICATION_ID;
+
+  if (!apiKey || !publicationId) {
+    return {
+      success: false,
+      manualInstructions: generateHashnodeManualInstructions(item),
+    };
+  }
+
+  try {
+    const mutation = `
+      mutation PublishPost($input: PublishPostInput!) {
+        publishPost(input: $input) {
+          post {
+            id
+            url
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        title: item.blogTitle || item.blogSlug || 'Untitled',
+        contentMarkdown: item.blogBody || '',
+        publicationId,
+        originalArticleURL: item.publishedUrl || undefined,
+        tags: [],
+      },
+    };
+
+    const resp = await fetch('https://gql.hashnode.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': apiKey,
+      },
+      body: JSON.stringify({ query: mutation, variables }),
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      logger.error({ status: resp.status, body: errText }, 'Hashnode API error');
+      return { success: false, error: `Hashnode API ${resp.status}: ${errText.slice(0, 200)}` };
+    }
+
+    const data: any = await resp.json();
+
+    if (data.errors?.length) {
+      const errMsg = data.errors.map((e: any) => e.message).join('; ');
+      logger.error({ errors: data.errors }, 'Hashnode GraphQL errors');
+      return { success: false, error: `Hashnode: ${errMsg.slice(0, 200)}` };
+    }
+
+    const post = data.data?.publishPost?.post;
+    return {
+      success: true,
+      url: post?.url,
+      externalId: post?.id,
+    };
+  } catch (e: any) {
+    logger.error({ err: e }, 'Hashnode crosspost failed');
+    return { success: false, error: e.message };
+  }
+}
+
+function generateDevToManualInstructions(item: ContentItem): string {
+  return `To cross-post this article to Dev.to manually:
+
+1. Open https://dev.to/new
+2. Paste the title: ${item.blogTitle || ''}
+3. Paste the article body (Markdown)
+4. Set canonical URL to: ${item.publishedUrl || ''}
+5. Add tags: ai, hiring, web3
+6. Click "Publish"`;
+}
+
+function generateHashnodeManualInstructions(item: ContentItem): string {
+  return `To cross-post this article to Hashnode manually:
+
+1. Open your Hashnode dashboard
+2. Click "Write an article"
+3. Paste the title: ${item.blogTitle || ''}
+4. Paste the article body (Markdown)
+5. Set original article URL to: ${item.publishedUrl || ''}
+6. Click "Publish"`;
 }
 
 // ─── OAuth 1.0a signature for Twitter ───

@@ -757,6 +757,12 @@ export const api = {
   publishContent: (id: string) =>
     request<ContentItem>(`/admin/content/${id}/publish`, { method: 'POST' }),
 
+  crosspostContent: (id: string, platforms: string[], tags?: string[], force?: boolean) =>
+    request<ContentItem & { crosspostResults?: Record<string, any> }>(`/admin/content/${id}/crosspost`, {
+      method: 'POST',
+      body: JSON.stringify({ platforms, tags, force }),
+    }),
+
   deleteContent: (id: string) =>
     request<{ message: string }>(`/admin/content/${id}`, { method: 'DELETE' }),
 

@@ -5,7 +5,7 @@ import { requireStaffOrAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { logStaffActivity } from '../lib/activity-logger.js';
-import { publishContent } from '../lib/social-publish.js';
+import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/social-publish.js';
 
 const router = Router();
 
@@ -431,6 +431,104 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content publish error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/content/:id/crosspost — cross-post published blog to Dev.to / Hashnode
+const crosspostSchema = z.object({
+  platforms: z.array(z.enum(['devto', 'hashnode'])).min(1),
+  tags: z.array(z.string()).max(4).optional(),
+  force: z.boolean().optional(),
+});
+
+router.post('/:id/crosspost', async (req: AuthRequest, res) => {
+  try {
+    const parsed = crosspostSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
+    const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
+    if (!item) return res.status(404).json({ error: 'Content item not found' });
+
+    if (item.platform !== 'BLOG') {
+      return res.status(400).json({ error: 'Cross-posting is only available for BLOG items' });
+    }
+    if (item.status !== 'PUBLISHED') {
+      return res.status(400).json({ error: 'Content must be PUBLISHED before cross-posting' });
+    }
+    if (!item.publishedUrl) {
+      return res.status(400).json({ error: 'Content must have a published URL (canonical) before cross-posting' });
+    }
+
+    const { platforms, tags, force } = parsed.data;
+    const results: Record<string, any> = {};
+    const updateData: any = {};
+    const errors: Record<string, string> = {};
+
+    for (const platform of platforms) {
+      if (platform === 'devto') {
+        if (item.devtoUrl && !force) {
+          results.devto = { skipped: true, url: item.devtoUrl };
+          continue;
+        }
+        const result = await crosspostToDevTo(item, tags);
+        results.devto = result;
+        if (result.success) {
+          updateData.devtoUrl = result.url;
+          updateData.devtoArticleId = result.externalId;
+        } else if (result.manualInstructions) {
+          results.devto.manualInstructions = result.manualInstructions;
+        } else {
+          errors.devto = result.error || 'Unknown error';
+        }
+      }
+
+      if (platform === 'hashnode') {
+        if (item.hashnodeUrl && !force) {
+          results.hashnode = { skipped: true, url: item.hashnodeUrl };
+          continue;
+        }
+        const result = await crosspostToHashnode(item);
+        results.hashnode = result;
+        if (result.success) {
+          updateData.hashnodeUrl = result.url;
+          updateData.hashnodePostId = result.externalId;
+        } else if (result.manualInstructions) {
+          results.hashnode.manualInstructions = result.manualInstructions;
+        } else {
+          errors.hashnode = result.error || 'Unknown error';
+        }
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      updateData.crosspostErrors = {
+        ...(item.crosspostErrors as Record<string, string> || {}),
+        ...errors,
+      };
+    }
+
+    const updated = Object.keys(updateData).length > 0
+      ? await prisma.contentItem.update({ where: { id: req.params.id }, data: updateData })
+      : item;
+
+    logger.info({ contentId: req.params.id, platforms, results }, 'Content cross-post attempt');
+
+    if (req.userId) {
+      logStaffActivity({
+        humanId: req.userId,
+        actionType: 'content_crossposted',
+        entityType: 'ContentItem',
+        entityId: req.params.id,
+        metadata: { platforms, results },
+      });
+    }
+
+    res.json({ ...updated, crosspostResults: results });
+  } catch (error) {
+    logger.error({ err: error }, 'Content crosspost error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -119,6 +119,26 @@ export default function ContentManager() {
     } catch (e: any) { toast.error(e.message); }
   };
 
+  const handleCrosspost = async (id: string, platform: 'devto' | 'hashnode') => {
+    try {
+      const result = await api.crosspostContent(id, [platform]);
+      const platResult = result.crosspostResults?.[platform === 'devto' ? 'devto' : 'hashnode'];
+      if (platResult?.success) {
+        toast.success(`Cross-posted to ${platform === 'devto' ? 'Dev.to' : 'Hashnode'}!`);
+      } else if (platResult?.manualInstructions) {
+        toast.success('Manual instructions generated');
+      } else if (platResult?.skipped) {
+        toast('Already cross-posted', { icon: '\u2139\uFE0F' });
+      } else {
+        toast.error(`Cross-post failed: ${platResult?.error || 'Unknown error'}`);
+      }
+      // Refresh the item to get updated URLs
+      const updated = await api.getContentItem(id);
+      setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
+      if (selectedItem?.id === id) setSelectedItem(updated);
+    } catch (e: any) { toast.error(e.message); }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this content item?')) return;
     try {
@@ -288,6 +308,7 @@ export default function ContentManager() {
             setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
             setSelectedItem(updated);
           }}
+          onCrosspost={handleCrosspost}
         />
       )}
     </div>
@@ -302,6 +323,7 @@ function ContentDetailModal({
   onPublish,
   onDelete,
   onUpdate,
+  onCrosspost,
 }: {
   item: ContentItem;
   onClose: () => void;
@@ -310,6 +332,7 @@ function ContentDetailModal({
   onPublish: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (item: ContentItem) => void;
+  onCrosspost: (id: string, platform: 'devto' | 'hashnode') => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
@@ -510,6 +533,51 @@ function ContentDetailModal({
               <a href={item.publishedUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:underline break-all">
                 {item.publishedUrl}
               </a>
+            </div>
+          )}
+
+          {/* Cross-post status (BLOG items only) */}
+          {item.platform === 'BLOG' && item.status === 'PUBLISHED' && (
+            <div className="bg-gray-50 rounded-md p-3 space-y-2">
+              <div className="text-sm font-medium text-gray-700">Cross-posts</div>
+
+              {/* Dev.to */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Dev.to</span>
+                {item.devtoUrl ? (
+                  <a href={item.devtoUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:underline flex items-center gap-1">
+                    <span>&#10003;</span> Published
+                  </a>
+                ) : item.crosspostErrors?.devto ? (
+                  <span className="text-sm text-red-500" title={item.crosspostErrors.devto}>Failed</span>
+                ) : (
+                  <button
+                    onClick={() => onCrosspost(item.id, 'devto')}
+                    className="text-xs px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-900"
+                  >
+                    Cross-post to Dev.to
+                  </button>
+                )}
+              </div>
+
+              {/* Hashnode */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Hashnode</span>
+                {item.hashnodeUrl ? (
+                  <a href={item.hashnodeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:underline flex items-center gap-1">
+                    <span>&#10003;</span> Published
+                  </a>
+                ) : item.crosspostErrors?.hashnode ? (
+                  <span className="text-sm text-red-500" title={item.crosspostErrors.hashnode}>Failed</span>
+                ) : (
+                  <button
+                    onClick={() => onCrosspost(item.id, 'hashnode')}
+                    className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Cross-post to Hashnode
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

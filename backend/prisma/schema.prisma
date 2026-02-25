@@ -1082,6 +1082,11 @@ model ContentItem {
   publishedUrl    String?
   publishError    String?
   manualInstructions String?      @db.Text
+  devtoUrl          String?
+  devtoArticleId    String?
+  hashnodeUrl       String?
+  hashnodePostId    String?
+  crosspostErrors   Json?
   approvedById    String?
   approvedAt      DateTime?
   rejectionReason String?         @db.Text

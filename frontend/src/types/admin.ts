@@ -363,6 +363,11 @@ export interface ContentItem {
   publishedUrl: string | null;
   publishError: string | null;
   manualInstructions: string | null;
+  devtoUrl: string | null;
+  devtoArticleId: string | null;
+  hashnodeUrl: string | null;
+  hashnodePostId: string | null;
+  crosspostErrors: Record<string, string> | null;
   approvedById: string | null;
   approvedAt: string | null;
   rejectionReason: string | null;
