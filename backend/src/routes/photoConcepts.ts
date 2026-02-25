@@ -219,6 +219,9 @@ router.post('/generate-batch', async (req, res) => {
       stdio: 'ignore',
       detached: true,
     });
+    child.on('error', (err) => {
+      logger.error({ err }, 'Photo batch generation spawn error');
+    });
     child.unref();
 
     logger.info({ count, pid: child.pid }, 'Photo batch generation spawned');
@@ -582,6 +585,9 @@ router.post('/:slug/render', async (req, res) => {
       cwd: PHOTO_PIPELINE_DIR,
       stdio: 'ignore',
       detached: true,
+    });
+    child.on('error', (err) => {
+      logger.error({ err, slug, tier }, 'Photo concept render spawn error');
     });
     child.unref();
 

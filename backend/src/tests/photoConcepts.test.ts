@@ -4,6 +4,8 @@ import app from '../app.js';
 import fs from 'fs/promises';
 import path from 'path';
 
+// Prisma mock is handled by setup-no-db.ts (via vitest.photo.config.ts)
+
 // Mock email module (imported by other routes that app loads)
 vi.mock('../lib/email.js', () => ({
   sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
