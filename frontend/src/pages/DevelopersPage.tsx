@@ -175,8 +175,8 @@ export default function DevelopersPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO
-        title="API & MCP Server"
-        description="Integrate Human Pages into your AI agent. Install the MCP server or use the REST API to search humans by skill and location."
+        title="MCP Server & API for AI Agents"
+        description="Give your AI agent the ability to hire real people. Install the free MCP server or use the REST API to search, hire, and pay freelancers by skill and location."
         path="/dev"
       />
       <SEO
