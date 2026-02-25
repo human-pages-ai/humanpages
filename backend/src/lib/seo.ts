@@ -157,8 +157,8 @@ const BLOG_POSTS: Record<string, { title: string; description: string; date: str
     date: '2026-02-08',
   },
   'getting-paid-usdc-freelancers': {
-    title: 'Getting Paid in USDC: A Freelancer\'s Guide to Crypto Payments',
-    description: 'Everything you need to know about receiving USDC payments for freelance work — wallets, networks, and why stablecoins beat bank transfers.',
+    title: 'Getting Paid as a Freelancer: A Guide to Digital Payments',
+    description: 'Everything you need to know about receiving payments for freelance work — wallets, networks, and why instant digital payments beat bank transfers.',
     date: '2026-02-08',
   },
   'mcp-protocol-ai-agents': {

@@ -201,7 +201,7 @@ router.get('/blog/:slug', (req, res) => {
     const titles: Record<string, string> = {
       'free-moltbook-agent': 'How to Build a Free AI Agent That Posts on Moltbook',
       'ai-agents-hiring-humans': 'How AI Agents Are Hiring Humans for Real-World Tasks',
-      'getting-paid-usdc-freelancers': 'Getting Paid in USDC: A Freelancer\'s Guide to Crypto Payments',
+      'getting-paid-usdc-freelancers': 'Getting Paid as a Freelancer: A Guide to Digital Payments',
       'mcp-protocol-ai-agents': 'The MCP Protocol: How AI Agents Discover and Hire People',
     };
 

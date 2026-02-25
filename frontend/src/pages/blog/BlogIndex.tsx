@@ -48,7 +48,7 @@ export default function BlogIndex() {
       title: 'How to Build a Free AI Agent That Hires Real People',
       slug: 'build-ai-agent-that-hires-people',
       date: 'February 22, 2026',
-      excerpt: 'Build a Telegram bot that finds freelancers, sends job offers, and manages work for you. Free LLM, free hosting, full code included. Wallet setup, USDC on-ramps, and LLM upgrade path all covered.',
+      excerpt: 'Build a Telegram bot that finds freelancers, sends job offers, and manages work for you. Free LLM, free hosting, full code included. Wallet setup, payment on-ramps, and LLM upgrade path all covered.',
       readingTime: '10 min',
       featured: true,
     },
@@ -56,7 +56,7 @@ export default function BlogIndex() {
       title: 'How to Hire Social Media Marketers with an AI Agent (CLI Tool)',
       slug: 'social-media-marketing-hiring-process',
       date: 'February 11, 2026',
-      excerpt: 'A technical guide to automating influencer marketing. We built a TypeScript bot that finds, hires, and pays freelancers in USDC using the Human Pages API.',
+      excerpt: 'A technical guide to automating influencer marketing. We built a TypeScript bot that finds, hires, and pays freelancers using the Human Pages API.',
       readingTime: '8 min',
       featured: true,
     },
@@ -64,7 +64,7 @@ export default function BlogIndex() {
       title: 'Automated Influencer Outreach: Skip the Agency, Keep the Results',
       slug: 'automated-influencer-outreach',
       date: 'February 11, 2026',
-      excerpt: 'We replaced our influencer agency with a bot that pays marketers upfront in crypto. Campaigns that took weeks now launch in hours — here\'s what we learned.',
+      excerpt: 'We replaced our influencer agency with a bot that pays marketers upfront. Campaigns that took weeks now launch in hours — here\'s what we learned.',
       readingTime: '6 min',
       featured: true,
     },
@@ -109,10 +109,10 @@ export default function BlogIndex() {
       featured: true,
     },
     {
-      title: 'Getting Paid in USDC: A Freelancer\'s Guide to Crypto Payments',
+      title: 'Getting Paid as a Freelancer: A Guide to Digital Payments',
       slug: 'getting-paid-usdc-freelancers',
       date: 'February 8, 2026',
-      excerpt: 'Everything you need to know about receiving USDC payments for freelance work — wallets, networks, and why stablecoins beat bank transfers.',
+      excerpt: 'Everything you need to know about receiving payments for freelance work — wallets, networks, and why instant digital payments beat bank transfers.',
       readingTime: '4 min',
       featured: true,
     },
@@ -140,14 +140,14 @@ export default function BlogIndex() {
     <div className="min-h-screen bg-slate-50">
       <SEO
         title="Blog"
-        description="Articles about AI agents, freelancing, crypto payments, and the future of work."
+        description="Articles about AI agents, freelancing, payments, and the future of work."
         path="/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
           "name": "Human Pages Blog",
           "url": "https://humanpages.ai/blog",
-          "description": "Articles about AI agents, freelancing, crypto payments, and the future of work."
+          "description": "Articles about AI agents, freelancing, payments, and the future of work."
         }}
       />
 
@@ -168,7 +168,7 @@ export default function BlogIndex() {
       <main className="py-12 md:py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Blog</h1>
-          <p className="text-lg text-slate-600 mb-12">Articles about AI agents, freelancing, crypto payments, and the future of work.</p>
+          <p className="text-lg text-slate-600 mb-12">Articles about AI agents, freelancing, payments, and the future of work.</p>
 
           {/* Featured section */}
           {featuredArticles.length > 0 && (
