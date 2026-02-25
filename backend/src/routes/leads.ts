@@ -148,6 +148,139 @@ router.post('/bulk-status', apiKeyAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/leads/ai/list — list/search leads (API key)
+router.get('/ai/list', apiKeyAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const search = (req.query.search as string) || '';
+    const status = req.query.status as string;
+    const list = req.query.list as string;
+    const source = req.query.source as string;
+
+    const where: any = {};
+
+    if (status && LEAD_STATUSES.includes(status as any)) {
+      where.status = status;
+    }
+    if (list) {
+      where.list = list;
+    }
+    if (source && LEAD_SOURCES.includes(source as any)) {
+      where.source = source;
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { handle: { contains: search, mode: 'insensitive' } },
+        { focusAreas: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [leads, total] = await Promise.all([
+      prisma.influencerLead.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.influencerLead.count({ where }),
+    ]);
+
+    res.json({
+      leads,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'AI lead list error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/leads/ai/:id — get single lead (API key)
+router.get('/ai/:id', apiKeyAdmin, async (req, res) => {
+  try {
+    const lead = await prisma.influencerLead.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
+    res.json(lead);
+  } catch (error) {
+    logger.error({ err: error }, 'AI lead detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/leads/ai/:id — update lead fields (API key)
+router.patch('/ai/:id', apiKeyAdmin, async (req, res) => {
+  try {
+    const parsed = updateLeadSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
+    const lead = await prisma.influencerLead.update({
+      where: { id: req.params.id },
+      data: parsed.data,
+    });
+    res.json(lead);
+  } catch (error: any) {
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Lead not found' });
+    logger.error({ err: error }, 'AI lead update error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/leads/ai/:id/status — transition lead status (API key)
+router.patch('/ai/:id/status', apiKeyAdmin, async (req, res) => {
+  try {
+    const parsed = statusTransitionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
+    const lead = await prisma.influencerLead.findUnique({ where: { id: req.params.id } });
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
+
+    const allowed = STATUS_TRANSITIONS[lead.status] || [];
+    if (!allowed.includes(parsed.data.status)) {
+      return res.status(400).json({
+        error: `Cannot transition from ${lead.status} to ${parsed.data.status}`,
+        allowed,
+      });
+    }
+
+    const extraData: any = {};
+    if (parsed.data.status === 'CONTACTED') {
+      extraData.outreachSentAt = new Date();
+      extraData.lastContactAt = new Date();
+    }
+
+    const updated = await prisma.influencerLead.update({
+      where: { id: req.params.id },
+      data: { status: parsed.data.status, ...extraData },
+    });
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'AI lead status transition error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/leads/ai/:id — delete lead (API key)
+router.delete('/ai/:id', apiKeyAdmin, async (req, res) => {
+  try {
+    await prisma.influencerLead.delete({ where: { id: req.params.id } });
+    res.json({ deleted: true });
+  } catch (error: any) {
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Lead not found' });
+    logger.error({ err: error }, 'AI lead delete error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ─── JWT staff/admin auth (dashboard) ───
 
 router.use(authenticateToken, requireStaffOrAdmin, requireLeadGen);
