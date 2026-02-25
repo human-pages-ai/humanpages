@@ -1,6 +1,6 @@
 {
   "name": "humanpages",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "mcpName": "io.github.human-pages-ai/humanpages",
   "description": "MCP Server for AI agents to discover and hire humans for real-world tasks via humanpages.ai",
   "main": "dist/index.js",

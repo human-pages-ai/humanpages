@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.human-pages-ai/humanpages",
+  "title": "Human Pages",
+  "description": "Search for and hire humans for real-world tasks via humanpages.ai",
+  "websiteUrl": "https://humanpages.ai",
+  "repository": {
+    "url": "https://github.com/human-pages-ai/humanpages",
+    "source": "github"
+  },
+  "version": "1.2.3",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://humanpages.ai/mcp"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "humanpages",
+      "version": "1.2.3",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
