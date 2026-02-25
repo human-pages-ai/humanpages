@@ -68,7 +68,12 @@ interface PhotoStatus {
 async function loadStatus(): Promise<PhotoStatus> {
   try {
     const data = await fs.readFile(STATUS_FILE, 'utf-8');
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      logger.warn('Status file had invalid characters, sanitizing');
+      return JSON.parse(sanitizeJson(data));
+    }
   } catch {
     return {};
   }
@@ -79,10 +84,22 @@ async function saveStatus(status: PhotoStatus): Promise<void> {
   await fs.writeFile(STATUS_FILE, JSON.stringify(status, null, 2));
 }
 
+/** Strip control characters (except \n, \r, \t) that break JSON.parse */
+function sanitizeJson(raw: string): string {
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+}
+
 async function loadBatch(): Promise<any[]> {
   try {
     const data = await fs.readFile(BATCH_FILE, 'utf-8');
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      // Retry after stripping control characters (Python can emit them)
+      logger.warn('Batch file had invalid characters, sanitizing');
+      return JSON.parse(sanitizeJson(data));
+    }
   } catch {
     return [];
   }
