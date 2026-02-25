@@ -18,6 +18,29 @@ const BATCH_FILE = path.join(PHOTO_PIPELINE_DIR, 'suggested_batch.json');
 const QUEUE_DIR = path.join(DATA_DIR, 'queue');
 const OUTPUT_DIR = path.join(PHOTO_PIPELINE_DIR, 'output');
 
+// Log resolved paths on startup so we can see what the server is using
+logger.info({
+  PHOTO_PIPELINE_DIR,
+  PYTHON_BIN,
+  DATA_DIR,
+  STATUS_FILE,
+  BATCH_FILE,
+  QUEUE_DIR,
+  OUTPUT_DIR,
+}, 'Photo concepts: resolved paths');
+
+/** Return error detail string from any caught error */
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
+/** Strip control characters (except \n, \r, \t) that break JSON.parse */
+function sanitizeJson(raw: string): string {
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+}
+
 // Valid PostType values from the photo pipeline's schemas/post.py
 const VALID_POST_TYPES = [
   'meme_classic', 'meme_caption', 'meme_multi_panel', 'meme_reaction', 'meme_labeled',
@@ -70,11 +93,13 @@ async function loadStatus(): Promise<PhotoStatus> {
     const data = await fs.readFile(STATUS_FILE, 'utf-8');
     try {
       return JSON.parse(data);
-    } catch {
-      logger.warn('Status file had invalid characters, sanitizing');
+    } catch (parseErr) {
+      logger.warn({ err: parseErr, file: STATUS_FILE, firstChars: data.slice(0, 200) },
+        'Status file had invalid JSON, trying sanitized parse');
       return JSON.parse(sanitizeJson(data));
     }
-  } catch {
+  } catch (err) {
+    logger.debug({ err: errMsg(err), file: STATUS_FILE }, 'loadStatus: could not read/parse, returning {}');
     return {};
   }
 }
@@ -84,23 +109,18 @@ async function saveStatus(status: PhotoStatus): Promise<void> {
   await fs.writeFile(STATUS_FILE, JSON.stringify(status, null, 2));
 }
 
-/** Strip control characters (except \n, \r, \t) that break JSON.parse */
-function sanitizeJson(raw: string): string {
-  // eslint-disable-next-line no-control-regex
-  return raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
-}
-
 async function loadBatch(): Promise<any[]> {
   try {
     const data = await fs.readFile(BATCH_FILE, 'utf-8');
     try {
       return JSON.parse(data);
-    } catch {
-      // Retry after stripping control characters (Python can emit them)
-      logger.warn('Batch file had invalid characters, sanitizing');
+    } catch (parseErr) {
+      logger.warn({ err: parseErr, file: BATCH_FILE, firstChars: data.slice(0, 200) },
+        'Batch file had invalid JSON, trying sanitized parse');
       return JSON.parse(sanitizeJson(data));
     }
-  } catch {
+  } catch (err) {
+    logger.debug({ err: errMsg(err), file: BATCH_FILE }, 'loadBatch: could not read/parse, returning []');
     return [];
   }
 }
@@ -236,16 +256,14 @@ router.post('/generate-batch', async (req, res) => {
       stdio: 'ignore',
       detached: true,
     });
-    child.on('error', (err) => {
-      logger.error({ err }, 'Photo batch generation spawn error');
-    });
+    child.on('error', (err) => logger.error({ err }, 'Photo batch generation spawn failed'));
     child.unref();
 
     logger.info({ count, pid: child.pid }, 'Photo batch generation spawned');
     res.json({ message: `Batch generation started (${count} concepts)`, pid: child.pid });
   } catch (error) {
     logger.error({ err: error }, 'Photo batch generation error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -273,7 +291,7 @@ router.post('/assess-all', async (req, res) => {
     res.json({ message: `Assessed ${assessed} concepts`, total: batch.length });
   } catch (error) {
     logger.error({ err: error }, 'Photo assess-all error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -324,7 +342,7 @@ router.get('/', async (_req, res) => {
     res.json({ concepts });
   } catch (error) {
     logger.error({ err: error }, 'Photo concepts list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -390,7 +408,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(buildConceptResponse(slug, status[slug], newConcept));
   } catch (error) {
     logger.error({ err: error }, 'Photo concept create error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -417,7 +435,7 @@ router.get('/:slug', async (req, res) => {
     res.json(buildConceptResponse(slug, entry, batchConcept));
   } catch (error) {
     logger.error({ err: error }, 'Photo concept get error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -460,7 +478,7 @@ router.patch('/:slug', async (req, res) => {
     res.json(buildConceptResponse(slug, status[slug], batch[idx]));
   } catch (error) {
     logger.error({ err: error }, 'Photo concept update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -489,7 +507,7 @@ router.delete('/:slug', async (req, res) => {
     res.json({ message: `Concept '${slug}' deleted` });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept delete error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -533,7 +551,7 @@ router.post('/:slug/approve', async (req, res) => {
     res.json({ slug, status: 'approved' });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept approve error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -556,7 +574,7 @@ router.post('/:slug/reject', async (req, res) => {
     res.json({ slug, status: 'rejected' });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept reject error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -603,16 +621,14 @@ router.post('/:slug/render', async (req, res) => {
       stdio: 'ignore',
       detached: true,
     });
-    child.on('error', (err) => {
-      logger.error({ err, slug, tier }, 'Photo concept render spawn error');
-    });
+    child.on('error', (err) => logger.error({ err, slug, tier }, 'Photo render spawn failed'));
     child.unref();
 
     logger.info({ slug, tier, pid: child.pid }, 'Photo concept render spawned');
     res.json({ message: `Render started (${tier} tier)`, pid: child.pid, slug });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept render error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -647,7 +663,7 @@ router.post('/:slug/assess', async (req, res) => {
     res.json({ slug, ...result });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept assess error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -685,7 +701,7 @@ router.get('/:slug/outputs', async (req, res) => {
     res.json({ slug, outputs });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept outputs error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -734,7 +750,7 @@ router.get('/:slug/image/:filename', async (req, res) => {
     res.status(404).json({ error: 'Image not found' });
   } catch (error) {
     logger.error({ err: error }, 'Photo concept image serve error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -760,7 +776,7 @@ router.get('/:slug/image/:platform/:filename', async (req, res) => {
     }
   } catch (error) {
     logger.error({ err: error }, 'Photo concept platform image serve error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

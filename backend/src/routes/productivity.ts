@@ -7,6 +7,12 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // GET /stream — SSE endpoint for real-time updates
 // Uses ?token= query param since EventSource cannot set custom headers.
 router.get('/stream', async (req, res) => {
@@ -181,7 +187,7 @@ router.get('/dashboard', async (_req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Productivity dashboard error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -231,7 +237,7 @@ router.get('/alerts', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Productivity alerts error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -270,7 +276,7 @@ router.patch('/alerts/:id/dismiss', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Productivity alert dismiss error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -319,7 +325,7 @@ router.get('/activity', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Productivity activity error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

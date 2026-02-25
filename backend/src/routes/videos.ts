@@ -15,6 +15,12 @@ import {
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── Auth: jwtOrApiKey, then require admin for JWT users ───
 router.use(jwtOrApiKey);
 router.use((req: Request, res: Response, next) => {
@@ -93,7 +99,7 @@ router.get('/', async (req: Request, res: Response) => {
     });
   } catch (err) {
     logger.error({ err }, 'Failed to list videos');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -132,7 +138,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     });
   } catch (err) {
     logger.error({ err }, 'Failed to get video detail');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -167,7 +173,7 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: err.errors });
     }
     logger.error({ err }, 'Failed to create video');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -202,7 +208,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: err.errors });
     }
     logger.error({ err }, 'Failed to update video');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -232,7 +238,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.json({ message: 'Video deleted' });
   } catch (err) {
     logger.error({ err }, 'Failed to delete video');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -260,7 +266,7 @@ router.post('/:id/upload-url', async (req: Request, res: Response) => {
     res.json({ uploadUrl, key, assetType, sceneNumber });
   } catch (err) {
     logger.error({ err }, 'Failed to generate upload URL');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -311,7 +317,7 @@ router.post('/:id/confirm-upload', async (req: Request, res: Response) => {
     res.status(201).json(asset);
   } catch (err) {
     logger.error({ err }, 'Failed to confirm upload');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

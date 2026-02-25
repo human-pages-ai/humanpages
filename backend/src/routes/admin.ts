@@ -20,6 +20,12 @@ import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from 
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── API-key routes (read-only, for CLI tooling) ───
 // These sit ABOVE the JWT middleware so they don't require a browser session.
 
@@ -54,7 +60,7 @@ router.get('/ai/stats', apiKeyAdmin, async (_req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'AI admin stats error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -80,7 +86,7 @@ router.get('/ai/activity', apiKeyAdmin, async (req, res) => {
     res.json({ recentUsers, recentFeedback });
   } catch (error) {
     logger.error({ err: error }, 'AI admin activity error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -130,7 +136,7 @@ router.get('/me', authenticateToken, requireStaffOrAdmin, async (req: AuthReques
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin /me error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -157,7 +163,7 @@ router.get('/ai/staff', apiKeyAdmin, async (_req, res) => {
     res.json({ staff });
   } catch (error) {
     logger.error({ err: error }, 'AI staff list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -186,7 +192,7 @@ router.patch('/ai/staff/:id/capabilities', apiKeyAdmin, async (req, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'AI staff capabilities update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -223,7 +229,7 @@ router.get('/tasks/summary', authenticateToken, requireStaffOrAdmin, async (req:
     res.json({ capabilities, summary });
   } catch (error) {
     logger.error({ err: error }, 'Task summary error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -349,7 +355,7 @@ router.get('/stats', async (_req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin stats error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -420,7 +426,7 @@ router.get('/users', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin users error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -487,7 +493,7 @@ router.get('/agents', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin agents error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -556,7 +562,7 @@ router.get('/jobs', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin jobs error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -633,7 +639,7 @@ router.get('/users/:id', async (req: AuthRequest, res) => {
     res.json({ ...user, referralCount });
   } catch (error) {
     logger.error({ err: error }, 'Admin user detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -671,7 +677,7 @@ router.get('/agents/:id', async (req: AuthRequest, res) => {
     res.json(agent);
   } catch (error) {
     logger.error({ err: error }, 'Admin agent detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -752,7 +758,7 @@ router.patch('/agents/:id', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Admin agent update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -794,7 +800,7 @@ router.get('/jobs/:id', async (req: AuthRequest, res) => {
     res.json(job);
   } catch (error) {
     logger.error({ err: error }, 'Admin job detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -864,7 +870,7 @@ router.get('/activity', async (req: AuthRequest, res) => {
     res.json({ activity: activity.slice(0, limit) });
   } catch (error) {
     logger.error({ err: error }, 'Admin activity error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -917,7 +923,7 @@ router.get('/listings', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin listings error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -951,7 +957,7 @@ router.get('/listings/:id', async (req: AuthRequest, res) => {
     res.json(safeListing);
   } catch (error) {
     logger.error({ err: error }, 'Admin listing detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1048,7 +1054,7 @@ router.get('/staff', async (req: AuthRequest, res) => {
     res.json({ staff });
   } catch (error) {
     logger.error({ err: error }, 'Admin staff list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1094,7 +1100,7 @@ router.post('/staff/:id/api-key', async (req: AuthRequest, res) => {
     res.json({ apiKey, prefix: apiKeyPrefix });
   } catch (error) {
     logger.error({ err: error }, 'Staff API key generation error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1115,7 +1121,7 @@ router.delete('/staff/:id/api-key', async (req: AuthRequest, res) => {
     res.json({ message: 'API key revoked' });
   } catch (error) {
     logger.error({ err: error }, 'Staff API key revocation error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1164,7 +1170,7 @@ router.patch('/staff/:id/role', async (req: AuthRequest, res) => {
     res.json({ message: `Role updated to ${role}`, id, role });
   } catch (error) {
     logger.error({ err: error }, 'Staff role update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1181,7 +1187,7 @@ router.get('/staff/:id/capabilities', async (req: AuthRequest, res) => {
     res.json({ capabilities: getEffectiveCapabilities(effectiveRole, user.capabilities) });
   } catch (error) {
     logger.error({ err: error }, 'Staff capabilities get error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1209,7 +1215,7 @@ router.patch('/staff/:id/capabilities', async (req: AuthRequest, res) => {
     res.json({ id: updated.id, capabilities: getEffectiveCapabilities(effectiveRole, updated.capabilities) });
   } catch (error) {
     logger.error({ err: error }, 'Staff capabilities update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1246,7 +1252,7 @@ router.post('/staff/:id/send-key', async (req: AuthRequest, res) => {
     res.json({ message: 'API key sent via email' });
   } catch (error) {
     logger.error({ err: error }, 'Staff API key email error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1284,7 +1290,7 @@ router.get('/moderation', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin moderation list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -1339,7 +1345,7 @@ router.patch('/moderation/:id', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Admin moderation override error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

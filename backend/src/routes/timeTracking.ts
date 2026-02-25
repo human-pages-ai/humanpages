@@ -9,6 +9,12 @@ import { resolveIdleAlerts } from '../lib/idle-worker.js';
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // All routes require staff or API key auth
 router.use(jwtOrApiKey, requireStaffOrApiKey);
 
@@ -32,7 +38,7 @@ router.get('/status', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Time tracking status error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -75,7 +81,7 @@ router.post('/clock-in', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Time tracking clock-in error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -129,7 +135,7 @@ router.post('/clock-out', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Time tracking clock-out error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -178,7 +184,7 @@ router.get('/entries', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Time tracking entries error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -247,7 +253,7 @@ router.get('/summary', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Time tracking summary error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -331,7 +337,7 @@ router.get('/all-staff', async (req: AuthRequest, res) => {
     res.json({ staff });
   } catch (error) {
     logger.error({ err: error }, 'Time tracking all-staff error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -372,7 +378,7 @@ router.patch('/rate', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Rate config error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -482,7 +488,7 @@ router.post('/payments', async (req: AuthRequest, res) => {
     res.status(201).json(payment);
   } catch (error) {
     logger.error({ err: error }, 'Create payment error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -528,7 +534,7 @@ router.get('/payments', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'List payments error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -561,7 +567,7 @@ router.patch('/payments/:id', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Payment not found' });
     }
     logger.error({ err: error }, 'Update payment error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -583,7 +589,7 @@ router.delete('/payments/:id', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Payment not found' });
     }
     logger.error({ err: error }, 'Delete payment error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -618,7 +624,7 @@ router.post('/adjustments', async (req: AuthRequest, res) => {
     res.status(201).json(adjustment);
   } catch (error) {
     logger.error({ err: error }, 'Create adjustment error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -657,7 +663,7 @@ router.get('/adjustments', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'List adjustments error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -693,7 +699,7 @@ router.patch('/adjustments/:id', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Adjustment not found' });
     }
     logger.error({ err: error }, 'Update adjustment error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -718,7 +724,7 @@ router.get('/balance', async (req: AuthRequest, res) => {
     res.json(balance);
   } catch (error) {
     logger.error({ err: error }, 'Balance calculation error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -744,7 +750,7 @@ router.get('/balance/all-staff', async (req: AuthRequest, res) => {
     res.json({ balances: balances.filter(Boolean) });
   } catch (error) {
     logger.error({ err: error }, 'All staff balance error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

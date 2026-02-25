@@ -58,8 +58,8 @@ app.use(cors({
 }));
 // Routes with larger body limits (before global 10kb parser, API-key protected)
 app.use('/api/admin/content', express.json({ limit: '2mb' }));
-app.use('/api/admin/leads', express.json({ limit: '2mb' }));
 app.use('/api/admin/photo-concepts', express.json({ limit: '2mb' }));
+app.use('/api/admin/leads', express.json({ limit: '2mb' }));
 app.use('/api/feedback', express.json({ limit: '2mb' }));
 
 // Global body parser — 10kb limit for all other routes (bot/abuse protection)

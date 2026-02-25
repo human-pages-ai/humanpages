@@ -7,6 +7,12 @@ import { Request, Response } from 'express';
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── Auth ───
 router.use(jwtOrApiKey);
 router.use((req: Request, res: Response, next) => {
@@ -106,7 +112,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Career applications list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -134,7 +140,7 @@ router.get('/stats', async (_req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Career applications stats error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -172,7 +178,7 @@ router.get('/:id', async (req, res) => {
     res.json(application);
   } catch (error) {
     logger.error({ err: error }, 'Career application detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -197,7 +203,7 @@ router.patch('/bulk-status', async (req, res) => {
     res.json({ updated: result.count });
   } catch (error) {
     logger.error({ err: error }, 'Career applications bulk update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -236,7 +242,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Application not found' });
     }
     logger.error({ err: error }, 'Career application update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

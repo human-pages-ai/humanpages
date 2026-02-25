@@ -9,6 +9,12 @@ import { getSignedDownloadUrl } from '../lib/storage.js';
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── Auth: jwtOrApiKey, then require admin for JWT users ───
 router.use(jwtOrApiKey);
 router.use((req: Request, res: Response, next) => {
@@ -116,7 +122,7 @@ router.get('/', async (req: Request, res: Response) => {
     });
   } catch (err) {
     logger.error({ err }, 'Failed to list schedule');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -142,7 +148,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
     });
   } catch (err) {
     logger.error({ err }, 'Failed to get schedule stats');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -181,7 +187,7 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: err.errors });
     }
     logger.error({ err }, 'Failed to create schedule entry');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -218,7 +224,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: err.errors });
     }
     logger.error({ err }, 'Failed to update schedule entry');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -233,7 +239,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Schedule entry not found' });
     }
     logger.error({ err }, 'Failed to delete schedule entry');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -260,7 +266,7 @@ router.post('/:id/mark-published', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Schedule entry not found' });
     }
     logger.error({ err }, 'Failed to mark as published');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

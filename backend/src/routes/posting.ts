@@ -10,6 +10,12 @@ import { logStaffActivity } from '../lib/activity-logger.js';
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── Extension distribution ───
 
 const EXTENSION_DIR = path.join(process.cwd(), 'data', 'extension');
@@ -26,7 +32,7 @@ router.get('/extension/version', jwtOrApiKey, requireStaffOrApiKey, (_req, res) 
     res.json(info);
   } catch (error) {
     logger.error({ err: error }, 'Extension version check error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -39,7 +45,7 @@ router.get('/extension/download', jwtOrApiKey, requireStaffOrApiKey, (_req, res)
     res.download(EXTENSION_ZIP_FILE, 'human-pages-extension.zip');
   } catch (error) {
     logger.error({ err: error }, 'Extension download error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -73,7 +79,7 @@ router.post('/ads', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
     res.json(ad);
   } catch (error) {
     logger.error({ err: error }, 'Posting ads upsert error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -116,7 +122,7 @@ router.post('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
     res.json({ created: created.length, skipped: skipped.length, groups: created });
   } catch (error) {
     logger.error({ err: error }, 'Posting groups create error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -148,7 +154,7 @@ router.get('/stats', jwtOrApiKey, requireStaffOrApiKey, async (_req, res) => {
     res.json({ groups: byStatus, adCount, byType });
   } catch (error) {
     logger.error({ err: error }, 'Posting stats error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -217,7 +223,7 @@ router.get('/groups', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequest
     });
   } catch (error) {
     logger.error({ err: error }, 'Posting groups list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -295,7 +301,7 @@ router.patch('/groups/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthR
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Posting group update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -372,7 +378,7 @@ router.get('/staff-stats', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRe
     });
   } catch (error) {
     logger.error({ err: error }, 'Staff stats error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -386,7 +392,7 @@ router.get('/ads', jwtOrApiKey, requireStaffOrApiKey, async (_req, res) => {
     res.json({ ads });
   } catch (error) {
     logger.error({ err: error }, 'Posting ads list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -403,7 +409,7 @@ router.get('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthReques
     res.json(ad);
   } catch (error) {
     logger.error({ err: error }, 'Posting ad detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -437,7 +443,7 @@ router.patch('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRequ
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Ad copy update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -461,7 +467,7 @@ router.post('/ads/create', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRe
       return res.status(409).json({ error: 'An ad with this number and language already exists' });
     }
     logger.error({ err: error }, 'Ad copy create error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -484,7 +490,7 @@ router.delete('/ads/:id', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthReq
     res.json({ message: 'Ad deleted' });
   } catch (error) {
     logger.error({ err: error }, 'Ad copy delete error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

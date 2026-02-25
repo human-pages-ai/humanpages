@@ -9,6 +9,12 @@ import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/so
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── API-key auth (blog engine CLI) ───
 
 const ingestItemSchema = z.object({
@@ -102,7 +108,7 @@ router.post('/ingest', apiKeyAdmin, async (req, res) => {
     res.json({ created: created.length, ids: created });
   } catch (error) {
     logger.error({ err: error }, 'Content ingest error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -145,7 +151,7 @@ router.get('/feedback', apiKeyAdmin, async (req, res) => {
     res.json({ rejections: items });
   } catch (error) {
     logger.error({ err: error }, 'Content feedback error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -175,7 +181,7 @@ router.get('/stats', async (_req, res) => {
     res.json({ byStatus: statusCounts, byPlatform: platformCounts });
   } catch (error) {
     logger.error({ err: error }, 'Content stats error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -223,7 +229,7 @@ router.get('/', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Content list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -235,7 +241,7 @@ router.get('/:id', async (req, res) => {
     res.json(item);
   } catch (error) {
     logger.error({ err: error }, 'Content detail error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -265,7 +271,7 @@ router.post('/', async (req: AuthRequest, res) => {
     res.status(201).json(item);
   } catch (error) {
     logger.error({ err: error }, 'Content create error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -300,7 +306,7 @@ router.patch('/:id', async (req, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -334,7 +340,7 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content approve error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -378,7 +384,7 @@ router.patch('/:id/reject', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content reject error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -431,7 +437,7 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Content publish error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -543,7 +549,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Content item deleted' });
   } catch (error) {
     logger.error({ err: error }, 'Content delete error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

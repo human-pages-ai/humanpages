@@ -9,6 +9,12 @@ import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
+// ─── Helper function ───
+function errMsg(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
+
 // ─── Path resolution ───
 // __dirname = backend/src/routes (or backend/dist/routes) → up 4 to projects/
 const VIDEO_PIPELINE_DIR = process.env.VIDEO_PIPELINE_DIR
@@ -240,7 +246,7 @@ router.get('/', async (_req, res) => {
     res.json({ concepts });
   } catch (error) {
     logger.error({ err: error }, 'Video concepts list error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -277,7 +283,7 @@ router.get('/:slug', async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Video concept get error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -335,7 +341,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Video concept create error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -385,7 +391,7 @@ router.patch('/:slug', async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Video concept update error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -412,7 +418,7 @@ router.delete('/:slug', async (req, res) => {
     res.json({ message: `Concept '${slug}' deleted` });
   } catch (error) {
     logger.error({ err: error }, 'Video concept delete error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -474,7 +480,7 @@ router.post('/:slug/preview', async (req, res) => {
     res.json({ message: `Preview queued for '${slug}'`, jobId: parent.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept preview error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -507,7 +513,7 @@ router.post('/:slug/approve', async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Video concept approve error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -587,7 +593,7 @@ router.post('/:slug/produce', async (req, res) => {
     res.json({ message: `Production queued for '${slug}'`, jobId: parent.id });
   } catch (error) {
     logger.error({ err: error }, 'Video concept produce error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
@@ -638,7 +644,7 @@ router.get('/:slug/outputs', async (req, res) => {
     res.json({ slug, outputs });
   } catch (error) {
     logger.error({ err: error }, 'Video concept outputs error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 
