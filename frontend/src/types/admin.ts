@@ -343,7 +343,7 @@ export type ContentPlatform = 'TWITTER' | 'LINKEDIN' | 'BLOG';
 
 export interface ContentItem {
   id: string;
-  sourceTitle: string;
+  sourceTitle: string | null;
   sourceUrl: string | null;
   source: string | null;
   relevanceScore: number | null;

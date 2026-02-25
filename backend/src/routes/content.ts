@@ -18,7 +18,7 @@ function errMsg(error: unknown): string {
 // ─── API-key auth (blog engine CLI) ───
 
 const ingestItemSchema = z.object({
-  sourceTitle: z.string().min(1),
+  sourceTitle: z.string().min(1).optional(),
   sourceUrl: z.string().optional(),
   source: z.string().optional(),
   relevanceScore: z.number().int().min(0).max(3).optional(),
@@ -247,7 +247,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/admin/content — create manually
 const createSchema = z.object({
-  sourceTitle: z.string().min(1),
+  sourceTitle: z.string().optional(),
   sourceUrl: z.string().optional(),
   source: z.string().optional(),
   platform: z.enum(['TWITTER', 'LINKEDIN', 'BLOG']),

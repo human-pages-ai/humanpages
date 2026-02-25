@@ -68,7 +68,7 @@ export default function ContentManager() {
   const checkLinkedInAdvisory = (item: ContentItem) => {
     if (item.platform !== 'LINKEDIN') return;
     const siblingBlog = items.find(
-      (i) => i.platform === 'BLOG' && i.sourceTitle === item.sourceTitle && i.status !== 'PUBLISHED'
+      (i) => i.platform === 'BLOG' && item.sourceTitle && i.sourceTitle === item.sourceTitle && i.status !== 'PUBLISHED'
     );
     if (siblingBlog) {
       toast('This LinkedIn post links to your blog. Make sure the blog post is also published.', { icon: '\u26A0\uFE0F', duration: 6000 });
@@ -234,7 +234,7 @@ export default function ContentManager() {
                   </span>
                 </td>
                 <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px] truncate">
-                  {item.sourceTitle}
+                  {item.sourceTitle || item.blogTitle || 'Original post'}
                 </td>
                 <td className="px-4 py-3 text-gray-600 max-w-[300px] truncate">
                   {getContentPreview(item)}
@@ -392,7 +392,7 @@ function ContentDetailModal({
         <div className="px-6 py-4 space-y-6">
           {/* Source info */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-1">{item.sourceTitle}</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">{item.sourceTitle || 'Original post'}</h3>
             {item.sourceUrl && (
               <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline break-all">
                 {item.sourceUrl}

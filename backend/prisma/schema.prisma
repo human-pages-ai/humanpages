@@ -1062,7 +1062,7 @@ enum ContentPlatform {
 
 model ContentItem {
   id              String          @id @default(cuid())
-  sourceTitle     String
+  sourceTitle     String?
   sourceUrl       String?
   source          String?
   relevanceScore  Int?
