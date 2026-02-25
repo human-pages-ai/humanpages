@@ -89,6 +89,7 @@ export default function JobBoard() {
       <SEO
         title={t('listings.seo.title')}
         description={t('listings.seo.description')}
+        path="/listings"
       />
 
       {/* Nav bar */}
