@@ -801,9 +801,7 @@
       "optionA": "Option A: Add to .mcp.json (recommended)",
       "optionADesc": "Add this to your project's <code>.mcp.json</code> file:",
       "optionB": "Option B: Claude Code CLI",
-      "optionBDesc": "Or add directly via the Claude Code CLI:",
-      "optionC": "Option C: OpenClaw",
-      "optionCDesc": "Using <a href=\"https://openclaw.ai\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">OpenClaw</a>? Install from <a href=\"https://clawhub.ai/skills/humanpages\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">ClawHub</a>:"
+      "optionBDesc": "Or add directly via the Claude Code CLI:"
     },
     "tools": {
       "title": "Available Tools",

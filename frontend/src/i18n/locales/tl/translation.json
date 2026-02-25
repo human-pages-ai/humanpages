@@ -741,9 +741,7 @@
       "optionA": "Opsyon A: Idagdag sa .mcp.json (inirerekomenda)",
       "optionADesc": "Idagdag ito sa <code>.mcp.json</code> file ng iyong proyekto:",
       "optionB": "Opsyon B: Claude Code CLI",
-      "optionBDesc": "O direktang idagdag sa pamamagitan ng Claude Code CLI:",
-      "optionC": "Opsyon C: OpenClaw",
-      "optionCDesc": "Gumagamit ng <a href=\"https://openclaw.ai\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">OpenClaw</a>? I-install mula sa <a href=\"https://clawhub.ai/skills/humanpages\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">ClawHub</a>:"
+      "optionBDesc": "O direktang idagdag sa pamamagitan ng Claude Code CLI:"
     },
     "tools": {
       "title": "Mga available na tool",

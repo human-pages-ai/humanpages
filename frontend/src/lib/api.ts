@@ -1,5 +1,5 @@
-import type { Profile, Wallet, FiatPaymentMethod, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail } from '../types/admin';
+import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -163,24 +163,6 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ label }),
     }),
-
-  // Fiat payment methods
-  getFiatMethods: () => request<FiatPaymentMethod[]>('/humans/me/fiat-methods'),
-
-  addFiatMethod: (data: { platform: string; handle: string; label?: string; isPrimary?: boolean }) =>
-    request<FiatPaymentMethod>('/humans/me/fiat-methods', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  updateFiatMethod: (id: string, data: { label?: string; isPrimary?: boolean }) =>
-    request<FiatPaymentMethod>(`/humans/me/fiat-methods/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-
-  deleteFiatMethod: (id: string) =>
-    request<void>(`/humans/me/fiat-methods/${id}`, { method: 'DELETE' }),
 
   // Services
   getServices: () => request<Service[]>('/services'),
@@ -400,13 +382,12 @@ export const api = {
   getAdminStats: () =>
     request<AdminStats>('/admin/stats'),
 
-  getAdminUsers: (params: { page?: number; limit?: number; search?: string; verified?: string; hasPhoto?: boolean; sort?: string; order?: string } = {}) => {
+  getAdminUsers: (params: { page?: number; limit?: number; search?: string; verified?: string; sort?: string; order?: string } = {}) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
     if (params.search) query.set('search', params.search);
     if (params.verified) query.set('verified', params.verified);
-    if (params.hasPhoto) query.set('hasPhoto', 'true');
     if (params.sort) query.set('sort', params.sort);
     if (params.order) query.set('order', params.order);
     const qs = query.toString();
@@ -741,14 +722,13 @@ export const api = {
   },
 
   // Content Pipeline
-  getContentItems: (params: { page?: number; limit?: number; status?: string; platform?: string; search?: string; excludeStatus?: string } = {}) => {
+  getContentItems: (params: { page?: number; limit?: number; status?: string; platform?: string; search?: string } = {}) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
     if (params.status) query.set('status', params.status);
     if (params.platform) query.set('platform', params.platform);
     if (params.search) query.set('search', params.search);
-    if (params.excludeStatus) query.set('excludeStatus', params.excludeStatus);
     const qs = query.toString();
     return request<{ items: ContentItem[]; pagination: Pagination }>(`/admin/content${qs ? `?${qs}` : ''}`);
   },
@@ -777,23 +757,14 @@ export const api = {
   publishContent: (id: string) =>
     request<ContentItem>(`/admin/content/${id}/publish`, { method: 'POST' }),
 
-  crosspostContent: (id: string, platforms: string[], tags?: string[], force?: boolean, includeCoverImage?: boolean) =>
+  crosspostContent: (id: string, platforms: string[], tags?: string[], force?: boolean) =>
     request<ContentItem & { crosspostResults?: Record<string, any> }>(`/admin/content/${id}/crosspost`, {
       method: 'POST',
-      body: JSON.stringify({ platforms, tags, force, includeCoverImage }),
+      body: JSON.stringify({ platforms, tags, force }),
     }),
 
   deleteContent: (id: string) =>
     request<{ message: string }>(`/admin/content/${id}`, { method: 'DELETE' }),
-
-  generateBlogImage: (id: string, type: 'template' | 'pixel' | 'generated') =>
-    request<ContentItem & { imageUrl: string | null; thumbUrl: string | null }>(`/admin/content/${id}/generate-image`, {
-      method: 'POST',
-      body: JSON.stringify({ type }),
-    }),
-
-  getBlogImageUrls: (id: string) =>
-    request<{ imageUrl: string | null; thumbUrl: string | null; imageType: string | null }>(`/admin/content/${id}/image-urls`),
 
   // Public Blog API
   getBlogPosts: (params: { page?: number; limit?: number } = {}) => {
@@ -884,34 +855,6 @@ export const api = {
     request<{ success: boolean }>(`/admin/video-concepts/${slug}/script/${tier}`, {
       method: 'PUT',
       body: JSON.stringify(script),
-    }),
-
-  // Video Batches
-  getVideoBatches: () =>
-    request<{ batches: BatchSummary[] }>('/admin/video-batches'),
-
-  getVideoBatchQueue: () =>
-    request<{ queue: Array<{ date: string; concept: number; title: string; tier: string; approvedAt: string }> }>('/admin/video-batches/queue'),
-
-  getVideoBatch: (date: string) =>
-    request<BatchDetail>(`/admin/video-batches/${date}`),
-
-  getVideoBatchConcept: (date: string, num: number) =>
-    request<BatchConceptDetail>(`/admin/video-batches/${date}/concept/${num}`),
-
-  getVideoBatchImageUrl: (date: string, num: number, filename: string) =>
-    `/api/admin/video-batches/${date}/concept/${num}/image/${filename}`,
-
-  approveVideoBatchConcepts: (date: string, concepts: number[], tier: string = 'draft') =>
-    request<{ approved: number; tier: string; date: string }>(`/admin/video-batches/${date}/approve`, {
-      method: 'POST',
-      body: JSON.stringify({ concepts, tier }),
-    }),
-
-  rejectVideoBatchConcepts: (date: string, concepts: number[]) =>
-    request<{ rejected: number; date: string }>(`/admin/video-batches/${date}/reject`, {
-      method: 'POST',
-      body: JSON.stringify({ concepts }),
     }),
 
   // Photo Concepts
@@ -1023,9 +966,6 @@ export const api = {
 
   getScheduleStats: () =>
     request<ScheduleStats>('/admin/schedule/stats'),
-
-  getScheduleForContent: (contentItemId: string) =>
-    request<{ entries: ScheduleEntry[] }>(`/admin/schedule/by-content/${contentItemId}`),
 
   createScheduleEntry: (data: Record<string, unknown>) =>
     request<ScheduleEntry>('/admin/schedule', { method: 'POST', body: JSON.stringify(data) }),

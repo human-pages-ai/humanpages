@@ -1,16 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import sharp from 'sharp';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireStaffOrAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { logStaffActivity } from '../lib/activity-logger.js';
 import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/social-publish.js';
-import { notifySlackEngagement, notifySlackCrosspost } from '../lib/slack.js';
-import { generateBlogCover, generateBlogThumbnail } from '../lib/blogCovers.js';
-import { uploadToR2, getSignedDownloadUrl, deleteR2Object, isStorageConfigured } from '../lib/storage.js';
-import { createOpenAIClient } from '../lib/openai-keys.js';
 
 const router = Router();
 
@@ -23,7 +18,7 @@ function errMsg(error: unknown): string {
 // ─── API-key auth (blog engine CLI) ───
 
 const ingestItemSchema = z.object({
-  sourceTitle: z.string().min(1).optional(),
+  sourceTitle: z.string().min(1),
   sourceUrl: z.string().optional(),
   source: z.string().optional(),
   relevanceScore: z.number().int().min(0).max(3).optional(),
@@ -196,7 +191,6 @@ router.get('/', async (req: AuthRequest, res) => {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const status = req.query.status as string;
-    const excludeStatus = req.query.excludeStatus as string;
     const platform = req.query.platform as string;
     const search = (req.query.search as string) || '';
 
@@ -204,8 +198,6 @@ router.get('/', async (req: AuthRequest, res) => {
 
     if (status && ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED'].includes(status)) {
       where.status = status;
-    } else if (excludeStatus && ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED'].includes(excludeStatus)) {
-      where.status = { not: excludeStatus };
     }
 
     if (platform && ['TWITTER', 'LINKEDIN', 'BLOG'].includes(platform)) {
@@ -255,7 +247,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/admin/content — create manually
 const createSchema = z.object({
-  sourceTitle: z.string().optional(),
+  sourceTitle: z.string().min(1),
   sourceUrl: z.string().optional(),
   source: z.string().optional(),
   platform: z.enum(['TWITTER', 'LINKEDIN', 'BLOG']),
@@ -324,7 +316,7 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
     const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Content item not found' });
 
-    let updated = await prisma.contentItem.update({
+    const updated = await prisma.contentItem.update({
       where: { id: req.params.id },
       data: {
         status: 'APPROVED',
@@ -334,35 +326,6 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
     });
 
     logger.info({ contentId: req.params.id, userId: req.userId }, 'Content approved');
-
-    // Auto-generate template cover image for BLOG items
-    if (item.platform === 'BLOG' && item.blogTitle && isStorageConfigured()) {
-      try {
-        const fullBuffer = await generateBlogCover(item.blogTitle, item.id, 'template');
-        const thumbBuffer = await generateBlogThumbnail(fullBuffer);
-
-        const fullKey = `blog-images/${item.id}/full.webp`;
-        const thumbKey = `blog-images/${item.id}/thumb.webp`;
-
-        await Promise.all([
-          uploadToR2(fullKey, fullBuffer, 'image/webp'),
-          uploadToR2(thumbKey, thumbBuffer, 'image/webp'),
-        ]);
-
-        updated = await prisma.contentItem.update({
-          where: { id: item.id },
-          data: {
-            blogImageR2Key: fullKey,
-            blogThumbR2Key: thumbKey,
-            blogImageType: 'template',
-          },
-        });
-
-        logger.info({ contentId: item.id }, 'Blog cover image auto-generated on approval');
-      } catch (imgErr) {
-        logger.warn({ err: imgErr, contentId: item.id }, 'Failed to auto-generate blog cover image (non-fatal)');
-      }
-    }
 
     if (req.userId) {
       logStaffActivity({
@@ -445,26 +408,6 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
       updateData.status = 'PUBLISHED';
       updateData.publishedUrl = result.url;
       updateData.publishError = null;
-
-      if (result.url) {
-        // Skip engagement notification for BLOG — the own site URL isn't useful
-        // for staff to amplify. External links (dev.to, twitter) are sent when
-        // those platforms publish via crosspost / publish routes.
-        if (item.platform !== 'BLOG') {
-          notifySlackEngagement({
-            title: item.sourceTitle || item.blogTitle || 'New content published',
-            url: result.url,
-            platform: item.platform,
-          }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
-        }
-
-        if (item.platform === 'BLOG' && item.blogSlug) {
-          notifySlackCrosspost(
-            item.blogTitle || item.sourceTitle || 'Untitled post',
-            item.blogSlug,
-          ).catch(err => logger.error({ err }, 'Slack crosspost notify failed'));
-        }
-      }
     } else if (result.manualInstructions) {
       // API not configured — provide manual instructions but still mark as published
       updateData.status = 'PUBLISHED';
@@ -503,7 +446,6 @@ const crosspostSchema = z.object({
   platforms: z.array(z.enum(['devto', 'hashnode'])).min(1),
   tags: z.array(z.string()).max(4).optional(),
   force: z.boolean().optional(),
-  includeCoverImage: z.boolean().optional(),
 });
 
 router.post('/:id/crosspost', async (req: AuthRequest, res) => {
@@ -526,20 +468,10 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Content must have a published URL (canonical) before cross-posting' });
     }
 
-    const { platforms, tags, force, includeCoverImage } = parsed.data;
+    const { platforms, tags, force } = parsed.data;
     const results: Record<string, any> = {};
     const updateData: any = {};
     const errors: Record<string, string> = {};
-
-    // Resolve cover image URL if requested (default: true when image exists)
-    let coverImageUrl: string | undefined;
-    if (includeCoverImage !== false && item.blogImageR2Key) {
-      try {
-        coverImageUrl = await getSignedDownloadUrl(item.blogImageR2Key) ?? undefined;
-      } catch (err) {
-        logger.warn({ err, contentId: item.id }, 'Failed to resolve cover image URL for crosspost (non-fatal)');
-      }
-    }
 
     for (const platform of platforms) {
       if (platform === 'devto') {
@@ -547,19 +479,11 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
           results.devto = { skipped: true, url: item.devtoUrl };
           continue;
         }
-        const result = await crosspostToDevTo(item, tags, coverImageUrl);
+        const result = await crosspostToDevTo(item, tags);
         results.devto = result;
         if (result.success) {
           updateData.devtoUrl = result.url;
           updateData.devtoArticleId = result.externalId;
-
-          if (result.url) {
-            notifySlackEngagement({
-              title: item.blogTitle || item.sourceTitle || 'Blog cross-posted to Dev.to',
-              url: result.url,
-              platform: 'DEVTO',
-            }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
-          }
         } else if (result.manualInstructions) {
           results.devto.manualInstructions = result.manualInstructions;
         } else {
@@ -572,19 +496,11 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
           results.hashnode = { skipped: true, url: item.hashnodeUrl };
           continue;
         }
-        const result = await crosspostToHashnode(item, coverImageUrl);
+        const result = await crosspostToHashnode(item);
         results.hashnode = result;
         if (result.success) {
           updateData.hashnodeUrl = result.url;
           updateData.hashnodePostId = result.externalId;
-
-          if (result.url) {
-            notifySlackEngagement({
-              title: item.blogTitle || item.sourceTitle || 'Blog cross-posted to Hashnode',
-              url: result.url,
-              platform: 'HASHNODE',
-            }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
-          }
         } else if (result.manualInstructions) {
           results.hashnode.manualInstructions = result.manualInstructions;
         } else {
@@ -623,131 +539,11 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
   }
 });
 
-// POST /api/admin/content/:id/generate-image — switch blog cover image type
-const generateImageSchema = z.object({
-  type: z.enum(['template', 'pixel', 'generated']),
-});
-
-router.post('/:id/generate-image', async (req: AuthRequest, res) => {
-  try {
-    const parsed = generateImageSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
-    }
-
-    const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
-    if (!item) return res.status(404).json({ error: 'Content item not found' });
-
-    if (item.platform !== 'BLOG') {
-      return res.status(400).json({ error: 'Image generation is only available for BLOG items' });
-    }
-    if (!['APPROVED', 'PUBLISHED'].includes(item.status)) {
-      return res.status(400).json({ error: 'Content must be APPROVED or PUBLISHED' });
-    }
-    if (!item.blogTitle) {
-      return res.status(400).json({ error: 'Blog title is required for image generation' });
-    }
-
-    const { type } = parsed.data;
-    let fullBuffer: Buffer;
-
-    if (type === 'generated') {
-      // DALL-E 3 generation
-      const openai = createOpenAIClient({ maxRetries: 2, timeout: 60_000 });
-      const prompt = `Professional, modern blog cover image for an article titled "${item.blogTitle.substring(0, 100)}". Style: clean editorial illustration, abstract geometric shapes, no text or words in the image. Colors: blue, slate, and orange accents. Suitable for a tech blog header at 1792x1024.`;
-
-      const response = await openai.images.generate({
-        model: 'dall-e-3',
-        prompt,
-        n: 1,
-        size: '1792x1024',
-        response_format: 'b64_json',
-      });
-
-      const b64 = response.data?.[0]?.b64_json;
-      if (!b64) {
-        return res.status(500).json({ error: 'Image generation failed — no data returned' });
-      }
-
-      const imageBuffer = Buffer.from(b64, 'base64');
-      fullBuffer = await sharp(imageBuffer)
-        .resize(1200, 630, { fit: 'cover', position: 'centre' })
-        .webp({ quality: 80 })
-        .toBuffer();
-    } else {
-      // Template or pixel — zero cost
-      fullBuffer = await generateBlogCover(item.blogTitle, item.id, type);
-    }
-
-    const thumbBuffer = await generateBlogThumbnail(fullBuffer);
-
-    // Delete old R2 objects
-    if (item.blogImageR2Key) await deleteR2Object(item.blogImageR2Key);
-    if (item.blogThumbR2Key) await deleteR2Object(item.blogThumbR2Key);
-
-    // Upload new
-    const fullKey = `blog-images/${item.id}/full.webp`;
-    const thumbKey = `blog-images/${item.id}/thumb.webp`;
-    await Promise.all([
-      uploadToR2(fullKey, fullBuffer, 'image/webp'),
-      uploadToR2(thumbKey, thumbBuffer, 'image/webp'),
-    ]);
-
-    // Update DB
-    const updated = await prisma.contentItem.update({
-      where: { id: item.id },
-      data: {
-        blogImageR2Key: fullKey,
-        blogThumbR2Key: thumbKey,
-        blogImageType: type,
-      },
-    });
-
-    // Resolve signed URLs for immediate display
-    const [imageUrl, thumbUrl] = await Promise.all([
-      getSignedDownloadUrl(fullKey),
-      getSignedDownloadUrl(thumbKey),
-    ]);
-
-    logger.info({ contentId: item.id, type }, 'Blog cover image generated');
-
-    res.json({ ...updated, imageUrl, thumbUrl });
-  } catch (error) {
-    logger.error({ err: error }, 'Blog image generation error');
-    res.status(500).json({ error: 'Failed to generate image', detail: errMsg(error) });
-  }
-});
-
-// GET /api/admin/content/:id/image-urls — resolve R2 keys to presigned URLs
-router.get('/:id/image-urls', async (req, res) => {
-  try {
-    const item = await prisma.contentItem.findUnique({
-      where: { id: req.params.id },
-      select: { blogImageR2Key: true, blogThumbR2Key: true, blogImageType: true },
-    });
-    if (!item) return res.status(404).json({ error: 'Content item not found' });
-
-    const [imageUrl, thumbUrl] = await Promise.all([
-      item.blogImageR2Key ? getSignedDownloadUrl(item.blogImageR2Key) : null,
-      item.blogThumbR2Key ? getSignedDownloadUrl(item.blogThumbR2Key) : null,
-    ]);
-
-    res.json({ imageUrl, thumbUrl, imageType: item.blogImageType });
-  } catch (error) {
-    logger.error({ err: error }, 'Blog image URLs error');
-    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
-  }
-});
-
 // DELETE /api/admin/content/:id
 router.delete('/:id', async (req, res) => {
   try {
     const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Content item not found' });
-
-    // Clean up R2 blog cover images
-    if (item.blogImageR2Key) deleteR2Object(item.blogImageR2Key).catch(() => {});
-    if (item.blogThumbR2Key) deleteR2Object(item.blogThumbR2Key).catch(() => {});
 
     await prisma.contentItem.delete({ where: { id: req.params.id } });
     res.json({ message: 'Content item deleted' });

@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
-import { getSignedDownloadUrl } from '../lib/storage.js';
 
 const router = Router();
 
@@ -16,7 +15,7 @@ router.get('/posts', async (req, res) => {
       status: 'PUBLISHED' as const,
     };
 
-    const [rawPosts, total] = await Promise.all([
+    const [posts, total] = await Promise.all([
       prisma.contentItem.findMany({
         where,
         select: {
@@ -28,7 +27,6 @@ router.get('/posts', async (req, res) => {
           isFeatured: true,
           publishedAt: true,
           createdAt: true,
-          blogThumbR2Key: true,
         },
         orderBy: [{ isFeatured: 'desc' }, { publishedAt: 'desc' }],
         skip: (page - 1) * limit,
@@ -36,14 +34,6 @@ router.get('/posts', async (req, res) => {
       }),
       prisma.contentItem.count({ where }),
     ]);
-
-    // Resolve thumb R2 keys to signed URLs (don't expose raw keys publicly)
-    const posts = await Promise.all(
-      rawPosts.map(async ({ blogThumbR2Key, ...post }) => ({
-        ...post,
-        blogThumbUrl: blogThumbR2Key ? await getSignedDownloadUrl(blogThumbR2Key) : null,
-      })),
-    );
 
     res.json({
       posts,
@@ -58,7 +48,7 @@ router.get('/posts', async (req, res) => {
 // GET /api/blog/posts/:slug — single article by slug (no auth)
 router.get('/posts/:slug', async (req, res) => {
   try {
-    const rawPost = await prisma.contentItem.findFirst({
+    const post = await prisma.contentItem.findFirst({
       where: {
         blogSlug: req.params.slug,
         platform: 'BLOG',
@@ -77,19 +67,14 @@ router.get('/posts/:slug', async (req, res) => {
         sourceUrl: true,
         publishedAt: true,
         createdAt: true,
-        blogImageR2Key: true,
       },
     });
 
-    if (!rawPost) {
+    if (!post) {
       return res.status(404).json({ error: 'Blog post not found' });
     }
 
-    // Resolve image R2 key to signed URL (don't expose raw key publicly)
-    const { blogImageR2Key, ...post } = rawPost;
-    const blogImageUrl = blogImageR2Key ? await getSignedDownloadUrl(blogImageR2Key) : null;
-
-    res.json({ ...post, blogImageUrl });
+    res.json(post);
   } catch (error) {
     logger.error({ err: error }, 'Blog post detail error');
     res.status(500).json({ error: 'Internal server error' });

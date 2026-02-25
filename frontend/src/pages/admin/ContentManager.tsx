@@ -45,19 +45,12 @@ export default function ContentManager() {
   const [platformFilter, setPlatformFilter] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [hideRejected, setHideRejected] = useState(true);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
       const [itemsRes, statsRes] = await Promise.all([
-        api.getContentItems({
-          page,
-          status: statusFilter || undefined,
-          platform: platformFilter || undefined,
-          search: search || undefined,
-          excludeStatus: (!statusFilter && hideRejected) ? 'REJECTED' : undefined,
-        }),
+        api.getContentItems({ page, status: statusFilter || undefined, platform: platformFilter || undefined, search: search || undefined }),
         api.getContentStats(),
       ]);
       setItems(itemsRes.items);
@@ -68,14 +61,14 @@ export default function ContentManager() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, platformFilter, search, hideRejected]);
+  }, [page, statusFilter, platformFilter, search]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
   const checkLinkedInAdvisory = (item: ContentItem) => {
     if (item.platform !== 'LINKEDIN') return;
     const siblingBlog = items.find(
-      (i) => i.platform === 'BLOG' && item.sourceTitle && i.sourceTitle === item.sourceTitle && i.status !== 'PUBLISHED'
+      (i) => i.platform === 'BLOG' && i.sourceTitle === item.sourceTitle && i.status !== 'PUBLISHED'
     );
     if (siblingBlog) {
       toast('This LinkedIn post links to your blog. Make sure the blog post is also published.', { icon: '\u26A0\uFE0F', duration: 6000 });
@@ -126,9 +119,9 @@ export default function ContentManager() {
     } catch (e: any) { toast.error(e.message); }
   };
 
-  const handleCrosspost = async (id: string, platform: 'devto' | 'hashnode', includeCoverImage?: boolean) => {
+  const handleCrosspost = async (id: string, platform: 'devto' | 'hashnode') => {
     try {
-      const result = await api.crosspostContent(id, [platform], undefined, undefined, includeCoverImage);
+      const result = await api.crosspostContent(id, [platform]);
       const platResult = result.crosspostResults?.[platform === 'devto' ? 'devto' : 'hashnode'];
       if (platResult?.success) {
         toast.success(`Cross-posted to ${platform === 'devto' ? 'Dev.to' : 'Hashnode'}!`);
@@ -203,15 +196,6 @@ export default function ContentManager() {
           placeholder="Search..."
           className="px-3 py-2 text-sm border border-gray-200 rounded-md flex-1"
         />
-        <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">
-          <input
-            type="checkbox"
-            checked={hideRejected}
-            onChange={(e) => { setHideRejected(e.target.checked); setPage(1); }}
-            className="rounded border-gray-300"
-          />
-          Hide rejected
-        </label>
       </div>
 
       {/* Table */}
@@ -250,7 +234,7 @@ export default function ContentManager() {
                   </span>
                 </td>
                 <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px] truncate">
-                  {item.sourceTitle || item.blogTitle || 'Original post'}
+                  {item.sourceTitle}
                 </td>
                 <td className="px-4 py-3 text-gray-600 max-w-[300px] truncate">
                   {getContentPreview(item)}
@@ -348,102 +332,19 @@ function ContentDetailModal({
   onPublish: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (item: ContentItem) => void;
-  onCrosspost: (id: string, platform: 'devto' | 'hashnode', includeCoverImage?: boolean) => void;
+  onCrosspost: (id: string, platform: 'devto' | 'hashnode') => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [includeCoverImage, setIncludeCoverImage] = useState(!!item.blogImageR2Key);
-
-  // Scheduling state
-  const [scheduleEntry, setScheduleEntry] = useState<any>(null);
-  const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [showSchedulePicker, setShowSchedulePicker] = useState(false);
-  const [scheduleDatetime, setScheduleDatetime] = useState('');
-  const [scheduleSaving, setScheduleSaving] = useState(false);
 
   useEffect(() => {
     if (item.platform === 'TWITTER') setDraft(item.tweetDraft || '');
     else if (item.platform === 'LINKEDIN') setDraft(item.linkedinSnippet || '');
     else if (item.platform === 'BLOG') setDraft(item.blogBody || '');
   }, [item]);
-
-  // Fetch existing schedule entry for this content item
-  useEffect(() => {
-    if (item.status !== 'APPROVED') return;
-    let cancelled = false;
-    setScheduleLoading(true);
-    api.getScheduleForContent(item.id)
-      .then(({ entries }) => {
-        if (cancelled) return;
-        const active = entries.find((e: any) => e.status === 'SCHEDULED' || e.status === 'PUBLISHING');
-        setScheduleEntry(active || null);
-        if (active?.scheduledAt) {
-          setScheduleDatetime(new Date(active.scheduledAt).toISOString().slice(0, 16));
-        }
-      })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setScheduleLoading(false); });
-    return () => { cancelled = true; };
-  }, [item.id, item.status]);
-
-  const contentTypeForPlatform = item.platform === 'BLOG' ? 'ARTICLE' : 'SHORT_POST';
-
-  const handleSchedule = async () => {
-    if (!scheduleDatetime) return;
-    setScheduleSaving(true);
-    try {
-      const entry = await api.createScheduleEntry({
-        contentItemId: item.id,
-        title: item.sourceTitle || item.blogTitle || 'Untitled',
-        platform: item.platform,
-        contentType: contentTypeForPlatform,
-        scheduledAt: new Date(scheduleDatetime).toISOString(),
-        status: 'SCHEDULED',
-        isAuto: true,
-      });
-      setScheduleEntry(entry);
-      setShowSchedulePicker(false);
-      toast.success('Scheduled for ' + new Date(scheduleDatetime).toLocaleString());
-    } catch (e: any) { toast.error(e.message); }
-    finally { setScheduleSaving(false); }
-  };
-
-  const handleReschedule = async () => {
-    if (!scheduleEntry || !scheduleDatetime) return;
-    setScheduleSaving(true);
-    try {
-      const updated = await api.updateScheduleEntry(scheduleEntry.id, {
-        scheduledAt: new Date(scheduleDatetime).toISOString(),
-        status: 'SCHEDULED',
-      });
-      setScheduleEntry(updated);
-      setShowSchedulePicker(false);
-      toast.success('Rescheduled to ' + new Date(scheduleDatetime).toLocaleString());
-    } catch (e: any) { toast.error(e.message); }
-    finally { setScheduleSaving(false); }
-  };
-
-  const handleCancelSchedule = async () => {
-    if (!scheduleEntry) return;
-    try {
-      await api.updateScheduleEntry(scheduleEntry.id, { status: 'CANCELLED' });
-      setScheduleEntry(null);
-      setShowSchedulePicker(false);
-      toast.success('Schedule cancelled');
-    } catch (e: any) { toast.error(e.message); }
-  };
-
-  const handlePublishNow = async () => {
-    // Cancel existing schedule if any (best-effort)
-    if (scheduleEntry) {
-      api.updateScheduleEntry(scheduleEntry.id, { status: 'CANCELLED' }).catch(() => {});
-      setScheduleEntry(null);
-    }
-    onPublish(item.id);
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -491,7 +392,7 @@ function ContentDetailModal({
         <div className="px-6 py-4 space-y-6">
           {/* Source info */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-1">{item.sourceTitle || 'Original post'}</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">{item.sourceTitle}</h3>
             {item.sourceUrl && (
               <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline break-all">
                 {item.sourceUrl}
@@ -525,11 +426,6 @@ function ContentDetailModal({
               </label>
               <span className="text-sm text-gray-700">Featured on blog</span>
             </div>
-          )}
-
-          {/* Blog Cover Image (BLOG items, APPROVED/PUBLISHED only) */}
-          {item.platform === 'BLOG' && ['APPROVED', 'PUBLISHED'].includes(item.status) && (
-            <BlogCoverImageSection item={item} onUpdate={onUpdate} />
           )}
 
           {/* Content editor */}
@@ -645,19 +541,6 @@ function ContentDetailModal({
             <div className="bg-gray-50 rounded-md p-3 space-y-2">
               <div className="text-sm font-medium text-gray-700">Cross-posts</div>
 
-              {/* Include cover image toggle */}
-              {item.blogImageR2Key && (!item.devtoUrl || !item.hashnodeUrl) && (
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeCoverImage}
-                    onChange={(e) => setIncludeCoverImage(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  Include cover image
-                </label>
-              )}
-
               {/* Dev.to */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Dev.to</span>
@@ -669,7 +552,7 @@ function ContentDetailModal({
                   <span className="text-sm text-red-500" title={item.crosspostErrors.devto}>Failed</span>
                 ) : (
                   <button
-                    onClick={() => onCrosspost(item.id, 'devto', includeCoverImage)}
+                    onClick={() => onCrosspost(item.id, 'devto')}
                     className="text-xs px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-900"
                   >
                     Cross-post to Dev.to
@@ -688,7 +571,7 @@ function ContentDetailModal({
                   <span className="text-sm text-red-500" title={item.crosspostErrors.hashnode}>Failed</span>
                 ) : (
                   <button
-                    onClick={() => onCrosspost(item.id, 'hashnode', includeCoverImage)}
+                    onClick={() => onCrosspost(item.id, 'hashnode')}
                     className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
                     Cross-post to Hashnode
@@ -734,86 +617,6 @@ function ContentDetailModal({
             </div>
           )}
 
-          {/* Scheduling UI for APPROVED items */}
-          {item.status === 'APPROVED' && !scheduleLoading && (
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              {scheduleEntry ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Scheduled for {new Date(scheduleEntry.scheduledAt).toLocaleString()}
-                    </span>
-                  </div>
-                  {showSchedulePicker ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="datetime-local"
-                        value={scheduleDatetime}
-                        onChange={(e) => setScheduleDatetime(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
-                      />
-                      <button
-                        onClick={handleReschedule}
-                        disabled={scheduleSaving || !scheduleDatetime}
-                        className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                      >
-                        {scheduleSaving ? 'Saving...' : 'Confirm'}
-                      </button>
-                      <button
-                        onClick={() => setShowSchedulePicker(false)}
-                        className="px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-100"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowSchedulePicker(true)}
-                        className="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
-                      >
-                        Reschedule
-                      </button>
-                      <button
-                        onClick={handleCancelSchedule}
-                        className="px-3 py-1.5 text-xs bg-red-100 text-red-600 rounded-md hover:bg-red-200"
-                      >
-                        Cancel Schedule
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : showSchedulePicker ? (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Schedule publication</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="datetime-local"
-                      value={scheduleDatetime}
-                      onChange={(e) => setScheduleDatetime(e.target.value)}
-                      min={new Date().toISOString().slice(0, 16)}
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
-                    />
-                    <button
-                      onClick={handleSchedule}
-                      disabled={scheduleSaving || !scheduleDatetime}
-                      className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                    >
-                      {scheduleSaving ? 'Scheduling...' : 'Schedule'}
-                    </button>
-                    <button
-                      onClick={() => setShowSchedulePicker(false)}
-                      className="px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-100"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          )}
-
           {/* Action buttons */}
           <div className="flex gap-2 pt-4 border-t border-gray-200">
             {item.status === 'DRAFT' && (
@@ -837,19 +640,9 @@ function ContentDetailModal({
               </>
             )}
             {item.status === 'APPROVED' && (
-              <>
-                <button onClick={handlePublishNow} className="px-4 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600">
-                  Publish Now
-                </button>
-                {!scheduleEntry && !showSchedulePicker && (
-                  <button
-                    onClick={() => setShowSchedulePicker(true)}
-                    className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
-                  >
-                    Schedule for Later
-                  </button>
-                )}
-              </>
+              <button onClick={() => onPublish(item.id)} className="px-4 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600">
+                Publish
+              </button>
             )}
             <button onClick={() => onDelete(item.id)} className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 ml-auto">
               Delete
@@ -857,128 +650,6 @@ function ContentDetailModal({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function BlogCoverImageSection({
-  item,
-  onUpdate,
-}: {
-  item: ContentItem;
-  onUpdate: (item: ContentItem) => void;
-}) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageType, setImageType] = useState<string | null>(item.blogImageType || null);
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-
-  // Fetch presigned URLs on mount
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const urls = await api.getBlogImageUrls(item.id);
-        if (!cancelled) {
-          setImageUrl(urls.imageUrl);
-          setImageType(urls.imageType);
-        }
-      } catch {
-        // no image yet
-      } finally {
-        if (!cancelled) setFetching(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [item.id, item.blogImageType]);
-
-  const handleGenerate = async (type: 'template' | 'pixel' | 'generated') => {
-    setLoading(true);
-    try {
-      const result = await api.generateBlogImage(item.id, type);
-      setImageUrl(result.imageUrl);
-      setImageType(type);
-      onUpdate(result);
-      toast.success(`${type === 'generated' ? 'AI' : type.charAt(0).toUpperCase() + type.slice(1)} cover image generated`);
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to generate image');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const IMAGE_TYPES = [
-    { key: 'template' as const, label: 'Template' },
-    { key: 'pixel' as const, label: 'Pixel Art' },
-    { key: 'generated' as const, label: 'AI Generated' },
-  ];
-
-  return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="flex justify-between items-center mb-3">
-        <h4 className="font-medium text-gray-700">Cover Image</h4>
-        {imageType === 'generated' && imageUrl && (
-          <button
-            onClick={() => handleGenerate('generated')}
-            disabled={loading}
-            className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-white disabled:opacity-50"
-          >
-            Regenerate
-          </button>
-        )}
-      </div>
-
-      {/* Type selector buttons */}
-      <div className="flex gap-2 mb-3">
-        {IMAGE_TYPES.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => handleGenerate(key)}
-            disabled={loading}
-            className={`px-3 py-1.5 text-xs rounded-md transition-colors disabled:opacity-50 ${
-              imageType === key
-                ? 'bg-blue-500 text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Loading state */}
-      {(loading || fetching) && (
-        <div className="flex items-center justify-center py-8 text-gray-400">
-          <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-          </svg>
-          {loading ? 'Generating...' : 'Loading...'}
-        </div>
-      )}
-
-      {/* Image preview */}
-      {!loading && !fetching && imageUrl && (
-        <div>
-          <div className="rounded-md overflow-hidden border border-gray-200 mb-2" style={{ aspectRatio: '1200/630' }}>
-            <img src={imageUrl} alt="Blog cover" className="w-full h-full object-cover" />
-          </div>
-          <a
-            href={imageUrl}
-            download={`${item.blogSlug || item.id}-cover.webp`}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Download Full Size
-          </a>
-        </div>
-      )}
-
-      {/* No image yet */}
-      {!loading && !fetching && !imageUrl && (
-        <div className="text-sm text-gray-500 py-4 text-center">
-          No cover image yet. Click a style above to generate one.
-        </div>
-      )}
     </div>
   );
 }

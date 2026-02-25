@@ -1,36 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Profile, FiatPaymentMethod } from './types';
+import { Profile } from './types';
 import LocationAutocomplete from '../LocationAutocomplete';
 import ProfilePhoto from './ProfilePhoto';
-
-const FIAT_PLATFORMS = [
-  'WISE', 'VENMO', 'PAYPAL', 'CASHAPP', 'REVOLUT', 'ZELLE', 'MONZO', 'N26', 'MERCADOPAGO',
-] as const;
-
-const PLATFORM_LABELS: Record<string, string> = {
-  WISE: 'Wise',
-  VENMO: 'Venmo',
-  PAYPAL: 'PayPal',
-  CASHAPP: 'Cash App',
-  REVOLUT: 'Revolut',
-  ZELLE: 'Zelle',
-  MONZO: 'Monzo',
-  N26: 'N26',
-  MERCADOPAGO: 'MercadoPago',
-};
-
-const PLATFORM_COLORS: Record<string, string> = {
-  WISE: 'bg-green-100 text-green-700',
-  VENMO: 'bg-blue-100 text-blue-700',
-  PAYPAL: 'bg-indigo-100 text-indigo-700',
-  CASHAPP: 'bg-emerald-100 text-emerald-700',
-  REVOLUT: 'bg-purple-100 text-purple-700',
-  ZELLE: 'bg-violet-100 text-violet-700',
-  MONZO: 'bg-pink-100 text-pink-700',
-  N26: 'bg-teal-100 text-teal-700',
-  MERCADOPAGO: 'bg-sky-100 text-sky-700',
-};
 
 interface Props {
   profile: Profile;
@@ -38,9 +10,6 @@ interface Props {
   setEditingProfile: (v: boolean) => void;
   hasWallet: boolean;
   onScrollToWallets?: () => void;
-  fiatMethods: FiatPaymentMethod[];
-  onAddFiatMethod: (data: { platform: string; handle: string; label?: string }) => Promise<void>;
-  onDeleteFiatMethod: (id: string) => Promise<void>;
   profileForm: {
     name: string;
     bio: string;
@@ -81,9 +50,6 @@ export default function ProfileSection({
   setEditingProfile,
   hasWallet,
   onScrollToWallets,
-  fiatMethods,
-  onAddFiatMethod,
-  onDeleteFiatMethod,
   profileForm,
   setProfileForm,
   saving,
@@ -98,13 +64,11 @@ export default function ProfileSection({
   const [usernameError, setUsernameError] = React.useState<string>('');
   const [checkingUsername, setCheckingUsername] = React.useState(false);
   const usernameCheckTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showNonCrypto, setShowNonCrypto] = React.useState(Boolean(profileForm.paymentMethods) || fiatMethods.length > 0);
-  const [fiatForm, setFiatForm] = React.useState({ platform: 'VENMO', handle: '', label: '' });
-  const [addingFiat, setAddingFiat] = React.useState(false);
+  const [showNonCrypto, setShowNonCrypto] = React.useState(Boolean(profileForm.paymentMethods));
 
   React.useEffect(() => {
     if (editingProfile) {
-      setShowNonCrypto(Boolean(profileForm.paymentMethods) || fiatMethods.length > 0);
+      setShowNonCrypto(Boolean(profileForm.paymentMethods));
     }
   }, [editingProfile]);
 
@@ -379,102 +343,19 @@ export default function ProfileSection({
                 <span className="text-sm text-gray-700">{t('dashboard.profile.alsoAcceptNonCrypto')}</span>
               </label>
               {showNonCrypto && (
-                <div className="space-y-3">
-                  {/* Existing fiat methods */}
-                  {fiatMethods.length > 0 && (
-                    <div className="space-y-2">
-                      {fiatMethods.map((m) => (
-                        <div key={m.id} className="flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${PLATFORM_COLORS[m.platform] || 'bg-gray-100 text-gray-700'}`}>
-                            {PLATFORM_LABELS[m.platform] || m.platform}
-                          </span>
-                          <span className="text-sm text-gray-900">{m.handle}</span>
-                          {m.label && <span className="text-xs text-gray-500">({m.label})</span>}
-                          <button
-                            type="button"
-                            onClick={() => onDeleteFiatMethod(m.id)}
-                            className="ml-auto text-red-400 hover:text-red-600 text-xs"
-                          >
-                            {t('common.delete', 'Delete')}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Add fiat method form */}
-                  <div className="flex flex-wrap items-end gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Platform</label>
-                      <select
-                        value={fiatForm.platform}
-                        onChange={(e) => setFiatForm({ ...fiatForm, platform: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded-md text-sm"
-                      >
-                        {FIAT_PLATFORMS.map((p) => (
-                          <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-[140px]">
-                      <label className="block text-xs text-gray-500 mb-1">Handle</label>
-                      <input
-                        type="text"
-                        value={fiatForm.handle}
-                        onChange={(e) => setFiatForm({ ...fiatForm, handle: e.target.value })}
-                        placeholder="email, phone, or @username"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm"
-                      />
-                    </div>
-                    <div className="w-28">
-                      <label className="block text-xs text-gray-500 mb-1">Label</label>
-                      <input
-                        type="text"
-                        value={fiatForm.label}
-                        onChange={(e) => setFiatForm({ ...fiatForm, label: e.target.value })}
-                        placeholder="optional"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      disabled={!fiatForm.handle.trim() || addingFiat}
-                      onClick={async () => {
-                        setAddingFiat(true);
-                        try {
-                          await onAddFiatMethod({
-                            platform: fiatForm.platform,
-                            handle: fiatForm.handle.trim(),
-                            label: fiatForm.label.trim() || undefined,
-                          });
-                          setFiatForm({ platform: 'VENMO', handle: '', label: '' });
-                        } finally {
-                          setAddingFiat(false);
-                        }
-                      }}
-                      className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-500 disabled:opacity-50"
-                    >
-                      {addingFiat ? '...' : t('common.add', 'Add')}
-                    </button>
-                  </div>
-
-                  {/* Legacy free-text field */}
-                  {profileForm.paymentMethods && (
-                    <div>
-                      <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
-                        {t('dashboard.profile.paymentMethods')} ({t('common.legacy', 'legacy')})
-                      </label>
-                      <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
-                      <textarea
-                        id="profile-payment-methods"
-                        value={profileForm.paymentMethods}
-                        onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
-                        placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
-                        rows={2}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                      />
-                    </div>
-                  )}
+                <div>
+                  <label htmlFor="profile-payment-methods" className="block text-sm font-medium text-gray-700">
+                    {t('dashboard.profile.paymentMethods')}
+                  </label>
+                  <p className="text-xs text-gray-500 mb-1">{t('dashboard.profile.paymentMethodsHelp')}</p>
+                  <textarea
+                    id="profile-payment-methods"
+                    value={profileForm.paymentMethods}
+                    onChange={(e) => setProfileForm({ ...profileForm, paymentMethods: e.target.value })}
+                    placeholder={t('dashboard.profile.paymentMethodsPlaceholder')}
+                    rows={2}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
                 </div>
               )}
             </div>
@@ -660,15 +541,6 @@ export default function ProfileSection({
                         </svg>
                         {t('dashboard.profile.usdcWalletConnected')}
                       </span>
-                    </div>
-                  )}
-                  {fiatMethods.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {fiatMethods.map((m) => (
-                        <span key={m.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${PLATFORM_COLORS[m.platform] || 'bg-gray-100 text-gray-700'}`}>
-                          {PLATFORM_LABELS[m.platform] || m.platform}: {m.handle}
-                        </span>
-                      ))}
                     </div>
                   )}
                   {profile.paymentMethods && (

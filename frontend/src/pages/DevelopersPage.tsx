@@ -50,8 +50,6 @@ const MCP_CONFIG = `{
 
 const CLAUDE_CODE_INSTALL = `claude mcp add humanpages -- npx -y humanpages`;
 
-const OPENCLAW_INSTALL = `clawhub install humanpages`;
-
 const SEARCH_EXAMPLE = `// Search for photographers in NYC
 const results = await mcp.callTool("search_humans", {
   skill: "photography",
@@ -272,15 +270,6 @@ export default function DevelopersPage() {
               {t('dev.install.optionBDesc')}
             </p>
             <CodeBlock code={CLAUDE_CODE_INSTALL} />
-          </div>
-
-          {/* Option C: OpenClaw */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">
-              {t('dev.install.optionC')}
-            </h3>
-            <p className="text-slate-600 mb-4" dangerouslySetInnerHTML={{ __html: t('dev.install.optionCDesc') }} />
-            <CodeBlock code={OPENCLAW_INSTALL} />
           </div>
         </div>
       </section>

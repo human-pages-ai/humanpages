@@ -740,9 +740,7 @@
       "optionA": "विकल्प A: .mcp.json में जोड़ें (अनुशंसित)",
       "optionADesc": "इसे अपने प्रोजेक्ट की <code>.mcp.json</code> फ़ाइल में जोड़ें:",
       "optionB": "विकल्प B: Claude Code CLI",
-      "optionBDesc": "या सीधे Claude Code CLI के माध्यम से जोड़ें:",
-      "optionC": "विकल्प C: OpenClaw",
-      "optionCDesc": "<a href=\"https://openclaw.ai\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">OpenClaw</a> का उपयोग करते हैं? <a href=\"https://clawhub.ai/skills/humanpages\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">ClawHub</a> से इंस्टॉल करें:"
+      "optionBDesc": "या सीधे Claude Code CLI के माध्यम से जोड़ें:"
     },
     "tools": {
       "title": "उपलब्ध टूल्स",

@@ -253,77 +253,13 @@ describe('Auth API', () => {
     it('should redirect with error when token is missing', async () => {
       const res = await request(app).get('/api/auth/verify-email');
       expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('emailVerifyError=');
+      expect(res.headers.location).toContain('emailVerifyError=true');
     });
 
     it('should redirect with error when token is invalid', async () => {
       const res = await request(app).get('/api/auth/verify-email?token=invalid-token');
       expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('emailVerifyError=invalid');
-    });
-
-    it('should redirect with expired error when token is older than 24 hours', async () => {
-      const user = await createTestUser({ email: 'expired@example.com' });
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      const expiredDate = new Date(Date.now() - 25 * 60 * 60 * 1000); // 25 hours ago
-      await prisma.human.update({
-        where: { id: user.id },
-        data: {
-          emailVerificationToken: verificationToken,
-          emailVerificationTokenCreatedAt: expiredDate,
-          emailVerified: false,
-        },
-      });
-
-      const res = await request(app).get(`/api/auth/verify-email?token=${verificationToken}`);
-      expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('emailVerifyError=expired');
-
-      // Token should NOT be cleared (user can resend)
-      const human = await prisma.human.findUnique({ where: { id: user.id } });
-      expect(human?.emailVerified).toBe(false);
-      expect(human?.emailVerificationToken).toBe(verificationToken);
-    });
-
-    it('should accept token that is under 24 hours old', async () => {
-      const user = await createTestUser({ email: 'fresh@example.com' });
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      const recentDate = new Date(Date.now() - 23 * 60 * 60 * 1000); // 23 hours ago
-      await prisma.human.update({
-        where: { id: user.id },
-        data: {
-          emailVerificationToken: verificationToken,
-          emailVerificationTokenCreatedAt: recentDate,
-          emailVerified: false,
-        },
-      });
-
-      const res = await request(app).get(`/api/auth/verify-email?token=${verificationToken}`);
-      expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('/email-verified');
-
-      const human = await prisma.human.findUnique({ where: { id: user.id } });
-      expect(human?.emailVerified).toBe(true);
-      expect(human?.emailVerificationToken).toBeNull();
-      expect(human?.emailVerificationTokenCreatedAt).toBeNull();
-    });
-
-    it('should clear emailVerificationTokenCreatedAt on successful verification', async () => {
-      const user = await createTestUser({ email: 'cleardate@example.com' });
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      await prisma.human.update({
-        where: { id: user.id },
-        data: {
-          emailVerificationToken: verificationToken,
-          emailVerificationTokenCreatedAt: new Date(),
-          emailVerified: false,
-        },
-      });
-
-      await request(app).get(`/api/auth/verify-email?token=${verificationToken}`);
-
-      const human = await prisma.human.findUnique({ where: { id: user.id } });
-      expect(human?.emailVerificationTokenCreatedAt).toBeNull();
+      expect(res.headers.location).toContain('emailVerifyError=true');
     });
   });
 
@@ -386,50 +322,6 @@ describe('Auth API', () => {
     it('should require authentication', async () => {
       const res = await request(app).post('/api/auth/resend-verification');
       expect(res.status).toBe(401);
-    });
-
-    it('should store emailVerificationTokenCreatedAt on resend', async () => {
-      const user = await createTestUser({ email: 'resendts@example.com' });
-      await prisma.human.update({
-        where: { id: user.id },
-        data: { emailVerified: false },
-      });
-
-      const before = Date.now();
-      await authRequest(user.token).post('/api/auth/resend-verification');
-      const after = Date.now();
-
-      const human = await prisma.human.findUnique({ where: { id: user.id } });
-      expect(human?.emailVerificationToken).toBeTruthy();
-      expect(human?.emailVerificationTokenCreatedAt).toBeTruthy();
-      const ts = human!.emailVerificationTokenCreatedAt!.getTime();
-      expect(ts).toBeGreaterThanOrEqual(before);
-      expect(ts).toBeLessThanOrEqual(after);
-    });
-
-    it('should invalidate old token when new one is issued', async () => {
-      const user = await createTestUser({ email: 'invalidate@example.com' });
-      await prisma.human.update({
-        where: { id: user.id },
-        data: { emailVerified: false },
-      });
-
-      // First resend
-      await authRequest(user.token).post('/api/auth/resend-verification');
-      const human1 = await prisma.human.findUnique({ where: { id: user.id } });
-      const oldToken = human1!.emailVerificationToken;
-
-      // Second resend (replaces old token)
-      await authRequest(user.token).post('/api/auth/resend-verification');
-      const human2 = await prisma.human.findUnique({ where: { id: user.id } });
-      const newToken = human2!.emailVerificationToken;
-
-      expect(newToken).not.toBe(oldToken);
-
-      // Old token should no longer work
-      const res = await request(app).get(`/api/auth/verify-email?token=${oldToken}`);
-      expect(res.status).toBe(302);
-      expect(res.headers.location).toContain('emailVerifyError=invalid');
     });
   });
 });

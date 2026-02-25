@@ -8,7 +8,7 @@ import { posthog } from '../lib/posthog';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { Profile, Job, ReviewStats, Service, FiatPaymentMethod } from '../components/dashboard/types';
+import { Profile, Job, ReviewStats, Service } from '../components/dashboard/types';
 import StatusHeader from '../components/dashboard/StatusHeader';
 import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
@@ -97,7 +97,6 @@ export default function Dashboard() {
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
 
   const [copiedProfile, setCopiedProfile] = useState(false);
-  const [fiatMethods, setFiatMethods] = useState<FiatPaymentMethod[]>([]);
 
   const [telegramStatus, setTelegramStatus] = useState<{
     connected: boolean;
@@ -144,15 +143,6 @@ export default function Dashboard() {
       searchParams.delete('githubVerified');
       setSearchParams(searchParams, { replace: true });
       loadProfile();
-    }
-    const emailVerifyError = searchParams.get('emailVerifyError');
-    if (emailVerifyError) {
-      const message = emailVerifyError === 'expired'
-        ? 'Email verification link has expired. Please request a new one.'
-        : 'Email verification link is invalid. Please request a new one.';
-      toast.error(message, { duration: 6000 });
-      searchParams.delete('emailVerifyError');
-      setSearchParams(searchParams, { replace: true });
     }
   }, []);
 
@@ -211,7 +201,6 @@ export default function Dashboard() {
         rateCurrency: data.rateCurrency || 'USD',
       });
       setServiceForm((prev) => ({ ...prev, priceCurrency: data.rateCurrency || 'USD' }));
-      setFiatMethods(data.fiatPaymentMethods || []);
       updateUser({ hasWallet: (data.wallets?.length ?? 0) > 0 });
       if (data.id) {
         try {
@@ -493,27 +482,6 @@ export default function Dashboard() {
     });
   };
 
-  const addFiatMethod = async (data: { platform: string; handle: string; label?: string }) => {
-    try {
-      const method = await api.addFiatMethod(data);
-      setFiatMethods((prev) => [method, ...prev]);
-      toast.success('Fiat payment method added');
-    } catch (error: any) {
-      toast.error(error.message || t('toast.genericError'));
-      throw error;
-    }
-  };
-
-  const deleteFiatMethod = async (id: string) => {
-    try {
-      await api.deleteFiatMethod(id);
-      setFiatMethods((prev) => prev.filter((m) => m.id !== id));
-      toast.success('Fiat payment method removed');
-    } catch (error: any) {
-      toast.error(error.message || t('toast.genericError'));
-    }
-  };
-
   const addService = async () => {
     setSaving(true);
     try {
@@ -780,9 +748,6 @@ export default function Dashboard() {
                     setEditingProfile={setEditingProfile}
                     hasWallet={profile.wallets.length > 0}
                     onScrollToWallets={() => setActiveTab('payments')}
-                    fiatMethods={fiatMethods}
-                    onAddFiatMethod={addFiatMethod}
-                    onDeleteFiatMethod={deleteFiatMethod}
                     profileForm={profileForm}
                     setProfileForm={setProfileForm}
                     saving={saving}

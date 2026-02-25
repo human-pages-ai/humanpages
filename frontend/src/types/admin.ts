@@ -53,8 +53,6 @@ export interface AdminUser {
   role: 'USER' | 'STAFF' | 'ADMIN';
   createdAt: string;
   lastActiveAt: string;
-  profilePhotoUrl?: string;
-  profilePhotoStatus?: string;
   _count: {
     jobs: number;
     reviews: number;
@@ -345,7 +343,7 @@ export type ContentPlatform = 'TWITTER' | 'LINKEDIN' | 'BLOG';
 
 export interface ContentItem {
   id: string;
-  sourceTitle: string | null;
+  sourceTitle: string;
   sourceUrl: string | null;
   source: string | null;
   relevanceScore: number | null;
@@ -375,9 +373,6 @@ export interface ContentItem {
   rejectionReason: string | null;
   rejectedById: string | null;
   rejectedAt: string | null;
-  blogImageR2Key: string | null;
-  blogThumbR2Key: string | null;
-  blogImageType: 'template' | 'pixel' | 'generated' | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -864,69 +859,4 @@ export interface StaffBalance {
   owed: number;
   from: string;
   to: string;
-}
-
-// ─── Video Batches ───
-export interface BatchSummary {
-  date: string;
-  conceptCount: number;
-  validConcepts: number;
-  approvedCount: number;
-  tier: string;
-  approvedTier: string | null;
-}
-
-export interface BatchConcept {
-  number: number;
-  title: string;
-  concept: string;
-  hook: string;
-  pillar: string;
-  hasThumbnails: boolean;
-  thumbnailCount: number;
-  approved: boolean;
-  approvedTier: string | null;
-  failed: boolean;
-}
-
-export interface BatchDetail {
-  date: string;
-  tier: string;
-  conceptCount: number;
-  concepts: BatchConcept[];
-}
-
-export interface BatchConceptDetail {
-  number: number;
-  title: string;
-  concept: string;
-  hook: string;
-  pillar: string;
-  script: {
-    title: string;
-    concept: string;
-    total_duration_seconds: number;
-    visual_style: string;
-    music_mood: string;
-    scenes: Array<{
-      scene_number: number;
-      duration_seconds: number;
-      shot_type: string;
-      camera_motion: string;
-      setting: string;
-      image_prompt: string;
-      overlay_text: string | null;
-      overlay_position: string | null;
-      dialogue: string | null;
-      dialogue_speaker: string | null;
-      narration: string | null;
-      sound_effect: string | null;
-      transition_in: string;
-      transition_out: string;
-    }>;
-  } | null;
-  images: string[];
-  approved: boolean;
-  approvedTier: string | null;
-  approvedAt: string | null;
 }

@@ -150,10 +150,7 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
       const verificationToken = crypto.randomBytes(32).toString('hex');
       await prisma.human.update({
         where: { id: human.id },
-        data: {
-          emailVerificationToken: verificationToken,
-          emailVerificationTokenCreatedAt: new Date(),
-        },
+        data: { emailVerificationToken: verificationToken },
       });
       const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
       sendVerificationEmail(email, verifyUrl).catch((err) =>
@@ -347,24 +344,12 @@ router.get('/verify-email', async (req, res) => {
     });
 
     if (!human) {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=invalid`);
-    }
-
-    // Check if token has expired (24 hours)
-    if (human.emailVerificationTokenCreatedAt) {
-      const ageMs = Date.now() - human.emailVerificationTokenCreatedAt.getTime();
-      if (ageMs > 24 * 60 * 60 * 1000) {
-        return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=expired`);
-      }
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
     }
 
     await prisma.human.update({
       where: { id: human.id },
-      data: {
-        emailVerified: true,
-        emailVerificationToken: null,
-        emailVerificationTokenCreatedAt: null,
-      },
+      data: { emailVerified: true, emailVerificationToken: null },
     });
 
     res.redirect(`${process.env.FRONTEND_URL}/email-verified`);
@@ -414,10 +399,7 @@ router.post('/resend-verification', authenticateToken, async (req: AuthRequest, 
     const verificationToken = crypto.randomBytes(32).toString('hex');
     await prisma.human.update({
       where: { id: human.id },
-      data: {
-        emailVerificationToken: verificationToken,
-        emailVerificationTokenCreatedAt: new Date(),
-      },
+      data: { emailVerificationToken: verificationToken },
     });
 
     const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;

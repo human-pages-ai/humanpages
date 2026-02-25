@@ -28,7 +28,7 @@ Humans on the platform offer services including: photography, local research, ph
    - Social activation: `POST /api/agents/activate/social` → get code → post on social media → `POST /api/agents/activate/social/verify`
    - Payment activation: `POST /api/agents/activate/payment` → pay USDC → `POST /api/agents/activate/payment/verify`
 3. **Agent searches** the directory via `GET /api/humans/search` (public, returns limited profiles — skills, location, rates, reputation)
-4. **Agent gets full profile** via `GET /api/humans/:id/profile` (gated, requires active agent — returns contact info, wallets, fiat payment methods, social links)
+4. **Agent gets full profile** via `GET /api/humans/:id/profile` (gated, requires active agent — returns contact info, wallets, social links)
 5. **Agent creates a job offer** via `POST /api/jobs` (requires active agent — human gets notified, can accept or reject)
 6. **In-platform messaging** via `GET/POST /api/jobs/:id/messages` for communication between agent and human
 7. **Payment** is peer-to-peer in USDC stablecoins with zero platform fees
@@ -97,7 +97,7 @@ The REST API is available at `https://humanpages.ai/api`. Key endpoints:
 - `GET /api/listings/my-applications` — Human's own applications with listing summaries
 
 ### Gated Endpoints (requires activated agent)
-- `GET /api/humans/:id/profile` — Get full profile with contact info, wallets, and fiat payment methods
+- `GET /api/humans/:id/profile` — Get full profile with contact info and wallets
 - `POST /api/jobs` — Create a job offer for a human
 - `GET /api/jobs/:id` — Get job status
 - `GET /api/jobs/:id/messages` — Get messages for a job

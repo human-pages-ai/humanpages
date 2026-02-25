@@ -741,9 +741,7 @@
       "optionA": "Cách A: Thêm vào .mcp.json (khuyến nghị)",
       "optionADesc": "Thêm đoạn này vào file <code>.mcp.json</code> của dự án:",
       "optionB": "Cách B: Claude Code CLI",
-      "optionBDesc": "Hoặc thêm trực tiếp qua Claude Code CLI:",
-      "optionC": "Cách C: OpenClaw",
-      "optionCDesc": "Dùng <a href=\"https://openclaw.ai\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">OpenClaw</a>? Cài đặt từ <a href=\"https://clawhub.ai/skills/humanpages\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">ClawHub</a>:"
+      "optionBDesc": "Hoặc thêm trực tiếp qua Claude Code CLI:"
     },
     "tools": {
       "title": "Công cụ có sẵn",

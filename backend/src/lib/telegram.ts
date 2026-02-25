@@ -92,34 +92,6 @@ ${escapeHtml(data.jobDescription.slice(0, 200))}${data.jobDescription.length > 2
   });
 }
 
-interface PaymentClaimNotification {
-  chatId: string;
-  humanName: string;
-  jobTitle: string;
-  amount: number | string;
-  method: string;
-  dashboardUrl: string;
-}
-
-export async function sendPaymentClaimTelegram(data: PaymentClaimNotification): Promise<boolean> {
-  const message = `
-<b>Payment Claimed!</b>
-
-An agent claims they've sent <b>$${data.amount} USDC</b> via <b>${escapeHtml(data.method)}</b> for:
-<b>${escapeHtml(data.jobTitle)}</b>
-
-Please confirm you received this payment.
-
-<a href="${data.dashboardUrl}">Confirm Payment</a>
-`.trim();
-
-  return sendTelegramMessage({
-    chatId: data.chatId,
-    text: message,
-    parseMode: 'HTML',
-  });
-}
-
 // Escape HTML special characters for Telegram
 function escapeHtml(text: string): string {
   return text

@@ -27,7 +27,6 @@ import {
   sendJobOfferEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
-  sendPaymentClaimEmail,
   verifyEmailConfig,
 } from '../lib/email.js';
 
@@ -273,81 +272,6 @@ describe('Email Service', () => {
       const result = await verifyEmailConfig();
 
       expect(result).toBe(false);
-    });
-  });
-
-  describe('sendPaymentClaimEmail', () => {
-    const paymentClaimData = {
-      humanName: 'Alice',
-      humanEmail: 'alice@example.com',
-      humanId: 'user-456',
-      jobTitle: 'Build a landing page',
-      amount: 75,
-      method: 'PayPal',
-      dashboardUrl: 'http://localhost:3000/dashboard?tab=jobs',
-    };
-
-    it('should send email via Resend with correct subject and recipient', async () => {
-      process.env.RESEND_API_KEY = 'test-resend-key';
-      mockSend.mockResolvedValueOnce({ data: { id: 'msg-456' }, error: null });
-
-      const result = await sendPaymentClaimEmail(paymentClaimData);
-
-      expect(result).toBe(true);
-      expect(mockSend).toHaveBeenCalledTimes(1);
-
-      const call = mockSend.mock.calls[0][0];
-      expect(call.to).toEqual(['alice@example.com']);
-      expect(call.subject).toContain('Payment claimed');
-      expect(call.subject).toContain('$75');
-      expect(call.subject).toContain('Build a landing page');
-    });
-
-    it('should include payment details in HTML body', async () => {
-      process.env.RESEND_API_KEY = 'test-resend-key';
-      mockSend.mockResolvedValueOnce({ data: { id: 'msg-789' }, error: null });
-
-      await sendPaymentClaimEmail(paymentClaimData);
-
-      const call = mockSend.mock.calls[0][0];
-      expect(call.html).toContain('Build a landing page');
-      expect(call.html).toContain('$75');
-      expect(call.html).toContain('PayPal');
-      expect(call.html).toContain('Confirm Payment');
-      expect(call.html).toContain('dashboard?tab=jobs');
-    });
-
-    it('should include unsubscribe link', async () => {
-      process.env.RESEND_API_KEY = 'test-resend-key';
-      mockSend.mockResolvedValueOnce({ data: { id: 'msg-unsub' }, error: null });
-
-      await sendPaymentClaimEmail(paymentClaimData);
-
-      const call = mockSend.mock.calls[0][0];
-      expect(call.html).toContain('Unsubscribe');
-      expect(call.html).toContain('/api/auth/unsubscribe');
-    });
-
-    it('should include payment details in text body', async () => {
-      process.env.RESEND_API_KEY = 'test-resend-key';
-      mockSend.mockResolvedValueOnce({ data: { id: 'msg-text' }, error: null });
-
-      await sendPaymentClaimEmail(paymentClaimData);
-
-      const call = mockSend.mock.calls[0][0];
-      expect(call.text).toContain('$75');
-      expect(call.text).toContain('PayPal');
-      expect(call.text).toContain('Build a landing page');
-    });
-
-    it('should return false when no email provider is configured', async () => {
-      delete process.env.RESEND_API_KEY;
-      delete process.env.SES_SMTP_USER;
-
-      const result = await sendPaymentClaimEmail(paymentClaimData);
-
-      expect(result).toBe(false);
-      expect(mockSend).not.toHaveBeenCalled();
     });
   });
 });

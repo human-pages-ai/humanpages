@@ -16,9 +16,7 @@ import videoRoutes from './videos.js';
 import scheduleRoutes from './schedule.js';
 import productivityRoutes from './productivity.js';
 import leadRoutes from './leads.js';
-import videoBatchRoutes from './videoBatches.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
-import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 
 const router = Router();
 
@@ -97,9 +95,6 @@ router.use('/content', contentRoutes);
 
 // ─── Video concepts routes (API key + admin) ───
 router.use('/video-concepts', videoConceptRoutes);
-
-// ─── Video batches routes (API key + admin) ───
-router.use('/video-batches', videoBatchRoutes);
 
 // ─── Photo concepts routes (API key + admin) ───
 router.use('/photo-concepts', photoConceptRoutes);
@@ -371,7 +366,6 @@ router.get('/users', async (req: AuthRequest, res) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const search = (req.query.search as string) || '';
     const verified = req.query.verified as string;
-    const hasPhoto = req.query.hasPhoto as string;
     const sort = (req.query.sort as string) || 'createdAt';
     const order = (req.query.order as string) === 'asc' ? 'asc' : 'desc';
 
@@ -390,7 +384,6 @@ router.get('/users', async (req: AuthRequest, res) => {
 
     if (verified === 'true') where.emailVerified = true;
     if (verified === 'false') where.emailVerified = false;
-    if (hasPhoto === 'true') where.profilePhotoKey = { not: null };
 
     const [users, total] = await Promise.all([
       prisma.human.findMany({
@@ -407,8 +400,6 @@ router.get('/users', async (req: AuthRequest, res) => {
           role: true,
           createdAt: true,
           lastActiveAt: true,
-          profilePhotoKey: true,
-          profilePhotoStatus: true,
           _count: {
             select: {
               jobs: true,
@@ -424,23 +415,8 @@ router.get('/users', async (req: AuthRequest, res) => {
       prisma.human.count({ where }),
     ]);
 
-    // Generate signed photo URLs and strip internal keys
-    const usersWithPhotos = await Promise.all(
-      users.map(async (u: any) => {
-        if (u.profilePhotoKey && ['approved', 'pending'].includes(u.profilePhotoStatus)) {
-          try {
-            u.profilePhotoUrl = await getProfilePhotoSignedUrl(u.profilePhotoKey);
-          } catch {
-            // If signed URL generation fails, just omit the photo
-          }
-        }
-        delete u.profilePhotoKey;
-        return u;
-      })
-    );
-
     res.json({
-      users: usersWithPhotos,
+      users,
       pagination: {
         page,
         limit,

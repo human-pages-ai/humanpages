@@ -144,8 +144,8 @@
     "/humans/{id}/profile": {
       "get": {
         "operationId": "getHumanProfile",
-        "summary": "Get a human's full profile including contact info, wallets, and fiat payment methods",
-        "description": "Gated endpoint. Returns the complete profile including contact email, Telegram, WhatsApp, social links, wallet addresses, and structured fiat payment methods (Venmo, PayPal, Wise, etc.). Requires an activated agent API key in X-Agent-Key header (or x402 payment via x-payment header, $0.05 USDC on Base).",
+        "summary": "Get a human's full profile including contact info and wallets",
+        "description": "Gated endpoint. Returns the complete profile including contact email, Telegram, WhatsApp, social links, and wallet addresses. Requires an activated agent API key in X-Agent-Key header (or x402 payment via x-payment header, $0.05 USDC on Base).",
         "security": [{ "agentApiKey": [] }],
         "parameters": [
           {
@@ -158,7 +158,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Full human profile with contact info, wallets, and fiat payment methods",
+            "description": "Full human profile with contact info and wallets",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/HumanFullProfile" }
@@ -794,7 +794,7 @@
       },
       "HumanFullProfile": {
         "type": "object",
-        "description": "Full profile returned by the gated /humans/{id}/profile endpoint. Includes all public fields plus contact info, wallets, and fiat payment methods. Requires an activated agent.",
+        "description": "Full profile returned by the gated /humans/{id}/profile endpoint. Includes all public fields plus contact info and wallets. Requires an activated agent.",
         "allOf": [
           { "$ref": "#/components/schemas/HumanPublicProfile" },
           {
@@ -816,20 +816,6 @@
                     "network": { "type": "string" },
                     "chain": { "type": "string" },
                     "address": { "type": "string" }
-                  }
-                }
-              },
-              "fiatPaymentMethods": {
-                "type": "array",
-                "description": "Structured fiat payment methods (Venmo, PayPal, Wise, etc.) for sending non-crypto payments",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "string" },
-                    "platform": { "type": "string", "enum": ["WISE", "VENMO", "PAYPAL", "CASHAPP", "REVOLUT", "ZELLE", "MONZO", "N26", "MERCADOPAGO"] },
-                    "handle": { "type": "string", "description": "Platform-specific handle (email, phone, or @username)" },
-                    "label": { "type": "string", "description": "Optional label (e.g. 'Personal Venmo')" },
-                    "isPrimary": { "type": "boolean" }
                   }
                 }
               }

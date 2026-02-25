@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
-import toast from 'react-hot-toast';
 import type {
   ScheduleEntry,
   ScheduleStats,
   PublishPlatform,
   PublicationStatusType,
+  PublishContentType,
 } from '../../types/admin';
 
 const PLATFORM_LABELS: Record<PublishPlatform, string> = {
@@ -18,6 +18,10 @@ const PLATFORM_ICONS: Record<PublishPlatform, string> = {
   LINKEDIN: 'in', TWITTER: 'X', FACEBOOK: 'f', BLOG: 'B',
 };
 
+const CONTENT_TYPE_ICONS: Record<PublishContentType, string> = {
+  VIDEO: 'V', ARTICLE: 'A', SHORT_POST: 'S', IMAGE_POST: 'I',
+};
+
 const STATUS_COLORS: Record<PublicationStatusType, string> = {
   DRAFT: 'bg-gray-100 text-gray-700',
   SCHEDULED: 'bg-blue-100 text-blue-700',
@@ -25,15 +29,6 @@ const STATUS_COLORS: Record<PublicationStatusType, string> = {
   PUBLISHED: 'bg-green-100 text-green-700',
   FAILED: 'bg-red-100 text-red-700',
   CANCELLED: 'bg-gray-200 text-gray-500',
-};
-
-const STATUS_DOT_COLORS: Record<PublicationStatusType, string> = {
-  DRAFT: 'bg-gray-400',
-  SCHEDULED: 'bg-blue-500',
-  PUBLISHING: 'bg-yellow-500',
-  PUBLISHED: 'bg-green-500',
-  FAILED: 'bg-red-500',
-  CANCELLED: 'bg-gray-300',
 };
 
 function Badge({ label, className }: { label: string; className: string }) {
@@ -99,106 +94,121 @@ function MarkPublishedModal({ entry, onClose, onDone }: { entry: ScheduleEntry; 
   );
 }
 
-function getEntryTitle(entry: ScheduleEntry): string {
-  if (entry.title) return entry.title;
-  if (entry.video) return entry.video.title;
-  if (entry.contentItem) return entry.contentItem.blogTitle || entry.contentItem.sourceTitle;
-  return 'Untitled';
-}
-
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr);
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (d.toDateString() === today.toDateString()) return 'Today';
-  if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function groupByDate(entries: ScheduleEntry[], dateField: 'scheduledAt' | 'publishedAt'): Map<string, ScheduleEntry[]> {
-  const groups = new Map<string, ScheduleEntry[]>();
-  for (const entry of entries) {
-    const dateVal = entry[dateField] || entry.scheduledAt || entry.createdAt;
-    const key = new Date(dateVal).toDateString();
-    const existing = groups.get(key) || [];
-    existing.push(entry);
-    groups.set(key, existing);
-  }
-  return groups;
-}
-
-// Inline reschedule component
-function InlineReschedule({ entry, onDone }: { entry: ScheduleEntry; onDone: () => void }) {
-  const [editing, setEditing] = useState(false);
-  const [datetime, setDatetime] = useState(
-    entry.scheduledAt ? new Date(entry.scheduledAt).toISOString().slice(0, 16) : ''
-  );
+function CreateEntryModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [form, setForm] = useState({
+    title: '',
+    body: '',
+    platform: 'TIKTOK' as PublishPlatform,
+    contentType: 'SHORT_POST' as PublishContentType,
+    scheduledAt: '',
+    isAuto: false,
+  });
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async () => {
-    if (!datetime) return;
+  const handleSubmit = async () => {
     setSaving(true);
     try {
-      await api.updateScheduleEntry(entry.id, {
-        scheduledAt: new Date(datetime).toISOString(),
-        status: 'SCHEDULED',
+      await api.createScheduleEntry({
+        ...form,
+        scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : undefined,
+        status: form.scheduledAt ? 'SCHEDULED' : 'DRAFT',
       });
-      toast.success('Rescheduled');
-      setEditing(false);
       onDone();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSaving(false);
     }
   };
 
-  if (!editing) {
-    return (
-      <button
-        onClick={() => setEditing(true)}
-        className="text-xs text-gray-500 hover:text-blue-600 hover:underline cursor-pointer"
-        title="Click to reschedule"
-      >
-        {entry.scheduledAt ? formatTime(entry.scheduledAt) : '--:--'}
-      </button>
-    );
-  }
-
   return (
-    <div className="flex items-center gap-1.5">
-      <input
-        type="datetime-local"
-        value={datetime}
-        onChange={(e) => setDatetime(e.target.value)}
-        min={new Date().toISOString().slice(0, 16)}
-        className="border border-gray-300 rounded px-2 py-1 text-xs w-44"
-        autoFocus
-      />
-      <button
-        onClick={handleSave}
-        disabled={saving || !datetime}
-        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-      >
-        Save
-      </button>
-      <button
-        onClick={() => setEditing(false)}
-        className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
-      >
-        Cancel
-      </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-lg font-semibold mb-4">New Schedule Entry</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Body</label>
+            <textarea
+              value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
+              rows={3}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Platform</label>
+              <select
+                value={form.platform}
+                onChange={(e) => setForm({ ...form, platform: e.target.value as PublishPlatform })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              >
+                {Object.entries(PLATFORM_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Content Type</label>
+              <select
+                value={form.contentType}
+                onChange={(e) => setForm({ ...form, contentType: e.target.value as PublishContentType })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              >
+                <option value="VIDEO">Video</option>
+                <option value="ARTICLE">Article</option>
+                <option value="SHORT_POST">Short Post</option>
+                <option value="IMAGE_POST">Image Post</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Scheduled At</label>
+            <input
+              type="datetime-local"
+              value={form.scheduledAt}
+              onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isAuto}
+              onChange={(e) => setForm({ ...form, isAuto: e.target.checked })}
+            />
+            Auto-publish via API
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md border">Cancel</button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || !form.title}
+            className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {saving ? 'Creating...' : 'Create'}
+          </button>
+        </div>
+      </div>
     </div>
   );
+}
+
+function EntryTitle({ entry }: { entry: ScheduleEntry }) {
+  if (entry.title) return <>{entry.title}</>;
+  if (entry.video) return <>{entry.video.title}</>;
+  if (entry.contentItem) return <>{entry.contentItem.blogTitle || entry.contentItem.sourceTitle}</>;
+  return <span className="text-gray-400 italic">Untitled</span>;
 }
 
 export default function AdminSchedule() {
@@ -207,18 +217,20 @@ export default function AdminSchedule() {
   const [loading, setLoading] = useState(true);
   const [platformFilter, setPlatformFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [contentTypeFilter, setContentTypeFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [publishEntry, setPublishEntry] = useState<ScheduleEntry | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     Promise.all([
       api.getSchedule({
         page,
-        limit: 100,
         platform: platformFilter || undefined,
         status: statusFilter || undefined,
+        contentType: contentTypeFilter || undefined,
       }),
       api.getScheduleStats(),
     ])
@@ -229,47 +241,40 @@ export default function AdminSchedule() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [page, platformFilter, statusFilter]);
+  }, [page, platformFilter, statusFilter, contentTypeFilter]);
 
   useEffect(() => { load(); }, [load]);
 
   const now = new Date();
-  const upcoming = entries
-    .filter((e) => e.status === 'SCHEDULED' || (e.status === 'PUBLISHING' && e.scheduledAt && new Date(e.scheduledAt) > now))
-    .sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime());
-
-  const past = entries
-    .filter((e) => e.status === 'PUBLISHED' || e.status === 'FAILED' || e.status === 'CANCELLED' ||
-      (e.scheduledAt && new Date(e.scheduledAt) <= now && e.status !== 'SCHEDULED'))
-    .sort((a, b) => {
-      const aDate = a.publishedAt || a.scheduledAt || a.createdAt;
-      const bDate = b.publishedAt || b.scheduledAt || b.createdAt;
-      return new Date(bDate).getTime() - new Date(aDate).getTime();
-    });
-
-  const upcomingGroups = groupByDate(upcoming, 'scheduledAt');
-  const pastGroups = groupByDate(past, 'publishedAt');
+  const upcoming = entries.filter((e) => e.scheduledAt && new Date(e.scheduledAt) > now && e.status !== 'PUBLISHED' && e.status !== 'CANCELLED');
+  const past = entries.filter((e) => e.publishedAt || (e.scheduledAt && new Date(e.scheduledAt) <= now) || e.status === 'PUBLISHED');
+  const other = entries.filter((e) => !upcoming.includes(e) && !past.includes(e));
 
   const handleCancel = async (id: string) => {
     try {
       await api.updateScheduleEntry(id, { status: 'CANCELLED' });
-      toast.success('Cancelled');
       load();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      console.error(err);
     }
   };
-
-  const failedCount = stats?.byStatus.FAILED || 0;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <h2 className="text-lg font-semibold text-gray-900">Publication Timeline</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Publication Schedule</h2>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+        >
+          + New Entry
+        </button>
+      </div>
 
       {/* Stats bar */}
       {stats && (
-        <div className={`grid gap-3 ${failedCount > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-white rounded-lg border p-3">
             <p className="text-2xl font-bold text-blue-600">{stats.upcoming}</p>
             <p className="text-xs text-gray-500">Upcoming</p>
@@ -278,12 +283,14 @@ export default function AdminSchedule() {
             <p className="text-2xl font-bold text-green-600">{stats.byStatus.PUBLISHED || 0}</p>
             <p className="text-xs text-gray-500">Published</p>
           </div>
-          {failedCount > 0 && (
-            <div className="bg-white rounded-lg border p-3">
-              <p className="text-2xl font-bold text-red-600">{failedCount}</p>
-              <p className="text-xs text-gray-500">Failed</p>
-            </div>
-          )}
+          <div className="bg-white rounded-lg border p-3">
+            <p className="text-2xl font-bold text-gray-600">{stats.byStatus.DRAFT || 0}</p>
+            <p className="text-xs text-gray-500">Drafts</p>
+          </div>
+          <div className="bg-white rounded-lg border p-3">
+            <p className="text-2xl font-bold text-red-600">{stats.byStatus.FAILED || 0}</p>
+            <p className="text-xs text-gray-500">Failed</p>
+          </div>
         </div>
       )}
 
@@ -300,12 +307,23 @@ export default function AdminSchedule() {
           ))}
         </select>
         <select
+          value={contentTypeFilter}
+          onChange={(e) => { setContentTypeFilter(e.target.value); setPage(1); }}
+          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+        >
+          <option value="">All Types</option>
+          <option value="VIDEO">Video</option>
+          <option value="ARTICLE">Article</option>
+          <option value="SHORT_POST">Short Post</option>
+          <option value="IMAGE_POST">Image Post</option>
+        </select>
+        <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
         >
           <option value="">All Statuses</option>
-          {(['SCHEDULED', 'PUBLISHING', 'PUBLISHED', 'FAILED', 'CANCELLED'] as const).map((s) => (
+          {(['DRAFT', 'SCHEDULED', 'PUBLISHING', 'PUBLISHED', 'FAILED', 'CANCELLED'] as const).map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
@@ -314,69 +332,20 @@ export default function AdminSchedule() {
       {loading ? (
         <p className="text-gray-500 text-sm">Loading...</p>
       ) : entries.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-400 text-sm">No scheduled publications yet.</p>
-          <p className="text-gray-400 text-xs mt-1">Schedule content from the Content Manager.</p>
-        </div>
+        <p className="text-gray-500 text-sm">No schedule entries found.</p>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Upcoming section */}
           {upcoming.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Upcoming</h3>
-              <div className="space-y-6">
-                {Array.from(upcomingGroups.entries()).map(([dateKey, groupEntries]) => (
-                  <div key={dateKey}>
-                    <div className="text-xs font-medium text-gray-400 mb-2 pl-6">
-                      {formatDateLabel(groupEntries[0].scheduledAt!)}
-                    </div>
-                    <div className="space-y-0">
-                      {groupEntries.map((entry) => (
-                        <TimelineEntry
-                          key={entry.id}
-                          entry={entry}
-                          isUpcoming
-                          onMarkPublished={setPublishEntry}
-                          onCancel={handleCancel}
-                          onReschedule={load}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Section title="Upcoming" entries={upcoming} onPublish={setPublishEntry} onCancel={handleCancel} />
           )}
-
-          {/* Past section */}
+          {/* Past / Published */}
           {past.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Past</h3>
-              <div className="space-y-6">
-                {Array.from(pastGroups.entries()).map(([dateKey, groupEntries]) => {
-                  const refDate = groupEntries[0].publishedAt || groupEntries[0].scheduledAt || groupEntries[0].createdAt;
-                  return (
-                    <div key={dateKey}>
-                      <div className="text-xs font-medium text-gray-400 mb-2 pl-6">
-                        {formatDateLabel(refDate)}
-                      </div>
-                      <div className="space-y-0">
-                        {groupEntries.map((entry) => (
-                          <TimelineEntry
-                            key={entry.id}
-                            entry={entry}
-                            isUpcoming={false}
-                            onMarkPublished={setPublishEntry}
-                            onCancel={handleCancel}
-                            onReschedule={load}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <Section title="Published / Past" entries={past} onPublish={setPublishEntry} onCancel={handleCancel} />
+          )}
+          {/* Other (drafts, etc.) */}
+          {other.length > 0 && (
+            <Section title="Drafts & Other" entries={other} onPublish={setPublishEntry} onCancel={handleCancel} />
           )}
         </div>
       )}
@@ -397,82 +366,96 @@ export default function AdminSchedule() {
           onDone={() => { setPublishEntry(null); load(); }}
         />
       )}
+      {showCreate && (
+        <CreateEntryModal
+          onClose={() => setShowCreate(false)}
+          onDone={() => { setShowCreate(false); load(); }}
+        />
+      )}
     </div>
   );
 }
 
-function TimelineEntry({
-  entry,
-  isUpcoming,
-  onMarkPublished,
+function Section({
+  title,
+  entries,
+  onPublish,
   onCancel,
-  onReschedule,
 }: {
-  entry: ScheduleEntry;
-  isUpcoming: boolean;
-  onMarkPublished: (e: ScheduleEntry) => void;
+  title: string;
+  entries: ScheduleEntry[];
+  onPublish: (e: ScheduleEntry) => void;
   onCancel: (id: string) => void;
-  onReschedule: () => void;
 }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 px-1 group">
-      {/* Timeline dot and line */}
-      <div className="flex flex-col items-center pt-1">
-        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT_COLORS[entry.status]}`} />
-        <div className="w-px h-full bg-gray-200 mt-1" />
-      </div>
+    <div>
+      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{title}</h3>
+      <div className="space-y-2">
+        {entries.map((entry) => (
+          <div key={entry.id} className="bg-white rounded-lg border p-4 flex items-start gap-4">
+            {/* Content type icon */}
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+              {CONTENT_TYPE_ICONS[entry.contentType]}
+            </div>
 
-      {/* Time */}
-      <div className="w-16 flex-shrink-0 pt-0.5">
-        {isUpcoming && entry.status === 'SCHEDULED' ? (
-          <InlineReschedule entry={entry} onDone={onReschedule} />
-        ) : (
-          <span className="text-xs text-gray-500">
-            {entry.publishedAt ? formatTime(entry.publishedAt) : entry.scheduledAt ? formatTime(entry.scheduledAt) : '--:--'}
-          </span>
-        )}
-      </div>
+            {/* Main content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium text-gray-900 truncate">
+                  <EntryTitle entry={entry} />
+                </p>
+                <PlatformBadge platform={entry.platform} />
+                <Badge label={entry.status} className={STATUS_COLORS[entry.status]} />
+                {entry.isAuto ? (
+                  <Badge label="Auto" className="bg-indigo-100 text-indigo-700" />
+                ) : (
+                  <Badge label="Manual" className="bg-amber-100 text-amber-700" />
+                )}
+              </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-gray-900 truncate">{getEntryTitle(entry)}</span>
-          <PlatformBadge platform={entry.platform} />
-          <Badge label={entry.status} className={STATUS_COLORS[entry.status]} />
-        </div>
-        {entry.contentItem && (
-          <p className="text-xs text-gray-400 mt-0.5 truncate">
-            {entry.contentItem.sourceTitle}
-          </p>
-        )}
-        {entry.publishedUrl && (
-          <a href={entry.publishedUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-0.5 inline-block">
-            View published
-          </a>
-        )}
-        {entry.errorMessage && (
-          <p className="text-xs text-red-600 mt-0.5">{entry.errorMessage}</p>
-        )}
-      </div>
+              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                {entry.scheduledAt && (
+                  <span>Scheduled: {new Date(entry.scheduledAt).toLocaleString()}</span>
+                )}
+                {entry.publishedAt && (
+                  <span>Published: {new Date(entry.publishedAt).toLocaleString()}</span>
+                )}
+                {entry.assignedTo && (
+                  <span>Assigned: {entry.assignedTo.name}</span>
+                )}
+              </div>
 
-      {/* Actions */}
-      <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        {entry.status !== 'PUBLISHED' && entry.status !== 'CANCELLED' && (
-          <>
-            <button
-              onClick={() => onMarkPublished(entry)}
-              className="px-2.5 py-1 text-xs rounded bg-green-50 text-green-700 hover:bg-green-100 font-medium"
-            >
-              Mark Published
-            </button>
-            <button
-              onClick={() => onCancel(entry.id)}
-              className="px-2.5 py-1 text-xs rounded bg-gray-50 text-gray-600 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-          </>
-        )}
+              {entry.publishedUrl && (
+                <a href={entry.publishedUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                  View published
+                </a>
+              )}
+              {entry.errorMessage && (
+                <p className="text-xs text-red-600 mt-1">{entry.errorMessage}</p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 flex-shrink-0">
+              {entry.status !== 'PUBLISHED' && entry.status !== 'CANCELLED' && (
+                <button
+                  onClick={() => onPublish(entry)}
+                  className="px-3 py-1.5 text-xs rounded-md bg-green-50 text-green-700 hover:bg-green-100 font-medium"
+                >
+                  Mark Published
+                </button>
+              )}
+              {entry.status !== 'PUBLISHED' && entry.status !== 'CANCELLED' && (
+                <button
+                  onClick={() => onCancel(entry.id)}
+                  className="px-3 py-1.5 text-xs rounded-md bg-gray-50 text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
