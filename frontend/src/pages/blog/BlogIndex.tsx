@@ -140,14 +140,14 @@ export default function BlogIndex() {
     <div className="min-h-screen bg-slate-50">
       <SEO
         title="Blog"
-        description="How AI agents find, hire, and pay real people — practical guides on AI agent automation, the AI-to-human marketplace, and getting paid for real-world tasks."
+        description="How AI agents find, hire, and pay real people — guides on AI automation, freelancer gigs, and the future of work."
         path="/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
           "name": "Human Pages Blog",
           "url": "https://humanpages.ai/blog",
-          "description": "How AI agents find, hire, and pay real people — practical guides on AI agent automation, the AI-to-human marketplace, and getting paid for real-world tasks."
+          "description": "How AI agents find, hire, and pay real people — guides on AI automation, freelancer gigs, and the future of work."
         }}
       />
 
@@ -168,7 +168,7 @@ export default function BlogIndex() {
       <main className="py-12 md:py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Blog</h1>
-          <p className="text-lg text-slate-600 mb-12">How AI agents find, hire, and pay real people — practical guides on AI agent automation, the AI-to-human marketplace, and getting paid for real-world tasks.</p>
+          <p className="text-lg text-slate-600 mb-12">How AI agents find, hire, and pay real people — guides on AI automation, freelancer gigs, and the future of work.</p>
 
           {/* Featured section */}
           {featuredArticles.length > 0 && (
