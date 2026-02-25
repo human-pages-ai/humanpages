@@ -15,7 +15,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = 'Human Pages';
-const DEFAULT_DESCRIPTION = "The future of hiring networks. No commissions, no middlemen.";
+const DEFAULT_DESCRIPTION = "Get paid for real-world tasks — AI agents hire freelancers for photography, deliveries, research, and more. Zero platform fees.";
 const SITE_URL = 'https://humanpages.ai';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 
@@ -37,7 +37,7 @@ export default function SEO({
 }: SEOProps) {
   const { i18n } = useTranslation();
   const currentLang = lang || i18n.language || 'en';
-  const pageTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — AI's Hiring. Are You Listed?`;
+  const pageTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Get Hired by AI Agents for Real-World Tasks`;
   const ogTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
   const canonicalUrl = canonical || (path ? getLangUrl(currentLang, path) : SITE_URL);
 

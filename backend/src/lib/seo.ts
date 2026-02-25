@@ -6,7 +6,7 @@ const SITE_URL = process.env.FRONTEND_URL || 'https://humanpages.ai';
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
 const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 const DEFAULT_TITLE = "Human Pages";
-const DEFAULT_DESCRIPTION = 'The future of hiring networks. No commissions, no middlemen.';
+const DEFAULT_DESCRIPTION = 'Get paid for real-world tasks — AI agents hire freelancers for photography, deliveries, research, and more. Zero platform fees.';
 
 // Cache the index.html template
 let indexHtmlTemplate: string | null = null;

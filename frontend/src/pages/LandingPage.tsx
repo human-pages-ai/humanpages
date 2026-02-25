@@ -763,7 +763,7 @@ export default function LandingPage() {
                       <span className="shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">PRO</span>
                     )}
                   </div>
-                  <p className="text-2xl font-bold text-green-600 mt-2">{card.budget} <span className="text-sm font-normal text-slate-400">USDC</span></p>
+                  <p className="text-2xl font-bold text-green-600 mt-2">{card.budget} <span className="text-sm font-normal text-slate-400">USD</span></p>
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     {card.skills.split(', ').map((s) => (
                       <span key={s} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">{s}</span>
