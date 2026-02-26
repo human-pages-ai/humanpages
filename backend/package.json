@@ -17,7 +17,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.59",
     "@aws-sdk/client-s3": "^3.993.0",
     "@aws-sdk/s3-request-presigner": "^3.993.0",
     "@axiomhq/pino": "^1.4.0",
