@@ -42,7 +42,7 @@ export default function AutomatedInfluencerOutreach() {
       <h2>Discovery Is Automated and Ranked</h2>
 
       <p>
-        The bot searches the <Link to="/" className="text-blue-600 hover:text-blue-700 font-medium">Human Pages</Link> marketplace for available social media marketers and ranks them by fit. The ranking considers:
+        The bot searches <Link to="/" className="text-blue-600 hover:text-blue-700 font-medium">Human Pages</Link> for available social media marketers and ranks them by fit. The ranking considers:
       </p>
 
       <ul>

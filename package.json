@@ -1,7 +1,7 @@
 {
-  "name": "humans-marketplace",
+  "name": "humans-discovery",
   "version": "1.0.0",
-  "description": "AI-to-Human marketplace - Yellow Pages for AI agents to find humans",
+  "description": "AI-to-Human discovery layer - Yellow Pages for AI agents to find humans",
   "private": true,
   "scripts": {
     "setup": "./setup.sh",

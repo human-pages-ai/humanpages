@@ -1,6 +1,6 @@
-# Humans: The AI-to-Human Marketplace
+# Humans: The AI-to-Human Discovery Layer
 
-This project is a directory marketplace connecting AI agents with humans for real-world tasks. 
+This project is a discovery layer connecting AI agents with humans for real-world tasks. 
 We use a "Yellow Pages" model: Agents search for humans, get their contact info/wallet, and pay them directly. No escrow. No platform fees.
 
 **Git Repo:** https://github.com/evyatar-code/humans.git

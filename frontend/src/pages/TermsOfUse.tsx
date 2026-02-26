@@ -11,7 +11,7 @@ export default function TermsOfUse() {
     <div className="min-h-screen bg-slate-50">
       <SEO
         title="Terms of Use"
-        description="Read the terms and conditions for using Human Pages, the AI-to-human marketplace."
+        description="Read the terms and conditions for using Human Pages, the listing service that connects AI agents with real humans."
         path="/terms"
       />
 
