@@ -34,6 +34,7 @@ vi.mock('../lib/email.js', () => ({
   sendJobOfferEmail: vi.fn(() => Promise.resolve()),
   sendJobOfferUpdatedEmail: vi.fn(() => Promise.resolve()),
   sendJobMessageEmail: vi.fn(() => Promise.resolve()),
+  sendPaymentClaimEmail: vi.fn(() => Promise.resolve()),
 }));
 
 // Mock telegram
@@ -41,10 +42,15 @@ vi.mock('../lib/telegram.js', () => ({
   sendJobOfferTelegram: vi.fn(() => Promise.resolve()),
   sendJobOfferUpdatedTelegram: vi.fn(() => Promise.resolve()),
   sendTelegramMessage: vi.fn(() => Promise.resolve()),
+  sendPaymentClaimTelegram: vi.fn(() => Promise.resolve()),
 }));
 
 import { verifyUsdcPayment } from '../lib/blockchain/verify-payment.js';
+import { sendPaymentClaimEmail } from '../lib/email.js';
+import { sendPaymentClaimTelegram } from '../lib/telegram.js';
 const mockVerifyUsdcPayment = vi.mocked(verifyUsdcPayment);
+const mockSendPaymentClaimEmail = vi.mocked(sendPaymentClaimEmail);
+const mockSendPaymentClaimTelegram = vi.mocked(sendPaymentClaimTelegram);
 
 let human: TestUser;
 let agent: TestAgent;
@@ -251,6 +257,99 @@ describe('PATCH /api/jobs/:id/claim-payment', () => {
       .send({});
 
     expect(res.status).toBe(400);
+  });
+
+  it('should send email notification to human on successful claim', async () => {
+    mockSendPaymentClaimEmail.mockClear();
+    const jobId = await createJob({ status: 'ACCEPTED' });
+
+    const res = await request(app)
+      .patch(`/api/jobs/${jobId}/claim-payment`)
+      .set('X-Agent-Key', agent.apiKey)
+      .send({ method: 'paypal', note: 'Sent via PayPal' });
+
+    expect(res.status).toBe(200);
+
+    // Wait for async notification to fire
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(mockSendPaymentClaimEmail).toHaveBeenCalledTimes(1);
+    const emailCall = mockSendPaymentClaimEmail.mock.calls[0][0];
+    expect(emailCall.humanEmail).toBe('worker@example.com');
+    expect(emailCall.humanName).toBe('Worker');
+    expect(emailCall.jobTitle).toBe('Test Job');
+    expect(emailCall.method).toBe('paypal');
+    expect(emailCall.amount).toBe(100);
+    expect(emailCall.dashboardUrl).toContain('/dashboard?tab=jobs');
+  });
+
+  it('should send Telegram notification when human has telegramChatId', async () => {
+    mockSendPaymentClaimTelegram.mockClear();
+
+    // Give human a Telegram chat ID
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { telegramChatId: 'tg-chat-123' },
+    });
+
+    const jobId = await createJob({ status: 'ACCEPTED' });
+
+    const res = await request(app)
+      .patch(`/api/jobs/${jobId}/claim-payment`)
+      .set('X-Agent-Key', agent.apiKey)
+      .send({ method: 'wise' });
+
+    expect(res.status).toBe(200);
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(mockSendPaymentClaimTelegram).toHaveBeenCalledTimes(1);
+    const tgCall = mockSendPaymentClaimTelegram.mock.calls[0][0];
+    expect(tgCall.chatId).toBe('tg-chat-123');
+    expect(tgCall.jobTitle).toBe('Test Job');
+    expect(tgCall.method).toBe('wise');
+    expect(tgCall.amount).toBe(100);
+  });
+
+  it('should not send email when human has emailNotifications disabled', async () => {
+    mockSendPaymentClaimEmail.mockClear();
+
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { emailNotifications: false },
+    });
+
+    const jobId = await createJob({ status: 'ACCEPTED' });
+
+    await request(app)
+      .patch(`/api/jobs/${jobId}/claim-payment`)
+      .set('X-Agent-Key', agent.apiKey)
+      .send({ method: 'venmo' });
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(mockSendPaymentClaimEmail).not.toHaveBeenCalled();
+  });
+
+  it('should not send Telegram when human has no telegramChatId', async () => {
+    mockSendPaymentClaimTelegram.mockClear();
+
+    // Ensure no Telegram chat ID
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { telegramChatId: null },
+    });
+
+    const jobId = await createJob({ status: 'ACCEPTED' });
+
+    await request(app)
+      .patch(`/api/jobs/${jobId}/claim-payment`)
+      .set('X-Agent-Key', agent.apiKey)
+      .send({ method: 'paypal' });
+
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(mockSendPaymentClaimTelegram).not.toHaveBeenCalled();
   });
 });
 

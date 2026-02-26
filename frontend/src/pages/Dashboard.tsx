@@ -145,6 +145,15 @@ export default function Dashboard() {
       setSearchParams(searchParams, { replace: true });
       loadProfile();
     }
+    const emailVerifyError = searchParams.get('emailVerifyError');
+    if (emailVerifyError) {
+      const message = emailVerifyError === 'expired'
+        ? 'Email verification link has expired. Please request a new one.'
+        : 'Email verification link is invalid. Please request a new one.';
+      toast.error(message, { duration: 6000 });
+      searchParams.delete('emailVerifyError');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, []);
 
   // Poll for email verification when unverified (user may verify on another device)

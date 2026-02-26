@@ -32,6 +32,17 @@ const app = express();
 // Trust first proxy (nginx/ALB) so X-Forwarded-For is used for rate limiting
 app.set('trust proxy', 1);
 
+// WWW → non-WWW redirect (must be before CORS to avoid blocking www visitors)
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.hostname.startsWith('www.')) {
+      const newHost = req.hostname.slice(4);
+      return res.redirect(301, `https://${newHost}${req.originalUrl}`);
+    }
+    next();
+  });
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {

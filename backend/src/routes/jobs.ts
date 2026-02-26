@@ -11,8 +11,8 @@ import { requireActiveIfAgent } from '../middleware/requireActiveAgent.js';
 import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
 import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
 import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib/x402.js';
-import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
-import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
+import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail, sendPaymentClaimEmail } from '../lib/email.js';
+import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage, sendPaymentClaimTelegram } from '../lib/telegram.js';
 import {
   verifyUsdcPayment,
   PaymentVerificationError,
@@ -1160,6 +1160,39 @@ router.patch('/:id/claim-payment', authenticateAgent, requireActiveAgent, async 
         'job.payment_claimed',
         { method: data.method, note: data.note },
       );
+    }
+
+    // Notify the human about the payment claim
+    const human = await prisma.human.findUnique({
+      where: { id: job.humanId },
+      select: { email: true, name: true, telegramChatId: true, emailNotifications: true, id: true },
+    });
+
+    if (human) {
+      const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard?tab=jobs`;
+
+      if (human.emailNotifications) {
+        sendPaymentClaimEmail({
+          humanName: human.name,
+          humanEmail: human.email,
+          humanId: human.id,
+          jobTitle: job.title,
+          amount: Number(job.priceUsdc),
+          method: data.method,
+          dashboardUrl,
+        }).catch(err => logger.error({ err }, 'Failed to send payment claim email'));
+      }
+
+      if (human.telegramChatId) {
+        sendPaymentClaimTelegram({
+          chatId: human.telegramChatId,
+          humanName: human.name,
+          jobTitle: job.title,
+          amount: Number(job.priceUsdc),
+          method: data.method,
+          dashboardUrl,
+        }).catch(err => logger.error({ err }, 'Failed to send payment claim telegram'));
+      }
     }
 
     res.json({

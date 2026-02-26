@@ -232,6 +232,7 @@ model Human {
   termsAcceptedAt        DateTime?
   emailVerified          Boolean    @default(false)
   emailVerificationToken String?    @unique
+  emailVerificationTokenCreatedAt DateTime?
   emailNotifications     Boolean    @default(true)
   telegramNotifications  Boolean    @default(true)
   whatsappNotifications  Boolean    @default(true)
