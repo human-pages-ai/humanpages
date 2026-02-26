@@ -860,3 +860,68 @@ export interface StaffBalance {
   from: string;
   to: string;
 }
+
+// ─── Video Batches ───
+export interface BatchSummary {
+  date: string;
+  conceptCount: number;
+  validConcepts: number;
+  approvedCount: number;
+  tier: string;
+  approvedTier: string | null;
+}
+
+export interface BatchConcept {
+  number: number;
+  title: string;
+  concept: string;
+  hook: string;
+  pillar: string;
+  hasThumbnails: boolean;
+  thumbnailCount: number;
+  approved: boolean;
+  approvedTier: string | null;
+  failed: boolean;
+}
+
+export interface BatchDetail {
+  date: string;
+  tier: string;
+  conceptCount: number;
+  concepts: BatchConcept[];
+}
+
+export interface BatchConceptDetail {
+  number: number;
+  title: string;
+  concept: string;
+  hook: string;
+  pillar: string;
+  script: {
+    title: string;
+    concept: string;
+    total_duration_seconds: number;
+    visual_style: string;
+    music_mood: string;
+    scenes: Array<{
+      scene_number: number;
+      duration_seconds: number;
+      shot_type: string;
+      camera_motion: string;
+      setting: string;
+      image_prompt: string;
+      overlay_text: string | null;
+      overlay_position: string | null;
+      dialogue: string | null;
+      dialogue_speaker: string | null;
+      narration: string | null;
+      sound_effect: string | null;
+      transition_in: string;
+      transition_out: string;
+    }>;
+  } | null;
+  images: string[];
+  approved: boolean;
+  approvedTier: string | null;
+  approvedAt: string | null;
+}

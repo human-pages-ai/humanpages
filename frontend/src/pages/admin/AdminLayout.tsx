@@ -16,6 +16,7 @@ const adminOnlyItems = [
   { to: '/admin/staff', label: 'Staff' },
   { to: '/admin/productivity', label: 'Productivity' },
   { to: '/admin/leads', label: 'Lead Gen' },
+  { to: '/admin/batches', label: 'Batches' },
 ];
 
 const sharedItems = [
