@@ -1,6 +1,8 @@
 # Human Pages MCP Server
 
-An MCP (Model Context Protocol) server that enables AI agents to search for and hire humans for real-world tasks via [humanpages.ai](https://humanpages.ai).
+MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 31 tools including search by skill/location/equipment, job offers, job board listings, in-job messaging, and streaming payments. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
+
+Visit [humanpages.ai](https://humanpages.ai) to learn more.
 
 ## Quick Install
 
