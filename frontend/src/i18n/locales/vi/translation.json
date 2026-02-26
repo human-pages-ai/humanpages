@@ -389,7 +389,7 @@
       "defaultPaymentUsdc": "Thanh toán mặc định: USDC qua ví đã kết nối của bạn",
       "usdcHint": "USDC là stablecoin — luôn có giá trị $1 USD",
       "walletConnected": "Ví đã kết nối",
-      "connectWalletPrompt": "Kết nối ví để nhận thanh toán USDC",
+      "connectWalletPrompt": "Bạn muốn nhận tiền bằng cách nào?",
       "alsoAcceptNonCrypto": "Tôi cũng chấp nhận thanh toán không dùng crypto",
       "usdcWalletConnected": "USDC (ví đã kết nối)",
       "howToPayYou": "Cách thanh toán cho bạn",
@@ -402,8 +402,8 @@
     },
     "wallets": {
       "title": "Ví",
-      "paymentSetupTitle": "Thiết lập thanh toán",
-      "paymentSetupSubtitle": "USDC là phương thức thanh toán mặc định. Kết nối ví để nhận thanh toán.",
+      "paymentSetupTitle": "Nhận Tiền",
+      "paymentSetupSubtitle": "Chọn cách bạn muốn nhận tiền. Chúng tôi khuyên dùng USDC hoặc ETH — thuận tiện nhất cho AI agent và sẽ tăng cơ hội được thuê.",
       "addWallet": "Thêm ví",
       "connectWallet": "Kết nối ví",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -428,8 +428,8 @@
       "label": "Nhãn",
       "labelPlaceholder": "VD: Ví chính",
       "noWallets": "Chưa thêm ví nào",
-      "emptyTitle": "Chưa kết nối ví",
-      "emptyDescription": "Thêm ví để nhận thanh toán cho các công việc đã hoàn thành",
+      "emptyTitle": "Robot nên trả tiền cho bạn bằng cách nào?",
+      "emptyDescription": "Chọn phương thức thanh toán để bắt đầu kiếm tiền từ công việc đã hoàn thành",
       "walletAddress": "Địa chỉ ví",
       "confirmDelete": "Xóa ví này?",
       "networks": {
@@ -599,9 +599,9 @@
     "lastUpdated": "Cập nhật lần cuối",
     "offerUpdated": "Đề nghị này đã được đại lý cập nhật",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "Chọn cách nhận tiền cho công việc này",
+      "description": "Chọn phương thức thanh toán để agent có thể gửi tiền cho bạn khi công việc hoàn thành.",
+      "action": "Nhận Tiền"
     }
   },
   "trust": {
@@ -665,9 +665,9 @@
     "emailVerified": "Đã xác minh email thành công",
     "preferencesSaved": "Đã lưu tùy chọn",
     "genericError": "Đã xảy ra lỗi. Vui lòng thử lại.",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "Robot nên trả tiền cho bạn bằng cách nào?",
+    "walletNudgeDescription": "Chọn phương thức thanh toán để bắt đầu kiếm tiền từ công việc đã hoàn thành.",
+    "walletNudgeAction": "Nhận Tiền"
   },
   "emailVerifiedPage": {
     "title": "Xác minh email thành công",

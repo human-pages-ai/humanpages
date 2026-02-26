@@ -389,7 +389,7 @@
       "defaultPaymentUsdc": "การชำระเงินเริ่มต้น: USDC ผ่านกระเป๋าเงินที่เชื่อมต่อของคุณ",
       "usdcHint": "USDC เป็น stablecoin — มีมูลค่าเท่ากับ $1 USD เสมอ",
       "walletConnected": "กระเป๋าเงินเชื่อมต่อแล้ว",
-      "connectWalletPrompt": "เชื่อมต่อกระเป๋าเงินเพื่อรับการชำระเงิน USDC",
+      "connectWalletPrompt": "คุณต้องการรับเงินอย่างไร?",
       "alsoAcceptNonCrypto": "ฉันยังรับการชำระเงินที่ไม่ใช่คริปโต",
       "usdcWalletConnected": "USDC (กระเป๋าเงินเชื่อมต่อแล้ว)",
       "howToPayYou": "วิธีชำระเงินให้คุณ",
@@ -402,8 +402,8 @@
     },
     "wallets": {
       "title": "กระเป๋าเงิน",
-      "paymentSetupTitle": "ตั้งค่าการชำระเงิน",
-      "paymentSetupSubtitle": "USDC เป็นวิธีการชำระเงินเริ่มต้น เชื่อมต่อกระเป๋าเงินเพื่อรับการชำระเงิน",
+      "paymentSetupTitle": "รับเงิน",
+      "paymentSetupSubtitle": "เลือกวิธีที่คุณต้องการรับเงิน เราแนะนำ USDC หรือ ETH — สะดวกที่สุดสำหรับ AI agent และจะเพิ่มโอกาสในการได้รับงาน",
       "addWallet": "เพิ่มกระเป๋าเงิน",
       "connectWallet": "เชื่อมต่อกระเป๋าเงิน",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -428,8 +428,8 @@
       "label": "ป้ายกำกับ",
       "labelPlaceholder": "เช่น กระเป๋าเงินหลัก",
       "noWallets": "ยังไม่มีกระเป๋าเงิน",
-      "emptyTitle": "ยังไม่มีกระเป๋าเงินที่เชื่อมต่อ",
-      "emptyDescription": "เพิ่มกระเป๋าเงินเพื่อรับการชำระเงินสำหรับงานที่เสร็จสิ้น",
+      "emptyTitle": "หุ่นยนต์ควรจ่ายเงินคุณอย่างไร?",
+      "emptyDescription": "เลือกวิธีรับเงินเพื่อเริ่มรับรายได้จากงานที่ทำเสร็จ",
       "walletAddress": "ที่อยู่กระเป๋าเงิน",
       "confirmDelete": "ลบกระเป๋าเงินนี้?",
       "networks": {
@@ -599,9 +599,9 @@
     "lastUpdated": "อัปเดตล่าสุด",
     "offerUpdated": "ข้อเสนอนี้ได้รับการอัปเดตโดยตัวแทน",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "เลือกวิธีรับเงินสำหรับงานนี้",
+      "description": "เลือกวิธีรับเงินเพื่อให้เอเจนต์ส่งเงินให้คุณเมื่องานเสร็จ",
+      "action": "รับเงิน"
     }
   },
   "trust": {
@@ -665,9 +665,9 @@
     "emailVerified": "ยืนยันอีเมลสำเร็จ",
     "preferencesSaved": "บันทึกการตั้งค่าแล้ว",
     "genericError": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "หุ่นยนต์ควรจ่ายเงินคุณอย่างไร?",
+    "walletNudgeDescription": "เลือกวิธีรับเงินเพื่อเริ่มรับรายได้จากงานที่ทำเสร็จ",
+    "walletNudgeAction": "รับเงิน"
   },
   "emailVerifiedPage": {
     "title": "ยืนยันอีเมลสำเร็จ",

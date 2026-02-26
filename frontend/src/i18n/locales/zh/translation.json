@@ -424,7 +424,7 @@
       "defaultPaymentUsdc": "默认支付方式：通过您连接的钱包使用USDC",
       "usdcHint": "USDC是一种稳定币——始终价值1美元",
       "walletConnected": "钱包已连接",
-      "connectWalletPrompt": "连接钱包以接收USDC付款",
+      "connectWalletPrompt": "你想怎么收款？",
       "alsoAcceptNonCrypto": "我也接受非加密货币支付",
       "usdcWalletConnected": "USDC（钱包已连接）",
       "howToPayYou": "如何付款",
@@ -437,8 +437,8 @@
     },
     "wallets": {
       "title": "钱包",
-      "paymentSetupTitle": "支付设置",
-      "paymentSetupSubtitle": "USDC是默认支付方式。连接钱包以接收付款。",
+      "paymentSetupTitle": "收款",
+      "paymentSetupSubtitle": "选择你想如何收款。我们推荐USDC或ETH——对AI代理最方便，也会增加你被雇用的机会。",
       "addWallet": "添加钱包",
       "connectWallet": "连接钱包",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -463,8 +463,8 @@
       "label": "标签",
       "labelPlaceholder": "例如：主钱包",
       "noWallets": "还没有添加钱包",
-      "emptyTitle": "没有连接钱包",
-      "emptyDescription": "添加钱包以接收完成工作的付款",
+      "emptyTitle": "机器人应该怎么付钱给你？",
+      "emptyDescription": "选择收款方式，开始从完成的工作中赚钱",
       "walletAddress": "钱包地址",
       "confirmDelete": "删除这个钱包？",
       "networks": {
@@ -604,9 +604,9 @@
     "lastUpdated": "最后更新",
     "offerUpdated": "此报价已被代理更新",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "选择这份工作的收款方式",
+      "description": "选择收款方式，以便代理在工作完成后向你付款。",
+      "action": "收款"
     }
   },
   "trust": {
@@ -670,9 +670,9 @@
     "emailVerified": "邮箱验证成功",
     "preferencesSaved": "偏好设置已保存",
     "genericError": "出了点问题。请重试。",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "机器人应该怎么付钱给你？",
+    "walletNudgeDescription": "选择收款方式，开始从完成的工作中赚钱。",
+    "walletNudgeAction": "收款"
   },
   "emailVerifiedPage": {
     "title": "邮箱验证成功",

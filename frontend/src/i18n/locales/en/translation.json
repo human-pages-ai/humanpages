@@ -400,14 +400,14 @@
       "defaultPaymentUsdc": "Default payment: USDC via your connected wallet",
       "usdcHint": "USDC is a stablecoin — always worth $1 USD",
       "walletConnected": "Wallet connected",
-      "connectWalletPrompt": "Connect a wallet to receive USDC payments",
+      "connectWalletPrompt": "How would you like to get paid?",
       "alsoAcceptNonCrypto": "I also accept non-crypto payments",
       "usdcWalletConnected": "USDC (wallet connected)"
     },
     "wallets": {
       "title": "Wallets",
-      "paymentSetupTitle": "Payment Setup",
-      "paymentSetupSubtitle": "USDC is the default payment method. Connect a wallet to receive payments.",
+      "paymentSetupTitle": "Receive Money",
+      "paymentSetupSubtitle": "Choose how you'd like to get paid. We recommend USDC or ETH — they're the most convenient for AI agents and will increase your chances of getting hired.",
       "addWallet": "Add Wallet",
       "connectWallet": "Connect Wallet",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -434,8 +434,8 @@
       "addLabel": "Add label",
       "editLabel": "Edit label",
       "noWallets": "No wallets added yet",
-      "emptyTitle": "No wallets connected",
-      "emptyDescription": "Add a wallet to receive payments for completed jobs",
+      "emptyTitle": "How should the robots pay you?",
+      "emptyDescription": "Pick a payment method to start earning from completed jobs",
       "walletAddress": "Wallet address",
       "confirmDelete": "Delete this wallet?",
       "allNetworksNote": "Available on all EVM networks",
@@ -640,9 +640,9 @@
     "offerUpdated": "This offer has been updated by the agent",
     "viewTransaction": "View transaction",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "Choose how you get paid for this job",
+      "description": "Pick a payment method so the agent can send you money when the job is done.",
+      "action": "Get Paid"
     },
     "paymentClaimed": "The agent claims they sent payment",
     "paymentClaimMethod": "Method",
@@ -731,9 +731,9 @@
     "emailVerified": "Email verified successfully",
     "preferencesSaved": "Preferences saved",
     "genericError": "Something went wrong. Please try again.",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "How should the robots pay you?",
+    "walletNudgeDescription": "Pick a payment method so you can start earning from completed jobs.",
+    "walletNudgeAction": "Get Paid"
   },
   "emailVerifiedPage": {
     "title": "Email Verified!",

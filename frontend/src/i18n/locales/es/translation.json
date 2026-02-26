@@ -424,7 +424,7 @@
       "defaultPaymentUsdc": "Pago predeterminado: USDC a través de tu billetera conectada",
       "usdcHint": "USDC es una stablecoin — siempre vale $1 USD",
       "walletConnected": "Billetera conectada",
-      "connectWalletPrompt": "Conecta una billetera para recibir pagos en USDC",
+      "connectWalletPrompt": "¿Cómo te gustaría que te paguen?",
       "alsoAcceptNonCrypto": "También acepto pagos fuera de cripto",
       "usdcWalletConnected": "USDC (billetera conectada)",
       "howToPayYou": "Cómo pagarte",
@@ -437,8 +437,8 @@
     },
     "wallets": {
       "title": "Billeteras",
-      "paymentSetupTitle": "Configuración de Pagos",
-      "paymentSetupSubtitle": "USDC es el método de pago predeterminado. Conecta una billetera para recibir pagos.",
+      "paymentSetupTitle": "Recibir Dinero",
+      "paymentSetupSubtitle": "Elige cómo quieres que te paguen. Recomendamos USDC o ETH — son los más convenientes para los agentes de IA y aumentarán tus chances de ser contratado.",
       "addWallet": "Agregar Billetera",
       "connectWallet": "Conectar billetera",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -463,8 +463,8 @@
       "label": "Etiqueta",
       "labelPlaceholder": "ej., Billetera principal",
       "noWallets": "Aún no hay billeteras agregadas",
-      "emptyTitle": "No hay billeteras conectadas",
-      "emptyDescription": "Agrega una billetera para recibir pagos por trabajos completados",
+      "emptyTitle": "¿Cómo deberían pagarte los robots?",
+      "emptyDescription": "Elige un método de pago para empezar a ganar con trabajos completados",
       "walletAddress": "Dirección de billetera",
       "confirmDelete": "¿Eliminar esta billetera?",
       "networks": {
@@ -604,9 +604,9 @@
     "lastUpdated": "Última actualización",
     "offerUpdated": "Esta oferta ha sido actualizada por el agente",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "Elige cómo cobrar por este trabajo",
+      "description": "Elige un método de pago para que el agente pueda enviarte dinero cuando termine el trabajo.",
+      "action": "Cobrar"
     }
   },
   "trust": {
@@ -670,9 +670,9 @@
     "emailVerified": "Email verificado exitosamente",
     "preferencesSaved": "Preferencias guardadas",
     "genericError": "Algo salió mal. Por favor, intenta de nuevo.",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "¿Cómo deberían pagarte los robots?",
+    "walletNudgeDescription": "Elige un método de pago para empezar a ganar con trabajos completados.",
+    "walletNudgeAction": "Cobrar"
   },
   "emailVerifiedPage": {
     "title": "Correo verificado",

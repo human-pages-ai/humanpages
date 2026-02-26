@@ -430,14 +430,14 @@
       "defaultPaymentUsdc": "डिफ़ॉल्ट भुगतान: आपके कनेक्टेड वॉलेट से USDC",
       "usdcHint": "USDC एक स्टेबलकॉइन है — हमेशा $1 USD के बराबर",
       "walletConnected": "वॉलेट कनेक्ट है",
-      "connectWalletPrompt": "USDC भुगतान प्राप्त करने के लिए वॉलेट कनेक्ट करें",
+      "connectWalletPrompt": "आप कैसे भुगतान पाना चाहेंगे?",
       "alsoAcceptNonCrypto": "मैं गैर-क्रिप्टो भुगतान भी स्वीकार करता/करती हूँ",
       "usdcWalletConnected": "USDC (वॉलेट कनेक्ट है)"
     },
     "wallets": {
       "title": "वॉलेट्स",
-      "paymentSetupTitle": "भुगतान सेटअप",
-      "paymentSetupSubtitle": "USDC डिफ़ॉल्ट भुगतान विधि है। भुगतान प्राप्त करने के लिए वॉलेट कनेक्ट करें।",
+      "paymentSetupTitle": "पैसे प्राप्त करें",
+      "paymentSetupSubtitle": "चुनें कि आप कैसे भुगतान पाना चाहते हैं। हम USDC या ETH की सलाह देते हैं — ये AI एजेंट्स के लिए सबसे सुविधाजनक हैं और आपके हायर होने की संभावना बढ़ाएंगे।",
       "addWallet": "वॉलेट जोड़ें",
       "connectWallet": "वॉलेट कनेक्ट करें",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -462,8 +462,8 @@
       "label": "लेबल",
       "labelPlaceholder": "जैसे, मेन वॉलेट",
       "noWallets": "अभी तक कोई वॉलेट नहीं जोड़ा",
-      "emptyTitle": "कोई वॉलेट कनेक्ट नहीं",
-      "emptyDescription": "पूर्ण जॉब्स के लिए पेमेंट प्राप्त करने हेतु वॉलेट जोड़ें",
+      "emptyTitle": "रोबोट्स आपको कैसे भुगतान करें?",
+      "emptyDescription": "पूरे किए गए कामों से कमाई शुरू करने के लिए भुगतान विधि चुनें",
       "walletAddress": "वॉलेट एड्रेस",
       "confirmDelete": "यह वॉलेट हटाएं?",
       "networks": {
@@ -598,9 +598,9 @@
     "lastUpdated": "अंतिम अपडेट",
     "offerUpdated": "यह प्रस्ताव एजेंट द्वारा अपडेट किया गया है",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "इस काम के लिए भुगतान कैसे लेना चाहेंगे",
+      "description": "भुगतान विधि चुनें ताकि काम पूरा होने पर एजेंट आपको पैसे भेज सके।",
+      "action": "भुगतान पाएं"
     }
   },
   "trust": {
@@ -664,9 +664,9 @@
     "emailVerified": "ईमेल सफलतापूर्वक सत्यापित",
     "preferencesSaved": "प्राथमिकताएं सहेजी गईं",
     "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "रोबोट्स आपको कैसे भुगतान करें?",
+    "walletNudgeDescription": "पूरे किए गए कामों से कमाई शुरू करने के लिए भुगतान विधि चुनें।",
+    "walletNudgeAction": "भुगतान पाएं"
   },
   "emailVerifiedPage": {
     "title": "ईमेल सत्यापित",

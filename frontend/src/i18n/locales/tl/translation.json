@@ -424,7 +424,7 @@
       "defaultPaymentUsdc": "Default na bayad: USDC sa pamamagitan ng iyong nakakonektang wallet",
       "usdcHint": "Ang USDC ay isang stablecoin — laging katumbas ng $1 USD",
       "walletConnected": "Nakakonekta ang wallet",
-      "connectWalletPrompt": "Ikonekta ang wallet para makatanggap ng USDC na bayad",
+      "connectWalletPrompt": "Paano mo gustong mabayaran?",
       "alsoAcceptNonCrypto": "Tumatanggap din ako ng hindi crypto na bayad",
       "usdcWalletConnected": "USDC (nakakonekta ang wallet)",
       "howToPayYou": "Paano ka babayaran",
@@ -437,8 +437,8 @@
     },
     "wallets": {
       "title": "Mga Wallet",
-      "paymentSetupTitle": "Setup ng Bayad",
-      "paymentSetupSubtitle": "USDC ang default na paraan ng bayad. Ikonekta ang wallet para makatanggap ng bayad.",
+      "paymentSetupTitle": "Tumanggap ng Pera",
+      "paymentSetupSubtitle": "Piliin kung paano mo gustong mabayaran. Inirerekomenda namin ang USDC o ETH — pinaka-maginhawa para sa AI agents at magpapataas ng chance mong ma-hire.",
       "addWallet": "Magdagdag ng Wallet",
       "connectWallet": "Ikonekta ang Wallet",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -463,8 +463,8 @@
       "label": "Label",
       "labelPlaceholder": "hal., Main wallet",
       "noWallets": "Wala pang naidagdag na wallets",
-      "emptyTitle": "Walang konektadong wallet",
-      "emptyDescription": "Magdagdag ng wallet para makatanggap ng bayad para sa mga nakumpletong trabaho",
+      "emptyTitle": "Paano ka babayaran ng mga robot?",
+      "emptyDescription": "Pumili ng paraan ng bayad para magsimulang kumita sa mga natapos na trabaho",
       "walletAddress": "Wallet address",
       "confirmDelete": "Tanggalin ang wallet na ito?",
       "networks": {
@@ -599,9 +599,9 @@
     "lastUpdated": "Huling na-update",
     "offerUpdated": "Ang alok na ito ay na-update ng ahente",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "Piliin kung paano ka mababayaran para sa trabahong ito",
+      "description": "Pumili ng paraan ng bayad para maipadala sa iyo ng agent ang pera kapag tapos na ang trabaho.",
+      "action": "Mabayaran"
     }
   },
   "trust": {
@@ -665,9 +665,9 @@
     "emailVerified": "Matagumpay na na-verify ang email",
     "preferencesSaved": "Nai-save ang mga kagustuhan",
     "genericError": "May nangyaring mali. Subukan muli.",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "Paano ka babayaran ng mga robot?",
+    "walletNudgeDescription": "Pumili ng paraan ng bayad para magsimulang kumita sa mga natapos na trabaho.",
+    "walletNudgeAction": "Mabayaran"
   },
   "emailVerifiedPage": {
     "title": "Na-verify na ang Email",

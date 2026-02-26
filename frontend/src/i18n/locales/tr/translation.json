@@ -424,7 +424,7 @@
       "defaultPaymentUsdc": "Varsayılan ödeme: Bağlı cüzdanınız üzerinden USDC",
       "usdcHint": "USDC bir stablecoin'dir — her zaman 1 USD değerindedir",
       "walletConnected": "Cüzdan bağlı",
-      "connectWalletPrompt": "USDC ödemeleri almak için bir cüzdan bağlayın",
+      "connectWalletPrompt": "Nasıl ödeme almak istersiniz?",
       "alsoAcceptNonCrypto": "Kripto dışı ödemeleri de kabul ediyorum",
       "usdcWalletConnected": "USDC (cüzdan bağlı)",
       "howToPayYou": "Size nasıl ödeme yapılır",
@@ -437,8 +437,8 @@
     },
     "wallets": {
       "title": "Cüzdanlar",
-      "paymentSetupTitle": "Ödeme Kurulumu",
-      "paymentSetupSubtitle": "USDC varsayılan ödeme yöntemidir. Ödeme almak için bir cüzdan bağlayın.",
+      "paymentSetupTitle": "Para Al",
+      "paymentSetupSubtitle": "Nasıl ödeme almak istediğinizi seçin. USDC veya ETH öneriyoruz — AI ajanlar için en uygunlar ve işe alınma şansınızı artırırlar.",
       "addWallet": "Cüzdan Ekle",
       "connectWallet": "Cüzdanı Bağla",
       "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
@@ -463,8 +463,8 @@
       "label": "Etiket",
       "labelPlaceholder": "örn., Ana cüzdan",
       "noWallets": "Henüz cüzdan eklenmedi",
-      "emptyTitle": "Bağlı cüzdan yok",
-      "emptyDescription": "Tamamlanan işler için ödeme almak üzere cüzdan ekleyin",
+      "emptyTitle": "Robotlar sizi nasıl ödesin?",
+      "emptyDescription": "Tamamlanan işlerden kazanmaya başlamak için bir ödeme yöntemi seçin",
       "walletAddress": "Cüzdan adresi",
       "confirmDelete": "Bu cüzdanı sil?",
       "networks": {
@@ -605,9 +605,9 @@
     "lastUpdated": "Son güncelleme",
     "offerUpdated": "Bu teklif ajan tarafından güncellendi",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "Bu iş için nasıl ödeme alacağınızı seçin",
+      "description": "İş bittiğinde ajanın size para gönderebilmesi için bir ödeme yöntemi seçin.",
+      "action": "Ödeme Al"
     }
   },
   "trust": {
@@ -671,9 +671,9 @@
     "emailVerified": "E-posta başarıyla doğrulandı",
     "preferencesSaved": "Tercihler kaydedildi",
     "genericError": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "Robotlar sizi nasıl ödesin?",
+    "walletNudgeDescription": "Tamamlanan işlerden kazanmaya başlamak için bir ödeme yöntemi seçin.",
+    "walletNudgeAction": "Ödeme Al"
   },
   "emailVerifiedPage": {
     "title": "E-posta Dogrulandı",

@@ -546,9 +546,9 @@
     "avgPaySpeed": "Velocidade Média de Pagamento",
     "memberSince": "Membro desde {{date}}",
     "walletNudge": {
-      "title": "Set up a wallet to get this job",
-      "description": "Most agents pay in USDC (crypto). Without a connected wallet, you may not be able to accept or receive payment for jobs.",
-      "action": "Set Up Wallet"
+      "title": "Escolha como receber por este trabalho",
+      "description": "Escolha um método de pagamento para que o agente possa te enviar o dinheiro quando o trabalho terminar.",
+      "action": "Receber"
     }
   },
   "currency": {
@@ -616,9 +616,9 @@
     "emailVerified": "E-mail verificado com sucesso",
     "preferencesSaved": "Preferências salvas",
     "genericError": "Algo deu errado. Tente novamente.",
-    "walletNudgeTitle": "Set up your wallet",
-    "walletNudgeDescription": "Connect a crypto wallet to receive payments from AI agents.",
-    "walletNudgeAction": "Set Up"
+    "walletNudgeTitle": "Como os robôs devem te pagar?",
+    "walletNudgeDescription": "Escolha um método de pagamento para começar a ganhar com trabalhos concluídos.",
+    "walletNudgeAction": "Receber"
   },
   "emailVerifiedPage": {
     "title": "E-mail Verificado",
