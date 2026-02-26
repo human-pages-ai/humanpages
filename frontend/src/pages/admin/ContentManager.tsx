@@ -126,9 +126,9 @@ export default function ContentManager() {
     } catch (e: any) { toast.error(e.message); }
   };
 
-  const handleCrosspost = async (id: string, platform: 'devto' | 'hashnode') => {
+  const handleCrosspost = async (id: string, platform: 'devto' | 'hashnode', includeCoverImage?: boolean) => {
     try {
-      const result = await api.crosspostContent(id, [platform]);
+      const result = await api.crosspostContent(id, [platform], undefined, undefined, includeCoverImage);
       const platResult = result.crosspostResults?.[platform === 'devto' ? 'devto' : 'hashnode'];
       if (platResult?.success) {
         toast.success(`Cross-posted to ${platform === 'devto' ? 'Dev.to' : 'Hashnode'}!`);
@@ -348,13 +348,14 @@ function ContentDetailModal({
   onPublish: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (item: ContentItem) => void;
-  onCrosspost: (id: string, platform: 'devto' | 'hashnode') => void;
+  onCrosspost: (id: string, platform: 'devto' | 'hashnode', includeCoverImage?: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [includeCoverImage, setIncludeCoverImage] = useState(!!item.blogImageR2Key);
 
   useEffect(() => {
     if (item.platform === 'TWITTER') setDraft(item.tweetDraft || '');
@@ -562,6 +563,19 @@ function ContentDetailModal({
             <div className="bg-gray-50 rounded-md p-3 space-y-2">
               <div className="text-sm font-medium text-gray-700">Cross-posts</div>
 
+              {/* Include cover image toggle */}
+              {item.blogImageR2Key && (!item.devtoUrl || !item.hashnodeUrl) && (
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeCoverImage}
+                    onChange={(e) => setIncludeCoverImage(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  Include cover image
+                </label>
+              )}
+
               {/* Dev.to */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Dev.to</span>
@@ -573,7 +587,7 @@ function ContentDetailModal({
                   <span className="text-sm text-red-500" title={item.crosspostErrors.devto}>Failed</span>
                 ) : (
                   <button
-                    onClick={() => onCrosspost(item.id, 'devto')}
+                    onClick={() => onCrosspost(item.id, 'devto', includeCoverImage)}
                     className="text-xs px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-900"
                   >
                     Cross-post to Dev.to
@@ -592,7 +606,7 @@ function ContentDetailModal({
                   <span className="text-sm text-red-500" title={item.crosspostErrors.hashnode}>Failed</span>
                 ) : (
                   <button
-                    onClick={() => onCrosspost(item.id, 'hashnode')}
+                    onClick={() => onCrosspost(item.id, 'hashnode', includeCoverImage)}
                     className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
                     Cross-post to Hashnode

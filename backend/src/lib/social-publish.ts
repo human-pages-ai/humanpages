@@ -193,6 +193,7 @@ export interface CrosspostResult {
 export async function crosspostToDevTo(
   item: ContentItem,
   tags?: string[],
+  coverImageUrl?: string,
 ): Promise<CrosspostResult> {
   const apiKey = process.env.DEVTO_API_KEY;
 
@@ -211,6 +212,7 @@ export async function crosspostToDevTo(
         published: true,
         canonical_url: item.publishedUrl || undefined,
         tags: (tags || ['ai', 'hiring', 'web3']).slice(0, 4),
+        ...(coverImageUrl && { main_image: coverImageUrl }),
       },
     };
 
@@ -244,6 +246,7 @@ export async function crosspostToDevTo(
 
 export async function crosspostToHashnode(
   item: ContentItem,
+  coverImageUrl?: string,
 ): Promise<CrosspostResult> {
   const apiKey = process.env.HASHNODE_API_KEY;
   const publicationId = process.env.HASHNODE_PUBLICATION_ID;
@@ -274,6 +277,7 @@ export async function crosspostToHashnode(
         publicationId,
         originalArticleURL: item.publishedUrl || undefined,
         tags: [],
+        ...(coverImageUrl && { coverImageOptions: { coverImageURL: coverImageUrl } }),
       },
     };
 

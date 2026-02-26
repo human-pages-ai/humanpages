@@ -503,6 +503,7 @@ const crosspostSchema = z.object({
   platforms: z.array(z.enum(['devto', 'hashnode'])).min(1),
   tags: z.array(z.string()).max(4).optional(),
   force: z.boolean().optional(),
+  includeCoverImage: z.boolean().optional(),
 });
 
 router.post('/:id/crosspost', async (req: AuthRequest, res) => {
@@ -525,10 +526,20 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Content must have a published URL (canonical) before cross-posting' });
     }
 
-    const { platforms, tags, force } = parsed.data;
+    const { platforms, tags, force, includeCoverImage } = parsed.data;
     const results: Record<string, any> = {};
     const updateData: any = {};
     const errors: Record<string, string> = {};
+
+    // Resolve cover image URL if requested (default: true when image exists)
+    let coverImageUrl: string | undefined;
+    if (includeCoverImage !== false && item.blogImageR2Key) {
+      try {
+        coverImageUrl = await getSignedDownloadUrl(item.blogImageR2Key) ?? undefined;
+      } catch (err) {
+        logger.warn({ err, contentId: item.id }, 'Failed to resolve cover image URL for crosspost (non-fatal)');
+      }
+    }
 
     for (const platform of platforms) {
       if (platform === 'devto') {
@@ -536,7 +547,7 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
           results.devto = { skipped: true, url: item.devtoUrl };
           continue;
         }
-        const result = await crosspostToDevTo(item, tags);
+        const result = await crosspostToDevTo(item, tags, coverImageUrl);
         results.devto = result;
         if (result.success) {
           updateData.devtoUrl = result.url;
@@ -561,7 +572,7 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
           results.hashnode = { skipped: true, url: item.hashnodeUrl };
           continue;
         }
-        const result = await crosspostToHashnode(item);
+        const result = await crosspostToHashnode(item, coverImageUrl);
         results.hashnode = result;
         if (result.success) {
           updateData.hashnodeUrl = result.url;
