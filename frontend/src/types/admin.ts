@@ -53,6 +53,8 @@ export interface AdminUser {
   role: 'USER' | 'STAFF' | 'ADMIN';
   createdAt: string;
   lastActiveAt: string;
+  profilePhotoUrl?: string;
+  profilePhotoStatus?: string;
   _count: {
     jobs: number;
     reviews: number;
