@@ -1121,6 +1121,9 @@ model ContentItem {
   rejectionReason String?         @db.Text
   rejectedById    String?
   rejectedAt      DateTime?
+  blogImageR2Key  String?
+  blogThumbR2Key  String?
+  blogImageType   String?         // "template" | "pixel" | "generated"
   schedule        PublicationSchedule[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt

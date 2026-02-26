@@ -375,6 +375,9 @@ export interface ContentItem {
   rejectionReason: string | null;
   rejectedById: string | null;
   rejectedAt: string | null;
+  blogImageR2Key: string | null;
+  blogThumbR2Key: string | null;
+  blogImageType: 'template' | 'pixel' | 'generated' | null;
   createdAt: string;
   updatedAt: string;
 }

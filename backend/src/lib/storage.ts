@@ -131,6 +131,20 @@ export async function deleteProfilePhoto(key: string): Promise<void> {
   }
 }
 
+/**
+ * Upload a buffer to R2 at the given key. Generic helper for any content type.
+ */
+export async function uploadToR2(key: string, buffer: Buffer, contentType: string): Promise<void> {
+  await getR2Client().send(new PutObjectCommand({
+    Bucket: getBucket(),
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+    CacheControl: 'public, max-age=86400',
+  }));
+  logger.info({ key, size: buffer.length }, 'Uploaded to R2');
+}
+
 // ===== Generic R2 helpers (video assets, etc.) =====
 
 /**

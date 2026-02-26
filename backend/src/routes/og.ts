@@ -196,16 +196,33 @@ router.get('/careers', (req, res) => {
 });
 
 // Blog post OG image (served as PNG)
-router.get('/blog/:slug', (req, res) => {
+router.get('/blog/:slug', async (req, res) => {
   try {
-    const titles: Record<string, string> = {
+    // Hardcoded titles for backwards compatibility
+    const hardcodedTitles: Record<string, string> = {
       'free-moltbook-agent': 'How to Build a Free AI Agent That Posts on Moltbook',
       'ai-agents-hiring-humans': 'How AI Agents Are Hiring Humans for Real-World Tasks',
       'getting-paid-usdc-freelancers': 'Getting Paid as a Freelancer: A Guide to Digital Payments',
       'mcp-protocol-ai-agents': 'The MCP Protocol: How AI Agents Discover and Hire People',
     };
 
-    const title = titles[req.params.slug];
+    let title = hardcodedTitles[req.params.slug];
+
+    // DB fallback: look up published blog post by slug
+    if (!title) {
+      const post = await prisma.contentItem.findFirst({
+        where: {
+          blogSlug: req.params.slug,
+          platform: 'BLOG',
+          status: 'PUBLISHED',
+        },
+        select: { blogTitle: true },
+      });
+      if (post?.blogTitle) {
+        title = post.blogTitle;
+      }
+    }
+
     if (!title) {
       return res.status(404).send('Not found');
     }

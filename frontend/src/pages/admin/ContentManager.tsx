@@ -45,12 +45,19 @@ export default function ContentManager() {
   const [platformFilter, setPlatformFilter] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [hideRejected, setHideRejected] = useState(true);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
       const [itemsRes, statsRes] = await Promise.all([
-        api.getContentItems({ page, status: statusFilter || undefined, platform: platformFilter || undefined, search: search || undefined }),
+        api.getContentItems({
+          page,
+          status: statusFilter || undefined,
+          platform: platformFilter || undefined,
+          search: search || undefined,
+          excludeStatus: (!statusFilter && hideRejected) ? 'REJECTED' : undefined,
+        }),
         api.getContentStats(),
       ]);
       setItems(itemsRes.items);
@@ -61,7 +68,7 @@ export default function ContentManager() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, platformFilter, search]);
+  }, [page, statusFilter, platformFilter, search, hideRejected]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
@@ -196,6 +203,15 @@ export default function ContentManager() {
           placeholder="Search..."
           className="px-3 py-2 text-sm border border-gray-200 rounded-md flex-1"
         />
+        <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={hideRejected}
+            onChange={(e) => { setHideRejected(e.target.checked); setPage(1); }}
+            className="rounded border-gray-300"
+          />
+          Hide rejected
+        </label>
       </div>
 
       {/* Table */}
@@ -428,6 +444,11 @@ function ContentDetailModal({
             </div>
           )}
 
+          {/* Blog Cover Image (BLOG items, APPROVED/PUBLISHED only) */}
+          {item.platform === 'BLOG' && ['APPROVED', 'PUBLISHED'].includes(item.status) && (
+            <BlogCoverImageSection item={item} onUpdate={onUpdate} />
+          )}
+
           {/* Content editor */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -650,6 +671,128 @@ function ContentDetailModal({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BlogCoverImageSection({
+  item,
+  onUpdate,
+}: {
+  item: ContentItem;
+  onUpdate: (item: ContentItem) => void;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageType, setImageType] = useState<string | null>(item.blogImageType || null);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
+  // Fetch presigned URLs on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const urls = await api.getBlogImageUrls(item.id);
+        if (!cancelled) {
+          setImageUrl(urls.imageUrl);
+          setImageType(urls.imageType);
+        }
+      } catch {
+        // no image yet
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [item.id, item.blogImageType]);
+
+  const handleGenerate = async (type: 'template' | 'pixel' | 'generated') => {
+    setLoading(true);
+    try {
+      const result = await api.generateBlogImage(item.id, type);
+      setImageUrl(result.imageUrl);
+      setImageType(type);
+      onUpdate(result);
+      toast.success(`${type === 'generated' ? 'AI' : type.charAt(0).toUpperCase() + type.slice(1)} cover image generated`);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to generate image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const IMAGE_TYPES = [
+    { key: 'template' as const, label: 'Template' },
+    { key: 'pixel' as const, label: 'Pixel Art' },
+    { key: 'generated' as const, label: 'AI Generated' },
+  ];
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="font-medium text-gray-700">Cover Image</h4>
+        {imageType === 'generated' && imageUrl && (
+          <button
+            onClick={() => handleGenerate('generated')}
+            disabled={loading}
+            className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-white disabled:opacity-50"
+          >
+            Regenerate
+          </button>
+        )}
+      </div>
+
+      {/* Type selector buttons */}
+      <div className="flex gap-2 mb-3">
+        {IMAGE_TYPES.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => handleGenerate(key)}
+            disabled={loading}
+            className={`px-3 py-1.5 text-xs rounded-md transition-colors disabled:opacity-50 ${
+              imageType === key
+                ? 'bg-blue-500 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Loading state */}
+      {(loading || fetching) && (
+        <div className="flex items-center justify-center py-8 text-gray-400">
+          <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          {loading ? 'Generating...' : 'Loading...'}
+        </div>
+      )}
+
+      {/* Image preview */}
+      {!loading && !fetching && imageUrl && (
+        <div>
+          <div className="rounded-md overflow-hidden border border-gray-200 mb-2" style={{ aspectRatio: '1200/630' }}>
+            <img src={imageUrl} alt="Blog cover" className="w-full h-full object-cover" />
+          </div>
+          <a
+            href={imageUrl}
+            download={`${item.blogSlug || item.id}-cover.webp`}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Download Full Size
+          </a>
+        </div>
+      )}
+
+      {/* No image yet */}
+      {!loading && !fetching && !imageUrl && (
+        <div className="text-sm text-gray-500 py-4 text-center">
+          No cover image yet. Click a style above to generate one.
+        </div>
+      )}
     </div>
   );
 }

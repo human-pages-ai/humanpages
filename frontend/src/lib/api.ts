@@ -741,13 +741,14 @@ export const api = {
   },
 
   // Content Pipeline
-  getContentItems: (params: { page?: number; limit?: number; status?: string; platform?: string; search?: string } = {}) => {
+  getContentItems: (params: { page?: number; limit?: number; status?: string; platform?: string; search?: string; excludeStatus?: string } = {}) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
     if (params.status) query.set('status', params.status);
     if (params.platform) query.set('platform', params.platform);
     if (params.search) query.set('search', params.search);
+    if (params.excludeStatus) query.set('excludeStatus', params.excludeStatus);
     const qs = query.toString();
     return request<{ items: ContentItem[]; pagination: Pagination }>(`/admin/content${qs ? `?${qs}` : ''}`);
   },
@@ -784,6 +785,15 @@ export const api = {
 
   deleteContent: (id: string) =>
     request<{ message: string }>(`/admin/content/${id}`, { method: 'DELETE' }),
+
+  generateBlogImage: (id: string, type: 'template' | 'pixel' | 'generated') =>
+    request<ContentItem & { imageUrl: string | null; thumbUrl: string | null }>(`/admin/content/${id}/generate-image`, {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    }),
+
+  getBlogImageUrls: (id: string) =>
+    request<{ imageUrl: string | null; thumbUrl: string | null; imageType: string | null }>(`/admin/content/${id}/image-urls`),
 
   // Public Blog API
   getBlogPosts: (params: { page?: number; limit?: number } = {}) => {

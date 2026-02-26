@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import sharp from 'sharp';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireStaffOrAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
@@ -7,6 +8,9 @@ import { logger } from '../lib/logger.js';
 import { logStaffActivity } from '../lib/activity-logger.js';
 import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/social-publish.js';
 import { notifySlackEngagement, notifySlackCrosspost } from '../lib/slack.js';
+import { generateBlogCover, generateBlogThumbnail } from '../lib/blogCovers.js';
+import { uploadToR2, getSignedDownloadUrl, deleteR2Object, isStorageConfigured } from '../lib/storage.js';
+import { createOpenAIClient } from '../lib/openai-keys.js';
 
 const router = Router();
 
@@ -192,6 +196,7 @@ router.get('/', async (req: AuthRequest, res) => {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const status = req.query.status as string;
+    const excludeStatus = req.query.excludeStatus as string;
     const platform = req.query.platform as string;
     const search = (req.query.search as string) || '';
 
@@ -199,6 +204,8 @@ router.get('/', async (req: AuthRequest, res) => {
 
     if (status && ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED'].includes(status)) {
       where.status = status;
+    } else if (excludeStatus && ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED'].includes(excludeStatus)) {
+      where.status = { not: excludeStatus };
     }
 
     if (platform && ['TWITTER', 'LINKEDIN', 'BLOG'].includes(platform)) {
@@ -317,7 +324,7 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
     const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Content item not found' });
 
-    const updated = await prisma.contentItem.update({
+    let updated = await prisma.contentItem.update({
       where: { id: req.params.id },
       data: {
         status: 'APPROVED',
@@ -327,6 +334,35 @@ router.patch('/:id/approve', async (req: AuthRequest, res) => {
     });
 
     logger.info({ contentId: req.params.id, userId: req.userId }, 'Content approved');
+
+    // Auto-generate template cover image for BLOG items
+    if (item.platform === 'BLOG' && item.blogTitle && isStorageConfigured()) {
+      try {
+        const fullBuffer = await generateBlogCover(item.blogTitle, item.id, 'template');
+        const thumbBuffer = await generateBlogThumbnail(fullBuffer);
+
+        const fullKey = `blog-images/${item.id}/full.webp`;
+        const thumbKey = `blog-images/${item.id}/thumb.webp`;
+
+        await Promise.all([
+          uploadToR2(fullKey, fullBuffer, 'image/webp'),
+          uploadToR2(thumbKey, thumbBuffer, 'image/webp'),
+        ]);
+
+        updated = await prisma.contentItem.update({
+          where: { id: item.id },
+          data: {
+            blogImageR2Key: fullKey,
+            blogThumbR2Key: thumbKey,
+            blogImageType: 'template',
+          },
+        });
+
+        logger.info({ contentId: item.id }, 'Blog cover image auto-generated on approval');
+      } catch (imgErr) {
+        logger.warn({ err: imgErr, contentId: item.id }, 'Failed to auto-generate blog cover image (non-fatal)');
+      }
+    }
 
     if (req.userId) {
       logStaffActivity({
@@ -576,11 +612,131 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
   }
 });
 
+// POST /api/admin/content/:id/generate-image — switch blog cover image type
+const generateImageSchema = z.object({
+  type: z.enum(['template', 'pixel', 'generated']),
+});
+
+router.post('/:id/generate-image', async (req: AuthRequest, res) => {
+  try {
+    const parsed = generateImageSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
+
+    const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
+    if (!item) return res.status(404).json({ error: 'Content item not found' });
+
+    if (item.platform !== 'BLOG') {
+      return res.status(400).json({ error: 'Image generation is only available for BLOG items' });
+    }
+    if (!['APPROVED', 'PUBLISHED'].includes(item.status)) {
+      return res.status(400).json({ error: 'Content must be APPROVED or PUBLISHED' });
+    }
+    if (!item.blogTitle) {
+      return res.status(400).json({ error: 'Blog title is required for image generation' });
+    }
+
+    const { type } = parsed.data;
+    let fullBuffer: Buffer;
+
+    if (type === 'generated') {
+      // DALL-E 3 generation
+      const openai = createOpenAIClient({ maxRetries: 2, timeout: 60_000 });
+      const prompt = `Professional, modern blog cover image for an article titled "${item.blogTitle.substring(0, 100)}". Style: clean editorial illustration, abstract geometric shapes, no text or words in the image. Colors: blue, slate, and orange accents. Suitable for a tech blog header at 1792x1024.`;
+
+      const response = await openai.images.generate({
+        model: 'dall-e-3',
+        prompt,
+        n: 1,
+        size: '1792x1024',
+        response_format: 'b64_json',
+      });
+
+      const b64 = response.data?.[0]?.b64_json;
+      if (!b64) {
+        return res.status(500).json({ error: 'Image generation failed — no data returned' });
+      }
+
+      const imageBuffer = Buffer.from(b64, 'base64');
+      fullBuffer = await sharp(imageBuffer)
+        .resize(1200, 630, { fit: 'cover', position: 'centre' })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } else {
+      // Template or pixel — zero cost
+      fullBuffer = await generateBlogCover(item.blogTitle, item.id, type);
+    }
+
+    const thumbBuffer = await generateBlogThumbnail(fullBuffer);
+
+    // Delete old R2 objects
+    if (item.blogImageR2Key) await deleteR2Object(item.blogImageR2Key);
+    if (item.blogThumbR2Key) await deleteR2Object(item.blogThumbR2Key);
+
+    // Upload new
+    const fullKey = `blog-images/${item.id}/full.webp`;
+    const thumbKey = `blog-images/${item.id}/thumb.webp`;
+    await Promise.all([
+      uploadToR2(fullKey, fullBuffer, 'image/webp'),
+      uploadToR2(thumbKey, thumbBuffer, 'image/webp'),
+    ]);
+
+    // Update DB
+    const updated = await prisma.contentItem.update({
+      where: { id: item.id },
+      data: {
+        blogImageR2Key: fullKey,
+        blogThumbR2Key: thumbKey,
+        blogImageType: type,
+      },
+    });
+
+    // Resolve signed URLs for immediate display
+    const [imageUrl, thumbUrl] = await Promise.all([
+      getSignedDownloadUrl(fullKey),
+      getSignedDownloadUrl(thumbKey),
+    ]);
+
+    logger.info({ contentId: item.id, type }, 'Blog cover image generated');
+
+    res.json({ ...updated, imageUrl, thumbUrl });
+  } catch (error) {
+    logger.error({ err: error }, 'Blog image generation error');
+    res.status(500).json({ error: 'Failed to generate image', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/content/:id/image-urls — resolve R2 keys to presigned URLs
+router.get('/:id/image-urls', async (req, res) => {
+  try {
+    const item = await prisma.contentItem.findUnique({
+      where: { id: req.params.id },
+      select: { blogImageR2Key: true, blogThumbR2Key: true, blogImageType: true },
+    });
+    if (!item) return res.status(404).json({ error: 'Content item not found' });
+
+    const [imageUrl, thumbUrl] = await Promise.all([
+      item.blogImageR2Key ? getSignedDownloadUrl(item.blogImageR2Key) : null,
+      item.blogThumbR2Key ? getSignedDownloadUrl(item.blogThumbR2Key) : null,
+    ]);
+
+    res.json({ imageUrl, thumbUrl, imageType: item.blogImageType });
+  } catch (error) {
+    logger.error({ err: error }, 'Blog image URLs error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // DELETE /api/admin/content/:id
 router.delete('/:id', async (req, res) => {
   try {
     const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Content item not found' });
+
+    // Clean up R2 blog cover images
+    if (item.blogImageR2Key) deleteR2Object(item.blogImageR2Key).catch(() => {});
+    if (item.blogThumbR2Key) deleteR2Object(item.blogThumbR2Key).catch(() => {});
 
     await prisma.contentItem.delete({ where: { id: req.params.id } });
     res.json({ message: 'Content item deleted' });
