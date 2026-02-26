@@ -80,7 +80,7 @@ export async function notifySlackCrosspost(title: string, slug: string): Promise
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*${title}*\n${canonicalUrl}`,
+          text: `*${title}*\nCanonical URL (for SEO attribution): ${canonicalUrl}`,
         },
       },
       {
@@ -95,17 +95,6 @@ export async function notifySlackCrosspost(title: string, slug: string): Promise
             ':white_square: *Vocal Media* — create story in Futurism, add "Originally published at" link at bottom',
           ].join('\n'),
         },
-      },
-      {
-        type: 'actions',
-        elements: [
-          {
-            type: 'button',
-            text: { type: 'plain_text', text: 'View blog post' },
-            url: canonicalUrl,
-            style: 'primary',
-          },
-        ],
       },
     ],
   };

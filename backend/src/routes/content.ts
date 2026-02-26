@@ -411,11 +411,16 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
       updateData.publishError = null;
 
       if (result.url) {
-        notifySlackEngagement({
-          title: item.sourceTitle || item.blogTitle || 'New content published',
-          url: result.url,
-          platform: item.platform,
-        }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
+        // Skip engagement notification for BLOG — the own site URL isn't useful
+        // for staff to amplify. External links (dev.to, twitter) are sent when
+        // those platforms publish via crosspost / publish routes.
+        if (item.platform !== 'BLOG') {
+          notifySlackEngagement({
+            title: item.sourceTitle || item.blogTitle || 'New content published',
+            url: result.url,
+            platform: item.platform,
+          }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
+        }
 
         if (item.platform === 'BLOG' && item.blogSlug) {
           notifySlackCrosspost(
