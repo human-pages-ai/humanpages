@@ -26,6 +26,7 @@ import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import blogApiRoutes from './routes/blog.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml } from './lib/seo.js';
+import { trackServerEvent } from './lib/posthog.js';
 
 const app = express();
 
@@ -103,6 +104,34 @@ app.use(sitemapRoutes);
 app.use('/api', sitemapRoutes);
 app.use('/api/og', ogRoutes);
 app.use('/api/badge', badgeRoutes);
+
+// ===== Bot crawl tracking for GEO-sensitive routes =====
+const AI_BOT_PATTERNS: Record<string, RegExp> = {
+  'GPTBot': /GPTBot/i,
+  'ChatGPT-User': /ChatGPT-User/i,
+  'ClaudeBot': /ClaudeBot/i,
+  'PerplexityBot': /PerplexityBot/i,
+  'Google-Extended': /Google-Extended/i,
+  'Googlebot': /Googlebot/i,
+  'Applebot': /Applebot/i,
+  'Bingbot': /bingbot/i,
+};
+
+app.use(['/llms.txt', '/.well-known/openapi.json', '/.well-known/ai-plugin.json'], (req, res, next) => {
+  const userAgent = req.get('user-agent') || '';
+  for (const [botName, pattern] of Object.entries(AI_BOT_PATTERNS)) {
+    if (pattern.test(userAgent)) {
+      logger.info({ bot: botName, path: req.path, ip: req.ip }, 'AI bot crawl detected');
+      trackServerEvent(`bot:${botName}`, 'ai_bot_crawl', {
+        path: req.path,
+        botName,
+        userAgent: userAgent.substring(0, 200),
+      }, req);
+      break;
+    }
+  }
+  next();
+});
 
 // Serve frontend static files in production
 const frontendDistPath = path.join(process.cwd(), '../frontend/dist');

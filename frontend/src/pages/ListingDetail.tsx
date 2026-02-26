@@ -97,7 +97,44 @@ export default function ListingDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <SEO title={listing.title} noindex />
+      <SEO
+        title={listing.title}
+        description={listing.description?.substring(0, 160)}
+        path={`/listings/${listing.id}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": listing.title,
+          "description": listing.description,
+          "datePosted": listing.createdAt,
+          "validThrough": listing.expiresAt,
+          ...(listing.location && {
+            "jobLocation": {
+              "@type": "Place",
+              "address": listing.location
+            }
+          }),
+          ...(listing.workMode && {
+            "jobLocationType": listing.workMode === 'REMOTE' ? "TELECOMMUTE" : undefined
+          }),
+          ...(listing.budgetUsdc && {
+            "baseSalary": {
+              "@type": "MonetaryAmount",
+              "currency": "USD",
+              "value": listing.budgetUsdc
+            }
+          }),
+          "hiringOrganization": {
+            "@type": "Organization",
+            "name": listing.agent?.name || "AI Agent",
+            ...(listing.agent?.domainVerified && { "url": `https://humanpages.ai/agents/${listing.agent.id}` })
+          },
+          "employmentType": "TEMPORARY",
+          ...(listing.requiredSkills?.length > 0 && {
+            "skills": listing.requiredSkills.join(", ")
+          })
+        }}
+      />
 
       {/* Nav bar */}
       <nav className="bg-white shadow">

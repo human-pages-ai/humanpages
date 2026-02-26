@@ -9,6 +9,7 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -35,6 +36,8 @@ const registerSchema = z.object({
   description: z.string().max(500).optional(),
   websiteUrl: z.string().url().optional(),
   contactEmail: z.string().email().optional(),
+  source: z.enum(['direct', 'mcp_directory', 'search', 'llm', 'blog', 'other']).optional(),
+  sourceDetail: z.string().max(500).optional(),
 });
 
 const updateSchema = z.object({
@@ -77,8 +80,18 @@ router.post('/register', registerLimiter, async (req, res) => {
         apiKeyPrefix,
         verificationToken,
         erc8004AgentId,
+        discoverySource: data.source,
+        discoveryDetail: data.sourceDetail,
       },
     });
+
+    // Track registration in PostHog (fire-and-forget)
+    trackServerEvent(agent.id, 'agent_registered', {
+      agentName: data.name,
+      discoverySource: data.source || 'unknown',
+      discoveryDetail: data.sourceDetail,
+      erc8004AgentId: agent.erc8004AgentId,
+    }, req);
 
     res.status(201).json({
       agent: {

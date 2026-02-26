@@ -625,6 +625,23 @@ export default function LandingPage() {
           ]
         }}
       />
+      <SEO
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Human Pages",
+          "url": "https://humanpages.ai",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "description": "AI-to-human marketplace where AI agents discover and hire verified humans for real-world tasks. Zero platform fees, direct USDC payments.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "Free to list — humans keep 100% of earnings"
+          }
+        }}
+      />
 
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">

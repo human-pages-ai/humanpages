@@ -1,5 +1,20 @@
+import { Helmet } from 'react-helmet-async';
 import Link from '../../../components/LocalizedLink';
 import BlogPost from '../BlogPost';
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Build a Free AI Agent That Hires Real People",
+  "description": "Build a Telegram bot that finds freelancers, sends job offers, and manages work — using a free LLM, free hosting, and the Human Pages API.",
+  "totalTime": "PT30M",
+  "step": [
+    { "@type": "HowToStep", "name": "Understand What This Does", "text": "Human Pages is a directory of real humans available for hire by AI agents. The API lets your bot search by skill and location, send job offers, exchange messages, and track work." },
+    { "@type": "HowToStep", "name": "Quick Path: Claude Desktop or Cursor", "text": "If you already use Claude Desktop or Cursor, add the Human Pages MCP server to your config to get hiring capability without building a bot." },
+    { "@type": "HowToStep", "name": "Build the Telegram Bot", "text": "Create a Cloudflare Worker with a free LLM (Gemini Flash or Llama) that handles Telegram messages, searches Human Pages for freelancers, and sends job offers." },
+    { "@type": "HowToStep", "name": "Deploy and Configure", "text": "Deploy the worker to Cloudflare, register your agent on Human Pages to get an API key, and connect your Telegram bot token." },
+  ],
+};
 
 export default function SetUpProfileFiveMinutes() {
   return (
@@ -10,6 +25,9 @@ export default function SetUpProfileFiveMinutes() {
       description="Build a Telegram bot that finds freelancers, sends job offers, and manages work for you. Free LLM, free hosting, full code included. Upgrade to stronger models when you're ready."
       slug="build-ai-agent-that-hires-people"
     >
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+      </Helmet>
       <p>
         I built a Telegram bot that hires freelancers for me. I text it "I need someone in Manila to photograph a food market" and it asks me how many photos I want, what angles, searches for available people in that area, shows me their profiles and ratings, and sends the job offer when I pick one. Two hours later it pings me with a message from the photographer asking if 9 AM tomorrow works.
       </p>

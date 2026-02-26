@@ -355,6 +355,10 @@ model Agent {
   profilePhotoKey    String?   // R2 object key: "photos/{agentId}/{uuid}.webp"
   profilePhotoStatus String    @default("none") // "none" | "pending" | "approved" | "rejected"
 
+  // ===== DISCOVERY / ATTRIBUTION =====
+  discoverySource  String?   // "direct" | "mcp_directory" | "search" | "llm" | "blog" | "other"
+  discoveryDetail  String?   @db.VarChar(500) // referrer URL, LLM name, blog post, etc.
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)

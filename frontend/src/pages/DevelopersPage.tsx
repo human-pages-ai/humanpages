@@ -195,6 +195,26 @@ export default function DevelopersPage() {
           }
         }}
       />
+      <SEO
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": "Human Pages API",
+          "serviceType": "AI Agent Marketplace",
+          "description": "REST API and MCP server for AI agents to discover, hire, and pay verified humans for real-world tasks",
+          "url": "https://humanpages.ai/dev",
+          "provider": {
+            "@type": "Organization",
+            "name": "Human Pages",
+            "url": "https://humanpages.ai"
+          },
+          "areaServed": "Worldwide",
+          "availableChannel": {
+            "@type": "ServiceChannel",
+            "serviceUrl": "https://humanpages.ai/api"
+          }
+        }}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
