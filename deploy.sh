@@ -75,6 +75,14 @@ else
 fi
 
 echo ""
+echo "=== Ensuring log rotation is configured ==="
+if ! pm2 describe pm2-logrotate > /dev/null 2>&1; then
+  sh scripts/setup-logrotate.sh
+else
+  echo "pm2-logrotate already configured"
+fi
+
+echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"
