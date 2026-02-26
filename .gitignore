@@ -28,3 +28,7 @@ backend/package.json
 backend/prisma/migrations/20260222092235_init/migration.sql
 frontend/package-lock.json
 frontend/package.json
+
+# Local assets
+marketing/
+mcp-publisher
