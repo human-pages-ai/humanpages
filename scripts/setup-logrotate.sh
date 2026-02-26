@@ -4,7 +4,7 @@
 #
 # What this does:
 #   - Installs pm2-logrotate module (if not already installed)
-#   - Configures: max 10MB per file, keep 30 days, compress old logs with gzip
+#   - Configures: max 10MB per file, keep 90 days, compress old logs with gzip
 #   - PM2 handles rotation automatically — no cron needed
 #
 # Log files end up in ~/.pm2/logs/ as:
@@ -29,8 +29,8 @@ echo "Configuring rotation settings..."
 # Max size per log file before rotation (10MB)
 pm2 set pm2-logrotate:max_size 10M
 
-# Keep rotated files for 30 days
-pm2 set pm2-logrotate:retain 30
+# Keep rotated files for 90 days (~600MB disk with gzip compression)
+pm2 set pm2-logrotate:retain 90
 
 # Enable gzip compression for rotated files
 pm2 set pm2-logrotate:compress true
@@ -45,16 +45,13 @@ pm2 set pm2-logrotate:dateFormat 'YYYY-MM-DD_HH-mm-ss'
 # Also rotate PM2's own internal logs
 pm2 set pm2-logrotate:rotateModule true
 
-# Limit total number of rotated files as a safety net
-pm2 set pm2-logrotate:max_size 10M
-
 echo ""
 echo "=== Current pm2-logrotate config ==="
 pm2 conf pm2-logrotate
 
 echo ""
 echo "=== Done ==="
-echo "Logs will auto-rotate at 10MB, keep 30 days, and compress old files with gzip."
+echo "Logs will auto-rotate at 10MB, keep 90 days, and compress old files with gzip."
 echo "Log location: ~/.pm2/logs/"
 echo ""
 echo "Useful commands:"
