@@ -282,11 +282,12 @@ export default function PostingWorkMode() {
     setTimeout(() => setter(false), 2000);
   };
 
-  // ─── YT reply parsing ───
+  // ─── Comment/reply parsing ───
   const isYt = currentGroup?.taskType === 'yt_comment' || currentGroup?.taskType === 'yt_reply';
+  const hasCommentNotes = currentGroup?.taskType === 'blog_comment' && !!currentGroup?.notes?.trim();
   let replyContext = '';
   let replyBody = '';
-  if (isYt && currentGroup?.notes) {
+  if ((isYt || hasCommentNotes) && currentGroup?.notes) {
     if (currentGroup.taskType === 'yt_reply') {
       const findMatch = currentGroup.notes.match(/FIND COMMENT:\s*\n([\s\S]*?)(?=\n\s*\nYOUR REPLY:)/i);
       const replyMatch = currentGroup.notes.match(/YOUR REPLY:\s*\n([\s\S]*?)$/i);
@@ -495,12 +496,12 @@ export default function PostingWorkMode() {
             </div>
           )}
 
-          {/* YouTube reply/comment section */}
-          {isYt && (replyContext || replyBody) && (
+          {/* Reply/comment section (YT + blog comments with notes) */}
+          {(isYt || hasCommentNotes) && (replyContext || replyBody) && (
             <div className="mx-5 mb-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-600 uppercase">
-                  {currentGroup.taskType === 'yt_reply' ? 'YouTube Reply' : 'YouTube Comment'}
+                  {currentGroup.taskType === 'yt_reply' ? 'YouTube Reply' : currentGroup.taskType === 'blog_comment' ? 'Blog Comment' : 'YouTube Comment'}
                 </span>
               </div>
               {replyContext && (
@@ -519,7 +520,7 @@ export default function PostingWorkMode() {
           )}
 
           {/* Ad copy section */}
-          {!isYt && (
+          {!isYt && !hasCommentNotes && (
             <div className="mx-5 mb-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-600 uppercase">
