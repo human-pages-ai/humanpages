@@ -1,30 +1,48 @@
 import pino from 'pino';
 
-function buildTransport(): pino.TransportSingleOptions | pino.TransportMultiOptions | undefined {
-  const targets: pino.TransportTargetOptions[] = [];
+const REDACT_PATHS = ['authorization', 'password', 'passwordHash', 'token', 'req.headers.authorization', 'callbackSecret'];
 
-  // Always log to stdout (PM2 captures this into log files)
-  targets.push({
-    target: 'pino/file',
-    options: { destination: 1 },
-  });
+/**
+ * Build the initial logger — stdout only.
+ * Axiom transport gets added later via `initLogShipping()` after secrets load.
+ */
+export let logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  redact: REDACT_PATHS,
+  transport: {
+    targets: [
+      { target: 'pino/file', options: { destination: 1 } },
+    ],
+  },
+});
 
-  // Ship to Axiom if configured (free tier: 500GB/month, 30-day retention)
-  if (process.env.AXIOM_DATASET && process.env.AXIOM_TOKEN) {
-    targets.push({
-      target: '@axiomhq/pino',
-      options: {
-        dataset: process.env.AXIOM_DATASET,
-        token: process.env.AXIOM_TOKEN,
-      },
-    });
+/**
+ * Call AFTER secrets are loaded (process.env.AXIOM_* available).
+ * Recreates the logger with an additional Axiom transport target.
+ * If Axiom isn't configured, this is a no-op.
+ */
+export function initLogShipping(): void {
+  const dataset = process.env.AXIOM_DATASET;
+  const token = process.env.AXIOM_TOKEN;
+
+  if (!dataset || !token) {
+    logger.debug('Axiom not configured — logs stay local only');
+    return;
   }
 
-  return { targets };
-}
+  logger = pino({
+    level: process.env.LOG_LEVEL || 'info',
+    redact: REDACT_PATHS,
+    transport: {
+      targets: [
+        { target: 'pino/file', options: { destination: 1 } },
+        {
+          target: '@axiomhq/pino',
+          options: { dataset, token },
+        },
+      ],
+    },
+  });
 
-export const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  redact: ['authorization', 'password', 'passwordHash', 'token', 'req.headers.authorization', 'callbackSecret'],
-  transport: buildTransport(),
-});
+  logger.info({ dataset }, 'Log shipping to Axiom enabled');
+}

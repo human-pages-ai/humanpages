@@ -1,4 +1,4 @@
-import { logger } from './logger.js';
+import { logger, initLogShipping } from './logger.js';
 
 const SECRETS_TO_FETCH = [
   'DATABASE_URL',
@@ -25,6 +25,8 @@ const SECRETS_TO_FETCH = [
   'GITHUB_CLIENT_ID',
   'GITHUB_CLIENT_SECRET',
   'META_APP_ACCESS_TOKEN',
+  'AXIOM_DATASET',
+  'AXIOM_TOKEN',
 ];
 
 /**
@@ -40,6 +42,8 @@ export async function initSecrets(): Promise<void> {
 
   if (!clientId || !clientSecret || !projectId) {
     logger.info('Infisical not configured — using environment variables from .env / shell');
+    // .env is already loaded by dotenv — enable log shipping if AXIOM_* is set
+    initLogShipping();
     return;
   }
 
@@ -72,6 +76,9 @@ export async function initSecrets(): Promise<void> {
     }
 
     logger.info({ loaded, environment }, 'Secrets loaded from Infisical');
+
+    // Now that AXIOM_* env vars are available, enable log shipping
+    initLogShipping();
   } catch (error) {
     logger.error({ err: error }, 'Failed to load secrets from Infisical');
     throw new Error('Failed to initialize secrets from Infisical. Cannot start.');
