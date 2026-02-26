@@ -31,6 +31,11 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
+### OpenClaw
+```bash
+clawhub install humanpages
+```
+
 ### npm Global Install
 ```bash
 npm install -g humanpages
