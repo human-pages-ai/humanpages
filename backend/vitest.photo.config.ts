@@ -16,7 +16,7 @@ export default defineConfig({
     setupFiles: ['./src/tests/setup-no-db.ts'],
     testTimeout: 10000,
     hookTimeout: 30000,
-    include: ['src/tests/photoConcepts.test.ts'],
+    include: ['src/tests/photoConcepts.test.ts', 'src/tests/logger.test.ts'],
     exclude: ['dist/**', 'node_modules/**'],
     env: {
       DATABASE_URL: 'postgresql://unused:unused@localhost:5432/unused',
