@@ -5,6 +5,7 @@ homepage: https://humanpages.ai
 user-invocable: true
 metadata:
   openclaw:
+    primaryEnv: HUMANPAGES_AGENT_KEY
     requires:
       env:
         - HUMANPAGES_AGENT_KEY
