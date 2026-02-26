@@ -139,6 +139,19 @@ enum EmailDigestMode {
   DAILY
 }
 
+// Fiat payment platform for structured payment methods
+enum FiatPaymentPlatform {
+  WISE
+  VENMO
+  PAYPAL
+  CASHAPP
+  REVOLUT
+  ZELLE
+  MONZO
+  N26
+  MERCADOPAGO
+}
+
 model Human {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -285,6 +298,7 @@ model Human {
   staffActivities   StaffActivity[]
   idleAlerts        IdleAlert[]
   assignedLeads     InfluencerLead[] @relation("LeadAssignment")
+  fiatPaymentMethods FiatPaymentMethod[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -609,6 +623,21 @@ model Wallet {
   @@unique([humanId, network, address])
   @@index([humanId, isPrimary])
   @@index([address])
+}
+
+model FiatPaymentMethod {
+  id        String   @id @default(cuid())
+  humanId   String
+  platform  FiatPaymentPlatform
+  handle    String   // email, phone, @username — platform-specific
+  label     String?  // e.g., "Personal Venmo"
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@unique([humanId, platform, handle])
+  @@index([platform, handle])  // For ZKP2P proof matching lookups
 }
 
 model Service {

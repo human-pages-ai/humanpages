@@ -37,6 +37,7 @@ export const mockProfile = {
   youtubeUrl: '',
   websiteUrl: '',
   wallets: [],
+  fiatPaymentMethods: [],
   services: [],
   referralCode: 'TEST123',
   referralCount: 0,

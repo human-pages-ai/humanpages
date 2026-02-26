@@ -1,4 +1,4 @@
-import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
+import type { Profile, Wallet, FiatPaymentMethod, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
 import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats } from '../types/admin';
 
 const API_BASE = '/api';
@@ -163,6 +163,24 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ label }),
     }),
+
+  // Fiat payment methods
+  getFiatMethods: () => request<FiatPaymentMethod[]>('/humans/me/fiat-methods'),
+
+  addFiatMethod: (data: { platform: string; handle: string; label?: string; isPrimary?: boolean }) =>
+    request<FiatPaymentMethod>('/humans/me/fiat-methods', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateFiatMethod: (id: string, data: { label?: string; isPrimary?: boolean }) =>
+    request<FiatPaymentMethod>(`/humans/me/fiat-methods/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteFiatMethod: (id: string) =>
+    request<void>(`/humans/me/fiat-methods/${id}`, { method: 'DELETE' }),
 
   // Services
   getServices: () => request<Service[]>('/services'),

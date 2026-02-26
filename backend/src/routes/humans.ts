@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
+import { FiatPaymentPlatform } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
@@ -81,6 +82,9 @@ const fullHumanSelect = {
   websiteUrl: true,
   wallets: {
     select: { network: true, chain: true, address: true, label: true, isPrimary: true },
+  },
+  fiatPaymentMethods: {
+    select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
   },
 } as const;
 
@@ -279,7 +283,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
-      include: { wallets: true, services: true },
+      include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
 
     if (!human) {
@@ -526,7 +530,7 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     const human = await prisma.human.update({
       where: { id: req.userId },
       data: dataToSave,
-      include: { wallets: true, services: true },
+      include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
 
     const [reputation, trustScore] = await Promise.all([
@@ -1261,6 +1265,118 @@ router.post('/:id/report', authenticateToken, requireEmailVerified, humanReportL
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Report human error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ===== FIAT PAYMENT METHODS =====
+
+const addFiatMethodSchema = z.object({
+  platform: z.nativeEnum(FiatPaymentPlatform),
+  handle: z.string().min(1).max(200),
+  label: z.string().max(50).optional(),
+  isPrimary: z.boolean().optional(),
+});
+
+const updateFiatMethodSchema = z.object({
+  label: z.string().max(50).optional().nullable(),
+  isPrimary: z.boolean().optional(),
+});
+
+// List fiat payment methods
+router.get('/me/fiat-methods', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const methods = await prisma.fiatPaymentMethod.findMany({
+      where: { humanId: req.userId! },
+      select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(methods);
+  } catch (error) {
+    logger.error({ err: error }, 'List fiat methods error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add fiat payment method
+router.post('/me/fiat-methods', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const data = addFiatMethodSchema.parse(req.body);
+
+    // Max 20 per user
+    const count = await prisma.fiatPaymentMethod.count({ where: { humanId: req.userId! } });
+    if (count >= 20) {
+      return res.status(400).json({ error: 'Maximum 20 fiat payment methods allowed' });
+    }
+
+    const method = await prisma.fiatPaymentMethod.create({
+      data: {
+        humanId: req.userId!,
+        platform: data.platform,
+        handle: data.handle,
+        label: data.label,
+        isPrimary: data.isPrimary ?? false,
+      },
+      select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
+    });
+
+    res.status(201).json(method);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    if (error?.code === 'P2002') {
+      return res.status(400).json({ error: 'This platform and handle combination already exists' });
+    }
+    logger.error({ err: error }, 'Add fiat method error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update fiat payment method
+router.patch('/me/fiat-methods/:id', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const data = updateFiatMethodSchema.parse(req.body);
+
+    // Ownership check
+    const existing = await prisma.fiatPaymentMethod.findFirst({
+      where: { id: req.params.id, humanId: req.userId! },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: 'Fiat payment method not found' });
+    }
+
+    const method = await prisma.fiatPaymentMethod.update({
+      where: { id: req.params.id },
+      data,
+      select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
+    });
+
+    res.json(method);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update fiat method error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete fiat payment method
+router.delete('/me/fiat-methods/:id', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    // Ownership check
+    const existing = await prisma.fiatPaymentMethod.findFirst({
+      where: { id: req.params.id, humanId: req.userId! },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: 'Fiat payment method not found' });
+    }
+
+    await prisma.fiatPaymentMethod.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Fiat payment method deleted' });
+  } catch (error) {
+    logger.error({ err: error }, 'Delete fiat method error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

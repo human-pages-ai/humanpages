@@ -73,6 +73,7 @@ const baseProfile: Profile = {
   youtubeUrl: '',
   websiteUrl: '',
   wallets: [],
+  fiatPaymentMethods: [],
   services: [],
 };
 
@@ -107,6 +108,9 @@ function renderSection(overrides: Record<string, any> = {}) {
     setEditingProfile: vi.fn(),
     hasWallet: false,
     onScrollToWallets: vi.fn(),
+    fiatMethods: [],
+    onAddFiatMethod: vi.fn().mockResolvedValue(undefined),
+    onDeleteFiatMethod: vi.fn().mockResolvedValue(undefined),
     profileForm: { ...baseFormState },
     setProfileForm: vi.fn(),
     saving: false,
