@@ -238,6 +238,23 @@ export interface AdminUserDetail extends AdminUser {
     careerApplications: number;
   };
 }
+export interface AgentStats {
+  listings: { total: number; active: number };
+  jobs: { total: number; completed: number; pending: number; paid: number; totalSpendUsdc: string };
+  applications: { total: number; avgPerListing: number };
+  recentActivity: Array<{ type: 'listing' | 'job'; id: string; title: string; status: string; date: string }>;
+}
+
+export interface BulkUpdateRequest {
+  agentIds: string[];
+  updates: { status?: string; activationTier?: string };
+}
+
+export interface BulkUpdateResponse {
+  success: number;
+  failed: number;
+  errors: Array<{ id: string; error: string }>;
+}
 
 export interface AdminAgentDetail extends AdminAgent {
   activatedAt: string | null;
@@ -249,6 +266,7 @@ export interface AdminAgentDetail extends AdminAgent {
   paymentAmount: string | null;
   verifiedAt: string | null;
   verificationToken: string | null;
+  listings?: Array<{ id: string; title: string; status: string; budgetUsdc: string; createdAt: string }>;
   jobs: Array<{
     id: string;
     title: string;

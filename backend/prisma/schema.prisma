@@ -372,7 +372,6 @@ model Agent {
   @@index([lastActiveAt])
   @@index([status])
 }
-
 model X402Payment {
   id              String   @id @default(cuid())
   agentId         String

@@ -497,6 +497,74 @@ router.get('/agents', async (req: AuthRequest, res) => {
   }
 });
 
+// POST /api/admin/agents/bulk — Bulk update agents
+router.post('/agents/bulk', async (req: AuthRequest, res) => {
+  try {
+    const { agentIds, updates } = req.body;
+
+    if (!Array.isArray(agentIds) || agentIds.length === 0) {
+      return res.status(400).json({ error: 'agentIds must be a non-empty array' });
+    }
+
+    if (!updates || typeof updates !== 'object') {
+      return res.status(400).json({ error: 'updates must be an object' });
+    }
+
+    const VALID_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED', 'BANNED'];
+    const VALID_TIERS = ['BASIC', 'PRO'];
+
+    if (updates.status && !VALID_STATUSES.includes(updates.status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+
+    if (updates.activationTier && !VALID_TIERS.includes(updates.activationTier)) {
+      return res.status(400).json({ error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}` });
+    }
+
+    const errors: { id: string; error: string }[] = [];
+    let success = 0;
+
+    for (const agentId of agentIds) {
+      try {
+        const agent = await prisma.agent.findUnique({ where: { id: agentId } });
+        if (!agent) {
+          errors.push({ id: agentId, error: 'Agent not found' });
+          continue;
+        }
+
+        const data: any = {};
+
+        if (updates.status) {
+          data.status = updates.status;
+          if (updates.status === 'ACTIVE' && agent.status !== 'ACTIVE') {
+            data.activatedAt = new Date();
+            data.activationMethod = 'ADMIN';
+          }
+        }
+
+        if (updates.activationTier) {
+          data.activationTier = updates.activationTier;
+        }
+
+        await prisma.agent.update({
+          where: { id: agentId },
+          data,
+        });
+
+        logger.info({ adminId: req.userId, agentId, updates }, 'Bulk agent update');
+        success++;
+      } catch (error) {
+        errors.push({ id: agentId, error: errMsg(error) });
+      }
+    }
+
+    res.json({ success, failed: errors.length, errors });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin bulk agents error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // GET /api/admin/jobs — Paginated jobs list
 router.get('/jobs', async (req: AuthRequest, res) => {
   try {
@@ -643,6 +711,51 @@ router.get('/users/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// GET /api/admin/agents/export — Export agents as CSV
+router.get('/agents/export', async (req: AuthRequest, res) => {
+  try {
+    const agents = await prisma.agent.findMany({
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        activationTier: true,
+        contactEmail: true,
+        websiteUrl: true,
+        lastActiveAt: true,
+        createdAt: true,
+        _count: {
+          select: { listings: true, reports: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Build CSV header
+    const headers = ['Name', 'Status', 'Tier', 'Contact Email', 'Website URL', 'Listings', 'Reports', 'Last Active At', 'Created At'];
+    const rows = agents.map(agent => [
+      `"${agent.name.replace(/"/g, '""')}"`,
+      agent.status,
+      agent.activationTier,
+      agent.contactEmail ? `"${agent.contactEmail.replace(/"/g, '""')}"` : '',
+      agent.websiteUrl ? `"${agent.websiteUrl.replace(/"/g, '""')}"` : '',
+      agent._count.listings,
+      agent._count.reports,
+      agent.lastActiveAt.toISOString(),
+      agent.createdAt.toISOString(),
+    ]);
+
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="agents.csv"');
+    res.send(csv);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin agents export error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // GET /api/admin/agents/:id — Full agent detail
 router.get('/agents/:id', async (req: AuthRequest, res) => {
   try {
@@ -657,12 +770,20 @@ router.get('/agents/:id', async (req: AuthRequest, res) => {
           orderBy: { createdAt: 'desc' },
           take: 20,
         },
+        listings: {
+          select: {
+            id: true, title: true, status: true, budgetUsdc: true, createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
         reports: {
           select: {
             id: true, reason: true, description: true, status: true, createdAt: true,
             reporter: { select: { id: true, name: true, email: true } },
           },
           orderBy: { createdAt: 'desc' },
+        },
         },
         _count: {
           select: { jobs: true, reports: true },
