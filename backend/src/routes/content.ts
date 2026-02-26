@@ -6,7 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { logStaffActivity } from '../lib/activity-logger.js';
 import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/social-publish.js';
-import { notifySlackEngagement } from '../lib/slack.js';
+import { notifySlackEngagement, notifySlackCrosspost } from '../lib/slack.js';
 
 const router = Router();
 
@@ -416,6 +416,13 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
           url: result.url,
           platform: item.platform,
         }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
+
+        if (item.platform === 'BLOG' && item.blogSlug) {
+          notifySlackCrosspost(
+            item.blogTitle || item.sourceTitle || 'Untitled post',
+            item.blogSlug,
+          ).catch(err => logger.error({ err }, 'Slack crosspost notify failed'));
+        }
       }
     } else if (result.manualInstructions) {
       // API not configured — provide manual instructions but still mark as published
