@@ -46,6 +46,7 @@ interface Human {
     reviewCount: number;
   };
   wallets?: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
+  fiatPaymentMethods?: { platform: string; handle: string; label?: string; isPrimary?: boolean }[];
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
 }
 
@@ -468,7 +469,7 @@ export function createServer(): Server {
       {
         name: 'get_human_profile',
         description:
-          'Get the full profile of a human including contact info, wallet addresses, and social links. Requires an ACTIVE agent API key. Alternative: agents can pay $0.05 per view via x402 (USDC on Base) by including an x-payment header — no activation needed.',
+          'Get the full profile of a human including contact info, wallet addresses, fiat payment methods, and social links. Requires an ACTIVE agent API key. Alternative: agents can pay $0.05 per view via x402 (USDC on Base) by including an x-payment header — no activation needed.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -1406,6 +1407,10 @@ ${human.humanityVerified
           .join('\n');
         const primaryWallet = (human.wallets || []).find((w) => w.isPrimary) || (human.wallets || [])[0];
 
+        const fiatInfo = (human.fiatPaymentMethods || [])
+          .map((f) => `- ${f.platform}${f.label ? ` (${f.label})` : ''}${f.isPrimary ? ' ⭐' : ''}: ${f.handle}`)
+          .join('\n');
+
         const socialLinks = [
           human.linkedinUrl && `- LinkedIn: ${human.linkedinUrl}`,
           human.twitterUrl && `- Twitter: ${human.twitterUrl}`,
@@ -1425,6 +1430,9 @@ ${human.humanityVerified
 ## Payment Wallets
 ${walletInfo || 'No wallets added'}
 ${primaryWallet ? `\n**Preferred wallet:** ${primaryWallet.chain || primaryWallet.network} - ${primaryWallet.address}` : ''}
+
+## Fiat Payment Methods
+${fiatInfo || 'No fiat payment methods added'}
 
 ## Social Profiles
 ${socialLinks || 'No social profiles added'}`;
