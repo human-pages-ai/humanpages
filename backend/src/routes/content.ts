@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { logStaffActivity } from '../lib/activity-logger.js';
 import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/social-publish.js';
+import { notifySlackEngagement } from '../lib/slack.js';
 
 const router = Router();
 
@@ -408,6 +409,14 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
       updateData.status = 'PUBLISHED';
       updateData.publishedUrl = result.url;
       updateData.publishError = null;
+
+      if (result.url) {
+        notifySlackEngagement({
+          title: item.sourceTitle || item.blogTitle || 'New content published',
+          url: result.url,
+          platform: item.platform,
+        }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
+      }
     } else if (result.manualInstructions) {
       // API not configured — provide manual instructions but still mark as published
       updateData.status = 'PUBLISHED';
@@ -484,6 +493,14 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
         if (result.success) {
           updateData.devtoUrl = result.url;
           updateData.devtoArticleId = result.externalId;
+
+          if (result.url) {
+            notifySlackEngagement({
+              title: item.blogTitle || item.sourceTitle || 'Blog cross-posted to Dev.to',
+              url: result.url,
+              platform: 'DEVTO',
+            }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
+          }
         } else if (result.manualInstructions) {
           results.devto.manualInstructions = result.manualInstructions;
         } else {
@@ -501,6 +518,14 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
         if (result.success) {
           updateData.hashnodeUrl = result.url;
           updateData.hashnodePostId = result.externalId;
+
+          if (result.url) {
+            notifySlackEngagement({
+              title: item.blogTitle || item.sourceTitle || 'Blog cross-posted to Hashnode',
+              url: result.url,
+              platform: 'HASHNODE',
+            }).catch(err => logger.error({ err }, 'Slack engagement notify failed'));
+          }
         } else if (result.manualInstructions) {
           results.hashnode.manualInstructions = result.manualInstructions;
         } else {
