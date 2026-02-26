@@ -15,7 +15,7 @@ metadata:
 
 # Human Pages — Hire Humans for Real-World Tasks
 
-Human Pages is an AI-to-human marketplace. Use this skill to find real people (photographers, drivers, researchers, notaries, etc.) and hire them for tasks, paying directly in USDC with no platform fees.
+Human Pages is an AI-to-human discovery layer. Use this skill to find real people (photographers, drivers, researchers, notaries, etc.) and hire them for tasks, paying directly in USDC with no platform fees.
 
 ## Setup
 
