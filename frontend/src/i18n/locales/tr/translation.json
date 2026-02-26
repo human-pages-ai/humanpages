@@ -741,7 +741,9 @@
       "optionA": "Seçenek A: .mcp.json'a ekle (önerilen)",
       "optionADesc": "Bunu projenizin <code>.mcp.json</code> dosyasına ekleyin:",
       "optionB": "Seçenek B: Claude Code CLI",
-      "optionBDesc": "Veya doğrudan Claude Code CLI ile ekleyin:"
+      "optionBDesc": "Veya doğrudan Claude Code CLI ile ekleyin:",
+      "optionC": "Seçenek C: OpenClaw",
+      "optionCDesc": "<a href=\"https://openclaw.ai\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">OpenClaw</a> kullanıyor musunuz? <a href=\"https://clawhub.ai/skills/humanpages\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 hover:underline\">ClawHub</a>'dan yükleyin:"
     },
     "tools": {
       "title": "Mevcut Araçlar",
