@@ -1024,6 +1024,9 @@ export const api = {
   getScheduleStats: () =>
     request<ScheduleStats>('/admin/schedule/stats'),
 
+  getScheduleForContent: (contentItemId: string) =>
+    request<{ entries: ScheduleEntry[] }>(`/admin/schedule/by-content/${contentItemId}`),
+
   createScheduleEntry: (data: Record<string, unknown>) =>
     request<ScheduleEntry>('/admin/schedule', { method: 'POST', body: JSON.stringify(data) }),
 

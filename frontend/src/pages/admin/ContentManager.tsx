@@ -357,11 +357,93 @@ function ContentDetailModal({
   const [copied, setCopied] = useState(false);
   const [includeCoverImage, setIncludeCoverImage] = useState(!!item.blogImageR2Key);
 
+  // Scheduling state
+  const [scheduleEntry, setScheduleEntry] = useState<any>(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [showSchedulePicker, setShowSchedulePicker] = useState(false);
+  const [scheduleDatetime, setScheduleDatetime] = useState('');
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+
   useEffect(() => {
     if (item.platform === 'TWITTER') setDraft(item.tweetDraft || '');
     else if (item.platform === 'LINKEDIN') setDraft(item.linkedinSnippet || '');
     else if (item.platform === 'BLOG') setDraft(item.blogBody || '');
   }, [item]);
+
+  // Fetch existing schedule entry for this content item
+  useEffect(() => {
+    if (item.status !== 'APPROVED') return;
+    let cancelled = false;
+    setScheduleLoading(true);
+    api.getScheduleForContent(item.id)
+      .then(({ entries }) => {
+        if (cancelled) return;
+        const active = entries.find((e: any) => e.status === 'SCHEDULED' || e.status === 'PUBLISHING');
+        setScheduleEntry(active || null);
+        if (active?.scheduledAt) {
+          setScheduleDatetime(new Date(active.scheduledAt).toISOString().slice(0, 16));
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setScheduleLoading(false); });
+    return () => { cancelled = true; };
+  }, [item.id, item.status]);
+
+  const contentTypeForPlatform = item.platform === 'BLOG' ? 'ARTICLE' : 'SHORT_POST';
+
+  const handleSchedule = async () => {
+    if (!scheduleDatetime) return;
+    setScheduleSaving(true);
+    try {
+      const entry = await api.createScheduleEntry({
+        contentItemId: item.id,
+        title: item.sourceTitle || item.blogTitle || 'Untitled',
+        platform: item.platform,
+        contentType: contentTypeForPlatform,
+        scheduledAt: new Date(scheduleDatetime).toISOString(),
+        status: 'SCHEDULED',
+        isAuto: true,
+      });
+      setScheduleEntry(entry);
+      setShowSchedulePicker(false);
+      toast.success('Scheduled for ' + new Date(scheduleDatetime).toLocaleString());
+    } catch (e: any) { toast.error(e.message); }
+    finally { setScheduleSaving(false); }
+  };
+
+  const handleReschedule = async () => {
+    if (!scheduleEntry || !scheduleDatetime) return;
+    setScheduleSaving(true);
+    try {
+      const updated = await api.updateScheduleEntry(scheduleEntry.id, {
+        scheduledAt: new Date(scheduleDatetime).toISOString(),
+        status: 'SCHEDULED',
+      });
+      setScheduleEntry(updated);
+      setShowSchedulePicker(false);
+      toast.success('Rescheduled to ' + new Date(scheduleDatetime).toLocaleString());
+    } catch (e: any) { toast.error(e.message); }
+    finally { setScheduleSaving(false); }
+  };
+
+  const handleCancelSchedule = async () => {
+    if (!scheduleEntry) return;
+    try {
+      await api.updateScheduleEntry(scheduleEntry.id, { status: 'CANCELLED' });
+      setScheduleEntry(null);
+      setShowSchedulePicker(false);
+      toast.success('Schedule cancelled');
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const handlePublishNow = async () => {
+    // Cancel existing schedule if any (best-effort)
+    if (scheduleEntry) {
+      api.updateScheduleEntry(scheduleEntry.id, { status: 'CANCELLED' }).catch(() => {});
+      setScheduleEntry(null);
+    }
+    onPublish(item.id);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -652,6 +734,86 @@ function ContentDetailModal({
             </div>
           )}
 
+          {/* Scheduling UI for APPROVED items */}
+          {item.status === 'APPROVED' && !scheduleLoading && (
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              {scheduleEntry ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Scheduled for {new Date(scheduleEntry.scheduledAt).toLocaleString()}
+                    </span>
+                  </div>
+                  {showSchedulePicker ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="datetime-local"
+                        value={scheduleDatetime}
+                        onChange={(e) => setScheduleDatetime(e.target.value)}
+                        className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                      />
+                      <button
+                        onClick={handleReschedule}
+                        disabled={scheduleSaving || !scheduleDatetime}
+                        className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                      >
+                        {scheduleSaving ? 'Saving...' : 'Confirm'}
+                      </button>
+                      <button
+                        onClick={() => setShowSchedulePicker(false)}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowSchedulePicker(true)}
+                        className="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
+                      >
+                        Reschedule
+                      </button>
+                      <button
+                        onClick={handleCancelSchedule}
+                        className="px-3 py-1.5 text-xs bg-red-100 text-red-600 rounded-md hover:bg-red-200"
+                      >
+                        Cancel Schedule
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : showSchedulePicker ? (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Schedule publication</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="datetime-local"
+                      value={scheduleDatetime}
+                      onChange={(e) => setScheduleDatetime(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                    />
+                    <button
+                      onClick={handleSchedule}
+                      disabled={scheduleSaving || !scheduleDatetime}
+                      className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                    >
+                      {scheduleSaving ? 'Scheduling...' : 'Schedule'}
+                    </button>
+                    <button
+                      onClick={() => setShowSchedulePicker(false)}
+                      className="px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+
           {/* Action buttons */}
           <div className="flex gap-2 pt-4 border-t border-gray-200">
             {item.status === 'DRAFT' && (
@@ -675,9 +837,19 @@ function ContentDetailModal({
               </>
             )}
             {item.status === 'APPROVED' && (
-              <button onClick={() => onPublish(item.id)} className="px-4 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600">
-                Publish
-              </button>
+              <>
+                <button onClick={handlePublishNow} className="px-4 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600">
+                  Publish Now
+                </button>
+                {!scheduleEntry && !showSchedulePicker && (
+                  <button
+                    onClick={() => setShowSchedulePicker(true)}
+                    className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
+                  >
+                    Schedule for Later
+                  </button>
+                )}
+              </>
             )}
             <button onClick={() => onDelete(item.id)} className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 ml-auto">
               Delete

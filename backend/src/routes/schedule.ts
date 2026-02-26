@@ -152,6 +152,21 @@ router.get('/stats', async (_req: Request, res: Response) => {
   }
 });
 
+// ─── GET /api/admin/schedule/by-content/:contentItemId — Entries for a content item ───
+
+router.get('/by-content/:contentItemId', async (req: Request, res: Response) => {
+  try {
+    const entries = await prisma.publicationSchedule.findMany({
+      where: { contentItemId: req.params.contentItemId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ entries });
+  } catch (err) {
+    logger.error({ err }, 'Failed to get schedule entries for content item');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(err) });
+  }
+});
+
 // ─── POST /api/admin/schedule — Create schedule entry ───
 
 router.post('/', async (req: Request, res: Response) => {
