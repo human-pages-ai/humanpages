@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import type { VideoConcept, VideoConceptStatus, VideoJob, VideoJobStatus, VideoItem, VideoDetail, VideoTier, VideoStatusType } from '../../types/admin';
 import StoryboardViewer from './video/StoryboardViewer';
+import { BatchesTab } from './AdminVideoBatches';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 
@@ -617,7 +618,7 @@ function VideosTab() {
 
 // ── Main component ────────────────────────────────────────
 
-type TabId = 'pipeline' | 'videos';
+type TabId = 'pipeline' | 'videos' | 'batches';
 
 export default function AdminVideoConcepts() {
   const [tab, setTab] = useState<TabId>('pipeline');
@@ -870,7 +871,7 @@ export default function AdminVideoConcepts() {
     <div>
       {/* Tab bar */}
       <div className="flex items-center gap-1 mb-6 border-b border-gray-200">
-        {([['pipeline', 'Pipeline'], ['videos', 'Videos']] as const).map(([id, label]) => (
+        {([['pipeline', 'Pipeline'], ['videos', 'Videos'], ['batches', 'Batches']] as const).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -884,6 +885,9 @@ export default function AdminVideoConcepts() {
           </button>
         ))}
       </div>
+
+      {/* Batches tab */}
+      {tab === 'batches' && <BatchesTab />}
 
       {/* Videos tab */}
       {tab === 'videos' && <VideosTab />}

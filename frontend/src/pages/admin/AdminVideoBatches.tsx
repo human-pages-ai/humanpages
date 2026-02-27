@@ -639,8 +639,8 @@ function BatchDetailView({
   );
 }
 
-// ─── Main Page ───
-export default function AdminVideoBatches() {
+// ─── Batches Tab (reusable) ───
+export function BatchesTab() {
   const [batches, setBatches] = useState<BatchSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
