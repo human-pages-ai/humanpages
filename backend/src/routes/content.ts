@@ -19,9 +19,16 @@ function errMsg(error: unknown): string {
 }
 
 /** Resolve imageR2Key → signed imageUrl on a content item. */
-async function withImageUrl<T extends { imageR2Key?: string | null }>(item: T): Promise<T & { imageUrl: string | null }> {
-  const imageUrl = item.imageR2Key ? await getSignedDownloadUrl(item.imageR2Key) : null;
-  return { ...item, imageUrl };
+async function withImageUrl<T extends Record<string, any>>(item: T): Promise<T & { imageUrl: string | null }> {
+  let imageUrl: string | null = null;
+  if (item.imageR2Key && isStorageConfigured()) {
+    try {
+      imageUrl = await getSignedDownloadUrl(item.imageR2Key);
+    } catch {
+      // R2 unavailable — return null imageUrl
+    }
+  }
+  return Object.assign({}, item, { imageUrl });
 }
 
 // ─── API-key auth (blog engine CLI) ───
