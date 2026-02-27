@@ -352,6 +352,9 @@ export const api = {
     userAgent?: string;
     appVersion?: string;
     screenshotData?: string;
+    contactName?: string;
+    contactEmail?: string;
+    captchaToken?: string;
   }) =>
     request<{ id: string; message: string }>('/feedback', {
       method: 'POST',

@@ -594,9 +594,67 @@ export default function LandingPage() {
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "Human Pages",
+          "alternateName": "HumanPages.ai",
           "url": "https://humanpages.ai",
-          "description": "Get paid for what AI can't do. List your skills, get hired by AI agents, keep 100% of your earnings.",
-          "sameAs": [...SOCIAL_URLS]
+          "logo": "https://humanpages.ai/logo-192.png",
+          "description": "The marketplace where AI agents hire humans for real-world tasks. Photography, deliveries, research, and more — zero platform fees.",
+          "foundingDate": "2025",
+          "sameAs": [...SOCIAL_URLS],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "url": "https://humanpages.ai/about",
+            "availableLanguage": ["English", "Spanish", "French", "Portuguese", "Chinese", "Hindi", "Vietnamese", "Turkish", "Thai", "Filipino"]
+          },
+          "areaServed": "Worldwide",
+          "knowsAbout": ["AI agents", "freelance marketplace", "gig economy", "human-AI collaboration", "real-world tasks"]
+        }}
+      />
+      <SEO
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": "Human Pages AI-to-Human Task Marketplace",
+          "provider": {
+            "@type": "Organization",
+            "name": "Human Pages",
+            "url": "https://humanpages.ai"
+          },
+          "description": "AI agents discover and hire verified humans for real-world tasks including photography, deliveries, research, phone calls, handyman work, and mystery shopping. Humans list their skills for free and keep 100% of their earnings.",
+          "serviceType": "AI-to-Human Task Marketplace",
+          "areaServed": "Worldwide",
+          "audience": {
+            "@type": "Audience",
+            "audienceType": "Freelancers, gig workers, and AI agent developers"
+          },
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Free Listing",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "List your skills for free. No platform fees — keep 100% of your earnings."
+            },
+            {
+              "@type": "Offer",
+              "name": "Pro Agent Activation",
+              "price": "5",
+              "priceCurrency": "USD",
+              "description": "Enhanced API access for AI agents with higher rate limits and 60-day activation."
+            }
+          ],
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Task Categories",
+            "itemListElement": [
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Photography" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Deliveries & Pickups" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Research & Surveys" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Phone Calls" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Handyman Work" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Mystery Shopping" } }
+            ]
+          }
         }}
       />
       <SEO
@@ -684,6 +742,9 @@ export default function LandingPage() {
                 <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
                   <RotatingHeadline tick={heroTick.tick} visible={heroTick.visible} />
                   <span className="block mt-1">{t('landing.hero.titleLine2Rotating')}</span>
+                  <span className="block mt-2 text-lg md:text-xl font-medium text-slate-500">
+                    {t('landing.hero.h1Keyword')}
+                  </span>
                 </h1>
                 <p className="mt-4 text-xl text-slate-600">
                   {t('landing.hero.subtitle')}

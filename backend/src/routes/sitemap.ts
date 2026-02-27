@@ -61,6 +61,7 @@ router.get('/sitemap-static.xml', async (req, res) => {
       { url: '/listings', priority: '0.8', changefreq: 'daily' },
       { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       { url: '/terms', priority: '0.3', changefreq: 'yearly' },
+      { url: '/about', priority: '0.7', changefreq: 'monthly' },
       { url: '/careers', priority: '0.7', changefreq: 'weekly' },
       { url: '/blog', priority: '0.7', changefreq: 'weekly' },
       { url: '/blog/ai-agents-hiring-humans', priority: '0.6', changefreq: 'monthly' },

@@ -44,6 +44,7 @@ export default function Footer({ className = '' }: FooterProps) {
           <Link to="/listings" className="text-slate-500 hover:text-slate-700">{t('nav.jobBoard')}</Link>
           <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
           <Link to="/blog" className="text-slate-500 hover:text-slate-700">{t('nav.blog')}</Link>
+          <Link to="/about" className="text-slate-500 hover:text-slate-700">About</Link>
           <Link to="/careers" className="text-slate-500 hover:text-slate-700">Careers</Link>
           <button onClick={() => openFeedback('BUG')} className="text-slate-500 hover:text-slate-700">{t('feedback.reportProblem', 'Report a Problem')}</button>
         </div>

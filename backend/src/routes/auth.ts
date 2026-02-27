@@ -11,6 +11,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { recordAffiliateReferral } from './affiliate.js';
 import { generateReferralCode } from '../lib/referralCode.js';
+import { verifyCaptcha } from '../lib/captcha.js';
 
 const router = Router();
 
@@ -29,24 +30,6 @@ const loginSchema = z.object({
   captchaToken: z.string().min(1),
 });
 
-async function verifyCaptcha(token: string): Promise<boolean> {
-  if (process.env.NODE_ENV === 'test') return true;
-
-  const secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) {
-    logger.warn('TURNSTILE_SECRET_KEY not set, skipping captcha verification');
-    return true;
-  }
-
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ secret, response: token }),
-  });
-
-  const data = await res.json() as { success: boolean };
-  return data.success;
-}
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),

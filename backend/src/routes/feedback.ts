@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
+import { verifyCaptcha } from '../lib/captcha.js';
 
 const router = Router();
 
@@ -41,6 +42,11 @@ const feedbackSchema = z.object({
   userAgent: z.string().max(500).optional(),
   appVersion: z.string().max(50).optional(),
   screenshotData: z.string().max(2 * 1024 * 1024).optional(), // ~2MB max base64
+
+  // Contact form fields (anonymous submissions)
+  contactName: z.string().max(100).optional(),
+  contactEmail: z.string().email().max(200).optional(),
+  captchaToken: z.string().min(1).optional(),
 });
 
 // ─── Optional auth middleware: attaches userId if token present, but doesn't reject ───
@@ -80,13 +86,34 @@ router.post('/', feedbackLimiter, optionalAuth, async (req: AuthRequest, res) =>
 
     const data = parsed.data;
 
+    // Require captcha for anonymous (non-authenticated) submissions
+    if (!req.userId) {
+      if (!data.captchaToken) {
+        return res.status(400).json({ error: 'CAPTCHA is required.' });
+      }
+      const captchaValid = await verifyCaptcha(data.captchaToken);
+      if (!captchaValid) {
+        return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+      }
+    }
+
+    // Prepend contact info to description for contact form submissions
+    let fullDescription = data.description;
+    if (data.contactName || data.contactEmail) {
+      const contactHeader = [
+        data.contactName ? `Name: ${data.contactName}` : null,
+        data.contactEmail ? `Email: ${data.contactEmail}` : null,
+      ].filter(Boolean).join('\n');
+      fullDescription = `${contactHeader}\n---\n${data.description}`;
+    }
+
     const feedback = await prisma.feedback.create({
       data: {
         humanId: req.userId || null,
         type: data.type,
         category: data.category || null,
         title: data.title || null,
-        description: data.description,
+        description: fullDescription,
         sentiment: data.sentiment ?? null,
         stepsToReproduce: data.stepsToReproduce || null,
         expectedBehavior: data.expectedBehavior || null,
