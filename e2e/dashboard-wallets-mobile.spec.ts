@@ -26,7 +26,7 @@ test.describe('Wallet mobile deep links', () => {
     await goToDashboard(page, token);
 
     // Navigate to payments tab
-    await page.getByRole('tab', { name: /payment/i }).click();
+    await page.getByRole('tab', { name: /receive money/i }).click();
 
     // Deep link buttons should be visible
     const metamaskLink = page.getByRole('link', { name: 'Open in MetaMask' });
@@ -62,7 +62,7 @@ test.describe('Wallet mobile deep links', () => {
     });
 
     await goToDashboard(page, token);
-    await page.getByRole('tab', { name: /payment/i }).click();
+    await page.getByRole('tab', { name: /receive money/i }).click();
 
     // Should show "No wallet extension detected" with install links
     await expect(page.getByText('No wallet extension detected')).toBeVisible({ timeout: 10_000 });
@@ -86,7 +86,7 @@ test.describe('Wallet mobile deep links', () => {
     });
 
     await goToDashboard(page, token);
-    await page.getByRole('tab', { name: /payment/i }).click();
+    await page.getByRole('tab', { name: /receive money/i }).click();
 
     await expect(page.getByRole('link', { name: 'Open in MetaMask' })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('link', { name: 'Open in Coinbase Wallet' })).toBeVisible();
