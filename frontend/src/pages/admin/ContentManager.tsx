@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { api } from '../../lib/api';
 import type { ContentItem, ContentStats, ContentStatus, ContentPlatform, Pagination } from '../../types/admin';
 import toast from 'react-hot-toast';
+
+const PLATFORMS: ContentPlatform[] = ['TWITTER', 'LINKEDIN', 'BLOG'];
 
 const STATUS_COLORS: Record<ContentStatus, string> = {
   DRAFT: 'bg-gray-100 text-gray-700',
@@ -39,6 +41,7 @@ export default function ContentManager() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
@@ -159,7 +162,15 @@ export default function ContentManager() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Content Manager</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">Content Manager</h2>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
+          + New
+        </button>
+      </div>
 
       {/* Stats bar */}
       {stats && (
@@ -309,6 +320,18 @@ export default function ContentManager() {
             setSelectedItem(updated);
           }}
           onCrosspost={handleCrosspost}
+        />
+      )}
+
+      {/* Create Content Modal */}
+      {showCreateModal && (
+        <CreateContentModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={(item) => {
+            setShowCreateModal(false);
+            fetchItems();
+            setSelectedItem(item);
+          }}
         />
       )}
     </div>
@@ -463,7 +486,7 @@ function ContentDetailModal({
                   <textarea
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    className="w-full h-24 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
+                    className="w-full h-40 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
                     maxLength={280}
                   />
                 ) : (
@@ -481,7 +504,7 @@ function ContentDetailModal({
                   <textarea
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    className="w-full h-32 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
+                    className="w-full h-48 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
                   />
                 ) : (
                   <div className="bg-gray-50 rounded-md p-3 text-sm whitespace-pre-wrap">{item.linkedinSnippet}</div>
@@ -510,10 +533,10 @@ function ContentDetailModal({
                   <textarea
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    className="w-full h-64 px-3 py-2 text-sm border border-gray-200 rounded-md font-mono resize-y"
+                    className="w-full h-96 px-3 py-2 text-sm border border-gray-200 rounded-md font-mono resize-y"
                   />
                 ) : (
-                  <div className="bg-gray-50 rounded-md p-3 text-sm font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                  <div className="bg-gray-50 rounded-md p-3 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto">
                     {item.blogBody}
                   </div>
                 )}
@@ -649,6 +672,217 @@ function ContentDetailModal({
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateContentModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (item: ContentItem) => void;
+}) {
+  const [platform, setPlatform] = useState<ContentPlatform>('TWITTER');
+  const [sourceTitle, setSourceTitle] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [tweetDraft, setTweetDraft] = useState('');
+  const [linkedinSnippet, setLinkedinSnippet] = useState('');
+  const [blogTitle, setBlogTitle] = useState('');
+  const [blogSlug, setBlogSlug] = useState('');
+  const [blogBody, setBlogBody] = useState('');
+  const [blogExcerpt, setBlogExcerpt] = useState('');
+  const [blogReadingTime, setBlogReadingTime] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!sourceTitle.trim()) return;
+    setSubmitting(true);
+    try {
+      const data: Parameters<typeof api.createContent>[0] = {
+        sourceTitle: sourceTitle.trim(),
+        platform,
+        ...(sourceUrl.trim() && { sourceUrl: sourceUrl.trim() }),
+        ...(platform === 'TWITTER' && tweetDraft.trim() && { tweetDraft: tweetDraft.trim() }),
+        ...(platform === 'LINKEDIN' && linkedinSnippet.trim() && { linkedinSnippet: linkedinSnippet.trim() }),
+        ...(platform === 'BLOG' && {
+          ...(blogTitle.trim() && { blogTitle: blogTitle.trim() }),
+          ...(blogSlug.trim() && { blogSlug: blogSlug.trim() }),
+          ...(blogBody.trim() && { blogBody: blogBody.trim() }),
+          ...(blogExcerpt.trim() && { blogExcerpt: blogExcerpt.trim() }),
+          ...(blogReadingTime.trim() && { blogReadingTime: blogReadingTime.trim() }),
+        }),
+      };
+      const created = await api.createContent(data);
+      toast.success('Content created');
+      onCreated(created);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={onClose}>
+      <div
+        className="bg-white w-full max-w-xl h-full overflow-y-auto shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-900">New Content</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-5">
+          {/* Platform selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+            <div className="flex gap-3">
+              {PLATFORMS.map((p) => (
+                <label key={p} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="platform"
+                    checked={platform === p}
+                    onChange={() => setPlatform(p)}
+                    className="text-blue-500"
+                  />
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${PLATFORM_COLORS[p]}`}>
+                    {PLATFORM_LABELS[p]}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Source Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Source Title *</label>
+            <input
+              type="text"
+              value={sourceTitle}
+              onChange={(e) => setSourceTitle(e.target.value)}
+              required
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md"
+              placeholder="e.g. AI Agent Hiring Trends 2026"
+            />
+          </div>
+
+          {/* Source URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Source URL</label>
+            <input
+              type="url"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md"
+              placeholder="https://..."
+            />
+          </div>
+
+          {/* Twitter fields */}
+          {platform === 'TWITTER' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tweet Draft</label>
+              <textarea
+                value={tweetDraft}
+                onChange={(e) => setTweetDraft(e.target.value)}
+                className="w-full h-40 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
+                maxLength={280}
+                placeholder="Write your tweet..."
+              />
+              <div className="text-xs text-gray-400 mt-1 text-right">{tweetDraft.length}/280</div>
+            </div>
+          )}
+
+          {/* LinkedIn fields */}
+          {platform === 'LINKEDIN' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Snippet</label>
+              <textarea
+                value={linkedinSnippet}
+                onChange={(e) => setLinkedinSnippet(e.target.value)}
+                className="w-full h-48 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
+                placeholder="Write your LinkedIn post..."
+              />
+            </div>
+          )}
+
+          {/* Blog fields */}
+          {platform === 'BLOG' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Blog Title</label>
+                <input
+                  type="text"
+                  value={blogTitle}
+                  onChange={(e) => setBlogTitle(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md"
+                  placeholder="Article title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Blog Slug</label>
+                <input
+                  type="text"
+                  value={blogSlug}
+                  onChange={(e) => setBlogSlug(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md"
+                  placeholder="article-url-slug"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Blog Body</label>
+                <textarea
+                  value={blogBody}
+                  onChange={(e) => setBlogBody(e.target.value)}
+                  className="w-full h-96 px-3 py-2 text-sm border border-gray-200 rounded-md font-mono resize-y"
+                  placeholder="Markdown content..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
+                <textarea
+                  value={blogExcerpt}
+                  onChange={(e) => setBlogExcerpt(e.target.value)}
+                  className="w-full h-20 px-3 py-2 text-sm border border-gray-200 rounded-md resize-none"
+                  placeholder="Short summary for previews..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reading Time</label>
+                <input
+                  type="text"
+                  value={blogReadingTime}
+                  onChange={(e) => setBlogReadingTime(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md"
+                  placeholder="e.g. 5 min read"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Submit */}
+          <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !sourceTitle.trim()}
+              className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Creating...' : 'Create'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

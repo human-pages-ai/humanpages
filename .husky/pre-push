@@ -6,13 +6,106 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 if [ "$NODE_ENV" = "production" ]; then
-  echo "ERROR: NODE_ENV=production. Refusing to run E2E tests against production."
+  echo "ERROR: NODE_ENV=production. Refusing to run checks against production."
   exit 1
 fi
 
 # ------------------------------------------------------------------
-# Cleanup trap — kill dev servers on exit/ctrl+c if we started them
+# Determine mode: lite (default ~30-60s) or heavy (lite + e2e)
+#
+# Override with env vars:
+#   PUSH_LITE=1   → force lite (skip all detection)
+#   PUSH_HEAVY=1  → force heavy
 # ------------------------------------------------------------------
+
+if [ "$PUSH_LITE" = "1" ]; then
+  echo "  PUSH_LITE=1 → forcing lite mode"
+  MODE="lite"
+elif [ "$PUSH_HEAVY" = "1" ]; then
+  echo "  PUSH_HEAVY=1 → forcing heavy mode"
+  MODE="heavy"
+else
+  # --- Hybrid detection ---
+  MODE="lite"
+
+  # Figure out what we're pushing vs the remote
+  UPSTREAM=$(git rev-parse --verify "@{push}" 2>/dev/null \
+    || git merge-base HEAD origin/main 2>/dev/null \
+    || echo "HEAD~1")
+
+  CHANGED=$(git diff --name-only "$UPSTREAM" HEAD 2>/dev/null || echo "")
+
+  # Step 1 — File pattern gate (instant)
+  for file in $CHANGED; do
+    case "$file" in
+      backend/src/routes/*|backend/src/middleware/*)
+        MODE="heavy"; break ;;
+      frontend/src/lib/api.ts)
+        MODE="heavy"; break ;;
+      frontend/src/pages/Dashboard*|frontend/src/pages/Welcome.tsx)
+        MODE="heavy"; break ;;
+      prisma/schema.prisma|prisma/migrations/*)
+        MODE="heavy"; break ;;
+      e2e/*)
+        MODE="heavy"; break ;;
+    esac
+  done
+
+  # Step 2 — LLM escalation for large diffs (500+ lines)
+  if [ "$MODE" = "lite" ]; then
+    DIFF_LINES=$(git diff "$UPSTREAM" HEAD 2>/dev/null | wc -l)
+    if [ "$DIFF_LINES" -gt 500 ]; then
+      echo "  Large diff ($DIFF_LINES lines), no heavy patterns — asking LLM..."
+      if node scripts/should-run-e2e.mjs "$UPSTREAM"; then
+        MODE="heavy"
+        echo "  LLM verdict: run e2e → heavy mode"
+      else
+        echo "  LLM verdict: skip e2e → lite mode"
+      fi
+    fi
+  fi
+fi
+
+echo "  Mode: $MODE"
+
+# ------------------------------------------------------------------
+# Regenerate Prisma client so type checks match the latest schema
+# ------------------------------------------------------------------
+echo "  Regenerating Prisma client..."
+if ! (cd backend && npx prisma generate); then
+  echo "  WARNING: prisma generate failed — type checks may report false errors"
+  echo "  Run 'cd backend && npx prisma generate' manually if tsc fails"
+fi
+
+# ------------------------------------------------------------------
+# Lite checks: tsc (parallel) + backend unit tests
+# ------------------------------------------------------------------
+LOG="/tmp/human-pages-pre-push.log"
+
+if [ "$MODE" = "lite" ]; then
+  echo "  Running lite checks... (log: $LOG)"
+  npx concurrently --kill-others-on-fail \
+    -n "tsc:be,tsc:fe,test" \
+    "cd backend && npx tsc --noEmit" \
+    "cd frontend && npx tsc --noEmit" \
+    "cd backend && npm test" \
+    >"$LOG" 2>&1
+
+  if [ $? -ne 0 ]; then
+    echo "  Lite checks failed — see $LOG"
+    tail -40 "$LOG"
+    exit 1
+  fi
+
+  echo "=== Lite checks passed ==="
+  exit 0
+fi
+
+# ------------------------------------------------------------------
+# Heavy checks: lite + e2e (start servers, run playwright)
+# ------------------------------------------------------------------
+
+# Cleanup trap — kill dev servers on exit
 STARTED_SERVERS=0
 DEV_PID=""
 FINAL_EXIT=0
@@ -28,24 +121,12 @@ stop_servers() {
 trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' INT TERM
 trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' EXIT
 
-# ------------------------------------------------------------------
-# Regenerate Prisma client so type checks match the latest schema
-# ------------------------------------------------------------------
-echo "  Regenerating Prisma client..."
-if ! (cd backend && npx prisma generate); then
-  echo "  WARNING: prisma generate failed — type checks may report false errors"
-  echo "  Run 'cd backend && npx prisma generate' manually if tsc fails"
-fi
-
-# ------------------------------------------------------------------
-# Start dev servers (if needed) — they boot while checks run
-# ------------------------------------------------------------------
+# Start dev servers if needed
 if curl -sf http://localhost:3001/health >/dev/null 2>&1 && curl -sf http://localhost:3000 >/dev/null 2>&1; then
   echo "  Dev servers already running"
 else
   echo "  Starting dev servers in background..."
   STARTED_SERVERS=1
-  # Kill stale processes on our ports
   lsof -ti :3000 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
   lsof -ti :3001 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
   sleep 1
@@ -53,12 +134,7 @@ else
   DEV_PID=$!
 fi
 
-# ------------------------------------------------------------------
-# Run all checks in parallel: type checks, backend tests, and E2E
-# The e2e command waits for servers inline before running playwright.
-# ------------------------------------------------------------------
-LOG="/tmp/human-pages-pre-push.log"
-echo "Running all checks in parallel... (log: $LOG)"
+echo "  Running heavy checks (lite + e2e)... (log: $LOG)"
 npx concurrently --kill-others-on-fail \
   -n "tsc:be,tsc:fe,test,e2e" \
   "cd backend && npx tsc --noEmit" \
@@ -68,9 +144,9 @@ npx concurrently --kill-others-on-fail \
   >"$LOG" 2>&1
 
 if [ $? -ne 0 ]; then
-  echo "  One or more checks failed — see $LOG"
+  echo "  Heavy checks failed — see $LOG"
   tail -40 "$LOG"
   exit 1
 fi
 
-echo "=== All checks passed ==="
+echo "=== Heavy checks passed ==="
