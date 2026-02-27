@@ -1079,6 +1079,7 @@ model ContentItem {
   blogExcerpt     String?         @db.VarChar(500)
   blogReadingTime String?
   metaDescription String?         @db.VarChar(300)
+  imageR2Key      String?
   isFeatured      Boolean         @default(false)
   status          ContentStatus   @default(DRAFT)
   publishedAt     DateTime?

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireStaffOrAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
@@ -6,13 +7,21 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { logStaffActivity } from '../lib/activity-logger.js';
 import { publishContent, crosspostToDevTo, crosspostToHashnode } from '../lib/social-publish.js';
+import { generatePresignedUploadUrl, getSignedDownloadUrl, isStorageConfigured, uploadToR2 } from '../lib/storage.js';
+import { generateBlogCover } from '../lib/blogCovers.js';
 
 const router = Router();
 
-// ─── Helper function ───
+// ─── Helper functions ───
 function errMsg(error: unknown): string {
   if (error instanceof Error) return `${error.name}: ${error.message}`;
   return String(error);
+}
+
+/** Resolve imageR2Key → signed imageUrl on a content item. */
+async function withImageUrl<T extends { imageR2Key?: string | null }>(item: T): Promise<T & { imageUrl: string | null }> {
+  const imageUrl = item.imageR2Key ? await getSignedDownloadUrl(item.imageR2Key) : null;
+  return { ...item, imageUrl };
 }
 
 // ─── API-key auth (blog engine CLI) ───
@@ -213,7 +222,7 @@ router.get('/', async (req: AuthRequest, res) => {
       ];
     }
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       prisma.contentItem.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -222,6 +231,8 @@ router.get('/', async (req: AuthRequest, res) => {
       }),
       prisma.contentItem.count({ where }),
     ]);
+
+    const items = await Promise.all(rawItems.map(withImageUrl));
 
     res.json({
       items,
@@ -238,7 +249,7 @@ router.get('/:id', async (req, res) => {
   try {
     const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
     if (!item) return res.status(404).json({ error: 'Content item not found' });
-    res.json(item);
+    res.json(await withImageUrl(item));
   } catch (error) {
     logger.error({ err: error }, 'Content detail error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
@@ -258,6 +269,7 @@ const createSchema = z.object({
   blogBody: z.string().optional(),
   blogExcerpt: z.string().optional(),
   blogReadingTime: z.string().optional(),
+  imageR2Key: z.string().optional(),
 });
 
 router.post('/', async (req: AuthRequest, res) => {
@@ -268,7 +280,7 @@ router.post('/', async (req: AuthRequest, res) => {
     }
 
     const item = await prisma.contentItem.create({ data: parsed.data });
-    res.status(201).json(item);
+    res.status(201).json(await withImageUrl(item));
   } catch (error) {
     logger.error({ err: error }, 'Content create error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
@@ -285,6 +297,7 @@ const updateSchema = z.object({
   blogExcerpt: z.string().optional(),
   blogReadingTime: z.string().optional(),
   metaDescription: z.string().optional(),
+  imageR2Key: z.string().optional().nullable(),
   isFeatured: z.boolean().optional(),
   status: z.enum(['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED']).optional(),
 }).strict();
@@ -303,7 +316,7 @@ router.patch('/:id', async (req, res) => {
       where: { id: req.params.id },
       data: parsed.data,
     });
-    res.json(updated);
+    res.json(await withImageUrl(updated));
   } catch (error) {
     logger.error({ err: error }, 'Content update error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
@@ -536,6 +549,58 @@ router.post('/:id/crosspost', async (req: AuthRequest, res) => {
   } catch (error) {
     logger.error({ err: error }, 'Content crosspost error');
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/content/:id/upload-url — presigned URL for image upload
+router.post('/:id/upload-url', async (req, res) => {
+  try {
+    if (!isStorageConfigured()) {
+      return res.status(503).json({ error: 'R2 storage not configured' });
+    }
+
+    const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
+    if (!item) return res.status(404).json({ error: 'Content item not found' });
+
+    const { contentType } = req.body;
+    if (!contentType || !contentType.startsWith('image/')) {
+      return res.status(400).json({ error: 'contentType is required and must be an image type' });
+    }
+
+    const ext = contentType === 'image/webp' ? 'webp' : contentType === 'image/png' ? 'png' : 'jpg';
+    const key = `content/${item.id}/${crypto.randomUUID()}.${ext}`;
+    const uploadUrl = await generatePresignedUploadUrl(key, contentType);
+
+    res.json({ uploadUrl, key });
+  } catch (error) {
+    logger.error({ err: error }, 'Content upload-url error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// POST /api/admin/content/:id/generate-image — auto-generate default cover image
+router.post('/:id/generate-image', async (req, res) => {
+  try {
+    if (!isStorageConfigured()) {
+      return res.status(503).json({ error: 'R2 storage not configured' });
+    }
+
+    const item = await prisma.contentItem.findUnique({ where: { id: req.params.id } });
+    if (!item) return res.status(404).json({ error: 'Content item not found' });
+
+    const buffer = await generateBlogCover(item.sourceTitle, item.id);
+    const key = `content/${item.id}/${crypto.randomUUID()}.webp`;
+    await uploadToR2(key, buffer, 'image/webp');
+
+    const updated = await prisma.contentItem.update({
+      where: { id: item.id },
+      data: { imageR2Key: key },
+    });
+
+    res.json(await withImageUrl(updated));
+  } catch (error) {
+    logger.error({ err: error }, 'Content generate-image error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

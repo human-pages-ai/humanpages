@@ -375,6 +375,8 @@ export interface ContentItem {
   blogExcerpt: string | null;
   blogReadingTime: string | null;
   metaDescription: string | null;
+  imageR2Key: string | null;
+  imageUrl: string | null;
   isFeatured: boolean;
   status: ContentStatus;
   publishedAt: string | null;

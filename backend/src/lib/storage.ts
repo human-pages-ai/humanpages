@@ -199,6 +199,21 @@ export async function deleteR2Object(key: string): Promise<void> {
 }
 
 /**
+ * Upload a buffer directly to R2.
+ * Returns the key for reference.
+ */
+export async function uploadToR2(key: string, buffer: Buffer, contentType: string): Promise<void> {
+  await getR2Client().send(new PutObjectCommand({
+    Bucket: getBucket(),
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+    CacheControl: 'public, max-age=86400',
+  }));
+  logger.info({ key, size: buffer.length }, 'Object uploaded to R2');
+}
+
+/**
  * Download an image from an external URL (for OAuth photo import).
  * Validates content-type and enforces a 5MB size limit.
  */

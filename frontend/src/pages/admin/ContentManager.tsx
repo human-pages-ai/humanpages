@@ -362,6 +362,8 @@ function ContentDetailModal({
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   useEffect(() => {
     if (item.platform === 'TWITTER') setDraft(item.tweetDraft || '');
@@ -426,6 +428,73 @@ function ContentDetailModal({
             </div>
             {item.whyUs && (
               <p className="text-sm text-gray-600 mt-2 italic">{item.whyUs}</p>
+            )}
+          </div>
+
+          {/* Image section */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-medium text-gray-700">Image</h4>
+              <div className="flex gap-2">
+                <label className={`text-xs px-2 py-1 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                  {item.imageUrl ? 'Replace' : 'Upload'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingImage}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingImage(true);
+                      try {
+                        const { uploadUrl, key } = await api.getContentUploadUrl(item.id, file.type);
+                        await fetch(uploadUrl, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': file.type },
+                          body: file,
+                        });
+                        const updated = await api.updateContentItem(item.id, { imageR2Key: key });
+                        onUpdate(updated);
+                        toast.success('Image uploaded');
+                      } catch (err: any) {
+                        toast.error(`Upload failed: ${err.message}`);
+                      } finally {
+                        setUploadingImage(false);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </label>
+                {!item.imageUrl && (
+                  <button
+                    onClick={async () => {
+                      setGeneratingImage(true);
+                      try {
+                        const updated = await api.generateContentImage(item.id);
+                        onUpdate(updated);
+                        toast.success('Default image generated');
+                      } catch (err: any) {
+                        toast.error(`Generation failed: ${err.message}`);
+                      } finally {
+                        setGeneratingImage(false);
+                      }
+                    }}
+                    disabled={generatingImage}
+                    className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {generatingImage ? 'Generating...' : 'Generate default'}
+                  </button>
+                )}
+              </div>
+            </div>
+            {uploadingImage && <div className="text-xs text-gray-500">Uploading...</div>}
+            {item.imageUrl ? (
+              <a href={item.imageUrl} target="_blank" rel="noopener noreferrer">
+                <img src={item.imageUrl} alt="Content image" className="h-32 rounded-md object-cover border border-gray-200" />
+              </a>
+            ) : (
+              <div className="text-sm text-gray-400 bg-gray-50 rounded-md p-3 text-center">No image attached</div>
             )}
           </div>
 
@@ -694,7 +763,22 @@ function CreateContentModal({
   const [blogBody, setBlogBody] = useState('');
   const [blogExcerpt, setBlogExcerpt] = useState('');
   const [blogReadingTime, setBlogReadingTime] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [useDefault, setUseDefault] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    setUseDefault(false);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -715,7 +799,30 @@ function CreateContentModal({
           ...(blogReadingTime.trim() && { blogReadingTime: blogReadingTime.trim() }),
         }),
       };
-      const created = await api.createContent(data);
+      let created = await api.createContent(data);
+
+      // Upload custom image if selected
+      if (imageFile) {
+        try {
+          const { uploadUrl, key } = await api.getContentUploadUrl(created.id, imageFile.type);
+          await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': imageFile.type },
+            body: imageFile,
+          });
+          created = await api.updateContentItem(created.id, { imageR2Key: key });
+        } catch (imgErr: any) {
+          toast.error(`Image upload failed: ${imgErr.message}`);
+        }
+      } else if (useDefault) {
+        // Generate default cover image
+        try {
+          created = await api.generateContentImage(created.id);
+        } catch (imgErr: any) {
+          toast.error(`Image generation failed: ${imgErr.message}`);
+        }
+      }
+
       toast.success('Content created');
       onCreated(created);
     } catch (e: any) {
@@ -864,6 +971,46 @@ function CreateContentModal({
               </div>
             </div>
           )}
+
+          {/* Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
+            {imagePreview && (
+              <div className="mb-2">
+                <img src={imagePreview} alt="Preview" className="h-24 rounded-md object-cover" />
+              </div>
+            )}
+            <div className="flex gap-2 items-center">
+              <label className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 cursor-pointer">
+                Choose file
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => { setImageFile(null); setImagePreview(null); setUseDefault(true); }}
+                className={`px-3 py-1.5 text-sm rounded-md ${useDefault ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Use default
+              </button>
+              {(imageFile || useDefault) && (
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); setUseDefault(false); }}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              {imageFile ? imageFile.name : useDefault ? 'Auto-generated cover will be created' : 'Optional — can add later'}
+            </p>
+          </div>
 
           {/* Submit */}
           <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">

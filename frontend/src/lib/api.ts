@@ -769,8 +769,17 @@ export const api = {
   deleteContent: (id: string) =>
     request<{ message: string }>(`/admin/content/${id}`, { method: 'DELETE' }),
 
-  createContent: (data: { sourceTitle: string; sourceUrl?: string; source?: string; platform: ContentPlatform; tweetDraft?: string; linkedinSnippet?: string; blogTitle?: string; blogSlug?: string; blogBody?: string; blogExcerpt?: string; blogReadingTime?: string }) =>
+  createContent: (data: { sourceTitle: string; sourceUrl?: string; source?: string; platform: ContentPlatform; tweetDraft?: string; linkedinSnippet?: string; blogTitle?: string; blogSlug?: string; blogBody?: string; blogExcerpt?: string; blogReadingTime?: string; imageR2Key?: string }) =>
     request<ContentItem>('/admin/content', { method: 'POST', body: JSON.stringify(data) }),
+
+  getContentUploadUrl: (id: string, contentType: string) =>
+    request<{ uploadUrl: string; key: string }>(`/admin/content/${id}/upload-url`, {
+      method: 'POST',
+      body: JSON.stringify({ contentType }),
+    }),
+
+  generateContentImage: (id: string) =>
+    request<ContentItem>(`/admin/content/${id}/generate-image`, { method: 'POST' }),
 
   // Public Blog API
   getBlogPosts: (params: { page?: number; limit?: number } = {}) => {

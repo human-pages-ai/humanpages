@@ -176,6 +176,7 @@ export async function getBlogMetaHtml(slug: string, lang?: string): Promise<stri
   let postTitle: string;
   let postDescription: string;
   let postDate: string;
+  let customImageR2Key: string | null = null;
 
   const hardcoded = BLOG_POSTS[slug];
   if (hardcoded) {
@@ -186,18 +187,29 @@ export async function getBlogMetaHtml(slug: string, lang?: string): Promise<stri
     // Query DB for dynamic content items
     const dbPost = await prisma.contentItem.findFirst({
       where: { blogSlug: slug, platform: 'BLOG', status: 'PUBLISHED' },
-      select: { blogTitle: true, blogExcerpt: true, metaDescription: true, publishedAt: true, createdAt: true },
+      select: { blogTitle: true, blogExcerpt: true, metaDescription: true, publishedAt: true, createdAt: true, imageR2Key: true },
     });
     if (!dbPost || !dbPost.blogTitle) return null;
 
     postTitle = dbPost.blogTitle;
     postDescription = dbPost.metaDescription || dbPost.blogExcerpt || '';
     postDate = (dbPost.publishedAt || dbPost.createdAt).toISOString().slice(0, 10);
+    customImageR2Key = dbPost.imageR2Key;
   }
 
   const title = escapeHtml(`${postTitle} | Human Pages`);
   const description = escapeHtml(postDescription);
-  const ogImage = `${SITE_URL}/api/og/blog/${slug}`;
+
+  let ogImage = `${SITE_URL}/api/og/blog/${slug}`;
+  if (customImageR2Key) {
+    try {
+      const { getSignedDownloadUrl } = await import('./storage.js');
+      const signedUrl = await getSignedDownloadUrl(customImageR2Key, 86400);
+      if (signedUrl) ogImage = signedUrl;
+    } catch {
+      // Fall back to generated OG image
+    }
+  }
   const unprefixedPath = `/blog/${slug}`;
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`

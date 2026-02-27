@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { logger } from './logger.js';
+import { getR2ObjectBuffer, getSignedDownloadUrl } from './storage.js';
 
 interface ContentItem {
   id: string;
@@ -10,6 +11,7 @@ interface ContentItem {
   blogTitle: string | null;
   blogBody: string | null;
   publishedUrl: string | null;
+  imageR2Key: string | null;
 }
 
 interface PublishResult {
@@ -45,14 +47,33 @@ async function publishTwitter(item: ContentItem): Promise<PublishResult> {
   if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
     return {
       success: false,
-      manualInstructions: generateTwitterManualInstructions(item.tweetDraft || ''),
+      manualInstructions: generateTwitterManualInstructions(item.tweetDraft || '', !!item.imageR2Key),
     };
   }
 
   try {
+    // Upload image to Twitter if available
+    let mediaId: string | undefined;
+    if (item.imageR2Key) {
+      try {
+        const imageBuffer = await getR2ObjectBuffer(item.imageR2Key);
+        if (imageBuffer) {
+          mediaId = await uploadTwitterMedia(imageBuffer, {
+            consumerKey, consumerSecret, accessToken, accessTokenSecret,
+          });
+        }
+      } catch (imgErr) {
+        logger.warn({ err: imgErr }, 'Failed to upload image to Twitter, posting without media');
+      }
+    }
+
     const url = 'https://api.twitter.com/2/tweets';
     const method = 'POST';
-    const body = JSON.stringify({ text: item.tweetDraft });
+    const tweetBody: any = { text: item.tweetDraft };
+    if (mediaId) {
+      tweetBody.media = { media_ids: [mediaId] };
+    }
+    const body = JSON.stringify(tweetBody);
 
     const authHeader = buildOAuth1Header({
       method,
@@ -99,20 +120,39 @@ async function publishLinkedIn(item: ContentItem): Promise<PublishResult> {
   if (!accessToken || !orgUrn) {
     return {
       success: false,
-      manualInstructions: generateLinkedInManualInstructions(item.linkedinSnippet || ''),
+      manualInstructions: generateLinkedInManualInstructions(item.linkedinSnippet || '', !!item.imageR2Key),
     };
   }
 
   try {
+    // Resolve image URL for LinkedIn share
+    let imageUrl: string | null = null;
+    if (item.imageR2Key) {
+      try {
+        imageUrl = await getSignedDownloadUrl(item.imageR2Key, 86400); // 24h expiry
+      } catch (imgErr) {
+        logger.warn({ err: imgErr }, 'Failed to resolve image URL for LinkedIn');
+      }
+    }
+
+    const shareContent: any = {
+      shareCommentary: { text: item.linkedinSnippet },
+      shareMediaCategory: imageUrl ? 'ARTICLE' : 'NONE',
+    };
+    if (imageUrl) {
+      shareContent.media = [{
+        status: 'READY',
+        originalUrl: imageUrl,
+        title: { text: item.blogTitle || item.linkedinSnippet?.slice(0, 100) || 'Human Pages' },
+      }];
+    }
+
     const url = 'https://api.linkedin.com/v2/ugcPosts';
     const body = {
       author: orgUrn,
       lifecycleState: 'PUBLISHED',
       specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: { text: item.linkedinSnippet },
-          shareMediaCategory: 'NONE',
-        },
+        'com.linkedin.ugc.ShareContent': shareContent,
       },
       visibility: {
         'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
@@ -157,7 +197,8 @@ async function publishBlog(item: ContentItem): Promise<PublishResult> {
 
 // ─── Manual instructions fallback ───
 
-function generateTwitterManualInstructions(text: string): string {
+function generateTwitterManualInstructions(text: string, hasImage: boolean): string {
+  const imageNote = hasImage ? '\n4. Don\'t forget to attach the image from the content manager' : '';
   return `To publish this tweet manually:
 
 1. Open https://twitter.com/compose/tweet
@@ -165,10 +206,11 @@ function generateTwitterManualInstructions(text: string): string {
 ---
 ${text}
 ---
-3. Click "Post"`;
+3. Click "Post"${imageNote}`;
 }
 
-function generateLinkedInManualInstructions(text: string): string {
+function generateLinkedInManualInstructions(text: string, hasImage: boolean): string {
+  const imageNote = hasImage ? '\n5. Don\'t forget to attach the image from the content manager' : '';
   return `To publish this LinkedIn post manually:
 
 1. Open https://www.linkedin.com/company/humanpages/admin/feed/
@@ -177,7 +219,7 @@ function generateLinkedInManualInstructions(text: string): string {
 ---
 ${text}
 ---
-4. Click "Post"`;
+4. Click "Post"${imageNote}`;
 }
 
 // ─── Cross-posting to external blog platforms ───
@@ -333,6 +375,41 @@ function generateHashnodeManualInstructions(item: ContentItem): string {
 4. Paste the article body (Markdown)
 5. Set original article URL to: ${item.publishedUrl || ''}
 6. Click "Publish"`;
+}
+
+// ─── Twitter media upload (v1.1 chunked) ───
+
+async function uploadTwitterMedia(
+  imageBuffer: Buffer,
+  creds: { consumerKey: string; consumerSecret: string; accessToken: string; accessTokenSecret: string },
+): Promise<string> {
+  const mediaUploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
+
+  const authHeader = buildOAuth1Header({
+    method: 'POST',
+    url: mediaUploadUrl,
+    ...creds,
+  });
+
+  const formData = new FormData();
+  formData.append('media_data', imageBuffer.toString('base64'));
+
+  const resp = await fetch(mediaUploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': authHeader,
+    },
+    body: formData,
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`Twitter media upload ${resp.status}: ${errText.slice(0, 200)}`);
+  }
+
+  const data: any = await resp.json();
+  return data.media_id_string;
 }
 
 // ─── OAuth 1.0a signature for Twitter ───
