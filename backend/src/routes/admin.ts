@@ -16,6 +16,7 @@ import videoRoutes from './videos.js';
 import scheduleRoutes from './schedule.js';
 import productivityRoutes from './productivity.js';
 import leadRoutes from './leads.js';
+import videoBatchRoutes from './videoBatches.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 
 const router = Router();
@@ -95,6 +96,9 @@ router.use('/content', contentRoutes);
 
 // ─── Video concepts routes (API key + admin) ───
 router.use('/video-concepts', videoConceptRoutes);
+
+// ─── Video batches routes (API key + admin) ───
+router.use('/video-batches', videoBatchRoutes);
 
 // ─── Photo concepts routes (API key + admin) ───
 router.use('/photo-concepts', photoConceptRoutes);

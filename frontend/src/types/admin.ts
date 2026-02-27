@@ -658,6 +658,49 @@ export interface VideoScriptData {
   scenes: VideoScene[];
 }
 
+// ===== Video Batches =====
+export interface BatchSummary {
+  date: string;
+  conceptCount: number;
+  validConcepts: number;
+  approvedCount: number;
+  tier: string;
+  approvedTier: string | null;
+}
+
+export interface BatchDetailConcept {
+  number: number;
+  title: string;
+  concept: string;
+  hook: string;
+  pillar: string;
+  hasThumbnails: boolean;
+  thumbnailCount: number;
+  approved: boolean;
+  approvedTier: string | null;
+  failed: boolean;
+}
+
+export interface BatchDetail {
+  date: string;
+  tier: string;
+  conceptCount: number;
+  concepts: BatchDetailConcept[];
+}
+
+export interface BatchConceptDetail {
+  number: number;
+  title: string;
+  concept: string;
+  hook: string;
+  pillar: string;
+  script: VideoScriptData | null;
+  images: string[];
+  approved: boolean;
+  approvedTier: string | null;
+  approvedAt: string | null;
+}
+
 // ===== Video Concepts =====
 export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done'
   | 'draft_images_ready' | 'final_images_ready' | 'draft_in_production' | 'final_in_production';

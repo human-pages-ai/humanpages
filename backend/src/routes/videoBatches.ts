@@ -314,6 +314,58 @@ router.post('/:date/approve', async (req, res) => {
   }
 });
 
+// ─── PUT /:date/concept/:num/script — Update a concept's script ───
+router.put('/:date/concept/:num/script', async (req, res) => {
+  try {
+    const { date, num } = req.params;
+    const conceptNum = parseInt(num, 10);
+    if (isNaN(conceptNum)) {
+      return res.status(400).json({ error: 'Invalid concept number' });
+    }
+
+    const manifest = await loadManifest(date);
+    if (!manifest) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+
+    const concept = manifest.concepts.find(c => c.concept_number === conceptNum);
+    if (!concept) {
+      return res.status(404).json({ error: 'Concept not found' });
+    }
+
+    const script = req.body;
+    if (!script || !script.title || !script.scenes || !Array.isArray(script.scenes) || script.scenes.length === 0) {
+      return res.status(400).json({ error: 'Invalid script: must have title and at least one scene' });
+    }
+    for (const scene of script.scenes) {
+      if (typeof scene.scene_number !== 'number' || typeof scene.duration_seconds !== 'number') {
+        return res.status(400).json({ error: 'Invalid scene: missing scene_number or duration_seconds' });
+      }
+    }
+
+    const padded = String(conceptNum).padStart(2, '0');
+    const conceptDir = path.join(BATCHES_DIR, date, `concept-${padded}`);
+    const scriptPath = path.join(conceptDir, 'script.json');
+
+    await fs.mkdir(conceptDir, { recursive: true });
+
+    // Backup existing script before overwriting
+    try {
+      await fs.access(scriptPath);
+      const backupPath = path.join(conceptDir, `script.${Date.now()}.bak.json`);
+      await fs.copyFile(scriptPath, backupPath);
+    } catch { /* no existing script to back up */ }
+
+    await fs.writeFile(scriptPath, JSON.stringify(script, null, 2));
+
+    logger.info({ date, concept: conceptNum }, 'Batch concept script updated');
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update concept script');
+    res.status(500).json({ error: 'Failed to update script', detail: errMsg(err) });
+  }
+});
+
 // ─── POST /:date/reject — Remove concepts from approval queue ───
 router.post('/:date/reject', async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -856,6 +856,37 @@ export const api = {
 
   updateVideoConceptScript: (slug: string, tier: string, script: VideoScriptData) =>
     request<{ success: boolean }>(`/admin/video-concepts/${slug}/script/${tier}`, {
+      method: 'PUT',
+      body: JSON.stringify(script),
+    }),
+
+  // Video Batches
+  getVideoBatches: () =>
+    request<{ batches: BatchSummary[] }>('/admin/video-batches'),
+
+  getVideoBatch: (date: string) =>
+    request<BatchDetail>(`/admin/video-batches/${date}`),
+
+  getVideoBatchConcept: (date: string, num: number) =>
+    request<BatchConceptDetail>(`/admin/video-batches/${date}/concept/${num}`),
+
+  approveVideoBatchConcepts: (date: string, concepts: number[], tier: string = 'draft') =>
+    request<{ approved: number; tier: string; date: string }>(`/admin/video-batches/${date}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ concepts, tier }),
+    }),
+
+  rejectVideoBatchConcepts: (date: string, concepts: number[]) =>
+    request<{ rejected: number; date: string }>(`/admin/video-batches/${date}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ concepts }),
+    }),
+
+  getVideoBatchImageUrl: (date: string, conceptNum: number, filename: string) =>
+    `/api/admin/video-batches/${date}/concept/${conceptNum}/image/${filename}`,
+
+  updateVideoBatchScript: (date: string, conceptNum: number, script: VideoScriptData) =>
+    request<{ success: boolean }>(`/admin/video-batches/${date}/concept/${conceptNum}/script`, {
       method: 'PUT',
       body: JSON.stringify(script),
     }),

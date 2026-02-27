@@ -10,6 +10,7 @@ const adminOnlyItems = [
   { to: '/admin/activity', label: 'Activity' },
   { to: '/admin/feedback', label: 'Feedback' },
   { to: '/admin/video', label: 'Videos' },
+  { to: '/admin/batches', label: 'Batches' },
   { to: '/admin/schedule', label: 'Schedule' },
   { to: '/admin/photos', label: 'Photos' },
   { to: '/admin/careers', label: 'Careers' },
