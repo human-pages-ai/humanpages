@@ -18,14 +18,9 @@ import {
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
-const FEATURED_LISTINGS = [
-  { name: 'Dang AI', href: 'https://dang.ai/', badge: 'https://cdn.prod.website-files.com/63d8afd87da01fb58ea3fbcb/6487e2868c6c8f93b4828827_dang-badge.png' },
-  { name: 'Crunchbase', href: 'https://www.crunchbase.com/organization/human-pages' },
-  { name: 'AlternativeTo', href: 'https://alternativeto.net/software/human-pages/' },
-  { name: 'Medium', href: 'https://medium.com/@humanpages' },
-];
 
 function ContactForm() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -36,7 +31,7 @@ function ContactForm() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!captchaToken) {
-      setErrorMsg('Please complete the CAPTCHA.');
+      setErrorMsg(t('about.formCaptchaError'));
       setStatus('error');
       return;
     }
@@ -62,7 +57,7 @@ function ContactForm() {
       setMessage('');
       setCaptchaToken('');
     } catch (err: any) {
-      setErrorMsg(err?.response?.data?.error || 'Something went wrong. Please try again.');
+      setErrorMsg(err?.response?.data?.error || t('about.formGenericError'));
       setStatus('error');
     }
   }
@@ -70,13 +65,13 @@ function ContactForm() {
   if (status === 'sent') {
     return (
       <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-        <p className="text-green-800 font-medium text-lg">Message sent!</p>
-        <p className="text-green-600 mt-1 text-sm">We'll get back to you soon.</p>
+        <p className="text-green-800 font-medium text-lg">{t('about.formSent')}</p>
+        <p className="text-green-600 mt-1 text-sm">{t('about.formSentSub')}</p>
         <button
           onClick={() => setStatus('idle')}
           className="mt-4 text-sm text-blue-600 hover:underline"
         >
-          Send another message
+          {t('about.formSendAnother')}
         </button>
       </div>
     );
@@ -87,7 +82,7 @@ function ContactForm() {
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="contact-name" className="block text-sm font-medium text-slate-700 mb-1">
-            Name <span className="text-slate-400">(optional)</span>
+            {t('about.formName')} <span className="text-slate-400">({t('common.optional')})</span>
           </label>
           <input
             id="contact-name"
@@ -96,12 +91,12 @@ function ContactForm() {
             onChange={(e) => setName(e.target.value)}
             maxLength={100}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            placeholder="Your name"
+            placeholder={t('about.formNamePlaceholder')}
           />
         </div>
         <div>
           <label htmlFor="contact-email" className="block text-sm font-medium text-slate-700 mb-1">
-            Email <span className="text-slate-400">(optional)</span>
+            {t('about.formEmail')} <span className="text-slate-400">({t('common.optional')})</span>
           </label>
           <input
             id="contact-email"
@@ -116,7 +111,7 @@ function ContactForm() {
       </div>
       <div>
         <label htmlFor="contact-message" className="block text-sm font-medium text-slate-700 mb-1">
-          Message <span className="text-red-500">*</span>
+          {t('about.formMessage')} <span className="text-red-500">*</span>
         </label>
         <textarea
           id="contact-message"
@@ -127,7 +122,7 @@ function ContactForm() {
           maxLength={5000}
           rows={4}
           className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y"
-          placeholder="How can we help?"
+          placeholder={t('about.formMessagePlaceholder')}
         />
       </div>
       <Turnstile
@@ -143,7 +138,7 @@ function ContactForm() {
         disabled={status === 'sending' || !message.trim()}
         className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
       >
-        {status === 'sending' ? 'Sending...' : 'Send message'}
+        {status === 'sending' ? t('about.formSending') : t('about.formSend')}
       </button>
     </form>
   );
@@ -208,11 +203,10 @@ export default function AboutPage() {
         <section className="py-16 md:py-24 px-4 bg-white">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-              Get Paid for What AI Can't Do
+              {t('about.heroTitle')}
             </h1>
             <p className="mt-6 text-xl text-slate-600 leading-relaxed">
-              Human Pages connects AI agents with real people for real-world tasks.
-              List your skills, get hired directly, keep 100% of your earnings.
+              {t('about.heroSubtitle')}
             </p>
           </div>
         </section>
@@ -220,16 +214,12 @@ export default function AboutPage() {
         {/* Mission */}
         <section className="py-16 bg-slate-50 px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Our Mission</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">{t('about.missionTitle')}</h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              AI agents are becoming capable of planning, coordinating, and paying for work — but they still need
-              humans for tasks in the physical world. Photography, deliveries, research, phone calls, inspections,
-              and countless other jobs require a real person on the ground.
+              {t('about.missionP1')}
             </p>
             <p className="mt-4 text-lg text-slate-600 leading-relaxed">
-              Human Pages exists to bridge that gap. We give humans a single place to list their skills, location,
-              and availability so AI agents can find and hire them directly. No middleman, no platform fees — humans
-              keep 100% of what they earn.
+              {t('about.missionP2')}
             </p>
           </div>
         </section>
@@ -237,18 +227,16 @@ export default function AboutPage() {
         {/* How it works */}
         <section className="py-16 bg-white px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">How It Works</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">{t('about.howItWorksTitle')}</h2>
             <div className="space-y-6">
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
                   <UserGroupIcon className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 text-lg">For Humans</h3>
+                  <h3 className="font-semibold text-slate-900 text-lg">{t('about.forHumansTitle')}</h3>
                   <p className="mt-1 text-slate-600">
-                    Create a free profile with your skills, location, and rates. AI agents search our directory
-                    and send you job offers with a description and price. Accept, do the work, get paid directly
-                    in USDC. It takes about 30 seconds to set up.
+                    {t('about.forHumansDesc')}
                   </p>
                 </div>
               </div>
@@ -257,11 +245,9 @@ export default function AboutPage() {
                   <CpuChipIcon className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 text-lg">For AI Agents</h3>
+                  <h3 className="font-semibold text-slate-900 text-lg">{t('about.forAgentsTitle')}</h3>
                   <p className="mt-1 text-slate-600">
-                    Use our REST API or MCP server to search human profiles by skill, location, and availability.
-                    Send job offers, track progress, and pay on completion. Integrate with any AI framework —
-                    we support OpenAI, Anthropic, LangChain, and any agent that can make HTTP requests.
+                    {t('about.forAgentsDesc')}
                   </p>
                 </div>
               </div>
@@ -272,71 +258,35 @@ export default function AboutPage() {
         {/* Principles / Trust signals */}
         <section className="py-16 bg-slate-50 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">Our Principles</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">{t('about.principlesTitle')}</h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-4">
                   <BanknotesIcon className="w-6 h-6 text-green-600" />
                 </div>
-                <h3 className="font-semibold text-slate-900 text-lg">Zero Platform Fees</h3>
+                <h3 className="font-semibold text-slate-900 text-lg">{t('about.zeroFeesTitle')}</h3>
                 <p className="mt-2 text-slate-600 text-sm">
-                  Humans keep 100% of their earnings. We never take a cut from payments between AI agents and humans.
-                  Our revenue comes from optional agent activation tiers.
+                  {t('about.zeroFeesDesc')}
                 </p>
               </div>
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
                   <ShieldCheckIcon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="font-semibold text-slate-900 text-lg">Privacy First</h3>
+                <h3 className="font-semibold text-slate-900 text-lg">{t('about.privacyTitle')}</h3>
                 <p className="mt-2 text-slate-600 text-sm">
-                  Humans control what's visible on their profile. Personal contact information is never shared
-                  with AI agents. All communication happens through our secure messaging system.
+                  {t('about.privacyDesc')}
                 </p>
               </div>
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center mb-4">
                   <GlobeAltIcon className="w-6 h-6 text-violet-600" />
                 </div>
-                <h3 className="font-semibold text-slate-900 text-lg">Global & Open</h3>
+                <h3 className="font-semibold text-slate-900 text-lg">{t('about.globalTitle')}</h3>
                 <p className="mt-2 text-slate-600 text-sm">
-                  Available worldwide in 10 languages. Our API is open to any AI agent or developer.
-                  We publish an MCP server, OpenAPI spec, and llms.txt to make integration easy.
+                  {t('about.globalDesc')}
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured On */}
-        <section className="py-16 bg-white px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-10">
-              {t('about.featuredOn')}
-            </h2>
-            <div className="flex flex-wrap justify-center items-center gap-6">
-              {FEATURED_LISTINGS.map((listing) => (
-                <a
-                  key={listing.name}
-                  href={listing.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {listing.badge ? (
-                    <img
-                      src={listing.badge}
-                      alt={listing.name}
-                      width={150}
-                      height={54}
-                      className="hover:opacity-80 transition-opacity"
-                    />
-                  ) : (
-                    <span className="inline-block px-5 py-2.5 border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-600 transition-colors">
-                      {listing.name}
-                    </span>
-                  )}
-                </a>
-              ))}
             </div>
           </div>
         </section>
@@ -344,24 +294,24 @@ export default function AboutPage() {
         {/* Contact Form */}
         <section className="py-16 bg-white px-4">
           <div className="max-w-xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Contact Us</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{t('about.contactTitle')}</h2>
             <p className="text-slate-600 mb-6">
-              For general inquiries, partnerships, or press — send us a message.
+              {t('about.contactSubtitle')}
             </p>
             <ContactForm />
             <div className="mt-8 pt-6 border-t border-slate-200">
               <p className="text-slate-600 text-sm">
-                Follow us on{' '}
+                {t('about.followUs')}{' '}
                 {SOCIAL_LINKS.filter(l => l.name !== 'Linktree').map((link, i, arr) => (
                   <span key={link.name}>
                     <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{link.name}</a>
                     {i < arr.length - 1 ? ', ' : ''}
                   </span>
                 ))}
-                {' '}for updates.
+                {' '}{t('about.forUpdates')}
               </p>
               <p className="mt-2 text-slate-600 text-sm">
-                Interested in joining the team? Check our <Link to="/careers" className="text-blue-600 hover:underline">careers page</Link>.
+                {t('about.joinTeam')} <Link to="/careers" className="text-blue-600 hover:underline">{t('about.careersPage')}</Link>.
               </p>
             </div>
           </div>
@@ -371,10 +321,10 @@ export default function AboutPage() {
         <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-700 px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
-              Ready to get started?
+              {t('about.ctaTitle')}
             </h2>
             <p className="mt-3 text-blue-100 text-lg">
-              List your skills and start receiving job offers from AI agents today.
+              {t('about.ctaSubtitle')}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link

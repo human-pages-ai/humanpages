@@ -53,6 +53,7 @@ export default function Footer({ className = '' }: FooterProps) {
           <Link to="/status" className="text-slate-500 hover:text-slate-700">{t('nav.status')}</Link>
           <Link to="/about" className="text-slate-500 hover:text-slate-700">{t('nav.about')}</Link>
           <Link to="/careers" className="text-slate-500 hover:text-slate-700">{t('nav.careers')}</Link>
+          <a href="https://dang.ai/" target="_blank" className="text-slate-500 hover:text-slate-700">Dang AI</a>
           <button onClick={() => openFeedback('BUG')} className="text-slate-500 hover:text-slate-700">{t('feedback.reportProblem', 'Report a Problem')}</button>
         </div>
         <div className="flex items-center gap-4">
