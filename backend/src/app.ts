@@ -110,11 +110,16 @@ const AI_BOT_PATTERNS: Record<string, RegExp> = {
   'GPTBot': /GPTBot/i,
   'ChatGPT-User': /ChatGPT-User/i,
   'ClaudeBot': /ClaudeBot/i,
+  'Anthropic-Docs': /Anthropic-Docs/i,
   'PerplexityBot': /PerplexityBot/i,
   'Google-Extended': /Google-Extended/i,
   'Googlebot': /Googlebot/i,
   'Applebot': /Applebot/i,
   'Bingbot': /bingbot/i,
+  'Bytespider': /Bytespider/i,
+  'YandexBot': /YandexBot/i,
+  'FacebookBot': /facebookexternalhit/i,
+  'LinkedInBot': /LinkedInBot/i,
 };
 
 app.use(['/llms.txt', '/.well-known/openapi.json', '/.well-known/ai-plugin.json'], (req, res, next) => {

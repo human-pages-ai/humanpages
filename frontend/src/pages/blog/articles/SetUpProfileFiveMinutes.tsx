@@ -8,11 +8,24 @@ const howToSchema = {
   "name": "How to Build a Free AI Agent That Hires Real People",
   "description": "Build a Telegram bot that finds freelancers, sends job offers, and manages work — using a free LLM, free hosting, and the Human Pages API.",
   "totalTime": "PT30M",
+  "tool": [
+    { "@type": "HowToTool", "name": "npm / wrangler CLI" },
+    { "@type": "HowToTool", "name": "Code editor" },
+  ],
+  "supply": [
+    { "@type": "HowToSupply", "name": "Cloudflare account (free)" },
+    { "@type": "HowToSupply", "name": "Telegram BotFather token" },
+    { "@type": "HowToSupply", "name": "Gemini API key (free tier)" },
+  ],
   "step": [
-    { "@type": "HowToStep", "name": "Understand What This Does", "text": "Human Pages is a directory of real humans available for hire by AI agents. The API lets your bot search by skill and location, send job offers, exchange messages, and track work." },
-    { "@type": "HowToStep", "name": "Quick Path: Claude Desktop or Cursor", "text": "If you already use Claude Desktop or Cursor, add the Human Pages MCP server to your config to get hiring capability without building a bot." },
-    { "@type": "HowToStep", "name": "Build the Telegram Bot", "text": "Create a Cloudflare Worker with a free LLM (Gemini Flash or Llama) that handles Telegram messages, searches Human Pages for freelancers, and sends job offers." },
-    { "@type": "HowToStep", "name": "Deploy and Configure", "text": "Deploy the worker to Cloudflare, register your agent on Human Pages to get an API key, and connect your Telegram bot token." },
+    { "@type": "HowToStep", "name": "Understand What Human Pages Does", "text": "Human Pages is a directory of real humans available for hire by AI agents. The API lets your bot search by skill and location, send job offers, exchange messages, and track work." },
+    { "@type": "HowToStep", "name": "Quick Path: Add MCP to Claude or Cursor", "text": "If you already use Claude Desktop or Cursor, add the Human Pages MCP server to your config and skip building a custom bot." },
+    { "@type": "HowToStep", "name": "Build the Telegram Bot on Cloudflare Workers", "text": "Create a Cloudflare Worker with a free LLM (Gemini Flash or Llama). Set up wrangler, create a KV namespace for conversation state, and write the worker that handles Telegram messages, calls the LLM, and interfaces with the Human Pages API." },
+    { "@type": "HowToStep", "name": "Test Conversations and Refine", "text": "Send natural-language requests to your bot via Telegram. It asks follow-up questions when details are vague, searches for matching freelancers, and sends job offers when you confirm." },
+    { "@type": "HowToStep", "name": "Upgrade to Stronger Models When Needed", "text": "Swap the free Gemini Flash model for Claude, GPT-4, or DeepSeek when you need better reasoning. Change one environment variable and one URL." },
+    { "@type": "HowToStep", "name": "Add Other Integrations", "text": "Extend the bot to work via Slack, Discord, WhatsApp, or email using the same Human Pages API with different frontends." },
+    { "@type": "HowToStep", "name": "Set Up an Agent Wallet", "text": "Create a wallet for your agent to send USDC payments directly to freelancers. Supports Base, Ethereum, Polygon, and Arbitrum networks." },
+    { "@type": "HowToStep", "name": "Review the Cost", "text": "The infrastructure costs $0. Cloudflare Workers free tier covers 100K requests/day. The free LLM tier handles normal usage. You only pay the freelancers." },
   ],
 };
 
