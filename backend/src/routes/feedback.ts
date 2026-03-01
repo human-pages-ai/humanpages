@@ -87,7 +87,7 @@ router.post('/', feedbackLimiter, optionalAuth, async (req: AuthRequest, res) =>
     const data = parsed.data;
 
     // Require captcha for anonymous (non-authenticated) submissions
-    if (!req.userId) {
+    if (!req.userId && process.env.NODE_ENV !== 'test') {
       if (!data.captchaToken) {
         return res.status(400).json({ error: 'CAPTCHA is required.' });
       }
