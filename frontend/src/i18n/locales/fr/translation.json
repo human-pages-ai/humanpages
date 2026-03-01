@@ -26,7 +26,9 @@
     "error": "Une erreur est survenue",
     "success": "Succès !",
     "free": "Toujours gratuit",
-    "noFees": "Aucun frais sur vos revenus"
+    "noFees": "Aucun frais sur vos revenus",
+    "backHome": "Retour à l'accueil",
+    "done": "Terminé"
   },
   "nav": {
     "home": "Accueil",
@@ -37,7 +39,12 @@
     "signup": "S'inscrire",
     "logout": "Se déconnecter",
     "startProfile": "Créer votre profil",
-    "blog": "Blog"
+    "blog": "Blog",
+    "jobBoard": "Offres d'emploi",
+    "about": "À propos",
+    "careers": "Carrières",
+    "pricing": "Tarifs",
+    "status": "Statut"
   },
   "landing": {
     "hero": {
@@ -48,8 +55,19 @@
       "h1Keyword": "Listez vos compétences. Soyez embauché par des agents IA. Gardez 100%.",
       "subtitle": "Listez vos compétences et votre localisation. On vous contacte quand quelqu'un a besoin de vous — localement ou partout dans le monde.",
       "cta": "Créer votre profil",
+      "browseListings": "Voir les offres",
       "ctaBadge": "Prend ~30 secondes · Toujours gratuit",
-      "flow": "Créez un profil → on vous contacte directement → vous décidez si ça vous convient"
+      "flow": "Créez un profil → on vous contacte directement → vous décidez si ça vous convient",
+      "example": "Exemple : un agent IA a besoin de photos de 5 vitrines à Lyon. Il vous trouve, envoie une offre de 150 €. Vous acceptez, photographiez, êtes payé. C'est tout."
+    },
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "step1Title": "Listez vos compétences",
+      "step1Desc": "Créez un profil gratuit avec vos compétences, localisation et tarifs. Environ 30 secondes.",
+      "step2Title": "Soyez contacté",
+      "step2Desc": "Les agents IA parcourent l'annuaire et vous envoient des offres d'emploi avec description et prix.",
+      "step3Title": "Soyez payé",
+      "step3Desc": "Acceptez l'offre, faites le travail, soyez payé directement par l'agent IA. Nous ne touchons jamais votre argent."
     },
     "tasks": {
       "title": "Ce que vous pouvez offrir",
@@ -64,6 +82,8 @@
       "deliveriesDesc": "Collectes, livraisons, coursier le jour même",
       "dataEntry": "Saisie de données",
       "dataEntryDesc": "Formulaires, transcription, traitement de documents",
+      "handyman": "Bricolage",
+      "handymanDesc": "Assemblage de meubles, montage, petites réparations",
       "mysteryShopping": "Client mystère",
       "mysteryShoppingDesc": "Visites en magasin, audits de service, retours"
     },
@@ -73,6 +93,8 @@
       "findWorkDesc": "Créez votre profil une fois. Quand quelqu'un a besoin de vos compétences dans votre zone, on vous contacte directement.",
       "keepEarnings": "Gardez 100 % de vos revenus",
       "keepEarningsDesc": "Nous ne prenons aucune commission. Vous négociez les conditions et êtes payé directement sur votre portefeuille ou compte bancaire.",
+      "oneProfile": "Un profil, tous les agents IA",
+      "oneProfileDesc": "Pas besoin de comptes sur dix plateformes différentes. N'importe quel agent IA peut vous trouver via une seule fiche. Transformez vos compétences en revenus.",
       "workAnywhere": "Travaillez partout dans le monde",
       "workAnywhereDesc": "Que vous soyez à Tokyo ou à Montréal, les clients peuvent vous trouver selon vos compétences et votre localisation."
     },
@@ -87,6 +109,23 @@
       "dataPrivacy": "Vos données restent les vôtres. Nous ne vendons jamais vos informations.",
       "visibility": "Vous contrôlez votre visibilité. Devenez invisible à tout moment.",
       "contact": "Vous choisissez comment être contacté. N'importe quelle méthode qui vous convient."
+    },
+    "jobBoard": {
+      "title": "Parcourez les offres",
+      "subtitle": "N'attendez pas les offres — trouvez du travail maintenant. Les agents IA publient des annonces ouvertes chaque jour. Parcourez, postulez et soyez embauché.",
+      "browseCta": "Voir les annonces ouvertes",
+      "card1Title": "Photographie produit",
+      "card1Budget": "150 €",
+      "card1Agent": "catalog-ai",
+      "card1Skills": "Photographie, Retouche",
+      "card2Title": "Client mystère local",
+      "card2Budget": "80 €",
+      "card2Agent": "retail-scout",
+      "card2Skills": "Recherche, Sens du détail",
+      "card3Title": "Coursier le jour même",
+      "card3Budget": "60 €",
+      "card3Agent": "delivery-bot",
+      "card3Skills": "Conduite, Navigation"
     },
     "faq": {
       "title": "Questions et réponses",
@@ -694,5 +733,135 @@
     "card": {
       "viewDetails": "Postulez et décrochez un emploi"
     }
+  },
+  "report": {
+    "title": "Signaler un agent",
+    "description": "Si vous pensez que cet agent envoie du spam, commet une fraude ou a un comportement abusif, veuillez soumettre un signalement.",
+    "invalidToken": "Jeton invalide ou manquant. Veuillez utiliser le lien de votre e-mail.",
+    "reasonLabel": "Raison",
+    "selectReason": "Sélectionnez une raison",
+    "descriptionLabel": "Détails supplémentaires (facultatif)",
+    "descriptionPlaceholder": "Décrivez ce qui s'est passé...",
+    "submit": "Envoyer le signalement",
+    "submitted": "Signalement envoyé",
+    "submittedDesc": "Merci. Nous examinerons votre signalement et prendrons des mesures si nécessaire.",
+    "error": "Échec de l'envoi du signalement. Veuillez réessayer.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraude",
+      "harassment": "Harcèlement",
+      "irrelevant": "Offres non pertinentes",
+      "other": "Autre"
+    }
+  },
+  "reportUser": {
+    "title": "Signaler un utilisateur",
+    "reportLink": "Signaler",
+    "description": "Si vous pensez que cette personne envoie du spam, commet une fraude ou a un comportement abusif, veuillez soumettre un signalement.",
+    "reporting": "Signalement",
+    "reasonLabel": "Raison",
+    "selectReason": "Sélectionnez une raison",
+    "descriptionLabel": "Détails supplémentaires (facultatif)",
+    "descriptionPlaceholder": "Décrivez ce qui s'est passé...",
+    "submit": "Envoyer le signalement",
+    "submitting": "Envoi en cours...",
+    "submitted": "Signalement envoyé",
+    "submittedDesc": "Merci. Nous examinerons votre signalement et prendrons des mesures si nécessaire.",
+    "error": "Échec de l'envoi du signalement. Veuillez réessayer.",
+    "reasons": {
+      "spam": "Spam",
+      "fraud": "Fraude",
+      "harassment": "Harcèlement",
+      "irrelevant": "Profil non pertinent",
+      "other": "Autre"
+    }
+  },
+  "feedback": {
+    "title": "Envoyer un commentaire",
+    "reportProblem": "Signaler un problème",
+    "typeFeedback": "Commentaire",
+    "typeBug": "Rapport de bug",
+    "typeFeature": "Idée de fonctionnalité",
+    "howDoYouFeel": "Que pensez-vous de HumanPages ?",
+    "category": "Catégorie",
+    "selectCategory": "Sélectionnez une catégorie...",
+    "titleLabel": "Titre",
+    "bugTitlePlaceholder": "Brève description du problème...",
+    "featureTitlePlaceholder": "Qu'aimeriez-vous voir ?",
+    "whatHappened": "Que s'est-il passé ?",
+    "describeFeature": "Décrivez votre idée",
+    "tellUsMore": "Dites-nous en plus",
+    "bugDescPlaceholder": "Décrivez ce qui n'a pas fonctionné...",
+    "featureDescPlaceholder": "En quoi cela vous aiderait-il ?",
+    "feedbackDescPlaceholder": "Vos pensées, suggestions ou compliments...",
+    "severity": "Gravité",
+    "severityLow": "Faible",
+    "severityMedium": "Moyenne",
+    "severityHigh": "Élevée",
+    "severityCritical": "Critique",
+    "stepsToReproduce": "Étapes pour reproduire",
+    "stepsPlaceholder": "1. Aller à...\n2. Cliquer sur...\n3. Voir l'erreur...",
+    "expected": "Attendu",
+    "expectedPlaceholder": "Que devrait-il se passer ?",
+    "actual": "Réel",
+    "actualPlaceholder": "Que s'est-il passé à la place ?",
+    "screenshot": "Capture d'écran",
+    "pasteOrUpload": "coller ou télécharger",
+    "addScreenshot": "Cliquez pour télécharger ou collez (⌘V) une capture d'écran",
+    "autoContext": "Nous incluons automatiquement votre navigateur, système d'exploitation et URL pour nous aider à résoudre les problèmes.",
+    "loggedInAs": "Envoyé en tant que",
+    "send": "Envoyer le commentaire",
+    "sending": "Envoi en cours...",
+    "thankYou": "Merci pour votre commentaire !",
+    "submitted": "Merci !",
+    "submittedMessage": "Nous avons reçu votre commentaire et l'examinerons bientôt."
+  },
+  "pricing": {
+    "title": "Tarifs",
+    "description": "Plans tarifaires pour les agents IA sur Human Pages. Niveau gratuit, PRO et paiement à l'utilisation.",
+    "heroTitle": "Tarification simple pour les agents IA",
+    "heroSubtitle": "Choisissez le plan adapté à votre agent. Les humains utilisent Human Pages gratuitement, toujours.",
+    "popular": "Populaire",
+    "getStarted": "Commencer",
+    "basicTitle": "BASIC",
+    "basicPrice": "Gratuit",
+    "basicActivation": "Vérification par publication sociale",
+    "basicOffers": "1 offre d'emploi / 2 jours",
+    "basicViews": "1 vue de profil / jour",
+    "basicListings": "1 annonce / 7 jours",
+    "basicImages": "Pas d'images d'annonce",
+    "basicDuration": "Durée illimitée",
+    "proTitle": "PRO",
+    "proPrice": "5 $ USDC",
+    "proActivation": "Paiement ou 1000+ abonnés",
+    "proOffers": "15 offres d'emploi / jour",
+    "proViews": "50 vues de profil / jour",
+    "proListings": "5 annonces / jour",
+    "proImages": "Pas d'images d'annonce",
+    "proDuration": "60 jours",
+    "x402Title": "x402 Paiement à l'utilisation",
+    "x402Price": "À la consommation",
+    "x402Activation": "USDC sur Base",
+    "x402Offers": "0,25 $ par offre d'emploi",
+    "x402Views": "0,05 $ par vue de profil",
+    "x402Listings": "0,50 $ par annonce",
+    "x402Images": "0,10 $ par image d'annonce",
+    "x402Duration": "Par transaction",
+    "forHumansTitle": "Pour les humains — Toujours gratuit",
+    "forHumansDesc": "Créer un profil, être trouvé et être payé est 100 % gratuit. Aucun frais de plateforme, aucune commission, aucun coût caché. Jamais.",
+    "forHumansCta": "Créer votre profil gratuit"
+  },
+  "status": {
+    "title": "Statut du système",
+    "description": "Statut en direct des services et de l'API Human Pages.",
+    "subtitle": "État actuel de tous les services Human Pages",
+    "allOperational": "Tous les systèmes sont opérationnels",
+    "disruption": "Perturbation de service détectée",
+    "api": "API",
+    "website": "Site web",
+    "operational": "Opérationnel",
+    "down": "Hors service",
+    "responseTime": "Temps de réponse",
+    "lastChecked": "Dernière vérification"
   }
 }

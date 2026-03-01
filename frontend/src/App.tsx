@@ -34,6 +34,8 @@ const BrandKit = lazy(() => import('./pages/BrandKit'));
 const CareersPage = lazy(() => import('./pages/CareersPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const EmailVerified = lazy(() => import('./pages/EmailVerified'));
+const StatusPage = lazy(() => import('./pages/StatusPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -255,6 +257,8 @@ function AppRoutes() {
       <Route path="/badge" element={<Badge />} />
       <Route path="/report" element={<ReportAgent />} />
       <Route path="/brand" element={<BrandKit />} />
+      <Route path="/status" element={<StatusPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/careers/apply/:positionId" element={<CareersPage />} />
@@ -295,6 +299,8 @@ function AppRoutes() {
       <Route path="/:lang/blog/build-ai-agent-that-hires-people" element={<LangWrapper><SetUpProfileFiveMinutes /></LangWrapper>} />
       <Route path="/:lang/blog/moltbook-agent-survival-guide" element={<LangWrapper><MoltbookSurvivalGuide /></LangWrapper>} />
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
+      <Route path="/:lang/status" element={<LangWrapper><StatusPage /></LangWrapper>} />
+      <Route path="/:lang/pricing" element={<LangWrapper><PricingPage /></LangWrapper>} />
       <Route path="/:lang/about" element={<LangWrapper><AboutPage /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/careers/apply/:positionId" element={<LangWrapper><CareersPage /></LangWrapper>} />
