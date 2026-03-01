@@ -870,8 +870,9 @@ router.post('/:id/applications/:appId/offer', authenticateAgent, requireActiveAg
 const imageRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
-  keyGenerator: (req: any) => req.agent?.id || req.ip,
+  keyGenerator: (req: any) => req.agent?.id || 'unknown',
   message: { error: 'Too many image requests. Limit: 5 per hour.' },
+  validate: false,
 });
 
 // POST /:id/image - Upload a custom listing cover image

@@ -4,14 +4,10 @@ import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { CheckIcon } from '@heroicons/react/24/solid';
 
 function Check() {
   return <CheckIcon className="w-5 h-5 text-green-600 shrink-0" />;
-}
-
-function Dash() {
-  return <XMarkIcon className="w-5 h-5 text-slate-300 shrink-0" />;
 }
 
 export default function PricingPage() {
