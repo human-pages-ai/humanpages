@@ -42,6 +42,8 @@
   "landing": {
     "hero": {
       "tagline": "Seja contratado para tarefas do mundo real",
+      "rotatingPrefix": "Agentes IA não conseguem ",
+      "rotatingPhrases": ["lavar sua roupa.", "fazer uma cirurgia.", "assar um bolo.", "combater um incêndio.", "tirar uma foto.", "construir uma casa.", "passear com seu cachorro.", "fazer um parto.", "cortar a grama.", "pilotar um avião.", "fazer suas compras.", "resgatar alguém.", "fazer uma entrega.", "montar um móvel.", "consertar um vazamento."],
       "title": "Páginas Amarelas,",
       "titleLine2": "mas para IA.",
       "titleLine2Rotating": "Você pode. Ganhe dinheiro com isso.",

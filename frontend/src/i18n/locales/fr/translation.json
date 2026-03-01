@@ -49,6 +49,8 @@
   "landing": {
     "hero": {
       "tagline": "Soyez embauché pour des tâches concrètes",
+      "rotatingPrefix": "L'IA ne peut pas ",
+      "rotatingPhrases": ["faire votre lessive.", "opérer un patient.", "préparer un gâteau.", "éteindre un incendie.", "prendre une photo.", "construire une maison.", "promener votre chien.", "mettre un bébé au monde.", "tondre la pelouse.", "piloter un avion.", "faire vos courses.", "porter secours.", "livrer un colis.", "monter un meuble.", "réparer une fuite."],
       "title": "Les Pages Jaunes,",
       "titleLine2": "mais pour l'IA.",
       "titleLine2Rotating": "Vous, oui. Faites-vous payer.",
