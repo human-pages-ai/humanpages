@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import { posthog } from '../lib/posthog';
+import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -439,7 +440,7 @@ export default function Dashboard() {
     setSaving(true);
     try {
       await api.addWallet(data);
-      posthog.capture('wallet_added', { address: data.address });
+      analytics.track('wallet_added', { address: data.address });
       await loadProfile();
       toast.success(t('toast.walletAdded'));
     } catch (error: any) {
@@ -473,6 +474,7 @@ export default function Dashboard() {
         setConfirmDialog(d => ({ ...d, open: false }));
         try {
           await api.deleteWallet(id);
+          analytics.track('wallet_deleted');
           toast.success(t('toast.walletDeleted'));
           await loadProfile();
         } catch (error: any) {

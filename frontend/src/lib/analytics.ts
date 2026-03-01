@@ -24,7 +24,19 @@ type EventName =
   | 'careers_referral_share'
   | 'careers_hero_signup'
   | 'careers_copy_apply_link'
-  | 'careers_deeplink_landed';
+  | 'careers_deeplink_landed'
+  | 'wallet_section_viewed'
+  | 'wallet_not_detected'
+  | 'wallet_install_link_clicked'
+  | 'wallet_deeplink_clicked'
+  | 'wallet_connect_started'
+  | 'wallet_connect_success'
+  | 'wallet_connect_rejected'
+  | 'wallet_connect_failed'
+  | 'wallet_sign_rejected'
+  | 'wallet_sign_failed'
+  | 'wallet_added'
+  | 'wallet_deleted';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

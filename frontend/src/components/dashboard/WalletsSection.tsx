@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
+import { analytics } from '../../lib/analytics';
 import { Wallet } from './types';
 
 type Step = 'idle' | 'busy';
@@ -52,6 +53,21 @@ export default function WalletsSection({
     };
   }, []);
 
+  const trackedRef = useRef(false);
+  useEffect(() => {
+    if (trackedRef.current) return;
+    trackedRef.current = true;
+    const hasWallet = !!window.ethereum;
+    analytics.track('wallet_section_viewed', {
+      wallet_detected: hasWallet,
+      is_mobile: isMobileOrInApp,
+      existing_wallets: wallets.length,
+    });
+    if (!hasWallet) {
+      analytics.track('wallet_not_detected', { is_mobile: isMobileOrInApp });
+    }
+  }, []);
+
   useEffect(() => {
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -84,6 +100,7 @@ export default function WalletsSection({
   const connectAndVerify = async () => {
     if (!window.ethereum) return;
     setError('');
+    analytics.track('wallet_connect_started');
 
     // Step 1: Connect wallet
     setBusyMessage(t('dashboard.wallets.connecting'));
@@ -92,15 +109,19 @@ export default function WalletsSection({
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
       if (accounts.length === 0) {
+        analytics.track('wallet_connect_failed', { reason: 'no_accounts' });
         setError(t('dashboard.wallets.connectionFailed'));
         setStep('idle');
         return;
       }
       address = accounts[0];
+      analytics.track('wallet_connect_success');
     } catch (err: any) {
       if (err?.code === 4001) {
+        analytics.track('wallet_connect_rejected');
         setError(t('dashboard.wallets.connectionRejected'));
       } else {
+        analytics.track('wallet_connect_failed', { reason: err?.message || 'unknown' });
         setError(t('dashboard.wallets.connectionFailed'));
       }
       setStep('idle');
@@ -126,8 +147,10 @@ export default function WalletsSection({
       resetState();
     } catch (err: any) {
       if (err?.code === 4001) {
+        analytics.track('wallet_sign_rejected');
         setError(t('dashboard.wallets.signatureRejected'));
       } else {
+        analytics.track('wallet_sign_failed', { reason: err?.message || 'unknown' });
         setError(err?.message || t('dashboard.wallets.verificationFailed'));
       }
       setStep('idle');
@@ -157,6 +180,14 @@ export default function WalletsSection({
     return translated !== key ? translated : network.charAt(0).toUpperCase() + network.slice(1);
   };
 
+  const trackDeepLink = (wallet: string) => {
+    analytics.track('wallet_deeplink_clicked', { wallet, is_mobile: isMobileOrInApp });
+  };
+
+  const trackInstallLink = (wallet: string) => {
+    analytics.track('wallet_install_link_clicked', { wallet });
+  };
+
   const renderNoWallet = () => {
     if (isMobileOrInApp) {
       return (
@@ -164,12 +195,14 @@ export default function WalletsSection({
           <p className="text-sm text-gray-700">{t('dashboard.wallets.mobileWalletHint')}</p>
           <a
             href={deepLinks.metamask}
+            onClick={() => trackDeepLink('metamask')}
             className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
           >
             {t('dashboard.wallets.openInMetaMask')}
           </a>
           <a
             href={deepLinks.coinbase}
+            onClick={() => trackDeepLink('coinbase')}
             className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
           >
             {t('dashboard.wallets.openInCoinbase')}
@@ -180,9 +213,9 @@ export default function WalletsSection({
     return (
       <div className="text-xs text-gray-400">
         {t('dashboard.wallets.noWalletExtension')}{' '}
-        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">MetaMask</a>
+        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" onClick={() => trackInstallLink('metamask')} className="text-blue-500 hover:text-blue-600 underline">MetaMask</a>
         {' '}{t('common.or').toLowerCase()}{' '}
-        <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">Coinbase Wallet</a>
+        <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" onClick={() => trackInstallLink('coinbase')} className="text-blue-500 hover:text-blue-600 underline">Coinbase Wallet</a>
       </div>
     );
   };
