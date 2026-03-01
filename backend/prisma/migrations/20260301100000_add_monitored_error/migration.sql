@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "MonitoredError" (
+CREATE TABLE IF NOT EXISTS "MonitoredError" (
     "id" TEXT NOT NULL,
     "fingerprint" TEXT NOT NULL,
     "level" INTEGER NOT NULL,
@@ -22,13 +22,13 @@ CREATE TABLE "MonitoredError" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MonitoredError_fingerprint_key" ON "MonitoredError"("fingerprint");
+CREATE UNIQUE INDEX IF NOT EXISTS "MonitoredError_fingerprint_key" ON "MonitoredError"("fingerprint");
 
 -- CreateIndex
-CREATE INDEX "MonitoredError_status_idx" ON "MonitoredError"("status");
+CREATE INDEX IF NOT EXISTS "MonitoredError_status_idx" ON "MonitoredError"("status");
 
 -- CreateIndex
-CREATE INDEX "MonitoredError_lastSeenAt_idx" ON "MonitoredError"("lastSeenAt");
+CREATE INDEX IF NOT EXISTS "MonitoredError_lastSeenAt_idx" ON "MonitoredError"("lastSeenAt");
 
 -- CreateIndex
-CREATE INDEX "MonitoredError_fingerprint_idx" ON "MonitoredError"("fingerprint");
+CREATE INDEX IF NOT EXISTS "MonitoredError_fingerprint_idx" ON "MonitoredError"("fingerprint");

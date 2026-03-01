@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "MktOpsLog" (
+CREATE TABLE IF NOT EXISTS "MktOpsLog" (
     "id" TEXT NOT NULL,
     "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "event" TEXT NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "MktOpsLog" (
 );
 
 -- CreateTable
-CREATE TABLE "MktOpsDecision" (
+CREATE TABLE IF NOT EXISTS "MktOpsDecision" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "resolvedAt" TIMESTAMP(3),
@@ -30,7 +30,7 @@ CREATE TABLE "MktOpsDecision" (
 );
 
 -- CreateTable
-CREATE TABLE "MktOpsConfig" (
+CREATE TABLE IF NOT EXISTS "MktOpsConfig" (
     "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "value" JSONB NOT NULL,
@@ -41,19 +41,19 @@ CREATE TABLE "MktOpsConfig" (
 );
 
 -- CreateIndex
-CREATE INDEX "MktOpsLog_timestamp_idx" ON "MktOpsLog"("timestamp");
+CREATE INDEX IF NOT EXISTS "MktOpsLog_timestamp_idx" ON "MktOpsLog"("timestamp");
 
 -- CreateIndex
-CREATE INDEX "MktOpsLog_staff_idx" ON "MktOpsLog"("staff");
+CREATE INDEX IF NOT EXISTS "MktOpsLog_staff_idx" ON "MktOpsLog"("staff");
 
 -- CreateIndex
-CREATE INDEX "MktOpsLog_event_idx" ON "MktOpsLog"("event");
+CREATE INDEX IF NOT EXISTS "MktOpsLog_event_idx" ON "MktOpsLog"("event");
 
 -- CreateIndex
-CREATE INDEX "MktOpsDecision_status_idx" ON "MktOpsDecision"("status");
+CREATE INDEX IF NOT EXISTS "MktOpsDecision_status_idx" ON "MktOpsDecision"("status");
 
 -- CreateIndex
-CREATE INDEX "MktOpsDecision_createdAt_idx" ON "MktOpsDecision"("createdAt");
+CREATE INDEX IF NOT EXISTS "MktOpsDecision_createdAt_idx" ON "MktOpsDecision"("createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MktOpsConfig_key_key" ON "MktOpsConfig"("key");
+CREATE UNIQUE INDEX IF NOT EXISTS "MktOpsConfig_key_key" ON "MktOpsConfig"("key");
