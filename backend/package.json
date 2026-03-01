@@ -19,6 +19,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.993.0",
     "@aws-sdk/s3-request-presigner": "^3.993.0",
+    "@axiomhq/js": "^1.4.0",
     "@axiomhq/pino": "^1.4.0",
     "@infisical/sdk": "^4.0.6",
     "@prisma/client": "^5.10.0",
