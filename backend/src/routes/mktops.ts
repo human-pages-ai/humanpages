@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { requireAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
+import { requireAdmin, apiKeyAdmin, jwtOrApiKey, requireStaffOrApiKey } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 
@@ -83,7 +83,7 @@ router.patch('/decision/:id', apiKeyAdmin, async (req, res) => {
 });
 
 // GET /api/admin/mktops/config/:key — get config (API key OR admin JWT)
-router.get('/config/:key', apiKeyAdmin, async (req, res) => {
+router.get('/config/:key', jwtOrApiKey, requireStaffOrApiKey, async (req, res) => {
   try {
     const config = await prisma.mktOpsConfig.findUnique({
       where: { key: req.params.key },
