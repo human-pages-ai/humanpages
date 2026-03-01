@@ -268,15 +268,16 @@ router.post('/config/seed', apiKeyAdmin, async (_req, res) => {
         followUpIntervalHours: 2,
       },
       'daily-procedures': {
-        morningBriefingTemplate: 'Send greeting, review active Linear tasks, prioritize top tasks for the day, remind about Zoom screen sharing.',
-        followUpStyle: 'Brief and friendly check-in. Ask how current task is going and if they need help.',
+        morningBriefingTemplate: 'Send greeting, review active Linear tasks, prioritize top tasks for the day, remind about Zoom screen sharing and clocking in.',
+        greetingReminders: 'On greeting/clock-in: remind to clock in at humanpages.ai/admin, create Zoom meeting with screen sharing, send link to Admin.',
+        followUpStyle: 'Brief and friendly check-in. Ask how current task is going and if they need help. First follow-up includes Zoom screen sharing reminder.',
         eodQuestions: [
-          'What did you accomplish today?',
-          'What worked well?',
-          'What didn\'t work or was difficult?',
-          'Are you blocked on anything?',
-          'What\'s your plan for tomorrow?',
+          'What you worked on and what went well',
+          'What didn\'t go as planned',
+          'Whether you\'re blocked or need help',
+          'What you plan to work on tomorrow (becomes starting point for next day)',
         ],
+        eodReminders: 'Validate EOD report covers all 4 points. If tomorrow\'s plan is missing, nudge before they sign off. Remind to clock out.',
       },
     };
 
