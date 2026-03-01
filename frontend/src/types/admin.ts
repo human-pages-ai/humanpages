@@ -1030,3 +1030,32 @@ export interface MktOpsDailyProcedures {
   followUpStyle: string;
   eodQuestions: string[];
 }
+
+// ─── Watch Dog: AI Error Monitoring ───
+
+export interface MonitoredError {
+  id: string;
+  fingerprint: string;
+  level: number;
+  errorType: string | null;
+  message: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  occurrences: number;
+  aiAnalysis: string | null;
+  aiAnalyzedAt: string | null;
+  status: 'new' | 'alerted' | 'acknowledged' | 'resolved' | 'ignored';
+  alertedAt: string | null;
+  acknowledgedAt: string | null;
+  resolvedAt: string | null;
+  samplePayload: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WatchDogStats {
+  total: number;
+  new: number;
+  alerted: number;
+  acknowledged: number;
+}

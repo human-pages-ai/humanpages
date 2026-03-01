@@ -19,8 +19,8 @@ import leadRoutes from './leads.js';
 import logRoutes from './logs.js';
 import mktopsRoutes from './mktops.js';
 import videoBatchRoutes from './videoBatches.js';
+import watchdogRoutes from './watchdog.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
-import mktopsRoutes from './mktops.js';
 
 const router = Router();
 
@@ -120,6 +120,7 @@ router.use('/leads', leadRoutes);
 
 // ─── Log viewer routes (admin only, queries Axiom) ───
 router.use('/logs', logRoutes);
+router.use('/watchdog', watchdogRoutes);
 
 // ─── Marketing Ops routes (API key + admin) ───
 router.use('/mktops', mktopsRoutes);

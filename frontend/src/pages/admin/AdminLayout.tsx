@@ -17,6 +17,7 @@ const adminOnlyItems = [
   { to: '/admin/productivity', label: 'Productivity' },
   { to: '/admin/leads', label: 'Lead Gen' },
   { to: '/admin/logs', label: 'Logs' },
+  { to: '/admin/watchdog', label: 'Watch Dog' },
   { to: '/admin/marketing-ops', label: 'Marketing Ops' },
 ];
 

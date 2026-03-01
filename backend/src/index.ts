@@ -7,6 +7,7 @@ import { startProfileNudgeWorker, stopProfileNudgeWorker } from './lib/profile-n
 import { startListingExpiryWorker, stopListingExpiryWorker } from './lib/listing-expiry.js';
 import { startModerationWorker, stopModerationWorker } from './lib/moderation-worker.js';
 import { startIdleWorker, stopIdleWorker } from './lib/idle-worker.js';
+import { startErrorMonitorWorker, stopErrorMonitorWorker } from './lib/error-monitor-worker.js';
 import { logger } from './lib/logger.js';
 import { shutdownPostHog } from './lib/posthog.js';
 import { initSecrets } from './lib/secrets.js';
@@ -25,6 +26,7 @@ async function start() {
     startListingExpiryWorker();
     startModerationWorker();
     startIdleWorker();
+    startErrorMonitorWorker();
   });
 
   process.on('SIGTERM', async () => {
@@ -35,6 +37,7 @@ async function start() {
     stopListingExpiryWorker();
     stopModerationWorker();
     stopIdleWorker();
+    stopErrorMonitorWorker();
     await shutdownPostHog();
     server.close(() => {
       logger.info('Server closed');
@@ -50,6 +53,7 @@ async function start() {
     stopListingExpiryWorker();
     stopModerationWorker();
     stopIdleWorker();
+    stopErrorMonitorWorker();
     await shutdownPostHog();
     server.close(() => {
       logger.info('Server closed');

@@ -1107,6 +1107,21 @@ export const api = {
   getLogStats: (timeRange = '24h') =>
     request<LogStats>(`/admin/logs/stats?timeRange=${timeRange}`),
 
+  // ─── Watch Dog ───
+  getWatchDogErrors: (params: { status?: string; limit?: number; offset?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.set('status', params.status);
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.offset) query.set('offset', String(params.offset));
+    return request<{ errors: any[]; total: number }>(`/admin/watchdog?${query}`);
+  },
+  getWatchDogStats: () =>
+    request<{ total: number; new: number; alerted: number; acknowledged: number }>('/admin/watchdog/stats'),
+  updateWatchDogError: (id: string, status: string) =>
+    request<any>(`/admin/watchdog/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  triggerWatchDogScan: () =>
+    request<{ success: boolean; message: string }>('/admin/watchdog/scan', { method: 'POST' }),
+
   // ─── Marketing Ops ───
   getMktOpsLogs: (params: { page?: number; limit?: number; event?: string; staff?: string; from?: string; to?: string } = {}) => {
     const query = new URLSearchParams();

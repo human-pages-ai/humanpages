@@ -1443,3 +1443,35 @@ model MktOpsConfig {
   updatedAt DateTime @updatedAt
   updatedBy String?
 }
+
+// ─── Watch Dog: AI Error Monitoring ────────────────────────────────
+model MonitoredError {
+  id            String   @id @default(uuid())
+  fingerprint   String   @unique // hash of error type + normalized message
+  level         Int      // pino level: 50=error, 60=fatal
+  errorType     String?  // e.g. "TypeError", "PrismaClientKnownRequestError"
+  message       String   // raw error message
+  firstSeenAt   DateTime
+  lastSeenAt    DateTime
+  occurrences   Int      @default(1)
+
+  // AI analysis
+  aiAnalysis    String?  // Claude's explanation + suggested fix
+  aiAnalyzedAt  DateTime?
+
+  // Status tracking
+  status        String   @default("new") // new | alerted | acknowledged | resolved | ignored
+  alertedAt     DateTime?
+  acknowledgedAt DateTime?
+  resolvedAt    DateTime?
+
+  // Sample data
+  samplePayload Json?    // raw log entry for context
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([lastSeenAt])
+  @@index([fingerprint])
+}
