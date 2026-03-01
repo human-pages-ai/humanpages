@@ -716,5 +716,8 @@
     "card": {
       "viewDetails": "Candidate-se e consiga trabalho"
     }
+  },
+  "about": {
+    "featuredOn": "Destaque em"
   }
 }

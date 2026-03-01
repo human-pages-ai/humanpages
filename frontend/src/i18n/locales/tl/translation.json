@@ -786,5 +786,8 @@
       "title": "Kailangan ng mga tao sa iyong direktoryo?",
       "subtitle": "Ibahagi ang signup link sa iyong komunidad para palaguin ang supply."
     }
+  },
+  "about": {
+    "featuredOn": "Naka-feature sa"
   }
 }

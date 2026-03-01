@@ -18,6 +18,13 @@ import {
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
+const FEATURED_LISTINGS = [
+  { name: 'Dang AI', href: 'https://dang.ai/', badge: 'https://cdn.prod.website-files.com/63d8afd87da01fb58ea3fbcb/6487e2868c6c8f93b4828827_dang-badge.png' },
+  { name: 'Crunchbase', href: 'https://www.crunchbase.com/organization/human-pages' },
+  { name: 'AlternativeTo', href: 'https://alternativeto.net/software/human-pages/' },
+  { name: 'Medium', href: 'https://medium.com/@humanpages' },
+];
+
 function ContactForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -297,6 +304,39 @@ export default function AboutPage() {
                   We publish an MCP server, OpenAPI spec, and llms.txt to make integration easy.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured On */}
+        <section className="py-16 bg-white px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-10">
+              {t('about.featuredOn')}
+            </h2>
+            <div className="flex flex-wrap justify-center items-center gap-6">
+              {FEATURED_LISTINGS.map((listing) => (
+                <a
+                  key={listing.name}
+                  href={listing.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {listing.badge ? (
+                    <img
+                      src={listing.badge}
+                      alt={listing.name}
+                      width={150}
+                      height={54}
+                      className="hover:opacity-80 transition-opacity"
+                    />
+                  ) : (
+                    <span className="inline-block px-5 py-2.5 border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                      {listing.name}
+                    </span>
+                  )}
+                </a>
+              ))}
             </div>
           </div>
         </section>

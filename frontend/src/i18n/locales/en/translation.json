@@ -1043,6 +1043,9 @@
     "forHumansDesc": "Creating a profile, getting found, and getting paid is 100% free. No platform fees, no commissions, no hidden costs. Ever.",
     "forHumansCta": "Create your free profile"
   },
+  "about": {
+    "featuredOn": "Featured On"
+  },
   "status": {
     "title": "System Status",
     "description": "Live status of Human Pages services and API.",

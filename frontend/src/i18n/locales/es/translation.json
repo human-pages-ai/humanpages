@@ -791,5 +791,8 @@
       "title": "¿Necesitas humanos en tu directorio?",
       "subtitle": "Comparte el enlace de registro con tu comunidad para crecer la oferta."
     }
+  },
+  "about": {
+    "featuredOn": "Destacado en"
   }
 }

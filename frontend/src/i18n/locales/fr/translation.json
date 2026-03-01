@@ -851,6 +851,9 @@
     "forHumansDesc": "Créer un profil, être trouvé et être payé est 100 % gratuit. Aucun frais de plateforme, aucune commission, aucun coût caché. Jamais.",
     "forHumansCta": "Créer votre profil gratuit"
   },
+  "about": {
+    "featuredOn": "Vu sur"
+  },
   "status": {
     "title": "Statut du système",
     "description": "Statut en direct des services et de l'API Human Pages.",

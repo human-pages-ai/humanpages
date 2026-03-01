@@ -786,5 +786,8 @@
       "title": "Cần thêm người trong danh bạ?",
       "subtitle": "Chia sẻ link đăng ký với cộng đồng của bạn để tăng nguồn cung."
     }
+  },
+  "about": {
+    "featuredOn": "Xuất hiện trên"
   }
 }
