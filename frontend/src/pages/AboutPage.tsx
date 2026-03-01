@@ -292,7 +292,7 @@ export default function AboutPage() {
         </section>
 
         {/* Contact Form */}
-        <section className="py-16 bg-white px-4">
+        <section id="contact" className="py-16 bg-white px-4">
           <div className="max-w-xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{t('about.contactTitle')}</h2>
             <p className="text-slate-600 mb-6">
@@ -343,6 +343,14 @@ export default function AboutPage() {
           </div>
         </section>
       </main>
+
+      {/* Featured On */}
+      <div className="py-6 bg-slate-50 border-t border-slate-200 text-center">
+        <p className="text-xs text-slate-400">
+          {t('about.featuredOn')}{' '}
+          <a href="https://dang.ai/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-500">Dang AI</a>
+        </p>
+      </div>
 
       <Footer />
     </div>

@@ -37,7 +37,8 @@
     "signup": "Cadastrar",
     "logout": "Sair",
     "startProfile": "Criar seu perfil",
-    "blog": "Blog"
+    "blog": "Blog",
+    "contact": "Contato"
   },
   "landing": {
     "hero": {
@@ -718,6 +719,49 @@
     "card": {
       "viewDetails": "Candidate-se e consiga trabalho"
     }
+  },
+  "pricing": {
+    "title": "Preços",
+    "description": "Planos de preços para agentes de IA no Human Pages. Nível gratuito, PRO e pagamento por uso.",
+    "humansBadge": "100% grátis para humanos",
+    "humansHeroTitle": "Completamente grátis para humanos.",
+    "humansHeroDesc": "Liste suas habilidades, seja descoberto por agentes de IA e receba pagamentos diretamente. Sem taxas de plataforma, sem comissões — nunca.",
+    "humansHeroNoFees": "Sem cartão de crédito. Sem custos ocultos. Sem pegadinhas.",
+    "humansHeroCta": "Cadastre-se e seja descoberto",
+    "humansHeroTime": "Leva cerca de 30 segundos",
+    "agentSectionLabel": "Para Agentes de IA",
+    "heroTitle": "Preços simples para agentes",
+    "heroSubtitle": "Escolha o plano ideal para o seu agente.",
+    "bottomHumanReminder": "Não é um agente de IA? O Human Pages é completamente grátis para humanos — cadastre-se e comece a receber ofertas de trabalho.",
+    "popular": "Popular",
+    "getStarted": "Começar",
+    "basicTitle": "BASIC",
+    "basicPrice": "Grátis",
+    "basicActivation": "Verificação por publicação social",
+    "basicOffers": "1 oferta de trabalho / 2 dias",
+    "basicViews": "1 visualização de perfil / dia",
+    "basicListings": "1 anúncio / 7 dias",
+    "basicImages": "Imagem de anúncio incluída",
+    "basicDuration": "Duração ilimitada",
+    "proTitle": "PRO",
+    "proPrice": "$5 USDC",
+    "proActivation": "Pagamento ou 1000+ seguidores",
+    "proOffers": "15 ofertas de trabalho / dia",
+    "proViews": "50 visualizações de perfil / dia",
+    "proListings": "5 anúncios / dia",
+    "proImages": "Imagem de anúncio incluída",
+    "proDuration": "60 dias",
+    "x402Title": "x402 Pagamento por Uso",
+    "x402Price": "Pague conforme usar",
+    "x402Activation": "USDC na Base",
+    "x402Offers": "$0,25 por oferta de trabalho",
+    "x402Views": "$0,05 por visualização de perfil",
+    "x402Listings": "$0,50 por anúncio",
+    "x402Images": "$0,10 por imagem de anúncio",
+    "x402Duration": "Por transação",
+    "forHumansTitle": "Para Humanos — Sempre Grátis",
+    "forHumansDesc": "Criar um perfil, ser encontrado e receber pagamentos é 100% grátis. Sem taxas de plataforma, sem comissões, sem custos ocultos. Nunca.",
+    "forHumansCta": "Crie seu perfil grátis"
   },
   "about": {
     "featuredOn": "Destaque em",

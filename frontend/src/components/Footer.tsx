@@ -41,9 +41,8 @@ export default function Footer({ className = '' }: FooterProps) {
 
   return (
     <footer className={`py-8 bg-white border-t border-slate-200 px-4 ${className}`}>
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <span className="text-slate-500 text-sm">{t('landing.footer.copyright')}</span>
-        <div className="flex items-center gap-6 text-sm">
+      <div className="max-w-5xl mx-auto flex flex-col items-center gap-4">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs sm:text-sm">
           <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
           <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
           <Link to="/listings" className="text-slate-500 hover:text-slate-700">{t('nav.jobBoard')}</Link>
@@ -53,10 +52,10 @@ export default function Footer({ className = '' }: FooterProps) {
           <Link to="/status" className="text-slate-500 hover:text-slate-700">{t('nav.status')}</Link>
           <Link to="/about" className="text-slate-500 hover:text-slate-700">{t('nav.about')}</Link>
           <Link to="/careers" className="text-slate-500 hover:text-slate-700">{t('nav.careers')}</Link>
-          <a href="https://dang.ai/" target="_blank" className="text-slate-500 hover:text-slate-700">Dang AI</a>
+          <Link to="/about#contact" className="text-slate-500 hover:text-slate-700">{t('nav.contact')}</Link>
           <button onClick={() => openFeedback('BUG')} className="text-slate-500 hover:text-slate-700">{t('feedback.reportProblem', 'Report a Problem')}</button>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center gap-4">
           {SOCIAL_LINKS.map((link) => (
             <a
               key={link.name}
@@ -70,6 +69,7 @@ export default function Footer({ className = '' }: FooterProps) {
             </a>
           ))}
         </div>
+        <span className="text-slate-400 text-xs">{t('landing.footer.copyright')}</span>
       </div>
     </footer>
   );

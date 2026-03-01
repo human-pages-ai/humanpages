@@ -733,35 +733,35 @@ export default function LandingPage() {
         {/* Hero */}
         <section className="py-16 md:py-24 px-4 bg-white overflow-hidden">
           <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
               {/* Left: copy */}
               <div>
                 <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full mb-4">
                   {t('landing.hero.tagline')}
                 </span>
-                <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
                   <RotatingHeadline tick={heroTick.tick} visible={heroTick.visible} />
                   <span className="block mt-1">{t('landing.hero.titleLine2Rotating')}</span>
-                  <span className="block mt-2 text-lg md:text-xl font-medium text-slate-500">
+                  <span className="block mt-2 text-base sm:text-lg md:text-xl font-medium text-slate-500">
                     {t('landing.hero.h1Keyword')}
                   </span>
                 </h1>
-                <p className="mt-4 text-xl text-slate-600">
+                <p className="mt-4 text-base sm:text-lg md:text-xl text-slate-600">
                   {t('landing.hero.subtitle')}
                 </p>
                 <p className="mt-3 text-sm text-slate-500 italic">
                   {t('landing.hero.example')}
                 </p>
-                <div className="mt-8 flex flex-wrap items-center gap-4">
+                <div className="mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
                   <Link
                     to="/signup"
-                    className="inline-block px-8 py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors text-lg shadow-lg shadow-orange-500/25"
+                    className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25 text-center"
                   >
                     {t('landing.hero.cta')}
                   </Link>
                   <Link
                     to="/listings"
-                    className="inline-block px-8 py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors text-lg"
+                    className="inline-block px-6 sm:px-8 py-3 sm:py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors text-base sm:text-lg text-center"
                   >
                     {t('landing.hero.browseListings')}
                   </Link>
@@ -776,7 +776,7 @@ export default function LandingPage() {
                 </p>
               </div>
               {/* Right: ChatGPT conversation mockup */}
-              <div className="hidden md:block">
+              <div>
                 <MockChatConversation />
               </div>
             </div>
@@ -880,7 +880,7 @@ export default function LandingPage() {
                 <p className="mt-2 text-slate-600 mb-6">
                   {t('landing.tasks.subtitle')}
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {TASKS.map((task) => (
                     <div
                       key={task.title}
@@ -985,7 +985,7 @@ export default function LandingPage() {
             </p>
             <Link
               to="/signup"
-              className="mt-6 inline-block px-8 py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/25"
+              className="mt-6 inline-block px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/25"
             >
               {t('landing.hero.cta')}
             </Link>

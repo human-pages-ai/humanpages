@@ -60,6 +60,7 @@ const AdminCareerApplications = lazy(() => import('./pages/admin/AdminCareerAppl
 const AdminSchedule = lazy(() => import('./pages/admin/AdminSchedule'));
 const AdminLeadGeneration = lazy(() => import('./pages/admin/AdminLeadGeneration'));
 const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+const AdminMarketingOps = lazy(() => import('./pages/admin/MarketingOps'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffProductivity = lazy(() => import('./pages/admin/StaffProductivity'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
@@ -334,6 +335,7 @@ function AppRoutes() {
         <Route path="productivity" element={<StaffProductivity />} />
         <Route path="leads" element={<AdminLeadGeneration />} />
         <Route path="logs" element={<AdminLogs />} />
+        <Route path="marketing-ops" element={<AdminMarketingOps />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

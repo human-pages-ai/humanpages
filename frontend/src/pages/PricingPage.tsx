@@ -28,10 +28,7 @@ export default function PricingPage() {
       {/* Sticky header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <Logo className="h-7 w-7" />
-            <span className="font-semibold text-slate-900">Human Pages</span>
-          </Link>
+          <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <Link to="/signup" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
@@ -42,10 +39,36 @@ export default function PricingPage() {
       </header>
 
       <main className="min-h-screen bg-slate-50">
-        {/* Hero */}
-        <section className="py-16 px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">{t('pricing.heroTitle')}</h1>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto">{t('pricing.heroSubtitle')}</p>
+        {/* Humans — Always Free */}
+        <section className="py-12 md:py-16 px-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-b border-blue-100">
+          <div className="max-w-2xl mx-auto text-center">
+            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full mb-4">
+              {t('pricing.humansBadge')}
+            </span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-3">
+              {t('pricing.humansHeroTitle')}
+            </h1>
+            <p className="text-base sm:text-lg text-slate-600 max-w-lg mx-auto mb-2">
+              {t('pricing.humansHeroDesc')}
+            </p>
+            <p className="text-sm text-slate-500 mb-8">
+              {t('pricing.humansHeroNoFees')}
+            </p>
+            <Link
+              to="/signup"
+              className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25"
+            >
+              {t('pricing.humansHeroCta')}
+            </Link>
+            <p className="mt-3 text-xs text-slate-400">{t('pricing.humansHeroTime')}</p>
+          </div>
+        </section>
+
+        {/* Agent pricing hero */}
+        <section className="pt-16 pb-8 px-4 text-center">
+          <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-2">{t('pricing.agentSectionLabel')}</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">{t('pricing.heroTitle')}</h2>
+          <p className="text-base text-slate-500 max-w-xl mx-auto">{t('pricing.heroSubtitle')}</p>
         </section>
 
         {/* Tier cards */}
@@ -68,8 +91,8 @@ export default function PricingPage() {
                 <li className="flex items-start gap-2 text-sm text-slate-700">
                   <Check /> {t('pricing.basicListings')}
                 </li>
-                <li className="flex items-start gap-2 text-sm text-slate-400">
-                  <Dash /> {t('pricing.basicImages')}
+                <li className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check /> {t('pricing.basicImages')}
                 </li>
                 <li className="flex items-start gap-2 text-sm text-slate-700">
                   <Check /> {t('pricing.basicDuration')}
@@ -100,8 +123,8 @@ export default function PricingPage() {
                 <li className="flex items-start gap-2 text-sm text-slate-700">
                   <Check /> {t('pricing.proListings')}
                 </li>
-                <li className="flex items-start gap-2 text-sm text-slate-400">
-                  <Dash /> {t('pricing.proImages')}
+                <li className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check /> {t('pricing.proImages')}
                 </li>
                 <li className="flex items-start gap-2 text-sm text-slate-700">
                   <Check /> {t('pricing.proDuration')}
@@ -130,9 +153,6 @@ export default function PricingPage() {
                   <Check /> {t('pricing.x402Listings')}
                 </li>
                 <li className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check /> {t('pricing.x402Images')}
-                </li>
-                <li className="flex items-start gap-2 text-sm text-slate-700">
                   <Check /> {t('pricing.x402Duration')}
                 </li>
               </ul>
@@ -144,13 +164,12 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* For Humans callout */}
+        {/* Bottom CTA for humans */}
         <section className="px-4 pb-16">
-          <div className="max-w-3xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-8 text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('pricing.forHumansTitle')}</h2>
-            <p className="text-slate-600 mb-6">{t('pricing.forHumansDesc')}</p>
-            <Link to="/signup" className="inline-block text-sm font-medium text-white bg-blue-600 rounded-lg px-6 py-2.5 hover:bg-blue-700 transition-colors">
-              {t('pricing.forHumansCta')}
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-slate-600 mb-4">{t('pricing.bottomHumanReminder')}</p>
+            <Link to="/signup" className="inline-block text-sm font-medium text-white bg-orange-500 rounded-lg px-6 py-2.5 hover:bg-orange-600 transition-colors">
+              {t('pricing.humansHeroCta')}
             </Link>
           </div>
         </section>

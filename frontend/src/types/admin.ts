@@ -923,3 +923,110 @@ export interface StaffBalance {
   from: string;
   to: string;
 }
+
+// ─── Logs (Axiom) ───
+
+export interface LogEntryReq {
+  method?: string;
+  url?: string;
+  statusCode?: number;
+  responseTime?: number;
+}
+
+export interface LogEntryErr {
+  name?: string;
+  message?: string;
+  stack?: string;
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: number;
+  msg: string;
+  req?: LogEntryReq;
+  err?: LogEntryErr;
+  raw: Record<string, any>;
+}
+
+export interface LogQueryResult {
+  entries: LogEntry[];
+  count: number;
+  query: {
+    dataset: string;
+    timeRange: string;
+    level?: string;
+    search?: string;
+  };
+  status: {
+    rowsExamined: number;
+    rowsMatched: number;
+    elapsedTime: number;
+  };
+}
+
+export interface LogStats {
+  timeSeries: any[];
+  errorCount: number;
+  totalCount: number;
+  timeRange: string;
+}
+
+// ─── Marketing Ops ───
+
+export interface MktOpsLog {
+  id: string;
+  timestamp: string;
+  event: string;
+  staff: string | null;
+  prompt: string | null;
+  response: string | null;
+  model: string | null;
+  durationMs: number | null;
+  details: Record<string, unknown>;
+}
+
+export interface MktOpsDecision {
+  id: string;
+  createdAt: string;
+  resolvedAt: string | null;
+  staff: string | null;
+  question: string;
+  context: string;
+  options: Array<{ label: string; callbackData: string }>;
+  chosen: string | null;
+  telegramMsgId: number | null;
+  status: string;
+}
+
+export interface MktOpsConfig {
+  id: string;
+  key: string;
+  value: unknown;
+  updatedAt: string;
+  updatedBy: string | null;
+}
+
+export interface MktOpsStaffProfile {
+  name: string;
+  timezone: string;
+  availabilityStart: string;
+  availabilityEnd: string;
+  availabilityDays: string[];
+  skills: string[];
+  level: 'basic' | 'strategic' | 'technical';
+  notes: string;
+}
+
+export interface MktOpsStrategy {
+  focusAreas: string[];
+  platformPriorities: string[];
+  maxTasksPerPersonPerDay: number;
+  maxFollowUpsBeforeEscalation: number;
+  followUpIntervalHours: number;
+}
+
+export interface MktOpsDailyProcedures {
+  morningBriefingTemplate: string;
+  followUpStyle: string;
+  eodQuestions: string[];
+}

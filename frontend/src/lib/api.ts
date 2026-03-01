@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -1091,6 +1091,50 @@ export const api = {
       return res.blob();
     });
   },
+
+
+  // ─── Logs (Axiom) ───
+  getLogs: (params: { level?: string; search?: string; timeRange?: string; limit?: number; offset?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.level) query.set('level', params.level);
+    if (params.search) query.set('search', params.search);
+    if (params.timeRange) query.set('timeRange', params.timeRange);
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.offset) query.set('offset', String(params.offset));
+    return request<LogQueryResult>(`/admin/logs?${query}`);
+  },
+
+  getLogStats: (timeRange = '24h') =>
+    request<LogStats>(`/admin/logs/stats?timeRange=${timeRange}`),
+
+  // ─── Marketing Ops ───
+  getMktOpsLogs: (params: { page?: number; limit?: number; event?: string; staff?: string; from?: string; to?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.event) query.set('event', params.event);
+    if (params.staff) query.set('staff', params.staff);
+    if (params.from) query.set('from', params.from);
+    if (params.to) query.set('to', params.to);
+    const qs = query.toString();
+    return request<{ logs: MktOpsLog[]; pagination: Pagination }>(`/admin/mktops/logs${qs ? `?${qs}` : ''}`);
+  },
+  getMktOpsDecisions: (params: { page?: number; limit?: number; status?: string; staff?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.status) query.set('status', params.status);
+    if (params.staff) query.set('staff', params.staff);
+    const qs = query.toString();
+    return request<{ decisions: MktOpsDecision[]; pagination: Pagination }>(`/admin/mktops/decisions${qs ? `?${qs}` : ''}`);
+  },
+  getMktOpsConfig: (key: string) =>
+    request<MktOpsConfig>(`/admin/mktops/config/${key}`),
+  updateMktOpsConfig: (key: string, value: unknown) =>
+    request<MktOpsConfig>(`/admin/mktops/config/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify({ value }),
+    }),
 };
 
 // Referral Program types (included in profile response)

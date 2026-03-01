@@ -16,8 +16,11 @@ import videoRoutes from './videos.js';
 import scheduleRoutes from './schedule.js';
 import productivityRoutes from './productivity.js';
 import leadRoutes from './leads.js';
+import logRoutes from './logs.js';
+import mktopsRoutes from './mktops.js';
 import videoBatchRoutes from './videoBatches.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
+import mktopsRoutes from './mktops.js';
 
 const router = Router();
 
@@ -114,6 +117,12 @@ router.use('/schedule', scheduleRoutes);
 
 // ─── Lead generation routes (API key + LEAD_GEN capability + admin) ───
 router.use('/leads', leadRoutes);
+
+// ─── Log viewer routes (admin only, queries Axiom) ───
+router.use('/logs', logRoutes);
+
+// ─── Marketing Ops routes (API key + admin) ───
+router.use('/mktops', mktopsRoutes);
 
 // ─── Posting queue routes (staff + admin) ───
 router.use('/posting', postingRoutes);

@@ -16,7 +16,6 @@ export const X402_PRICES = {
   profile_view: parseFloat(process.env.X402_PROFILE_VIEW_PRICE || '0.05'),
   job_offer: parseFloat(process.env.X402_JOB_OFFER_PRICE || '0.25'),
   listing_post: parseFloat(process.env.X402_LISTING_POST_PRICE || '0.50'),
-  listing_image_generate: parseFloat(process.env.X402_LISTING_IMAGE_PRICE || '0.10'),
 } as const;
 
 export type X402ResourceType = keyof typeof X402_PRICES;
@@ -81,7 +80,6 @@ export async function buildPaymentRequiredResponse(
     profile_view: 'Full human profile with contact info and wallets',
     listing_post: 'Post a job listing on the board',
     job_offer: 'Create a job offer for a human',
-    listing_image_generate: 'Generate an AI cover image for a listing via DALL-E',
   };
   const description = descriptions[resourceType] || 'Access to a paid resource';
 

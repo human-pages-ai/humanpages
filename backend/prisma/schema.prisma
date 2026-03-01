@@ -1401,3 +1401,45 @@ model InfluencerLead {
   @@index([createdAt])
   @@index([list, status])
 }
+
+// ─── Marketing Ops ───
+
+model MktOpsLog {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  event      String   // "claude-call", "slack-dm-sent", "telegram-sent", "follow-up", "escalation", etc.
+  staff      String?
+  prompt     String?
+  response   String?
+  model      String?
+  durationMs Int?
+  details    Json     @default("{}")
+
+  @@index([timestamp])
+  @@index([staff])
+  @@index([event])
+}
+
+model MktOpsDecision {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+  staff         String?
+  question      String
+  context       String
+  options       Json
+  chosen        String?
+  telegramMsgId Int?
+  status        String    @default("pending") // pending, resolved, expired
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MktOpsConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique // "staff-profiles", "strategy", "daily-procedures"
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}

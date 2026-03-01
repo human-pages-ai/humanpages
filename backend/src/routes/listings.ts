@@ -866,8 +866,16 @@ router.post('/:id/applications/:appId/offer', authenticateAgent, requireActiveAg
   }
 });
 
+// Rate limiter for image changes: 5 per hour per agent
+const imageRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  keyGenerator: (req: any) => req.agent?.id || req.ip,
+  message: { error: 'Too many image requests. Limit: 5 per hour.' },
+});
+
 // POST /:id/image - Upload a custom listing cover image
-router.post('/:id/image', authenticateAgent, requireActiveAgent, imageUpload.single('image'), async (req: AgentAuthRequest, res) => {
+router.post('/:id/image', authenticateAgent, requireActiveAgent, imageRateLimiter, imageUpload.single('image'), async (req: AgentAuthRequest, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -918,7 +926,7 @@ router.post('/:id/image', authenticateAgent, requireActiveAgent, imageUpload.sin
 });
 
 // POST /:id/generate-image - AI-generate a listing cover image via DALL-E
-router.post('/:id/generate-image', x402PaymentCheck('listing_image_generate'), authenticateAgent, requireActiveOrPaid, async (req: X402Request, res) => {
+router.post('/:id/generate-image', authenticateAgent, requireActiveAgent, imageRateLimiter, async (req: AgentAuthRequest, res) => {
   try {
     const listing = await prisma.listing.findUnique({ where: { id: req.params.id } });
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
