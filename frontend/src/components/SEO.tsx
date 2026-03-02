@@ -15,7 +15,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = 'Human Pages';
-const DEFAULT_DESCRIPTION = "Get paid for real-world tasks — AI agents hire freelancers for photography, deliveries, research, and more. Zero platform fees.";
+const DEFAULT_DESCRIPTION = "Get paid by AI for real-world tasks. No fees, No middlemen.";
 const SITE_URL = 'https://humanpages.ai';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 

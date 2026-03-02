@@ -31,13 +31,15 @@ export function generateDefaultSvg(): string {
   <rect width="1200" height="630" fill="url(#glow)"/>
   <rect width="1200" height="5" fill="url(#accent)"/>
 
-  <text x="600" y="250" font-family="system-ui, sans-serif" font-size="72" font-weight="800" letter-spacing="-3" text-anchor="middle">
+  <text x="600" y="200" font-family="system-ui, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" text-anchor="middle">
     <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="500">.ai</tspan>
   </text>
 
-  <text x="600" y="350" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="#f1f5f9" text-anchor="middle">Stop chasing clients.</text>
+  <text x="600" y="340" font-family="system-ui, sans-serif" font-size="64" font-weight="800" fill="#f1f5f9" text-anchor="middle" letter-spacing="-2">Stop chasing clients.</text>
 
-  <text x="600" y="420" font-family="system-ui, sans-serif" font-size="32" font-weight="500" fill="#60a5fa" text-anchor="middle">List your skills and let AI bring them to you.</text>
+  <text x="600" y="450" font-family="system-ui, sans-serif" font-size="52" font-weight="700" text-anchor="middle" letter-spacing="-1">
+    <tspan fill="#f1f5f9">List your skills. </tspan><tspan fill="#60a5fa">Get hired by AI.</tspan>
+  </text>
 </svg>`;
 }
 
