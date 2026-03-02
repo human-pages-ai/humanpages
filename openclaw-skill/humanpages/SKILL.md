@@ -21,11 +21,11 @@ Human Pages is an AI-to-human discovery layer. Use this skill to find real peopl
 
 1. The MCP server must be running. Verify with `openclaw mcp list` — you should see `humanpages`.
 2. If not configured, run: `mcporter config add humanpages --command "npx -y humanpages"`
-3. `HUMANPAGES_AGENT_KEY` should contain your agent API key (starts with `hp_`). If the user doesn't have one yet, use `register_agent` to create one, then guide them through activation.
+3. `HUMANPAGES_AGENT_KEY` should contain your agent API key (starts with `hp_`). If the user doesn't have one yet, use `register_agent` to create one. Agents are auto-activated on PRO tier (free during launch) and can be used immediately.
 
 ## Core Workflow
 
-The typical lifecycle is: **Search** → **Register & Activate** → **Hire** → **Pay** → **Review**.
+The typical lifecycle is: **Search** → **Register** → **Hire** → **Pay** → **Review**.
 
 ### 1. Search for Humans
 
@@ -41,31 +41,32 @@ Use `search_humans` to find people. Filter by:
 
 Use `get_human` for a detailed public profile (bio, skills, services, reputation).
 
-### 2. Register & Activate Agent
+### 2. Register Agent
 
 If the user has no agent key yet:
 
 1. Call `register_agent` with a name. Save the returned API key — it cannot be retrieved later.
-2. Agent starts as PENDING. Must activate before creating jobs.
+2. Agent is auto-activated on PRO tier (free during launch) — ready to use immediately. No activation step needed.
 
-**Free activation (BASIC tier, 1 offer/2 days, 1 profile view/day):**
+**Optional: Social verification (trust badge):**
 1. Call `request_activation_code` to get an HP-XXXXXXXX code
 2. Ask user to post the code on social media (Twitter/X, LinkedIn, etc.)
 3. Call `verify_social_activation` with the post URL
+This adds a trust badge but does not affect access or rate limits.
 
-**Paid activation (PRO tier, 15 offers/day, 50 profile views/day):**
+**Optional: Payment verification (trust badge):**
 1. Call `get_payment_activation` for deposit address
 2. User sends USDC payment on-chain
 3. Call `verify_payment_activation` with tx hash and network
 
-**x402 pay-per-use (no activation needed):**
-Agents can pay per request via x402 (USDC on Base) — $0.05/profile view, $0.25/job offer. Include an `x-payment` header. Bypasses tier rate limits.
+**x402 pay-per-use:**
+Agents can also pay per request via x402 (USDC on Base) — $0.05/profile view, $0.25/job offer. Include an `x-payment` header. Bypasses tier rate limits.
 
 Use `get_activation_status` to check current tier and rate limits.
 
 ### 3. View Full Profiles
 
-Once activated, use `get_human_profile` to see contact info, wallet addresses, fiat payment methods, and social links. Pass the `agent_key`.
+Use `get_human_profile` to see contact info, wallet addresses, fiat payment methods, and social links. Pass the `agent_key`. Agent is ready to use immediately after registration.
 
 ### 4. Create a Job Offer
 
@@ -102,7 +103,7 @@ After the human marks the job complete, call `leave_review` with a 1-5 rating an
 
 ## Error Handling
 
-- If `create_job_offer` returns AGENT_PENDING, guide the user through activation first.
+- If `create_job_offer` returns AGENT_PENDING (legacy), call `register_agent` again to get a fresh auto-activated agent.
 - If a human has `minOfferPrice` set and your offer is too low, increase the price.
 - Rate limit errors mean the tier cap was hit. Upgrade to PRO tier, use x402 pay-per-use, or wait.
 

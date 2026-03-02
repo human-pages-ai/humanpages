@@ -73,6 +73,13 @@ interface RegisterAgentResponse {
   apiKey: string;
   verificationToken: string;
   message: string;
+  status?: string;
+  tier?: string;
+  dashboardUrl?: string;
+  limits?: {
+    jobOffersPerDay: number;
+    profileViewsPerDay: number;
+  };
 }
 
 interface Job {
@@ -164,7 +171,7 @@ export function createServer(): Server {
       {
         name: 'search_humans',
         description:
-          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates), and rate. Returns profiles with reputation stats. Contact info and wallets require an ACTIVE agent — use get_human_profile after activating.',
+          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates), and rate. Returns profiles with reputation stats. Contact info and wallets available via get_human_profile (requires registered agent).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -221,7 +228,7 @@ export function createServer(): Server {
       {
         name: 'get_human',
         description:
-          'Get detailed information about a specific human by their ID, including their bio, skills, and service offerings. Contact info, wallets, and social links require an ACTIVE agent — use get_human_profile.',
+          'Get detailed information about a specific human by their ID, including their bio, skills, and service offerings. Contact info, wallets, and social links available via get_human_profile (requires registered agent).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -236,7 +243,7 @@ export function createServer(): Server {
       {
         name: 'register_agent',
         description:
-          'Register as an agent on Human Pages. Returns an API key that you MUST save and use for all subsequent job creation calls. The API key cannot be retrieved later.',
+          'Register as an agent on Human Pages. Agents are auto-activated on PRO tier (free during launch). Returns an API key that you MUST save and use for all subsequent calls. The API key cannot be retrieved later.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -302,7 +309,7 @@ export function createServer(): Server {
       {
         name: 'create_job_offer',
         description:
-          'Create a job offer for a human. Requires an ACTIVE agent API key (from register_agent + activation) or x402 payment ($0.25 USDC on Base via x-payment header). RATE LIMITS: BASIC tier = 1 offer/2 days, PRO tier = 15 offers/day. x402 payments bypass tier limits. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
+          'Create a job offer for a human. Requires a registered agent API key or x402 payment ($0.25 USDC on Base via x-payment header). RATE LIMITS: PRO tier = 15 offers/day. x402 payments bypass tier limits. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -469,7 +476,7 @@ export function createServer(): Server {
       {
         name: 'get_human_profile',
         description:
-          'Get the full profile of a human including contact info, wallet addresses, fiat payment methods, and social links. Requires an ACTIVE agent API key. Alternative: agents can pay $0.05 per view via x402 (USDC on Base) by including an x-payment header — no activation needed.',
+          'Get the full profile of a human including contact info, wallet addresses, fiat payment methods, and social links. Requires a registered agent API key. Alternative: pay $0.05 per view via x402 (USDC on Base) by including an x-payment header.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -488,7 +495,7 @@ export function createServer(): Server {
       {
         name: 'request_activation_code',
         description:
-          'Request an activation code (HP-XXXXXXXX) to post on social media for free BASIC tier activation. After posting, use verify_social_activation with the post URL.',
+          'Optional: Request an activation code (HP-XXXXXXXX) to post on social media for a verified trust badge. Not required for API access — agents are auto-activated on registration.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -503,7 +510,7 @@ export function createServer(): Server {
       {
         name: 'verify_social_activation',
         description:
-          'Verify a social media post containing your activation code. On success, your agent is activated with BASIC tier.',
+          'Optional: Verify a social media post containing your activation code for a verified trust badge. Not required for API access — agents are auto-activated on registration.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -687,7 +694,7 @@ export function createServer(): Server {
       {
         name: 'create_listing',
         description:
-          'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires an ACTIVE agent or x402 payment ($0.50 USDC). RATE LIMITS: BASIC = 1 listing/week, PRO = 5 listings/day. x402 bypasses limits.',
+          'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires a registered agent or x402 payment ($0.50 USDC). RATE LIMITS: PRO = 5 listings/day. x402 bypasses limits.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -901,7 +908,7 @@ export function createServer(): Server {
       {
         name: 'claim_free_pro_upgrade',
         description:
-          'Claim a free PRO tier upgrade via the launch promo (first 100 agents). Your agent must be ACTIVE with BASIC tier (social-activated) before claiming. On success, your tier is upgraded to PRO with 60-day duration.',
+          'Deprecated: Agents are now auto-activated on PRO tier at registration. This endpoint is a no-op for agents already on PRO.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -972,7 +979,7 @@ export function createServer(): Server {
           .join('\n\n');
 
         return {
-          content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}\n\n_Contact info and wallets require an ACTIVE agent. Use get_human_profile after activating._` }],
+          content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}\n\n_Contact info and wallets available via get_human_profile (requires registered agent)._` }],
         };
       }
 
@@ -1032,7 +1039,7 @@ ${human.locationGranularity === 'neighborhood' && human.neighborhood && human.lo
 - **Rate Type:** ${human.rateType || 'NEGOTIABLE'}
 
 ## Contact & Payment
-_Available via get_human_profile (requires ACTIVE agent)._
+_Available via get_human_profile (requires registered agent)._
 
 ## Services Offered
 ${servicesInfo || 'No services listed'}`;
@@ -1065,19 +1072,20 @@ ${servicesInfo || 'No services listed'}`;
           content: [
             {
               type: 'text',
-              text: `**Agent Registered!**
+              text: `**Agent Registered and Active!**
 
 **Agent ID:** ${result.agent.id}
 **Name:** ${result.agent.name}
 **API Key:** \`${result.apiKey}\`
-**Status:** PENDING
+**Status:** ${result.status || 'ACTIVE'}
+**Tier:** ${result.tier || 'PRO'}
+**Dashboard:** ${result.dashboardUrl || `https://humanpages.ai/agents/${result.agent.id}`}
+**Limits:** ${result.limits ? `${result.limits.jobOffersPerDay} job offers/day, ${result.limits.profileViewsPerDay} profile views/day` : '15 job offers/day, 50 profile views/day'}
 
 **IMPORTANT:** Save your API key now — it cannot be retrieved later.
-Pass it as \`agent_key\` when using \`create_job_offer\`.
+Pass it as \`agent_key\` when using \`create_job_offer\` or \`get_human_profile\`.
 
-**⚠️ Activation Required:** Your agent starts as PENDING. You must activate before creating jobs or viewing full profiles.
-- **Free (BASIC tier):** Use \`request_activation_code\` to get a code, post it on social media, then \`verify_social_activation\`.
-- **Paid (PRO tier):** Use \`get_payment_activation\` for a deposit address, then \`verify_payment_activation\`.
+You're ready to go — start searching for humans with \`search_humans\` and create job offers with \`create_job_offer\`.
 
 **Domain Verification Token:** \`${result.verificationToken}\`
 To get a verified badge, set up domain verification using \`verify_agent_domain\`.`,
@@ -1185,10 +1193,7 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
           const error = await res.json() as ApiError & { code?: string };
           if (res.status === 403 && error.code === 'AGENT_PENDING') {
             throw new Error(
-              'Agent is not yet activated. You must activate before creating jobs.\n'
-              + '- Free (BASIC tier): Use `request_activation_code` → post on social media → `verify_social_activation`\n'
-              + '- Paid (PRO tier): Use `get_payment_activation` → send payment → `verify_payment_activation`\n'
-              + 'Check your status with `get_activation_status`.'
+              'Agent may be suspended or banned. Check your status with `get_activation_status`.'
             );
           }
           throw new Error(error.error || `API error: ${res.status}`);
@@ -1385,7 +1390,7 @@ ${human.humanityVerified
       if (name === 'get_human_profile') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required. Register and activate first.');
+          throw new Error('agent_key is required. Register first with register_agent to get an API key.');
         }
 
         const res = await fetch(`${API_BASE}/api/humans/${args?.human_id}/profile`, {
@@ -1395,7 +1400,7 @@ ${human.humanityVerified
         if (!res.ok) {
           const error = await res.json() as ApiError & { code?: string };
           if (res.status === 403 && error.code === 'AGENT_PENDING') {
-            throw new Error('Agent is not yet activated. Activate first using request_activation_code or get_payment_activation.');
+            throw new Error('Agent may be suspended or banned. Check your status with `get_activation_status`.');
           }
           throw new Error(error.error || `API error: ${res.status}`);
         }
