@@ -2,15 +2,13 @@
  * Integration Test: Agent Onboarding Flow
  *
  * Simulates the complete journey of an AI agent:
- *   1. Register agent (get API key)
- *   2. Check activation status (PENDING)
- *   3. Request social verification code
- *   4. Activate via social verification (mocked)
- *   5. Check activation status (ACTIVE / BASIC tier)
- *   6. Update agent profile
- *   7. View agent public profile with reputation
- *   8. Test banned agent cannot activate
- *   9. Test expired activation code
+ *   1. Register agent (get API key, auto-activated as PRO)
+ *   2. Check activation status (ACTIVE / PRO tier)
+ *   3. Optional: Request social verification code (for trust badge)
+ *   4. Update agent profile
+ *   5. View agent public profile with reputation
+ *   6. Test banned agent cannot activate
+ *   7. Test expired activation code
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -34,8 +32,8 @@ beforeEach(async () => {
 
 describe('Flow: Agent Onboarding — Registration & Activation', () => {
 
-  it('should complete full agent lifecycle: register → activation request → check status → update profile → view public profile', async () => {
-    // ─── Step 1: Register agent ────────────────────────────────────────
+  it('should complete full agent lifecycle: register (auto-activated) → check status → update profile → view public profile', async () => {
+    // ─── Step 1: Register agent (auto-activated as PRO) ─────────────────
     const registerRes = await request(app)
       .post('/api/agents/register')
       .send({
@@ -52,65 +50,39 @@ describe('Flow: Agent Onboarding — Registration & Activation', () => {
     expect(registerRes.body.verificationToken).toBeDefined();
     expect(registerRes.body.agent.name).toBe('AutoTasker AI');
     expect(registerRes.body.agent.domainVerified).toBe(false);
+    expect(registerRes.body.status).toBe('ACTIVE');
+    expect(registerRes.body.tier).toBe('PRO');
+    expect(registerRes.body.dashboardUrl).toContain('/agents/');
+    expect(registerRes.body.limits).toBeDefined();
+    expect(registerRes.body.limits.jobOffersPerDay).toBe(15);
+    expect(registerRes.body.limits.profileViewsPerDay).toBe(50);
 
     const agentId = registerRes.body.agent.id;
     const apiKey = registerRes.body.apiKey;
 
-    // ─── Step 2: Check activation status (should be PENDING) ───────────
+    // ─── Step 2: Check activation status (should be ACTIVE / PRO) ───────
     const statusRes = await request(app)
       .get('/api/agents/activate/status')
       .set('X-Agent-Key', apiKey);
 
     expect(statusRes.status).toBe(200);
-    expect(statusRes.body.status).toBe('PENDING');
-    // activationTier defaults to 'BASIC' in the DB schema
-    expect(statusRes.body.tier).toBe('BASIC');
+    expect(statusRes.body.status).toBe('ACTIVE');
+    expect(statusRes.body.tier).toBe('PRO');
+    expect(statusRes.body.limits).toBeDefined();
+    expect(statusRes.body.limits.jobOffersPerDay).toBe(15);
+    expect(statusRes.body.limits.profileViewsPerDay).toBe(50);
 
-    // ─── Step 3: Request social verification code ──────────────────────
+    // ─── Step 3: Optional — request social verification code (trust badge) ──
     const socialRes = await request(app)
       .post('/api/agents/activate/social')
       .set('X-Agent-Key', apiKey);
 
+    // Already active agents can still request social verification for trust badge
     expect(socialRes.status).toBe(200);
     expect(socialRes.body.code).toBeDefined();
     expect(socialRes.body.code).toMatch(/^HP-/);
-    expect(socialRes.body.expiresAt).toBeDefined();
-    expect(socialRes.body.platforms).toBeDefined();
-    expect(socialRes.body.suggestedPosts).toBeDefined();
-    expect(socialRes.body.requirements).toContain('humanpages.ai');
 
-    // ─── Step 4: Manually activate (simulate social verification) ──────
-    // In real flow, social/verify calls oEmbed APIs. We simulate by directly updating DB.
-    const verificationCode = socialRes.body.code;
-    await prisma.agent.update({
-      where: { id: agentId },
-      data: {
-        status: 'ACTIVE',
-        activatedAt: new Date(),
-        activationMethod: 'SOCIAL',
-        activationExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        activationTier: 'BASIC',
-        activationPlatform: 'twitter',
-        socialPostUrl: 'https://twitter.com/test/status/123',
-        socialVerificationCode: null,
-        socialCodeExpiresAt: null,
-      },
-    });
-
-    // ─── Step 5: Verify activation status is now ACTIVE ────────────────
-    const activeStatusRes = await request(app)
-      .get('/api/agents/activate/status')
-      .set('X-Agent-Key', apiKey);
-
-    expect(activeStatusRes.status).toBe(200);
-    expect(activeStatusRes.body.status).toBe('ACTIVE');
-    expect(activeStatusRes.body.tier).toBe('BASIC');
-    expect(activeStatusRes.body.platform).toBe('twitter');
-    expect(activeStatusRes.body.limits).toBeDefined();
-    expect(activeStatusRes.body.limits.jobOffersPerTwoDays).toBe(1);
-    expect(activeStatusRes.body.limits.profileViewsPerDay).toBe(1);
-
-    // ─── Step 6: Update agent profile ──────────────────────────────────
+    // ─── Step 4: Update agent profile ──────────────────────────────────
     const updateRes = await request(app)
       .patch(`/api/agents/${agentId}`)
       .set('X-Agent-Key', apiKey)
@@ -123,7 +95,7 @@ describe('Flow: Agent Onboarding — Registration & Activation', () => {
     expect(updateRes.body.name).toBe('AutoTasker AI v2');
     expect(updateRes.body.description).toContain('video and photography');
 
-    // ─── Step 7: View public agent profile ─────────────────────────────
+    // ─── Step 5: View public agent profile ─────────────────────────────
     const publicRes = await request(app).get(`/api/agents/${agentId}`);
 
     expect(publicRes.status).toBe(200);

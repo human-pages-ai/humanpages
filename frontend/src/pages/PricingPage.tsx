@@ -69,41 +69,12 @@ export default function PricingPage() {
 
         {/* Tier cards */}
         <section className="px-4 pb-16">
-          <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
-
-            {/* BASIC */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col">
-              <h2 className="text-lg font-bold text-slate-900">{t('pricing.basicTitle')}</h2>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{t('pricing.basicPrice')}</p>
-              <p className="text-sm text-slate-500 mt-1">{t('pricing.basicActivation')}</p>
-
-              <ul className="mt-6 space-y-3 flex-1">
-                <li className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check /> {t('pricing.basicOffers')}
-                </li>
-                <li className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check /> {t('pricing.basicViews')}
-                </li>
-                <li className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check /> {t('pricing.basicListings')}
-                </li>
-                <li className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check /> {t('pricing.basicImages')}
-                </li>
-                <li className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check /> {t('pricing.basicDuration')}
-                </li>
-              </ul>
-
-              <Link to="/dev" className="mt-6 block text-center text-sm font-medium text-blue-600 border border-blue-600 rounded-lg py-2.5 hover:bg-blue-50 transition-colors">
-                {t('pricing.getStarted')}
-              </Link>
-            </div>
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
 
             {/* PRO */}
             <div className="bg-white rounded-2xl border-2 border-blue-500 p-6 flex flex-col relative">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                {t('pricing.popular')}
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                {t('pricing.proLaunchBadge')}
               </span>
               <h2 className="text-lg font-bold text-slate-900">{t('pricing.proTitle')}</h2>
               <p className="text-3xl font-bold text-slate-900 mt-2">{t('pricing.proPrice')}</p>
@@ -127,7 +98,9 @@ export default function PricingPage() {
                 </li>
               </ul>
 
-              <Link to="/dev" className="mt-6 block text-center text-sm font-medium text-white bg-blue-600 rounded-lg py-2.5 hover:bg-blue-700 transition-colors">
+              <p className="mt-4 text-xs text-slate-500 text-center">{t('pricing.proLaunchNote')}</p>
+
+              <Link to="/dev" className="mt-4 block text-center text-sm font-medium text-white bg-blue-600 rounded-lg py-2.5 hover:bg-blue-700 transition-colors">
                 {t('pricing.getStarted')}
               </Link>
             </div>

@@ -82,6 +82,12 @@ router.post('/register', registerLimiter, async (req, res) => {
         erc8004AgentId,
         discoverySource: data.source,
         discoveryDetail: data.sourceDetail,
+        // Auto-activate as PRO with no expiry (free launch offer)
+        status: 'ACTIVE',
+        activatedAt: new Date(),
+        activationMethod: 'AUTO',
+        activationTier: 'PRO',
+        activationExpiresAt: null,
       },
     });
 
@@ -105,7 +111,14 @@ router.post('/register', registerLimiter, async (req, res) => {
       },
       apiKey,
       verificationToken,
-      message: 'Agent registered. Save your API key — it cannot be retrieved later. Pass it as X-Agent-Key header when creating jobs.',
+      status: 'ACTIVE',
+      tier: 'PRO',
+      dashboardUrl: `https://humanpages.ai/agents/${agent.id}`,
+      limits: {
+        jobOffersPerDay: 15,
+        profileViewsPerDay: 50,
+      },
+      message: 'Agent registered and active on PRO tier. Save your API key — it cannot be retrieved later. Pass it as X-Agent-Key header when creating jobs.',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

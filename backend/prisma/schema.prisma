@@ -77,8 +77,21 @@ enum PostingGroupStatus {
   SKIPPED
 }
 
+enum FiatPaymentPlatform {
+  WISE
+  VENMO
+  PAYPAL
+  CASHAPP
+  REVOLUT
+  ZELLE
+  MONZO
+  N26
+  MERCADOPAGO
+}
+
 // How the agent activated their account
 enum ActivationMethod {
+  AUTO
   SOCIAL
   PAYMENT
   ADMIN
@@ -285,6 +298,7 @@ model Human {
   staffActivities   StaffActivity[]
   idleAlerts        IdleAlert[]
   assignedLeads     InfluencerLead[] @relation("LeadAssignment")
+  fiatPaymentMethods FiatPaymentMethod[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -294,6 +308,20 @@ model Human {
   @@index([lastActiveAt])
   @@index([isAvailable, lastActiveAt])
   @@index([humanStatus])
+}
+
+model FiatPaymentMethod {
+  id        String               @id @default(cuid())
+  humanId   String
+  human     Human                @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  platform  FiatPaymentPlatform
+  handle    String               // Username, email, or link for the platform
+  label     String?              // Optional display label
+  isPrimary Boolean              @default(false)
+  createdAt DateTime             @default(now())
+
+  @@unique([humanId, platform, handle])
+  @@index([platform, handle])
 }
 
 // Job status flow:

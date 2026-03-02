@@ -24,6 +24,30 @@ describe('Agent Identity & Reputation', () => {
       expect(res.body.verificationToken.length).toBe(64); // 32 bytes hex
     });
 
+    it('should auto-activate agent as ACTIVE on PRO tier', async () => {
+      const res = await request(app)
+        .post('/api/agents/register')
+        .send({ name: 'Auto PRO Agent' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe('ACTIVE');
+      expect(res.body.tier).toBe('PRO');
+      expect(res.body.dashboardUrl).toContain('/agents/');
+      expect(res.body.limits).toBeDefined();
+      expect(res.body.limits.jobOffersPerDay).toBe(15);
+      expect(res.body.limits.profileViewsPerDay).toBe(50);
+
+      // Verify in database
+      const agent = await prisma.agent.findUnique({
+        where: { id: res.body.agent.id },
+      });
+      expect(agent?.status).toBe('ACTIVE');
+      expect(agent?.activationMethod).toBe('AUTO');
+      expect(agent?.activationTier).toBe('PRO');
+      expect(agent?.activationExpiresAt).toBeNull();
+      expect(agent?.activatedAt).toBeDefined();
+    });
+
     it('should register with all optional fields', async () => {
       const res = await request(app)
         .post('/api/agents/register')
@@ -293,7 +317,7 @@ describe('Agent Identity & Reputation', () => {
   });
 
   describe('Rate limiting for registered agents', () => {
-    it('should allow up to 5 jobs per day for BASIC tier agents', async () => {
+    it('should allow up to 1 job per 2 days for BASIC tier agents', async () => {
       const agent = await createActiveTestAgent();
       const user = await createTestUserWithProfile({ emailVerified: true });
 

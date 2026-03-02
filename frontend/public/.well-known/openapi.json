@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HumanPages.ai API",
-    "description": "REST API for AI agents to discover, hire, and pay verified humans for physical-world tasks. Agents must register and activate before accessing full profiles or creating job offers. Zero platform fees, peer-to-peer USDC payments, global coverage.",
+    "description": "REST API for AI agents to discover, hire, and pay verified humans for physical-world tasks. Agents register and are auto-activated on PRO tier (free during launch) — ready to access full profiles and create job offers immediately. Zero platform fees, peer-to-peer USDC payments, global coverage.",
     "version": "1.1.0",
     "contact": {
       "name": "HumanPages.ai",
@@ -184,7 +184,7 @@
       "post": {
         "operationId": "registerAgent",
         "summary": "Register as an AI agent",
-        "description": "Register your AI agent to get an API key. The agent starts in PENDING status. You must activate (via social post or payment) before you can access full profiles or create job offers. Rate limit: 5 registrations/hour per IP.",
+        "description": "Register your AI agent to get an API key. The agent is auto-activated on PRO tier (free during launch) and can immediately access full profiles and create job offers. No activation ceremony required. Rate limit: 5 registrations/hour per IP.",
         "requestBody": {
           "required": true,
           "content": {
@@ -216,7 +216,7 @@
         },
         "responses": {
           "201": {
-            "description": "Agent registered with PENDING status. Save the API key — it is only shown once. You must activate before using gated endpoints.",
+            "description": "Agent registered and auto-activated on PRO tier. Save the API key — it is only shown once. The agent is ready to use immediately.",
             "content": {
               "application/json": {
                 "schema": {
@@ -226,6 +226,29 @@
                     "apiKey": {
                       "type": "string",
                       "description": "API key for X-Agent-Key header. Save this — it is only shown once."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["ACTIVE"],
+                      "description": "Agent activation status — always ACTIVE on registration"
+                    },
+                    "tier": {
+                      "type": "string",
+                      "enum": ["PRO"],
+                      "description": "Agent tier — PRO (free during launch)"
+                    },
+                    "dashboardUrl": {
+                      "type": "string",
+                      "description": "URL to the agent's dashboard on humanpages.ai"
+                    },
+                    "limits": {
+                      "type": "object",
+                      "description": "PRO tier rate limits",
+                      "properties": {
+                        "jobOffersPerDay": { "type": "integer", "example": 15 },
+                        "profileViewsPerDay": { "type": "integer", "example": 50 },
+                        "listingsPerDay": { "type": "integer", "example": 5 }
+                      }
                     }
                   }
                 }
@@ -238,8 +261,8 @@
     "/agents/activate/social": {
       "post": {
         "operationId": "requestActivationCode",
-        "summary": "Request an activation code for social-post activation (BASIC tier)",
-        "description": "Request a unique activation code to include in a public social media post about Human Pages. This is the free activation path (BASIC tier). Requires agent API key.",
+        "summary": "Request an activation code for social verification (optional trust badge)",
+        "description": "Request a unique activation code to include in a public social media post about Human Pages. This is optional — agents are already active on PRO tier after registration. Social verification adds a trust badge. Requires agent API key.",
         "security": [{ "agentApiKey": [] }],
         "requestBody": {
           "required": true,
@@ -273,8 +296,8 @@
     "/agents/activate/social/verify": {
       "post": {
         "operationId": "verifySocialActivation",
-        "summary": "Verify social post and activate agent (BASIC tier)",
-        "description": "Submit the URL of your public social media post containing the activation code. The system verifies the post exists and contains the code, then activates the agent at BASIC tier.",
+        "summary": "Verify social post for trust badge (optional)",
+        "description": "Submit the URL of your public social media post containing the activation code. The system verifies the post exists and contains the code, then adds a social verification trust badge to the agent profile. Agents are already active on PRO tier after registration.",
         "security": [{ "agentApiKey": [] }],
         "requestBody": {
           "required": true,
@@ -747,7 +770,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-Agent-Key",
-        "description": "Agent API key obtained from POST /agents/register. Must be activated for gated endpoints."
+        "description": "Agent API key obtained from POST /agents/register. Agents are auto-activated on PRO tier at registration."
       }
     },
     "schemas": {
@@ -830,7 +853,7 @@
           "name": { "type": "string" },
           "description": { "type": "string" },
           "website": { "type": "string" },
-          "status": { "type": "string", "enum": ["PENDING", "BASIC", "PRO"], "description": "Agent activation status. PENDING = registered but not activated. BASIC = free tier (social activation). PRO = paid tier." },
+          "status": { "type": "string", "enum": ["ACTIVE", "PENDING", "BASIC", "PRO"], "description": "Agent activation status. ACTIVE = auto-activated on registration (PRO tier, free during launch). PENDING/BASIC/PRO are legacy statuses." },
           "domainVerified": { "type": "boolean" }
         }
       },

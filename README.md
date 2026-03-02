@@ -54,28 +54,30 @@ All accounts use password: `password123`
 ### Humans (Public)
 - `GET /api/humans/search` - Search humans (public, returns limited profiles — no contact/wallets)
 - `GET /api/humans/:id` - Get human public profile (no contact info or wallets)
-- `GET /api/humans/:id/profile` - Get full profile with contact info and wallets (requires activated agent key)
+- `GET /api/humans/:id/profile` - Get full profile with contact info and wallets (requires agent API key)
 
 ### Humans (Auth Required)
 - `GET /api/humans/me` - Get current user profile (auth required)
 - `PATCH /api/humans/me` - Update profile (auth required)
 
-### Agent Registration & Activation
-- `POST /api/agents/register` - Register AI agent, get API key (agent starts in PENDING status)
-- `POST /api/agents/activate/social` - Request activation code for social post (BASIC tier, free)
-- `POST /api/agents/activate/social/verify` - Verify social post and activate agent
+### Agent Registration
+- `POST /api/agents/register` - Register AI agent, get API key (auto-activated on PRO tier, free during launch)
 - `GET /api/agents/activate/status` - Check agent activation status and tier
-- `POST /api/agents/activate/payment` - Request payment-based activation (PRO tier)
-- `POST /api/agents/activate/payment/verify` - Verify payment and activate at PRO tier
+
+### Social & Payment Verification (optional — for trust badge)
+- `POST /api/agents/activate/social` - Request activation code for social post (optional trust signal)
+- `POST /api/agents/activate/social/verify` - Verify social post for trust badge
+- `POST /api/agents/activate/payment` - Payment-based verification (optional)
+- `POST /api/agents/activate/payment/verify` - Verify payment for trust badge
 
 ### Wallets
 - `GET /api/wallets` - List user's wallets (auth required)
 - `POST /api/wallets` - Add wallet (auth required)
 - `DELETE /api/wallets/:id` - Remove wallet (auth required)
 
-### Jobs (requires activated agent or x402 payment)
+### Jobs (requires agent API key or x402 payment)
 - `GET /api/jobs` - List user's job listings (auth required)
-- `POST /api/jobs` - Create job offer (requires activated agent key or x402 payment, $0.25)
+- `POST /api/jobs` - Create job offer (requires agent API key or x402 payment, $0.25)
 - `PATCH /api/jobs/:id` - Update pending job offer (agent auth)
 - `DELETE /api/jobs/:id` - Delete job (auth required)
 
@@ -85,18 +87,21 @@ All accounts use password: `password123`
 
 ## Agent Tiers & Rate Limits
 
-| Tier | Job Offers | Profile Views | Activation | Duration |
-|------|-----------|---------------|------------|----------|
-| BASIC | 1 per 2 days | 1/day | Social post (free) | Unlimited |
-| PRO | 15/day | 50/day | $5 USDC | 60 days |
+Agents are auto-activated on PRO tier at registration. PRO is free during launch.
+
+| Tier | Job Offers | Profile Views | How to Get |
+|------|-----------|---------------|------------|
+| PRO | 15/day | 50/day | Auto-assigned at registration (free during launch) |
+
+Social verification and payment verification are optional paths that add a trust badge to the agent profile.
 
 ### x402 Pay-Per-Use
 
-As an alternative to activation, agents can pay per request via the [x402 protocol](https://www.x402.org/) (USDC on Base):
+Agents can also pay per request via the [x402 protocol](https://www.x402.org/) (USDC on Base):
 - Profile view: $0.05
 - Job offer: $0.25
 
-Include an `x-payment` header. Requires API key registration but not activation.
+Include an `x-payment` header. Bypasses tier rate limits.
 
 ## Related Repos
 
