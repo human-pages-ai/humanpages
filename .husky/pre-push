@@ -78,6 +78,25 @@ if ! (cd backend && npx prisma generate); then
 fi
 
 # ------------------------------------------------------------------
+# Schema drift check: ensure schema.prisma matches migration history
+# ------------------------------------------------------------------
+SHADOW_URL="${SHADOW_DATABASE_URL:-postgresql://humans:humans_secret@localhost:5432/humans_shadow}"
+echo "  Checking schema drift..."
+if (cd backend && npx prisma migrate diff \
+    --from-migrations ./prisma/migrations \
+    --to-schema-datamodel ./prisma/schema.prisma \
+    --exit-code \
+    --shadow-database-url "$SHADOW_URL" 2>&1); then
+  echo "  No schema drift detected"
+else
+  echo ""
+  echo "  ERROR: Schema drift detected!"
+  echo "  Fields in schema.prisma don't match migrations."
+  echo "  Run: cd backend && npx prisma migrate dev --name <description>"
+  exit 1
+fi
+
+# ------------------------------------------------------------------
 # Lite checks: tsc (parallel) + backend unit tests
 # ------------------------------------------------------------------
 LOG="/tmp/human-pages-pre-push.log"
