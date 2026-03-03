@@ -78,6 +78,8 @@ const AutomatedInfluencerOutreach = lazy(() => import('./pages/blog/articles/Aut
 const GetPaidSocialMediaPromotion = lazy(() => import('./pages/blog/articles/GetPaidSocialMediaPromotion'));
 const SetUpProfileFiveMinutes = lazy(() => import('./pages/blog/articles/SetUpProfileFiveMinutes'));
 const MoltbookSurvivalGuide = lazy(() => import('./pages/blog/articles/MoltbookSurvivalGuide'));
+const RentahumanAlternative = lazy(() => import('./pages/blog/articles/RentahumanAlternative'));
+const CountryLanding = lazy(() => import('./pages/CountryLanding'));
 const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
 
 function LoadingSpinner() {
@@ -279,7 +281,13 @@ function AppRoutes() {
       <Route path="/blog/get-paid-social-media-promotion" element={<GetPaidSocialMediaPromotion />} />
       <Route path="/blog/build-ai-agent-that-hires-people" element={<SetUpProfileFiveMinutes />} />
       <Route path="/blog/moltbook-agent-survival-guide" element={<MoltbookSurvivalGuide />} />
+      <Route path="/blog/rentahuman-alternative" element={<RentahumanAlternative />} />
       <Route path="/blog/:slug" element={<DynamicBlogPost />} />
+
+      {/* Country landing pages (must be before /:lang to avoid clash) */}
+      <Route path="/ng" element={<CountryLanding countryCode="NG" countryName="Nigeria" />} />
+      <Route path="/gh" element={<CountryLanding countryCode="GH" countryName="Ghana" />} />
+      <Route path="/ke" element={<CountryLanding countryCode="KE" countryName="Kenya" />} />
 
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
@@ -301,6 +309,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/get-paid-social-media-promotion" element={<LangWrapper><GetPaidSocialMediaPromotion /></LangWrapper>} />
       <Route path="/:lang/blog/build-ai-agent-that-hires-people" element={<LangWrapper><SetUpProfileFiveMinutes /></LangWrapper>} />
       <Route path="/:lang/blog/moltbook-agent-survival-guide" element={<LangWrapper><MoltbookSurvivalGuide /></LangWrapper>} />
+      <Route path="/:lang/blog/rentahuman-alternative" element={<LangWrapper><RentahumanAlternative /></LangWrapper>} />
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/status" element={<LangWrapper><StatusPage /></LangWrapper>} />
       <Route path="/:lang/pricing" element={<LangWrapper><PricingPage /></LangWrapper>} />

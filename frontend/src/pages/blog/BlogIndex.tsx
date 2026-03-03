@@ -124,6 +124,14 @@ export default function BlogIndex() {
       readingTime: '6 min',
       featured: true,
     },
+    {
+      title: 'Best RentAHuman Alternative in 2026: Why Agents Pick Human Pages',
+      slug: 'rentahuman-alternative',
+      date: 'March 3, 2026',
+      excerpt: 'Looking for a RentAHuman alternative? Human Pages offers a free tier, pay-per-use pricing, MCP protocol support, and zero platform fees — built for AI agents that hire real people.',
+      readingTime: '8 min',
+      featured: false,
+    },
   ];
 
   // Merge dynamic + hardcoded, dedup by slug
