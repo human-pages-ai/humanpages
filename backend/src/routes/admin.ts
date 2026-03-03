@@ -798,7 +798,6 @@ router.get('/agents/:id', async (req: AuthRequest, res) => {
           },
           orderBy: { createdAt: 'desc' },
         },
-        },
         _count: {
           select: { jobs: true, reports: true },
         },
