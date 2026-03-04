@@ -40,6 +40,7 @@ export default function AdminUserDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [catchAllLoading, setCatchAllLoading] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -61,6 +62,32 @@ export default function AdminUserDetail() {
 
       <div className="bg-white rounded-lg shadow p-5">
         <div className="flex items-start gap-4">
+          {/* Profile Photo */}
+          <div className="flex-shrink-0">
+            {user.profilePhotoUrl && !photoError ? (
+              <img
+                src={user.profilePhotoUrl}
+                alt={user.name}
+                className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200"
+                onError={() => setPhotoError(true)}
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center ring-2 ring-gray-200">
+                <span className="text-xl font-semibold text-blue-600">
+                  {user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
+            {user.profilePhotoStatus && user.profilePhotoStatus !== 'none' && (
+              <p className={`text-[10px] text-center mt-1 ${
+                user.profilePhotoStatus === 'approved' ? 'text-green-600' :
+                user.profilePhotoStatus === 'pending' ? 'text-yellow-600' :
+                user.profilePhotoStatus === 'rejected' ? 'text-red-600' : 'text-gray-400'
+              }`}>
+                {user.profilePhotoStatus}
+              </p>
+            )}
+          </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{user.name}</h2>
             {user.username && <p className="text-sm text-gray-500">@{user.username}</p>}

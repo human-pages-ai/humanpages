@@ -61,6 +61,44 @@ export interface AdminUser {
   };
 }
 
+export interface AdminPerson {
+  id: string;
+  email: string;
+  name: string;
+  username: string | null;
+  location: string | null;
+  bio: string | null;
+  skills: string[];
+  languages: string[];
+  isAvailable: boolean;
+  emailVerified: boolean;
+  linkedinVerified: boolean;
+  githubVerified: boolean;
+  referralCode: string;
+  referredBy: string | null;
+  referredByName: string | null;
+  referralCount: number;
+  role: 'USER' | 'STAFF' | 'ADMIN';
+  createdAt: string;
+  lastActiveAt: string;
+  _count: {
+    jobs: number;
+    reviews: number;
+    services: number;
+  };
+  careerApplications: Array<{
+    positionId: string;
+    positionTitle: string;
+    status: string;
+  }>;
+}
+
+export interface PeopleFilterOptions {
+  countries: string[];
+  skills: string[];
+  careerPositions: Array<{ id: string; title: string; count: number }>;
+}
+
 export interface AdminAgent {
   id: string;
   name: string;
@@ -134,6 +172,8 @@ export interface AdminFeedback {
 }
 
 export interface AdminUserDetail extends AdminUser {
+  profilePhotoUrl: string | null;
+  profilePhotoStatus: string;
   bio: string | null;
   neighborhood: string | null;
   skills: string[];

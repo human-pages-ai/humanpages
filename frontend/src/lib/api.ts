@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -396,6 +396,54 @@ export const api = {
     if (params.order) query.set('order', params.order);
     const qs = query.toString();
     return request<{ users: AdminUser[]; pagination: Pagination }>(`/admin/users${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminPeople: (params: {
+    page?: number; limit?: number; search?: string; sort?: string; order?: string;
+    country?: string; skills?: string; hasCareerApplication?: boolean; careerPositionId?: string;
+    affiliatedBy?: string; hasReferrals?: boolean; availability?: string;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.search) query.set('search', params.search);
+    if (params.sort) query.set('sort', params.sort);
+    if (params.order) query.set('order', params.order);
+    if (params.country) query.set('country', params.country);
+    if (params.skills) query.set('skills', params.skills);
+    if (params.hasCareerApplication) query.set('hasCareerApplication', 'true');
+    if (params.careerPositionId) query.set('careerPositionId', params.careerPositionId);
+    if (params.affiliatedBy) query.set('affiliatedBy', params.affiliatedBy);
+    if (params.hasReferrals) query.set('hasReferrals', 'true');
+    if (params.availability) query.set('availability', params.availability);
+    const qs = query.toString();
+    return request<{ people: AdminPerson[]; pagination: Pagination }>(`/admin/people${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminPeopleFilterOptions: () =>
+    request<PeopleFilterOptions>('/admin/people/filter-options'),
+
+  exportAdminPeople: (params: {
+    search?: string; country?: string; skills?: string; hasCareerApplication?: boolean;
+    careerPositionId?: string; affiliatedBy?: string; hasReferrals?: boolean; availability?: string;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.search) query.set('search', params.search);
+    if (params.country) query.set('country', params.country);
+    if (params.skills) query.set('skills', params.skills);
+    if (params.hasCareerApplication) query.set('hasCareerApplication', 'true');
+    if (params.careerPositionId) query.set('careerPositionId', params.careerPositionId);
+    if (params.affiliatedBy) query.set('affiliatedBy', params.affiliatedBy);
+    if (params.hasReferrals) query.set('hasReferrals', 'true');
+    if (params.availability) query.set('availability', params.availability);
+    const qs = query.toString();
+    const token = getToken();
+    return fetch(`${API_BASE}/admin/people/export${qs ? `?${qs}` : ''}`, {
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+    }).then(res => {
+      if (!res.ok) throw new Error('Export failed');
+      return res.blob();
+    });
   },
 
   getAdminAgents: (params: { page?: number; limit?: number; search?: string; status?: string } = {}) => {

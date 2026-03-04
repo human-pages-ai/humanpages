@@ -40,6 +40,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminPeople = lazy(() => import('./pages/admin/AdminPeople'));
 const AdminAgents = lazy(() => import('./pages/admin/AdminAgents'));
 const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
 const AdminActivity = lazy(() => import('./pages/admin/AdminActivity'));
@@ -321,6 +322,7 @@ function AppRoutes() {
 
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route index element={<AdminIndex />} />
+        <Route path="people" element={<AdminPeople />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="users/:id" element={<AdminUserDetailPage />} />
         <Route path="agents" element={<AdminAgents />} />
