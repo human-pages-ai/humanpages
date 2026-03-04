@@ -164,6 +164,7 @@ export interface AdminFeedback {
   userAgent: string | null;
   appVersion: string | null;
   screenshotData: string | null;
+  diagnostics: Record<string, unknown> | null;
   status: 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
   adminNotes: string | null;
   createdAt: string;

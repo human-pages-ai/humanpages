@@ -831,6 +831,7 @@ model Feedback {
   userAgent       String?
   appVersion      String?
   screenshotData  String?        @db.Text // base64 data URI
+  diagnostics     Json?          // Auto-captured environment diagnostics (wallet state, in-app browser, etc.)
 
   // Admin processing
   status          FeedbackStatus @default(NEW)

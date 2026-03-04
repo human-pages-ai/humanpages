@@ -352,6 +352,7 @@ export const api = {
     userAgent?: string;
     appVersion?: string;
     screenshotData?: string;
+    diagnostics?: Record<string, unknown>;
     contactName?: string;
     contactEmail?: string;
     captchaToken?: string;

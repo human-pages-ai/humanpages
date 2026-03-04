@@ -6,6 +6,39 @@ import { ChatBubbleLeftEllipsisIcon, XMarkIcon, BugAntIcon, LightBulbIcon, ChatB
 import { api } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
+// ─── Environment diagnostics (auto-captured with feedback) ───
+function getDiagnostics(): Record<string, unknown> {
+  const diag: Record<string, unknown> = {};
+  const ua = navigator.userAgent;
+
+  // Wallet / web3 state
+  const eth = (window as any).ethereum;
+  diag.walletDetected = !!eth;
+  if (eth) {
+    diag.walletProviders = {
+      isMetaMask: !!eth.isMetaMask,
+      isCoinbaseWallet: !!eth.isCoinbaseWallet,
+      isBraveWallet: !!eth.isBraveWallet,
+      isRabby: !!eth.isRabby,
+    };
+    if (eth.providerMap) {
+      diag.multipleProviders = Array.from((eth.providerMap as Map<string, unknown>).keys());
+    }
+  }
+
+  // In-app / WebView browser detection
+  diag.isInAppBrowser = /FBAN|FBAV|Instagram|TikTok|BytedanceWebview|CoinbaseBrowser|Coinbase|wv\)|WebView/i.test(ua);
+  diag.isWebView = /wv\)|WebView/i.test(ua);
+
+  // Connection type (if available)
+  const conn = (navigator as any).connection;
+  if (conn) {
+    diag.connectionType = conn.effectiveType;
+  }
+
+  return diag;
+}
+
 // ─── Browser info parser ───
 function getBrowserInfo(): { browser: string; os: string } {
   const ua = navigator.userAgent;
@@ -18,13 +51,13 @@ function getBrowserInfo(): { browser: string; os: string } {
   else if (ua.includes('Chrome/')) browser = `Chrome ${ua.split('Chrome/')[1]?.split(' ')[0] || ''}`;
   else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = `Safari ${ua.split('Version/')[1]?.split(' ')[0] || ''}`;
 
-  // OS detection
-  if (ua.includes('Windows NT 10')) os = 'Windows 10/11';
+  // OS detection (Android/iOS before Linux — Android UAs contain "Linux")
+  if (ua.includes('Android')) os = `Android ${ua.split('Android ')[1]?.split(';')[0] || ''}`;
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = `iOS ${ua.split('OS ')[1]?.split(' ')[0]?.replace(/_/g, '.') || ''}`;
+  else if (ua.includes('Windows NT 10')) os = 'Windows 10/11';
   else if (ua.includes('Windows')) os = 'Windows';
   else if (ua.includes('Mac OS X')) os = `macOS ${ua.split('Mac OS X ')[1]?.split(')')[0]?.replace(/_/g, '.') || ''}`;
   else if (ua.includes('Linux')) os = 'Linux';
-  else if (ua.includes('Android')) os = `Android ${ua.split('Android ')[1]?.split(';')[0] || ''}`;
-  else if (ua.includes('iPhone') || ua.includes('iPad')) os = `iOS ${ua.split('OS ')[1]?.split(' ')[0]?.replace(/_/g, '.') || ''}`;
 
   return { browser: browser.trim(), os: os.trim() };
 }
@@ -134,6 +167,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
     setSubmitting(true);
     try {
       const { browser, os } = getBrowserInfo();
+      const diagnostics = getDiagnostics();
 
       await api.submitFeedback({
         type,
@@ -145,6 +179,7 @@ export default function FeedbackWidget({ defaultType, isOpen: controlledOpen, on
         viewport: `${window.innerWidth}x${window.innerHeight}`,
         userAgent: navigator.userAgent,
         screenshotData: screenshotData || undefined,
+        diagnostics,
       });
 
       setSubmitted(true);

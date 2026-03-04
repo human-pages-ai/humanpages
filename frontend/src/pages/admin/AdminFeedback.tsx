@@ -204,6 +204,25 @@ export default function AdminFeedback() {
                       </div>
                     </div>
 
+                    {/* Environment diagnostics */}
+                    {item.diagnostics && Object.keys(item.diagnostics as Record<string, unknown>).length > 0 && (
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <p className="text-xs font-medium text-gray-500 mb-2">Environment Diagnostics</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-600">
+                          {Object.entries(item.diagnostics as Record<string, unknown>).map(([key, value]) => (
+                            <div key={key}>
+                              <span className="text-gray-400">{key}:</span>{' '}
+                              {typeof value === 'object' ? (
+                                <code className="text-[10px] break-all">{JSON.stringify(value)}</code>
+                              ) : (
+                                String(value)
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Status controls */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs text-gray-500">Set status:</span>
