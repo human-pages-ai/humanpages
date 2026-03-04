@@ -217,7 +217,8 @@
     "privacyPolicy": "Patakaran sa Privacy",
     "acceptTermsTitle": "Tanggapin ang mga Tuntunin para Magpatuloy",
     "acceptTermsDesc": "Bago gumawa ng account, suriin at tanggapin ang aming mga tuntunin.",
-    "continueSignUp": "Magpatuloy sa Pagpaparehistro"
+    "continueSignUp": "Magpatuloy sa Pagpaparehistro",
+    "captchaFailed": "Hindi na-load ang verification. Buksan ang humanpages.ai sa iyong regular na browser (hindi sa in-app browser)."
   },
   "dashboard": {
     "title": "Dashboard",

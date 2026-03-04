@@ -217,7 +217,8 @@
     "privacyPolicy": "隐私政策",
     "acceptTermsTitle": "接受条款以继续",
     "acceptTermsDesc": "在创建帐户之前，请查看并接受我们的条款。",
-    "continueSignUp": "继续注册"
+    "continueSignUp": "继续注册",
+    "captchaFailed": "验证无法加载。请在常规浏览器中打开 humanpages.ai（不要使用应用内浏览器）。"
   },
   "dashboard": {
     "title": "控制面板",

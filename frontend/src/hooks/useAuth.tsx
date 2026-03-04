@@ -78,13 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = async () => {
     const { url, state } = await api.getOAuthUrl('google');
-    sessionStorage.setItem('oauth_state', state);
+    localStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
 
   const loginWithLinkedIn = async () => {
     const { url, state } = await api.getOAuthUrl('linkedin');
-    sessionStorage.setItem('oauth_state', state);
+    localStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
 

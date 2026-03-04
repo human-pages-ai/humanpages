@@ -215,7 +215,8 @@
     "privacyPolicy": "Politique de confidentialité",
     "acceptTermsTitle": "Accepter les conditions pour continuer",
     "acceptTermsDesc": "Avant de créer votre compte, veuillez lire et accepter nos conditions.",
-    "continueSignUp": "Continuer l'inscription"
+    "continueSignUp": "Continuer l'inscription",
+    "captchaFailed": "La vérification n'a pas pu se charger. Veuillez ouvrir humanpages.ai dans votre navigateur habituel (pas un navigateur intégré)."
   },
   "dashboard": {
     "title": "Tableau de bord",

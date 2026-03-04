@@ -209,7 +209,8 @@
     "privacyPolicy": "Privacy Policy",
     "acceptTermsTitle": "Accept Terms to Continue",
     "acceptTermsDesc": "Before creating your account, please review and accept our terms.",
-    "continueSignUp": "Continue Sign Up"
+    "continueSignUp": "Continue Sign Up",
+    "captchaFailed": "Verification couldn't load. Please open humanpages.ai in your regular browser (not an in-app browser)."
   },
   "dashboard": {
     "title": "Dashboard",

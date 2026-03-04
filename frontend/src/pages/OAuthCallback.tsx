@@ -87,8 +87,8 @@ export default function OAuthCallback() {
     }
 
     // Retrieve and consume the stored OAuth state
-    const storedState = sessionStorage.getItem('oauth_state');
-    sessionStorage.removeItem('oauth_state');
+    const storedState = localStorage.getItem('oauth_state');
+    localStorage.removeItem('oauth_state');
 
     if (!storedState) {
       setError('OAuth state missing. Please try logging in again.');

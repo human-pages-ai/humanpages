@@ -217,7 +217,8 @@
     "privacyPolicy": "Gizlilik Politikası",
     "acceptTermsTitle": "Devam Etmek İçin Koşulları Kabul Edin",
     "acceptTermsDesc": "Hesabınızı oluşturmadan önce lütfen koşullarımızı inceleyin ve kabul edin.",
-    "continueSignUp": "Kayda Devam Et"
+    "continueSignUp": "Kayda Devam Et",
+    "captchaFailed": "Doğrulama yüklenemedi. Lütfen humanpages.ai adresini normal tarayıcınızda açın (uygulama içi tarayıcıda değil)."
   },
   "dashboard": {
     "title": "Panel",

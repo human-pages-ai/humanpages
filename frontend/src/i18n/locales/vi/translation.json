@@ -217,7 +217,8 @@
     "privacyPolicy": "Chính sách Bảo mật",
     "acceptTermsTitle": "Chấp nhận Điều khoản để Tiếp tục",
     "acceptTermsDesc": "Trước khi tạo tài khoản, vui lòng xem xét và chấp nhận các điều khoản của chúng tôi.",
-    "continueSignUp": "Tiếp tục Đăng ký"
+    "continueSignUp": "Tiếp tục Đăng ký",
+    "captchaFailed": "Không thể tải xác minh. Vui lòng mở humanpages.ai trong trình duyệt thông thường (không phải trình duyệt trong ứng dụng)."
   },
   "dashboard": {
     "title": "Bảng điều khiển",

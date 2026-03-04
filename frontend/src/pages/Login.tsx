@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Turnstile } from 'react-turnstile';
@@ -11,6 +11,7 @@ import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // test key fallback
+const CAPTCHA_TIMEOUT_MS = 10_000;
 
 export default function Login() {
   const { t } = useTranslation();
@@ -20,8 +21,20 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaFailed, setCaptchaFailed] = useState(false);
+  const captchaResolved = useRef(false);
   const { login, loginWithGoogle, loginWithLinkedIn } = useAuth();
   const navigate = useNavigate();
+
+  // Application-level timeout: if Turnstile hasn't verified within 10s, show fallback
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!captchaResolved.current) {
+        setCaptchaFailed(true);
+      }
+    }, CAPTCHA_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -115,9 +128,16 @@ export default function Login() {
           </div>
           <Turnstile
             sitekey={TURNSTILE_SITE_KEY}
-            onVerify={(token) => setCaptchaToken(token)}
+            onVerify={(token) => { captchaResolved.current = true; setCaptchaFailed(false); setCaptchaToken(token); }}
             onExpire={() => setCaptchaToken('')}
+            onError={() => setCaptchaFailed(true)}
+            onTimeout={() => setCaptchaFailed(true)}
           />
+          {captchaFailed && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+              {t('auth.captchaFailed')}
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading || !captchaToken}

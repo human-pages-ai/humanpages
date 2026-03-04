@@ -176,7 +176,8 @@
     "privacyPolicy": "Política de Privacidade",
     "acceptTermsTitle": "Aceite os Termos para Continuar",
     "acceptTermsDesc": "Antes de criar sua conta, leia e aceite nossos termos.",
-    "continueSignUp": "Continuar Cadastro"
+    "continueSignUp": "Continuar Cadastro",
+    "captchaFailed": "A verificação não carregou. Por favor, abra humanpages.ai no seu navegador padrão (não em um navegador integrado)."
   },
   "dashboard": {
     "title": "Painel",
