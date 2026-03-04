@@ -250,6 +250,56 @@ app.get('/u/:username', async (req, res, next) => {
   next();
 });
 
+// /from/:slug — short redirect links for outreach tracking
+const FROM_SLUGS: Record<string, { utm_source: string; utm_medium: string; utm_campaign: string }> = {
+  // Lagos — Telegram (sponsored)
+  'mjane':            { utm_source: 'telegram', utm_medium: 'sponsored', utm_campaign: 'lagos_mjane' },
+  'jobnetworking':    { utm_source: 'telegram', utm_medium: 'sponsored', utm_campaign: 'lagos_jobnetworking' },
+  'mjane-wa':         { utm_source: 'whatsapp', utm_medium: 'sponsored', utm_campaign: 'lagos_mjane' },
+  'jobnetworking-wa': { utm_source: 'whatsapp', utm_medium: 'sponsored', utm_campaign: 'lagos_jobnetworking' },
+  // Digital Nomads — Telegram
+  'offchain-bali':    { utm_source: 'telegram', utm_medium: 'organic', utm_campaign: 'nomad_offchain_bali' },
+  'cryptojobslist':   { utm_source: 'telegram', utm_medium: 'organic', utm_campaign: 'nomad_cryptojobslist' },
+  'dnxchat':          { utm_source: 'telegram', utm_medium: 'organic', utm_campaign: 'nomad_dnxchat' },
+  // Digital Nomads — Reddit
+  'beermoney':        { utm_source: 'reddit', utm_medium: 'organic', utm_campaign: 'nomad_beermoney' },
+  'workonline':       { utm_source: 'reddit', utm_medium: 'organic', utm_campaign: 'nomad_workonline' },
+  'digitalnomad':     { utm_source: 'reddit', utm_medium: 'organic', utm_campaign: 'nomad_digitalnomad' },
+  'sidehustle':       { utm_source: 'reddit', utm_medium: 'organic', utm_campaign: 'nomad_sidehustle' },
+  'slavelabour':      { utm_source: 'reddit', utm_medium: 'organic', utm_campaign: 'nomad_slavelabour' },
+  'jobsforbitcoin':   { utm_source: 'reddit', utm_medium: 'organic', utm_campaign: 'nomad_jobsforbitcoin' },
+  // Digital Nomads — Facebook
+  'fb-chiangmai':     { utm_source: 'facebook', utm_medium: 'organic', utm_campaign: 'nomad_chiangmai' },
+  'fb-digitalnomads': { utm_source: 'facebook', utm_medium: 'organic', utm_campaign: 'nomad_digitalnomads' },
+  'fb-aroundtheworld':{ utm_source: 'facebook', utm_medium: 'organic', utm_campaign: 'nomad_aroundtheworld' },
+  'fb-jobs':          { utm_source: 'facebook', utm_medium: 'organic', utm_campaign: 'nomad_jobs' },
+  'fb-thailand':      { utm_source: 'facebook', utm_medium: 'organic', utm_campaign: 'thailand_nomads' },
+  // Digital Nomads — WhatsApp
+  'wa-thailand':      { utm_source: 'whatsapp', utm_medium: 'organic', utm_campaign: 'nomad_thailand' },
+  'wa-sea':           { utm_source: 'whatsapp', utm_medium: 'organic', utm_campaign: 'nomad_sea' },
+  'wa-bali':          { utm_source: 'whatsapp', utm_medium: 'organic', utm_campaign: 'nomad_bali' },
+  // Thailand — other
+  'line-thailand':    { utm_source: 'line', utm_medium: 'organic', utm_campaign: 'thailand_openchat' },
+  'pantip':           { utm_source: 'pantip', utm_medium: 'organic', utm_campaign: 'thailand_pantip' },
+  // Crypto job boards
+  'board-cryptojobs': { utm_source: 'cryptojobslist', utm_medium: 'paid', utm_campaign: 'jobboard_cryptojobslist' },
+  'board-web3career': { utm_source: 'web3career', utm_medium: 'paid', utm_campaign: 'jobboard_web3career' },
+  'board-remote3':    { utm_source: 'remote3', utm_medium: 'paid', utm_campaign: 'jobboard_remote3' },
+  'board-laborx':     { utm_source: 'laborx', utm_medium: 'paid', utm_campaign: 'jobboard_laborx' },
+};
+
+app.get('/from/:slug', (req, res) => {
+  const params = FROM_SLUGS[req.params.slug];
+  if (!params) {
+    return res.redirect(302, '/');
+  }
+  const url = new URL('/', 'https://humanpages.ai');
+  url.searchParams.set('utm_source', params.utm_source);
+  url.searchParams.set('utm_medium', params.utm_medium);
+  url.searchParams.set('utm_campaign', params.utm_campaign);
+  res.redirect(302, url.toString());
+});
+
 // SPA catch-all: serve index.html for all non-API routes
 app.get('*', (req, res) => {
   const indexPath = path.join(frontendDistPath, 'index.html');

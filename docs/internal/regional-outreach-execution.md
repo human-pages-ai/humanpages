@@ -17,166 +17,112 @@
 
 ## Ad Copy — Nigeria (Lagos Telegram/WhatsApp)
 
-### Short Version (~150 words) — for MJane single Telegram posts
+**Tracked links for Nigeria channels:**
 
-> **New way to earn from your phone — no interview, no oga, no wahala**
->
-> AI-powered companies are now hiring real people for everyday tasks — and they're paying in dollars (USDC).
->
-> We're talking things like:
-> - Take photos of a location in Lagos
-> - Run an errand or pick up a document
-> - Visit a shop and report what you see
-> - Write short content or do data entry
-> - Translate something into Yoruba, Igbo, or Pidgin
->
-> No degree required. No experience needed. Just sign up, list what you can do, and get matched with tasks.
->
-> The platform is called **Human Pages** — it's like a job board, but the employers are AI systems that need humans to do things in the real world.
->
-> Free to join. You get paid directly — no platform fees.
->
-> Sign up now: **humanpages.ai**
->
-> Your next side hustle might just find you first.
+| Channel | Link |
+|---------|------|
+| MJane (Telegram) | `https://humanpages.ai/from/mjane` |
+| Jobnetworking (Telegram) | `https://humanpages.ai/from/jobnetworking` |
+| MJane (WhatsApp) | `https://humanpages.ai/from/mjane-wa` |
+| Jobnetworking (WhatsApp) | `https://humanpages.ai/from/jobnetworking-wa` |
 
-### Medium Version (~250 words) — for WhatsApp forwards
+> Swap the link below with the right one from the table before posting.
 
-> **AI companies are hiring Nigerians for real-world tasks — here's how to get in**
->
-> Make I tell you something interesting.
->
-> You know how AI is everywhere now — ChatGPT this, AI that? Well, these AI systems are powerful, but there's one thing they cannot do: **show up in person.**
->
-> They can't go snap a photo in Lekki. They can't pick up a document from an office in Ikeja. They can't walk into a store in Computer Village and check prices.
->
-> That's where **you** come in.
->
-> **Human Pages** (humanpages.ai) is a platform where AI-powered companies post tasks they need real people to handle. Things like:
->
-> - Photography — snap specific locations or products
-> - Errands — pick up or deliver items
-> - Mystery shopping — visit a business and report back
-> - Content & data entry — write, type, or organize info
-> - Translation — Yoruba, Igbo, Pidgin, Hausa… your language is valuable
->
-> **How e dey work:**
-> 1. Sign up free at humanpages.ai
-> 2. Create your profile — list your skills and location
-> 3. AI agents browse profiles and send you task offers
-> 4. You complete the task, you get paid in USDC (that's dollar-value crypto — you can convert to naira easily)
->
-> **No platform fees.** What you earn is what you keep.
->
-> No interview. No long application. No "we'll get back to you." You sign up, an AI system finds you, and you start earning.
->
-> This is not MLM. This is not "pay to join." It's free.
->
-> Create your profile now: **humanpages.ai**
->
-> The gig economy just changed. Don't sleep on this one.
+https://humanpages.ai/from/mjane
 
-### Long Version (~380 words) — for Jobnetworking package
+AI companies are hiring Nigerians for real-world tasks — here's how to get in
 
-> **How Young Nigerians Are Earning Dollar-Value Income From AI Companies — No Degree, No Interview**
->
-> Let's be real — the job market is tough. But there's a whole new category of work opening up, and most people don't even know about it yet.
->
-> **AI-powered companies need humans.**
->
-> Yes, the same AI everyone is talking about. These systems can write essays and generate images, but they **cannot** exist in the physical world. They can't visit a location in Lagos. They can't take a photo of a shopfront in Surulere. They can't pick up a document from a government office.
->
-> So they hire people. And they're doing it through **Human Pages** (humanpages.ai).
->
-> **What kind of tasks?**
->
-> - Photography — take photos of locations, products, or events
-> - Errands — pick up documents, deliver items, visit offices
-> - Local research — check prices, visit businesses, gather info
-> - Mystery shopping — visit a store and report your experience
-> - Content creation — write short articles, captions, product descriptions
-> - Data entry — organize information, fill forms, input data
-> - Translation — English to Yoruba, Igbo, Pidgin, Hausa, and more
->
-> **How does it work?**
->
-> 1. Go to **humanpages.ai** and create a free profile
-> 2. List your skills, your location (e.g., Lagos, Abuja, PH), and what tasks you can do
-> 3. AI agents (think of them as automated hiring systems for companies) find your profile and send you job offers
-> 4. You accept, complete the task, and get paid
->
-> **Common questions:**
->
-> *"Is it free?"* — Yes. The BASIC tier is completely free. No hidden charges.
->
-> *"How do I get paid?"* — Payment is in USDC, a stablecoin pegged to the US dollar. You can convert to naira through any crypto exchange or P2P platform you already use.
->
-> *"Do I need experience?"* — No. If you can run errands, take photos, or speak a local language, you qualify for tasks.
->
-> *"Is this legit?"* — Human Pages is a registered platform. No MLM, no "refer 5 friends," no upfront payment. You sign up, you work, you earn.
->
-> **No platform fees.** You keep 100% of what you earn.
->
-> The world is changing. AI needs people on the ground — and Nigeria is one of the biggest opportunity zones right now.
->
-> **Sign up free today: humanpages.ai**
->
-> Don't wait for someone to forward this to you twice.
+Make I tell you something interesting.
+
+You know how AI is everywhere now — ChatGPT this, AI that? Well, these AI systems are powerful, but there's one thing they cannot do: show up in person.
+
+They can't go snap a photo in Lekki. They can't pick up a document from an office in Ikeja. They can't walk into a store in Computer Village and check prices.
+
+That's where you come in.
+
+HumanPages.ai is a platform where AI-powered companies post tasks they need real people to handle. Things like:
+
+- Photography — snap specific locations or products
+- Errands — pick up or deliver items
+- Mystery shopping — visit a business and report back
+- Content & data entry — write, type, or organize info
+- Translation — Yoruba, Igbo, Pidgin, Hausa… your language is valuable
+
+How e dey work:
+1. Sign up free at https://humanpages.ai/from/mjane
+2. Create your profile — list your skills and location
+3. AI agents browse profiles and send you task offers
+4. You complete the task, you get paid in USDC (that's dollar-value crypto — you can convert to naira easily)
+
+No platform fees. What you earn is what you keep.
+
+No interview. No long application. No "we'll get back to you." You sign up, an AI system finds you, and you start earning.
+
+This is not MLM. This is not "pay to join." It's free.
+
+The gig economy just changed. Don't sleep on this one.
+
+Create your free profile now: https://humanpages.ai/from/mjane
 
 ---
 
 ## Ad Copy — Thailand / Digital Nomads
 
-### Short Version (~150 words) — for Telegram groups
+**Tracked links — use the right one for each channel:**
 
-> **There's a new gig platform — and your clients are AI agents**
->
-> AI companies need humans for tasks their systems can't do remotely. Things like:
->
-> - On-location photography
-> - Document or package pickups
-> - In-person research and mystery shopping
-> - Content writing, translations, data tasks
->
-> **Human Pages** (humanpages.ai) connects you directly with AI-powered companies that need real-world help — wherever you are.
->
-> Whether you're in Chiang Mai, Bangkok, Bali, or Lisbon — if you've got a skill and a location, there's likely a task waiting.
->
-> Free to join. Paid in USDC (stablecoin) — no platform fees, no middleman. Useful if you're already in the crypto ecosystem, and easy to off-ramp if you're not.
->
-> It's the gig economy for the AI era. Your physical presence is the product.
->
-> Create your profile: **humanpages.ai**
+| Channel | Link |
+|---------|------|
+| OffChain Bali (Telegram) | `https://humanpages.ai/from/offchain-bali` |
+| CryptoJobsList (Telegram) | `https://humanpages.ai/from/cryptojobslist` |
+| DNX Chat (Telegram) | `https://humanpages.ai/from/dnxchat` |
+| r/beermoney | `https://humanpages.ai/from/beermoney` |
+| r/WorkOnline | `https://humanpages.ai/from/workonline` |
+| r/digitalnomad | `https://humanpages.ai/from/digitalnomad` |
+| r/sidehustle | `https://humanpages.ai/from/sidehustle` |
+| r/slavelabour | `https://humanpages.ai/from/slavelabour` |
+| r/jobsforbitcoin | `https://humanpages.ai/from/jobsforbitcoin` |
+| DN Chiang Mai (Facebook) | `https://humanpages.ai/from/fb-chiangmai` |
+| Digital Nomads (Facebook) | `https://humanpages.ai/from/fb-digitalnomads` |
+| DN Around the World (Facebook) | `https://humanpages.ai/from/fb-aroundtheworld` |
+| DN Jobs (Facebook) | `https://humanpages.ai/from/fb-jobs` |
+| Thailand (Facebook) | `https://humanpages.ai/from/fb-thailand` |
+| Thailand (WhatsApp) | `https://humanpages.ai/from/wa-thailand` |
+| SEA (WhatsApp) | `https://humanpages.ai/from/wa-sea` |
+| Bali (WhatsApp) | `https://humanpages.ai/from/wa-bali` |
+| Thailand (LINE) | `https://humanpages.ai/from/line-thailand` |
+| Thailand (Pantip) | `https://humanpages.ai/from/pantip` |
 
-### Medium Version (~230 words) — for Facebook/Reddit/WhatsApp
+> Swap the link below with the right one from the table before posting.
 
-> **AI agents are hiring humans. Seriously. Here's how it works.**
->
-> You've probably noticed: AI can do a lot now. But it still can't walk into a co-working space in Chiang Mai, photograph a street market in Bangkok, or pick up a visa document from an embassy.
->
-> That's the gap **Human Pages** fills.
->
-> It's a marketplace where AI-powered companies post tasks they need real humans to complete in the physical world. You create a profile, list your skills and location, and AI agents match with you when they need someone nearby.
->
-> **Typical tasks:**
-> - Location photography and visual documentation
-> - Errands — pickups, deliveries, in-person check-ins
-> - Local research — price checks, business visits, mystery shopping
-> - Content creation, data entry, translations
->
-> **Why it works for nomads and expats:**
-> - You're already in interesting locations that companies want intel on
-> - Tasks are flexible — do them between your main work
-> - Payment is in USDC (dollar-pegged stablecoin) — no bank hassles, no currency conversion headaches, no platform fees
-> - Free to join, no commitments
->
-> Think of it as micro-consulting for AI systems. Your local knowledge and physical presence have real market value now — this platform just makes it accessible.
->
-> Whether you're long-term in Southeast Asia or hopping between cities, your profile travels with you.
->
-> Sign up free at **humanpages.ai**
->
-> The AI economy needs boots on the ground. Might as well be yours.
+https://humanpages.ai/from/beermoney
+
+**AI agents are hiring humans. Seriously. Here's how it works.**
+
+You've probably noticed: AI can do a lot now. But it still can't walk into a co-working space in Chiang Mai, photograph a street market in Bangkok, or pick up a visa document from an embassy.
+
+That's the gap **HumanPages.ai** fills.
+
+It's a marketplace where AI-powered companies post tasks they need real humans to complete in the physical world. You create a profile, list your skills and location, and AI agents match with you when they need someone nearby.
+
+**Typical tasks:**
+- Location photography and visual documentation
+- Errands — pickups, deliveries, in-person check-ins
+- Local research — price checks, business visits, mystery shopping
+- Content creation, data entry, translations
+
+**Why it works for nomads and expats:**
+- You're already in interesting locations that companies want intel on
+- Tasks are flexible — do them between your main work
+- Payment is in USDC (dollar-pegged stablecoin) — no bank hassles, no currency conversion headaches, no platform fees
+- Free to join, no commitments
+
+Think of it as micro-consulting for AI systems. Your local knowledge and physical presence have real market value now — HumanPages.ai just makes it accessible.
+
+Whether you're long-term in Southeast Asia or hopping between cities, your profile travels with you.
+
+The AI economy needs boots on the ground. Might as well be yours.
+
+Sign up free: https://humanpages.ai/from/beermoney
 
 ---
 
@@ -267,23 +213,17 @@
 
 ---
 
-## UTM Link Templates
+## Tracked Short Links
 
-```
-# Lagos
-humanpages.ai/?utm_source=telegram&utm_medium=sponsored&utm_campaign=lagos_jobnetworking
-humanpages.ai/?utm_source=telegram&utm_medium=sponsored&utm_campaign=lagos_mjane
-humanpages.ai/?utm_source=whatsapp&utm_medium=sponsored&utm_campaign=lagos_jobnetworking
+All `/from/` short links redirect to `https://humanpages.ai/?utm_source=...&utm_medium=...&utm_campaign=...` via a 302 redirect on the backend. The mapping lives in `backend/src/app.ts` → `FROM_SLUGS`.
 
-# Thailand
-humanpages.ai/?utm_source=facebook&utm_medium=organic&utm_campaign=thailand_nomads
-humanpages.ai/?utm_source=line&utm_medium=organic&utm_campaign=thailand_openchat
-humanpages.ai/?utm_source=pantip&utm_medium=organic&utm_campaign=thailand_pantip
+To add a new channel: add a slug to `FROM_SLUGS` in app.ts, then use `https://humanpages.ai/from/your-slug` in your post.
 
-# Digital Nomads
-humanpages.ai/?utm_source=telegram&utm_medium=organic&utm_campaign=nomad_offchain_bali
-humanpages.ai/?utm_source=reddit&utm_medium=organic&utm_campaign=nomad_beermoney
-humanpages.ai/?utm_source=reddit&utm_medium=organic&utm_campaign=nomad_workonline
-humanpages.ai/?utm_source=facebook&utm_medium=organic&utm_campaign=nomad_chiangmai
-humanpages.ai/?utm_source=whatsapp&utm_medium=organic&utm_campaign=nomad_sea
-```
+**Crypto job board links:**
+
+| Board | Link |
+|-------|------|
+| CryptoJobsList | `https://humanpages.ai/from/board-cryptojobs` |
+| Web3.career | `https://humanpages.ai/from/board-web3career` |
+| Remote3.co | `https://humanpages.ai/from/board-remote3` |
+| LaborX | `https://humanpages.ai/from/board-laborx` |
