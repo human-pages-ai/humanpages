@@ -222,6 +222,11 @@ model Human {
   referralCode  String   @unique // Short code for referral links (auto-generated via middleware)
   referredBy    String?  // ID of the human who referred this user
 
+  // UTM attribution — tracks which campaign brought this signup
+  utmSource     String?  // e.g. "telegram", "reddit", "facebook"
+  utmMedium     String?  // e.g. "sponsored", "organic", "cta"
+  utmCampaign   String?  // e.g. "lagos_jobnetworking", "nomad_beermoney"
+
   // Token invalidation for logout-all
   tokenInvalidatedAt DateTime? // All tokens issued before this time are invalid
 
@@ -264,6 +269,7 @@ model Human {
   abuseStrikes    Int         @default(0)
 
   // ===== STAFF CAPABILITIES =====
+  isCatchAll      Boolean  @default(false) // Catch-all concierge profile injected into sparse search results
   capabilities    String[] @default([]) // CONTENT_REVIEWER, POSTER, ANALYST, CREATIVE, GROUP_MANAGER
 
   // ===== STAFF PAY CONFIG =====

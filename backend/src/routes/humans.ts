@@ -880,6 +880,54 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       }
     }
 
+    // Inject catch-all concierge profiles when organic results are sparse
+    const CATCH_ALL_THRESHOLD = parseInt(process.env.CATCH_ALL_THRESHOLD || '3', 10);
+    if (humans.length < CATCH_ALL_THRESHOLD) {
+      const catchAllWhere: any = {
+        isCatchAll: true,
+        emailVerified: true,
+        humanStatus: 'ACTIVE',
+        id: { notIn: humans.map(h => h.id) },
+      };
+
+      // Respect equipment filter
+      if (equipment) {
+        catchAllWhere.equipment = { has: equipment as string };
+      }
+      // Respect language filter
+      if (language) {
+        catchAllWhere.languages = { has: language as string };
+      }
+      // Respect rate filters
+      if (minRate) {
+        const minRateVal = parseFloat(minRate as string);
+        if (!isNaN(minRateVal) && isFinite(minRateVal)) {
+          catchAllWhere.minRateUsdEstimate = { gte: minRateVal };
+        }
+      }
+      if (maxRate) {
+        const maxRateVal = parseFloat(maxRate as string);
+        if (!isNaN(maxRateVal) && isFinite(maxRateVal)) {
+          catchAllWhere.OR = [
+            { minRateUsdEstimate: { lte: maxRateVal } },
+            { minRateUsdEstimate: null },
+          ];
+        }
+      }
+      // No location/radius/workMode filtering — catch-all profiles are remote coordinators
+
+      const catchAlls = await prisma.human.findMany({
+        where: catchAllWhere,
+        select: {
+          ...publicHumanSelect,
+          locationLat: true,
+          locationLng: true,
+        },
+      });
+
+      humans = [...humans, ...catchAlls];
+    }
+
     // Add reputation stats to each human using batch queries
     const humanIds = humans.map((h) => h.id);
 

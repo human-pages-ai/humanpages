@@ -29,7 +29,10 @@ export default function OAuthCallback() {
     referrerId?: string,
     termsAcceptedFlag?: boolean,
   ) => {
-    const result = await api.oauthCallback(oauthProvider, code, state, referrerId, termsAcceptedFlag);
+    const utmSource = sessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+    const result = await api.oauthCallback(oauthProvider, code, state, referrerId, termsAcceptedFlag, utmSource, utmMedium, utmCampaign);
 
     if (result.requiresTerms) {
       setOauthData({ provider: oauthProvider, code, state, referrerId });
@@ -40,7 +43,7 @@ export default function OAuthCallback() {
     localStorage.removeItem('referrer_id');
     localStorage.setItem('token', result.token);
     if (result.isNew) {
-      analytics.track('signup_complete', { method: oauthProvider });
+      analytics.track('signup_complete', { method: oauthProvider, utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
       // Store OAuth photo URL for import prompt on onboarding page
       if (result.oauthPhotoUrl) {
         localStorage.setItem('oauthPhotoUrl', result.oauthPhotoUrl);

@@ -89,7 +89,7 @@ export interface ReviewsResponse {
 
 export const api = {
   // Auth
-  signup: (data: { email: string; password: string; name: string; referrerId?: string; termsAccepted: boolean; captchaToken: string }) =>
+  signup: (data: { email: string; password: string; name: string; referrerId?: string; termsAccepted: boolean; captchaToken: string; utmSource?: string; utmMedium?: string; utmCampaign?: string }) =>
     request<AuthResponse>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -105,10 +105,10 @@ export const api = {
   getOAuthUrl: (provider: 'google' | 'linkedin') =>
     request<{ url: string; state: string }>(`/oauth/${provider}`),
 
-  oauthCallback: (provider: 'google' | 'linkedin', code: string, state: string, referrerId?: string, termsAccepted?: boolean) =>
+  oauthCallback: (provider: 'google' | 'linkedin', code: string, state: string, referrerId?: string, termsAccepted?: boolean, utmSource?: string, utmMedium?: string, utmCampaign?: string) =>
     request<AuthResponse>(`/oauth/${provider}/callback`, {
       method: 'POST',
-      body: JSON.stringify({ code, state, referrerId, termsAccepted }),
+      body: JSON.stringify({ code, state, referrerId, termsAccepted, utmSource, utmMedium, utmCampaign }),
     }),
 
   // Password Reset
@@ -419,6 +419,9 @@ export const api = {
 
   getAdminUser: (id: string) =>
     request<AdminUserDetail>(`/admin/users/${id}`),
+
+  updateAdminUser: (id: string, data: { isCatchAll?: boolean }) =>
+    request<AdminUserDetail>(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   getAdminAgent: (id: string) =>
     request<AdminAgentDetail>(`/admin/agents/${id}`),

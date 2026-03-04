@@ -39,6 +39,7 @@ export default function AdminUserDetail() {
   const [user, setUser] = useState<AdminUserDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [catchAllLoading, setCatchAllLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -76,6 +77,37 @@ export default function AdminUserDetail() {
         </div>
         {user.bio && <p className="mt-3 text-sm text-gray-700">{user.bio}</p>}
       </div>
+
+      <Section title="Admin Actions">
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={user.isCatchAll ?? false}
+              disabled={catchAllLoading}
+              onChange={async (e) => {
+                if (!id) return;
+                setCatchAllLoading(true);
+                try {
+                  await api.updateAdminUser(id, { isCatchAll: e.target.checked });
+                  setUser(prev => prev ? { ...prev, isCatchAll: e.target.checked } : prev);
+                } catch (err: any) {
+                  setError(err.message);
+                } finally {
+                  setCatchAllLoading(false);
+                }
+              }}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            Catch-All Concierge Profile
+          </label>
+          <span className="text-xs text-gray-400">
+            {user.isCatchAll
+              ? 'This profile appears in search results when organic matches are sparse.'
+              : 'Enable to inject this profile into sparse search results as a catch-all concierge.'}
+          </span>
+        </div>
+      </Section>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Section title="Verification">

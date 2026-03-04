@@ -725,6 +725,40 @@ router.get('/users/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// PATCH /api/admin/users/:id — Update user fields (admin override)
+router.patch('/users/:id', async (req: AuthRequest, res) => {
+  try {
+    const { isCatchAll } = req.body;
+
+    const user = await prisma.human.findUnique({ where: { id: req.params.id } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const data: any = {};
+
+    if (typeof isCatchAll === 'boolean') {
+      data.isCatchAll = isCatchAll;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const updated = await prisma.human.update({
+      where: { id: req.params.id },
+      data,
+    });
+
+    logger.info({ adminId: req.userId, userId: req.params.id, updates: data }, 'Admin user update');
+
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'Admin user update error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // GET /api/admin/agents/export — Export agents as CSV
 router.get('/agents/export', async (req: AuthRequest, res) => {
   try {

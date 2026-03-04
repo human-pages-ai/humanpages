@@ -133,6 +133,7 @@ export interface AdminFeedback {
 }
 
 export interface AdminUserDetail extends AdminUser {
+  isCatchAll: boolean;
   bio: string | null;
   neighborhood: string | null;
   skills: string[];

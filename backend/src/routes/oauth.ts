@@ -90,7 +90,7 @@ const pendingOAuthProfiles = new Map<string, { googleId: string; email: string; 
 // Google OAuth - callback handler
 router.post('/google/callback', async (req, res) => {
   try {
-    const { code, state, referrerId, termsAccepted } = req.body;
+    const { code, state, referrerId, termsAccepted, utmSource, utmMedium, utmCampaign } = req.body;
 
     if (!code && !termsAccepted) {
       return res.status(400).json({ error: 'Authorization code required' });
@@ -195,12 +195,20 @@ router.post('/google/callback', async (req, res) => {
             termsAcceptedAt: new Date(),
             emailVerified: true, // OAuth email is verified by provider
             oauthPhotoUrl: picture || null,
+            utmSource: utmSource || undefined,
+            utmMedium: utmMedium || undefined,
+            utmCampaign: utmCampaign || undefined,
           },
         });
         isNew = true;
 
         // Track OAuth signup in PostHog (pass req for country geolocation)
-        trackServerEvent(human.id, 'user_signed_up_server', { method: 'google' }, req);
+        trackServerEvent(human.id, 'user_signed_up_server', {
+          method: 'google',
+          utm_source: utmSource || undefined,
+          utm_medium: utmMedium || undefined,
+          utm_campaign: utmCampaign || undefined,
+        }, req);
       }
     } else {
       // Existing user by Google ID - consume state
@@ -332,7 +340,7 @@ const pendingLinkedInProfiles = new Map<string, LinkedInProfile>();
 // LinkedIn OAuth - callback handler (login/signup)
 router.post('/linkedin/callback', async (req, res) => {
   try {
-    const { code, state, referrerId, termsAccepted } = req.body;
+    const { code, state, referrerId, termsAccepted, utmSource, utmMedium, utmCampaign } = req.body;
 
     if (!code && !termsAccepted) {
       return res.status(400).json({ error: 'Authorization code required' });
@@ -405,11 +413,19 @@ router.post('/linkedin/callback', async (req, res) => {
             termsAcceptedAt: new Date(),
             emailVerified: true,
             oauthPhotoUrl: profile.picture || null,
+            utmSource: utmSource || undefined,
+            utmMedium: utmMedium || undefined,
+            utmCampaign: utmCampaign || undefined,
           },
         });
         isNew = true;
 
-        trackServerEvent(human.id, 'user_signed_up_server', { method: 'linkedin' }, req);
+        trackServerEvent(human.id, 'user_signed_up_server', {
+          method: 'linkedin',
+          utm_source: utmSource || undefined,
+          utm_medium: utmMedium || undefined,
+          utm_campaign: utmCampaign || undefined,
+        }, req);
       }
     } else {
       // Existing user — update headline if we got a fresh one

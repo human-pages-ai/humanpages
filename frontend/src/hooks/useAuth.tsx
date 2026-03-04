@@ -58,7 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true, captchaToken: string) => {
     const referrerId = localStorage.getItem('referrer_id') || undefined;
-    const { human, token } = await api.signup({ email, password, name, referrerId, termsAccepted, captchaToken });
+    // Pass UTM attribution from sessionStorage (captured by useUTMParams hook on landing)
+    const utmSource = sessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+    const { human, token } = await api.signup({ email, password, name, referrerId, termsAccepted, captchaToken, utmSource, utmMedium, utmCampaign });
     localStorage.removeItem('referrer_id'); // Clean up after use
     localStorage.setItem('token', token);
     setUser(human);

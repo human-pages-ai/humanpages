@@ -35,7 +35,10 @@ export default function Signup() {
       localStorage.setItem('referrer_id', ref);
     }
 
-    analytics.track('signup_start');
+    const utmSource = searchParams.get('utm_source') || sessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = searchParams.get('utm_medium') || sessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = searchParams.get('utm_campaign') || sessionStorage.getItem('utm_campaign') || undefined;
+    analytics.track('signup_start', { utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
   }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -45,7 +48,10 @@ export default function Signup() {
 
     try {
       await signup(email, password, name, termsAccepted, captchaToken);
-      analytics.track('signup_complete', { method: 'email' });
+      const utmSource = sessionStorage.getItem('utm_source') || undefined;
+      const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
+      const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+      analytics.track('signup_complete', { method: 'email', utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
       // Always go through onboarding for new users.
       // If there's an apply intent in localStorage, Onboarding will chain to /careers after.
       navigate('/onboarding');

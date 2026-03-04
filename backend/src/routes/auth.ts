@@ -22,6 +22,9 @@ const signupSchema = z.object({
   referrerId: z.string().optional(),
   termsAccepted: z.literal(true, { errorMap: () => ({ message: 'You must accept the Terms of Use and Privacy Policy' }) }),
   captchaToken: z.string().min(1),
+  utmSource: z.string().max(100).optional(),
+  utmMedium: z.string().max(100).optional(),
+  utmCampaign: z.string().max(200).optional(),
 });
 
 const loginSchema = z.object({
@@ -72,7 +75,7 @@ const globalSignupThrottle = rateLimit({
 
 router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) => {
   try {
-    const { email, password, name, referrerId, termsAccepted, captchaToken } = signupSchema.parse(req.body);
+    const { email, password, name, referrerId, termsAccepted, captchaToken, utmSource, utmMedium, utmCampaign } = signupSchema.parse(req.body);
 
     const captchaValid = await verifyCaptcha(captchaToken);
     if (!captchaValid) {
@@ -104,12 +107,20 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
         referredBy: validReferrerId,
         referralCode: generateReferralCode(),
         termsAcceptedAt: new Date(),
+        utmSource: utmSource || undefined,
+        utmMedium: utmMedium || undefined,
+        utmCampaign: utmCampaign || undefined,
       },
       select: { id: true, email: true, name: true },
     });
 
     // Track signup in PostHog (pass req for country geolocation)
-    trackServerEvent(human.id, 'user_signed_up_server', { method: 'email' }, req);
+    trackServerEvent(human.id, 'user_signed_up_server', {
+      method: 'email',
+      utm_source: utmSource || undefined,
+      utm_medium: utmMedium || undefined,
+      utm_campaign: utmCampaign || undefined,
+    }, req);
 
     // Record affiliate referral if the referrer is an affiliate
     if (validReferrerId) {
