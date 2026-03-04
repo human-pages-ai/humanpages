@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
@@ -42,6 +43,7 @@ const feedbackSchema = z.object({
   userAgent: z.string().max(500).optional(),
   appVersion: z.string().max(50).optional(),
   screenshotData: z.string().max(2 * 1024 * 1024).optional(), // ~2MB max base64
+  diagnostics: z.record(z.unknown()).optional(), // Auto-captured environment context
 
   // Contact form fields (anonymous submissions)
   contactName: z.string().max(100).optional(),
@@ -126,6 +128,7 @@ router.post('/', feedbackLimiter, optionalAuth, async (req: AuthRequest, res) =>
         userAgent: data.userAgent || null,
         appVersion: data.appVersion || null,
         screenshotData: data.screenshotData || null,
+        diagnostics: (data.diagnostics as Prisma.InputJsonValue) || undefined,
       },
     });
 
