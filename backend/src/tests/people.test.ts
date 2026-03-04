@@ -123,6 +123,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'software-engineer',
           positionTitle: 'Software Engineer',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
 
@@ -133,6 +134,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'software-engineer',
           positionTitle: 'Software Engineer',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
 
@@ -143,6 +145,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'designer',
           positionTitle: 'Product Designer',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
 
@@ -267,6 +270,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'engineer',
           positionTitle: 'Engineer',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
 
@@ -289,6 +293,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'pos-1',
           positionTitle: 'Position 1',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
       await prisma.careerApplication.create({
@@ -297,6 +302,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'pos-2',
           positionTitle: 'Position 2',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
 
@@ -490,6 +496,7 @@ describe('Admin People Endpoints', () => {
           positionId: 'test-pos',
           positionTitle: 'Test Position',
           status: 'PENDING',
+          about: 'Test application',
         },
       });
 
