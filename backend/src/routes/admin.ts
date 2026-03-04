@@ -383,6 +383,8 @@ router.get('/users', async (req: AuthRequest, res) => {
     const sort = (req.query.sort as string) || 'createdAt';
     const order = (req.query.order as string) === 'asc' ? 'asc' : 'desc';
 
+    const catchAll = req.query.catchAll as string;
+
     const allowedSorts = ['createdAt', 'name', 'email', 'lastActiveAt'];
     const sortField = allowedSorts.includes(sort) ? sort : 'createdAt';
 
@@ -398,6 +400,8 @@ router.get('/users', async (req: AuthRequest, res) => {
 
     if (verified === 'true') where.emailVerified = true;
     if (verified === 'false') where.emailVerified = false;
+    if (catchAll === 'true') where.isCatchAll = true;
+    if (catchAll === 'false') where.isCatchAll = false;
 
     const [users, total] = await Promise.all([
       prisma.human.findMany({
@@ -412,6 +416,7 @@ router.get('/users', async (req: AuthRequest, res) => {
           emailVerified: true,
           referralCode: true,
           role: true,
+          isCatchAll: true,
           createdAt: true,
           lastActiveAt: true,
           _count: {

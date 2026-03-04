@@ -9,6 +9,7 @@ export default function AdminUsers() {
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
   const [verified, setVerified] = useState('');
+  const [catchAll, setCatchAll] = useState('');
   const [sort, setSort] = useState('createdAt');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ export default function AdminUsers() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.getAdminUsers({ page, limit: 20, search, verified, sort, order });
+      const res = await api.getAdminUsers({ page, limit: 20, search, verified, catchAll, sort, order });
       setUsers(res.users);
       setPagination(res.pagination);
     } catch (err: any) {
@@ -26,7 +27,7 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }, [search, verified, sort, order]);
+  }, [search, verified, catchAll, sort, order]);
 
   useEffect(() => {
     const timer = setTimeout(() => load(1), 300);
@@ -65,6 +66,15 @@ export default function AdminUsers() {
           <option value="">All users</option>
           <option value="true">Verified</option>
           <option value="false">Unverified</option>
+        </select>
+        <select
+          value={catchAll}
+          onChange={(e) => setCatchAll(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All roles</option>
+          <option value="true">Default Humans</option>
+          <option value="false">Regular Users</option>
         </select>
       </div>
 
@@ -108,6 +118,7 @@ export default function AdminUsers() {
                     >
                       {u.name}
                     </Link>
+                    {u.isCatchAll && <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">Default</span>}
                     {u.username && <span className="ml-1 text-gray-400">@{u.username}</span>}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>

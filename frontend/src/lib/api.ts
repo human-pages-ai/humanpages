@@ -385,12 +385,13 @@ export const api = {
   getAdminStats: () =>
     request<AdminStats>('/admin/stats'),
 
-  getAdminUsers: (params: { page?: number; limit?: number; search?: string; verified?: string; sort?: string; order?: string } = {}) => {
+  getAdminUsers: (params: { page?: number; limit?: number; search?: string; verified?: string; catchAll?: string; sort?: string; order?: string } = {}) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
     if (params.search) query.set('search', params.search);
     if (params.verified) query.set('verified', params.verified);
+    if (params.catchAll) query.set('catchAll', params.catchAll);
     if (params.sort) query.set('sort', params.sort);
     if (params.order) query.set('order', params.order);
     const qs = query.toString();

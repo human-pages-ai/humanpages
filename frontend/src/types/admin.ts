@@ -51,6 +51,7 @@ export interface AdminUser {
   emailVerified: boolean;
   referralCode: string;
   role: 'USER' | 'STAFF' | 'ADMIN';
+  isCatchAll: boolean;
   createdAt: string;
   lastActiveAt: string;
   _count: {
@@ -133,7 +134,6 @@ export interface AdminFeedback {
 }
 
 export interface AdminUserDetail extends AdminUser {
-  isCatchAll: boolean;
   bio: string | null;
   neighborhood: string | null;
   skills: string[];
