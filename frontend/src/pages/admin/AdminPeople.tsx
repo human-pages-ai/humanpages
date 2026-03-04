@@ -110,7 +110,7 @@ export default function AdminPeople() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert('Export failed: ' + err.message);
+      setError('Export failed: ' + err.message);
     } finally {
       setExporting(false);
     }

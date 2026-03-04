@@ -662,7 +662,7 @@ describe('AdminPeople — Sorting', () => {
   });
 
   it('changes sort when clicking on column header', async () => {
-    const user = userEvent.setup();
+    userEvent.setup();
     renderWithProviders(<AdminPeople />);
 
     await waitFor(() => {

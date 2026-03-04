@@ -677,6 +677,7 @@ router.get('/people/export', async (req: AuthRequest, res) => {
     const people = await prisma.human.findMany({
       where,
       select: {
+        id: true,
         name: true,
         email: true,
         username: true,
@@ -695,6 +696,7 @@ router.get('/people/export', async (req: AuthRequest, res) => {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: 10000, // Safety limit for export
     });
 
     // Get referrer names
@@ -704,24 +706,18 @@ router.get('/people/export', async (req: AuthRequest, res) => {
       : [];
     const referrerMap = new Map(referrers.map((r) => [r.id, r.name]));
 
-    // Count referrals
-    const allIds = people.map((p) => p.email); // need IDs — use a different approach
-    const peopleWithIds = await prisma.human.findMany({
-      where,
-      select: { id: true, email: true },
-    });
-    const emailToId = new Map(peopleWithIds.map((p) => [p.email, p.id]));
-    const pIds = [...emailToId.values()];
+    // Count referrals using IDs from the same query (no N+1)
+    const personIds = people.map((p) => p.id);
     const referralCounts = await prisma.human.groupBy({
       by: ['referredBy'],
-      where: { referredBy: { in: pIds } },
+      where: { referredBy: { in: personIds } },
       _count: true,
     });
     const referralCountMap = new Map(referralCounts.map((r) => [r.referredBy, r._count]));
 
     const esc = (s: string | null | undefined) => {
       if (!s) return '';
-      return `"${s.replace(/"/g, '""')}"`;
+      return `"${s.replace(/"/g, '""').replace(/\n/g, ' ').replace(/\r/g, '')}"`;
     };
 
     const extractCountry = (loc: string | null) => {
@@ -731,27 +727,24 @@ router.get('/people/export', async (req: AuthRequest, res) => {
     };
 
     const headers = ['Name', 'Email', 'Username', 'Location', 'Country', 'Skills', 'Languages', 'Available', 'Email Verified', 'LinkedIn Verified', 'GitHub Verified', 'Career Applications', 'Referred By', 'Referral Count', 'Created', 'Last Active'];
-    const rows = people.map((p) => {
-      const id = emailToId.get(p.email) || '';
-      return [
-        esc(p.name),
-        esc(p.email),
-        esc(p.username),
-        esc(p.location),
-        esc(extractCountry(p.location)),
-        esc(p.skills.join('; ')),
-        esc(p.languages.join('; ')),
-        p.isAvailable ? 'Yes' : 'No',
-        p.emailVerified ? 'Yes' : 'No',
-        p.linkedinVerified ? 'Yes' : 'No',
-        p.githubVerified ? 'Yes' : 'No',
-        esc(p.careerApplications.map((a) => `${a.positionTitle} (${a.status})`).join('; ')),
-        esc(p.referredBy ? (referrerMap.get(p.referredBy) || p.referredBy) : ''),
-        referralCountMap.get(id) || 0,
-        p.createdAt.toISOString(),
-        p.lastActiveAt.toISOString(),
-      ];
-    });
+    const rows = people.map((p) => [
+      esc(p.name),
+      esc(p.email),
+      esc(p.username),
+      esc(p.location),
+      esc(extractCountry(p.location)),
+      esc(p.skills.join('; ')),
+      esc(p.languages.join('; ')),
+      p.isAvailable ? 'Yes' : 'No',
+      p.emailVerified ? 'Yes' : 'No',
+      p.linkedinVerified ? 'Yes' : 'No',
+      p.githubVerified ? 'Yes' : 'No',
+      esc(p.careerApplications.map((a) => `${a.positionTitle} (${a.status})`).join('; ')),
+      esc(p.referredBy ? (referrerMap.get(p.referredBy) || p.referredBy) : ''),
+      referralCountMap.get(p.id) || 0,
+      p.createdAt.toISOString(),
+      p.lastActiveAt.toISOString(),
+    ]);
 
     const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
 
