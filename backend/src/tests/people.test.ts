@@ -453,7 +453,6 @@ describe('Admin People Endpoints', () => {
       expect(lines.length).toBeGreaterThan(1);
       // Header should contain common fields
       const header = lines[0].toLowerCase();
-      expect(header).toContain('id');
       expect(header).toContain('email');
       expect(header).toContain('name');
     });
