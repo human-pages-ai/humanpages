@@ -21,6 +21,7 @@ import mktopsRoutes from './mktops.js';
 import videoBatchRoutes from './videoBatches.js';
 import watchdogRoutes from './watchdog.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
+import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 
 const router = Router();
 
@@ -449,6 +450,313 @@ router.get('/users', async (req: AuthRequest, res) => {
   }
 });
 
+// GET /api/admin/people/filter-options — Distinct values for filter dropdowns
+router.get('/people/filter-options', async (_req: AuthRequest, res) => {
+  try {
+    // Get all distinct locations and extract countries
+    const locationsRaw = await prisma.human.findMany({
+      where: { location: { not: null } },
+      select: { location: true },
+      distinct: ['location'],
+    });
+    const countrySet = new Set<string>();
+    for (const row of locationsRaw) {
+      if (!row.location) continue;
+      const parts = row.location.split(',').map((s: string) => s.trim());
+      if (parts.length >= 2) {
+        countrySet.add(parts[parts.length - 1]);
+      }
+    }
+    const countries = [...countrySet].sort();
+
+    // Get all distinct skills
+    const skillsRaw = await prisma.human.findMany({
+      where: { skills: { isEmpty: false } },
+      select: { skills: true },
+    });
+    const skillSet = new Set<string>();
+    for (const row of skillsRaw) {
+      for (const s of row.skills) skillSet.add(s);
+    }
+    const skills = [...skillSet].sort();
+
+    // Get career positions that have applications
+    const careerPositions = await prisma.careerApplication.groupBy({
+      by: ['positionId', 'positionTitle'],
+      _count: true,
+    });
+
+    res.json({
+      countries,
+      skills,
+      careerPositions: careerPositions.map((p) => ({ id: p.positionId, title: p.positionTitle, count: p._count })),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'People filter options error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/people — Enriched, filterable users list
+router.get('/people', async (req: AuthRequest, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 25));
+    const search = (req.query.search as string) || '';
+    const sort = (req.query.sort as string) || 'createdAt';
+    const order = (req.query.order as string) === 'asc' ? 'asc' : ('desc' as const);
+
+    const country = (req.query.country as string) || '';
+    const skillsParam = (req.query.skills as string) || '';
+    const hasCareerApplication = req.query.hasCareerApplication === 'true';
+    const careerPositionId = (req.query.careerPositionId as string) || '';
+    const affiliatedBy = (req.query.affiliatedBy as string) || '';
+    const hasReferrals = req.query.hasReferrals === 'true';
+    const availability = req.query.availability as string;
+
+    const allowedSorts = ['createdAt', 'name', 'email', 'lastActiveAt'];
+    const sortField = allowedSorts.includes(sort) ? sort : 'createdAt';
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { username: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Country filter: match last segment of location field
+    if (country) {
+      where.location = { endsWith: country, mode: 'insensitive' };
+    }
+
+    // Skills filter: match users who have ANY of the listed skills
+    if (skillsParam) {
+      const skillsList = skillsParam.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (skillsList.length > 0) {
+        where.skills = { hasSome: skillsList };
+      }
+    }
+
+    // Career application filter
+    if (hasCareerApplication || careerPositionId) {
+      where.careerApplications = { some: careerPositionId ? { positionId: careerPositionId } : {} };
+    }
+
+    // Affiliated by: users referred by a specific user
+    if (affiliatedBy) {
+      where.referredBy = affiliatedBy;
+    }
+
+    // Has referrals: users who have referred at least one person
+    if (hasReferrals) {
+      // Use a raw subquery approach: find IDs that appear in referredBy
+      const referrerIds = await prisma.human.findMany({
+        where: { referredBy: { not: null } },
+        select: { referredBy: true },
+        distinct: ['referredBy'],
+      });
+      const ids = referrerIds.map((r) => r.referredBy).filter(Boolean) as string[];
+      where.id = { ...(where.id || {}), in: ids };
+    }
+
+    if (availability === 'true') where.isAvailable = true;
+    if (availability === 'false') where.isAvailable = false;
+
+    const [people, total] = await Promise.all([
+      prisma.human.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          username: true,
+          location: true,
+          bio: true,
+          skills: true,
+          languages: true,
+          isAvailable: true,
+          emailVerified: true,
+          linkedinVerified: true,
+          githubVerified: true,
+          referralCode: true,
+          referredBy: true,
+          role: true,
+          createdAt: true,
+          lastActiveAt: true,
+          _count: {
+            select: { jobs: true, reviews: true, services: true },
+          },
+          careerApplications: {
+            select: { positionId: true, positionTitle: true, status: true },
+          },
+        },
+        orderBy: { [sortField]: order },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.human.count({ where }),
+    ]);
+
+    // Enrich with referredByName and referralCount
+    const referrerIds = [...new Set(people.map((p) => p.referredBy).filter(Boolean))] as string[];
+    const referrers = referrerIds.length > 0
+      ? await prisma.human.findMany({ where: { id: { in: referrerIds } }, select: { id: true, name: true } })
+      : [];
+    const referrerMap = new Map(referrers.map((r) => [r.id, r.name]));
+
+    // Count referrals for each person
+    const personIds = people.map((p) => p.id);
+    const referralCounts = await prisma.human.groupBy({
+      by: ['referredBy'],
+      where: { referredBy: { in: personIds } },
+      _count: true,
+    });
+    const referralCountMap = new Map(referralCounts.map((r) => [r.referredBy, r._count]));
+
+    const enriched = people.map((p) => ({
+      ...p,
+      referredByName: p.referredBy ? referrerMap.get(p.referredBy) || null : null,
+      referralCount: referralCountMap.get(p.id) || 0,
+    }));
+
+    res.json({
+      people: enriched,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin people error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/people/export — CSV export with same filters
+router.get('/people/export', async (req: AuthRequest, res) => {
+  try {
+    const search = (req.query.search as string) || '';
+    const country = (req.query.country as string) || '';
+    const skillsParam = (req.query.skills as string) || '';
+    const hasCareerApplication = req.query.hasCareerApplication === 'true';
+    const careerPositionId = (req.query.careerPositionId as string) || '';
+    const affiliatedBy = (req.query.affiliatedBy as string) || '';
+    const hasReferrals = req.query.hasReferrals === 'true';
+    const availability = req.query.availability as string;
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { username: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (country) where.location = { endsWith: country, mode: 'insensitive' };
+    if (skillsParam) {
+      const skillsList = skillsParam.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (skillsList.length > 0) where.skills = { hasSome: skillsList };
+    }
+    if (hasCareerApplication || careerPositionId) {
+      where.careerApplications = { some: careerPositionId ? { positionId: careerPositionId } : {} };
+    }
+    if (affiliatedBy) where.referredBy = affiliatedBy;
+    if (hasReferrals) {
+      const referrerIds = await prisma.human.findMany({
+        where: { referredBy: { not: null } },
+        select: { referredBy: true },
+        distinct: ['referredBy'],
+      });
+      const ids = referrerIds.map((r) => r.referredBy).filter(Boolean) as string[];
+      where.id = { ...(where.id || {}), in: ids };
+    }
+    if (availability === 'true') where.isAvailable = true;
+    if (availability === 'false') where.isAvailable = false;
+
+    const people = await prisma.human.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        location: true,
+        skills: true,
+        languages: true,
+        isAvailable: true,
+        emailVerified: true,
+        linkedinVerified: true,
+        githubVerified: true,
+        referredBy: true,
+        createdAt: true,
+        lastActiveAt: true,
+        careerApplications: {
+          select: { positionTitle: true, status: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10000, // Safety limit for export
+    });
+
+    // Get referrer names
+    const referrerIds = [...new Set(people.map((p) => p.referredBy).filter(Boolean))] as string[];
+    const referrers = referrerIds.length > 0
+      ? await prisma.human.findMany({ where: { id: { in: referrerIds } }, select: { id: true, name: true } })
+      : [];
+    const referrerMap = new Map(referrers.map((r) => [r.id, r.name]));
+
+    // Count referrals using IDs from the same query (no N+1)
+    const personIds = people.map((p) => p.id);
+    const referralCounts = await prisma.human.groupBy({
+      by: ['referredBy'],
+      where: { referredBy: { in: personIds } },
+      _count: true,
+    });
+    const referralCountMap = new Map(referralCounts.map((r) => [r.referredBy, r._count]));
+
+    const esc = (s: string | null | undefined) => {
+      if (!s) return '';
+      return `"${s.replace(/"/g, '""').replace(/\n/g, ' ').replace(/\r/g, '')}"`;
+    };
+
+    const extractCountry = (loc: string | null) => {
+      if (!loc) return '';
+      const parts = loc.split(',').map((s) => s.trim());
+      return parts.length >= 2 ? parts[parts.length - 1] : '';
+    };
+
+    const headers = ['Name', 'Email', 'Username', 'Location', 'Country', 'Skills', 'Languages', 'Available', 'Email Verified', 'LinkedIn Verified', 'GitHub Verified', 'Career Applications', 'Referred By', 'Referral Count', 'Created', 'Last Active'];
+    const rows = people.map((p) => [
+      esc(p.name),
+      esc(p.email),
+      esc(p.username),
+      esc(p.location),
+      esc(extractCountry(p.location)),
+      esc(p.skills.join('; ')),
+      esc(p.languages.join('; ')),
+      p.isAvailable ? 'Yes' : 'No',
+      p.emailVerified ? 'Yes' : 'No',
+      p.linkedinVerified ? 'Yes' : 'No',
+      p.githubVerified ? 'Yes' : 'No',
+      esc(p.careerApplications.map((a) => `${a.positionTitle} (${a.status})`).join('; ')),
+      esc(p.referredBy ? (referrerMap.get(p.referredBy) || p.referredBy) : ''),
+      referralCountMap.get(p.id) || 0,
+      p.createdAt.toISOString(),
+      p.lastActiveAt.toISOString(),
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="people-export-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(csv);
+  } catch (error) {
+    logger.error({ err: error }, 'People export error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // GET /api/admin/agents — Paginated agents list
 router.get('/agents', async (req: AuthRequest, res) => {
   try {
@@ -723,7 +1031,17 @@ router.get('/users/:id', async (req: AuthRequest, res) => {
 
     const referralCount = await prisma.human.count({ where: { referredBy: user.id } });
 
-    res.json({ ...user, referralCount });
+    // Generate signed URL for profile photo
+    let profilePhotoUrl: string | null = null;
+    if (user.profilePhotoKey && ['approved', 'pending'].includes(user.profilePhotoStatus)) {
+      try {
+        profilePhotoUrl = await getProfilePhotoSignedUrl(user.profilePhotoKey);
+      } catch {
+        // If signed URL generation fails, just omit the photo
+      }
+    }
+
+    res.json({ ...user, referralCount, profilePhotoUrl });
   } catch (error) {
     logger.error({ err: error }, 'Admin user detail error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });

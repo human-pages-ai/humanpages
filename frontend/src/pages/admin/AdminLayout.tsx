@@ -3,7 +3,7 @@ import { useAdminRole } from '../../hooks/useAdminRole';
 
 const adminOnlyItems = [
   { to: '/admin', label: 'Overview', end: true },
-  { to: '/admin/users', label: 'Users' },
+  { to: '/admin/people', label: 'People' },
   { to: '/admin/agents', label: 'Agents' },
   { to: '/admin/jobs', label: 'Jobs' },
   { to: '/admin/listings', label: 'Listings' },
