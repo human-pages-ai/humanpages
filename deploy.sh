@@ -75,18 +75,6 @@ else
 fi
 
 echo ""
-echo "=== Deploying Marketing Ops ==="
-if [ -d /opt/marketing-ops ]; then
-  cd /opt/marketing-ops
-  git pull
-  npm install --no-fund --no-audit
-  echo "Marketing ops dependencies installed"
-  sudo systemctl restart marketing-ops 2>/dev/null || true
-else
-  echo "SKIP: /opt/marketing-ops not found"
-fi
-
-echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"
