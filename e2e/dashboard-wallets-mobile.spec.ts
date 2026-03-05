@@ -28,7 +28,8 @@ test.describe('Wallet connection options', () => {
     // Should show single "Connect or Create Wallet" button (Privy handles all methods)
     await expect(page.getByText('Connect or Create Wallet')).toBeVisible({ timeout: 15_000 });
 
-    // Should show manual address paste input
+    // Manual address paste is collapsed by default — expand it
+    await page.getByText('Already have a wallet address? Paste it manually').click();
     await expect(page.getByPlaceholder('0x...')).toBeVisible();
 
     // Old per-connector buttons should NOT exist
@@ -54,6 +55,8 @@ test.describe('Wallet connection options', () => {
 
     // Should show single connect button
     await expect(page.getByText('Connect or Create Wallet')).toBeVisible({ timeout: 15_000 });
+    // Manual address paste is collapsed by default — expand it
+    await page.getByText('Already have a wallet address? Paste it manually').click();
     await expect(page.getByPlaceholder('0x...')).toBeVisible();
 
     await context.close();
@@ -74,6 +77,8 @@ test.describe('Wallet connection options', () => {
 
     // Should work in in-app browsers too
     await expect(page.getByText('Connect or Create Wallet')).toBeVisible({ timeout: 15_000 });
+    // Manual address paste is collapsed by default — expand it
+    await page.getByText('Already have a wallet address? Paste it manually').click();
     await expect(page.getByPlaceholder('0x...')).toBeVisible();
 
     await context.close();
