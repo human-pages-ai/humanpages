@@ -451,6 +451,8 @@
       "connectOrCreateDesc": "Use an existing wallet or create one with your email",
       "pasteAddress": "Paste wallet address",
       "pasteAddressDesc": "Add any EVM wallet address manually",
+      "showManualPaste": "Already have a wallet address? Paste it manually",
+      "hideManualPaste": "Hide manual paste",
       "pasteAddressNote": "Added without signature verification — label will show as Unverified",
       "invalidAddress": "Invalid EVM wallet address",
       "addingWallet": "Adding wallet...",

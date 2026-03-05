@@ -43,6 +43,7 @@ export default function WalletsSection({
   const [editLabel, setEditLabel] = useState('');
   const [manualAddress, setManualAddress] = useState('');
   const [manualError, setManualError] = useState('');
+  const [showManualPaste, setShowManualPaste] = useState(false);
 
   // Track whether we initiated the connect flow so we can auto-verify
   const pendingVerifyRef = useRef(false);
@@ -138,12 +139,13 @@ export default function WalletsSection({
   }, [authenticated, privyWallets, verifyWallet, onAddWalletManual, logout, t]);
 
   /** Open Privy modal to connect or create a wallet. */
-  const handleConnectWallet = useCallback(() => {
+  const handleConnectWallet = useCallback(async () => {
     setError('');
     analytics.track('wallet_connect_started', { method: 'privy' });
+    if (authenticated) await logout();
     pendingVerifyRef.current = true;
     login();
-  }, [login]);
+  }, [login, authenticated, logout]);
 
   /** Submit a manually pasted address. */
   const submitManualAddress = async () => {
@@ -220,33 +222,39 @@ export default function WalletsSection({
         </svg>
       </button>
 
-      {/* Manual address paste */}
-      <div className="border border-gray-200 rounded-lg p-3">
-        <p className="text-sm font-medium text-gray-900 mb-1">{t('dashboard.wallets.pasteAddress')}</p>
-        <p className="text-xs text-gray-500 mb-2">{t('dashboard.wallets.pasteAddressDesc')}</p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={manualAddress}
-            onChange={(e) => { setManualAddress(e.target.value); setManualError(''); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') submitManualAddress(); }}
-            placeholder="0x..."
-            className="flex-1 min-w-0 text-sm px-3 py-2 border border-gray-300 rounded-md font-mono"
-            disabled={saving || step === 'busy'}
-          />
-          <button
-            onClick={submitManualAddress}
-            disabled={saving || step === 'busy' || !manualAddress.trim()}
-            className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {t('common.add')}
-          </button>
+      {/* Manual address paste — collapsed by default */}
+      <button
+        onClick={() => setShowManualPaste(!showManualPaste)}
+        className="text-xs text-gray-400 hover:text-gray-600"
+      >
+        {showManualPaste ? t('dashboard.wallets.hideManualPaste') : t('dashboard.wallets.showManualPaste')}
+      </button>
+      {showManualPaste && (
+        <div className="border border-gray-200 rounded-lg p-3 mt-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={manualAddress}
+              onChange={(e) => { setManualAddress(e.target.value); setManualError(''); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitManualAddress(); }}
+              placeholder="0x..."
+              className="flex-1 min-w-0 text-sm px-3 py-2 border border-gray-300 rounded-md font-mono"
+              disabled={saving || step === 'busy'}
+            />
+            <button
+              onClick={submitManualAddress}
+              disabled={saving || step === 'busy' || !manualAddress.trim()}
+              className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {t('common.add')}
+            </button>
+          </div>
+          {manualError && (
+            <p className="text-xs text-red-600 mt-1">{manualError}</p>
+          )}
+          <p className="text-xs text-gray-400 mt-1">{t('dashboard.wallets.pasteAddressNote')}</p>
         </div>
-        {manualError && (
-          <p className="text-xs text-red-600 mt-1">{manualError}</p>
-        )}
-        <p className="text-xs text-gray-400 mt-1">{t('dashboard.wallets.pasteAddressNote')}</p>
-      </div>
+      )}
     </div>
   );
 
