@@ -20,6 +20,8 @@ export INFISICAL_CLIENT_SECRET=$(extract_env INFISICAL_CLIENT_SECRET)
 export INFISICAL_PROJECT_ID=$(extract_env INFISICAL_PROJECT_ID)
 node ../scripts/inject-frontend-env.mjs
 npm run build
+# Clean up JS/CSS assets older than 24h (keeps old chunks for users with stale HTML)
+bash ../scripts/clean-old-assets.sh
 
 echo ""
 echo "=== Injecting secrets to all satellite repos ==="

@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Keep old chunk files around so users with stale HTML don't get 404s.
+    // Old assets are cleaned up by scripts/clean-old-assets.sh after deploy.
+    emptyOutDir: false,
+  },
   test: {
     environment: 'jsdom',
     globals: true,
