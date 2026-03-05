@@ -3,6 +3,9 @@ import { logger } from './logger.js';
 export async function verifyCaptcha(token: string): Promise<boolean> {
   if (process.env.NODE_ENV === 'test') return true;
 
+  // Allow e2e tests running against the dev server to bypass captcha
+  if (process.env.NODE_ENV !== 'production' && token === 'test-token') return true;
+
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
     logger.warn('TURNSTILE_SECRET_KEY not set, skipping captcha verification');
