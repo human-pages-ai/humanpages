@@ -29,6 +29,7 @@ import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
 import PaymentPreferencesSection from '../components/dashboard/PaymentPreferencesSection';
 import ContactPrivacySection from '../components/dashboard/ContactPrivacySection';
+import FeaturedInviteModal from '../components/dashboard/FeaturedInviteModal';
 import ListingsSection from '../components/dashboard/ListingsSection';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
@@ -126,6 +127,11 @@ export default function Dashboard() {
     onConfirm: () => void;
   }>({ open: false, title: '', message: '', onConfirm: () => {} });
 
+  // Featured invite modal — shown when ?featured=1 is in the URL
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [featuredModalValue, setFeaturedModalValue] = useState(false);
+  const [featuredModalSaving, setFeaturedModalSaving] = useState(false);
+
   useEffect(() => {
     loadProfile();
     loadJobs();
@@ -150,6 +156,38 @@ export default function Dashboard() {
       loadProfile();
     }
   }, []);
+
+  // Show featured invite modal when ?featured=1 is in the URL
+  useEffect(() => {
+    if (!profile) return;
+    if (searchParams.get('featured') === '1' && !profile.featuredConsent) {
+      setFeaturedModalValue(profile.featuredConsent || false);
+      setShowFeaturedModal(true);
+      searchParams.delete('featured');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [profile]);
+
+  const saveFeaturedConsent = async () => {
+    setFeaturedModalSaving(true);
+    try {
+      const updated = await api.updateProfile({ featuredConsent: featuredModalValue });
+      setProfile(updated);
+      setProfileForm(prev => ({ ...prev, featuredConsent: featuredModalValue }));
+      initialProfileFormRef.current = { ...initialProfileFormRef.current, featuredConsent: featuredModalValue };
+      setShowFeaturedModal(false);
+      if (featuredModalValue) {
+        toast.success(t('toast.featuredEnabled', { defaultValue: 'You\'re now featured on the homepage!' }));
+      } else {
+        toast.success(t('toast.profileSaved'));
+      }
+      posthog.capture('featured_consent_updated', { enabled: featuredModalValue });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('toast.genericError'));
+    } finally {
+      setFeaturedModalSaving(false);
+    }
+  };
 
   // Poll for email verification when unverified (user may verify on another device)
   useEffect(() => {
@@ -900,6 +938,15 @@ export default function Dashboard() {
         message={confirmDialog.message}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(d => ({ ...d, open: false }))}
+      />
+
+      <FeaturedInviteModal
+        open={showFeaturedModal}
+        enabled={featuredModalValue}
+        saving={featuredModalSaving}
+        onToggle={setFeaturedModalValue}
+        onSave={saveFeaturedConsent}
+        onClose={() => setShowFeaturedModal(false)}
       />
 
       <Footer className="mt-12" />

@@ -1902,19 +1902,21 @@ interface FeaturedInviteEmailData {
 }
 
 export async function sendFeaturedInviteEmail(data: FeaturedInviteEmailData): Promise<boolean> {
-  const dashboardUrl = `${FRONTEND_URL}/dashboard`;
+  const dashboardUrl = `${FRONTEND_URL}/dashboard?featured=1`;
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
 
   const textContent = `Hi ${data.name},
 
 Your profile on Human Pages is looking great! We'd love to feature you on our homepage to showcase the community to new visitors and AI agents.
 
+Featured profiles get significantly more visibility — both from people browsing the site and from AI agents looking to hire. Being on the homepage is one of the best ways to attract more job offers.
+
 What gets shown: your profile photo, name, skills, and location — all info that's already public on your profile.
 
-If you'd like to be featured, just toggle "Feature me on the homepage" in your dashboard privacy settings:
+To get featured, just click the link below and toggle it on:
 ${dashboardUrl}
 
-You can opt out at any time from the same settings page.
+You can opt out at any time from your privacy settings.
 
 Thanks for being part of the community!
 
@@ -1937,17 +1939,18 @@ Unsubscribe: ${unsubscribeUrl}`;
         Your profile on Human Pages is looking great! We'd love to feature you on our
         <strong>homepage</strong> to showcase the community to new visitors and AI agents.
       </p>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 12px;">
+        Featured profiles get significantly more visibility — both from people browsing the site and from AI agents looking to hire.
+        <strong>Being on the homepage is one of the best ways to attract more job offers.</strong>
+      </p>
       <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 20px;">
         <strong>What gets shown:</strong> your profile photo, name, skills, and location — all info that's already public on your profile. You can opt out at any time.
       </p>
       <div style="text-align:center;margin:24px 0;">
         <a href="${dashboardUrl}" style="display:inline-block;padding:12px 28px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">
-          Go to Dashboard
+          Get Featured
         </a>
       </div>
-      <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin:16px 0 0;">
-        Toggle <strong>"Feature me on the homepage"</strong> in your Privacy settings.
-      </p>
     </div>
     <p style="color:#94a3b8;font-size:11px;text-align:center;margin:20px 0 0;">
       <a href="${unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a>
