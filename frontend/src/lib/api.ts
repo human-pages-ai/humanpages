@@ -155,6 +155,12 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  addWalletManual: (data: { address: string; label?: string }) =>
+    request<Wallet[]>('/wallets/manual', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   deleteWallet: (id: string) =>
     request<void>(`/wallets/${id}`, { method: 'DELETE' }),
 
@@ -1035,12 +1041,13 @@ export const api = {
     }),
 
   // Videos (R2-backed)
-  getVideos: (params?: { page?: number; limit?: number; status?: string; tier?: string }) => {
+  getVideos: (params?: { page?: number; limit?: number; status?: string; tier?: string; conceptSlug?: string }) => {
     const sp = new URLSearchParams();
     if (params?.page) sp.set('page', String(params.page));
     if (params?.limit) sp.set('limit', String(params.limit));
     if (params?.status) sp.set('status', params.status);
     if (params?.tier) sp.set('tier', params.tier);
+    if (params?.conceptSlug) sp.set('conceptSlug', params.conceptSlug);
     return request<{ videos: VideoItem[]; pagination: Pagination }>(`/admin/videos?${sp}`);
   },
 

@@ -36,6 +36,7 @@ type EventName =
   | 'wallet_sign_rejected'
   | 'wallet_sign_failed'
   | 'wallet_added'
+  | 'wallet_added_manual'
   | 'wallet_deleted';
 
 interface EventProperties {

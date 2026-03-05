@@ -67,10 +67,12 @@ router.get('/', async (req: Request, res: Response) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const status = req.query.status as string | undefined;
     const tier = req.query.tier as string | undefined;
+    const conceptSlug = req.query.conceptSlug as string | undefined;
 
     const where: any = {};
     if (status) where.status = status;
     if (tier) where.tier = tier;
+    if (conceptSlug) where.conceptSlug = conceptSlug;
 
     const [videos, total] = await Promise.all([
       prisma.video.findMany({

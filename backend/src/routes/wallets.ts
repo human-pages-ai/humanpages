@@ -134,6 +134,56 @@ router.post('/', authenticateToken, walletCreateLimiter, async (req: AuthRequest
   }
 });
 
+// Add a wallet without signature verification (for Privy-authenticated wallets)
+const addWalletManualSchema = z.object({
+  address: z.string().regex(EVM_ADDRESS_RE, 'Invalid EVM address'),
+  label: z.string().max(50).optional(),
+});
+
+router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthRequest, res) => {
+  try {
+    const { address, label } = addWalletManualSchema.parse(req.body);
+
+    const existing = await prisma.wallet.findMany({
+      where: {
+        humanId: req.userId!,
+        address,
+        network: { in: EVM_MAINNET_NETWORKS },
+      },
+    });
+    const existingNetworks = new Set(existing.map((w) => w.network));
+    const missingNetworks = EVM_MAINNET_NETWORKS.filter((n) => !existingNetworks.has(n));
+
+    if (missingNetworks.length === 0) {
+      return res.status(400).json({ error: 'This wallet is already registered on all supported networks' });
+    }
+
+    const created = await prisma.$transaction(
+      missingNetworks.map((network) =>
+        prisma.wallet.create({
+          data: {
+            humanId: req.userId!,
+            network,
+            address,
+            label,
+          },
+        })
+      )
+    );
+
+    res.status(201).json(created);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    if ((error as any).code === 'P2002') {
+      return res.status(400).json({ error: 'This wallet address is already added for this network' });
+    }
+    logger.error({ err: error }, 'Add wallet manual error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Update wallet label (updates all wallets with the same address for this user)
 const updateLabelSchema = z.object({
   label: z.string().max(50).optional(),

@@ -391,6 +391,72 @@ function VideoBadge({ label, className }: { label: string; className: string }) 
   );
 }
 
+function VideoPlayerModal({ slug, onClose }: { slug: string; onClose: () => void }) {
+  const [video, setVideo] = useState<VideoDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.getVideos({ conceptSlug: slug, limit: 1 })
+      .then((res) => {
+        if (res.videos.length > 0) {
+          return api.getVideo(res.videos[0].id);
+        }
+        return null;
+      })
+      .then((v) => {
+        if (v) setVideo(v);
+        else setError('No uploaded video found for this concept.');
+      })
+      .catch((err) => setError(err.message || 'Failed to load video'))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[95vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-700">
+          <h2 className="text-white font-semibold truncate">{video?.title || slug}</h2>
+          <div className="flex items-center gap-3">
+            {video?.videoUrl && (
+              <a
+                href={video.videoUrl}
+                download
+                className="text-xs text-blue-400 hover:text-blue-300"
+              >
+                Download MP4
+              </a>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+          {loading && <p className="text-gray-400">Loading...</p>}
+          {error && <p className="text-red-400">{error}</p>}
+          {video && !video.videoUrl && <p className="text-gray-400">Video not yet uploaded to R2.</p>}
+          {video?.videoUrl && (
+            <video
+              src={video.videoUrl}
+              controls
+              autoPlay
+              className="max-h-[80vh] max-w-full rounded-lg"
+              style={{ aspectRatio: video.aspectRatio === '9:16' ? '9/16' : '16/9' }}
+            />
+          )}
+        </div>
+        {video && (
+          <div className="px-5 py-3 border-t border-gray-700 flex items-center gap-4 text-xs text-gray-400">
+            <span>{video.tier}</span>
+            <span>{video.durationSeconds ? `${video.durationSeconds}s` : ''}</span>
+            <span>{video.assets.length} assets</span>
+            {video.estimatedCostUsd != null && <span>${video.estimatedCostUsd.toFixed(2)}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function VideoDetailModal({ videoId, onClose }: { videoId: string; onClose: () => void }) {
   const [video, setVideo] = useState<VideoDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -649,6 +715,9 @@ export default function AdminVideoConcepts() {
   const [reviewSlug, setReviewSlug] = useState<string | null>(null);
   const [reviewMode, setReviewMode] = useState<'review' | 'checkpoint'>('review');
   const [reviewTier, setReviewTier] = useState<string>('nano');
+
+  // Video player
+  const [watchSlug, setWatchSlug] = useState<string | null>(null);
 
   const fetchConcepts = useCallback(async () => {
     setLoading(true);
@@ -977,6 +1046,9 @@ export default function AdminVideoConcepts() {
                                   {c.status === 'approved' && (
                                     <button onClick={() => handleProduce(c.slug)} className="text-green-600 hover:text-green-800 text-sm">Produce</button>
                                   )}
+                                  {(c.status === 'draft_done' || c.status === 'final_done') && (
+                                    <button onClick={() => setWatchSlug(c.slug)} className="text-green-600 hover:text-green-800 text-sm font-medium">Watch</button>
+                                  )}
                                   {(c.status === 'draft_images_ready' || c.status === 'final_images_ready') && (
                                     <button
                                       onClick={() => openCheckpointReview(c.slug, c.status.replace('_images_ready', ''))}
@@ -1032,6 +1104,11 @@ export default function AdminVideoConcepts() {
           onReject={handleStoryboardReject}
           onContinue={handleContinue}
         />
+      )}
+
+      {/* Video Player Modal */}
+      {watchSlug && (
+        <VideoPlayerModal slug={watchSlug} onClose={() => setWatchSlug(null)} />
       )}
 
       {/* Create / Edit / View Modal */}
