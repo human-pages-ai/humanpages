@@ -33,7 +33,7 @@ export default function WalletsSection({
   onUpdateWalletLabel,
 }: Props) {
   const { t } = useTranslation();
-  const { login, authenticated, logout } = usePrivy();
+  const { login, authenticated, logout, exportWallet } = usePrivy();
   const { wallets: privyWallets } = useWallets();
 
   const [step, setStep] = useState<Step>('idle');
@@ -345,9 +345,17 @@ export default function WalletsSection({
             </div>
           )}
           {step === 'idle' && (
-            <div className="mt-4">
-              {renderConnectOptions()}
-            </div>
+            <>
+              <button
+                onClick={exportWallet}
+                className="mt-3 text-xs text-gray-500 hover:text-blue-600 underline"
+              >
+                {t('dashboard.wallets.exportKey')}
+              </button>
+              <div className="mt-4">
+                {renderConnectOptions()}
+              </div>
+            </>
           )}
         </>
       )}
