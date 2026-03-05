@@ -119,9 +119,23 @@ export default function WalletsSection({
     if (authenticated && privyWallets.length > 0 && pendingVerifyRef.current) {
       pendingVerifyRef.current = false;
       const wallet = privyWallets[0];
-      verifyWallet(wallet.address);
+      // Embedded wallets (created via email/Google) — use manual add since Privy already authed the user
+      if (wallet.walletClientType === 'privy') {
+        setStep('busy');
+        setBusyMessage(t('dashboard.wallets.addingWallet'));
+        onAddWalletManual(wallet.address)
+          .then(() => { resetState(); logout(); })
+          .catch((err: any) => {
+            setError(err?.message || t('dashboard.wallets.verificationFailed'));
+            setStep('idle');
+            logout();
+          });
+      } else {
+        // External wallets (MetaMask, Coinbase, etc.) — verify with signature
+        verifyWallet(wallet.address);
+      }
     }
-  }, [authenticated, privyWallets, verifyWallet]);
+  }, [authenticated, privyWallets, verifyWallet, onAddWalletManual, logout, t]);
 
   /** Open Privy modal to connect or create a wallet. */
   const handleConnectWallet = useCallback(() => {
