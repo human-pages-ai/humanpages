@@ -447,6 +447,7 @@
       "confirmDelete": "Delete this wallet?",
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "Export wallet private key",
+      "replaceWallet": "Replace wallet",
       "connectOrCreate": "Connect or Create Wallet",
       "connectOrCreateDesc": "Use an existing wallet or create one with your email",
       "pasteAddress": "Paste wallet address",

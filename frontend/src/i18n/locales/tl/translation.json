@@ -482,6 +482,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "I-export ang private key ng wallet",
+      "replaceWallet": "Palitan ang wallet",
       "showManualPaste": "Mayroon nang wallet address? I-paste ito nang manu-mano",
       "hideManualPaste": "Itago ang manu-manong pag-paste",
       "connectOrCreate": "Ikonekta o Gumawa ng Wallet",

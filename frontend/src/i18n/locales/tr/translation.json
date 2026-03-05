@@ -482,6 +482,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "Cüzdan özel anahtarını dışa aktar",
+      "replaceWallet": "Cüzdanı değiştir",
       "showManualPaste": "Zaten bir cüzdan adresiniz var mı? Manuel olarak yapıştırın",
       "hideManualPaste": "Manuel yapıştırmayı gizle",
       "connectOrCreate": "Cüzdan Bağla veya Oluştur",

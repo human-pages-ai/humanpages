@@ -447,6 +447,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "ส่งออกคีย์ส่วนตัวของกระเป๋าเงิน",
+      "replaceWallet": "เปลี่ยนกระเป๋าเงิน",
       "showManualPaste": "มีที่อยู่กระเป๋าเงินอยู่แล้ว? วางด้วยตนเอง",
       "hideManualPaste": "ซ่อนการวางด้วยตนเอง",
       "connectOrCreate": "เชื่อมต่อหรือสร้างกระเป๋าเงิน",

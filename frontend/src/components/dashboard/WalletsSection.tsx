@@ -326,6 +326,7 @@ export default function WalletsSection({
       {step === 'busy' && renderBusy()}
 
       {walletGroups.length === 0 && step === 'idle' ? (
+        /* ── No wallet yet ── */
         <div className="py-4">
           <div className="flex flex-col items-center gap-4 mb-6">
             <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,97 +340,93 @@ export default function WalletsSection({
           {renderConnectOptions()}
         </div>
       ) : (
+        /* ── Wallet connected ── */
         <>
-          {walletGroups.length > 0 && (
-            <div className="space-y-3">
-              {walletGroups.map((group) => (
-                <div key={group.address} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="min-w-0 flex-1">
-                      {editingAddress === group.address ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={editLabel}
-                            onChange={(e) => setEditLabel(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveLabel(group.address);
-                              if (e.key === 'Escape') cancelEditLabel();
-                            }}
-                            placeholder={t('dashboard.wallets.labelPlaceholder')}
-                            maxLength={50}
-                            className="text-sm px-2 py-1 border border-gray-300 rounded-md flex-1 min-w-0"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => saveLabel(group.address)}
-                            className="text-blue-600 hover:text-blue-500 text-xs"
-                          >
-                            {t('common.save')}
-                          </button>
-                          <button
-                            onClick={cancelEditLabel}
-                            className="text-gray-400 hover:text-gray-600 text-xs"
-                          >
-                            {t('common.cancel')}
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          {group.label ? (
-                            <span className="text-sm text-gray-500">{group.label}</span>
-                          ) : null}
-                          <button
-                            onClick={() => startEditLabel(group.address, group.label)}
-                            className="text-gray-400 hover:text-blue-600"
-                            aria-label={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
-                            title={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                      <p aria-label={t('dashboard.wallets.walletAddress')} className="text-xs text-gray-600 font-mono truncate max-w-md">{group.address}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.wallets.map((wallet) => (
-                      <span
-                        key={wallet.id}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
+          {walletGroups.map((group) => (
+            <div key={group.address} className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="min-w-0 flex-1">
+                  {editingAddress === group.address ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveLabel(group.address);
+                          if (e.key === 'Escape') cancelEditLabel();
+                        }}
+                        placeholder={t('dashboard.wallets.labelPlaceholder')}
+                        maxLength={50}
+                        className="text-sm px-2 py-1 border border-gray-300 rounded-md flex-1 min-w-0"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => saveLabel(group.address)}
+                        className="text-blue-600 hover:text-blue-500 text-xs"
                       >
-                        {networkDisplayName(wallet.network)}
-                        <button
-                          onClick={() => onDeleteWallet(wallet.id)}
-                          className="ml-0.5 text-blue-400 hover:text-red-600"
-                          aria-label={`Remove ${wallet.network}`}
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1.5">{t('dashboard.wallets.allNetworksNote')}</p>
+                        {t('common.save')}
+                      </button>
+                      <button
+                        onClick={cancelEditLabel}
+                        className="text-gray-400 hover:text-gray-600 text-xs"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      {group.label ? (
+                        <span className="text-sm text-gray-500">{group.label}</span>
+                      ) : null}
+                      <button
+                        onClick={() => startEditLabel(group.address, group.label)}
+                        className="text-gray-400 hover:text-blue-600"
+                        aria-label={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
+                        title={group.label ? t('dashboard.wallets.editLabel') : t('dashboard.wallets.addLabel')}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                  <p aria-label={t('dashboard.wallets.walletAddress')} className="text-xs text-gray-600 font-mono truncate max-w-md">{group.address}</p>
                 </div>
-              ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {group.wallets.map((wallet) => (
+                  <span
+                    key={wallet.id}
+                    className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
+                  >
+                    {networkDisplayName(wallet.network)}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">{t('dashboard.wallets.allNetworksNote')}</p>
             </div>
-          )}
+          ))}
           {step === 'idle' && (
-            <>
+            <div className="mt-3 flex items-center gap-3">
               <button
                 onClick={exportWallet}
-                className="mt-3 text-xs text-gray-500 hover:text-blue-600 underline"
+                className="text-xs text-gray-500 hover:text-blue-600 underline"
               >
                 {t('dashboard.wallets.exportKey')}
               </button>
-              <div className="mt-4">
-                {renderConnectOptions()}
-              </div>
-            </>
+              <span className="text-gray-300">·</span>
+              <button
+                onClick={() => {
+                  // Delete all wallets for all groups, then show connect UI
+                  walletGroups.forEach((g) => g.wallets.forEach((w) => onDeleteWallet(w.id)));
+                  autoRegisteredRef.current = false;
+                }}
+                className="text-xs text-gray-500 hover:text-red-500 underline"
+              >
+                {t('dashboard.wallets.replaceWallet')}
+              </button>
+            </div>
           )}
         </>
       )}

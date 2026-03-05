@@ -481,6 +481,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "वॉलेट की निजी कुंजी निर्यात करें",
+      "replaceWallet": "वॉलेट बदलें",
       "showManualPaste": "क्या आपके पास पहले से वॉलेट पता है? इसे मैन्युअल रूप से पेस्ट करें",
       "hideManualPaste": "मैन्युअल पेस्ट छिपाएं",
       "connectOrCreate": "वॉलेट कनेक्ट या बनाएं",

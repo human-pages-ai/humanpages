@@ -482,6 +482,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "导出钱包私钥",
+      "replaceWallet": "更换钱包",
       "showManualPaste": "已有钱包地址？手动粘贴",
       "hideManualPaste": "隐藏手动粘贴",
       "connectOrCreate": "连接或创建钱包",

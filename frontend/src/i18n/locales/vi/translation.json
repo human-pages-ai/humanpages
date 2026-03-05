@@ -447,6 +447,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "Xuất khóa riêng của ví",
+      "replaceWallet": "Thay đổi ví",
       "showManualPaste": "Đã có địa chỉ ví? Dán thủ công",
       "hideManualPaste": "Ẩn dán thủ công",
       "connectOrCreate": "Kết nối hoặc Tạo Ví",

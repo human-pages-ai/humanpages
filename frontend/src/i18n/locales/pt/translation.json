@@ -397,6 +397,7 @@
       },
       "allNetworksNote": "Available on all EVM networks",
       "exportKey": "Exportar chave privada da carteira",
+      "replaceWallet": "Substituir carteira",
       "showManualPaste": "Já tem um endereço de carteira? Cole-o manualmente",
       "hideManualPaste": "Ocultar colagem manual",
       "connectOrCreate": "Conectar ou Criar Carteira",
