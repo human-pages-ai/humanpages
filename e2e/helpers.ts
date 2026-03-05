@@ -20,13 +20,29 @@ export function uniqueEmail(): string {
 
 /**
  * Add X-Forwarded-For header to all /api/auth requests to bypass rate limiting.
+ * Also replaces captchaToken with 'test-token' in POST requests so the backend
+ * dev-mode bypass accepts it (avoids needing a real Turnstile secret key).
  * Call this at the start of tests that use UI-based signup/login.
  */
 export async function bypassRateLimit(page: Page) {
   const ip = uniqueIp();
-  await page.route('**/api/auth/**', (route) => {
-    route.continue({
-      headers: { ...route.request().headers(), 'X-Forwarded-For': ip },
+  await page.route('**/api/auth/**', async (route) => {
+    const request = route.request();
+    if (request.method() === 'POST' && request.postData()) {
+      try {
+        const body = JSON.parse(request.postData()!);
+        if ('captchaToken' in body) {
+          body.captchaToken = 'test-token';
+          await route.continue({
+            headers: { ...request.headers(), 'X-Forwarded-For': ip },
+            postData: JSON.stringify(body),
+          });
+          return;
+        }
+      } catch { /* not JSON, fall through */ }
+    }
+    await route.continue({
+      headers: { ...request.headers(), 'X-Forwarded-For': ip },
     });
   });
 }
@@ -44,7 +60,11 @@ export async function signup(
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
   await page.locator('#terms').check();
-  await page.locator('button[type="submit"]').click();
+  // Wait for Turnstile widget to verify (enables the submit button)
+  const submitBtn = page.locator('button[type="submit"]');
+  await submitBtn.waitFor({ state: 'attached' });
+  await expect(submitBtn).toBeEnabled({ timeout: 15_000 });
+  await submitBtn.click();
   await page.waitForURL(/\/(onboarding|dashboard|welcome)/, { timeout: 15_000 });
 }
 
@@ -76,7 +96,10 @@ export async function login(
   await page.goto('/login');
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
-  await page.locator('button[type="submit"]').click();
+  // Wait for Turnstile widget to verify (enables the submit button)
+  const loginBtn = page.locator('button[type="submit"]');
+  await expect(loginBtn).toBeEnabled({ timeout: 15_000 });
+  await loginBtn.click();
   await page.waitForURL('**/dashboard', { timeout: 15_000 });
 }
 
