@@ -61,15 +61,8 @@ export default function WalletsSection({
     });
   }, [authenticated, privyReady, walletsReady, privyWallets, privyUser]);
 
-  // Clean up any stale Privy session on mount (only before user initiates a flow)
-  const cleanedUpRef = useRef(false);
-  useEffect(() => {
-    if (privyReady && !cleanedUpRef.current && authenticated && !pendingVerifyRef.current) {
-      cleanedUpRef.current = true;
-      console.log('[Wallets] Cleaning up stale Privy session');
-      logout();
-    }
-  }, [privyReady, authenticated, logout]);
+  // Track whether we already auto-registered a wallet this session
+  const autoRegisteredRef = useRef(false);
 
   const trackedRef = useRef(false);
   useEffect(() => {
@@ -138,19 +131,21 @@ export default function WalletsSection({
     }
   }, [privyWallets, onAddWallet, logout, t]);
 
-  // When Privy authenticates and wallets are ready, auto-register
+  // When Privy authenticates and wallets are ready, auto-register the wallet
+  // Handles both: (1) user just clicked connect, (2) existing session from previous page load
   useEffect(() => {
-    if (!authenticated || !walletsReady || !pendingVerifyRef.current) return;
+    if (!authenticated || !walletsReady || autoRegisteredRef.current) return;
 
     // Try to get wallet from useWallets() first, fall back to user's linked accounts
-    let walletAddress = privyWallets[0]?.address;
-    let walletType = privyWallets[0]?.walletClientType;
+    let walletAddress = privyWallets.find((w) => w.walletClientType === 'privy')?.address
+      || privyWallets[0]?.address;
+    let walletType = privyWallets.find((w) => w.address === walletAddress)?.walletClientType;
 
     if (!walletAddress && privyUser) {
       const linkedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet');
       if (linkedWallet) {
         walletAddress = (linkedWallet as any).address;
-        walletType = 'privy'; // linked account wallets from email/Google are embedded
+        walletType = 'privy';
       }
     }
 
@@ -159,7 +154,19 @@ export default function WalletsSection({
       return;
     }
 
+    // Skip if this wallet is already registered with our backend
+    const alreadyRegistered = wallets.some(
+      (w) => w.address.toLowerCase() === walletAddress!.toLowerCase(),
+    );
+    if (alreadyRegistered) {
+      console.log('[Wallets] Wallet already registered, cleaning up Privy session');
+      autoRegisteredRef.current = true;
+      logout();
+      return;
+    }
+
     console.log('[Wallets] Wallet detected, registering:', { walletAddress, walletType });
+    autoRegisteredRef.current = true;
     pendingVerifyRef.current = false;
 
     // Embedded wallets (created via email/Google) — use manual add since Privy already authed the user
@@ -177,7 +184,7 @@ export default function WalletsSection({
       // External wallets (MetaMask, Coinbase, etc.) — verify with signature
       verifyWallet(walletAddress);
     }
-  }, [authenticated, walletsReady, privyWallets, privyUser, verifyWallet, onAddWalletManual, logout, t]);
+  }, [authenticated, walletsReady, privyWallets, privyUser, wallets, verifyWallet, onAddWalletManual, logout, t]);
 
   /** Open Privy modal to connect or create a wallet. */
   const handleConnectWallet = useCallback(async () => {
