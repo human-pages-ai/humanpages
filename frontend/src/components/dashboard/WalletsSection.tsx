@@ -48,6 +48,15 @@ export default function WalletsSection({
   // Track whether we initiated the connect flow so we can auto-verify
   const pendingVerifyRef = useRef(false);
 
+  // Clean up any stale Privy session on mount
+  const cleanedUpRef = useRef(false);
+  useEffect(() => {
+    if (!cleanedUpRef.current && authenticated) {
+      cleanedUpRef.current = true;
+      logout();
+    }
+  }, [authenticated, logout]);
+
   const trackedRef = useRef(false);
   useEffect(() => {
     if (trackedRef.current) return;
@@ -142,7 +151,11 @@ export default function WalletsSection({
   const handleConnectWallet = useCallback(async () => {
     setError('');
     analytics.track('wallet_connect_started', { method: 'privy' });
-    if (authenticated) await logout();
+    if (authenticated) {
+      await logout();
+      // Wait for Privy state to settle after logout
+      await new Promise((r) => setTimeout(r, 500));
+    }
     pendingVerifyRef.current = true;
     login();
   }, [login, authenticated, logout]);
