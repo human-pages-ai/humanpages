@@ -33,8 +33,8 @@ export default function WalletsSection({
   onUpdateWalletLabel,
 }: Props) {
   const { t } = useTranslation();
-  const { login, authenticated, logout, exportWallet } = usePrivy();
-  const { wallets: privyWallets } = useWallets();
+  const { login, authenticated, ready: privyReady, user: privyUser, logout, exportWallet } = usePrivy();
+  const { wallets: privyWallets, ready: walletsReady } = useWallets();
 
   const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState('');
@@ -48,14 +48,28 @@ export default function WalletsSection({
   // Track whether we initiated the connect flow so we can auto-verify
   const pendingVerifyRef = useRef(false);
 
-  // Clean up any stale Privy session on mount
+  // Debug logging for Privy state
+  useEffect(() => {
+    console.log('[Wallets] Privy state:', {
+      authenticated,
+      privyReady,
+      walletsReady,
+      pendingVerify: pendingVerifyRef.current,
+      privyWalletCount: privyWallets.length,
+      privyWallets: privyWallets.map((w) => ({ address: w.address, type: w.walletClientType })),
+      privyUserWallets: privyUser?.linkedAccounts?.filter((a: any) => a.type === 'wallet').map((a: any) => a.address),
+    });
+  }, [authenticated, privyReady, walletsReady, privyWallets, privyUser]);
+
+  // Clean up any stale Privy session on mount (only before user initiates a flow)
   const cleanedUpRef = useRef(false);
   useEffect(() => {
-    if (!cleanedUpRef.current && authenticated) {
+    if (privyReady && !cleanedUpRef.current && authenticated && !pendingVerifyRef.current) {
       cleanedUpRef.current = true;
+      console.log('[Wallets] Cleaning up stale Privy session');
       logout();
     }
-  }, [authenticated, logout]);
+  }, [privyReady, authenticated, logout]);
 
   const trackedRef = useRef(false);
   useEffect(() => {
@@ -124,28 +138,46 @@ export default function WalletsSection({
     }
   }, [privyWallets, onAddWallet, logout, t]);
 
-  // When Privy authenticates and we have a pending verify, auto-start verification
+  // When Privy authenticates and wallets are ready, auto-register
   useEffect(() => {
-    if (authenticated && privyWallets.length > 0 && pendingVerifyRef.current) {
-      pendingVerifyRef.current = false;
-      const wallet = privyWallets[0];
-      // Embedded wallets (created via email/Google) — use manual add since Privy already authed the user
-      if (wallet.walletClientType === 'privy') {
-        setStep('busy');
-        setBusyMessage(t('dashboard.wallets.addingWallet'));
-        onAddWalletManual(wallet.address)
-          .then(() => { resetState(); logout(); })
-          .catch((err: any) => {
-            setError(err?.message || t('dashboard.wallets.verificationFailed'));
-            setStep('idle');
-            logout();
-          });
-      } else {
-        // External wallets (MetaMask, Coinbase, etc.) — verify with signature
-        verifyWallet(wallet.address);
+    if (!authenticated || !walletsReady || !pendingVerifyRef.current) return;
+
+    // Try to get wallet from useWallets() first, fall back to user's linked accounts
+    let walletAddress = privyWallets[0]?.address;
+    let walletType = privyWallets[0]?.walletClientType;
+
+    if (!walletAddress && privyUser) {
+      const linkedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet');
+      if (linkedWallet) {
+        walletAddress = (linkedWallet as any).address;
+        walletType = 'privy'; // linked account wallets from email/Google are embedded
       }
     }
-  }, [authenticated, privyWallets, verifyWallet, onAddWalletManual, logout, t]);
+
+    if (!walletAddress) {
+      console.log('[Wallets] Authenticated but no wallet found yet');
+      return;
+    }
+
+    console.log('[Wallets] Wallet detected, registering:', { walletAddress, walletType });
+    pendingVerifyRef.current = false;
+
+    // Embedded wallets (created via email/Google) — use manual add since Privy already authed the user
+    if (walletType === 'privy') {
+      setStep('busy');
+      setBusyMessage(t('dashboard.wallets.addingWallet'));
+      onAddWalletManual(walletAddress)
+        .then(() => { resetState(); logout(); })
+        .catch((err: any) => {
+          setError(err?.message || t('dashboard.wallets.verificationFailed'));
+          setStep('idle');
+          logout();
+        });
+    } else {
+      // External wallets (MetaMask, Coinbase, etc.) — verify with signature
+      verifyWallet(walletAddress);
+    }
+  }, [authenticated, walletsReady, privyWallets, privyUser, verifyWallet, onAddWalletManual, logout, t]);
 
   /** Open Privy modal to connect or create a wallet. */
   const handleConnectWallet = useCallback(async () => {
