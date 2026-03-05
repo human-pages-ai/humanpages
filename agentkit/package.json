@@ -1,0 +1,53 @@
+{
+  "name": "humanpages-agentkit",
+  "version": "0.1.0",
+  "description": "Human Pages action provider for Coinbase AgentKit — search, hire, and pay real humans for physical-world tasks",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --testMatch='**/*.test.ts'",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "agentkit",
+    "coinbase",
+    "humanpages",
+    "ai-agent",
+    "hiring",
+    "physical-tasks",
+    "human-in-the-loop",
+    "usdc",
+    "base",
+    "x402"
+  ],
+  "author": "Human Pages",
+  "license": "MIT",
+  "homepage": "https://humanpages.ai/dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/human-pages-ai/humanpages.git",
+    "directory": "agentkit"
+  },
+  "peerDependencies": {
+    "@coinbase/agentkit": ">=0.2.0",
+    "zod": ">=3.22.0"
+  },
+  "devDependencies": {
+    "@coinbase/agentkit": "^0.2.0",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.7.0",
+    "reflect-metadata": "^0.2.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.4.0",
+    "zod": "^3.22.0"
+  }
+}
