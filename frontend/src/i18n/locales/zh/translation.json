@@ -481,6 +481,9 @@
         "base": "Base"
       },
       "allNetworksNote": "Available on all EVM networks",
+      "exportKey": "导出钱包私钥",
+      "showManualPaste": "已有钱包地址？手动粘贴",
+      "hideManualPaste": "隐藏手动粘贴",
       "connectOrCreate": "连接或创建钱包",
       "connectOrCreateDesc": "使用现有钱包或通过电子邮件创建一个"
     },

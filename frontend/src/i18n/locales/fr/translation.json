@@ -435,6 +435,9 @@
         "base": "Base"
       },
       "allNetworksNote": "Available on all EVM networks",
+      "exportKey": "Exporter la clé privée du portefeuille",
+      "showManualPaste": "Vous avez déjà une adresse de portefeuille ? Collez-la manuellement",
+      "hideManualPaste": "Masquer le collage manuel",
       "connectOrCreate": "Connecter ou Créer un Portefeuille",
       "connectOrCreateDesc": "Utilisez un portefeuille existant ou créez-en un avec votre e-mail"
     },

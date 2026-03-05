@@ -481,6 +481,9 @@
         "base": "Base"
       },
       "allNetworksNote": "Available on all EVM networks",
+      "exportKey": "Exportar clave privada de la billetera",
+      "showManualPaste": "¿Ya tienes una dirección de billetera? Pégala manualmente",
+      "hideManualPaste": "Ocultar pegado manual",
       "connectOrCreate": "Conectar o Crear Billetera",
       "connectOrCreateDesc": "Usa una billetera existente o crea una con tu correo"
     },

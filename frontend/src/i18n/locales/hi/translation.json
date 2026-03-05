@@ -480,6 +480,9 @@
         "base": "Base"
       },
       "allNetworksNote": "Available on all EVM networks",
+      "exportKey": "वॉलेट की निजी कुंजी निर्यात करें",
+      "showManualPaste": "क्या आपके पास पहले से वॉलेट पता है? इसे मैन्युअल रूप से पेस्ट करें",
+      "hideManualPaste": "मैन्युअल पेस्ट छिपाएं",
       "connectOrCreate": "वॉलेट कनेक्ट या बनाएं",
       "connectOrCreateDesc": "मौजूदा वॉलेट का उपयोग करें या अपने ईमेल से एक बनाएं"
     },

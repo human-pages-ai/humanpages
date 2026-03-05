@@ -481,6 +481,9 @@
         "base": "Base"
       },
       "allNetworksNote": "Available on all EVM networks",
+      "exportKey": "Cüzdan özel anahtarını dışa aktar",
+      "showManualPaste": "Zaten bir cüzdan adresiniz var mı? Manuel olarak yapıştırın",
+      "hideManualPaste": "Manuel yapıştırmayı gizle",
       "connectOrCreate": "Cüzdan Bağla veya Oluştur",
       "connectOrCreateDesc": "Mevcut bir cüzdan kullanın veya e-postanızla yeni bir tane oluşturun"
     },

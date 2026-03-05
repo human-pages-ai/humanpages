@@ -396,6 +396,9 @@
         "base": "Base"
       },
       "allNetworksNote": "Available on all EVM networks",
+      "exportKey": "Exportar chave privada da carteira",
+      "showManualPaste": "Já tem um endereço de carteira? Cole-o manualmente",
+      "hideManualPaste": "Ocultar colagem manual",
       "connectOrCreate": "Conectar ou Criar Carteira",
       "connectOrCreateDesc": "Use uma carteira existente ou crie uma com seu e-mail"
     },
