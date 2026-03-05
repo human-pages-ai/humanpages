@@ -4,7 +4,7 @@ import { PrivyProvider } from '@privy-io/react-auth';
 const appId = import.meta.env.VITE_PRIVY_APP_ID;
 
 export default function WalletProvider({ children }: { children: ReactNode }) {
-  if (!appId) {
+  if (!appId || appId.startsWith('<')) {
     return <>{children}</>;
   }
 
