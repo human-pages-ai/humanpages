@@ -19,7 +19,7 @@ import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
 
-// Lazy-load wallet stack (wagmi/connectkit/viem) — only fetched when payments tab opens
+// Lazy-load wallet stack (Privy) — only fetched when payments tab opens
 const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
 const WalletsSection = lazy(() => import('../components/dashboard/WalletsSection'));
 import ServicesSection from '../components/dashboard/ServicesSection';
@@ -457,6 +457,21 @@ export default function Dashboard() {
     }
   };
 
+  const addWalletManual = async (address: string) => {
+    setSaving(true);
+    try {
+      await api.addWalletManual({ address });
+      analytics.track('wallet_added_manual', { address });
+      await loadProfile();
+      toast.success(t('toast.walletAdded'));
+    } catch (error: any) {
+      toast.error(error.message);
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateWalletLabel = async (address: string, label?: string) => {
     setSaving(true);
     try {
@@ -812,6 +827,7 @@ export default function Dashboard() {
                     wallets={profile.wallets}
                     saving={saving}
                     onAddWallet={addWallet}
+                    onAddWalletManual={addWalletManual}
                     onDeleteWallet={deleteWallet}
                     onUpdateWalletLabel={updateWalletLabel}
                   />

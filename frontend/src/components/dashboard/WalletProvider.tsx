@@ -1,17 +1,30 @@
 import { ReactNode } from 'react';
-import { WagmiProvider } from 'wagmi';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConnectKitProvider } from 'connectkit';
-import { wagmiConfig } from '../../lib/walletConfig';
+import { PrivyProvider } from '@privy-io/react-auth';
 
-const queryClient = new QueryClient();
+const appId = import.meta.env.VITE_PRIVY_APP_ID;
 
 export default function WalletProvider({ children }: { children: ReactNode }) {
+  if (!appId) {
+    return <>{children}</>;
+  }
+
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>{children}</ConnectKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <PrivyProvider
+      appId={appId}
+      config={{
+        loginMethods: ['email', 'wallet', 'google'],
+        appearance: {
+          theme: 'light',
+          accentColor: '#2563EB',
+        },
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
+        },
+      }}
+    >
+      {children}
+    </PrivyProvider>
   );
 }

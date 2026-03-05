@@ -434,7 +434,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "Connecter ou Créer un Portefeuille",
+      "connectOrCreateDesc": "Utilisez un portefeuille existant ou créez-en un avec votre e-mail"
     },
     "services": {
       "title": "Services",

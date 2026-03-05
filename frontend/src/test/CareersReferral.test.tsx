@@ -26,10 +26,13 @@ vi.mock('../lib/analytics', () => ({
 vi.mock('../lib/posthog', () => ({
   posthog: { capture: (...args: any[]) => mockPosthogCapture(...args) },
 }));
+const mockGetReferralCode = vi.fn();
+
 vi.mock('../lib/api', () => ({
   api: {
     submitCareerApplication: (...args: any[]) => mockSubmitCareerApplication(...args),
     getProfile: () => mockGetProfile(),
+    getReferralCode: () => mockGetReferralCode(),
   },
 }));
 vi.mock('../lib/applyIntent', () => ({
@@ -49,6 +52,7 @@ beforeEach(() => {
   mockGetApplyIntent.mockReturnValue(null);
   mockSubmitCareerApplication.mockResolvedValue({});
   mockGetProfile.mockResolvedValue(mockProfile);
+  mockGetReferralCode.mockResolvedValue({ referralCode: 'TEST123' });
   mockUseAuthReturn = {
     user: { id: 'test-id', name: 'Test User', email: 'test@example.com' },
     loading: false,

@@ -480,7 +480,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "Cüzdan Bağla veya Oluştur",
+      "connectOrCreateDesc": "Mevcut bir cüzdan kullanın veya e-postanızla yeni bir tane oluşturun"
     },
     "services": {
       "title": "Hizmetler",

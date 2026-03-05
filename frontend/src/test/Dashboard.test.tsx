@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
 import { renderWithProviders, mockProfile } from './mocks';
@@ -37,6 +38,21 @@ vi.mock('../hooks/useAuth', () => ({
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
   }),
+}));
+
+// Mock wallet components (avoid loading Privy in tests)
+vi.mock('../components/dashboard/WalletProvider', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('../components/dashboard/WalletsSection', () => ({
+  default: ({ wallets }: { wallets: Array<{ id: string; network: string; address: string }> }) => (
+    <div data-testid="wallets-section">
+      {wallets.map((w) => (
+        <div key={w.id}>{w.address}</div>
+      ))}
+    </div>
+  ),
 }));
 
 // Mock useNavigate

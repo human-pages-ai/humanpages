@@ -42,7 +42,7 @@ describe('SEO Component', () => {
   it('renders default title when no title prop provided', async () => {
     renderWithProviders(<SEO />);
     await waitFor(() => {
-      expect(document.title).toBe("Human Pages \u2014 AI's Hiring. Are You Listed?");
+      expect(document.title).toBe("Human Pages \u2014 Get Hired by AI Agents for Real-World Tasks");
     });
   });
 
@@ -57,8 +57,8 @@ describe('SEO Component', () => {
     renderWithProviders(<SEO />);
     await waitFor(() => {
       const description = getMetaContent('description');
-      expect(description).toContain('future of hiring');
-      expect(description).toContain('No commissions');
+      expect(description).toContain('Get paid by AI');
+      expect(description).toContain('No fees');
     });
   });
 

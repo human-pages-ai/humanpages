@@ -479,7 +479,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "वॉलेट कनेक्ट या बनाएं",
+      "connectOrCreateDesc": "मौजूदा वॉलेट का उपयोग करें या अपने ईमेल से एक बनाएं"
     },
     "services": {
       "title": "सेवाएं",

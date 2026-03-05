@@ -3,6 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { FeedbackProvider } from '../hooks/useFeedback';
 import PublicProfile from '../pages/PublicProfile';
 import React from 'react';
 import { api } from '../lib/api';
@@ -12,6 +13,18 @@ vi.mock('../lib/api', () => ({
   api: {
     getHumanById: vi.fn(),
   },
+}));
+
+// Mock useAuth hook
+vi.mock('../hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: null,
+    loading: false,
+    login: vi.fn(),
+    signup: vi.fn(),
+    logout: vi.fn(),
+    loginWithGoogle: vi.fn(),
+  }),
 }));
 
 // Mock analytics
@@ -57,11 +70,13 @@ const mockPublicProfile = {
 function renderWithRouter(ui: React.ReactElement, { route = '/profile/test-id' } = {}) {
   return render(
     <HelmetProvider>
-      <MemoryRouter initialEntries={[route]}>
-        <Routes>
-          <Route path="/profile/:id" element={ui} />
-        </Routes>
-      </MemoryRouter>
+      <FeedbackProvider>
+        <MemoryRouter initialEntries={[route]}>
+          <Routes>
+            <Route path="/profile/:id" element={ui} />
+          </Routes>
+        </MemoryRouter>
+      </FeedbackProvider>
     </HelmetProvider>
   );
 }

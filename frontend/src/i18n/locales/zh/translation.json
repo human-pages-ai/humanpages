@@ -480,7 +480,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "连接或创建钱包",
+      "connectOrCreateDesc": "使用现有钱包或通过电子邮件创建一个"
     },
     "services": {
       "title": "服务",

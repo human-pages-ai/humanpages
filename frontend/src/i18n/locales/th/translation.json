@@ -445,7 +445,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "เชื่อมต่อหรือสร้างกระเป๋าเงิน",
+      "connectOrCreateDesc": "ใช้กระเป๋าเงินที่มีอยู่หรือสร้างใหม่ด้วยอีเมลของคุณ"
     },
     "services": {
       "title": "บริการ",

@@ -168,7 +168,7 @@ describe('Admin Route Guards', () => {
       renderApp('/admin');
       await waitFor(() => {
         expect(screen.getByText('Overview')).toBeInTheDocument();
-        expect(screen.getByText('Users')).toBeInTheDocument();
+        expect(screen.getByText('People')).toBeInTheDocument();
         expect(screen.getByText('Agents')).toBeInTheDocument();
         expect(screen.getByText('Jobs')).toBeInTheDocument();
         expect(screen.getByText('Activity')).toBeInTheDocument();

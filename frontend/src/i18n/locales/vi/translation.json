@@ -445,7 +445,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "Kết nối hoặc Tạo Ví",
+      "connectOrCreateDesc": "Sử dụng ví hiện có hoặc tạo ví mới bằng email của bạn"
     },
     "services": {
       "title": "Dịch vụ",

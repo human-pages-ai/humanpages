@@ -54,6 +54,7 @@ vi.mock('../lib/api', () => ({
     getJobs: vi.fn().mockResolvedValue([]),
     getTelegramStatus: vi.fn().mockResolvedValue({ connected: false, botAvailable: false }),
     getMyReviews: vi.fn().mockResolvedValue({ stats: null }),
+    getListings: vi.fn().mockResolvedValue({ listings: [], total: 0 }),
   },
 }));
 

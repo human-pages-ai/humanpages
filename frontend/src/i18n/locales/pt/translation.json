@@ -395,7 +395,9 @@
         "arbitrum": "Arbitrum",
         "base": "Base"
       },
-      "allNetworksNote": "Available on all EVM networks"
+      "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "Conectar ou Criar Carteira",
+      "connectOrCreateDesc": "Use uma carteira existente ou crie uma com seu e-mail"
     },
     "services": {
       "title": "Serviços",

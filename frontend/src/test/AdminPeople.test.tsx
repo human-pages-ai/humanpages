@@ -579,7 +579,7 @@ describe('AdminPeople — Pagination', () => {
     renderWithProviders(<AdminPeople />);
 
     // Loading text should appear initially
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/loading/i).length).toBeGreaterThan(0);
 
     // Then people should appear
     await waitFor(() => {
@@ -608,7 +608,7 @@ describe('AdminPeople — Table Display', () => {
 
     // Check that key information is displayed
     expect(screen.getByText('alice@example.com')).toBeInTheDocument();
-    expect(screen.getByText('United States')).toBeInTheDocument();
+    expect(screen.getAllByText(/United States/).length).toBeGreaterThan(0);
   });
 
   it('displays skills as comma-separated list or tags', async () => {

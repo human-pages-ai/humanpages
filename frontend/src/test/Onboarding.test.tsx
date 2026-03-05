@@ -104,7 +104,7 @@ describe('Onboarding', () => {
     });
 
     expect(screen.getByPlaceholderText('onboarding.step2.locationPlaceholder')).toBeInTheDocument();
-    // Default expanded categories: "Content & Writing" and "Marketing & Sales"
+    // Popular skills are shown at the top for quick selection
     expect(screen.getByText('Content Writing')).toBeInTheDocument();
     expect(screen.getByText('Social Media Management')).toBeInTheDocument();
   });
@@ -116,17 +116,17 @@ describe('Onboarding', () => {
       expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
     });
 
-    // First 2 categories are expanded by default
+    // All categories start collapsed; popular skills are visible at the top
     expect(screen.getByText('Content Writing')).toBeInTheDocument();
     expect(screen.getByText('Social Media Management')).toBeInTheDocument();
 
-    // Collapsed categories show their names as buttons
-    expect(screen.getByText(/Local Services/)).toBeInTheDocument();
-    expect(screen.getByText(/Development & QA/)).toBeInTheDocument();
+    // Category headers are rendered even when collapsed
+    expect(screen.getByText(/Local & In-Person/)).toBeInTheDocument();
+    expect(screen.getByText(/Home & Personal Services/)).toBeInTheDocument();
 
     // Skills in collapsed categories are NOT visible
     expect(screen.queryByText('Pet Care')).not.toBeInTheDocument();
-    expect(screen.queryByText('Software Development')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mystery Shopping')).not.toBeInTheDocument();
   });
 
   it('can expand collapsed categories and select skills', async () => {
@@ -136,12 +136,12 @@ describe('Onboarding', () => {
       expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
     });
 
-    // Expand "Local Services" category
-    fireEvent.click(screen.getByText(/Local Services/));
+    // Expand "Home & Personal Services" category
+    fireEvent.click(screen.getByText(/Home & Personal Services/));
 
     // Skills in expanded category should now be visible
     expect(screen.getByText('Pet Care')).toBeInTheDocument();
-    expect(screen.getByText('Package Delivery')).toBeInTheDocument();
+    expect(screen.getByText('Dog Walking')).toBeInTheDocument();
 
     // Select a skill
     const skillButton = screen.getByRole('button', { name: 'Pet Care' });
@@ -149,17 +149,20 @@ describe('Onboarding', () => {
     expect(skillButton.className).toContain('bg-blue-600');
   });
 
-  it('can select skills from default expanded categories', async () => {
+  it('can select skills from popular skills section', async () => {
     renderWithProviders(<Onboarding />);
 
     await waitFor(() => {
       expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
     });
 
-    const skillButton = screen.getByRole('button', { name: 'Content Writing' });
-    fireEvent.click(skillButton);
+    // Click a popular skill button (shown at top, bg-slate-100 style)
+    const popularButton = screen.getByRole('button', { name: 'Content Writing' });
+    fireEvent.click(popularButton);
 
-    expect(skillButton.className).toContain('bg-blue-600');
+    // After selection, popular button is removed and skill appears as a selected chip with bg-blue-600
+    const selectedChip = screen.getByRole('button', { name: /Content Writing/ });
+    expect(selectedChip.className).toContain('bg-blue-600');
   });
 
   it('skip button navigates directly to dashboard (no confirmation dialog)', async () => {
@@ -316,13 +319,14 @@ describe('Onboarding', () => {
         expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
       });
 
-      // Development & QA category should be expanded (contains matched skills)
-      expect(screen.getByText('Software Development')).toBeInTheDocument();
-      expect(screen.getByText('Code Review')).toBeInTheDocument();
+      // Development & Tech category should be auto-expanded (contains matched skills)
+      expect(screen.getAllByText('Software Development').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Code Review').length).toBeGreaterThanOrEqual(1);
 
-      // Matched skills should be pre-selected (blue background)
-      const swDevBtn = screen.getByRole('button', { name: 'Software Development' });
-      expect(swDevBtn.className).toContain('bg-blue-600');
+      // Matched skills should be pre-selected (blue background in selected chips or category buttons)
+      const swDevButtons = screen.getAllByRole('button', { name: 'Software Development' });
+      const selectedBtn = swDevButtons.find((btn) => btn.className.includes('bg-blue-600'));
+      expect(selectedBtn).toBeTruthy();
     });
   });
 

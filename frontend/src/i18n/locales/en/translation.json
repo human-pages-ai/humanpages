@@ -446,6 +446,13 @@
       "walletAddress": "Wallet address",
       "confirmDelete": "Delete this wallet?",
       "allNetworksNote": "Available on all EVM networks",
+      "connectOrCreate": "Connect or Create Wallet",
+      "connectOrCreateDesc": "Use an existing wallet or create one with your email",
+      "pasteAddress": "Paste wallet address",
+      "pasteAddressDesc": "Add any EVM wallet address manually",
+      "pasteAddressNote": "Added without signature verification — label will show as Unverified",
+      "invalidAddress": "Invalid EVM wallet address",
+      "addingWallet": "Adding wallet...",
       "networks": {
         "ethereum": "Ethereum",
         "polygon": "Polygon",
