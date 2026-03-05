@@ -218,7 +218,11 @@
     "acceptTermsTitle": "Chấp nhận Điều khoản để Tiếp tục",
     "acceptTermsDesc": "Trước khi tạo tài khoản, vui lòng xem xét và chấp nhận các điều khoản của chúng tôi.",
     "continueSignUp": "Tiếp tục Đăng ký",
-    "captchaFailed": "Không thể tải xác minh. Vui lòng mở humanpages.ai trong trình duyệt thông thường (không phải trình duyệt trong ứng dụng)."
+    "captchaFailed": "Không thể tải xác minh. Vui lòng mở humanpages.ai trong trình duyệt thông thường (không phải trình duyệt trong ứng dụng).",
+    "inAppBrowserTitle": "Phát hiện trình duyệt trong ứng dụng",
+    "inAppBrowserDesc": "Đăng nhập bằng Google không hoạt động trong trình duyệt trong ứng dụng. Vui lòng sao chép liên kết bên dưới và mở trong trình duyệt thông thường (Chrome, Safari, Firefox, v.v.).",
+    "copyLink": "Sao chép liên kết vào bộ nhớ tạm",
+    "linkCopied": "Đã sao chép liên kết!"
   },
   "dashboard": {
     "title": "Bảng điều khiển",

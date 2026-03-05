@@ -218,7 +218,11 @@
     "acceptTermsTitle": "Aceptar Términos para Continuar",
     "acceptTermsDesc": "Antes de crear tu cuenta, revisa y acepta nuestros términos.",
     "continueSignUp": "Continuar Registro",
-    "captchaFailed": "La verificación no se pudo cargar. Por favor, abre humanpages.ai en tu navegador habitual (no en un navegador integrado)."
+    "captchaFailed": "La verificación no se pudo cargar. Por favor, abre humanpages.ai en tu navegador habitual (no en un navegador integrado).",
+    "inAppBrowserTitle": "Navegador integrado detectado",
+    "inAppBrowserDesc": "El inicio de sesión con Google no funciona en navegadores integrados. Por favor, copia el enlace de abajo y ábrelo en tu navegador habitual (Chrome, Safari, Firefox, etc.).",
+    "copyLink": "Copiar enlace al portapapeles",
+    "linkCopied": "¡Enlace copiado!"
   },
   "dashboard": {
     "title": "Panel",

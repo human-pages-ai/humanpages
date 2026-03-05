@@ -10,6 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import InAppBrowserBanner from '../components/InAppBrowserBanner';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // test key fallback
 const CAPTCHA_TIMEOUT_MS = 10_000;
@@ -227,6 +228,8 @@ export default function Signup() {
               <span className="px-2 bg-gray-50 text-gray-500">{t('auth.continueWith')}</span>
             </div>
           </div>
+
+          <InAppBrowserBanner />
 
           <div className="space-y-3">
             <button

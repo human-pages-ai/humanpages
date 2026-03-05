@@ -218,7 +218,11 @@
     "acceptTermsTitle": "Devam Etmek İçin Koşulları Kabul Edin",
     "acceptTermsDesc": "Hesabınızı oluşturmadan önce lütfen koşullarımızı inceleyin ve kabul edin.",
     "continueSignUp": "Kayda Devam Et",
-    "captchaFailed": "Doğrulama yüklenemedi. Lütfen humanpages.ai adresini normal tarayıcınızda açın (uygulama içi tarayıcıda değil)."
+    "captchaFailed": "Doğrulama yüklenemedi. Lütfen humanpages.ai adresini normal tarayıcınızda açın (uygulama içi tarayıcıda değil).",
+    "inAppBrowserTitle": "Uygulama içi tarayıcı algılandı",
+    "inAppBrowserDesc": "Google ile giriş, uygulama içi tarayıcılarda çalışmaz. Lütfen aşağıdaki bağlantıyı kopyalayın ve normal tarayıcınızda açın (Chrome, Safari, Firefox vb.).",
+    "copyLink": "Bağlantıyı panoya kopyala",
+    "linkCopied": "Bağlantı kopyalandı!"
   },
   "dashboard": {
     "title": "Panel",

@@ -210,7 +210,11 @@
     "acceptTermsTitle": "Accept Terms to Continue",
     "acceptTermsDesc": "Before creating your account, please review and accept our terms.",
     "continueSignUp": "Continue Sign Up",
-    "captchaFailed": "Verification couldn't load. Please open humanpages.ai in your regular browser (not an in-app browser)."
+    "captchaFailed": "Verification couldn't load. Please open humanpages.ai in your regular browser (not an in-app browser).",
+    "inAppBrowserTitle": "In-app browser detected",
+    "inAppBrowserDesc": "Google sign-in doesn't work in in-app browsers. Please copy the link below and open it in your regular browser (Chrome, Safari, Firefox, etc.).",
+    "copyLink": "Copy link to clipboard",
+    "linkCopied": "Link copied!"
   },
   "dashboard": {
     "title": "Dashboard",

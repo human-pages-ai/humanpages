@@ -218,7 +218,11 @@
     "acceptTermsTitle": "Tanggapin ang mga Tuntunin para Magpatuloy",
     "acceptTermsDesc": "Bago gumawa ng account, suriin at tanggapin ang aming mga tuntunin.",
     "continueSignUp": "Magpatuloy sa Pagpaparehistro",
-    "captchaFailed": "Hindi na-load ang verification. Buksan ang humanpages.ai sa iyong regular na browser (hindi sa in-app browser)."
+    "captchaFailed": "Hindi na-load ang verification. Buksan ang humanpages.ai sa iyong regular na browser (hindi sa in-app browser).",
+    "inAppBrowserTitle": "Na-detect ang in-app browser",
+    "inAppBrowserDesc": "Hindi gumagana ang Google sign-in sa mga in-app browser. Pakikopya ang link sa ibaba at buksan ito sa iyong regular na browser (Chrome, Safari, Firefox, atbp.).",
+    "copyLink": "Kopyahin ang link sa clipboard",
+    "linkCopied": "Nakopya na ang link!"
   },
   "dashboard": {
     "title": "Dashboard",

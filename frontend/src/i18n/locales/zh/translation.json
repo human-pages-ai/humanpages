@@ -218,7 +218,11 @@
     "acceptTermsTitle": "接受条款以继续",
     "acceptTermsDesc": "在创建帐户之前，请查看并接受我们的条款。",
     "continueSignUp": "继续注册",
-    "captchaFailed": "验证无法加载。请在常规浏览器中打开 humanpages.ai（不要使用应用内浏览器）。"
+    "captchaFailed": "验证无法加载。请在常规浏览器中打开 humanpages.ai（不要使用应用内浏览器）。",
+    "inAppBrowserTitle": "检测到应用内浏览器",
+    "inAppBrowserDesc": "Google 登录在应用内浏览器中无法使用。请复制下方链接并在常规浏览器（Chrome、Safari、Firefox 等）中打开。",
+    "copyLink": "复制链接到剪贴板",
+    "linkCopied": "链接已复制！"
   },
   "dashboard": {
     "title": "控制面板",

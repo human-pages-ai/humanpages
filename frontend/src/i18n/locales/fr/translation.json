@@ -216,7 +216,11 @@
     "acceptTermsTitle": "Accepter les conditions pour continuer",
     "acceptTermsDesc": "Avant de créer votre compte, veuillez lire et accepter nos conditions.",
     "continueSignUp": "Continuer l'inscription",
-    "captchaFailed": "La vérification n'a pas pu se charger. Veuillez ouvrir humanpages.ai dans votre navigateur habituel (pas un navigateur intégré)."
+    "captchaFailed": "La vérification n'a pas pu se charger. Veuillez ouvrir humanpages.ai dans votre navigateur habituel (pas un navigateur intégré).",
+    "inAppBrowserTitle": "Navigateur intégré détecté",
+    "inAppBrowserDesc": "La connexion Google ne fonctionne pas dans les navigateurs intégrés. Veuillez copier le lien ci-dessous et l'ouvrir dans votre navigateur habituel (Chrome, Safari, Firefox, etc.).",
+    "copyLink": "Copier le lien dans le presse-papiers",
+    "linkCopied": "Lien copié !"
   },
   "dashboard": {
     "title": "Tableau de bord",
