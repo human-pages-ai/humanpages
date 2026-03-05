@@ -50,7 +50,7 @@ describe('Moderation Service', () => {
 
     it('should auto-approve profile photo when moderation is disabled', async () => {
       const origKey = process.env.OPENAI_API_KEY;
-      delete process.env.OPENAI_API_KEY;
+      process.env.OPENAI_API_KEY = '';
 
       try {
         // Re-import to pick up env change
@@ -75,7 +75,7 @@ describe('Moderation Service', () => {
 
     it('should auto-approve job when moderation is disabled', async () => {
       const origKey = process.env.OPENAI_API_KEY;
-      delete process.env.OPENAI_API_KEY;
+      process.env.OPENAI_API_KEY = '';
 
       try {
         vi.resetModules();
@@ -173,7 +173,7 @@ describe('Moderation Worker', () => {
   });
 
   afterEach(() => {
-    delete process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = '';
   });
 
   it('should process pending profile_photo items and approve clean ones', async () => {
