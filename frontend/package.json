@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@tanstack/react-query": "^5.90.21",
+    "connectkit": "^1.9.1",
     "i18next": "^25.8.4",
     "i18next-browser-languagedetector": "^8.2.0",
     "posthog-js": "^1.342.1",
@@ -21,7 +23,9 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.5.4",
     "react-router-dom": "^6.22.0",
-    "react-turnstile": "^1.1.5"
+    "react-turnstile": "^1.1.5",
+    "viem": "^2.47.0",
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",

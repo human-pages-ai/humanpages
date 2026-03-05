@@ -199,10 +199,12 @@ describe('Dashboard', () => {
 
     await waitForDashboard();
 
-    // Wallets are on the Payments tab
+    // Wallets are on the Payments tab (lazy-loaded)
     clickTab('dashboard.wallets.paymentSetupTitle');
 
-    expect(screen.getByText(/0xabc123/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/0xabc123/)).toBeInTheDocument();
+    });
   });
 
   it('renders services list', async () => {

@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
+import { useModal } from 'connectkit';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
 import { Wallet } from './types';
@@ -28,6 +30,10 @@ export default function WalletsSection({
   onUpdateWalletLabel,
 }: Props) {
   const { t } = useTranslation();
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const { disconnect } = useDisconnect();
+  const { setOpen } = useModal();
 
   const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState('');
@@ -35,47 +41,23 @@ export default function WalletsSection({
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
 
-  const [walletDetected, setWalletDetected] = useState(
-    typeof window !== 'undefined' && !!window.ethereum
-  );
+  // Track whether we initiated the connect flow so we can auto-verify
+  const pendingVerifyRef = useRef(false);
 
-  const isMobileOrInApp = useMemo(() =>
+  const isMobile = useMemo(() =>
     typeof navigator !== 'undefined' &&
-    /Android|iPhone|iPad|iPod|FBAN|FBAV|Instagram|TikTok|BytedanceWebview/i.test(navigator.userAgent),
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent),
   []);
-
-  const deepLinks = useMemo(() => {
-    const url = window.location.href;
-    const hostAndPath = window.location.host + window.location.pathname + window.location.search;
-    return {
-      metamask: `https://metamask.app.link/dapp/${hostAndPath}`,
-      coinbase: `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(url)}`,
-    };
-  }, []);
 
   const trackedRef = useRef(false);
   useEffect(() => {
     if (trackedRef.current) return;
     trackedRef.current = true;
-    const hasWallet = !!window.ethereum;
     analytics.track('wallet_section_viewed', {
-      wallet_detected: hasWallet,
-      is_mobile: isMobileOrInApp,
+      wallet_detected: !!window.ethereum,
+      is_mobile: isMobile,
       existing_wallets: wallets.length,
     });
-    if (!hasWallet) {
-      analytics.track('wallet_not_detected', { is_mobile: isMobileOrInApp });
-    }
-  }, []);
-
-  useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setWalletDetected(!!window.ethereum);
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, []);
 
   // Group wallets by address
@@ -97,56 +79,24 @@ export default function WalletsSection({
     setBusyMessage('');
   };
 
-  const connectAndVerify = async () => {
-    if (!window.ethereum) return;
+  /** After wallet connects, verify ownership by signing a nonce. */
+  const verifyWallet = useCallback(async (walletAddress: string) => {
     setError('');
-    analytics.track('wallet_connect_started');
-
-    // Step 1: Connect wallet
-    setBusyMessage(t('dashboard.wallets.connecting'));
-    setStep('busy');
-    let address: string;
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
-      if (accounts.length === 0) {
-        analytics.track('wallet_connect_failed', { reason: 'no_accounts' });
-        setError(t('dashboard.wallets.connectionFailed'));
-        setStep('idle');
-        return;
-      }
-      address = accounts[0];
-      analytics.track('wallet_connect_success');
-    } catch (err: any) {
-      if (err?.code === 4001) {
-        analytics.track('wallet_connect_rejected');
-        setError(t('dashboard.wallets.connectionRejected'));
-      } else {
-        analytics.track('wallet_connect_failed', { reason: err?.message || 'unknown' });
-        setError(t('dashboard.wallets.connectionFailed'));
-      }
-      setStep('idle');
-      return;
-    }
-
-    // Step 2: Sign to verify ownership
+    analytics.track('wallet_connect_success');
     setBusyMessage(t('dashboard.wallets.signing'));
+    setStep('busy');
+
     try {
-      const { nonce, message } = await api.getWalletNonce(address);
+      const { nonce, message } = await api.getWalletNonce(walletAddress);
+      const signature = await signMessageAsync({ message });
 
-      const signature = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [message, address],
-      }) as string;
-
-      await onAddWallet({
-        address,
-        signature,
-        nonce,
-      });
-
+      await onAddWallet({ address: walletAddress, signature, nonce });
+      analytics.track('wallet_connect_success');
       resetState();
+      // Disconnect the wagmi session — we only needed the signature
+      disconnect();
     } catch (err: any) {
-      if (err?.code === 4001) {
+      if (err?.code === 4001 || err?.name === 'UserRejectedRequestError') {
         analytics.track('wallet_sign_rejected');
         setError(t('dashboard.wallets.signatureRejected'));
       } else {
@@ -154,16 +104,33 @@ export default function WalletsSection({
         setError(err?.message || t('dashboard.wallets.verificationFailed'));
       }
       setStep('idle');
+      disconnect();
     }
-  };
+  }, [signMessageAsync, onAddWallet, disconnect, t]);
 
-  const startEditLabel = (address: string, currentLabel?: string) => {
-    setEditingAddress(address);
+  // When a wallet connects and we have a pending verify, auto-start verification
+  useEffect(() => {
+    if (isConnected && address && pendingVerifyRef.current) {
+      pendingVerifyRef.current = false;
+      verifyWallet(address);
+    }
+  }, [isConnected, address, verifyWallet]);
+
+  /** Open the ConnectKit modal. Once connected, verifyWallet runs via the effect above. */
+  const startConnect = useCallback(() => {
+    setError('');
+    analytics.track('wallet_connect_started');
+    pendingVerifyRef.current = true;
+    setOpen(true);
+  }, [setOpen]);
+
+  const startEditLabel = (addr: string, currentLabel?: string) => {
+    setEditingAddress(addr);
     setEditLabel(currentLabel || '');
   };
 
-  const saveLabel = async (address: string) => {
-    await onUpdateWalletLabel(address, editLabel || undefined);
+  const saveLabel = async (addr: string) => {
+    await onUpdateWalletLabel(addr, editLabel || undefined);
     setEditingAddress(null);
     setEditLabel('');
   };
@@ -176,48 +143,7 @@ export default function WalletsSection({
   const networkDisplayName = (network: string): string => {
     const key = `dashboard.wallets.networks.${network}` as const;
     const translated = t(key);
-    // If no translation found, capitalize first letter
     return translated !== key ? translated : network.charAt(0).toUpperCase() + network.slice(1);
-  };
-
-  const trackDeepLink = (wallet: string) => {
-    analytics.track('wallet_deeplink_clicked', { wallet, is_mobile: isMobileOrInApp });
-  };
-
-  const trackInstallLink = (wallet: string) => {
-    analytics.track('wallet_install_link_clicked', { wallet });
-  };
-
-  const renderNoWallet = () => {
-    if (isMobileOrInApp) {
-      return (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
-          <p className="text-sm text-gray-700">{t('dashboard.wallets.mobileWalletHint')}</p>
-          <a
-            href={deepLinks.metamask}
-            onClick={() => trackDeepLink('metamask')}
-            className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
-          >
-            {t('dashboard.wallets.openInMetaMask')}
-          </a>
-          <a
-            href={deepLinks.coinbase}
-            onClick={() => trackDeepLink('coinbase')}
-            className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700"
-          >
-            {t('dashboard.wallets.openInCoinbase')}
-          </a>
-        </div>
-      );
-    }
-    return (
-      <div className="text-xs text-gray-400">
-        {t('dashboard.wallets.noWalletExtension')}{' '}
-        <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" onClick={() => trackInstallLink('metamask')} className="text-blue-500 hover:text-blue-600 underline">MetaMask</a>
-        {' '}{t('common.or').toLowerCase()}{' '}
-        <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" onClick={() => trackInstallLink('coinbase')} className="text-blue-500 hover:text-blue-600 underline">Coinbase Wallet</a>
-      </div>
-    );
   };
 
   const renderBusy = () => (
@@ -230,19 +156,27 @@ export default function WalletsSection({
     </div>
   );
 
-  const renderAddButton = () => {
-    if (walletDetected) {
+  const renderConnectButton = (variant: 'primary' | 'link' = 'primary') => {
+    if (variant === 'link') {
       return (
         <button
-          onClick={connectAndVerify}
-          disabled={saving || step === 'busy'}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          onClick={startConnect}
+          disabled={saving}
+          className="text-blue-600 hover:text-blue-500 text-sm"
         >
           {t('dashboard.wallets.addWallet')}
         </button>
       );
     }
-    return renderNoWallet();
+    return (
+      <button
+        onClick={startConnect}
+        disabled={saving || step === 'busy'}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+      >
+        {t('dashboard.wallets.connectWallet')}
+      </button>
+    );
   };
 
   return (
@@ -270,7 +204,7 @@ export default function WalletsSection({
               <p className="text-lg font-medium text-gray-900 mb-1">{t('dashboard.wallets.emptyTitle')}</p>
               <p className="text-sm text-gray-500 mb-2">{t('dashboard.wallets.emptyDescription')}</p>
             </div>
-            {renderAddButton()}
+            {renderConnectButton()}
           </div>
         </div>
       ) : (
@@ -355,15 +289,7 @@ export default function WalletsSection({
           )}
           {step === 'idle' && (
             <div className="mt-4">
-              {walletDetected ? (
-                <button
-                  onClick={connectAndVerify}
-                  disabled={saving}
-                  className="text-blue-600 hover:text-blue-500 text-sm"
-                >
-                  {t('dashboard.wallets.addWallet')}
-                </button>
-              ) : renderNoWallet()}
+              {renderConnectButton('link')}
             </div>
           )}
         </>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -18,7 +18,10 @@ import WorkStatusSection from '../components/dashboard/WorkStatusSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
-import WalletsSection from '../components/dashboard/WalletsSection';
+
+// Lazy-load wallet stack (wagmi/connectkit/viem) — only fetched when payments tab opens
+const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
+const WalletsSection = lazy(() => import('../components/dashboard/WalletsSection'));
 import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
@@ -803,13 +806,17 @@ export default function Dashboard() {
           {/* ───── PAYMENTS TAB ───── */}
           {activeTab === 'payments' && (
             <div className="space-y-4" id="payment-setup-section">
-              <WalletsSection
-                wallets={profile.wallets}
-                saving={saving}
-                onAddWallet={addWallet}
-                onDeleteWallet={deleteWallet}
-                onUpdateWalletLabel={updateWalletLabel}
-              />
+              <Suspense fallback={<div className="bg-white rounded-lg shadow p-6 text-center text-gray-400 animate-pulse">Loading wallet tools…</div>}>
+                <WalletProvider>
+                  <WalletsSection
+                    wallets={profile.wallets}
+                    saving={saving}
+                    onAddWallet={addWallet}
+                    onDeleteWallet={deleteWallet}
+                    onUpdateWalletLabel={updateWalletLabel}
+                  />
+                </WalletProvider>
+              </Suspense>
               <PaymentPreferencesSection
                 paymentPreferences={profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION']}
                 saving={saving}
