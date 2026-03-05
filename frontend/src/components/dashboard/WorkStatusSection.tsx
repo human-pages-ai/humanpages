@@ -60,6 +60,26 @@ export default function WorkStatusSection({
   // Keep whatsappNotifications in scope to avoid unused variable warning
   void whatsappNotifications;
 
+  const allChannelsOff = !emailNotifications && !telegramNotifications;
+
+  // Check if toggling a channel would turn off all channels
+  const wouldDeactivate = (channel: 'email' | 'telegram' | 'whatsapp') => {
+    const next = {
+      email: channel === 'email' ? !emailNotifications : emailNotifications,
+      telegram: channel === 'telegram' ? !telegramNotifications : telegramNotifications,
+    };
+    return !next.email && !next.telegram;
+  };
+
+  const handleToggle = (channel: 'email' | 'telegram' | 'whatsapp') => {
+    if (wouldDeactivate(channel)) {
+      if (!window.confirm(t('dashboard.workStatus.allChannelsOffWarning', 'Turning off all notification channels will deactivate your account. Agents will no longer be able to reach you. Continue?'))) {
+        return;
+      }
+    }
+    onToggleNotification(channel);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6 space-y-5">
       {/* Master availability toggle */}
@@ -98,12 +118,17 @@ export default function WorkStatusSection({
               </div>
               <Toggle
                 enabled={ch.enabled}
-                onToggle={() => onToggleNotification(ch.key)}
+                onToggle={() => handleToggle(ch.key)}
                 disabled={saving || !isAvailable}
               />
             </div>
           ))}
         </div>
+        {allChannelsOff && isAvailable && (
+          <p className="text-xs text-amber-600 mt-2">
+            {t('dashboard.workStatus.allChannelsOffNote', 'All notification channels are off. Your account has been deactivated — agents cannot reach you.')}
+          </p>
+        )}
       </div>
 
       {/* Email frequency / digest mode */}

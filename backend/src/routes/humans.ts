@@ -497,6 +497,21 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
+    // If a notification toggle is being changed, check if all channels will be off
+    if (updates.emailNotifications !== undefined || updates.telegramNotifications !== undefined || updates.whatsappNotifications !== undefined) {
+      const current = await prisma.human.findUnique({
+        where: { id: req.userId },
+        select: { emailNotifications: true, telegramNotifications: true, whatsappNotifications: true },
+      });
+      const email = updates.emailNotifications ?? current?.emailNotifications ?? true;
+      const telegram = updates.telegramNotifications ?? current?.telegramNotifications ?? true;
+      const whatsapp = updates.whatsappNotifications ?? current?.whatsappNotifications ?? true;
+      if (!email && !telegram && !whatsapp) {
+        // All channels off — deactivate account so agents don't send unreachable offers
+        updates.isAvailable = false;
+      }
+    }
+
     // Compute minRateUsdEstimate if rate or currency changed
     const dataToSave: any = { ...updates, lastActiveAt: new Date() };
     const rateChanged = updates.minRateUsdc !== undefined || updates.rateCurrency !== undefined;

@@ -475,6 +475,23 @@ model PendingNotification {
   @@index([sentAt, createdAt])
 }
 
+model NotificationOutbox {
+  id        String   @id @default(cuid())
+  channel   String   // "email" | "telegram"
+  recipient String   // email address or telegram chat ID
+  subject   String?  // email subject (null for telegram)
+  payload   Json     // full params needed to re-send
+  status    String   @default("PENDING") // PENDING | SENT | FAILED
+  attempts  Int      @default(0)
+  lastError String?
+  nextRetryAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@index([createdAt])
+}
+
 model Job {
   id              String    @id @default(cuid())
   humanId         String

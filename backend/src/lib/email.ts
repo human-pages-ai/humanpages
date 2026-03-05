@@ -1,6 +1,4 @@
 import { Resend } from 'resend';
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
 import jwt from 'jsonwebtoken';
 import { getTranslator } from '../i18n/index.js';
 import { logger } from './logger.js';
@@ -14,29 +12,17 @@ function getResend(): Resend {
   return _resend;
 }
 
-// Lazy-initialize SES SMTP transport via nodemailer
-let _sesTransport: Transporter | null = null;
-function getSesTransport(): Transporter | null {
-  if (!process.env.SES_SMTP_USER || !process.env.SES_SMTP_PASS) {
-    return null;
-  }
-  if (!_sesTransport) {
-    _sesTransport = nodemailer.createTransport({
-      host: process.env.SES_SMTP_HOST || 'email-smtp.ap-southeast-2.amazonaws.com',
-      port: Number(process.env.SES_SMTP_PORT) || 465,
-      secure: true,
-      auth: {
-        user: process.env.SES_SMTP_USER,
-        pass: process.env.SES_SMTP_PASS,
-      },
-    });
-  }
-  return _sesTransport;
-}
-
 const FROM_EMAIL = process.env.FROM_EMAIL || 'hello@humanpages.ai';
 const FROM_NAME = process.env.FROM_NAME || 'HumanPages';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+// Retry config
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 1000; // 1s, 2s, 4s
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export function generateUnsubscribeUrl(humanId: string): string {
   const token = jwt.sign({ userId: humanId, action: 'unsubscribe' }, process.env.JWT_SECRET!, { expiresIn: '365d' });
@@ -50,49 +36,73 @@ interface SendEmailParams {
   html: string;
 }
 
-async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<boolean> {
-  const from = `${FROM_NAME} <${FROM_EMAIL}>`;
-
-  // Try Resend first
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const { data: response, error } = await getResend().emails.send({
-        from,
-        to: [to],
-        subject,
-        text,
-        html,
-      });
-
-      if (!error) {
-        logger.info({ messageId: response?.id, provider: 'resend' }, 'Email sent');
-        return true;
-      }
-
-      logger.warn({ err: error, provider: 'resend' }, 'Resend failed, attempting SES fallback');
-    } catch (error) {
-      logger.warn({ err: error, provider: 'resend' }, 'Resend failed, attempting SES fallback');
-    }
-  }
-
-  // Fallback to SES
-  const sesTransport = getSesTransport();
-  if (sesTransport) {
-    try {
-      const info = await sesTransport.sendMail({ from, to, subject, text, html });
-      logger.info({ messageId: info.messageId, provider: 'ses' }, 'Email sent');
-      return true;
-    } catch (error) {
-      logger.error({ err: error, provider: 'ses' }, 'SES fallback also failed');
-      return false;
-    }
-  }
-
-  // Neither provider available or both failed
+async function sendEmailOnce({ to, subject, text, html }: SendEmailParams): Promise<boolean> {
   if (!process.env.RESEND_API_KEY) {
     logger.info('No email provider configured, skipping email');
+    return false;
+  }
+
+  const from = `${FROM_NAME} <${FROM_EMAIL}>`;
+  const { data: response, error } = await getResend().emails.send({
+    from,
+    to: [to],
+    subject,
+    text,
+    html,
+  });
+
+  if (error) {
+    throw new Error(typeof error === 'object' ? JSON.stringify(error) : String(error));
+  }
+
+  logger.info({ messageId: response?.id, provider: 'resend' }, 'Email sent');
+  return true;
+}
+
+async function sendEmail(params: SendEmailParams): Promise<boolean> {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await sendEmailOnce(params);
+    } catch (err) {
+      logger.warn({ err, attempt, to: params.to }, 'Email send attempt failed');
+      if (attempt < MAX_RETRIES) {
+        await sleep(RETRY_BASE_MS * Math.pow(2, attempt - 1));
+      }
+    }
   }
   return false;
+}
+
+// Write a failed send to the outbox for the worker to retry later
+export async function writeToOutbox(
+  channel: 'email' | 'telegram',
+  recipient: string,
+  payload: Record<string, any>,
+  subject?: string,
+): Promise<void> {
+  const prisma = await getPrisma();
+  await prisma.notificationOutbox.create({
+    data: {
+      channel,
+      recipient,
+      subject: subject ?? null,
+      payload,
+      status: 'PENDING',
+      nextRetryAt: new Date(Date.now() + 30_000), // first retry in 30s
+    },
+  });
+}
+
+// Send email with retry. On total failure, persist to outbox for background retry.
+export async function sendEmailWithOutbox(params: SendEmailParams): Promise<boolean> {
+  const sent = await sendEmail(params);
+  if (!sent && process.env.RESEND_API_KEY) {
+    logger.info({ to: params.to, subject: params.subject }, 'Queuing email to outbox after inline failure');
+    await writeToOutbox('email', params.to, params, params.subject).catch(err =>
+      logger.error({ err }, 'Failed to write email to outbox')
+    );
+  }
+  return sent;
 }
 
 export function generateReportUrl(humanId: string, agentId: string, jobId?: string): string {
@@ -118,7 +128,7 @@ interface JobOfferEmailData {
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping email');
     return false;
   }
@@ -267,7 +277,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
     text: textContent,
@@ -276,7 +286,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 }
 
 export async function sendJobOfferUpdatedEmail(data: JobOfferEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping email');
     return false;
   }
@@ -426,7 +436,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `Updated offer from ${data.agentName || 'an agent'}: ${data.jobTitle}`,
     text: textContent,
@@ -446,7 +456,7 @@ interface JobMessageEmailData {
 }
 
 export async function sendJobMessageEmail(data: JobMessageEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping message email');
     return false;
   }
@@ -585,7 +595,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `New message from ${data.agentName} on "${data.jobTitle}"`,
     text: textContent,
@@ -594,7 +604,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 }
 
 export async function sendVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ email }, 'No email provider configured, skipping verification email');
     return false;
   }
@@ -721,6 +731,7 @@ Human Pages - Get hired for real-world tasks
 </html>
   `.trim();
 
+  // Time-sensitive: retry inline only (no outbox delay)
   return sendEmail({
     to: email,
     subject: 'Verify your email - Human Pages',
@@ -730,7 +741,7 @@ Human Pages - Get hired for real-world tasks
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ email }, 'No email provider configured, skipping password reset email');
     return false;
   }
@@ -850,6 +861,7 @@ Human Pages - Get hired for real-world tasks
 </html>
   `.trim();
 
+  // Time-sensitive: retry inline only (no outbox delay)
   return sendEmail({
     to: email,
     subject: 'Reset your password - Human Pages',
@@ -870,7 +882,7 @@ interface StreamFlowStoppedEmailData {
 }
 
 export async function sendStreamFlowStoppedEmail(data: StreamFlowStoppedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+  if (!process.env.RESEND_API_KEY) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -925,7 +937,7 @@ To unsubscribe: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `Payment flow stopped: ${data.jobTitle}`,
     text: textContent,
@@ -945,7 +957,7 @@ interface StreamStartedEmailData {
 }
 
 export async function sendStreamStartedEmail(data: StreamStartedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+  if (!process.env.RESEND_API_KEY) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -997,7 +1009,7 @@ To unsubscribe: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `Stream started: $${data.rateUsdc}/${intervalLabel} for ${data.jobTitle}`,
     text: textContent,
@@ -1016,7 +1028,7 @@ interface StreamCompletedEmailData {
 }
 
 export async function sendStreamCompletedEmail(data: StreamCompletedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+  if (!process.env.RESEND_API_KEY) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1036,7 +1048,7 @@ ${t('email.jobOffer.footer')}
 To unsubscribe: ${unsubscribeUrl}
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `Stream completed: ${data.jobTitle} — $${data.totalPaid.toFixed(2)} total`,
     text: textContent,
@@ -1059,7 +1071,7 @@ interface DigestEmailData {
 }
 
 export async function sendDigestEmail(data: DigestEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+  if (!process.env.RESEND_API_KEY) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1230,7 +1242,7 @@ To unsubscribe: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `${count} new notification${count !== 1 ? 's' : ''} - Human Pages`,
     text: textContent,
@@ -1312,7 +1324,7 @@ export async function sendOrQueueNotification(
     return true;
   }
 
-  // Send immediately
+  // Send immediately — failures are handled by the caller (outbox or fire-and-forget)
   return sendFn();
 }
 
@@ -1328,7 +1340,7 @@ interface ProfileNudgeEmailData {
 }
 
 export async function sendProfileNudgeEmail(data: ProfileNudgeEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+  if (!process.env.RESEND_API_KEY) return false;
 
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
   const dashboardUrl = `${FRONTEND_URL}/dashboard?tab=profile`;
@@ -1451,7 +1463,7 @@ To unsubscribe: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `Your profile is ${data.completionPercent}% complete — finish it to get more offers`,
     text: textContent,
@@ -1473,7 +1485,7 @@ interface ListingMatchEmailData {
 }
 
 export async function sendListingMatchEmail(data: ListingMatchEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) return false;
+  if (!process.env.RESEND_API_KEY) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1525,7 +1537,7 @@ To unsubscribe: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `New listing: ${data.listingTitle} — $${data.budgetUsdc} USDC`,
     text: textContent,
@@ -1542,7 +1554,7 @@ interface StaffApiKeyEmailData {
 }
 
 export async function sendStaffApiKeyEmail(data: StaffApiKeyEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ email: data.staffEmail }, 'No email provider configured, skipping staff API key email');
     return false;
   }
@@ -1669,7 +1681,7 @@ Human Pages — Staff Tools
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.staffEmail,
     subject: 'Your Human Pages Staff API Key',
     text: textContent,
@@ -1689,7 +1701,7 @@ interface ModerationDelayEmailData {
 }
 
 export async function sendModerationDelayEmail(data: ModerationDelayEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping moderation delay email');
     return false;
   }
@@ -1805,7 +1817,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.humanEmail,
     subject: `${data.humanName}, your job offer is being reviewed`,
     text: textContent,
@@ -1825,7 +1837,7 @@ interface PaymentOwedEmailData {
 }
 
 export async function sendPaymentOwedEmail(data: PaymentOwedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY && !process.env.SES_SMTP_USER) {
+  if (!process.env.RESEND_API_KEY) {
     logger.info('No email provider configured, skipping payment owed email');
     return false;
   }
@@ -1874,7 +1886,7 @@ Human Pages — Internal Staff Notification
 </html>
   `.trim();
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: 'hello@humanpages.ai',
     subject: `Payment owed: $${data.owedAmount.toFixed(2)} to ${data.staffName}`,
     text: textContent,
@@ -1944,7 +1956,7 @@ Unsubscribe: ${unsubscribeUrl}`;
 </body>
 </html>`;
 
-  return sendEmail({
+  return sendEmailWithOutbox({
     to: data.to,
     subject: 'We\'d love to feature you on our homepage!',
     text: textContent,
@@ -1954,15 +1966,8 @@ Unsubscribe: ${unsubscribeUrl}`;
 
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
-  const hasResend = !!process.env.RESEND_API_KEY;
-  const hasSes = !!process.env.SES_SMTP_USER && !!process.env.SES_SMTP_PASS;
-
-  if (hasResend && hasSes) {
-    logger.info('Email providers configured: Resend (primary) + SES (fallback)');
-  } else if (hasResend) {
+  if (process.env.RESEND_API_KEY) {
     logger.info('Email provider configured: Resend');
-  } else if (hasSes) {
-    logger.info('Email provider configured: SES only');
   } else {
     logger.info('No email provider configured - email notifications disabled');
     return false;

@@ -1,8 +1,17 @@
 // Telegram Bot API integration for notifications
 import { logger } from './logger.js';
+import { writeToOutbox } from './email.js';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = 'https://api.telegram.org/bot';
+
+// Retry config
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 1000;
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 interface SendMessageOptions {
   chatId: string;
@@ -10,36 +19,52 @@ interface SendMessageOptions {
   parseMode?: 'HTML' | 'Markdown';
 }
 
-export async function sendTelegramMessage(options: SendMessageOptions): Promise<boolean> {
+async function sendTelegramMessageOnce(options: SendMessageOptions): Promise<boolean> {
   if (!BOT_TOKEN) {
     logger.info('Telegram bot token not configured, skipping notification');
     return false;
   }
 
-  try {
-    const response = await fetch(`${TELEGRAM_API}${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: options.chatId,
-        text: options.text,
-        parse_mode: options.parseMode || 'HTML',
-      }),
-    });
+  const response = await fetch(`${TELEGRAM_API}${BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: options.chatId,
+      text: options.text,
+      parse_mode: options.parseMode || 'HTML',
+    }),
+  });
 
-    const data = await response.json() as { ok: boolean; description?: string };
+  const data = await response.json() as { ok: boolean; description?: string };
 
-    if (!data.ok) {
-      logger.error({ description: data.description }, 'Telegram failed to send message');
-      return false;
-    }
-
-    logger.info({ chatId: options.chatId }, 'Telegram message sent');
-    return true;
-  } catch (error) {
-    logger.error({ err: error }, 'Telegram error sending message');
-    return false;
+  if (!data.ok) {
+    throw new Error(`Telegram API error: ${data.description}`);
   }
+
+  logger.info({ chatId: options.chatId }, 'Telegram message sent');
+  return true;
+}
+
+export async function sendTelegramMessage(options: SendMessageOptions): Promise<boolean> {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await sendTelegramMessageOnce(options);
+    } catch (err) {
+      logger.warn({ err, attempt, chatId: options.chatId }, 'Telegram send attempt failed');
+      if (attempt < MAX_RETRIES) {
+        await sleep(RETRY_BASE_MS * Math.pow(2, attempt - 1));
+      }
+    }
+  }
+
+  // All retries exhausted — persist to outbox
+  if (BOT_TOKEN) {
+    logger.info({ chatId: options.chatId }, 'Queuing telegram message to outbox after inline failure');
+    await writeToOutbox('telegram', options.chatId, options).catch(err =>
+      logger.error({ err }, 'Failed to write telegram message to outbox')
+    );
+  }
+  return false;
 }
 
 interface JobOfferNotification {

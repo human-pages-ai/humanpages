@@ -1,8 +1,12 @@
 import { prisma } from './setup.js';
 import { cleanDatabase, createTestUser, type TestUser } from './helpers.js';
 
-// Mock OpenAI
-const mockCreate = vi.fn();
+// Use vi.hoisted so mock functions survive vi.resetModules()
+const { mockCreate, mockGetR2ObjectBuffer } = vi.hoisted(() => ({
+  mockCreate: vi.fn(),
+  mockGetR2ObjectBuffer: vi.fn().mockResolvedValue(Buffer.alloc(100)),
+}));
+
 vi.mock('openai', () => ({
   default: class {
     moderations = { create: mockCreate };
@@ -12,7 +16,7 @@ vi.mock('openai', () => ({
 // Mock storage for the worker
 vi.mock('../lib/storage.js', () => ({
   isStorageConfigured: () => true,
-  getR2ObjectBuffer: vi.fn().mockResolvedValue(Buffer.alloc(100)),
+  getR2ObjectBuffer: mockGetR2ObjectBuffer,
   getProfilePhotoSignedUrl: vi.fn().mockResolvedValue('https://example.com/signed'),
 }));
 

@@ -114,7 +114,7 @@ export async function processSuperfluidStreams(): Promise<void> {
           }).catch((err: any) => logger.error({ err }, 'Stream flow stopped email failed'));
         }
 
-        if (human.telegramChatId) {
+        if (human.telegramChatId && human.telegramNotifications) {
           sendTelegramMessage({
             chatId: human.telegramChatId,
             text: `<b>Payment Flow Stopped</b>\n\nThe payment flow for "${job.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}" was stopped by the agent.\n\nTotal received: $${totalStreamed.toFixed(2)} USDC\n\nThe stream has been paused.`,
@@ -238,6 +238,7 @@ export async function processMicroTransferStreams(): Promise<void> {
               contactEmail: true,
               emailNotifications: true,
               telegramChatId: true,
+              telegramNotifications: true,
             },
           },
         },
@@ -272,7 +273,7 @@ export async function processMicroTransferStreams(): Promise<void> {
 
         // Notify human
         const human = tick.job.human;
-        if (human.telegramChatId) {
+        if (human.telegramChatId && human.telegramNotifications) {
           sendTelegramMessage({
             chatId: human.telegramChatId,
             text: `<b>Stream Paused</b>\n\nThe stream payment for "${tick.job.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}" was paused because ${newMissedCount} payment(s) were missed.`,

@@ -224,6 +224,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         emailVerified: true,
         isAvailable: true,
         telegramChatId: true,
+        telegramNotifications: true,
         preferredLanguage: true,
         emailNotifications: true,
         paymentPreferences: true,
@@ -402,7 +403,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
     }
 
     // Send Telegram notification (async, don't block response)
-    if (human.telegramChatId) {
+    if (human.telegramChatId && human.telegramNotifications) {
       sendJobOfferTelegram({
         chatId: human.telegramChatId,
         humanName: human.name,
@@ -675,6 +676,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         contactEmail: true,
         emailNotifications: true,
         telegramChatId: true,
+        telegramNotifications: true,
         preferredLanguage: true,
       },
     });
@@ -699,7 +701,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         }).catch((err) => logger.error({ err }, 'Updated offer email notification failed'));
       }
 
-      if (human.telegramChatId) {
+      if (human.telegramChatId && human.telegramNotifications) {
         sendJobOfferUpdatedTelegram({
           chatId: human.telegramChatId,
           humanName: human.name,
@@ -1566,6 +1568,7 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
           emailVerified: true,
           emailNotifications: true,
           telegramChatId: true,
+          telegramNotifications: true,
           preferredLanguage: true,
         },
       });
@@ -1587,7 +1590,7 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
           }).catch((err) => logger.error({ err }, 'Agent message email notification failed'));
         }
 
-        if (human.telegramChatId) {
+        if (human.telegramChatId && human.telegramNotifications) {
           const preview = data.content.length > 200 ? data.content.slice(0, 200) + '...' : data.content;
           sendTelegramMessage({
             chatId: human.telegramChatId,

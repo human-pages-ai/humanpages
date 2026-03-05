@@ -8,6 +8,7 @@ import { startListingExpiryWorker, stopListingExpiryWorker } from './lib/listing
 import { startModerationWorker, stopModerationWorker } from './lib/moderation-worker.js';
 import { startIdleWorker, stopIdleWorker } from './lib/idle-worker.js';
 import { startErrorMonitorWorker, stopErrorMonitorWorker } from './lib/error-monitor-worker.js';
+import { startOutboxWorker, stopOutboxWorker } from './lib/outbox-worker.js';
 import { logger } from './lib/logger.js';
 import { shutdownPostHog } from './lib/posthog.js';
 import { initSecrets } from './lib/secrets.js';
@@ -27,6 +28,7 @@ async function start() {
     startModerationWorker();
     startIdleWorker();
     startErrorMonitorWorker();
+    startOutboxWorker();
   });
 
   process.on('SIGTERM', async () => {
@@ -38,6 +40,7 @@ async function start() {
     stopModerationWorker();
     stopIdleWorker();
     stopErrorMonitorWorker();
+    stopOutboxWorker();
     await shutdownPostHog();
     server.close(() => {
       logger.info('Server closed');
@@ -54,6 +57,7 @@ async function start() {
     stopModerationWorker();
     stopIdleWorker();
     stopErrorMonitorWorker();
+    stopOutboxWorker();
     await shutdownPostHog();
     server.close(() => {
       logger.info('Server closed');
