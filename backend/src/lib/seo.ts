@@ -376,6 +376,7 @@ export function getDevPageMetaHtml(lang?: string): string | null {
         <li><strong>activate_agent</strong> — Activate agent (auto-PRO during launch)</li>
         <li><strong>create_job</strong> — Send a job offer to a specific human</li>
         <li><strong>create_listing</strong> — Post a job listing on the public board</li>
+        <li><strong>update_listing</strong> — Update an open listing's details and cover photo (supports URL upload or AI generation)</li>
         <li><strong>browse_listings</strong> — Browse open listings by skill, location, budget</li>
         <li><strong>make_offer</strong> — Make an offer to a listing applicant</li>
       </ul>

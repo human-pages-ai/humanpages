@@ -15,13 +15,40 @@ import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { createOpenAIClient } from '../lib/openai-keys.js';
 import { isAllowedUrl, deliverWebhook } from '../lib/webhook.js';
-import { sendJobOfferEmail } from '../lib/email.js';
-import { processProfileImage, uploadProfilePhoto, getProfilePhotoSignedUrl, deleteProfilePhoto } from '../lib/storage.js';
+import { sendJobOfferEmail, sendListingTermsChangedEmail } from '../lib/email.js';
+import { processProfileImage, uploadProfilePhoto, getProfilePhotoSignedUrl, deleteProfilePhoto, downloadExternalImage } from '../lib/storage.js';
 import { queueModeration, moderateText } from '../lib/moderation.js';
 import { generateListingCover } from '../lib/listingCovers.js';
 import sharp from 'sharp';
 
 const router = Router();
+
+// Material fields — these are the listing terms that applicants rely on.
+// Changes to these fields trigger the reconfirm flow for existing applicants.
+const MATERIAL_FIELDS = [
+  'title', 'description', 'budgetUsdc', 'budgetFlexible',
+  'workMode', 'location', 'locationLat', 'locationLng', 'radiusKm',
+] as const;
+
+/** Build a snapshot of material listing fields (for storing on applications). */
+function buildListingSnapshot(listing: {
+  title: string; description: string; budgetUsdc: any;
+  budgetFlexible: boolean; workMode: string | null;
+  location: string | null; locationLat: number | null;
+  locationLng: number | null; radiusKm: number | null;
+}) {
+  return {
+    title: listing.title,
+    description: listing.description,
+    budgetUsdc: listing.budgetUsdc.toString(),
+    budgetFlexible: listing.budgetFlexible,
+    workMode: listing.workMode,
+    location: listing.location,
+    locationLat: listing.locationLat,
+    locationLng: listing.locationLng,
+    radiusKm: listing.radiusKm,
+  };
+}
 
 // Rate limiter for public listing browsing: 30/min
 const browseRateLimiter = rateLimit({
@@ -47,6 +74,16 @@ const applyRateLimiter = rateLimit({
   keyGenerator: (req) => {
     return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
   },
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+// Rate limiter for listing updates: 10/hour per agent
+const updateRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req: any) => req.agent?.id || 'unknown',
+  message: { error: 'Too many listing updates. Limit: 10 per hour.' },
   validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
@@ -598,7 +635,7 @@ router.post('/:id/apply', applyRateLimiter, authenticateToken, requireEmailVerif
       const currentApplicants = await prisma.listingApplication.count({
         where: {
           listingId: listing.id,
-          status: { in: ['PENDING', 'OFFERED'] },
+          status: { in: ['PENDING', 'PENDING_RECONFIRM', 'OFFERED'] },
         },
       });
 
@@ -610,13 +647,14 @@ router.post('/:id/apply', applyRateLimiter, authenticateToken, requireEmailVerif
       }
     }
 
-    // Create application (unique constraint handles duplicate applications)
+    // Create application with snapshot of current listing terms
     const application = await prisma.listingApplication.create({
       data: {
         listingId: listing.id,
         humanId: req.userId!,
         pitch: data.pitch,
         status: 'PENDING',
+        listingSnapshot: buildListingSnapshot(listing),
       },
     });
 
@@ -643,6 +681,137 @@ router.post('/:id/apply', applyRateLimiter, authenticateToken, requireEmailVerif
       });
     }
     logger.error({ err: error }, 'Apply to listing error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /:id/compare - Compare current listing with original snapshot (human applicant)
+router.get('/:id/compare', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const appId = req.query.app as string | undefined;
+
+    // Find the human's application for this listing
+    const where: any = {
+      listingId: req.params.id,
+      humanId: req.userId!,
+    };
+    if (appId) where.id = appId;
+
+    const application = await prisma.listingApplication.findFirst({
+      where,
+      include: {
+        listing: {
+          select: {
+            id: true, title: true, description: true,
+            budgetUsdc: true, budgetFlexible: true,
+            workMode: true, location: true, locationLat: true,
+            locationLng: true, radiusKm: true, status: true,
+          },
+        },
+      },
+    });
+
+    if (!application) {
+      return res.status(404).json({
+        error: 'Application not found',
+        message: 'You have not applied to this listing.',
+      });
+    }
+
+    const snapshot = application.listingSnapshot as Record<string, any> | null;
+
+    // Build diff: for each material field, show original vs current
+    const current = {
+      title: application.listing.title,
+      description: application.listing.description,
+      budgetUsdc: application.listing.budgetUsdc.toString(),
+      budgetFlexible: application.listing.budgetFlexible,
+      workMode: application.listing.workMode,
+      location: application.listing.location,
+      locationLat: application.listing.locationLat,
+      locationLng: application.listing.locationLng,
+      radiusKm: application.listing.radiusKm,
+    };
+
+    const changes: Record<string, { original: any; current: any }> = {};
+    if (snapshot) {
+      for (const field of MATERIAL_FIELDS) {
+        const orig = snapshot[field];
+        const curr = (current as any)[field];
+        if (JSON.stringify(orig) !== JSON.stringify(curr)) {
+          changes[field] = { original: orig ?? null, current: curr ?? null };
+        }
+      }
+    }
+
+    res.json({
+      applicationId: application.id,
+      applicationStatus: application.status,
+      listingId: application.listing.id,
+      listingStatus: application.listing.status,
+      original: snapshot || null,
+      current,
+      changes,
+      hasChanges: Object.keys(changes).length > 0,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Compare listing error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /:id/reconfirm - Reconfirm application after listing terms changed
+router.post('/:id/reconfirm', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const application = await prisma.listingApplication.findFirst({
+      where: {
+        listingId: req.params.id,
+        humanId: req.userId!,
+        status: 'PENDING_RECONFIRM',
+      },
+      include: { listing: { select: { title: true, status: true } } },
+    });
+
+    if (!application) {
+      return res.status(404).json({
+        error: 'No application pending reconfirmation',
+        message: 'You do not have a pending reconfirmation for this listing.',
+      });
+    }
+
+    if (application.listing.status !== 'OPEN') {
+      return res.status(400).json({
+        error: 'Listing no longer open',
+        message: `This listing is now ${application.listing.status.toLowerCase()}.`,
+      });
+    }
+
+    // Update snapshot to current listing terms and reconfirm
+    const listing = await prisma.listing.findUnique({ where: { id: req.params.id } });
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    await prisma.listingApplication.update({
+      where: { id: application.id },
+      data: {
+        status: 'PENDING',
+        listingSnapshot: buildListingSnapshot(listing),
+      },
+    });
+
+    trackServerEvent(req.userId!, 'listing_application_reconfirmed', {
+      listingId: listing.id,
+      applicationId: application.id,
+    }, req);
+
+    res.json({
+      id: application.id,
+      status: 'PENDING',
+      message: 'Application reconfirmed with updated listing terms.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Reconfirm application error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1014,6 +1183,293 @@ router.use((err: any, _req: any, res: any, next: any) => {
   next(err);
 });
 
+// Schema for updating a listing (all fields optional)
+const updateListingSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().min(1).max(5000).optional(),
+  category: z.string().max(100).optional().nullable(),
+  budgetUsdc: z.number().min(5, 'Minimum budget is $5').optional(),
+  budgetFlexible: z.boolean().optional(),
+  requiredSkills: z.array(z.string().max(100)).max(30).optional(),
+  requiredEquipment: z.array(z.string().max(100)).max(30).optional(),
+  location: z.string().optional().nullable(),
+  locationLat: z.number().min(-90).max(90).optional().nullable(),
+  locationLng: z.number().min(-180).max(180).optional().nullable(),
+  radiusKm: z.number().int().min(1).optional().nullable(),
+  workMode: z.enum(['REMOTE', 'ONSITE', 'HYBRID']).optional().nullable(),
+  expiresAt: z.string().refine((val) => {
+    const date = new Date(val);
+    const now = new Date();
+    const maxDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    return date > now && date <= maxDate;
+  }, 'expiresAt must be in the future and within 90 days').optional(),
+  maxApplicants: z.number().int().min(1).max(10000).optional().nullable(),
+  callbackUrl: z.string().url().optional().nullable(),
+  callbackSecret: z.string().min(16).max(256).optional().nullable(),
+  // Image update options (mutually exclusive)
+  imageUrl: z.string().url().optional(),
+  generateImage: z.literal(true).optional(),
+}).strict().refine((data) => Object.keys(data).length > 0, {
+  message: 'At least one field must be provided for update',
+}).refine((data) => !(data.imageUrl && data.generateImage), {
+  message: 'Cannot use both imageUrl and generateImage. Choose one.',
+});
+
+// PATCH /:id - Update a listing
+router.patch('/:id', authenticateAgent, requireActiveAgent, updateRateLimiter, async (req: AgentAuthRequest, res) => {
+  try {
+    const data = updateListingSchema.parse(req.body);
+    const agent = req.agent!;
+
+    const listing = await prisma.listing.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (listing.agentId !== agent.id) {
+      return res.status(403).json({
+        error: 'Not authorized',
+        message: 'You can only update your own listings.',
+      });
+    }
+
+    if (listing.status !== 'OPEN') {
+      return res.status(409).json({
+        error: 'Listing not editable',
+        message: `Cannot update a listing with status "${listing.status}". Only OPEN listings can be updated.`,
+      });
+    }
+
+    // SSRF prevention: validate callback URL if provided
+    if (data.callbackUrl && !(await isAllowedUrl(data.callbackUrl))) {
+      return res.status(400).json({
+        error: 'Invalid callback URL',
+        message: 'Callback URL must be a public HTTP(S) endpoint',
+      });
+    }
+
+    // Build update payload — only include provided fields
+    const updateData: Record<string, any> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.budgetUsdc !== undefined) updateData.budgetUsdc = new Decimal(data.budgetUsdc);
+    if (data.budgetFlexible !== undefined) updateData.budgetFlexible = data.budgetFlexible;
+    if (data.requiredSkills !== undefined) updateData.requiredSkills = data.requiredSkills;
+    if (data.requiredEquipment !== undefined) updateData.requiredEquipment = data.requiredEquipment;
+    if (data.location !== undefined) updateData.location = data.location;
+    if (data.locationLat !== undefined) updateData.locationLat = data.locationLat;
+    if (data.locationLng !== undefined) updateData.locationLng = data.locationLng;
+    if (data.radiusKm !== undefined) updateData.radiusKm = data.radiusKm;
+    if (data.workMode !== undefined) updateData.workMode = data.workMode;
+    if (data.expiresAt !== undefined) updateData.expiresAt = new Date(data.expiresAt);
+    if (data.maxApplicants !== undefined) updateData.maxApplicants = data.maxApplicants;
+    if (data.callbackUrl !== undefined) updateData.callbackUrl = data.callbackUrl;
+    if (data.callbackSecret !== undefined) updateData.callbackSecret = data.callbackSecret;
+
+    const updated = await prisma.listing.update({
+      where: { id: listing.id },
+      data: updateData,
+    });
+
+    // ── Image handling (mutually exclusive options) ──
+    let imageResult: { imageUrl?: string | null; imageStatus?: string; imageMethod?: string } = {};
+
+    if (data.imageUrl) {
+      // Option 1: Download image from agent-provided URL
+      try {
+        const rawBuffer = await downloadExternalImage(data.imageUrl);
+        const processed = await sharp(rawBuffer)
+          .rotate()
+          .resize(600, 400, { fit: 'cover', position: 'centre' })
+          .withMetadata({ orientation: undefined })
+          .webp({ quality: 80 })
+          .toBuffer();
+
+        if (listing.imageKey) {
+          await deleteProfilePhoto(listing.imageKey);
+        }
+
+        const key = await uploadProfilePhoto(updated.id, processed);
+        await prisma.listing.update({
+          where: { id: updated.id },
+          data: { imageKey: key, imageStatus: 'pending' },
+        });
+
+        await queueModeration('listing_image', updated.id);
+
+        const signedUrl = await getProfilePhotoSignedUrl(key);
+        imageResult = { imageUrl: signedUrl, imageStatus: 'pending', imageMethod: 'url' };
+      } catch (imgErr: any) {
+        return res.status(400).json({
+          error: 'Image download failed',
+          message: imgErr?.message || 'Could not download or process the image from the provided URL.',
+        });
+      }
+    } else if (data.generateImage) {
+      // Option 2: AI-generate cover via DALL-E
+      try {
+        const textResult = await moderateText(`${updated.title} ${updated.description}`);
+        if (textResult.flagged) {
+          return res.status(400).json({
+            error: 'Content flagged',
+            message: 'Listing text was flagged by moderation. Cannot generate image.',
+          });
+        }
+
+        const prompt = `Professional, clean illustration for a job listing titled "${updated.title.substring(0, 100)}". Style: modern flat design, abstract, no text or words in the image, suitable for a job board thumbnail. Vibrant but professional colors.`;
+
+        const openai = createOpenAIClient({ maxRetries: 2, timeout: 60_000 });
+        const response = await openai.images.generate({
+          model: 'dall-e-3',
+          prompt,
+          n: 1,
+          size: '1024x1024',
+          response_format: 'b64_json',
+        });
+
+        const b64 = response.data?.[0]?.b64_json;
+        if (!b64) {
+          return res.status(500).json({ error: 'Image generation failed' });
+        }
+
+        const imageBuffer = Buffer.from(b64, 'base64');
+        const processed = await sharp(imageBuffer)
+          .resize(600, 400, { fit: 'cover', position: 'centre' })
+          .webp({ quality: 80 })
+          .toBuffer();
+
+        if (listing.imageKey) {
+          await deleteProfilePhoto(listing.imageKey);
+        }
+
+        const key = await uploadProfilePhoto(updated.id, processed);
+        await prisma.listing.update({
+          where: { id: updated.id },
+          data: { imageKey: key, imageStatus: 'pending' },
+        });
+
+        await queueModeration('listing_image', updated.id);
+
+        const signedUrl = await getProfilePhotoSignedUrl(key);
+        imageResult = { imageUrl: signedUrl, imageStatus: 'pending', imageMethod: 'dalle' };
+      } catch (genErr) {
+        logger.error({ err: genErr, listingId: updated.id }, 'DALL-E image generation error during update');
+        return res.status(500).json({ error: 'Failed to generate image' });
+      }
+    } else if (data.title !== undefined || data.category !== undefined) {
+      // Auto-regenerate SVG cover when title or category changed (no explicit image option)
+      try {
+        const coverBuffer = await generateListingCover(
+          updated.title,
+          updated.category ?? undefined,
+        );
+        const coverKey = await uploadProfilePhoto(updated.id, coverBuffer);
+        await prisma.listing.update({
+          where: { id: updated.id },
+          data: { imageKey: coverKey, imageStatus: 'approved' },
+        });
+      } catch (coverErr) {
+        logger.warn({ err: coverErr, listingId: updated.id }, 'Failed to regenerate listing cover after update');
+      }
+    }
+
+    // ── Reconfirm flow: notify applicants if material terms changed ──
+    const materialChanged = MATERIAL_FIELDS.filter(f => (data as any)[f] !== undefined);
+    let reconfirmCount = 0;
+
+    if (materialChanged.length > 0) {
+      // Find all PENDING (active) applications that need reconfirmation
+      const affectedApps = await prisma.listingApplication.findMany({
+        where: {
+          listingId: listing.id,
+          status: 'PENDING',
+        },
+        include: {
+          human: {
+            select: { id: true, name: true, email: true, emailNotifications: true, preferredLanguage: true },
+          },
+        },
+      });
+
+      if (affectedApps.length > 0) {
+        // Bulk-update all PENDING → PENDING_RECONFIRM
+        await prisma.listingApplication.updateMany({
+          where: {
+            listingId: listing.id,
+            status: 'PENDING',
+          },
+          data: { status: 'PENDING_RECONFIRM' },
+        });
+        reconfirmCount = affectedApps.length;
+
+        // Send email notifications (fire-and-forget, don't block response)
+        const compareBaseUrl = `${process.env.FRONTEND_URL || 'https://humanpages.ai'}/listings/${listing.id}/compare`;
+        for (const app of affectedApps) {
+          if (app.human.emailNotifications) {
+            sendListingTermsChangedEmail({
+              humanName: app.human.name,
+              humanEmail: app.human.email,
+              humanId: app.human.id,
+              listingTitle: updated.title,
+              agentName: agent.name,
+              changedFields: materialChanged,
+              compareUrl: `${compareBaseUrl}?app=${app.id}`,
+              language: app.human.preferredLanguage || undefined,
+            }).catch(err => logger.error({ err, appId: app.id }, 'Failed to send listing terms changed email'));
+          }
+        }
+      }
+    }
+
+    // Fire webhook
+    if (updated.callbackUrl) {
+      const payload = {
+        event: 'listing.updated',
+        listingId: updated.id,
+        status: updated.status,
+        timestamp: new Date().toISOString(),
+        data: {
+          title: updated.title,
+          description: updated.description,
+          budgetUsdc: updated.budgetUsdc.toString(),
+          updatedFields: Object.keys(data),
+          ...(reconfirmCount > 0 ? { applicantsNeedReconfirm: reconfirmCount } : {}),
+        },
+      };
+      deliverWebhook(updated.callbackUrl, payload, updated.callbackSecret).catch((err) =>
+        logger.error({ err, listingId: updated.id }, 'Webhook delivery error'),
+      );
+    }
+
+    trackServerEvent(agent.id, 'listing_updated', {
+      listingId: updated.id,
+      updatedFields: Object.keys(data),
+      ...(reconfirmCount > 0 ? { applicantsNeedReconfirm: reconfirmCount } : {}),
+    }, req);
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: reconfirmCount > 0
+        ? `Listing updated successfully. ${reconfirmCount} applicant(s) have been notified and must reconfirm.`
+        : 'Listing updated successfully.',
+      updatedFields: Object.keys(data),
+      ...(reconfirmCount > 0 ? { applicantsNeedReconfirm: reconfirmCount } : {}),
+      ...imageResult,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update listing error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /:id - Cancel listing
 router.delete('/:id', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
   try {
@@ -1039,11 +1495,11 @@ router.delete('/:id', authenticateAgent, requireActiveAgent, async (req: AgentAu
       data: { status: 'CANCELLED' },
     });
 
-    // Reject all pending applications
+    // Reject all pending applications (including those awaiting reconfirmation)
     await prisma.listingApplication.updateMany({
       where: {
         listingId: listing.id,
-        status: 'PENDING',
+        status: { in: ['PENDING', 'PENDING_RECONFIRM'] },
       },
       data: { status: 'REJECTED' },
     });

@@ -878,6 +878,7 @@ enum ListingStatus {
 
 enum ApplicationStatus {
   PENDING
+  PENDING_RECONFIRM
   OFFERED
   REJECTED
   WITHDRAWN
@@ -935,6 +936,10 @@ model ListingApplication {
 
   jobId       String?           @unique // Set when offer is made, links to created Job
   job         Job?              @relation(fields: [jobId], references: [id])
+
+  /// Snapshot of material listing terms at time of application.
+  /// Captured on apply so humans can compare if the listing is later updated.
+  listingSnapshot Json?
 
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt

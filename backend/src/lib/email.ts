@@ -1967,6 +1967,70 @@ Unsubscribe: ${unsubscribeUrl}`;
   });
 }
 
+// ── Listing terms changed notification ──────────────
+
+export interface ListingTermsChangedEmailData {
+  humanName: string;
+  humanEmail: string;
+  humanId: string;
+  listingTitle: string;
+  agentName?: string;
+  changedFields: string[];
+  compareUrl: string;
+  language?: string;
+}
+
+export async function sendListingTermsChangedEmail(data: ListingTermsChangedEmailData): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY) {
+    logger.info({ to: data.humanEmail }, 'Skipping listing terms changed email: no RESEND_API_KEY');
+    return false;
+  }
+
+  const t = getTranslator(data.language || 'en');
+  const unsubUrl = generateUnsubscribeUrl(data.humanId);
+  const agentLabel = data.agentName || 'An agent';
+  const fieldList = data.changedFields.join(', ');
+
+  const textContent = [
+    `Hi ${data.humanName},`,
+    '',
+    `${agentLabel} has updated the listing "${data.listingTitle}" that you applied to.`,
+    `Changed fields: ${fieldList}`,
+    '',
+    `Please review the changes and decide if you'd still like to be considered:`,
+    data.compareUrl,
+    '',
+    `If you take no action, your application will remain paused until you reconfirm or withdraw.`,
+    '',
+    `— The HumanPages Team`,
+    '',
+    `Unsubscribe: ${unsubUrl}`,
+  ].join('\n');
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; max-width: 560px; margin: 0 auto; padding: 20px;">
+<p>Hi ${data.humanName},</p>
+<p><strong>${agentLabel}</strong> has updated the listing <strong>"${data.listingTitle}"</strong> that you applied to.</p>
+<p>Changed fields: <strong>${fieldList}</strong></p>
+<p>
+  <a href="${data.compareUrl}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+    Compare changes &amp; reconfirm
+  </a>
+</p>
+<p style="color: #666; font-size: 14px;">If you take no action, your application will remain paused until you reconfirm or withdraw.</p>
+<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+<p style="color: #999; font-size: 12px;"><a href="${unsubUrl}" style="color: #999;">Unsubscribe</a></p>
+</body></html>`;
+
+  return sendEmailWithOutbox({
+    to: data.humanEmail,
+    subject: `Listing updated: "${data.listingTitle}" — please review`,
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
   if (process.env.RESEND_API_KEY) {
