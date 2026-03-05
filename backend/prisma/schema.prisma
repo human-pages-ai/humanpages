@@ -659,6 +659,7 @@ model Wallet {
   address   String
   label     String?  // e.g., "Main wallet", "Business"
   isPrimary Boolean  @default(false) // Preferred payment wallet
+  source    String   @default("external") // "privy" | "external" | "manual_paste"
   createdAt DateTime @default(now())
 
   human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)

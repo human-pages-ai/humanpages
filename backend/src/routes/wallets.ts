@@ -138,11 +138,12 @@ router.post('/', authenticateToken, walletCreateLimiter, async (req: AuthRequest
 const addWalletManualSchema = z.object({
   address: z.string().regex(EVM_ADDRESS_RE, 'Invalid EVM address'),
   label: z.string().max(50).optional(),
+  source: z.enum(['privy', 'manual_paste']).optional().default('manual_paste'),
 });
 
 router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthRequest, res) => {
   try {
-    const { address, label } = addWalletManualSchema.parse(req.body);
+    const { address, label, source } = addWalletManualSchema.parse(req.body);
 
     const existing = await prisma.wallet.findMany({
       where: {
@@ -166,6 +167,7 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
             network,
             address,
             label,
+            source,
           },
         })
       )

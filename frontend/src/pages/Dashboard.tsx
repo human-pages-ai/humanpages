@@ -495,10 +495,10 @@ export default function Dashboard() {
     }
   };
 
-  const addWalletManual = async (address: string) => {
+  const addWalletManual = async (address: string, source?: 'privy' | 'manual_paste') => {
     setSaving(true);
     try {
-      await api.addWalletManual({ address });
+      await api.addWalletManual({ address, source });
       analytics.track('wallet_added_manual', { address });
       await loadProfile();
       toast.success(t('toast.walletAdded'));

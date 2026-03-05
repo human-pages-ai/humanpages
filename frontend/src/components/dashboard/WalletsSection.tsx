@@ -11,7 +11,7 @@ interface Props {
   wallets: Wallet[];
   saving: boolean;
   onAddWallet: (data: { address: string; signature: string; nonce: string }) => Promise<void>;
-  onAddWalletManual: (address: string) => Promise<void>;
+  onAddWalletManual: (address: string, source?: 'privy' | 'manual_paste') => Promise<void>;
   onDeleteWallet: (id: string) => void;
   onUpdateWalletLabel: (address: string, label?: string) => Promise<void>;
 }
@@ -173,7 +173,7 @@ export default function WalletsSection({
     if (walletType === 'privy') {
       setStep('busy');
       setBusyMessage(t('dashboard.wallets.addingWallet'));
-      onAddWalletManual(walletAddress)
+      onAddWalletManual(walletAddress, 'privy')
         .then(() => { resetState(); logout(); })
         .catch((err: any) => {
           setError(err?.message || t('dashboard.wallets.verificationFailed'));
@@ -210,7 +210,7 @@ export default function WalletsSection({
     setStep('busy');
     setBusyMessage(t('dashboard.wallets.addingWallet'));
     try {
-      await onAddWalletManual(trimmed);
+      await onAddWalletManual(trimmed, 'manual_paste');
       setManualAddress('');
       resetState();
     } catch (err: any) {

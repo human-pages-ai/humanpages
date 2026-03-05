@@ -155,7 +155,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  addWalletManual: (data: { address: string; label?: string }) =>
+  addWalletManual: (data: { address: string; label?: string; source?: 'privy' | 'manual_paste' }) =>
     request<Wallet[]>('/wallets/manual', {
       method: 'POST',
       body: JSON.stringify(data),
