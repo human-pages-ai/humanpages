@@ -30,6 +30,13 @@ if (!syncLang) {
 // Initialize PostHog
 initPostHog();
 
+// Log build version (check with: document.querySelector('meta[name="build-version"]')?.content)
+console.log(`[humanpages] build ${__COMMIT_HASH__} @ ${__BUILD_TIME__}`);
+const meta = document.createElement('meta');
+meta.name = 'build-version';
+meta.content = `${__COMMIT_HASH__}:${__BUILD_TIME__}`;
+document.head.appendChild(meta);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HelmetProvider>
