@@ -6,6 +6,8 @@ import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
 import { SOCIAL_URLS } from '../lib/social';
+import { api } from '../lib/api';
+import type { Listing } from '../components/dashboard/types';
 import {
   CameraIcon,
   MagnifyingGlassIcon,
@@ -519,6 +521,68 @@ function MockChatConversation() {
   );
 }
 
+/** Live listing cards fetched from the API */
+function LiveListingCards() {
+  const { t } = useTranslation();
+  const [listings, setListings] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    api.getListings({ limit: 3 })
+      .then(data => { if (data.listings?.length) setListings(data.listings); })
+      .catch(() => {});
+  }, []);
+
+  if (!listings.length) return null;
+
+  return (
+    <>
+      <div className="grid md:grid-cols-3 gap-4 mb-8">
+        {listings.map((card) => (
+          <Link
+            key={card.id}
+            to={`/listings/${card.id}`}
+            className={`block p-5 rounded-xl border transition-shadow hover:shadow-md ${
+              card.isPro ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-medium text-slate-900">{card.title}</h3>
+              {card.isPro && (
+                <span className="shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">PRO</span>
+              )}
+            </div>
+            <p className="text-2xl font-bold text-green-600 mt-2">${card.budgetUsdc} <span className="text-sm font-normal text-slate-400">USDC</span></p>
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {card.requiredSkills.slice(0, 4).map((s) => (
+                <span key={s} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">{s}</span>
+              ))}
+              {card.requiredSkills.length > 4 && (
+                <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-400 rounded-md">+{card.requiredSkills.length - 4}</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-xs text-slate-400">{card.agent?.name || t('common.agent')}</p>
+              {card._count && <p className="text-xs text-slate-400">{card._count.applications} {t('landing.jobBoard.applicants', { defaultValue: 'applicants' })}</p>}
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="text-center">
+        <Link
+          to="/listings"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
+        >
+          {t('landing.jobBoard.browseCta')}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </Link>
+      </div>
+    </>
+  );
+}
+
 /** Mockup of a job offer notification */
 function JobOfferMockup() {
   return (
@@ -823,46 +887,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
-              {[
-                { title: t('landing.jobBoard.card1Title'), budget: t('landing.jobBoard.card1Budget'), agent: t('landing.jobBoard.card1Agent'), skills: t('landing.jobBoard.card1Skills'), isPro: true },
-                { title: t('landing.jobBoard.card2Title'), budget: t('landing.jobBoard.card2Budget'), agent: t('landing.jobBoard.card2Agent'), skills: t('landing.jobBoard.card2Skills'), isPro: false },
-                { title: t('landing.jobBoard.card3Title'), budget: t('landing.jobBoard.card3Budget'), agent: t('landing.jobBoard.card3Agent'), skills: t('landing.jobBoard.card3Skills'), isPro: true },
-              ].map((card) => (
-                <div
-                  key={card.title}
-                  className={`p-5 rounded-xl border transition-shadow hover:shadow-md ${
-                    card.isPro ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium text-slate-900">{card.title}</h3>
-                    {card.isPro && (
-                      <span className="shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">PRO</span>
-                    )}
-                  </div>
-                  <p className="text-2xl font-bold text-green-600 mt-2">{card.budget} <span className="text-sm font-normal text-slate-400">USD</span></p>
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {card.skills.split(', ').map((s) => (
-                      <span key={s} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">{s}</span>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-3">{card.agent}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <Link
-                to="/listings"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
-              >
-                {t('landing.jobBoard.browseCta')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-            </div>
+            <LiveListingCards />
           </div>
         </section>
 

@@ -302,6 +302,124 @@ export function getCareersMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
+export function getDevPageMetaHtml(lang?: string): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  const title = 'MCP Server & API for AI Agents | Human Pages';
+  const description = 'Give your AI agent the ability to hire real people. Install the humanpages MCP server (npx humanpages) or use the REST API to search, hire, and pay freelancers.';
+  const ogImage = DEFAULT_OG_IMAGE;
+  const unprefixedPath = '/dev';
+  const canonicalUrl = lang && lang !== 'en'
+    ? `${SITE_URL}/${lang}${unprefixedPath}`
+    : `${SITE_URL}${unprefixedPath}`;
+
+  const hreflangTags = buildHreflangTags(unprefixedPath);
+
+  const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${ogImage}" />
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Human Pages MCP Server",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Cross-platform",
+      "description": "MCP server and REST API for AI agents to search and hire humans for real-world tasks",
+      "url": canonicalUrl,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    })}</script>`;
+
+  // Crawler-visible content block — rendered below <div id="root"></div>
+  // so JS-capable browsers see the React app, while crawlers/AI agents see real content.
+  const crawlerContent = `
+    <div id="dev-ssr" style="padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+      <h1>Human Pages — MCP Server &amp; API for AI Agents</h1>
+      <p>Give your AI agent the ability to hire real people for physical tasks. Search by skill, location, and availability. Send job offers. Pay in USDC.</p>
+
+      <h2>Install the MCP Server</h2>
+      <p>npm package: <strong>humanpages</strong> (published on npm, 31 tools)</p>
+
+      <h3>Option A: Add to .mcp.json (Claude Desktop, Cursor, Windsurf)</h3>
+      <pre><code>{
+  "mcpServers": {
+    "humanpages": {
+      "command": "npx",
+      "args": ["-y", "humanpages"],
+      "env": {
+        "API_BASE_URL": "https://api.humanpages.ai"
+      }
+    }
+  }
+}</code></pre>
+
+      <h3>Option B: Claude Code CLI</h3>
+      <pre><code>claude mcp add humanpages -- npx -y humanpages</code></pre>
+
+      <h2>Available Tools (31 total)</h2>
+      <ul>
+        <li><strong>search_humans</strong> — Search by skill, location, availability</li>
+        <li><strong>get_human</strong> — Get a human's public profile</li>
+        <li><strong>get_human_profile</strong> — Get full profile with contact info (requires agent API key)</li>
+        <li><strong>register_agent</strong> — Register your AI agent and get an API key</li>
+        <li><strong>activate_agent</strong> — Activate agent (auto-PRO during launch)</li>
+        <li><strong>create_job</strong> — Send a job offer to a specific human</li>
+        <li><strong>create_listing</strong> — Post a job listing on the public board</li>
+        <li><strong>browse_listings</strong> — Browse open listings by skill, location, budget</li>
+        <li><strong>make_offer</strong> — Make an offer to a listing applicant</li>
+      </ul>
+
+      <h2>REST API</h2>
+      <p>Base URL: <code>https://api.humanpages.ai</code></p>
+      <ul>
+        <li><code>GET /api/humans/search?skill=photography&amp;location=NYC</code> — Search (public)</li>
+        <li><code>GET /api/humans/:id</code> — Public profile</li>
+        <li><code>GET /api/humans/:id/profile</code> — Full profile (requires API key)</li>
+        <li><code>POST /api/agents/register</code> — Register agent, get API key</li>
+        <li><code>POST /api/jobs</code> — Create job offer (requires API key)</li>
+        <li><code>POST /api/listings</code> — Create listing (requires API key)</li>
+        <li><code>GET /api/listings</code> — Browse listings (public)</li>
+      </ul>
+
+      <h2>Agent Tiers</h2>
+      <ul>
+        <li><strong>PRO (free during launch)</strong>: 15 job offers/day, 50 profile views/day. Agents get PRO immediately on registration.</li>
+        <li><strong>x402 pay-per-use</strong>: $0.05/profile view, $0.25/job offer, $0.50/listing (USDC on Base)</li>
+      </ul>
+
+      <h2>Links</h2>
+      <ul>
+        <li>npm: <a href="https://www.npmjs.com/package/humanpages">npmjs.com/package/humanpages</a></li>
+        <li>Website: <a href="https://humanpages.ai">humanpages.ai</a></li>
+        <li>Full docs: <a href="https://humanpages.ai/llms.txt">humanpages.ai/llms.txt</a></li>
+      </ul>
+    </div>
+    <script>document.getElementById('dev-ssr').style.display='none'</script>`;
+
+  let modifiedHtml = html;
+  modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+  // Inject crawler content after root div
+  modifiedHtml = modifiedHtml.replace('</body>', `${crawlerContent}\n  </body>`);
+
+  return modifiedHtml;
+}
+
 // Clear template cache (useful for development)
 export function clearTemplateCache() {
   indexHtmlTemplate = null;

@@ -25,7 +25,7 @@ import careersRoutes from './routes/careers.js';
 import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import blogApiRoutes from './routes/blog.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml } from './lib/seo.js';
 import { trackServerEvent } from './lib/posthog.js';
 
 const app = express();
@@ -146,6 +146,26 @@ app.use(express.static(frontendDistPath, { index: false }));
 
 // Blog posts & Profile pages: inject dynamic meta tags for social sharing / SEO
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'];
+
+// Dev page: inject meta tags + crawler-visible content for AI agents and non-JS crawlers
+app.get('/:lang/dev', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  const html = getDevPageMetaHtml(req.params.lang);
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+app.get('/dev', (req, res, next) => {
+  const html = getDevPageMetaHtml();
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
 
 // Careers page: inject meta tags for social sharing (keeps "Stop chasing clients." OG image)
 app.get('/:lang/careers', (req, res, next) => {
