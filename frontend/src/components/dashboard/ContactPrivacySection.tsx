@@ -8,6 +8,7 @@ interface Props {
     contactEmail: string;
     telegram: string;
     hideContact: boolean;
+    featuredConsent: boolean;
   };
   setProfileForm: (v: any) => void;
 }
@@ -38,6 +39,22 @@ export default function ContactPrivacySection({
           <span className="font-medium text-gray-900">{t('dashboard.profile.hideContact')}</span>
           <br />
           <span className="text-gray-500 text-xs">{t('dashboard.profile.hideContactHelp')}</span>
+        </span>
+      </label>
+
+      {/* Featured on homepage toggle */}
+      <label className="flex items-start gap-2 mb-4 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={profileForm.featuredConsent}
+          onChange={(e) => setProfileForm({ ...profileForm, featuredConsent: e.target.checked })}
+          disabled={!editingProfile}
+          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <span className="text-sm">
+          <span className="font-medium text-gray-900">{t('dashboard.profile.featuredConsent', { defaultValue: 'Feature me on the homepage' })}</span>
+          <br />
+          <span className="text-gray-500 text-xs">{t('dashboard.profile.featuredConsentHelp', { defaultValue: 'Allow your photo, name, skills, and location to appear on our homepage to showcase the community.' })}</span>
         </span>
       </label>
 

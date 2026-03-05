@@ -424,6 +424,9 @@ export const api = {
   getAdminPeopleFilterOptions: () =>
     request<PeopleFilterOptions>('/admin/people/filter-options'),
 
+  sendFeaturedInvite: (humanId: string) =>
+    request<{ success: boolean; sentAt: string }>(`/admin/people/${humanId}/featured-invite`, { method: 'POST' }),
+
   exportAdminPeople: (params: {
     search?: string; country?: string; skills?: string; hasCareerApplication?: boolean;
     careerPositionId?: string; affiliatedBy?: string; hasReferrals?: boolean; availability?: string;

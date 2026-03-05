@@ -106,6 +106,7 @@ export interface Profile {
   whatsappNotifications?: boolean;
   analyticsOptOut?: boolean;
   emailDigestMode?: 'REALTIME' | 'HOURLY' | 'DAILY';
+  featuredConsent?: boolean;
 }
 
 export interface AgentProfile {

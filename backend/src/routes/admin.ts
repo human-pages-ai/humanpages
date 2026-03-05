@@ -5,7 +5,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
-import { sendStaffApiKeyEmail } from '../lib/email.js';
+import { sendStaffApiKeyEmail, sendFeaturedInviteEmail } from '../lib/email.js';
 import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
@@ -586,6 +586,10 @@ router.get('/people', async (req: AuthRequest, res) => {
           role: true,
           createdAt: true,
           lastActiveAt: true,
+          profilePhotoKey: true,
+          profilePhotoStatus: true,
+          featuredConsent: true,
+          featuredInviteSentAt: true,
           _count: {
             select: { jobs: true, reviews: true, services: true },
           },
@@ -616,8 +620,23 @@ router.get('/people', async (req: AuthRequest, res) => {
     });
     const referralCountMap = new Map(referralCounts.map((r) => [r.referredBy, r._count]));
 
+    // Attach signed photo URLs for people with photos
+    const photoUrls = new Map<string, string>();
+    await Promise.all(
+      people
+        .filter(p => p.profilePhotoKey && ['approved', 'pending'].includes(p.profilePhotoStatus))
+        .map(async (p) => {
+          try {
+            const url = await getProfilePhotoSignedUrl(p.profilePhotoKey!);
+            if (url) photoUrls.set(p.id, url);
+          } catch { /* skip */ }
+        })
+    );
+
     const enriched = people.map((p) => ({
       ...p,
+      profilePhotoUrl: photoUrls.get(p.id) || null,
+      profilePhotoKey: undefined, // strip R2 key
       referredByName: p.referredBy ? referrerMap.get(p.referredBy) || null : null,
       referralCount: referralCountMap.get(p.id) || 0,
     }));
@@ -629,6 +648,34 @@ router.get('/people', async (req: AuthRequest, res) => {
   } catch (error) {
     logger.error({ err: error }, 'Admin people error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// POST /api/admin/people/:id/featured-invite — Send featured invite email
+router.post('/people/:id/featured-invite', async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, email: true, name: true, emailVerified: true, featuredInviteSentAt: true, featuredConsent: true, emailNotifications: true },
+    });
+
+    if (!human) return res.status(404).json({ error: 'User not found' });
+    if (!human.emailVerified) return res.status(400).json({ error: 'User email not verified' });
+    if (human.featuredConsent) return res.status(400).json({ error: 'User already opted in' });
+    if (human.featuredInviteSentAt) return res.status(400).json({ error: 'Invite already sent on ' + human.featuredInviteSentAt.toISOString().slice(0, 10) });
+
+    const sent = await sendFeaturedInviteEmail({ to: human.email, name: human.name, humanId: human.id });
+    if (!sent) return res.status(500).json({ error: 'Failed to send email' });
+
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { featuredInviteSentAt: new Date() },
+    });
+
+    res.json({ success: true, sentAt: new Date().toISOString() });
+  } catch (error) {
+    logger.error({ err: error }, 'Featured invite error');
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

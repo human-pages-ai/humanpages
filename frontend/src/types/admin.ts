@@ -86,6 +86,10 @@ export interface AdminPerson {
     reviews: number;
     services: number;
   };
+  profilePhotoUrl: string | null;
+  profilePhotoStatus: string;
+  featuredConsent: boolean;
+  featuredInviteSentAt: string | null;
   careerApplications: Array<{
     positionId: string;
     positionTitle: string;

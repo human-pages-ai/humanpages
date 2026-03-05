@@ -81,6 +81,11 @@ export default function TermsOfUse() {
             You can control your visibility by toggling your availability status. When set to
             unavailable, your profile will not appear in search results.
           </p>
+          <p>
+            We may feature selected profiles (including your name, photo, skills, and location) on
+            our homepage and marketing materials to showcase the community. You can opt in or out of
+            featured placement at any time from your dashboard settings.
+          </p>
 
           <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">5. Payments & Cryptocurrency</h2>
           <p>

@@ -204,6 +204,7 @@ const updateProfileSchema = z.object({
 
   // Privacy
   hideContact: z.boolean().optional(),
+  featuredConsent: z.boolean().optional(),
 
   // Notification preferences
   emailNotifications: z.boolean().optional(),
@@ -698,6 +699,85 @@ router.post('/me/verify-humanity', authenticateToken, requireEmailVerified, veri
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Verify humanity error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /featured — Public stats + featured profiles for homepage
+// Cached in-memory for 5 minutes to avoid DB pressure
+let featuredCache: { data: any; expiresAt: number } | null = null;
+
+router.get('/featured', async (_req, res) => {
+  try {
+    const now = Date.now();
+    if (featuredCache && featuredCache.expiresAt > now) {
+      return res.json(featuredCache.data);
+    }
+
+    const [verifiedCount, withSkillsCount, countriesRaw, featuredRaw] = await Promise.all([
+      prisma.human.count({ where: { emailVerified: true } }),
+      prisma.human.count({ where: { emailVerified: true, skills: { isEmpty: false } } }),
+      prisma.human.findMany({
+        where: { emailVerified: true, location: { not: null } },
+        select: { location: true },
+        distinct: ['location'],
+      }),
+      prisma.human.findMany({
+        where: {
+          emailVerified: true,
+          isAvailable: true,
+          featuredConsent: true,
+          bio: { not: null },
+          location: { not: null },
+          profilePhotoKey: { not: null },
+          profilePhotoStatus: { in: ['approved', 'pending'] },
+        },
+        select: {
+          id: true,
+          name: true,
+          location: true,
+          skills: true,
+          bio: true,
+          profilePhotoKey: true,
+          profilePhotoStatus: true,
+        },
+        orderBy: { lastActiveAt: 'desc' },
+        take: 50,
+      }),
+    ]);
+
+    // Deduplicate countries from location strings
+    const countries = new Set<string>();
+    for (const { location } of countriesRaw) {
+      if (!location) continue;
+      const parts = location.split(',').map(s => s.trim());
+      countries.add(parts[parts.length - 1]);
+    }
+
+    // Quality filter: require 2+ skills and a real bio (20+ chars, not just a date or junk)
+    const quality = featuredRaw.filter(h =>
+      h.skills.length >= 2 &&
+      h.bio && h.bio.length >= 20 &&
+      h.name.length >= 3
+    );
+
+    // Pick up to 8 random profiles and attach signed photo URLs
+    const shuffled = quality.sort(() => Math.random() - 0.5).slice(0, 8);
+    const featured = await Promise.all(shuffled.map(h => attachPhotoUrl({ ...h })));
+
+    const data = {
+      stats: {
+        verifiedHumans: verifiedCount,
+        withSkills: withSkillsCount,
+        countries: countries.size,
+      },
+      featured,
+    };
+
+    featuredCache = { data, expiresAt: now + 5 * 60 * 1000 };
+    res.json(data);
+  } catch (error) {
+    logger.error({ err: error }, 'Featured profiles error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

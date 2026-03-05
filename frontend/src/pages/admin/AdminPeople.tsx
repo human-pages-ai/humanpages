@@ -23,6 +23,7 @@ export default function AdminPeople() {
   const [sort, setSort] = useState('createdAt');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [exporting, setExporting] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState<string | null>(null);
 
   const skillDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -131,6 +132,24 @@ export default function AdminPeople() {
   const filteredSkillOptions = filterOptions?.skills.filter(
     (s) => !selectedSkills.includes(s) && s.toLowerCase().includes(skillSearch.toLowerCase())
   ).slice(0, 20) || [];
+
+  async function handleSendFeaturedInvite(e: React.MouseEvent, personId: string) {
+    e.stopPropagation();
+    if (sendingInvite) return;
+    setSendingInvite(personId);
+    try {
+      const res = await api.sendFeaturedInvite(personId);
+      setPeople((prev) =>
+        prev.map((p) =>
+          p.id === personId ? { ...p, featuredInviteSentAt: res.sentAt } : p
+        )
+      );
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSendingInvite(null);
+    }
+  }
 
   function extractCountry(location: string | null) {
     if (!location) return '';
@@ -294,6 +313,7 @@ export default function AdminPeople() {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Skills</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Career Apps</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referrals</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Featured</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer" onClick={() => toggleSort('createdAt')}>
                 Joined{sortIndicator('createdAt')}
               </th>
@@ -304,29 +324,44 @@ export default function AdminPeople() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
             ) : people.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No people found</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No people found</td></tr>
             ) : (
               people.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/users/${p.id}`)}>
                   {/* Person */}
                   <td className="px-4 py-3">
-                    <div className="text-sm">
-                      <Link
-                        to={`/admin/users/${p.id}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {p.name}
-                      </Link>
-                      {p.username && <span className="ml-1 text-gray-400 text-xs">@{p.username}</span>}
-                    </div>
-                    <div className="text-xs text-gray-500">{p.email}</div>
-                    <div className="flex gap-1 mt-0.5">
-                      {p.emailVerified && <span className="text-[10px] px-1 py-0.5 bg-green-100 text-green-700 rounded">email</span>}
-                      {p.linkedinVerified && <span className="text-[10px] px-1 py-0.5 bg-blue-100 text-blue-700 rounded">linkedin</span>}
-                      {p.githubVerified && <span className="text-[10px] px-1 py-0.5 bg-gray-100 text-gray-700 rounded">github</span>}
+                    <div className="flex items-start gap-3">
+                      {p.profilePhotoUrl ? (
+                        <img
+                          src={p.profilePhotoUrl}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <span className="text-gray-400 text-xs">{p.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-sm">
+                          <Link
+                            to={`/admin/users/${p.id}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {p.name}
+                          </Link>
+                          {p.username && <span className="ml-1 text-gray-400 text-xs">@{p.username}</span>}
+                        </div>
+                        <div className="text-xs text-gray-500">{p.email}</div>
+                        <div className="flex gap-1 mt-0.5">
+                          {p.emailVerified && <span className="text-[10px] px-1 py-0.5 bg-green-100 text-green-700 rounded">email</span>}
+                          {p.linkedinVerified && <span className="text-[10px] px-1 py-0.5 bg-blue-100 text-blue-700 rounded">linkedin</span>}
+                          {p.githubVerified && <span className="text-[10px] px-1 py-0.5 bg-gray-100 text-gray-700 rounded">github</span>}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   {/* Location */}
@@ -387,6 +422,26 @@ export default function AdminPeople() {
                         <span className="text-gray-300">-</span>
                       )}
                     </div>
+                  </td>
+                  {/* Featured */}
+                  <td className="px-4 py-3 text-xs">
+                    {p.featuredConsent ? (
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Opted in</span>
+                    ) : p.featuredInviteSentAt ? (
+                      <span className="text-gray-400" title={`Sent ${new Date(p.featuredInviteSentAt).toLocaleDateString()}`}>
+                        Invited {new Date(p.featuredInviteSentAt).toLocaleDateString()}
+                      </span>
+                    ) : p.profilePhotoUrl && p.emailVerified ? (
+                      <button
+                        onClick={(e) => handleSendFeaturedInvite(e, p.id)}
+                        disabled={sendingInvite === p.id}
+                        className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-[11px]"
+                      >
+                        {sendingInvite === p.id ? 'Sending...' : 'Send Invite'}
+                      </button>
+                    ) : (
+                      <span className="text-gray-300">-</span>
+                    )}
                   </td>
                   {/* Joined */}
                   <td className="px-4 py-3 text-xs text-gray-500">

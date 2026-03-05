@@ -521,6 +521,87 @@ function MockChatConversation() {
   );
 }
 
+/** Stats + Featured profiles from /api/humans/featured */
+function FeaturedSection() {
+  const { t } = useTranslation();
+  const [data, setData] = useState<{
+    stats: { verifiedHumans: number; withSkills: number; countries: number };
+    featured: Array<{ id: string; name: string; location?: string; skills: string[]; bio?: string; profilePhotoUrl?: string }>;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/humans/featured')
+      .then(r => r.json())
+      .then(d => { if (d.stats) setData(d); })
+      .catch(() => {});
+  }, []);
+
+  if (!data) return null;
+
+  const { stats, featured } = data;
+
+  return (
+    <section className="py-16 bg-white px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Stats counters */}
+        <div className="grid grid-cols-3 gap-6 mb-12">
+          <div className="text-center">
+            <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.verifiedHumans.toLocaleString()}+</p>
+            <p className="text-sm text-slate-500 mt-1">{t('landing.stats.verifiedHumans', { defaultValue: 'Verified humans' })}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.withSkills.toLocaleString()}+</p>
+            <p className="text-sm text-slate-500 mt-1">{t('landing.stats.withSkills', { defaultValue: 'Skills listed' })}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.countries}</p>
+            <p className="text-sm text-slate-500 mt-1">{t('landing.stats.countries', { defaultValue: 'Countries' })}</p>
+          </div>
+        </div>
+
+        {/* Featured profiles */}
+        {featured.length > 0 && (
+          <>
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8">
+              {t('landing.featured.title', { defaultValue: 'Real people, ready to work' })}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {featured.map((h) => (
+                <Link
+                  key={h.id}
+                  to={`/humans/${h.id}`}
+                  className="group p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center"
+                >
+                  {h.profilePhotoUrl ? (
+                    <img
+                      src={h.profilePhotoUrl}
+                      alt={h.name}
+                      className="w-16 h-16 rounded-full mx-auto mb-3 object-cover ring-2 ring-slate-100 group-hover:ring-blue-200 transition-all"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full mx-auto mb-3 bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">
+                      {h.name.charAt(0)}
+                    </div>
+                  )}
+                  <h3 className="font-medium text-slate-900 text-sm truncate">{h.name}</h3>
+                  {h.location && (
+                    <p className="text-xs text-slate-400 mt-0.5 truncate">{h.location}</p>
+                  )}
+                  <div className="flex flex-wrap justify-center gap-1 mt-2">
+                    {h.skills.slice(0, 2).map((s) => (
+                      <span key={s} className="text-xs px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded">{s}</span>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
 /** Live listing cards fetched from the API */
 function LiveListingCards() {
   const { t } = useTranslation();
@@ -872,8 +953,11 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Stats + Featured Profiles */}
+        <FeaturedSection />
+
         {/* Job Board showcase */}
-        <section className="py-16 bg-white px-4">
+        <section className="py-16 bg-slate-50 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-sm font-medium rounded-full mb-4">

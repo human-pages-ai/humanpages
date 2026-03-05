@@ -1882,6 +1882,76 @@ Human Pages — Internal Staff Notification
   });
 }
 
+// Featured invite email — asks a human to opt in to homepage featuring
+interface FeaturedInviteEmailData {
+  to: string;
+  name: string;
+  humanId: string;
+}
+
+export async function sendFeaturedInviteEmail(data: FeaturedInviteEmailData): Promise<boolean> {
+  const dashboardUrl = `${FRONTEND_URL}/dashboard`;
+  const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
+
+  const textContent = `Hi ${data.name},
+
+Your profile on Human Pages is looking great! We'd love to feature you on our homepage to showcase the community to new visitors and AI agents.
+
+What gets shown: your profile photo, name, skills, and location — all info that's already public on your profile.
+
+If you'd like to be featured, just toggle "Feature me on the homepage" in your dashboard privacy settings:
+${dashboardUrl}
+
+You can opt out at any time from the same settings page.
+
+Thanks for being part of the community!
+
+— The Human Pages Team
+
+Unsubscribe: ${unsubscribeUrl}`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
+    <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:32px;">
+      <h1 style="font-size:20px;color:#1e293b;margin:0 0 16px;">We'd love to feature you!</h1>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 12px;">
+        Hi ${data.name},
+      </p>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 12px;">
+        Your profile on Human Pages is looking great! We'd love to feature you on our
+        <strong>homepage</strong> to showcase the community to new visitors and AI agents.
+      </p>
+      <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 20px;">
+        <strong>What gets shown:</strong> your profile photo, name, skills, and location — all info that's already public on your profile. You can opt out at any time.
+      </p>
+      <div style="text-align:center;margin:24px 0;">
+        <a href="${dashboardUrl}" style="display:inline-block;padding:12px 28px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">
+          Go to Dashboard
+        </a>
+      </div>
+      <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin:16px 0 0;">
+        Toggle <strong>"Feature me on the homepage"</strong> in your Privacy settings.
+      </p>
+    </div>
+    <p style="color:#94a3b8;font-size:11px;text-align:center;margin:20px 0 0;">
+      <a href="${unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a>
+    </p>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({
+    to: data.to,
+    subject: 'We\'d love to feature you on our homepage!',
+    text: textContent,
+    html: htmlContent,
+  });
+}
+
 // Verify email configuration on startup
 export async function verifyEmailConfig(): Promise<boolean> {
   const hasResend = !!process.env.RESEND_API_KEY;

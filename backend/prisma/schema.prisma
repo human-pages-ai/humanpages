@@ -199,7 +199,9 @@ model Human {
   paymentMethods  String?  // Free-text: PayPal, Venmo, Wise links, etc.
 
   // ===== PRIVACY =====
-  hideContact     Boolean  @default(true) // Hide contact info from public profile
+  hideContact          Boolean   @default(true) // Hide contact info from public profile
+  featuredConsent      Boolean   @default(false) // Opt-in to be featured on homepage
+  featuredInviteSentAt DateTime? // When we sent the "want to be featured?" email
 
   // ===== EMAIL DIGEST =====
   emailDigestMode EmailDigestMode @default(REALTIME)
