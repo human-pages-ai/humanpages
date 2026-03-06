@@ -82,12 +82,15 @@ async function createJob(opts?: {
   if (targetStatus === 'ACCEPTED') return jobId;
 
   if (targetStatus === 'COMPLETED') {
-    // For upon-completion flow: ACCEPTED → COMPLETED
+    // For upon-completion flow: ACCEPTED → SUBMITTED → COMPLETED
     await prisma.human.update({
       where: { id: human.id },
       data: { paymentPreferences: ['UPFRONT', 'UPON_COMPLETION'] },
     });
-    await authRequest(human.token).patch(`/api/jobs/${jobId}/complete`);
+    // Submit with evidence (goes to SUBMITTED)
+    await authRequest(human.token).patch(`/api/jobs/${jobId}/complete`).send({ message: 'All tasks completed as requested. Here are the deliverables.' });
+    // Approve completion as agent (SUBMITTED → COMPLETED)
+    await request(app).patch(`/api/jobs/${jobId}/approve-completion`).set('X-Agent-Key', agent.apiKey);
     return jobId;
   }
 
@@ -555,9 +558,13 @@ describe('Off-chain payment: full flow', () => {
 
     const jobId = await createJob({ status: 'ACCEPTED', paymentTiming: 'upon_completion' });
 
-    // Human completes work first
-    const completeRes = await authRequest(human.token).patch(`/api/jobs/${jobId}/complete`);
-    expect(completeRes.body.status).toBe('COMPLETED');
+    // Human submits work for review
+    const completeRes = await authRequest(human.token).patch(`/api/jobs/${jobId}/complete`).send({ message: 'All tasks completed as requested. Here are the deliverables.' });
+    expect(completeRes.body.status).toBe('SUBMITTED');
+
+    // Agent approves completion
+    const approveRes = await request(app).patch(`/api/jobs/${jobId}/approve-completion`).set('X-Agent-Key', agent.apiKey);
+    expect(approveRes.body.status).toBe('COMPLETED');
 
     // Agent claims off-chain payment
     const claimRes = await request(app)
@@ -647,8 +654,9 @@ describe('Review gating: milestone-based', () => {
     });
     const jobId = await createJob({ status: 'ACCEPTED', paymentTiming: 'upon_completion' });
 
-    // ACCEPTED → COMPLETED → PAYMENT_CLAIMED → PAID
-    await authRequest(human.token).patch(`/api/jobs/${jobId}/complete`);
+    // ACCEPTED → SUBMITTED → COMPLETED → PAYMENT_CLAIMED → PAID
+    await authRequest(human.token).patch(`/api/jobs/${jobId}/complete`).send({ message: 'All tasks completed as requested. Here are the deliverables.' });
+    await request(app).patch(`/api/jobs/${jobId}/approve-completion`).set('X-Agent-Key', agent.apiKey);
     await request(app)
       .patch(`/api/jobs/${jobId}/claim-payment`)
       .set('X-Agent-Key', agent.apiKey)
