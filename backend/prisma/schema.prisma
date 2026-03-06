@@ -348,9 +348,15 @@ enum JobStatus {
   PAID              // Payment verified (on-chain) or confirmed (off-chain)
   STREAMING         // Stream payment active (Superfluid flow or micro-transfers)
   PAUSED            // Stream paused (flow deleted or tick missed)
+  SUBMITTED         // Human submitted work for review, waiting for agent approval
   COMPLETED         // Work done
   CANCELLED         // Cancelled by either party (before money/work exchanged)
   DISPUTED          // Something went wrong (after money/work exchanged)
+}
+
+enum DisputeType {
+  PRE_PAYMENT       // Dispute raised before any payment (e.g. SUBMITTED, PAYMENT_CLAIMED)
+  POST_PAYMENT      // Dispute raised after payment (e.g. PAID, COMPLETED)
 }
 
 model Agent {
@@ -564,6 +570,7 @@ model Job {
   disputedAt      DateTime?
   disputeReason   String?
   disputedBy      String?    // "AGENT" | "HUMAN"
+  disputeType     DisputeType?
 
   // Audit: who last moved the workflow forward
   lastActionBy    String?    // "AGENT" | "HUMAN" | "SYSTEM"
@@ -571,6 +578,7 @@ model Job {
   // Timestamps
   createdAt       DateTime  @default(now())
   acceptedAt      DateTime?
+  submittedAt     DateTime?
   completedAt     DateTime?
   updatedAt       DateTime  @updatedAt
 

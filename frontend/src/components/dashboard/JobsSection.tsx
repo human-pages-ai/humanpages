@@ -42,7 +42,7 @@ export default function JobsSection({
       case 'pending':
         return jobs.filter(j => j.status === 'PENDING');
       case 'active':
-        return jobs.filter(j => ['ACCEPTED', 'PAYMENT_CLAIMED', 'PAID'].includes(j.status));
+        return jobs.filter(j => ['ACCEPTED', 'PAYMENT_CLAIMED', 'PAID', 'SUBMITTED'].includes(j.status));
       case 'completed':
         return jobs.filter(j => j.status === 'COMPLETED');
       default:
@@ -57,6 +57,7 @@ export default function JobsSection({
       REJECTED: 'bg-gray-100 text-gray-700',
       PAYMENT_CLAIMED: 'bg-orange-100 text-orange-700',
       PAID: 'bg-green-100 text-green-700',
+      SUBMITTED: 'bg-yellow-100 text-yellow-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       CANCELLED: 'bg-gray-100 text-gray-700',
       DISPUTED: 'bg-red-100 text-red-700',

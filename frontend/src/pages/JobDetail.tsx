@@ -48,6 +48,10 @@ export default function JobDetail() {
   }>({ open: false, title: '', message: '', onConfirm: () => {} });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitEvidence, setSubmitEvidence] = useState('');
+  const [submitConfirmed, setSubmitConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -68,7 +72,7 @@ export default function JobDetail() {
   // Poll for new messages every 5s
   useEffect(() => {
     if (!id || !job) return;
-    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID'];
+    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID', 'SUBMITTED', 'COMPLETED', 'DISPUTED'];
     if (!allowedStatuses.includes(job.status)) return;
 
     const interval = setInterval(loadMessages, 5000);
@@ -145,7 +149,16 @@ export default function JobDetail() {
     });
   };
 
+  const isUponCompletion = job?.paymentTiming === 'upon_completion'
+    || job?.human?.paymentPreferences?.includes('UPON_COMPLETION');
+
   const handleComplete = async () => {
+    // For upon_completion jobs in ACCEPTED status, show the submit modal
+    if (isUponCompletion && job?.status === 'ACCEPTED') {
+      setShowSubmitModal(true);
+      return;
+    }
+    // Standard flow (PAID → COMPLETED)
     try {
       await api.completeJob(id!);
       posthog.capture('job_completed', { jobId: id });
@@ -153,6 +166,25 @@ export default function JobDetail() {
       await loadJob();
     } catch (error: any) {
       toast.error(error.message);
+    }
+  };
+
+  const handleSubmitWork = async () => {
+    if (submitEvidence.length < 20 || !submitConfirmed || submitting) return;
+    setSubmitting(true);
+    try {
+      await api.completeJob(id!, { message: submitEvidence });
+      posthog.capture('job_submitted_for_review', { jobId: id });
+      toast.success(t('toast.workSubmitted', 'Work submitted for review'));
+      setShowSubmitModal(false);
+      setSubmitEvidence('');
+      setSubmitConfirmed(false);
+      await loadJob();
+      await loadMessages();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -212,6 +244,7 @@ export default function JobDetail() {
       REJECTED: 'bg-gray-100 text-gray-700',
       PAYMENT_CLAIMED: 'bg-orange-100 text-orange-700',
       PAID: 'bg-green-100 text-green-700',
+      SUBMITTED: 'bg-yellow-100 text-yellow-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       CANCELLED: 'bg-gray-100 text-gray-700',
       DISPUTED: 'bg-red-100 text-red-700',
@@ -220,7 +253,7 @@ export default function JobDetail() {
   };
 
   const isOwner = user && job && (job as any).humanId === user.id;
-  const canMessage = job && ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID'].includes(job.status);
+  const canMessage = job && !['CANCELLED', 'REJECTED'].includes(job.status);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
@@ -444,10 +477,14 @@ export default function JobDetail() {
 
           {/* Dispute/cancellation info banners */}
           {job.status === 'DISPUTED' && job.disputeReason && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm font-medium text-red-800">{t('jobDetail.disputeReason', 'Dispute reason')}</p>
-              <p className="text-sm text-red-700 mt-1">{job.disputeReason}</p>
-              {job.disputedBy && <p className="text-xs text-red-500 mt-2">{t('jobDetail.raisedBy', 'Raised by')}: {job.disputedBy}</p>}
+            <div className={`mt-4 p-4 border rounded-lg ${job.disputeType === 'POST_PAYMENT' ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
+              <p className={`text-sm font-medium ${job.disputeType === 'POST_PAYMENT' ? 'text-red-800' : 'text-orange-800'}`}>
+                {job.disputeType === 'POST_PAYMENT'
+                  ? t('jobDetail.disputePostPayment', 'Payment dispute — funds were already sent')
+                  : t('jobDetail.disputePrePayment', 'Work dispute — no payment was exchanged')}
+              </p>
+              <p className={`text-sm mt-1 ${job.disputeType === 'POST_PAYMENT' ? 'text-red-700' : 'text-orange-700'}`}>{job.disputeReason}</p>
+              {job.disputedBy && <p className={`text-xs mt-2 ${job.disputeType === 'POST_PAYMENT' ? 'text-red-500' : 'text-orange-500'}`}>{t('jobDetail.raisedBy', 'Raised by')}: {job.disputedBy}</p>}
             </div>
           )}
 
@@ -481,14 +518,14 @@ export default function JobDetail() {
               {job.status === 'ACCEPTED' && (
                 <div className="flex flex-col gap-2">
                   <span className="text-sm text-blue-600 font-medium">{t('dashboard.jobs.awaitingPayment')}</span>
-                  {job.human?.paymentPreferences?.includes('UPON_COMPLETION') && (
+                  {isUponCompletion && (
                     <>
-                      <span className="text-xs text-gray-500">{t('dashboard.jobs.completeBeforePayment')}</span>
+                      <span className="text-xs text-gray-500">{t('dashboard.jobs.completeBeforePayment', 'Complete the work, then submit for review')}</span>
                       <button
                         onClick={handleComplete}
                         className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700"
                       >
-                        {t('dashboard.jobs.markComplete')}
+                        {t('dashboard.jobs.submitWork', 'Submit work for review')}
                       </button>
                     </>
                   )}
@@ -498,6 +535,25 @@ export default function JobDetail() {
                   >
                     {t('jobDetail.cancelJob', 'Cancel job')}
                   </button>
+                </div>
+              )}
+              {job.status === 'SUBMITTED' && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-yellow-600 font-medium">{t('jobDetail.workSubmitted', 'Your work has been submitted and is waiting for review')}</span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleDispute}
+                      className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-md hover:bg-red-200"
+                    >
+                      {t('jobDetail.disputeJob', 'Dispute')}
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300"
+                    >
+                      {t('jobDetail.cancelJob', 'Cancel job')}
+                    </button>
+                  </div>
                 </div>
               )}
               {job.status === 'PAYMENT_CLAIMED' && (
@@ -614,6 +670,52 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Submit work modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">{t('jobDetail.submitWorkTitle', 'Submit your work for review')}</h3>
+            <textarea
+              value={submitEvidence}
+              onChange={(e) => setSubmitEvidence(e.target.value)}
+              placeholder={t('jobDetail.evidencePlaceholder', 'Describe what you did and include any links to your work')}
+              className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              {submitEvidence.length < 20
+                ? t('jobDetail.evidenceMinLength', '{{remaining}} more characters needed', { remaining: 20 - submitEvidence.length })
+                : t('jobDetail.evidenceLengthOk', 'Looks good')}
+            </p>
+            <label className="flex items-start gap-2 mt-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={submitConfirmed}
+                onChange={(e) => setSubmitConfirmed(e.target.checked)}
+                className="mt-1 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              />
+              <span className="text-sm text-gray-700">
+                {t('jobDetail.confirmQuality', 'I confirm that I have completed all tasks to professional standards')}
+              </span>
+            </label>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleSubmitWork}
+                disabled={submitEvidence.length < 20 || !submitConfirmed || submitting}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? t('common.submitting', 'Submitting...') : t('dashboard.jobs.submitWork', 'Submit work for review')}
+              </button>
+              <button
+                onClick={() => { setShowSubmitModal(false); setSubmitEvidence(''); setSubmitConfirmed(false); }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={confirmDialog.open}

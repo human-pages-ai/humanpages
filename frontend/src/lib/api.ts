@@ -289,8 +289,8 @@ export const api = {
   rejectJob: (id: string) =>
     request<Job>(`/jobs/${id}/reject`, { method: 'PATCH' }),
 
-  completeJob: (id: string) =>
-    request<Job>(`/jobs/${id}/complete`, { method: 'PATCH' }),
+  completeJob: (id: string, body?: { message: string }) =>
+    request<Job>(`/jobs/${id}/complete`, { method: 'PATCH', ...(body && { body: JSON.stringify(body) }) }),
 
   confirmPayment: (id: string) =>
     request<Job>(`/jobs/${id}/confirm-payment`, { method: 'PATCH' }),

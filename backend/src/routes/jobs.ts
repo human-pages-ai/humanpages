@@ -730,7 +730,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
 });
 
 // Valid job statuses for filtering
-const VALID_JOB_STATUSES = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID', 'STREAMING', 'PAUSED', 'COMPLETED', 'REJECTED', 'CANCELLED', 'DISPUTED'];
+const VALID_JOB_STATUSES = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID', 'STREAMING', 'PAUSED', 'SUBMITTED', 'COMPLETED', 'REJECTED', 'CANCELLED', 'DISPUTED'];
 
 // Get jobs for authenticated human
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
@@ -1021,12 +1021,12 @@ router.patch('/:id/paid', async (req, res) => {
   }
 });
 
-// Human marks job as completed
+// Human marks job as completed (or submits for review on upon_completion jobs)
 router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
-      include: { human: { select: { paymentPreferences: true } } },
+      include: { human: { select: { id: true, name: true, paymentPreferences: true } } },
     });
 
     if (!job) {
@@ -1037,22 +1037,60 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    // Determine if this is an upon-completion flow (needs SUBMITTED review step)
+    const isUponCompletion = job.paymentTiming === 'upon_completion'
+      || job.human.paymentPreferences.includes('UPON_COMPLETION');
+
     // For stream jobs, allow completion from STREAMING or PAUSED
     if (job.paymentMode === 'STREAM') {
       if (job.status !== 'STREAMING' && job.status !== 'PAUSED') {
         return res.status(400).json({ error: `Cannot complete stream job in ${job.status} status` });
       }
+    } else if (isUponCompletion && job.status === 'SUBMITTED') {
+      // Idempotency: if already SUBMITTED, return current state
+      return res.json({ id: job.id, status: job.status, message: 'Work already submitted for review.' });
+    } else if (isUponCompletion && job.status === 'ACCEPTED') {
+      // Upon-completion flow: ACCEPTED → SUBMITTED (requires evidence)
+      const body = z.object({
+        message: z.string().min(20, 'Please describe what you did in at least 20 characters'),
+      }).parse(req.body);
+
+      // Post evidence to chat before status update
+      await prisma.jobMessage.create({
+        data: {
+          jobId: job.id,
+          senderType: 'human',
+          senderId: job.humanId,
+          senderName: job.human.name || 'Human',
+          content: body.message,
+        },
+      });
+
+      const updated = await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'SUBMITTED',
+          submittedAt: new Date(),
+          lastActionBy: 'HUMAN',
+        },
+      });
+
+      if (job.callbackUrl) {
+        fireWebhook(
+          { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+          'job.submitted',
+        );
+      }
+
+      return res.json({
+        id: updated.id,
+        status: updated.status,
+        message: 'Work submitted for review.',
+      });
     } else {
-      // Allow PAID → COMPLETED always
-      // Allow ACCEPTED → COMPLETED when human accepts upon-completion
-      // Allow ACCEPTED → COMPLETED when paymentPreferences includes UPON_COMPLETION
+      // Standard flow: PAID → COMPLETED
       if (job.status !== 'PAID') {
-        const hasUponCompletion = job.human.paymentPreferences.includes('UPON_COMPLETION');
-        if (job.status === 'ACCEPTED' && (hasUponCompletion || job.paymentTiming === 'upon_completion')) {
-          // Allow completion before payment for upon-completion flow
-        } else {
-          return res.status(400).json({ error: `Cannot complete job in ${job.status} status` });
-        }
+        return res.status(400).json({ error: `Cannot complete job in ${job.status} status` });
       }
     }
 
@@ -1079,7 +1117,131 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       message: 'Job marked as completed. Review is now unlocked.',
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
     logger.error({ err: error }, 'Complete job error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ===== AGENT APPROVAL FLOW (for SUBMITTED jobs) =====
+
+// Agent approves submitted work → SUBMITTED → COMPLETED
+router.patch('/:id/approve-completion', authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Only the agent on this job can approve
+    if (req.senderType !== 'agent' || req.senderId !== job.registeredAgentId) {
+      return res.status(403).json({ error: 'Only the assigned agent can approve completion' });
+    }
+
+    // Idempotency: if already COMPLETED (or later), return current state
+    if (job.status === 'COMPLETED' || job.status === 'PAID') {
+      return res.json({ id: job.id, status: job.status, message: 'Work already approved.' });
+    }
+
+    if (job.status !== 'SUBMITTED') {
+      return res.status(400).json({ error: `Cannot approve completion for job in ${job.status} status` });
+    }
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'COMPLETED',
+        completedAt: new Date(),
+        lastActionBy: 'AGENT',
+      },
+    });
+
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.completed',
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: 'Work approved. Job completed.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Approve completion error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Agent requests revision → SUBMITTED → ACCEPTED
+router.patch('/:id/request-revision', authenticateEither, requireActiveIfAgent, async (req: EitherAuthRequest, res) => {
+  try {
+    const body = z.object({
+      reason: z.string().min(1, 'Revision reason is required').max(1000),
+    }).parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: { registeredAgent: { select: { name: true } } },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Only the agent on this job can request revision
+    if (req.senderType !== 'agent' || req.senderId !== job.registeredAgentId) {
+      return res.status(403).json({ error: 'Only the assigned agent can request revision' });
+    }
+
+    if (job.status !== 'SUBMITTED') {
+      return res.status(400).json({ error: `Cannot request revision for job in ${job.status} status` });
+    }
+
+    // Post revision reason as agent message in chat
+    await prisma.jobMessage.create({
+      data: {
+        jobId: job.id,
+        senderType: 'agent',
+        senderId: job.registeredAgentId!,
+        senderName: job.registeredAgent?.name || job.agentName || 'Agent',
+        content: body.reason,
+      },
+    });
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'ACCEPTED',
+        submittedAt: null,
+        lastActionBy: 'AGENT',
+      },
+    });
+
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.revision_requested',
+        { reason: body.reason },
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      message: 'Revision requested.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Request revision error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1259,10 +1421,10 @@ router.patch('/:id/cancel', authenticateEither, requireActiveIfAgent, async (req
     }
 
     // Allowed-from statuses depend on who is cancelling
-    // Human: ACCEPTED, PAYMENT_CLAIMED, PAUSED
-    // Agent: PENDING (withdraw offer), ACCEPTED, PAYMENT_CLAIMED, PAUSED
-    const humanAllowed = ['ACCEPTED', 'PAYMENT_CLAIMED', 'PAUSED'];
-    const agentAllowed = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAUSED'];
+    // Human: ACCEPTED, PAYMENT_CLAIMED, PAUSED, SUBMITTED
+    // Agent: PENDING (withdraw offer), ACCEPTED, PAYMENT_CLAIMED, PAUSED, SUBMITTED
+    const humanAllowed = ['ACCEPTED', 'PAYMENT_CLAIMED', 'PAUSED', 'SUBMITTED'];
+    const agentAllowed = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAUSED', 'SUBMITTED'];
     const allowed = isHuman ? humanAllowed : agentAllowed;
 
     if (!allowed.includes(job.status)) {
@@ -1335,12 +1497,12 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Allowed from: PAYMENT_CLAIMED, PAID, COMPLETED, PAUSED (money or work has been exchanged)
-    const allowed = ['PAYMENT_CLAIMED', 'PAID', 'COMPLETED', 'PAUSED'];
+    // Allowed from: SUBMITTED, PAYMENT_CLAIMED, PAID, COMPLETED, PAUSED (work submitted or money exchanged)
+    const allowed = ['SUBMITTED', 'PAYMENT_CLAIMED', 'PAID', 'COMPLETED', 'PAUSED'];
     if (!allowed.includes(job.status)) {
       if (['PENDING', 'ACCEPTED'].includes(job.status)) {
         return res.status(400).json({
-          error: 'Cannot dispute before money or work has been exchanged',
+          error: 'Cannot dispute before work has been submitted or money exchanged',
           hint: 'Use the cancel endpoint to back out of the deal.',
         });
       }
@@ -1351,12 +1513,17 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
 
     const disputedBy = isHuman ? 'HUMAN' : 'AGENT';
 
+    // Classify dispute type based on whether payment has occurred
+    const prePaymentStatuses = ['SUBMITTED', 'PAYMENT_CLAIMED'];
+    const disputeType = prePaymentStatuses.includes(job.status) ? 'PRE_PAYMENT' : 'POST_PAYMENT';
+
     const updated = await prisma.job.update({
       where: { id: job.id },
       data: {
         status: 'DISPUTED',
         disputedAt: new Date(),
         disputeReason: body.reason,
+        disputeType,
         disputedBy,
         lastActionBy: disputedBy,
       },
@@ -1367,7 +1534,7 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
       fireWebhook(
         { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
         'job.disputed',
-        { disputedBy, reason: body.reason },
+        { disputedBy, reason: body.reason, disputeType },
       );
     }
 
@@ -1523,9 +1690,9 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Status check: only allow on non-terminal statuses
-    const allowedStatuses = ['PENDING', 'ACCEPTED', 'PAID', 'STREAMING', 'PAUSED'];
-    if (!allowedStatuses.includes(job.status)) {
+    // Status check: allow on all statuses except terminal ones
+    const blockedStatuses = ['CANCELLED', 'REJECTED'];
+    if (blockedStatuses.includes(job.status)) {
       return res.status(400).json({ error: `Cannot send messages on ${job.status} jobs` });
     }
 

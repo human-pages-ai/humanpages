@@ -135,7 +135,9 @@ export interface AdminJob {
   paidAt: string | null;
   createdAt: string;
   acceptedAt: string | null;
+  submittedAt: string | null;
   completedAt: string | null;
+  disputeType: string | null;
   human: { id: string; name: string; email: string };
   registeredAgent: { id: string; name: string } | null;
   agentName: string | null;

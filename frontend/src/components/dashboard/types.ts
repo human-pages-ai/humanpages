@@ -141,7 +141,7 @@ export interface Job {
   description: string;
   category?: string;
   priceUsdc: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PAYMENT_CLAIMED' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PAYMENT_CLAIMED' | 'PAID' | 'SUBMITTED' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
   updateCount?: number;
   lastUpdatedByAgent?: string;
   createdAt: string;
@@ -157,7 +157,9 @@ export interface Job {
   cancelReason?: string;
   disputedBy?: string;
   disputeReason?: string;
+  disputeType?: 'PRE_PAYMENT' | 'POST_PAYMENT';
   paymentTiming?: string;
+  submittedAt?: string;
   review?: {
     id: string;
     rating: number;
