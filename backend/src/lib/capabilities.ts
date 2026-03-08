@@ -6,6 +6,7 @@ export const STAFF_CAPABILITIES = [
   'GROUP_MANAGER',
   'LEAD_GEN',
   'VIDEO_MANAGER',
+  'CAREER_MANAGER',
 ] as const;
 
 export type StaffCapability = (typeof STAFF_CAPABILITIES)[number];

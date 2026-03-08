@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { jwtOrApiKey, requireAdmin } from '../middleware/adminAuth.js';
+import { jwtOrApiKey, requireStaffOrAdmin } from '../middleware/adminAuth.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
@@ -18,7 +18,7 @@ router.use(jwtOrApiKey);
 router.use((req: Request, res: Response, next) => {
   const authReq = req as AuthRequest;
   if (authReq.userId) {
-    return requireAdmin(authReq, res, next);
+    return requireStaffOrAdmin(authReq, res, next);
   }
   next();
 });

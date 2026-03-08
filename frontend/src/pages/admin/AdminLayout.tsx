@@ -39,6 +39,7 @@ const sharedItems: NavItem[] = [
   { to: '/admin/posting/work', label: 'Work Mode' },
   { to: '/admin/ad-copy', label: 'Ad Copy' },
   { to: '/admin/video', label: 'Videos', capability: 'VIDEO_MANAGER' },
+  { to: '/admin/careers', label: 'Careers', capability: 'CAREER_MANAGER' },
 ];
 
 function navLinkClass({ isActive }: { isActive: boolean }) {

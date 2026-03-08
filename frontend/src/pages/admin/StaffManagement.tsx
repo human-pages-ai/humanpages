@@ -11,6 +11,7 @@ const CAP_LABELS: Record<StaffCapability, string> = {
   GROUP_MANAGER: 'Group Manager',
   LEAD_GEN: 'Lead Gen',
   VIDEO_MANAGER: 'Video Manager',
+  CAREER_MANAGER: 'Career Manager',
 };
 
 function CapabilitiesEditor({ member, onSaved }: { member: StaffMember; onSaved: (caps: StaffCapability[]) => void }) {

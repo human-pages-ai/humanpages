@@ -13,6 +13,7 @@ const CAP_META: Record<StaffCapability, { label: string; description: string; li
   GROUP_MANAGER: { label: 'Group Management', description: 'Manage posting groups', link: '/admin/posting', color: 'orange' },
   LEAD_GEN: { label: 'Lead Generation', description: 'Manage influencer leads and outreach', link: '/admin/leads', color: 'teal' },
   VIDEO_MANAGER: { label: 'Video Manager', description: 'Manage video pipeline and concepts', link: '/admin/video', color: 'indigo' },
+  CAREER_MANAGER: { label: 'Career Manager', description: 'Review and manage career applications', link: '/admin/careers', color: 'cyan' },
 };
 
 const COLOR_MAP: Record<string, { bg: string; badge: string; text: string; border: string }> = {
@@ -22,6 +23,7 @@ const COLOR_MAP: Record<string, { bg: string; badge: string; text: string; borde
   pink: { bg: 'bg-pink-50', badge: 'bg-pink-100 text-pink-700', text: 'text-pink-700', border: 'border-pink-200' },
   orange: { bg: 'bg-orange-50', badge: 'bg-orange-100 text-orange-700', text: 'text-orange-700', border: 'border-orange-200' },
   indigo: { bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-700', text: 'text-indigo-700', border: 'border-indigo-200' },
+  cyan: { bg: 'bg-cyan-50', badge: 'bg-cyan-100 text-cyan-700', text: 'text-cyan-700', border: 'border-cyan-200' },
 };
 
 function TaskCard({ cap, count, preview }: {
