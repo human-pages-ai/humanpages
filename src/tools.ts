@@ -31,9 +31,17 @@ interface Human {
   linkedinUrl?: string;
   twitterUrl?: string;
   githubUrl?: string;
+  facebookUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;
+  tiktokUrl?: string;
+  twitterFollowers?: number;
+  instagramFollowers?: number;
+  youtubeFollowers?: number;
+  tiktokFollowers?: number;
+  linkedinFollowers?: number;
+  facebookFollowers?: number;
   humanityVerified?: boolean;
   humanityScore?: number;
   humanityProvider?: string;
@@ -76,6 +84,7 @@ interface RegisterAgentResponse {
   status?: string;
   tier?: string;
   dashboardUrl?: string;
+  webhookSecret?: string;
   limits?: {
     jobOffersPerDay: number;
     profileViewsPerDay: number;
@@ -263,6 +272,10 @@ export function createServer(): Server {
               type: 'string',
               description: 'Contact email for the agent operator',
             },
+            webhook_url: {
+              type: 'string',
+              description: 'Webhook URL for receiving platform events (new job matches, status changes, announcements). Must be a public HTTPS endpoint.',
+            },
           },
           required: ['name'],
         },
@@ -433,6 +446,48 @@ export function createServer(): Server {
             },
           },
           required: ['job_id', 'payment_tx_hash', 'payment_network', 'payment_amount'],
+        },
+      },
+      {
+        name: 'approve_completion',
+        description:
+          'Approve submitted work for a job. Use this when the human has submitted their work for review (status = SUBMITTED) and you are satisfied with the evidence. Moves the job to COMPLETED, after which you can pay and leave a review.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            job_id: {
+              type: 'string',
+              description: 'The job ID',
+            },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (hp_...)',
+            },
+          },
+          required: ['job_id', 'agent_key'],
+        },
+      },
+      {
+        name: 'request_revision',
+        description:
+          'Request revision on submitted work. Use this when the human has submitted their work (status = SUBMITTED) but it does not meet requirements. The job moves back to ACCEPTED and the human can resubmit. Include a clear reason explaining what needs to be fixed.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            job_id: {
+              type: 'string',
+              description: 'The job ID',
+            },
+            reason: {
+              type: 'string',
+              description: 'Explain what needs to be revised or fixed',
+            },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (hp_...)',
+            },
+          },
+          required: ['job_id', 'reason', 'agent_key'],
         },
       },
       {
@@ -1058,6 +1113,7 @@ ${servicesInfo || 'No services listed'}`;
             description: args?.description,
             websiteUrl: args?.website_url,
             contactEmail: args?.contact_email,
+            webhookUrl: args?.webhook_url,
           }),
         });
 
@@ -1084,7 +1140,7 @@ ${servicesInfo || 'No services listed'}`;
 
 **IMPORTANT:** Save your API key now — it cannot be retrieved later.
 Pass it as \`agent_key\` when using \`create_job_offer\` or \`get_human_profile\`.
-
+${result.webhookSecret ? `\n**Webhook Secret:** \`${result.webhookSecret}\`\nSave this to verify webhook signatures (X-HumanPages-Signature header).` : ''}
 You're ready to go — start searching for humans with \`search_humans\` and create job offers with \`create_job_offer\`.
 
 **Domain Verification Token:** \`${result.verificationToken}\`
@@ -1358,6 +1414,70 @@ After completion, you can leave a review using \`leave_review\`.`,
         };
       }
 
+      if (name === 'approve_completion') {
+        const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/approve-completion`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Agent-Key': args?.agent_key as string,
+          },
+        });
+
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.reason || error.error || `API error: ${res.status}`);
+        }
+
+        const result = await res.json() as { id: string; status: string; message: string };
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `**Work Approved!**
+
+**Job ID:** ${result.id}
+**Status:** ${result.status}
+
+The work has been approved. You can now pay the human using \`mark_job_paid\` and then leave a review with \`leave_review\`.`,
+            },
+          ],
+        };
+      }
+
+      if (name === 'request_revision') {
+        const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/request-revision`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Agent-Key': args?.agent_key as string,
+          },
+          body: JSON.stringify({ reason: args?.reason }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.reason || error.error || `API error: ${res.status}`);
+        }
+
+        const result = await res.json() as { id: string; status: string; message: string };
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `**Revision Requested**
+
+**Job ID:** ${result.id}
+**Status:** ${result.status}
+**Reason:** ${args?.reason}
+
+The human has been notified and the job is back to ACCEPTED. They can resubmit their work when ready.`,
+            },
+          ],
+        };
+      }
+
       if (name === 'check_humanity_status') {
         const human = await getHuman(args?.human_id as string);
         const tier = human.humanityScore
@@ -1416,12 +1536,15 @@ ${human.humanityVerified
           .map((f) => `- ${f.platform}${f.label ? ` (${f.label})` : ''}${f.isPrimary ? ' ⭐' : ''}: ${f.handle}`)
           .join('\n');
 
+        const fmtFollowers = (n?: number) => n != null ? ` (${n.toLocaleString()} followers)` : '';
         const socialLinks = [
-          human.linkedinUrl && `- LinkedIn: ${human.linkedinUrl}`,
-          human.twitterUrl && `- Twitter: ${human.twitterUrl}`,
+          human.linkedinUrl && `- LinkedIn: ${human.linkedinUrl}${fmtFollowers(human.linkedinFollowers)}`,
+          human.twitterUrl && `- Twitter/X: ${human.twitterUrl}${fmtFollowers(human.twitterFollowers)}`,
           human.githubUrl && `- GitHub: ${human.githubUrl}`,
-          human.instagramUrl && `- Instagram: ${human.instagramUrl}`,
-          human.youtubeUrl && `- YouTube: ${human.youtubeUrl}`,
+          human.facebookUrl && `- Facebook: ${human.facebookUrl}${fmtFollowers(human.facebookFollowers)}`,
+          human.instagramUrl && `- Instagram: ${human.instagramUrl}${fmtFollowers(human.instagramFollowers)}`,
+          human.youtubeUrl && `- YouTube: ${human.youtubeUrl}${fmtFollowers(human.youtubeFollowers)}`,
+          human.tiktokUrl && `- TikTok: ${human.tiktokUrl}${fmtFollowers(human.tiktokFollowers)}`,
           human.websiteUrl && `- Website: ${human.websiteUrl}`,
         ].filter(Boolean).join('\n');
 
