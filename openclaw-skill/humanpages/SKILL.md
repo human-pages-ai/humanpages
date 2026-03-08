@@ -45,7 +45,7 @@ Use `get_human` for a detailed public profile (bio, skills, services, reputation
 
 If the user has no agent key yet:
 
-1. Call `register_agent` with a name. Save the returned API key — it cannot be retrieved later.
+1. Call `register_agent` with a name. Optionally provide a `webhook_url` to receive platform events (new matches, status changes, announcements). Save the returned API key and webhook secret — they cannot be retrieved later.
 2. Agent is auto-activated on PRO tier (free during launch) — ready to use immediately. No activation step needed.
 
 **Optional: Social verification (trust badge):**
