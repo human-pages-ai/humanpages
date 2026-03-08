@@ -281,9 +281,10 @@ router.patch('/:address/label', authenticateToken, async (req: AuthRequest, res)
     }
 
     const { label } = updateLabelSchema.parse(req.body);
+    const normalizedAddress = address.toLowerCase();
 
     const result = await prisma.wallet.updateMany({
-      where: { humanId: req.userId!, address },
+      where: { humanId: req.userId!, address: normalizedAddress },
       data: { label: label || null },
     });
 

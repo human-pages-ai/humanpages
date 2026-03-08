@@ -70,7 +70,7 @@ describe('Wallets API', () => {
       expect(networks).toContain('polygon');
       expect(networks).toContain('base');
       expect(networks).toContain('arbitrum');
-      expect(response.body[0].address).toBe(ACCOUNT_1.address);
+      expect(response.body[0].address).toBe(ACCOUNT_1.address.toLowerCase());
     });
 
     it('should reject unauthenticated request', async () => {
@@ -120,7 +120,7 @@ describe('Wallets API', () => {
       const ethWallet = response.body.find((w: any) => w.network === 'ethereum');
       expect(ethWallet).toBeDefined();
       expect(ethWallet).toHaveProperty('id');
-      expect(ethWallet.address).toBe(ACCOUNT_2.address);
+      expect(ethWallet.address).toBe(ACCOUNT_2.address.toLowerCase());
       expect(ethWallet.label).toBe('My ETH Wallet');
     });
 
@@ -134,13 +134,16 @@ describe('Wallets API', () => {
       expect(baseWallet.label).toBeNull();
     });
 
-    it('should reject duplicate wallet address when already registered on all networks', async () => {
+    it('should return existing wallets when already registered on all networks', async () => {
       await addWalletWithSignature(user.token, ACCOUNT_DUP, 'ethereum');
 
       const response = await addWalletWithSignature(user.token, ACCOUNT_DUP, 'ethereum');
 
-      expect(response.status).toBe(400);
-      expect(response.body.error).toContain('already registered on all supported networks');
+      // Re-submitting upgrades verified status and returns existing wallets
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body[0].verified).toBe(true);
     });
 
     it('should auto-register wallet across all EVM mainnet networks', async () => {

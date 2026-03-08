@@ -93,6 +93,7 @@ beforeEach(async () => {
       humanId: human.id,
       network: 'ethereum',
       address: '0x' + '2'.repeat(40),
+      verified: true,
     },
   });
 

@@ -71,6 +71,7 @@ describe('Stream Payments', () => {
         network: 'base',
         address: '0xHumanWallet123',
         isPrimary: true,
+        verified: true,
       },
     });
 

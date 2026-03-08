@@ -152,7 +152,7 @@ beforeEach(async () => {
     },
   });
   await prisma.wallet.create({
-    data: { humanId: human.id, network: 'ethereum', address: '0x' + '2'.repeat(40) },
+    data: { humanId: human.id, network: 'ethereum', address: '0x' + '2'.repeat(40), verified: true },
   });
 
   agent = await createActiveTestAgent({ name: 'TaskBot AI' });
