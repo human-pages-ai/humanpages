@@ -96,17 +96,18 @@ describe('Flow: Wallet Management — Multi-chain Wallet Lifecycle', () => {
     expect(listRes.body).toHaveLength(8);
 
     const ethNetworks = listRes.body
-      .filter((w: any) => w.address === WALLET_ETH.address)
+      .filter((w: any) => w.address === WALLET_ETH.address.toLowerCase())
       .map((w: any) => w.network);
     expect(ethNetworks).toContain('ethereum');
     expect(ethNetworks).toContain('polygon');
     expect(ethNetworks).toContain('base');
     expect(ethNetworks).toContain('arbitrum');
 
-    // ─── Step 5: Try duplicate (already on all networks) ────────────────
+    // ─── Step 5: Try duplicate (already on all networks) — returns existing wallets with verified upgrade
     const dupeRes = await addWalletSigned(user.token, WALLET_ETH, 'ethereum');
-    expect(dupeRes.status).toBe(400);
-    expect(dupeRes.body.error).toContain('already registered on all supported networks');
+    expect(dupeRes.status).toBe(200);
+    expect(Array.isArray(dupeRes.body)).toBe(true);
+    expect(dupeRes.body[0].verified).toBe(true);
 
     // ─── Step 6: Delete Ethereum wallet ────────────────────────────────
     const deleteRes = await authRequest(user.token).delete(`/api/wallets/${ethWalletId}`);
