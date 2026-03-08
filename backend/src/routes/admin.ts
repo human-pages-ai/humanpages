@@ -237,9 +237,7 @@ router.get('/tasks/summary', authenticateToken, requireStaffOrAdmin, async (req:
 
     if (capabilities.includes('CONTENT_REVIEWER')) summary.CONTENT_REVIEWER = counts[0] ?? 0;
     if (capabilities.includes('POSTER')) summary.POSTER = counts[1] ?? 0;
-    if (capabilities.includes('ANALYST')) summary.ANALYST = 0;
     if (capabilities.includes('CREATIVE')) summary.CREATIVE = 0;
-    if (capabilities.includes('GROUP_MANAGER')) summary.GROUP_MANAGER = 0;
 
     res.json({ capabilities, summary });
   } catch (error) {
@@ -1883,6 +1881,70 @@ router.patch('/moderation/:id', async (req: AuthRequest, res) => {
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Admin moderation override error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// ─── Email Log & Outbox ───
+
+router.get('/emails', async (req: AuthRequest, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const status = req.query.status as string | undefined;
+    const recipient = req.query.recipient as string | undefined;
+    const type = req.query.type as string | undefined;
+    const jobId = req.query.jobId as string | undefined;
+    const tab = (req.query.tab as string) || 'log';
+
+    if (tab === 'outbox') {
+      // Show NotificationOutbox entries (pending retries, failed, sent via worker)
+      const where: any = {};
+      if (status) where.status = status;
+      if (recipient) where.recipient = { contains: recipient, mode: 'insensitive' };
+
+      const [entries, total] = await Promise.all([
+        prisma.notificationOutbox.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.notificationOutbox.count({ where }),
+      ]);
+
+      return res.json({ entries, total, page, limit });
+    }
+
+    // Default: EmailLog
+    const where: any = {};
+    if (status) where.status = status;
+    if (recipient) where.recipient = { contains: recipient, mode: 'insensitive' };
+    if (type) where.type = type;
+    if (jobId) where.jobId = jobId;
+
+    const [entries, total, stats] = await Promise.all([
+      prisma.emailLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.emailLog.count({ where }),
+      prisma.emailLog.groupBy({
+        by: ['status'],
+        _count: true,
+      }),
+    ]);
+
+    const statusCounts: Record<string, number> = {};
+    for (const s of stats) {
+      statusCounts[s.status] = s._count;
+    }
+
+    return res.json({ entries, total, page, limit, statusCounts });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin email log error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });

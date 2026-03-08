@@ -388,12 +388,11 @@ export interface AdminJobDetail extends AdminJob {
 export const STAFF_CAPABILITIES = [
   'CONTENT_REVIEWER',
   'POSTER',
-  'ANALYST',
   'CREATIVE',
-  'GROUP_MANAGER',
   'LEAD_GEN',
   'VIDEO_MANAGER',
   'CAREER_MANAGER',
+  'PHOTO_MANAGER',
 ] as const;
 
 export type StaffCapability = (typeof STAFF_CAPABILITIES)[number];

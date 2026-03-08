@@ -6,12 +6,11 @@ import { STAFF_CAPABILITIES } from '../../types/admin';
 const CAP_LABELS: Record<StaffCapability, string> = {
   CONTENT_REVIEWER: 'Content Reviewer',
   POSTER: 'Poster',
-  ANALYST: 'Analyst',
   CREATIVE: 'Creative',
-  GROUP_MANAGER: 'Group Manager',
   LEAD_GEN: 'Lead Gen',
   VIDEO_MANAGER: 'Video Manager',
   CAREER_MANAGER: 'Career Manager',
+  PHOTO_MANAGER: 'Photo Manager',
 };
 
 function CapabilitiesEditor({ member, onSaved }: { member: StaffMember; onSaved: (caps: StaffCapability[]) => void }) {

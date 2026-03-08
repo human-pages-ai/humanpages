@@ -40,6 +40,7 @@ const sharedItems: NavItem[] = [
   { to: '/admin/ad-copy', label: 'Ad Copy' },
   { to: '/admin/video', label: 'Videos', capability: 'VIDEO_MANAGER' },
   { to: '/admin/careers', label: 'Careers', capability: 'CAREER_MANAGER' },
+  { to: '/admin/photos', label: 'Photos', capability: 'PHOTO_MANAGER' },
 ];
 
 function navLinkClass({ isActive }: { isActive: boolean }) {

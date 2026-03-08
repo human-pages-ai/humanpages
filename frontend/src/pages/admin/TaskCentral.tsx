@@ -7,13 +7,12 @@ import type { StaffCapability, TaskSummary, ContentItem, PostingGroup } from '..
 
 const CAP_META: Record<StaffCapability, { label: string; description: string; link: string; color: string }> = {
   CONTENT_REVIEWER: { label: 'Content Review', description: 'Review and approve draft content', link: '/admin/content', color: 'blue' },
-  POSTER: { label: 'Posting Queue', description: 'Post to groups and communities', link: '/admin/posting/work', color: 'green' },
-  ANALYST: { label: 'Analytics', description: 'Review performance metrics', link: '#', color: 'purple' },
+  POSTER: { label: 'Posting & Groups', description: 'Post to groups and manage posting queues', link: '/admin/posting/work', color: 'green' },
   CREATIVE: { label: 'Creative', description: 'Create ad copy and visuals', link: '/admin/ad-copy', color: 'pink' },
-  GROUP_MANAGER: { label: 'Group Management', description: 'Manage posting groups', link: '/admin/posting', color: 'orange' },
   LEAD_GEN: { label: 'Lead Generation', description: 'Manage influencer leads and outreach', link: '/admin/leads', color: 'teal' },
   VIDEO_MANAGER: { label: 'Video Manager', description: 'Manage video pipeline and concepts', link: '/admin/video', color: 'indigo' },
   CAREER_MANAGER: { label: 'Career Manager', description: 'Review and manage career applications', link: '/admin/careers', color: 'cyan' },
+  PHOTO_MANAGER: { label: 'Photo Manager', description: 'Manage photo pipeline and concepts', link: '/admin/photos', color: 'purple' },
 };
 
 const COLOR_MAP: Record<string, { bg: string; badge: string; text: string; border: string }> = {
@@ -153,16 +152,8 @@ export default function TaskCentral() {
           />
         )}
 
-        {capabilities.includes('ANALYST') && (
-          <TaskCard cap="ANALYST" count={summary?.summary.ANALYST ?? 0} />
-        )}
-
         {capabilities.includes('CREATIVE') && (
           <TaskCard cap="CREATIVE" count={summary?.summary.CREATIVE ?? 0} />
-        )}
-
-        {capabilities.includes('GROUP_MANAGER') && (
-          <TaskCard cap="GROUP_MANAGER" count={summary?.summary.GROUP_MANAGER ?? 0} />
         )}
       </div>
     </div>
