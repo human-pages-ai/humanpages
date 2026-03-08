@@ -253,7 +253,7 @@ export default function AdminLeadGeneration() {
                   <td className="px-4 py-3 text-sm text-gray-600 max-w-[180px] truncate">{l.email || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 max-w-[120px] truncate">{l.followers || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{l.source.replace('_', ' ')}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(l.updatedAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(l.updatedAt).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))
             )}

@@ -252,7 +252,7 @@ export default function ContentManager() {
                 </td>
                 <td className="px-4 py-3 text-gray-600">{item.relevanceScore ?? '-'}/3</td>
                 <td className="px-4 py-3 text-gray-500">
-                  {new Date(item.createdAt).toLocaleDateString()}
+                  {new Date(item.createdAt).toLocaleDateString('en-GB')}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>

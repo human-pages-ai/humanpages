@@ -423,7 +423,7 @@ export default function PostingQueue() {
                     )}
                   </td>
                   <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
-                    {group.datePosted ? new Date(group.datePosted).toLocaleDateString() : '-'}
+                    {group.datePosted ? new Date(group.datePosted).toLocaleDateString('en-GB') : '-'}
                   </td>
                   <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
                     {group.completedBy?.name || '-'}

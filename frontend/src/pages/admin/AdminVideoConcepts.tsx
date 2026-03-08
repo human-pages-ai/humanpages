@@ -648,7 +648,7 @@ function VideosTab() {
                   <td className="px-4 py-3"><VideoBadge label={v.status} className={VIDEO_STATUS_COLORS[v.status]} /></td>
                   <td className="px-4 py-3 text-gray-600">{v.durationSeconds ? `${v.durationSeconds}s` : '-'}</td>
                   <td className="px-4 py-3 text-gray-600">{v._count.assets}</td>
-                  <td className="px-4 py-3 text-gray-500">{new Date(v.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-gray-500">{new Date(v.createdAt).toLocaleDateString('en-GB')}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <select
                       value=""

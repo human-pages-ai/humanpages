@@ -15,7 +15,7 @@ function formatTime(iso: string): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
 }
 
 function formatMoney(amount: number | string): string {

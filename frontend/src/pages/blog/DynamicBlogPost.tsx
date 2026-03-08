@@ -47,10 +47,10 @@ export default function DynamicBlogPost() {
     );
   }
 
-  const publishDate = new Date(post.publishedAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
+  const publishDate = new Date(post.publishedAt).toLocaleDateString('en-GB', {
     day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 
   return (

@@ -123,8 +123,8 @@ export default function AdminAgentDetail() {
             {agent.contactEmail && <p className="text-sm text-gray-500 mt-1">{agent.contactEmail}</p>}
           </div>
           <div className="ml-auto text-right text-sm text-gray-400">
-            <p>Registered {new Date(agent.createdAt).toLocaleDateString()}</p>
-            <p>Last active {new Date(agent.lastActiveAt).toLocaleDateString()}</p>
+            <p>Registered {new Date(agent.createdAt).toLocaleDateString('en-GB')}</p>
+            <p>Last active {new Date(agent.lastActiveAt).toLocaleDateString('en-GB')}</p>
           </div>
         </div>
       </div>
@@ -224,7 +224,7 @@ export default function AdminAgentDetail() {
                     <Link to={`/admin/users/${j.human.id}`} className="text-blue-600 hover:underline">{j.human.name}</Link>
                   </td>
                   <td className="py-1.5 text-gray-600">${j.priceUsdc}</td>
-                  <td className="py-1.5 text-gray-400">{new Date(j.createdAt).toLocaleDateString()}</td>
+                  <td className="py-1.5 text-gray-400">{new Date(j.createdAt).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))}
             </tbody>
@@ -244,7 +244,7 @@ export default function AdminAgentDetail() {
                     {r.status}
                   </span>
                   <span className="text-sm font-medium text-gray-900">{r.reason}</span>
-                  <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
                 </div>
                 {r.description && <p className="text-sm text-gray-600 mt-1">{r.description}</p>}
                 <p className="text-xs text-gray-400 mt-1">

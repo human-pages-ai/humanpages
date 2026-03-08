@@ -219,7 +219,7 @@ export default function AdminJobDetail() {
         <Section title="Review">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium">{'★'.repeat(job.review.rating)}{'☆'.repeat(5 - job.review.rating)}</span>
-            <span className="text-xs text-gray-400">{new Date(job.review.createdAt).toLocaleDateString()}</span>
+            <span className="text-xs text-gray-400">{new Date(job.review.createdAt).toLocaleDateString('en-GB')}</span>
           </div>
           {job.review.comment && <p className="text-sm text-gray-600">{job.review.comment}</p>}
         </Section>

@@ -428,8 +428,8 @@ export default function AdminPeople() {
                     {p.featuredConsent ? (
                       <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Opted in</span>
                     ) : p.featuredInviteSentAt ? (
-                      <span className="text-gray-400" title={`Sent ${new Date(p.featuredInviteSentAt).toLocaleDateString()}`}>
-                        Invited {new Date(p.featuredInviteSentAt).toLocaleDateString()}
+                      <span className="text-gray-400" title={`Sent ${new Date(p.featuredInviteSentAt).toLocaleDateString('en-GB')}`}>
+                        Invited {new Date(p.featuredInviteSentAt).toLocaleDateString('en-GB')}
                       </span>
                     ) : p.profilePhotoUrl && p.emailVerified ? (
                       <button
@@ -445,11 +445,11 @@ export default function AdminPeople() {
                   </td>
                   {/* Joined */}
                   <td className="px-4 py-3 text-xs text-gray-500">
-                    {new Date(p.createdAt).toLocaleDateString()}
+                    {new Date(p.createdAt).toLocaleDateString('en-GB')}
                   </td>
                   {/* Last Active */}
                   <td className="px-4 py-3 text-xs text-gray-500">
-                    {new Date(p.lastActiveAt).toLocaleDateString()}
+                    {new Date(p.lastActiveAt).toLocaleDateString('en-GB')}
                   </td>
                 </tr>
               ))

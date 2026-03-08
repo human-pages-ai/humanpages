@@ -283,7 +283,7 @@ export default function StaffManagement() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{s.totalCompleted}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{new Date(s.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{new Date(s.createdAt).toLocaleDateString('en-GB')}</td>
                     <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-2">
                         <button
@@ -369,7 +369,7 @@ export default function StaffManagement() {
                             {s.apiKeyCreatedAt && (
                               <div>
                                 <span className="text-gray-500">Key created:</span>{' '}
-                                <span className="font-medium">{new Date(s.apiKeyCreatedAt).toLocaleDateString()}</span>
+                                <span className="font-medium">{new Date(s.apiKeyCreatedAt).toLocaleDateString('en-GB')}</span>
                               </div>
                             )}
                           </div>
@@ -391,7 +391,7 @@ export default function StaffManagement() {
                                       {d.count}
                                     </div>
                                     <div className="text-[9px] text-gray-400 mt-0.5">
-                                      {new Date(d.day + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                      {new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                                     </div>
                                   </div>
                                 ))}

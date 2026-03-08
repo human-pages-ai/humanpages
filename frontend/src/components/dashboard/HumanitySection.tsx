@@ -84,7 +84,7 @@ export default function HumanitySection({ profile, onVerified }: HumanitySection
           </div>
           {profile.humanityVerifiedAt && (
             <p className="text-xs text-gray-500">
-              Verified {new Date(profile.humanityVerifiedAt).toLocaleDateString()}
+              Verified {new Date(profile.humanityVerifiedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               {' via Gitcoin Passport'}
             </p>
           )}

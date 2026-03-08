@@ -124,7 +124,7 @@ export default function AdminJobs() {
                       <span className="text-gray-400">Unpaid</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(j.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(j.createdAt).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))
             )}

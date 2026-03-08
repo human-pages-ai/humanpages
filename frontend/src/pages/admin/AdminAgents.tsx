@@ -106,8 +106,8 @@ export default function AdminAgents() {
                       ? <span className="text-red-600">{a.abuseScore} / {a.abuseStrikes} strikes</span>
                       : <span className="text-gray-400">{a.abuseScore}</span>}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(a.lastActiveAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(a.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(a.lastActiveAt).toLocaleDateString('en-GB')}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(a.createdAt).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))
             )}

@@ -123,8 +123,8 @@ export default function AdminListings() {
                       <span className="text-xs text-gray-400">BASIC</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(l.expiresAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(l.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(l.expiresAt).toLocaleDateString('en-GB')}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500">{new Date(l.createdAt).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))
             )}

@@ -25,7 +25,7 @@ export default function BlogIndex() {
           res.posts.map((p) => ({
             title: p.blogTitle || 'Untitled',
             slug: p.blogSlug || '',
-            date: new Date(p.publishedAt || p.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+            date: new Date(p.publishedAt || p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
             excerpt: p.blogExcerpt || '',
             readingTime: p.blogReadingTime || '5 min',
             featured: p.isFeatured,

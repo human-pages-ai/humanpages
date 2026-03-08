@@ -95,8 +95,8 @@ export default function AdminUserDetail() {
             {user.location && <p className="text-sm text-gray-400">{user.location}</p>}
           </div>
           <div className="ml-auto text-right text-sm text-gray-400">
-            <p>Joined {new Date(user.createdAt).toLocaleDateString()}</p>
-            <p>Last active {new Date(user.lastActiveAt).toLocaleDateString()}</p>
+            <p>Joined {new Date(user.createdAt).toLocaleDateString('en-GB')}</p>
+            <p>Last active {new Date(user.lastActiveAt).toLocaleDateString('en-GB')}</p>
             <p className={user.isAvailable ? 'text-green-600' : 'text-gray-400'}>
               {user.isAvailable ? 'Available' : 'Not available'}
             </p>
@@ -146,7 +146,7 @@ export default function AdminUserDetail() {
               ? `Verified (${user.humanityProvider}, score: ${user.humanityScore})`
               : 'Not verified'
           } />
-          {user.humanityVerifiedAt && <Field label="Humanity verified at" value={new Date(user.humanityVerifiedAt).toLocaleDateString()} />}
+          {user.humanityVerifiedAt && <Field label="Humanity verified at" value={new Date(user.humanityVerifiedAt).toLocaleDateString('en-GB')} />}
         </Section>
 
         <Section title="Contact">
@@ -226,7 +226,7 @@ export default function AdminUserDetail() {
                   </span>
                   <span className="text-xs text-gray-400">{app.availability}</span>
                   {user.location && <span className="text-xs text-gray-400">{user.location}</span>}
-                  <span className="ml-auto text-xs text-gray-400">{new Date(app.createdAt).toLocaleDateString()}</span>
+                  <span className="ml-auto text-xs text-gray-400">{new Date(app.createdAt).toLocaleDateString('en-GB')}</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">{app.about}</p>
                 {app.portfolioUrl && (
@@ -311,7 +311,7 @@ export default function AdminUserDetail() {
                     ) : j.agentName || 'Unknown'}
                   </td>
                   <td className="py-1.5 text-gray-600">${j.priceUsdc}</td>
-                  <td className="py-1.5 text-gray-400">{new Date(j.createdAt).toLocaleDateString()}</td>
+                  <td className="py-1.5 text-gray-400">{new Date(j.createdAt).toLocaleDateString('en-GB')}</td>
                 </tr>
               ))}
             </tbody>
@@ -329,7 +329,7 @@ export default function AdminUserDetail() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
                   <Link to={`/admin/jobs/${r.jobId}`} className="text-xs text-blue-600 hover:underline">View job</Link>
-                  <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
                 </div>
                 {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
               </div>
