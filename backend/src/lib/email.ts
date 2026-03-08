@@ -34,21 +34,35 @@ interface SendEmailParams {
   subject: string;
   text: string;
   html: string;
+  /** Per-user unsubscribe URL for List-Unsubscribe header */
+  unsubscribeUrl?: string;
+  /** Metadata for email log — not sent to provider */
+  _meta?: {
+    type?: string;
+    jobId?: string;
+    humanId?: string;
+  };
 }
 
-async function sendEmailOnce({ to, subject, text, html }: SendEmailParams): Promise<boolean> {
+async function sendEmailOnce({ to, subject, text, html, unsubscribeUrl }: SendEmailParams): Promise<boolean> {
   if (!process.env.RESEND_API_KEY) {
     logger.info('No email provider configured, skipping email');
     return false;
   }
 
   const from = `${FROM_NAME} <${FROM_EMAIL}>`;
+  const headers: Record<string, string> = {};
+  if (unsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`;
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+  }
   const { data: response, error } = await getResend().emails.send({
     from,
     to: [to],
     subject,
     text,
     html,
+    ...(Object.keys(headers).length > 0 && { headers }),
   });
 
   if (error) {
@@ -96,6 +110,24 @@ export async function writeToOutbox(
 // Send email with retry. On total failure, persist to outbox for background retry.
 export async function sendEmailWithOutbox(params: SendEmailParams): Promise<boolean> {
   const sent = await sendEmail(params);
+  const meta = params._meta;
+
+  // Log every email send attempt to EmailLog for admin visibility
+  getPrisma().then(prisma =>
+    prisma.emailLog.create({
+      data: {
+        channel: 'email',
+        recipient: params.to,
+        subject: params.subject,
+        type: meta?.type ?? null,
+        status: sent ? 'SENT' : (process.env.RESEND_API_KEY ? 'QUEUED' : 'FAILED'),
+        error: sent ? null : (process.env.RESEND_API_KEY ? 'Queued to outbox' : 'No email provider configured'),
+        jobId: meta?.jobId ?? null,
+        humanId: meta?.humanId ?? null,
+      },
+    }).catch((err: unknown) => logger.error({ err }, 'Failed to write email log'))
+  );
+
   if (!sent && process.env.RESEND_API_KEY) {
     logger.info({ to: params.to, subject: params.subject }, 'Queuing email to outbox after inline failure');
     await writeToOutbox('email', params.to, params, params.subject).catch(err =>
@@ -282,6 +314,8 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
     subject: t('email.jobOffer.subject', { jobTitle: data.jobTitle }),
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
+    _meta: { type: 'job_offer', jobId: data.jobId, humanId: data.humanId },
   });
 }
 
@@ -441,6 +475,8 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
     subject: `Updated offer from ${data.agentName || 'an agent'}: ${data.jobTitle}`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
+    _meta: { type: 'job_updated', jobId: data.jobId, humanId: data.humanId },
   });
 }
 
@@ -600,6 +636,8 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
     subject: `New message from ${data.agentName} on "${data.jobTitle}"`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
+    _meta: { type: 'job_message', humanId: data.humanId },
   });
 }
 
@@ -942,6 +980,7 @@ To unsubscribe: ${unsubscribeUrl}
     subject: `Payment flow stopped: ${data.jobTitle}`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
   });
 }
 
@@ -1014,6 +1053,7 @@ To unsubscribe: ${unsubscribeUrl}
     subject: `Stream started: $${data.rateUsdc}/${intervalLabel} for ${data.jobTitle}`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
   });
 }
 
@@ -1053,6 +1093,7 @@ To unsubscribe: ${unsubscribeUrl}
     subject: `Stream completed: ${data.jobTitle} — $${data.totalPaid.toFixed(2)} total`,
     text: textContent,
     html: `<html><body><p>${textContent.replace(/\n/g, '<br>')}</p></body></html>`,
+    unsubscribeUrl,
   });
 }
 
@@ -1247,6 +1288,7 @@ To unsubscribe: ${unsubscribeUrl}
     subject: `${count} new notification${count !== 1 ? 's' : ''} - Human Pages`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
   });
 }
 
@@ -1468,6 +1510,7 @@ To unsubscribe: ${unsubscribeUrl}
     subject: `Your profile is ${data.completionPercent}% complete — finish it to get more offers`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
   });
 }
 
@@ -1542,6 +1585,7 @@ To unsubscribe: ${unsubscribeUrl}
     subject: `New listing: ${data.listingTitle} — $${data.budgetUsdc} USDC`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
   });
 }
 
@@ -1822,6 +1866,8 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
     subject: `${data.humanName}, your job offer is being reviewed`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
+    _meta: { type: 'moderation_delay', humanId: data.humanId },
   });
 }
 
@@ -1964,6 +2010,7 @@ Unsubscribe: ${unsubscribeUrl}`;
     subject: 'We\'d love to feature you on our homepage!',
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl,
   });
 }
 
@@ -2028,6 +2075,7 @@ export async function sendListingTermsChangedEmail(data: ListingTermsChangedEmai
     subject: `Listing updated: "${data.listingTitle}" — please review`,
     text: textContent,
     html: htmlContent,
+    unsubscribeUrl: unsubUrl,
   });
 }
 
