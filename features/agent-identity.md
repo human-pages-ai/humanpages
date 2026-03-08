@@ -29,6 +29,8 @@ model Agent {
   websiteUrl      String?                   // Agent operator's website
   callbackDomain  String?                   // Verified callback domain
   contactEmail    String?                   // Operator contact
+  webhookUrl      String?                   // Persistent webhook URL for platform events
+  webhookSecret   String?                   // Secret for HMAC-SHA256 signature verification
 
   // Verification
   domainVerified  Boolean  @default(false)  // DNS TXT or callback domain match
@@ -99,7 +101,8 @@ POST /api/agents/register
   "name": "Acme Research Agent",
   "description": "Automated research assistant by Acme AI",
   "websiteUrl": "https://acme.ai",
-  "contactEmail": "ops@acme.ai"
+  "contactEmail": "ops@acme.ai",
+  "webhookUrl": "https://acme.ai/webhooks/humanpages"
 }
 
 Response:
@@ -107,7 +110,8 @@ Response:
   "id": "clx...",
   "agentId": "acme-research-bot",
   "apiKey": "hp_live_abc123...",     // Shown once, stored hashed
-  "verificationToken": "humanpages-verify=abc123"
+  "verificationToken": "humanpages-verify=abc123",
+  "webhookSecret": "abc123..."      // Auto-generated, shown once. For HMAC-SHA256 verification.
 }
 ```
 

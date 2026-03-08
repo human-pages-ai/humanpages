@@ -208,6 +208,10 @@
                   "contactEmail": {
                     "type": "string",
                     "description": "Contact email for the agent operator"
+                  },
+                  "webhookUrl": {
+                    "type": "string",
+                    "description": "Webhook URL for receiving platform events (new matches, status changes, announcements). Must be a public HTTPS endpoint."
                   }
                 }
               }
@@ -240,6 +244,10 @@
                     "dashboardUrl": {
                       "type": "string",
                       "description": "URL to the agent's dashboard on humanpages.ai"
+                    },
+                    "webhookSecret": {
+                      "type": "string",
+                      "description": "Auto-generated secret for HMAC-SHA256 webhook signature verification. Only returned if webhookUrl was provided. Save this — it is only shown once."
                     },
                     "limits": {
                       "type": "object",
@@ -853,6 +861,7 @@
           "name": { "type": "string" },
           "description": { "type": "string" },
           "website": { "type": "string" },
+          "webhookUrl": { "type": "string", "description": "Persistent webhook URL for platform events (new matches, status changes, announcements)" },
           "status": { "type": "string", "enum": ["ACTIVE", "PENDING", "BASIC", "PRO"], "description": "Agent activation status. ACTIVE = auto-activated on registration (PRO tier, free during launch). PENDING/BASIC/PRO are legacy statuses." },
           "domainVerified": { "type": "boolean" }
         }
