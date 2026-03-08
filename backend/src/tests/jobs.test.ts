@@ -56,6 +56,7 @@ describe('Jobs API - Mutual Handshake', () => {
           create: {
             network: 'ethereum',
             address: '0x1234567890123456789012345678901234567890',
+            verified: true,
           },
         },
       },

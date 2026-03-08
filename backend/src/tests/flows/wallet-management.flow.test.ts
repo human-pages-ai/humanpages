@@ -77,7 +77,7 @@ describe('Flow: Wallet Management — Multi-chain Wallet Lifecycle', () => {
     expect(ethRes.body).toHaveLength(4);
     const ethWallet = ethRes.body.find((w: any) => w.network === 'ethereum');
     expect(ethWallet).toBeDefined();
-    expect(ethWallet.address).toBe(WALLET_ETH.address);
+    expect(ethWallet.address).toBe(WALLET_ETH.address.toLowerCase());
     expect(ethWallet.label).toBe('My ETH Wallet');
     const ethWalletId = ethWallet.id;
 
@@ -88,7 +88,7 @@ describe('Flow: Wallet Management — Multi-chain Wallet Lifecycle', () => {
     expect(baseRes.body).toHaveLength(4);
     const baseWallet = baseRes.body.find((w: any) => w.network === 'base');
     expect(baseWallet).toBeDefined();
-    expect(baseWallet.address).toBe(WALLET_BASE.address);
+    expect(baseWallet.address).toBe(WALLET_BASE.address.toLowerCase());
 
     // ─── Step 4: Verify all wallets listed (4 + 4 = 8) ─────────────────
     const listRes = await authRequest(user.token).get('/api/wallets');
