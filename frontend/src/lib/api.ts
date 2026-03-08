@@ -1,4 +1,4 @@
-import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication } from '../components/dashboard/types';
+import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
 import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions } from '../types/admin';
 
 const API_BASE = '/api';
@@ -169,6 +169,25 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ label }),
     }),
+
+  // Fiat Payment Methods
+  addFiatPaymentMethod: (data: { platform: string; handle: string; label?: string }) =>
+    request<FiatPaymentMethod>('/fiat-payment-methods', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateFiatPaymentMethod: (id: string, data: { handle?: string; label?: string }) =>
+    request<FiatPaymentMethod>(`/fiat-payment-methods/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteFiatPaymentMethod: (id: string) =>
+    request<void>(`/fiat-payment-methods/${id}`, { method: 'DELETE' }),
+
+  setFiatPaymentMethodPrimary: (id: string) =>
+    request<FiatPaymentMethod>(`/fiat-payment-methods/${id}/primary`, { method: 'POST' }),
 
   // Services
   getServices: () => request<Service[]>('/services'),
@@ -493,6 +512,30 @@ export const api = {
 
   getAdminActivity: (limit?: number) =>
     request<{ activity: AdminActivity[] }>(`/admin/activity${limit ? `?limit=${limit}` : ''}`),
+
+  getAdminModeration: (params: { page?: number; limit?: number; status?: string; contentType?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.page) qs.append('page', String(params.page));
+    if (params.limit) qs.append('limit', String(params.limit));
+    if (params.status) qs.append('status', params.status);
+    if (params.contentType) qs.append('contentType', params.contentType);
+    return request<{ items: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/admin/moderation${qs.toString() ? `?${qs}` : ''}`);
+  },
+
+  patchAdminModeration: (id: string, status: 'approved' | 'rejected') =>
+    request<any>(`/admin/moderation/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  getAdminEmails: (params: { page?: number; limit?: number; tab?: string; status?: string; recipient?: string; type?: string; jobId?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.page) qs.append('page', String(params.page));
+    if (params.limit) qs.append('limit', String(params.limit));
+    if (params.tab) qs.append('tab', params.tab);
+    if (params.status) qs.append('status', params.status);
+    if (params.recipient) qs.append('recipient', params.recipient);
+    if (params.type) qs.append('type', params.type);
+    if (params.jobId) qs.append('jobId', params.jobId);
+    return request<{ entries: any[]; total: number; page: number; limit: number; statusCounts?: Record<string, number> }>(`/admin/emails${qs.toString() ? `?${qs}` : ''}`);
+  },
 
   // Profile photos
   uploadProfilePhoto: (file: File) => {

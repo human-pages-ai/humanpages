@@ -5,6 +5,14 @@ export interface Wallet {
   label?: string;
 }
 
+export interface FiatPaymentMethod {
+  id: string;
+  platform: 'WISE' | 'VENMO' | 'PAYPAL' | 'CASHAPP' | 'REVOLUT' | 'ZELLE' | 'MONZO' | 'N26' | 'MERCADOPAGO';
+  handle: string;
+  label?: string;
+  isPrimary: boolean;
+}
+
 export interface Service {
   id: string;
   title: string;
@@ -46,6 +54,7 @@ export interface Profile {
   youtubeUrl?: string;
   websiteUrl?: string;
   wallets: Wallet[];
+  fiatPaymentMethods?: FiatPaymentMethod[];
   services: Service[];
   referralCount?: number;
   referralProgram?: {

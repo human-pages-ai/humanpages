@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import oauthRoutes from './routes/oauth.js';
 import humansRoutes from './routes/humans.js';
 import walletsRoutes from './routes/wallets.js';
+import fiatPaymentMethodsRoutes from './routes/fiatPaymentMethods.js';
 import servicesRoutes from './routes/services.js';
 import jobsRoutes from './routes/jobs.js';
 import agentActivationRoutes from './routes/agentActivation.js';
@@ -85,6 +86,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/oauth', oauthRoutes);
 app.use('/api/humans', humansRoutes);
 app.use('/api/wallets', walletsRoutes);
+app.use('/api/fiat-payment-methods', fiatPaymentMethodsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/agents/activate', agentActivationRoutes);
@@ -304,6 +306,26 @@ const FROM_SLUGS: Record<string, { utm_source: string; utm_medium: string; utm_c
   // Thailand — other
   'line-thailand':    { utm_source: 'line', utm_medium: 'organic', utm_campaign: 'thailand_openchat' },
   'pantip':           { utm_source: 'pantip', utm_medium: 'organic', utm_campaign: 'thailand_pantip' },
+  // Lagos — Nairaland
+  'nairaland':        { utm_source: 'nairaland', utm_medium: 'organic', utm_campaign: 'lagos_nairaland' },
+  // Lagos — Linktree outreach
+  'ngvacancy':        { utm_source: 'linktree', utm_medium: 'referral', utm_campaign: 'lagos_ngvacancy' },
+  'workready':        { utm_source: 'linktree', utm_medium: 'referral', utm_campaign: 'lagos_workready' },
+  'remoteafrica':     { utm_source: 'linktree', utm_medium: 'referral', utm_campaign: 'lagos_remoteafrica' },
+  'gngjobs':          { utm_source: 'linktree', utm_medium: 'referral', utm_campaign: 'lagos_gngjobs' },
+  'envisagehub':      { utm_source: 'linktree', utm_medium: 'referral', utm_campaign: 'lagos_envisagehub' },
+  'linkedinlocal':    { utm_source: 'linktree', utm_medium: 'referral', utm_campaign: 'lagos_linkedinlocal' },
+  // Lagos — Telegram (outreach round 2)
+  'jobnow':           { utm_source: 'telegram', utm_medium: 'sponsored', utm_campaign: 'lagos_jobnow' },
+  'jobvacancies':     { utm_source: 'telegram', utm_medium: 'sponsored', utm_campaign: 'lagos_jobvacancies' },
+  // Lagos — WhatsApp groups
+  'wa-lagos':         { utm_source: 'whatsapp', utm_medium: 'organic', utm_campaign: 'lagos_whatsapp' },
+  // Somaliland — direct outreach
+  'somalijobs':       { utm_source: 'somalijobs', utm_medium: 'partnership', utm_campaign: 'somaliland_somalijobs' },
+  'somalijobs-tg':    { utm_source: 'telegram', utm_medium: 'sponsored', utm_campaign: 'somaliland_somalijobs' },
+  'somalijobs-fb':    { utm_source: 'facebook', utm_medium: 'organic', utm_campaign: 'somaliland_somalijobs' },
+  'qaranjobs':        { utm_source: 'qaranjobs', utm_medium: 'partnership', utm_campaign: 'somaliland_qaranjobs' },
+  'joblink-so':       { utm_source: 'joblink', utm_medium: 'partnership', utm_campaign: 'somaliland_joblink' },
   // Crypto job boards
   'board-cryptojobs': { utm_source: 'cryptojobslist', utm_medium: 'paid', utm_campaign: 'jobboard_cryptojobslist' },
   'board-web3career': { utm_source: 'web3career', utm_medium: 'paid', utm_campaign: 'jobboard_web3career' },

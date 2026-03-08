@@ -82,6 +82,9 @@ const fullHumanSelect = {
   wallets: {
     select: { network: true, chain: true, address: true, label: true, isPrimary: true },
   },
+  fiatPaymentMethods: {
+    select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
+  },
 } as const;
 
 // Helper: generate signed photo URL and strip internal R2 key from response
@@ -271,7 +274,7 @@ function filterHiddenContact(human: any) {
     const { hideContact, ...rest } = human;
     return rest;
   }
-  const { contactEmail, telegram, whatsapp, signal, paymentMethods, hideContact, ...rest } = human;
+  const { contactEmail, telegram, whatsapp, signal, paymentMethods, fiatPaymentMethods, hideContact, ...rest } = human;
   return rest;
 }
 
@@ -280,7 +283,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
-      include: { wallets: true, services: true },
+      include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
 
     if (!human) {
@@ -542,7 +545,7 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     const human = await prisma.human.update({
       where: { id: req.userId },
       data: dataToSave,
-      include: { wallets: true, services: true },
+      include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
 
     const [reputation, trustScore] = await Promise.all([
@@ -612,6 +615,7 @@ router.get('/me/export', authenticateToken, async (req: AuthRequest, res) => {
       include: {
         wallets: true,
         services: true,
+        fiatPaymentMethods: true,
         jobs: { include: { review: true } },
         reviews: true,
       },
