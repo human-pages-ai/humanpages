@@ -88,6 +88,13 @@ export default function Dashboard() {
     instagramUrl: '',
     youtubeUrl: '',
     websiteUrl: '',
+    tiktokUrl: '',
+    twitterFollowers: '' as string,
+    instagramFollowers: '' as string,
+    youtubeFollowers: '' as string,
+    tiktokFollowers: '' as string,
+    linkedinFollowers: '' as string,
+    facebookFollowers: '' as string,
     workMode: null as 'REMOTE' | 'ONSITE' | 'HYBRID' | null,
   });
 
@@ -237,6 +244,13 @@ export default function Dashboard() {
         instagramUrl: data.instagramUrl || '',
         youtubeUrl: data.youtubeUrl || '',
         websiteUrl: data.websiteUrl || '',
+        tiktokUrl: data.tiktokUrl || '',
+        twitterFollowers: data.twitterFollowers?.toString() || '',
+        instagramFollowers: data.instagramFollowers?.toString() || '',
+        youtubeFollowers: data.youtubeFollowers?.toString() || '',
+        tiktokFollowers: data.tiktokFollowers?.toString() || '',
+        linkedinFollowers: data.linkedinFollowers?.toString() || '',
+        facebookFollowers: data.facebookFollowers?.toString() || '',
         workMode: data.workMode || null,
       });
       setFiltersForm({
@@ -393,6 +407,13 @@ export default function Dashboard() {
     instagramUrl: form.instagramUrl || null,
     youtubeUrl: form.youtubeUrl || null,
     websiteUrl: form.websiteUrl || null,
+    tiktokUrl: form.tiktokUrl || null,
+    twitterFollowers: form.twitterFollowers ? parseInt(form.twitterFollowers, 10) : null,
+    instagramFollowers: form.instagramFollowers ? parseInt(form.instagramFollowers, 10) : null,
+    youtubeFollowers: form.youtubeFollowers ? parseInt(form.youtubeFollowers, 10) : null,
+    tiktokFollowers: form.tiktokFollowers ? parseInt(form.tiktokFollowers, 10) : null,
+    linkedinFollowers: form.linkedinFollowers ? parseInt(form.linkedinFollowers, 10) : null,
+    facebookFollowers: form.facebookFollowers ? parseInt(form.facebookFollowers, 10) : null,
     workMode: form.workMode || null,
   });
 
@@ -496,10 +517,10 @@ export default function Dashboard() {
     }
   };
 
-  const addWalletManual = async (address: string, source?: 'privy' | 'manual_paste') => {
+  const addWalletManual = async (address: string, source?: 'privy' | 'manual_paste', privyIdToken?: string) => {
     setSaving(true);
     try {
-      await api.addWalletManual({ address, source });
+      await api.addWalletManual({ address, source }, privyIdToken);
       analytics.track('wallet_added_manual', { address });
       await loadProfile();
       toast.success(t('toast.walletAdded'));

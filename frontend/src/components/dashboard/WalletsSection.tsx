@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy, useWallets, getIdentityToken } from '@privy-io/react-auth';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
 import { Wallet } from './types';
@@ -11,7 +11,7 @@ interface Props {
   wallets: Wallet[];
   saving: boolean;
   onAddWallet: (data: { address: string; signature: string; nonce: string }) => Promise<void>;
-  onAddWalletManual: (address: string, source?: 'privy' | 'manual_paste') => Promise<void>;
+  onAddWalletManual: (address: string, source?: 'privy' | 'manual_paste', privyIdToken?: string) => Promise<void>;
   onDeleteWallet: (id: string) => void;
   onUpdateWalletLabel: (address: string, label?: string) => Promise<void>;
 }
@@ -169,11 +169,12 @@ export default function WalletsSection({
     autoRegisteredRef.current = true;
     pendingVerifyRef.current = false;
 
-    // Embedded wallets (created via email/Google) — use manual add since Privy already authed the user
+    // Embedded wallets (created via email/Google) — verify ownership via Privy identity token
     if (walletType === 'privy') {
       setStep('busy');
       setBusyMessage(t('dashboard.wallets.addingWallet'));
-      onAddWalletManual(walletAddress, 'privy')
+      getIdentityToken()
+        .then((idToken) => onAddWalletManual(walletAddress!, 'privy', idToken || undefined))
         .then(() => { resetState(); logout(); })
         .catch((err: any) => {
           setError(err?.message || t('dashboard.wallets.verificationFailed'));

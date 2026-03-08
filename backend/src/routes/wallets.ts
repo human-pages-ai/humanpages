@@ -7,6 +7,7 @@ import { authenticateToken, requireEmailVerified, AuthRequest } from '../middlew
 import { SUPPORTED_NETWORKS, EVM_MAINNET_NETWORKS } from '../lib/blockchain/chains.js';
 import { nonceStore } from '../lib/nonce-store.js';
 import { logger } from '../lib/logger.js';
+import { verifyIdentityToken, getEmbeddedWalletAddresses, getPrivyUserByDid } from '../lib/privy.js';
 
 const router = Router();
 
@@ -92,11 +93,14 @@ router.post('/', authenticateToken, walletCreateLimiter, async (req: AuthRequest
       return res.status(400).json({ error: 'Invalid signature. Wallet ownership could not be verified.' });
     }
 
+    // Normalize address to lowercase to prevent EIP-55 checksum casing issues
+    const normalizedAddress = address.toLowerCase();
+
     // Find which EVM mainnet networks already have this address registered
     const existing = await prisma.wallet.findMany({
       where: {
         humanId: req.userId!,
-        address,
+        address: normalizedAddress,
         network: { in: EVM_MAINNET_NETWORKS },
       },
     });
@@ -104,18 +108,28 @@ router.post('/', authenticateToken, walletCreateLimiter, async (req: AuthRequest
     const missingNetworks = EVM_MAINNET_NETWORKS.filter((n) => !existingNetworks.has(n));
 
     if (missingNetworks.length === 0) {
-      return res.status(400).json({ error: 'This wallet is already registered on all supported networks' });
+      // If already registered, mark them as verified (signature proves ownership)
+      await prisma.wallet.updateMany({
+        where: { humanId: req.userId!, address: normalizedAddress },
+        data: { verified: true },
+      });
+      const wallets = await prisma.wallet.findMany({
+        where: { humanId: req.userId!, address: normalizedAddress },
+      });
+      return res.json(wallets);
     }
 
     // Create wallet records for all missing networks in a transaction
+    // Signature-verified wallets are born verified
     const created = await prisma.$transaction(
       missingNetworks.map((network) =>
         prisma.wallet.create({
           data: {
             humanId: req.userId!,
             network,
-            address,
+            address: normalizedAddress,
             label,
+            verified: true,
           },
         })
       )
@@ -134,7 +148,7 @@ router.post('/', authenticateToken, walletCreateLimiter, async (req: AuthRequest
   }
 });
 
-// Add a wallet without signature verification (for Privy-authenticated wallets)
+// Add a wallet — Privy wallets verified via identity token, manual_paste stays unverified
 const addWalletManualSchema = z.object({
   address: z.string().regex(EVM_ADDRESS_RE, 'Invalid EVM address'),
   label: z.string().max(50).optional(),
@@ -144,11 +158,68 @@ const addWalletManualSchema = z.object({
 router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthRequest, res) => {
   try {
     const { address, label, source } = addWalletManualSchema.parse(req.body);
+    const normalizedAddress = address.toLowerCase();
+    let verified = false;
 
+    // For Privy wallets, verify ownership via identity token
+    if (source === 'privy') {
+      const idToken = req.headers['privy-id-token'] as string | undefined;
+      if (!idToken) {
+        return res.status(401).json({ error: 'Privy identity token required for embedded wallet registration' });
+      }
+
+      try {
+        // Verify the identity token and extract wallet addresses
+        const privyUser = await verifyIdentityToken(idToken);
+        const ownedAddresses = getEmbeddedWalletAddresses(privyUser);
+
+        if (!ownedAddresses.includes(normalizedAddress)) {
+          // Fallback: fetch fresh user data via REST in case identity token is stale
+          // (e.g. wallet was just created and token hasn't refreshed yet)
+          const human = await prisma.human.findUnique({ where: { id: req.userId! }, select: { privyDid: true } });
+          if (human?.privyDid) {
+            const freshUser = await getPrivyUserByDid(human.privyDid);
+            const freshAddresses = getEmbeddedWalletAddresses(freshUser);
+            if (!freshAddresses.includes(normalizedAddress)) {
+              logger.warn({ userId: req.userId, address: normalizedAddress }, 'Privy wallet ownership verification failed');
+              return res.status(403).json({ error: 'This wallet is not linked to your Privy account' });
+            }
+          } else {
+            logger.warn({ userId: req.userId, address: normalizedAddress }, 'Privy wallet claim without privyDid binding');
+            return res.status(403).json({ error: 'This wallet is not linked to your Privy account' });
+          }
+        }
+
+        // Bind privyDid if not already bound
+        const privyDid = privyUser.id;
+        await prisma.human.update({
+          where: { id: req.userId! },
+          data: { privyDid },
+        }).catch((err: any) => {
+          // P2002 = unique constraint violation — another account already has this privyDid
+          if (err.code === 'P2002') {
+            logger.error({ userId: req.userId, privyDid }, 'Privy DID already bound to another account');
+            throw new Error('PRIVY_DID_CONFLICT');
+          }
+          // Ignore if already set to same value
+          if (err.code !== 'P2025') throw err;
+        });
+
+        verified = true;
+      } catch (err: any) {
+        if (err.message === 'PRIVY_DID_CONFLICT') {
+          return res.status(409).json({ error: 'This Privy account is already linked to a different Human Pages account' });
+        }
+        logger.error({ err, userId: req.userId }, 'Privy identity token verification failed');
+        return res.status(401).json({ error: 'Invalid or expired Privy identity token' });
+      }
+    }
+
+    // Upsert: if wallets already exist, update them; otherwise create
     const existing = await prisma.wallet.findMany({
       where: {
         humanId: req.userId!,
-        address,
+        address: normalizedAddress,
         network: { in: EVM_MAINNET_NETWORKS },
       },
     });
@@ -156,7 +227,17 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
     const missingNetworks = EVM_MAINNET_NETWORKS.filter((n) => !existingNetworks.has(n));
 
     if (missingNetworks.length === 0) {
-      return res.status(400).json({ error: 'This wallet is already registered on all supported networks' });
+      // Already registered — if now verified, upgrade existing records
+      if (verified) {
+        await prisma.wallet.updateMany({
+          where: { humanId: req.userId!, address: normalizedAddress },
+          data: { verified: true, source },
+        });
+      }
+      const wallets = await prisma.wallet.findMany({
+        where: { humanId: req.userId!, address: normalizedAddress },
+      });
+      return res.json(wallets);
     }
 
     const created = await prisma.$transaction(
@@ -165,9 +246,10 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
           data: {
             humanId: req.userId!,
             network,
-            address,
+            address: normalizedAddress,
             label,
             source,
+            verified,
           },
         })
       )

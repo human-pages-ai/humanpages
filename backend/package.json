@@ -23,6 +23,7 @@
     "@axiomhq/pino": "^1.4.0",
     "@infisical/sdk": "^4.0.6",
     "@prisma/client": "^5.10.0",
+    "@privy-io/node": "^0.10.1",
     "@resvg/resvg-js": "^2.6.2",
     "@x402/core": "^2.3.1",
     "@x402/evm": "^2.3.1",

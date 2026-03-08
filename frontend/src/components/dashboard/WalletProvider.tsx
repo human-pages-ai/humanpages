@@ -20,7 +20,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
         },
         embeddedWallets: {
           ethereum: {
-            createOnLogin: 'users-without-wallets',
+            createOnLogin: 'off',
           },
         },
       }}

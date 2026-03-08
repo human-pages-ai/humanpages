@@ -883,13 +883,14 @@ router.patch('/:id/paid', async (req, res) => {
   try {
     const data = markPaidSchema.parse(req.body);
 
-    // Fetch job with human's wallets included for verification
+    // Fetch job with human's VERIFIED wallets included for payment verification
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
       include: {
         human: {
           include: {
             wallets: {
+              where: { verified: true },
               select: {
                 address: true,
                 network: true,
@@ -1829,7 +1830,7 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
       include: {
         human: {
           include: {
-            wallets: { select: { address: true, network: true } },
+            wallets: { where: { verified: true }, select: { address: true, network: true } },
           },
         },
       },
@@ -2043,7 +2044,7 @@ router.patch('/:id/stream-tick', authenticateAgent, requireActiveAgent, async (r
       include: {
         human: {
           include: {
-            wallets: { select: { address: true, network: true } },
+            wallets: { where: { verified: true }, select: { address: true, network: true } },
           },
         },
       },
@@ -2205,7 +2206,7 @@ router.patch('/:id/pause-stream', authenticateEither, requireActiveIfAgent, asyn
       where: { id: req.params.id },
       include: {
         human: {
-          include: { wallets: { select: { address: true, network: true } } },
+          include: { wallets: { where: { verified: true }, select: { address: true, network: true } } },
         },
       },
     });
@@ -2325,7 +2326,7 @@ router.patch('/:id/resume-stream', authenticateAgent, requireActiveAgent, async 
       where: { id: req.params.id },
       include: {
         human: {
-          include: { wallets: { select: { address: true, network: true } } },
+          include: { wallets: { where: { verified: true }, select: { address: true, network: true } } },
         },
       },
     });

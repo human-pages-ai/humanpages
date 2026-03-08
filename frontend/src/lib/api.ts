@@ -155,10 +155,11 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  addWalletManual: (data: { address: string; label?: string; source?: 'privy' | 'manual_paste' }) =>
+  addWalletManual: (data: { address: string; label?: string; source?: 'privy' | 'manual_paste' }, privyIdToken?: string) =>
     request<Wallet[]>('/wallets/manual', {
       method: 'POST',
       body: JSON.stringify(data),
+      headers: privyIdToken ? { 'privy-id-token': privyIdToken } : undefined,
     }),
 
   deleteWallet: (id: string) =>
