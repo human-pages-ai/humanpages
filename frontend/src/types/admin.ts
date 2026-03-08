@@ -392,6 +392,7 @@ export const STAFF_CAPABILITIES = [
   'CREATIVE',
   'GROUP_MANAGER',
   'LEAD_GEN',
+  'VIDEO_MANAGER',
 ] as const;
 
 export type StaffCapability = (typeof STAFF_CAPABILITIES)[number];

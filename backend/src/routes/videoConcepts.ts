@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { execFile } from 'child_process';
-import { jwtOrApiKey, requireAdmin } from '../middleware/adminAuth.js';
+import { jwtOrApiKey, requireStaffOrAdmin } from '../middleware/adminAuth.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
 import { prisma } from '../lib/prisma.js';
@@ -51,7 +51,7 @@ router.use((req: Request, res: Response, next) => {
   const authReq = req as AuthRequest;
   // If userId is set, JWT was used — require admin role
   if (authReq.userId) {
-    return requireAdmin(authReq, res, next);
+    return requireStaffOrAdmin(authReq, res, next);
   }
   // API key already validated
   next();

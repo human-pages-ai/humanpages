@@ -10,6 +10,7 @@ const CAP_LABELS: Record<StaffCapability, string> = {
   CREATIVE: 'Creative',
   GROUP_MANAGER: 'Group Manager',
   LEAD_GEN: 'Lead Gen',
+  VIDEO_MANAGER: 'Video Manager',
 };
 
 function CapabilitiesEditor({ member, onSaved }: { member: StaffMember; onSaved: (caps: StaffCapability[]) => void }) {

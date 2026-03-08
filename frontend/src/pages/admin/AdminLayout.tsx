@@ -1,7 +1,15 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAdminRole } from '../../hooks/useAdminRole';
+import type { StaffCapability } from '../../types/admin';
 
-const adminOnlyItems = [
+interface NavItem {
+  to: string;
+  label: string;
+  end?: boolean;
+  capability?: StaffCapability;
+}
+
+const adminOnlyItems: NavItem[] = [
   { to: '/admin', label: 'Overview', end: true },
   { to: '/admin/people', label: 'People' },
   { to: '/admin/agents', label: 'Agents' },
@@ -17,17 +25,20 @@ const adminOnlyItems = [
   { to: '/admin/productivity', label: 'Productivity' },
   { to: '/admin/leads', label: 'Lead Gen' },
   { to: '/admin/logs', label: 'Logs' },
+  { to: '/admin/emails', label: 'Email' },
+  { to: '/admin/moderation', label: 'Moderation' },
   { to: '/admin/watchdog', label: 'Watch Dog' },
   { to: '/admin/marketing-ops', label: 'Marketing Ops' },
 ];
 
-const sharedItems = [
+const sharedItems: NavItem[] = [
   { to: '/admin/tasks', label: 'Task Central' },
   { to: '/admin/time-tracking', label: 'Time Tracking' },
   { to: '/admin/content', label: 'Content' },
   { to: '/admin/posting', label: 'Posting Queue' },
   { to: '/admin/posting/work', label: 'Work Mode' },
   { to: '/admin/ad-copy', label: 'Ad Copy' },
+  { to: '/admin/video', label: 'Videos', capability: 'VIDEO_MANAGER' },
 ];
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
@@ -37,8 +48,11 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
 }
 
 export default function AdminLayout() {
-  const { isAdmin } = useAdminRole();
-  const navItems = isAdmin ? [...adminOnlyItems, ...sharedItems] : sharedItems;
+  const { isAdmin, capabilities } = useAdminRole();
+  const staffItems = sharedItems.filter(
+    (item) => !item.capability || capabilities.includes(item.capability),
+  );
+  const navItems = isAdmin ? [...adminOnlyItems, ...staffItems.filter((i) => !adminOnlyItems.some((a) => a.to === i.to))] : staffItems;
 
   return (
     <div className="min-h-screen bg-gray-50">
