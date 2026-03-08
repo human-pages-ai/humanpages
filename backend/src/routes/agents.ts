@@ -10,6 +10,7 @@ import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js'
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
+import { isAllowedUrl } from '../lib/webhook.js';
 
 const router = Router();
 
@@ -36,6 +37,7 @@ const registerSchema = z.object({
   description: z.string().max(500).optional(),
   websiteUrl: z.string().url().optional(),
   contactEmail: z.string().email().optional(),
+  webhookUrl: z.string().url().optional(),
   source: z.enum(['direct', 'mcp_directory', 'search', 'llm', 'blog', 'other']).optional(),
   sourceDetail: z.string().max(500).optional(),
 });
@@ -45,6 +47,8 @@ const updateSchema = z.object({
   description: z.string().max(500).optional(),
   websiteUrl: z.string().url().optional().nullable(),
   contactEmail: z.string().email().optional().nullable(),
+  webhookUrl: z.string().url().optional().nullable(),
+  webhookSecret: z.string().min(16).max(256).optional().nullable(),
 });
 
 const verifyDomainSchema = z.object({
@@ -61,6 +65,17 @@ router.post('/register', registerLimiter, async (req, res) => {
     const apiKey = `hp_${keyBytes}`;
     const apiKeyPrefix = apiKey.substring(0, 8); // "hp_xxxxx"
     const apiKeyHash = await bcrypt.hash(apiKey, 12);
+
+    // SSRF prevention: validate webhook URL points to public endpoint
+    if (data.webhookUrl && !(await isAllowedUrl(data.webhookUrl))) {
+      return res.status(400).json({
+        error: 'Invalid webhook URL',
+        message: 'Webhook URL must be a public HTTP(S) endpoint (no private IPs or localhost)',
+      });
+    }
+
+    // Generate webhook secret for HMAC signing
+    const webhookSecret = data.webhookUrl ? crypto.randomBytes(32).toString('hex') : undefined;
 
     // Generate verification token for domain verification
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -80,6 +95,8 @@ router.post('/register', registerLimiter, async (req, res) => {
         apiKeyPrefix,
         verificationToken,
         erc8004AgentId,
+        webhookUrl: data.webhookUrl,
+        webhookSecret,
         discoverySource: data.source,
         discoveryDetail: data.sourceDetail,
         // Auto-activate as PRO with no expiry (free launch offer)
@@ -106,11 +123,13 @@ router.post('/register', registerLimiter, async (req, res) => {
         description: agent.description,
         websiteUrl: agent.websiteUrl,
         contactEmail: agent.contactEmail,
+        webhookUrl: agent.webhookUrl,
         domainVerified: agent.domainVerified,
         createdAt: agent.createdAt,
       },
       apiKey,
       verificationToken,
+      ...(webhookSecret && { webhookSecret }),
       status: 'ACTIVE',
       tier: 'PRO',
       dashboardUrl: `https://humanpages.ai/agents/${agent.id}`,
@@ -118,7 +137,7 @@ router.post('/register', registerLimiter, async (req, res) => {
         jobOffersPerDay: 15,
         profileViewsPerDay: 50,
       },
-      message: 'Agent registered and active on PRO tier. Save your API key — it cannot be retrieved later. Pass it as X-Agent-Key header when creating jobs.',
+      message: 'Agent registered and active on PRO tier. Save your API key — it cannot be retrieved later. Pass it as X-Agent-Key header when creating jobs.' + (webhookSecret ? ' Your webhook secret is included — save it for verifying webhook signatures.' : ''),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -193,6 +212,14 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
 
     const data = updateSchema.parse(req.body);
 
+    // SSRF prevention: validate webhook URL points to public endpoint
+    if (data.webhookUrl && !(await isAllowedUrl(data.webhookUrl))) {
+      return res.status(400).json({
+        error: 'Invalid webhook URL',
+        message: 'Webhook URL must be a public HTTP(S) endpoint (no private IPs or localhost)',
+      });
+    }
+
     const updated = await prisma.agent.update({
       where: { id: req.params.id },
       data: {
@@ -200,6 +227,8 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         ...(data.description !== undefined && { description: data.description }),
         ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
         ...(data.contactEmail !== undefined && { contactEmail: data.contactEmail }),
+        ...(data.webhookUrl !== undefined && { webhookUrl: data.webhookUrl }),
+        ...(data.webhookSecret !== undefined && { webhookSecret: data.webhookSecret }),
       },
       select: {
         id: true,
@@ -207,6 +236,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         description: true,
         websiteUrl: true,
         contactEmail: true,
+        webhookUrl: true,
         domainVerified: true,
       },
     });
