@@ -53,6 +53,13 @@ export interface Profile {
   instagramUrl?: string;
   youtubeUrl?: string;
   websiteUrl?: string;
+  tiktokUrl?: string;
+  twitterFollowers?: number;
+  instagramFollowers?: number;
+  youtubeFollowers?: number;
+  tiktokFollowers?: number;
+  linkedinFollowers?: number;
+  facebookFollowers?: number;
   wallets: Wallet[];
   fiatPaymentMethods?: FiatPaymentMethod[];
   services: Service[];

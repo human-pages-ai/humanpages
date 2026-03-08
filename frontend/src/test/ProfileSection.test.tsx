@@ -98,6 +98,13 @@ const baseFormState = {
   instagramUrl: '',
   youtubeUrl: '',
   websiteUrl: '',
+  tiktokUrl: '',
+  twitterFollowers: '',
+  instagramFollowers: '',
+  youtubeFollowers: '',
+  tiktokFollowers: '',
+  linkedinFollowers: '',
+  facebookFollowers: '',
 };
 
 function renderSection(overrides: Record<string, any> = {}) {
@@ -199,6 +206,7 @@ describe('ProfileSection', () => {
           instagramUrl: '',
           youtubeUrl: '',
           websiteUrl: '',
+          tiktokUrl: '',
         },
       });
       expect(screen.queryByText('dashboard.profile.socialProfiles')).not.toBeInTheDocument();

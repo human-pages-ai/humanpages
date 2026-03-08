@@ -413,6 +413,10 @@ model Agent {
   discoverySource  String?   // "direct" | "mcp_directory" | "search" | "llm" | "blog" | "other"
   discoveryDetail  String?   @db.VarChar(500) // referrer URL, LLM name, blog post, etc.
 
+  // ===== WEBHOOK (agent-level, for platform events) =====
+  webhookUrl    String?   // Persistent webhook URL for platform events (new matches, status changes, announcements)
+  webhookSecret String?   // Secret for HMAC-SHA256 signature verification
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)

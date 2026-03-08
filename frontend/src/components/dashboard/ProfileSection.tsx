@@ -34,6 +34,13 @@ interface Props {
     instagramUrl: string;
     youtubeUrl: string;
     websiteUrl: string;
+    tiktokUrl: string;
+    twitterFollowers: string;
+    instagramFollowers: string;
+    youtubeFollowers: string;
+    tiktokFollowers: string;
+    linkedinFollowers: string;
+    facebookFollowers: string;
   };
   setProfileForm: (v: any) => void;
   saving: boolean;
@@ -380,6 +387,14 @@ export default function ProfileSection({
                 {profile.linkedinVerified && (
                   <p className="mt-1 text-xs text-gray-500">{t('dashboard.profile.disconnectToEdit', 'Disconnect to edit')}</p>
                 )}
+                <input
+                  type="number"
+                  min="0"
+                  value={profileForm.linkedinFollowers}
+                  onChange={(e) => setProfileForm({ ...profileForm, linkedinFollowers: e.target.value })}
+                  placeholder={t('dashboard.profile.followers', 'Followers')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
               </div>
               <div>
                 <label htmlFor="profile-twitter" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.twitter')}</label>
@@ -390,6 +405,14 @@ export default function ProfileSection({
                   onChange={(e) => setProfileForm({ ...profileForm, twitterUrl: e.target.value })}
                   placeholder="https://twitter.com/username"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={profileForm.twitterFollowers}
+                  onChange={(e) => setProfileForm({ ...profileForm, twitterFollowers: e.target.value })}
+                  placeholder={t('dashboard.profile.followers', 'Followers')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
               <div>
@@ -417,6 +440,14 @@ export default function ProfileSection({
                   placeholder="https://facebook.com/username"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
+                <input
+                  type="number"
+                  min="0"
+                  value={profileForm.facebookFollowers}
+                  onChange={(e) => setProfileForm({ ...profileForm, facebookFollowers: e.target.value })}
+                  placeholder={t('dashboard.profile.followers', 'Followers')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
               </div>
               <div>
                 <label htmlFor="profile-instagram" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.instagram')}</label>
@@ -428,6 +459,14 @@ export default function ProfileSection({
                   placeholder="https://instagram.com/username"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
+                <input
+                  type="number"
+                  min="0"
+                  value={profileForm.instagramFollowers}
+                  onChange={(e) => setProfileForm({ ...profileForm, instagramFollowers: e.target.value })}
+                  placeholder={t('dashboard.profile.followers', 'Followers')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
               </div>
               <div>
                 <label htmlFor="profile-youtube" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.youtube')}</label>
@@ -438,6 +477,33 @@ export default function ProfileSection({
                   onChange={(e) => setProfileForm({ ...profileForm, youtubeUrl: e.target.value })}
                   placeholder="https://youtube.com/@channel"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={profileForm.youtubeFollowers}
+                  onChange={(e) => setProfileForm({ ...profileForm, youtubeFollowers: e.target.value })}
+                  placeholder={t('dashboard.profile.followers', 'Followers')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="profile-tiktok" className="block text-sm font-medium text-gray-700">{t('dashboard.profile.tiktok', 'TikTok')}</label>
+                <input
+                  id="profile-tiktok"
+                  type="url"
+                  value={profileForm.tiktokUrl}
+                  onChange={(e) => setProfileForm({ ...profileForm, tiktokUrl: e.target.value })}
+                  placeholder="https://tiktok.com/@username"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={profileForm.tiktokFollowers}
+                  onChange={(e) => setProfileForm({ ...profileForm, tiktokFollowers: e.target.value })}
+                  placeholder={t('dashboard.profile.followers', 'Followers')}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
               <div>
@@ -488,7 +554,7 @@ export default function ProfileSection({
       ) : (
         (() => {
           const hasSocial = profile.linkedinUrl || profile.twitterUrl || profile.githubUrl ||
-            profile.facebookUrl || profile.instagramUrl || profile.youtubeUrl || profile.websiteUrl;
+            profile.facebookUrl || profile.instagramUrl || profile.youtubeUrl || profile.tiktokUrl || profile.websiteUrl;
 
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -610,12 +676,14 @@ export default function ProfileSection({
                       <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
                         {t('dashboard.profile.linkedin')}
+                        {profile.linkedinFollowers != null && <span className="font-medium">{profile.linkedinFollowers.toLocaleString()}</span>}
                       </a>
                     )}
                     {profile.twitterUrl && (
                       <a href={profile.twitterUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs hover:bg-sky-200">
                         {t('dashboard.profile.twitter')}
+                        {profile.twitterFollowers != null && <span className="font-medium">{profile.twitterFollowers.toLocaleString()}</span>}
                       </a>
                     )}
                     {profile.githubUrl && (
@@ -628,18 +696,28 @@ export default function ProfileSection({
                       <a href={profile.facebookUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
                         {t('dashboard.profile.facebook')}
+                        {profile.facebookFollowers != null && <span className="font-medium">{profile.facebookFollowers.toLocaleString()}</span>}
                       </a>
                     )}
                     {profile.instagramUrl && (
                       <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200">
                         {t('dashboard.profile.instagram')}
+                        {profile.instagramFollowers != null && <span className="font-medium">{profile.instagramFollowers.toLocaleString()}</span>}
                       </a>
                     )}
                     {profile.youtubeUrl && (
                       <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
                         {t('dashboard.profile.youtube')}
+                        {profile.youtubeFollowers != null && <span className="font-medium">{profile.youtubeFollowers.toLocaleString()}</span>}
+                      </a>
+                    )}
+                    {profile.tiktokUrl && (
+                      <a href={profile.tiktokUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-900 text-white rounded text-xs hover:bg-gray-800">
+                        {t('dashboard.profile.tiktok', 'TikTok')}
+                        {profile.tiktokFollowers != null && <span className="font-medium">{profile.tiktokFollowers.toLocaleString()}</span>}
                       </a>
                     )}
                     {profile.websiteUrl && (

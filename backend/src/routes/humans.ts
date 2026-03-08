@@ -45,6 +45,13 @@ const publicHumanSelect = {
   rateType: true,
   paymentPreferences: true,
   workMode: true,
+  twitterFollowers: true,
+  instagramFollowers: true,
+  youtubeFollowers: true,
+  tiktokUrl: true,
+  tiktokFollowers: true,
+  linkedinFollowers: true,
+  facebookFollowers: true,
   linkedinVerified: true,
   githubVerified: true,
   githubUsername: true,
@@ -246,6 +253,18 @@ const updateProfileSchema = z.object({
     'Must be a YouTube URL'
   ).optional().nullable(),
   websiteUrl: z.string().url().optional().nullable(),
+  tiktokUrl: z.string().url().refine(
+    (url) => isUrlFromDomain(url, ['tiktok.com']),
+    'Must be a TikTok URL'
+  ).optional().nullable(),
+
+  // Social follower counts (self-reported)
+  twitterFollowers: z.number().int().min(0).optional().nullable(),
+  instagramFollowers: z.number().int().min(0).optional().nullable(),
+  youtubeFollowers: z.number().int().min(0).optional().nullable(),
+  tiktokFollowers: z.number().int().min(0).optional().nullable(),
+  linkedinFollowers: z.number().int().min(0).optional().nullable(),
+  facebookFollowers: z.number().int().min(0).optional().nullable(),
 });
 
 // ERC-8004: This function reads the internal `rating` (1-5 scale), NOT
