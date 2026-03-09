@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "humanpages": {
+      "command": "npx",
+      "args": ["-y", "humanpages"],
+      "env": {
+        "API_BASE_URL": "https://api.humanpages.ai"
+      }
+    }
+  }
+}
