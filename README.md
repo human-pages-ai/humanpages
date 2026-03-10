@@ -36,6 +36,20 @@ All accounts use password: `password123`
 - bob@example.com - Data scientist (New York)
 - carol@example.com - UX/UI designer (Austin, currently unavailable)
 
+## Database Migrations
+
+We use Prisma Migrate for schema management. A few things to know:
+
+**After pulling migration changes**, run `npx prisma migrate reset` from `backend/` to rebuild your local DB from the clean migration history. This drops and recreates everything, so back up any local test data you care about first.
+
+**Validation script** — run `bash backend/scripts/validate-migrations.sh` to check for common issues (duplicate timestamps, unguarded drops, multiple inits). This also runs automatically in the pre-push hook.
+
+**When creating new migrations**, keep these rules in mind:
+- Always use `IF EXISTS` on DROP COLUMN/INDEX/TYPE statements
+- Don't reuse timestamps — if two migrations land at the same second, rename one
+- Don't name migrations `_init` unless they're the actual base schema
+- Keep ALTER TABLE blocks under 10 operations per migration
+
 ## Project Structure
 
 ```

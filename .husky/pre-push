@@ -78,6 +78,20 @@ if ! (cd backend && npx prisma generate); then
 fi
 
 # ------------------------------------------------------------------
+# Migration structure validation (fast, no DB needed)
+# ------------------------------------------------------------------
+echo "  Validating migration structure..."
+if bash backend/scripts/validate-migrations.sh >/tmp/migration-validate.log 2>&1; then
+  echo "  Migration structure OK"
+else
+  echo ""
+  cat /tmp/migration-validate.log
+  echo ""
+  echo "  ERROR: Migration structure issues found. Fix before pushing."
+  exit 1
+fi
+
+# ------------------------------------------------------------------
 # Schema drift check: ensure schema.prisma matches migration history
 # ------------------------------------------------------------------
 SHADOW_URL="${SHADOW_DATABASE_URL:-postgresql://humans:humans_secret@localhost:5432/humans_shadow}"
