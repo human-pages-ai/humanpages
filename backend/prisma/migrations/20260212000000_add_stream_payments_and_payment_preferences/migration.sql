@@ -26,8 +26,8 @@ UPDATE "Human" SET "paymentPreferences" = CASE
 END;
 
 -- Drop old column and enum
-ALTER TABLE "Human" DROP COLUMN "paymentPreference";
-DROP TYPE "PaymentPreference";
+ALTER TABLE "Human" DROP COLUMN IF EXISTS "paymentPreference";
+DROP TYPE IF EXISTS "PaymentPreference";
 
 -- Add stream payment fields to Job
 ALTER TABLE "Job" ADD COLUMN "paymentTiming" TEXT DEFAULT 'upfront';
