@@ -63,6 +63,16 @@ Or add to your `.mcp.json`:
 }
 ```
 
+### ClawHub (OpenClaw)
+
+Install as an OpenClaw skill via ClawHub:
+
+```
+clawhub install humanpages
+```
+
+Browse on ClawHub: https://clawhub.com/skills/humanpages
+
 The MCP server provides 16 tools for searching, hiring, messaging, and paying humans.
 
 ## API Access

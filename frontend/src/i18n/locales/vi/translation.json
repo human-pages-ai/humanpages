@@ -754,7 +754,9 @@
       "optionA": "Cách A: Thêm vào .mcp.json (khuyến nghị)",
       "optionADesc": "Thêm đoạn này vào file <code>.mcp.json</code> của dự án:",
       "optionB": "Cách B: Claude Code CLI",
-      "optionBDesc": "Hoặc thêm trực tiếp qua Claude Code CLI:"
+      "optionBDesc": "Hoặc thêm trực tiếp qua Claude Code CLI:",
+      "optionC": "Cách C: ClawHub (OpenClaw)",
+      "optionCDesc": "Cài đặt như một skill <a href=\"https://clawhub.com/skills/humanpages\" class=\"text-blue-600 hover:underline\">OpenClaw</a> qua ClawHub:"
     },
     "tools": {
       "title": "Công cụ có sẵn",

@@ -754,7 +754,9 @@
       "optionA": "Opsyon A: Idagdag sa .mcp.json (inirerekomenda)",
       "optionADesc": "Idagdag ito sa <code>.mcp.json</code> file ng iyong proyekto:",
       "optionB": "Opsyon B: Claude Code CLI",
-      "optionBDesc": "O direktang idagdag sa pamamagitan ng Claude Code CLI:"
+      "optionBDesc": "O direktang idagdag sa pamamagitan ng Claude Code CLI:",
+      "optionC": "Opsyon C: ClawHub (OpenClaw)",
+      "optionCDesc": "I-install bilang <a href=\"https://clawhub.com/skills/humanpages\" class=\"text-blue-600 hover:underline\">OpenClaw</a> skill sa pamamagitan ng ClawHub:"
     },
     "tools": {
       "title": "Mga available na tool",
