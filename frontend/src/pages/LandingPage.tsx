@@ -876,9 +876,9 @@ export default function LandingPage() {
 
       <main>
         {/* Hero */}
-        <section className="py-16 md:py-24 px-4 bg-white overflow-hidden">
+        <section className="py-10 md:py-24 px-4 bg-white overflow-hidden">
           <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-16 items-center">
               {/* Left: copy */}
               <div>
                 <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full mb-4">
@@ -887,26 +887,26 @@ export default function LandingPage() {
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
                   <RotatingHeadline tick={heroTick.tick} visible={heroTick.visible} />
                   <span className="block mt-1">{t('landing.hero.titleLine2Rotating')}</span>
-                  <span className="block mt-2 text-base sm:text-lg md:text-xl font-medium text-slate-500">
+                  <span className="hidden sm:block mt-2 text-base sm:text-lg md:text-xl font-medium text-slate-500">
                     {t('landing.hero.h1Keyword')}
                   </span>
                 </h1>
-                <p className="mt-4 text-base sm:text-lg md:text-xl text-slate-600">
+                <p className="mt-3 md:mt-4 text-base sm:text-lg md:text-xl text-slate-600">
                   {t('landing.hero.subtitle')}
                 </p>
-                <p className="mt-3 text-sm text-slate-500 italic">
+                <p className="hidden sm:block mt-3 text-sm text-slate-500 italic">
                   {t('landing.hero.example')}
                 </p>
-                <div className="mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
+                <div className="mt-6 md:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
                   <Link
                     to="/signup"
-                    className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25 text-center"
+                    className="inline-block px-6 sm:px-8 py-3.5 sm:py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors text-lg sm:text-lg shadow-lg shadow-orange-500/25 text-center"
                   >
                     {t('landing.hero.cta')}
                   </Link>
                   <Link
                     to="/listings"
-                    className="inline-block px-6 sm:px-8 py-3 sm:py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors text-base sm:text-lg text-center"
+                    className="hidden sm:inline-block px-6 sm:px-8 py-3 sm:py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors text-base sm:text-lg text-center"
                   >
                     {t('landing.hero.browseListings')}
                   </Link>
@@ -916,12 +916,12 @@ export default function LandingPage() {
                     {t('landing.hero.ctaBadge')}
                   </span>
                 </div>
-                <p className="mt-4 text-slate-400 text-sm">
+                <p className="hidden sm:block mt-4 text-slate-400 text-sm">
                   {t('landing.hero.flow')}
                 </p>
               </div>
               {/* Right: ChatGPT conversation mockup */}
-              <div>
+              <div className="hidden md:block">
                 <MockChatConversation />
               </div>
             </div>
@@ -1105,17 +1105,17 @@ export default function LandingPage() {
       <Footer />
 
       {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 md:hidden safe-area-pb">
         <Link
           to="/signup"
-          className="block w-full text-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+          className="block w-full text-center px-6 py-3.5 bg-orange-500 text-white text-lg font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/30"
         >
           {t('landing.hero.cta')}
         </Link>
       </div>
 
       {/* Spacer for mobile sticky CTA */}
-      <div className="h-20 md:hidden" />
+      <div className="h-24 md:hidden" />
     </div>
   );
 }
