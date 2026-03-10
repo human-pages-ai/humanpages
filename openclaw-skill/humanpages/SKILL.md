@@ -2,6 +2,7 @@
 name: humanpages
 description: "Search and hire real humans for tasks — photography, delivery, research, and more"
 homepage: https://humanpages.ai
+license: MIT
 user-invocable: true
 metadata:
   openclaw:
