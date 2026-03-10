@@ -281,22 +281,12 @@ export default function Onboarding() {
         }
       }
 
-      // Auto-submit listing application if there's a pending listing apply intent
+      // If there's a pending listing intent, redirect to that listing
       const onboardingListingIntent = getListingApplyIntent();
       if (onboardingListingIntent) {
-        try {
-          await api.applyToListing(onboardingListingIntent.listingId);
-          clearListingApplyIntent();
-          toast.success(`Applied! You can add a cover letter from your Applications.`, { duration: 5000 });
-          navigate(`/listings/${onboardingListingIntent.listingId}`);
-          return;
-        } catch (err) {
-          // Non-fatal: redirect to listing page so they can apply manually
-          console.error('Auto-apply to listing failed:', err);
-          clearListingApplyIntent();
-          navigate(`/listings/${onboardingListingIntent.listingId}`);
-          return;
-        }
+        clearListingApplyIntent();
+        navigate(`/listings/${onboardingListingIntent.listingId}`);
+        return;
       }
 
       navigate('/dashboard');
@@ -349,10 +339,9 @@ export default function Onboarding() {
       clearApplyIntent();
     }
 
-    // Auto-submit listing application on skip too
+    // Redirect to listing if there's a pending intent
     const skipListingIntent = getListingApplyIntent();
     if (skipListingIntent) {
-      api.applyToListing(skipListingIntent.listingId).catch(() => {}); // Fire and forget
       clearListingApplyIntent();
       navigate(`/listings/${skipListingIntent.listingId}`);
       return;

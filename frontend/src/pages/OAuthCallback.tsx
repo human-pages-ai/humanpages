@@ -45,30 +45,20 @@ export default function OAuthCallback() {
     if (result.isNew) {
       analytics.track('signup_complete', { method: oauthProvider, utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
 
-      // ── Fast-track: listing intent → skip onboarding, auto-apply, redirect ──
-      // This is the FB→signup conversion path. Every extra screen kills conversion.
-      // Flow: OAuth done → apply → land on listing page. Onboarding deferred.
+      // ── Fast-track: listing intent → skip onboarding, land on listing page ──
+      // The goal is profile creation (signup), not auto-applying.
+      // The listing URL shared on FB is just the hook to get signups.
+      // Skip onboarding to minimize friction; they can complete it later.
       const listingIntent = getListingApplyIntent();
       if (listingIntent) {
-        try {
-          // Save listing's required skills as the user's initial skills (non-blocking)
-          if (listingIntent.requiredSkills?.length) {
-            api.updateProfile({ skills: listingIntent.requiredSkills }).catch(() => {});
-          }
-          // Auto-apply to the listing
-          await api.applyToListing(listingIntent.listingId);
-          clearListingApplyIntent();
-          // Flag that onboarding is pending so dashboard can prompt later
-          localStorage.setItem('hp_onboarding_pending', '1');
-          window.location.href = `/listings/${listingIntent.listingId}?applied=1`;
-          return;
-        } catch {
-          // If apply fails, still redirect to the listing page
-          clearListingApplyIntent();
-          localStorage.setItem('hp_onboarding_pending', '1');
-          window.location.href = `/listings/${listingIntent.listingId}`;
-          return;
+        // Save listing's required skills as initial profile skills (non-blocking)
+        if (listingIntent.requiredSkills?.length) {
+          api.updateProfile({ skills: listingIntent.requiredSkills }).catch(() => {});
         }
+        clearListingApplyIntent();
+        localStorage.setItem('hp_onboarding_pending', '1');
+        window.location.href = `/listings/${listingIntent.listingId}?signedup=1`;
+        return;
       }
 
       // No listing intent — go through normal onboarding

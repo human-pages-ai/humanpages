@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
-import { setListingApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
+import { setListingApplyIntent } from '../lib/applyIntent';
 import SEO from '../components/SEO';
 import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -37,7 +37,6 @@ export default function ListingDetail() {
   const [pitch, setPitch] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [autoApplying, setAutoApplying] = useState(false);
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const applyFormRef = useRef<HTMLDivElement>(null);
 
@@ -47,50 +46,16 @@ export default function ListingDetail() {
     }
   }, [id]);
 
-  // Show success toast when redirected after fast-track signup+apply
+  // Show welcome toast when redirected after fast-track signup
   useEffect(() => {
-    if (searchParams.get('applied') === '1') {
+    if (searchParams.get('signedup') === '1') {
       toast.success(
-        'You\'re in! Add a cover letter from your dashboard to stand out.',
+        'Welcome! You can now apply to this gig or browse more listings.',
         { duration: 6000 }
       );
-      // Clean the URL without triggering a re-render
-      searchParams.delete('applied');
+      searchParams.delete('signedup');
       setSearchParams(searchParams, { replace: true });
     }
-  }, []);
-
-  // Auto-apply after OAuth redirect: user is logged in + listing intent exists
-  useEffect(() => {
-    if (!user || !listing || autoApplying) return;
-    const intent = getListingApplyIntent();
-    if (!intent || intent.listingId !== id) return;
-
-    const hasAlreadyApplied = listing.hasApplied || !!listing.myApplication;
-    const isListingExpired = new Date(listing.expiresAt) <= new Date();
-    const isListingClosed = listing.status !== 'OPEN' || isListingExpired;
-    if (hasAlreadyApplied || isListingClosed) {
-      clearListingApplyIntent();
-      return;
-    }
-
-    // Auto-apply without pitch — user can add a cover letter later
-    setAutoApplying(true);
-    api.applyToListing(id!)
-      .then(() => {
-        clearListingApplyIntent();
-        toast.success(
-          t('listings.detail.applicationSubmitted') +
-          ' You can add a cover letter from your Applications.',
-          { duration: 5000 }
-        );
-        loadListing();
-      })
-      .catch((err: any) => {
-        console.error('Auto-apply to listing failed:', err);
-        clearListingApplyIntent();
-      })
-      .finally(() => setAutoApplying(false));
   }, [user, listing]);
 
   const loadListing = async () => {
@@ -291,13 +256,6 @@ export default function ListingDetail() {
         </div>
       )}
 
-      {/* Auto-applying indicator */}
-      {autoApplying && (
-        <div className="flex items-center gap-2 text-sm text-blue-600">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-          Submitting your application...
-        </div>
-      )}
     </div>
   );
 
@@ -690,13 +648,6 @@ export default function ListingDetail() {
                   </button>
                 )}
 
-                {/* Auto-applying */}
-                {autoApplying && (
-                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-blue-600">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                    Applying...
-                  </div>
-                )}
               </div>
             </div>
 
