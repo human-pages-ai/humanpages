@@ -544,11 +544,7 @@ function FeaturedSection() {
     <section className="py-16 bg-white px-4">
       <div className="max-w-5xl mx-auto">
         {/* Stats counters */}
-        <div className="grid grid-cols-3 gap-6 mb-12">
-          <div className="text-center">
-            <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.verifiedHumans.toLocaleString()}+</p>
-            <p className="text-sm text-slate-500 mt-1">{t('landing.stats.verifiedHumans', { defaultValue: 'Verified humans' })}</p>
-          </div>
+        <div className="grid grid-cols-2 gap-6 mb-12 max-w-md mx-auto">
           <div className="text-center">
             <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.withSkills.toLocaleString()}+</p>
             <p className="text-sm text-slate-500 mt-1">{t('landing.stats.withSkills', { defaultValue: 'Skills listed' })}</p>
