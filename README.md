@@ -2,7 +2,7 @@
 
 MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 31 tools including search by skill/location/equipment, job offers, job board listings, in-job messaging, and streaming payments. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
 
-Visit [humanpages.ai](https://humanpages.ai) to learn more.
+Visit [humanpages.ai](https://humanpages.ai) to learn more. Available on [ClawHub](https://clawhub.com/skills/humanpages) | [npm](https://www.npmjs.com/package/humanpages).
 
 ## Quick Install
 
@@ -31,10 +31,12 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-### OpenClaw
+### OpenClaw / ClawHub
 ```bash
 clawhub install humanpages
 ```
+
+Browse on ClawHub: [clawhub.com/skills/humanpages](https://clawhub.com/skills/humanpages)
 
 ### npm Global Install
 ```bash

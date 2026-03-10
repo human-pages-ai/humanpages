@@ -4,13 +4,19 @@ An [OpenClaw](https://github.com/openclaw/openclaw) (formerly Moltbot) skill tha
 
 ## Install
 
-### Option A: Copy skill folder (recommended)
+### Option A: ClawHub (recommended)
+
+```bash
+clawhub install humanpages
+```
+
+### Option B: Copy skill folder
 
 ```bash
 cp -r humanpages/ ~/.openclaw/workspace/skills/humanpages/
 ```
 
-### Option B: Load from custom directory
+### Option C: Load from custom directory
 
 Add to `~/.openclaw/openclaw.json`:
 
@@ -128,5 +134,6 @@ Control which capabilities are enabled in `openclaw.json`:
 ## Links
 
 - [Human Pages](https://humanpages.ai) — the discovery layer
+- [ClawHub](https://clawhub.com/skills/humanpages) — install via ClawHub
 - [humanpages npm](https://www.npmjs.com/package/humanpages) — the MCP server
 - [OpenClaw Skills Docs](https://docs.openclaw.ai/tools/skills) — skill development guide
