@@ -37,7 +37,10 @@ type EventName =
   | 'wallet_sign_failed'
   | 'wallet_added'
   | 'wallet_added_manual'
-  | 'wallet_deleted';
+  | 'wallet_deleted'
+  | 'listing_viewed'
+  | 'listing_signup_clicked'
+  | 'listing_applied';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;
