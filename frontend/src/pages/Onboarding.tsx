@@ -284,10 +284,9 @@ export default function Onboarding() {
       const onboardingListingIntent = getListingApplyIntent();
       if (onboardingListingIntent) {
         try {
-          const defaultPitch = `Excited to work on "${onboardingListingIntent.listingTitle || 'this listing'}". I have relevant experience and would love to contribute.`;
-          await api.applyToListing(onboardingListingIntent.listingId, defaultPitch);
+          await api.applyToListing(onboardingListingIntent.listingId);
           clearListingApplyIntent();
-          toast.success(`Your application for "${onboardingListingIntent.listingTitle || 'this listing'}" has been submitted!`);
+          toast.success(`Applied! You can add a cover letter from your Applications.`, { duration: 5000 });
           navigate(`/listings/${onboardingListingIntent.listingId}`);
           return;
         } catch (err) {
@@ -352,8 +351,7 @@ export default function Onboarding() {
     // Auto-submit listing application on skip too
     const skipListingIntent = getListingApplyIntent();
     if (skipListingIntent) {
-      const defaultPitch = `Excited to work on "${skipListingIntent.listingTitle || 'this listing'}". I have relevant experience and would love to contribute.`;
-      api.applyToListing(skipListingIntent.listingId, defaultPitch).catch(() => {}); // Fire and forget
+      api.applyToListing(skipListingIntent.listingId).catch(() => {}); // Fire and forget
       clearListingApplyIntent();
       navigate(`/listings/${skipListingIntent.listingId}`);
       return;

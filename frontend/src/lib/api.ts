@@ -585,9 +585,15 @@ export const api = {
   getListing: (id: string) =>
     request<Listing>(`/listings/${id}`),
 
-  applyToListing: (id: string, pitch: string) =>
+  applyToListing: (id: string, pitch?: string) =>
     request<ListingApplication>(`/listings/${id}/apply`, {
       method: 'POST',
+      body: JSON.stringify(pitch ? { pitch } : {}),
+    }),
+
+  updateListingApplication: (listingId: string, pitch: string) =>
+    request<{ id: string; pitch: string; status: string }>(`/listings/${listingId}/application`, {
+      method: 'PATCH',
       body: JSON.stringify({ pitch }),
     }),
 

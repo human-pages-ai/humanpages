@@ -135,6 +135,11 @@ const createListingSchema = z.object({
 
 // Schema for applying to a listing
 const applySchema = z.object({
+  pitch: z.string().max(500).optional().default(''),
+});
+
+// Schema for updating an application (pitch / cover letter)
+const updateApplicationSchema = z.object({
   pitch: z.string().min(1).max(500),
 });
 
@@ -681,6 +686,50 @@ router.post('/:id/apply', applyRateLimiter, authenticateToken, requireEmailVerif
       });
     }
     logger.error({ err: error }, 'Apply to listing error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /:id/application - Update application pitch / cover letter
+router.patch('/:id/application', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+  try {
+    const data = updateApplicationSchema.parse(req.body);
+
+    const application = await prisma.listingApplication.findFirst({
+      where: {
+        listingId: req.params.id,
+        humanId: req.userId!,
+      },
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Only allow editing PENDING applications
+    if (application.status !== 'PENDING' && application.status !== 'PENDING_RECONFIRM') {
+      return res.status(400).json({
+        error: 'Cannot edit',
+        message: 'You can only edit pending applications.',
+      });
+    }
+
+    const updated = await prisma.listingApplication.update({
+      where: { id: application.id },
+      data: { pitch: data.pitch },
+    });
+
+    res.json({
+      id: updated.id,
+      pitch: updated.pitch,
+      status: updated.status,
+      message: 'Application updated successfully.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update application error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

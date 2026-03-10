@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -21,6 +21,12 @@ function formatTimeUntil(dateStr: string): string {
   return `${hours}h`;
 }
 
+/** Detect Facebook/Instagram in-app browser */
+function isFBBrowser(): boolean {
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|Instagram/i.test(ua);
+}
+
 export default function ListingDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -31,6 +37,8 @@ export default function ListingDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [autoApplying, setAutoApplying] = useState(false);
+  const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
+  const applyFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -52,17 +60,19 @@ export default function ListingDetail() {
       return;
     }
 
-    // Auto-apply with a default pitch
+    // Auto-apply without pitch — user can add a cover letter later
     setAutoApplying(true);
-    const defaultPitch = `Excited to work on "${listing.title}". I have relevant experience and would love to contribute.`;
-    api.applyToListing(id!, defaultPitch)
+    api.applyToListing(id!)
       .then(() => {
         clearListingApplyIntent();
-        toast.success(t('listings.detail.applicationSubmitted'));
+        toast.success(
+          t('listings.detail.applicationSubmitted') +
+          ' You can add a cover letter from your Applications.',
+          { duration: 5000 }
+        );
         loadListing();
       })
       .catch((err: any) => {
-        // Non-fatal — let the user manually apply
         console.error('Auto-apply to listing failed:', err);
         clearListingApplyIntent();
       })
@@ -96,6 +106,7 @@ export default function ListingDetail() {
       await api.applyToListing(id!, pitch.trim());
       toast.success(t('listings.detail.applicationSubmitted'));
       setPitch('');
+      setShowMobileApplySheet(false);
       await loadListing();
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
@@ -137,16 +148,18 @@ export default function ListingDetail() {
   const isClosed = listing.status !== 'OPEN' || isExpired;
   const hasApplied = listing.hasApplied || !!listing.myApplication;
   const canApply = user && !hasApplied && !isClosed;
+  const showMobileBottomBar = !hasApplied && !isClosed;
+  const inFBBrowser = isFBBrowser();
 
-  // ─── Apply Card (shared between mobile top + desktop sidebar) ──────────────
+  // ─── Desktop Sidebar Apply Card ────────────────────────────────────────────
 
-  const renderApplyCard = (isMobile?: boolean) => (
-    <div className={`bg-white rounded-lg shadow p-6 ${!isMobile ? 'sticky top-6' : ''}`}>
+  const renderDesktopApplyCard = () => (
+    <div className="sticky top-6 bg-white rounded-lg shadow p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t('listings.detail.applyNow')}
       </h2>
 
-      {/* Budget teaser */}
+      {/* Budget */}
       <div className="mb-4">
         <p className="text-2xl font-bold text-green-600">
           ${listing.budgetUsdc}{listing.budgetFlexible && '+'}
@@ -156,12 +169,12 @@ export default function ListingDetail() {
         )}
       </div>
 
-      {/* Skills hint for signup users */}
+      {/* Skills hint */}
       {!user && listing.requiredSkills?.length > 0 && (
         <div className="mb-4">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Skills needed</p>
           <div className="flex flex-wrap gap-1.5">
-            {listing.requiredSkills.map((skill, idx) => (
+            {listing.requiredSkills.map((skill: string, idx: number) => (
               <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
                 {skill}
               </span>
@@ -170,7 +183,7 @@ export default function ListingDetail() {
         </div>
       )}
 
-      {/* Not logged in — big Apply with OAuth buttons */}
+      {/* Not logged in — OAuth buttons */}
       {!user && !isClosed && (
         <div className="space-y-3">
           <button
@@ -200,7 +213,7 @@ export default function ListingDetail() {
         </div>
       )}
 
-      {/* Logged in — already applied */}
+      {/* Already applied */}
       {user && hasApplied && listing.myApplication && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-sm font-medium text-green-800 mb-2">
@@ -210,14 +223,24 @@ export default function ListingDetail() {
             <span className="font-medium">Status:</span>{' '}
             {t(`listings.myApplications.status.${listing.myApplication.status}`)}
           </p>
-          <p className="text-sm text-gray-700">
-            <span className="font-medium">Your pitch:</span> {listing.myApplication.pitch}
-          </p>
+          {listing.myApplication.pitch && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Your pitch:</span> {listing.myApplication.pitch}
+            </p>
+          )}
+          {!listing.myApplication.pitch && (
+            <Link
+              to="/dashboard"
+              className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Add a cover letter &rarr;
+            </Link>
+          )}
         </div>
       )}
 
       {/* Listing closed */}
-      {((!user && isClosed) || (user && !hasApplied && isClosed)) && (
+      {isClosed && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <p className="text-sm text-gray-700">
             {t('listings.detail.listingClosed')}
@@ -225,7 +248,7 @@ export default function ListingDetail() {
         </div>
       )}
 
-      {/* Logged in — can apply */}
+      {/* Logged in — can apply (desktop has inline form) */}
       {canApply && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -326,7 +349,7 @@ export default function ListingDetail() {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 pb-32 lg:pb-8">
         {/* Back link */}
         <Link
           to="/listings"
@@ -337,11 +360,6 @@ export default function ListingDetail() {
           </svg>
           {t('common.back')} to listings
         </Link>
-
-        {/* Mobile: Apply card at top */}
-        <div className="lg:hidden mt-4 mb-6">
-          {renderApplyCard(true)}
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
           {/* Left column - Main content */}
@@ -372,7 +390,7 @@ export default function ListingDetail() {
                 {listing.title}
               </h1>
 
-              {/* Budget (visible in main content on mobile only — sidebar has it on desktop) */}
+              {/* Budget on mobile */}
               <div className="mb-6 lg:hidden">
                 <p className="text-3xl font-bold text-green-600">
                   ${listing.budgetUsdc}{listing.budgetFlexible && '+'}
@@ -398,14 +416,13 @@ export default function ListingDetail() {
                   {t('listings.detail.requirements')}
                 </h2>
 
-                {/* Required skills */}
                 {listing.requiredSkills.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-2">
                       {t('listings.detail.skills')}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {listing.requiredSkills.map((skill, idx) => (
+                      {listing.requiredSkills.map((skill: string, idx: number) => (
                         <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded">
                           {skill}
                         </span>
@@ -414,14 +431,13 @@ export default function ListingDetail() {
                   </div>
                 )}
 
-                {/* Required equipment */}
                 {listing.requiredEquipment.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-2">
                       {t('listings.detail.equipment')}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {listing.requiredEquipment.map((item, idx) => (
+                      {listing.requiredEquipment.map((item: string, idx: number) => (
                         <span key={idx} className="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded">
                           {item}
                         </span>
@@ -430,7 +446,6 @@ export default function ListingDetail() {
                   </div>
                 )}
 
-                {/* Location */}
                 {listing.location && (
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">
@@ -443,7 +458,6 @@ export default function ListingDetail() {
                   </div>
                 )}
 
-                {/* Work mode */}
                 {listing.workMode && (
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">
@@ -471,16 +485,13 @@ export default function ListingDetail() {
                   </div>
                 </div>
               </div>
-              </div>{/* close p-6 wrapper */}
+              </div>
             </div>
           </div>
 
-          {/* Right column - Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Apply card — desktop only (mobile version is above) */}
-            <div className="hidden lg:block">
-              {renderApplyCard(false)}
-            </div>
+          {/* Right column - Sidebar (desktop only) */}
+          <div className="lg:col-span-1 space-y-6 hidden lg:block">
+            {renderDesktopApplyCard()}
 
             {/* Agent card */}
             {listing.agent && (
@@ -512,7 +523,6 @@ export default function ListingDetail() {
               </div>
             )}
 
-            {/* Agent reputation */}
             {listing.agentReputation && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
@@ -550,7 +560,6 @@ export default function ListingDetail() {
               </div>
             )}
 
-            {/* Report link (logged-in only) */}
             {user && listing.agent && (
               <button
                 onClick={() => setShowReportModal(true)}
@@ -560,10 +569,142 @@ export default function ListingDetail() {
               </button>
             )}
           </div>
+
+          {/* Mobile: Agent info below main content */}
+          <div className="lg:hidden space-y-6">
+            {listing.agent && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                  {t('listings.detail.postedBy')}
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900">{listing.agent.name}</p>
+                    {listing.agent.domainVerified && (
+                      <span className="inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                  {listing.agent.description && (
+                    <p className="text-sm text-gray-600">{listing.agent.description}</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
-      <Footer className="mt-12" />
+      <Footer className="mt-12 lg:mt-12" />
+
+      {/* ─── Mobile: Sticky Bottom CTA Bar ─────────────────────────────────────── */}
+      {showMobileBottomBar && (
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-50">
+          {/* Slide-up apply form (logged in users) */}
+          {showMobileApplySheet && canApply && (
+            <div ref={applyFormRef} className="bg-white border-t border-gray-200 px-4 pt-4 pb-2 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  {t('listings.detail.yourPitch')}
+                </label>
+                <button
+                  onClick={() => setShowMobileApplySheet(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <textarea
+                value={pitch}
+                onChange={(e) => setPitch(e.target.value)}
+                placeholder={t('listings.detail.pitchPlaceholder')}
+                rows={3}
+                maxLength={500}
+                autoFocus
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-gray-500">{pitch.length}/500</span>
+                <button
+                  onClick={handleApply}
+                  disabled={submitting || !pitch.trim()}
+                  className="bg-blue-600 text-white font-medium py-2 px-5 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {submitting ? t('listings.detail.submitting') : 'Submit'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Bottom bar */}
+          <div className="bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 safe-area-pb">
+            <div className="flex items-center gap-3">
+              {/* Budget teaser */}
+              <div className="shrink-0">
+                <p className="text-lg font-bold text-green-600">
+                  ${listing.budgetUsdc}{listing.budgetFlexible && '+'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {formatTimeUntil(listing.expiresAt)} left
+                </p>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {/* Not logged in — Apply button triggers OAuth */}
+                {!user && (
+                  <button
+                    onClick={() => handleApplySignup(inFBBrowser ? 'google' : 'linkedin')}
+                    className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all text-center"
+                  >
+                    Apply Now
+                  </button>
+                )}
+
+                {/* Logged in — can apply */}
+                {canApply && !showMobileApplySheet && (
+                  <button
+                    onClick={() => setShowMobileApplySheet(true)}
+                    className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all text-center"
+                  >
+                    Apply Now
+                  </button>
+                )}
+
+                {/* Auto-applying */}
+                {autoApplying && (
+                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-blue-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                    Applying...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Skills hint below the bar for non-logged-in users */}
+            {!user && listing.requiredSkills?.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {listing.requiredSkills.slice(0, 3).map((skill: string, idx: number) => (
+                  <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {skill}
+                  </span>
+                ))}
+                {listing.requiredSkills.length > 3 && (
+                  <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3} more</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom spacer for mobile sticky bar */}
+      {showMobileBottomBar && <div className="h-28 lg:hidden" />}
 
       {listing.agent && (
         <ReportAgentModal
