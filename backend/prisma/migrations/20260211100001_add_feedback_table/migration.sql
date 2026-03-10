@@ -1,11 +1,19 @@
--- CreateEnum
-CREATE TYPE "FeedbackType" AS ENUM ('BUG', 'FEATURE', 'FEEDBACK');
+-- CreateEnum (idempotent)
+DO $$ BEGIN
+    CREATE TYPE "FeedbackType" AS ENUM ('BUG', 'FEATURE', 'FEEDBACK');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "FeedbackStatus" AS ENUM ('NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
+-- CreateEnum (idempotent)
+DO $$ BEGIN
+    CREATE TYPE "FeedbackStatus" AS ENUM ('NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "Feedback" (
+CREATE TABLE IF NOT EXISTS "Feedback" (
     "id" TEXT NOT NULL,
     "humanId" TEXT,
     "type" "FeedbackType" NOT NULL DEFAULT 'FEEDBACK',
@@ -33,16 +41,20 @@ CREATE TABLE "Feedback" (
 );
 
 -- CreateIndex
-CREATE INDEX "Feedback_status_idx" ON "Feedback"("status");
+CREATE INDEX IF NOT EXISTS "Feedback_status_idx" ON "Feedback"("status");
 
 -- CreateIndex
-CREATE INDEX "Feedback_type_idx" ON "Feedback"("type");
+CREATE INDEX IF NOT EXISTS "Feedback_type_idx" ON "Feedback"("type");
 
 -- CreateIndex
-CREATE INDEX "Feedback_createdAt_idx" ON "Feedback"("createdAt");
+CREATE INDEX IF NOT EXISTS "Feedback_createdAt_idx" ON "Feedback"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Feedback_humanId_idx" ON "Feedback"("humanId");
+CREATE INDEX IF NOT EXISTS "Feedback_humanId_idx" ON "Feedback"("humanId");
 
 -- AddForeignKey
-ALTER TABLE "Feedback" ADD CONSTRAINT "Feedback_humanId_fkey" FOREIGN KEY ("humanId") REFERENCES "Human"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "Feedback" ADD CONSTRAINT "Feedback_humanId_fkey" FOREIGN KEY ("humanId") REFERENCES "Human"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
