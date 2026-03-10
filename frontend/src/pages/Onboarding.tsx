@@ -6,7 +6,7 @@ import { analytics } from '../lib/analytics';
 import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
-import { getApplyIntent, clearApplyIntent } from '../lib/applyIntent';
+import { getApplyIntent, clearApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
 import toast from 'react-hot-toast';
 
 // ─── Categorised skill suggestions ──────────────────────────────────────────
@@ -190,10 +190,16 @@ export default function Onboarding() {
     // Collect skills to pre-select from multiple sources
     const preSelectedSkills = new Set<string>();
 
-    // Source 1: Apply intent (e.g. user clicked "Apply" on Content Creator)
-    const intent = getApplyIntent();
-    if (intent?.suggestedSkills?.length) {
-      intent.suggestedSkills.forEach((s) => preSelectedSkills.add(s));
+    // Source 1a: Career apply intent (e.g. user clicked "Apply" on Content Creator)
+    const careerIntent = getApplyIntent();
+    if (careerIntent?.suggestedSkills?.length) {
+      careerIntent.suggestedSkills.forEach((s) => preSelectedSkills.add(s));
+    }
+
+    // Source 1b: Listing apply intent (e.g. user clicked "Apply" on a listing)
+    const listingIntent = getListingApplyIntent();
+    if (listingIntent?.requiredSkills?.length) {
+      listingIntent.requiredSkills.forEach((s) => preSelectedSkills.add(s));
     }
 
     // Source 2: LinkedIn headline auto-matching
@@ -256,21 +262,40 @@ export default function Onboarding() {
       posthog.capture('onboarding_completed', { skillCount: skills.length });
 
       // Auto-submit career application if there's a pending apply intent
-      const intent = getApplyIntent();
-      if (intent) {
+      const careerIntent = getApplyIntent();
+      if (careerIntent) {
         try {
           await api.submitCareerApplication({
-            positionId: intent.positionId,
-            positionTitle: intent.positionTitle || intent.positionId,
-            about: `Excited to contribute as a ${intent.positionTitle || intent.positionId}.`,
+            positionId: careerIntent.positionId,
+            positionTitle: careerIntent.positionTitle || careerIntent.positionId,
+            about: `Excited to contribute as a ${careerIntent.positionTitle || careerIntent.positionId}.`,
             availability: 'flexible',
           });
           clearApplyIntent();
-          toast.success(t('onboarding.applicationSubmitted', `Your application for ${intent.positionTitle || intent.positionId} has been submitted!`));
+          toast.success(t('onboarding.applicationSubmitted', `Your application for ${careerIntent.positionTitle || careerIntent.positionId} has been submitted!`));
         } catch (err) {
           // Non-fatal: application submission failure shouldn't block onboarding
           console.error('Auto-submit application failed:', err);
           clearApplyIntent();
+        }
+      }
+
+      // Auto-submit listing application if there's a pending listing apply intent
+      const onboardingListingIntent = getListingApplyIntent();
+      if (onboardingListingIntent) {
+        try {
+          const defaultPitch = `Excited to work on "${onboardingListingIntent.listingTitle || 'this listing'}". I have relevant experience and would love to contribute.`;
+          await api.applyToListing(onboardingListingIntent.listingId, defaultPitch);
+          clearListingApplyIntent();
+          toast.success(`Your application for "${onboardingListingIntent.listingTitle || 'this listing'}" has been submitted!`);
+          navigate(`/listings/${onboardingListingIntent.listingId}`);
+          return;
+        } catch (err) {
+          // Non-fatal: redirect to listing page so they can apply manually
+          console.error('Auto-apply to listing failed:', err);
+          clearListingApplyIntent();
+          navigate(`/listings/${onboardingListingIntent.listingId}`);
+          return;
         }
       }
 
@@ -313,15 +338,25 @@ export default function Onboarding() {
     posthog.capture('onboarding_skipped');
 
     // Still auto-submit application on skip if intent exists
-    const intent = getApplyIntent();
-    if (intent) {
+    const skipCareerIntent = getApplyIntent();
+    if (skipCareerIntent) {
       api.submitCareerApplication({
-        positionId: intent.positionId,
-        positionTitle: intent.positionTitle || intent.positionId,
-        about: `Excited to contribute as a ${intent.positionTitle || intent.positionId}.`,
+        positionId: skipCareerIntent.positionId,
+        positionTitle: skipCareerIntent.positionTitle || skipCareerIntent.positionId,
+        about: `Excited to contribute as a ${skipCareerIntent.positionTitle || skipCareerIntent.positionId}.`,
         availability: 'flexible',
       }).catch(() => {}); // Fire and forget
       clearApplyIntent();
+    }
+
+    // Auto-submit listing application on skip too
+    const skipListingIntent = getListingApplyIntent();
+    if (skipListingIntent) {
+      const defaultPitch = `Excited to work on "${skipListingIntent.listingTitle || 'this listing'}". I have relevant experience and would love to contribute.`;
+      api.applyToListing(skipListingIntent.listingId, defaultPitch).catch(() => {}); // Fire and forget
+      clearListingApplyIntent();
+      navigate(`/listings/${skipListingIntent.listingId}`);
+      return;
     }
 
     navigate('/dashboard');

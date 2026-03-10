@@ -1,25 +1,39 @@
 /**
- * Apply Intent — durable storage for the careers application flow.
+ * Apply Intent — durable storage for the careers & listing application flows.
  *
  * Stored in localStorage so it survives:
  *   - OAuth redirects (Google/LinkedIn leave the app entirely)
  *   - Page refreshes, tab closes, email verification delays
- *   - The full Signup → Onboarding → Careers chain
+ *   - The full Signup → Onboarding → Careers/Listing chain
  *
- * Flow:
+ * Careers flow:
  * 1. User clicks "Apply" on /careers → intent saved here
  * 2. Auth flow happens (signup, OAuth, login)
  * 3. After auth, Onboarding/Login/OAuthCallback check for intent
  * 4. If intent exists → redirect to /careers
  * 5. CareersPage reads intent → auto-opens apply modal → clears intent
+ *
+ * Listing flow:
+ * 1. User clicks "Apply" on /listings/:id → listing intent saved here
+ * 2. Auth flow happens (signup, OAuth, login)
+ * 3. After auth, Onboarding auto-applies with a default pitch
+ * 4. OAuthCallback/Login redirect to /listings/:id
  */
 
 const APPLY_INTENT_KEY = 'hp_apply_intent';
+const LISTING_APPLY_INTENT_KEY = 'hp_listing_apply_intent';
 
 interface ApplyIntent {
   positionId: string;
   positionTitle?: string;
   suggestedSkills?: string[];
+  timestamp: number;
+}
+
+interface ListingApplyIntent {
+  listingId: string;
+  listingTitle?: string;
+  requiredSkills?: string[];
   timestamp: number;
 }
 
@@ -48,6 +62,8 @@ export const POSITION_SKILL_HINTS: Record<string, string[]> = {
   'product-designer':     ['Graphic Design', 'Photo & Image Editing', 'UI/UX Design', 'Prototyping & Wireframing'],
   'qa-tester':            ['QA & Bug Testing', 'Software Development', 'Code Review'],
 };
+
+// ─── Career Apply Intent ─────────────────────────────────────────────────────
 
 export function setApplyIntent(positionId: string, positionTitle?: string): void {
   const suggestedSkills = POSITION_SKILL_HINTS[positionId] || [];
@@ -80,12 +96,52 @@ export function clearApplyIntent(): void {
   localStorage.removeItem(APPLY_INTENT_KEY);
 }
 
+// ─── Listing Apply Intent ────────────────────────────────────────────────────
+
+export function setListingApplyIntent(
+  listingId: string,
+  listingTitle?: string,
+  requiredSkills?: string[],
+): void {
+  localStorage.setItem(LISTING_APPLY_INTENT_KEY, JSON.stringify({
+    listingId,
+    listingTitle,
+    requiredSkills: requiredSkills || [],
+    timestamp: Date.now(),
+  }));
+}
+
+export function getListingApplyIntent(): ListingApplyIntent | null {
+  try {
+    const raw = localStorage.getItem(LISTING_APPLY_INTENT_KEY);
+    if (!raw) return null;
+    const parsed: ListingApplyIntent = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp > INTENT_TTL) {
+      localStorage.removeItem(LISTING_APPLY_INTENT_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    localStorage.removeItem(LISTING_APPLY_INTENT_KEY);
+    return null;
+  }
+}
+
+export function clearListingApplyIntent(): void {
+  localStorage.removeItem(LISTING_APPLY_INTENT_KEY);
+}
+
+// ─── Redirect Helper ─────────────────────────────────────────────────────────
+
 /**
  * Called by Onboarding/OAuthCallback/Login to get the post-auth redirect.
- * Returns '/careers' if an apply intent exists, null otherwise.
- * Does NOT clear the intent — CareersPage does that after opening the modal.
+ * Listing intents take priority over career intents.
+ * Returns the redirect path or null.
+ * Does NOT clear the intent — the destination page does that.
  */
 export function getApplyRedirect(): string | null {
+  const listingIntent = getListingApplyIntent();
+  if (listingIntent) return `/listings/${listingIntent.listingId}`;
   const intent = getApplyIntent();
   return intent ? '/careers' : null;
 }
