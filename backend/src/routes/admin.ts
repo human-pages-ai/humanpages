@@ -511,6 +511,7 @@ router.get('/people', async (req: AuthRequest, res) => {
     const affiliatedBy = (req.query.affiliatedBy as string) || '';
     const hasReferrals = req.query.hasReferrals === 'true';
     const availability = req.query.availability as string;
+    const hasPhoto = req.query.hasPhoto === 'true';
 
     const allowedSorts = ['createdAt', 'name', 'email', 'lastActiveAt'];
     const sortField = allowedSorts.includes(sort) ? sort : 'createdAt';
@@ -562,6 +563,10 @@ router.get('/people', async (req: AuthRequest, res) => {
 
     if (availability === 'true') where.isAvailable = true;
     if (availability === 'false') where.isAvailable = false;
+
+    if (hasPhoto) {
+      where.profilePhotoKey = { not: null };
+    }
 
     const [people, total] = await Promise.all([
       prisma.human.findMany({
@@ -688,6 +693,7 @@ router.get('/people/export', async (req: AuthRequest, res) => {
     const affiliatedBy = (req.query.affiliatedBy as string) || '';
     const hasReferrals = req.query.hasReferrals === 'true';
     const availability = req.query.availability as string;
+    const hasPhoto = req.query.hasPhoto === 'true';
 
     const where: any = {};
 
@@ -718,6 +724,7 @@ router.get('/people/export', async (req: AuthRequest, res) => {
     }
     if (availability === 'true') where.isAvailable = true;
     if (availability === 'false') where.isAvailable = false;
+    if (hasPhoto) where.profilePhotoKey = { not: null };
 
     const people = await prisma.human.findMany({
       where,

@@ -20,6 +20,7 @@ export default function AdminPeople() {
   const [hasCareerApplication, setHasCareerApplication] = useState(false);
   const [careerPositionId, setCareerPositionId] = useState('');
   const [hasReferrals, setHasReferrals] = useState(false);
+  const [hasPhoto, setHasPhoto] = useState(false);
   const [sort, setSort] = useState('createdAt');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [exporting, setExporting] = useState(false);
@@ -50,9 +51,10 @@ export default function AdminPeople() {
     hasCareerApplication: hasCareerApplication || undefined,
     careerPositionId: careerPositionId || undefined,
     hasReferrals: hasReferrals || undefined,
+    hasPhoto: hasPhoto || undefined,
     sort,
     order,
-  }), [search, country, selectedSkills, hasCareerApplication, careerPositionId, hasReferrals, sort, order]);
+  }), [search, country, selectedSkills, hasCareerApplication, careerPositionId, hasReferrals, hasPhoto, sort, order]);
 
   const load = useCallback(async (page: number) => {
     setLoading(true);
@@ -96,9 +98,10 @@ export default function AdminPeople() {
     setHasCareerApplication(false);
     setCareerPositionId('');
     setHasReferrals(false);
+    setHasPhoto(false);
   }
 
-  const hasActiveFilters = search || country || selectedSkills.length > 0 || hasCareerApplication || careerPositionId || hasReferrals;
+  const hasActiveFilters = search || country || selectedSkills.length > 0 || hasCareerApplication || careerPositionId || hasReferrals || hasPhoto;
 
   async function handleExport() {
     setExporting(true);
@@ -229,6 +232,21 @@ export default function AdminPeople() {
               }`}
             >
               Has referrals
+            </button>
+          </div>
+
+          {/* Has Photo toggle */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Photo</label>
+            <button
+              onClick={() => setHasPhoto(!hasPhoto)}
+              className={`px-3 py-2 border rounded-md text-sm transition-colors ${
+                hasPhoto
+                  ? 'bg-blue-50 border-blue-300 text-blue-700'
+                  : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Has photo
             </button>
           </div>
 
