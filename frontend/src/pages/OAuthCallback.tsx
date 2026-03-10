@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
-import { getApplyRedirect } from '../lib/applyIntent';
+import { getApplyRedirect, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
 
 export default function OAuthCallback() {
   const { t } = useTranslation();
@@ -44,6 +44,34 @@ export default function OAuthCallback() {
     localStorage.setItem('token', result.token);
     if (result.isNew) {
       analytics.track('signup_complete', { method: oauthProvider, utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
+
+      // ── Fast-track: listing intent → skip onboarding, auto-apply, redirect ──
+      // This is the FB→signup conversion path. Every extra screen kills conversion.
+      // Flow: OAuth done → apply → land on listing page. Onboarding deferred.
+      const listingIntent = getListingApplyIntent();
+      if (listingIntent) {
+        try {
+          // Save listing's required skills as the user's initial skills (non-blocking)
+          if (listingIntent.requiredSkills?.length) {
+            api.updateProfile({ skills: listingIntent.requiredSkills }).catch(() => {});
+          }
+          // Auto-apply to the listing
+          await api.applyToListing(listingIntent.listingId);
+          clearListingApplyIntent();
+          // Flag that onboarding is pending so dashboard can prompt later
+          localStorage.setItem('hp_onboarding_pending', '1');
+          window.location.href = `/listings/${listingIntent.listingId}?applied=1`;
+          return;
+        } catch {
+          // If apply fails, still redirect to the listing page
+          clearListingApplyIntent();
+          localStorage.setItem('hp_onboarding_pending', '1');
+          window.location.href = `/listings/${listingIntent.listingId}`;
+          return;
+        }
+      }
+
+      // No listing intent — go through normal onboarding
       // Store OAuth photo URL for import prompt on onboarding page
       if (result.oauthPhotoUrl) {
         localStorage.setItem('oauthPhotoUrl', result.oauthPhotoUrl);
@@ -53,8 +81,6 @@ export default function OAuthCallback() {
       if (result.linkedinHeadline) {
         localStorage.setItem('linkedinHeadline', result.linkedinHeadline);
       }
-      // New users always go through onboarding first.
-      // If there's an apply intent in localStorage, Onboarding will chain to /careers after.
       window.location.href = '/onboarding';
     } else {
       // Store LinkedIn headline for existing users too (in case they revisit onboarding)

@@ -260,6 +260,7 @@ export default function Onboarding() {
       });
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
+      localStorage.removeItem('hp_onboarding_pending');
 
       // Auto-submit career application if there's a pending apply intent
       const careerIntent = getApplyIntent();

@@ -282,7 +282,7 @@ export interface ListingApplication {
   id: string;
   listingId: string;
   pitch: string;
-  status: 'PENDING' | 'OFFERED' | 'REJECTED' | 'WITHDRAWN';
+  status: 'PENDING' | 'PENDING_RECONFIRM' | 'OFFERED' | 'REJECTED' | 'WITHDRAWN';
   jobId?: string;
   createdAt: string;
   listing?: {

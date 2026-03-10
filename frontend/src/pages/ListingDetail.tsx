@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -30,6 +30,7 @@ function isFBBrowser(): boolean {
 export default function ListingDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loginWithGoogle, loginWithLinkedIn } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,19 @@ export default function ListingDetail() {
       loadListing();
     }
   }, [id]);
+
+  // Show success toast when redirected after fast-track signup+apply
+  useEffect(() => {
+    if (searchParams.get('applied') === '1') {
+      toast.success(
+        'You\'re in! Add a cover letter from your dashboard to stand out.',
+        { duration: 6000 }
+      );
+      // Clean the URL without triggering a re-render
+      searchParams.delete('applied');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   // Auto-apply after OAuth redirect: user is logged in + listing intent exists
   useEffect(() => {

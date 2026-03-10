@@ -824,6 +824,24 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Onboarding pending banner — shown for fast-tracked listing signups */}
+        {localStorage.getItem('hp_onboarding_pending') === '1' && profile && !profile.location && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Complete your profile to get matched with more gigs</p>
+                <p className="text-xs text-blue-600 mt-0.5">Add your location and skills to appear in more search results</p>
+              </div>
+              <Link
+                to="/onboarding"
+                className="ml-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded whitespace-nowrap"
+              >
+                Complete Profile
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Status header — always visible */}
         <StatusHeader
           profile={profile}
