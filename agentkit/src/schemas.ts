@@ -38,6 +38,10 @@ export const SearchHumansSchema = z
       .boolean()
       .optional()
       .describe("Only show identity-verified humans"),
+    minExperience: z
+      .number()
+      .optional()
+      .describe("Minimum years of professional experience"),
   })
   .strip()
   .describe("Search for humans available for work on Human Pages");
@@ -56,6 +60,10 @@ export const CreateJobOfferSchema = z
     humanId: z
       .string()
       .describe("The ID of the human to send the job offer to"),
+    agentId: z
+      .string()
+      .optional()
+      .describe("Your agent identifier string. If omitted, defaults to your registered agent ID."),
     title: z
       .string()
       .describe("Short title describing the job (e.g. 'Deliver package to 123 Main St')"),

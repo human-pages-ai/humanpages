@@ -1,7 +1,5 @@
 import { z } from "zod";
-import { ActionProvider } from "@coinbase/agentkit";
-import { CreateAction } from "@coinbase/agentkit";
-import { Network } from "@coinbase/agentkit";
+import { ActionProvider, CreateAction, Network } from "@coinbase/agentkit";
 import { HUMANPAGES_API_BASE_URL } from "./constants";
 import {
   SearchHumansSchema,
@@ -18,22 +16,25 @@ import {
 
 export interface HumanPagesActionProviderConfig {
   apiKey?: string;
+  agentId?: string;
   apiBaseUrl?: string;
 }
 
 export class HumanPagesActionProvider extends ActionProvider {
   private readonly apiKey: string;
+  private readonly agentId: string;
   private readonly baseUrl: string;
 
   constructor(config: HumanPagesActionProviderConfig = {}) {
     super("humanpages", []);
 
     this.apiKey = config.apiKey || process.env.HUMANPAGES_API_KEY || "";
+    this.agentId = config.agentId || process.env.HUMANPAGES_AGENT_ID || "";
     this.baseUrl = config.apiBaseUrl || process.env.HUMANPAGES_API_BASE_URL || HUMANPAGES_API_BASE_URL;
 
     if (!this.apiKey) {
       throw new Error(
-        "HUMANPAGES_API_KEY is required. Register at https://humanpages.io or via the register_agent action, then set the HUMANPAGES_API_KEY environment variable.",
+        "HUMANPAGES_API_KEY is required. Register at https://humanpages.ai/dev or via the humanpages MCP server, then set HUMANPAGES_API_KEY and HUMANPAGES_AGENT_ID environment variables.",
       );
     }
   }
@@ -81,6 +82,7 @@ export class HumanPagesActionProvider extends ActionProvider {
       if (args.available !== undefined) params.set("available", String(args.available));
       if (args.workMode) params.set("workMode", args.workMode);
       if (args.verified !== undefined) params.set("verified", String(args.verified));
+      if (args.minExperience !== undefined) params.set("minExperience", String(args.minExperience));
 
       const query = params.toString();
       const data = await this.request(`/api/humans/search${query ? `?${query}` : ""}`);
@@ -118,6 +120,7 @@ export class HumanPagesActionProvider extends ActionProvider {
         method: "POST",
         body: JSON.stringify({
           humanId: args.humanId,
+          agentId: args.agentId || this.agentId || "agentkit",
           title: args.title,
           description: args.description,
           priceUsdc: args.priceUsdc,

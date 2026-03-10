@@ -20,6 +20,7 @@ interface Human {
   skills: string[];
   equipment: string[];
   languages: string[];
+  yearsOfExperience?: number;
   isAvailable: boolean;
   minRateUsdc?: string;
   rateCurrency?: string;
@@ -131,6 +132,7 @@ interface SearchParams {
   available_only?: boolean;
   work_mode?: string;
   verified?: string;
+  min_experience?: number;
 }
 
 async function searchHumans(params: SearchParams): Promise<Human[]> {
@@ -146,6 +148,7 @@ async function searchHumans(params: SearchParams): Promise<Human[]> {
   if (params.available_only) query.set('available', 'true');
   if (params.work_mode) query.set('workMode', params.work_mode);
   if (params.verified) query.set('verified', params.verified);
+  if (params.min_experience) query.set('minExperience', params.min_experience.toString());
 
   const res = await fetch(`${API_BASE}/api/humans/search?${query}`);
   if (!res.ok) {
@@ -230,6 +233,10 @@ export function createServer(): Server {
               type: 'string',
               enum: ['humanity'],
               description: 'Filter by verification status. Use "humanity" to only return humans who have verified their identity via Gitcoin Passport (score >= 20).',
+            },
+            min_experience: {
+              type: 'number',
+              description: 'Minimum years of professional experience',
             },
           },
         },
@@ -995,11 +1002,12 @@ export function createServer(): Server {
           available_only: args?.available_only !== false,
           work_mode: args?.work_mode as string | undefined,
           verified: args?.verified as string | undefined,
+          min_experience: args?.min_experience as number | undefined,
         });
 
         if (humans.length === 0) {
           return {
-            content: [{ type: 'text', text: 'No humans found matching the criteria.' }],
+            content: [{ type: 'text', text: 'No humans found matching the criteria. You can use `create_listing` to post a job listing on the Human Pages job board — qualified humans will discover it and apply to you.' }],
           };
         }
 
@@ -1029,6 +1037,7 @@ export function createServer(): Server {
   Skills: ${h.skills.join(', ') || 'None listed'}
   Equipment: ${h.equipment.join(', ') || 'None listed'}
   Languages: ${h.languages.join(', ') || 'Not specified'}
+  Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
   Jobs completed: ${rep?.jobsCompleted || 0}`;
           })
           .join('\n\n');
@@ -1087,6 +1096,7 @@ ${human.locationGranularity === 'neighborhood' && human.neighborhood && human.lo
 - **Skills:** ${human.skills.join(', ') || 'None listed'}
 - **Equipment:** ${human.equipment.join(', ') || 'None listed'}
 - **Languages:** ${human.languages.join(', ') || 'Not specified'}
+- **Experience:** ${human.yearsOfExperience ? `${human.yearsOfExperience} years` : 'Not specified'}
 
 ## Economics
 - **Minimum Rate:** ${human.minRateUsdc ? (human.rateCurrency && human.rateCurrency !== 'USD' ? `${human.rateCurrency} ${human.minRateUsdc} (~$${human.minRateUsdEstimate || '?'} USD)` : `$${human.minRateUsdc} USD`) : 'Negotiable'}
