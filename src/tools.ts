@@ -135,7 +135,13 @@ interface SearchParams {
   min_experience?: number;
 }
 
-async function searchHumans(params: SearchParams): Promise<Human[]> {
+interface SearchResponse {
+  results: Human[];
+  resolvedLocation?: string;
+  searchRadius?: { lat: number; lng: number; radiusKm: number };
+}
+
+async function searchHumans(params: SearchParams): Promise<SearchResponse> {
   const query = new URLSearchParams();
   if (params.skill) query.set('skill', params.skill);
   if (params.equipment) query.set('equipment', params.equipment);
@@ -154,7 +160,7 @@ async function searchHumans(params: SearchParams): Promise<Human[]> {
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);
   }
-  return res.json() as Promise<Human[]>;
+  return res.json() as Promise<SearchResponse>;
 }
 
 async function getHuman(id: string): Promise<Human> {
@@ -183,13 +189,13 @@ export function createServer(): Server {
       {
         name: 'search_humans',
         description:
-          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates), and rate. Returns profiles with reputation stats. Contact info and wallets available via get_human_profile (requires registered agent).',
+          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates with radius), and rate. When using text location, provide a fully-qualified name (e.g., "Richmond, Virginia, USA" not just "Richmond") for accurate geocoding. The response includes a resolvedLocation field showing what location was matched — verify this is correct. Default search radius is 30km. Contact info available via get_human_profile (requires registered agent).',
         inputSchema: {
           type: 'object',
           properties: {
             skill: {
               type: 'string',
-              description: 'Filter by skill tag (e.g., "photography", "driving", "notary")',
+              description: 'Filter by skill tag (e.g., "photography", "driving", "cleaning", "notary")',
             },
             equipment: {
               type: 'string',
@@ -201,7 +207,7 @@ export function createServer(): Server {
             },
             location: {
               type: 'string',
-              description: 'Filter by location name or neighborhood (partial match, e.g., "San Francisco" or "Mission District")',
+              description: 'Filter by location. Use fully-qualified names for best results (e.g., "San Francisco, California, USA" not just "San Francisco"). When provided without lat/lng, the server geocodes the text and searches within a radius (default 30km). Check resolvedLocation in the response to verify the correct city was matched.',
             },
             lat: {
               type: 'number',
@@ -213,7 +219,7 @@ export function createServer(): Server {
             },
             radius: {
               type: 'number',
-              description: 'Search radius in kilometers (requires lat and lng)',
+              description: 'Search radius in kilometers (default: 30km). Works with both text location and explicit lat/lng coordinates.',
             },
             max_rate: {
               type: 'number',
@@ -329,7 +335,7 @@ export function createServer(): Server {
       {
         name: 'create_job_offer',
         description:
-          'Create a job offer for a human. Requires a registered agent API key or x402 payment ($0.25 USDC on Base via x-payment header). RATE LIMITS: PRO tier = 15 offers/day. x402 payments bypass tier limits. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
+          'Create a job offer for a human. Requires a registered agent API key or x402 platform fee ($0.25 via x402 protocol). RATE LIMITS: PRO tier = 15 offers/day. x402 payments bypass tier limits. Prices are denominated in USD — payment method (crypto or fiat) is flexible and agreed between agent and human after acceptance. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -347,11 +353,11 @@ export function createServer(): Server {
             },
             category: {
               type: 'string',
-              description: 'Category of the task (e.g., "photography", "research", "delivery")',
+              description: 'Category of the task (e.g., "photography", "research", "delivery", "cleaning")',
             },
-            price_usdc: {
+            price_usd: {
               type: 'number',
-              description: 'Agreed price in USDC. Must meet the human\'s minOfferPrice if set.',
+              description: 'Agreed price in USD. Must meet the human\'s minOfferPrice if set. Payment method (crypto or fiat) is flexible — agreed after acceptance.',
             },
             agent_id: {
               type: 'string',
@@ -401,16 +407,21 @@ export function createServer(): Server {
               enum: ['HOURLY', 'DAILY', 'WEEKLY'],
               description: 'How often payments are made/checkpointed. Required when payment_mode=STREAM.',
             },
-            stream_rate_usdc: {
+            stream_rate_usd: {
               type: 'number',
-              description: 'USDC amount per interval (e.g., 10 = $10/day if interval=DAILY). Required when payment_mode=STREAM.',
+              description: 'USD amount per interval (e.g., 10 = $10/day if interval=DAILY). Required when payment_mode=STREAM. Stream payments use crypto (USDC) on-chain.',
             },
             stream_max_ticks: {
               type: 'number',
               description: 'Optional cap on number of payment intervals. Null = indefinite.',
             },
+            preferred_payment_method: {
+              type: 'string',
+              enum: ['crypto', 'fiat', 'any'],
+              description: 'Signal to the human what payment methods you support. "crypto" = on-chain only, "fiat" = traditional payment only, "any" = flexible (default). The human sees this when deciding whether to accept.',
+            },
           },
-          required: ['human_id', 'title', 'description', 'price_usdc', 'agent_id', 'agent_key'],
+          required: ['human_id', 'title', 'description', 'price_usd', 'agent_id', 'agent_key'],
         },
       },
       {
@@ -431,7 +442,7 @@ export function createServer(): Server {
       {
         name: 'mark_job_paid',
         description:
-          'Record that payment has been sent for an ACCEPTED job. The job must be accepted by the human first. Payment amount must match or exceed the agreed price.',
+          'Record that payment has been sent for an ACCEPTED job. Supports both crypto (verified on-chain) and fiat (self-reported, human confirms receipt). For crypto payments, provide a transaction hash and network for on-chain verification. For fiat payments (PayPal, bank transfer, etc.), provide a payment reference — the human will be asked to confirm receipt.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -439,20 +450,25 @@ export function createServer(): Server {
               type: 'string',
               description: 'The job ID',
             },
-            payment_tx_hash: {
+            payment_method: {
               type: 'string',
-              description: 'The on-chain transaction hash',
+              enum: ['usdc', 'eth', 'sol', 'paypal', 'bank_transfer', 'venmo', 'cashapp', 'other_crypto', 'other_fiat'],
+              description: 'How you paid the human. Crypto methods (usdc, eth, sol, other_crypto) are verified on-chain. Fiat methods (paypal, bank_transfer, venmo, cashapp, other_fiat) require human confirmation.',
+            },
+            payment_reference: {
+              type: 'string',
+              description: 'Proof of payment. For crypto: the on-chain transaction hash. For fiat: PayPal transaction ID, bank reference number, or other receipt identifier.',
             },
             payment_network: {
               type: 'string',
-              description: 'The blockchain network (e.g., "ethereum", "solana")',
+              description: 'Blockchain network (e.g., "base", "ethereum", "solana"). Required for crypto payments, ignored for fiat.',
             },
             payment_amount: {
               type: 'number',
-              description: 'The amount paid in USDC',
+              description: 'The amount paid in USD equivalent',
             },
           },
-          required: ['job_id', 'payment_tx_hash', 'payment_network', 'payment_amount'],
+          required: ['job_id', 'payment_method', 'payment_reference', 'payment_amount'],
         },
       },
       {
@@ -538,7 +554,7 @@ export function createServer(): Server {
       {
         name: 'get_human_profile',
         description:
-          'Get the full profile of a human including contact info, wallet addresses, fiat payment methods, and social links. Requires a registered agent API key. Alternative: pay $0.05 per view via x402 (USDC on Base) by including an x-payment header.',
+          'Get the full profile of a human including contact info, payment methods (crypto wallets and fiat options like PayPal), and social links. Requires a registered agent API key. Alternative: pay $0.05 per view via x402 platform fee. Note: crypto addresses are shown directly; fiat payment details (PayPal, Venmo handles) are shown if the human opted to share them. Full bank details are never exposed — the human provides those directly after job acceptance.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -644,7 +660,7 @@ export function createServer(): Server {
       {
         name: 'start_stream',
         description:
-          'Start a stream payment for an ACCEPTED stream job. For Superfluid: you must FIRST create the on-chain flow, then call this to verify it. Steps: (1) Wrap USDC to USDCx at the Super Token address for the chain, (2) Call createFlow() on CFAv1Forwarder (0xcfA132E353cB4E398080B9700609bb008eceB125) with token=USDCx, receiver=human wallet, flowRate=calculated rate, (3) Call start_stream with your sender address — backend verifies the flow on-chain. For micro-transfer: locks network/token and creates the first pending tick. Prefer L2s (Base, Arbitrum, Polygon) for lower gas costs.',
+          'Start a stream payment for an ACCEPTED stream job. Stream payments require crypto (on-chain). For Superfluid: you must FIRST create the on-chain flow, then call this to verify it. Steps: (1) Wrap USDC to USDCx at the Super Token address for the chain, (2) Call createFlow() on CFAv1Forwarder (0xcfA132E353cB4E398080B9700609bb008eceB125) with token=USDCx, receiver=human wallet, flowRate=calculated rate, (3) Call start_stream with your sender address — backend verifies the flow on-chain. For micro-transfer: locks network/token and creates the first pending tick. Prefer L2s (Base, Arbitrum, Polygon) for lower gas costs.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -756,7 +772,7 @@ export function createServer(): Server {
       {
         name: 'create_listing',
         description:
-          'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires a registered agent or x402 payment ($0.50 USDC). RATE LIMITS: PRO = 5 listings/day. x402 bypasses limits.',
+          'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires a registered agent or x402 platform fee ($0.50). RATE LIMITS: PRO = 5 listings/day. x402 bypasses limits.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -772,9 +788,9 @@ export function createServer(): Server {
               type: 'string',
               description: 'Detailed description of the work, expectations, and deliverables',
             },
-            budget_usdc: {
+            budget_usd: {
               type: 'number',
-              description: 'Budget in USDC (minimum $5)',
+              description: 'Budget in USD (minimum $5). Payment method is flexible — agreed between agent and human.',
             },
             category: {
               type: 'string',
@@ -828,7 +844,7 @@ export function createServer(): Server {
               description: 'Secret for HMAC-SHA256 webhook signature (min 16 chars)',
             },
           },
-          required: ['agent_key', 'title', 'description', 'budget_usdc', 'expires_at'],
+          required: ['agent_key', 'title', 'description', 'budget_usd', 'expires_at'],
         },
       },
       {
@@ -861,11 +877,11 @@ export function createServer(): Server {
             },
             min_budget: {
               type: 'number',
-              description: 'Minimum budget in USDC',
+              description: 'Minimum budget in USD',
             },
             max_budget: {
               type: 'number',
-              description: 'Maximum budget in USDC',
+              description: 'Maximum budget in USD',
             },
             lat: {
               type: 'number',
@@ -990,7 +1006,7 @@ export function createServer(): Server {
 
     try {
       if (name === 'search_humans') {
-        const humans = await searchHumans({
+        const response = await searchHumans({
           skill: args?.skill as string | undefined,
           equipment: args?.equipment as string | undefined,
           language: args?.language as string | undefined,
@@ -1005,9 +1021,14 @@ export function createServer(): Server {
           min_experience: args?.min_experience as number | undefined,
         });
 
+        const humans = response.results;
+        const locationNote = response.resolvedLocation
+          ? `\nLocation resolved to: "${response.resolvedLocation}" (${response.searchRadius?.radiusKm || 30}km radius). If this isn't the right place, try a more specific location name (e.g., "City, State, Country").`
+          : '';
+
         if (humans.length === 0) {
           return {
-            content: [{ type: 'text', text: 'No humans found matching the criteria. You can use `create_listing` to post a job listing on the Human Pages job board — qualified humans will discover it and apply to you.' }],
+            content: [{ type: 'text', text: `No humans found matching the criteria.${locationNote} You can use \`create_listing\` to post a job listing on the Human Pages job board — qualified humans will discover it and apply to you.` }],
           };
         }
 
@@ -1043,7 +1064,7 @@ export function createServer(): Server {
           .join('\n\n');
 
         return {
-          content: [{ type: 'text', text: `Found ${humans.length} human(s):\n\n${summary}\n\n_Contact info and wallets available via get_human_profile (requires registered agent)._` }],
+          content: [{ type: 'text', text: `Found ${humans.length} human(s):${locationNote}\n\n${summary}\n\n_Contact info and wallets available via get_human_profile (requires registered agent)._` }],
         };
       }
 
@@ -1243,13 +1264,14 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
             title: args?.title,
             description: args?.description,
             category: args?.category,
-            priceUsdc: args?.price_usdc,
+            priceUsdc: args?.price_usd,
             paymentMode: args?.payment_mode,
             paymentTiming: args?.payment_timing,
             streamMethod: args?.stream_method,
             streamInterval: args?.stream_interval,
-            streamRateUsdc: args?.stream_rate_usdc,
+            streamRateUsdc: args?.stream_rate_usd,
             streamMaxTicks: args?.stream_max_ticks,
+            preferredPaymentMethod: args?.preferred_payment_method,
             callbackUrl: args?.callback_url,
             callbackSecret: args?.callback_secret,
           }),
@@ -1281,11 +1303,11 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
 **Job ID:** ${job.id}
 **Status:** ${job.status}
 **Human:** ${human.name}
-**Price:** $${args?.price_usdc} USDC
+**Price:** $${args?.price_usd}${args?.preferred_payment_method ? `\n**Payment Preference:** ${args.preferred_payment_method}` : ''}
 
 ⏳ **Next Step:** Wait for ${human.name} to accept the offer.${webhookNote}
 
-Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to record the transaction.`,
+Once accepted, you'll see their accepted payment methods (crypto wallets, PayPal, etc.) and can pay via any method they support. Use \`mark_job_paid\` to record the transaction.`,
             },
           ],
         };
@@ -1303,12 +1325,14 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
           PENDING: '⏳',
           ACCEPTED: '✅',
           REJECTED: '❌',
+          PAYMENT_PENDING_CONFIRMATION: '🔔',
           PAID: '💰',
           STREAMING: '🔄',
           PAUSED: '⏸️',
           COMPLETED: '🎉',
           CANCELLED: '🚫',
           DISPUTED: '⚠️',
+          PAYMENT_EXPIRED: '⌛',
         };
 
         const isStream = (job as any).paymentMode === 'STREAM';
@@ -1326,9 +1350,7 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
                 ? 'Human accepted! Create a Superfluid flow to their wallet, then use `start_stream` with your sender address to verify.'
                 : 'Human accepted! Use `start_stream` to lock the network/token and start sending payments.';
             } else {
-              nextStep = job.callbackUrl
-                ? `Human accepted! Contact info was sent to your webhook. Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`
-                : `Human accepted! Send $${job.priceUsdc} USDC to their wallet, then use \`mark_job_paid\` with the transaction hash.`;
+              nextStep = `Human accepted! Pay $${job.priceUsdc} via any of their accepted payment methods (use \`get_human_profile\` to see their crypto wallets and fiat options), then use \`mark_job_paid\` to record the payment.`;
             }
             break;
           case 'REJECTED':
@@ -1339,13 +1361,19 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
             break;
           case 'STREAMING':
             if (streamSummary?.method === 'SUPERFLUID') {
-              nextStep = `Stream active via Superfluid. Total streamed: $${streamSummary?.totalPaid || '0'} USDC. Use \`pause_stream\` or \`stop_stream\` to manage.`;
+              nextStep = `Stream active via Superfluid. Total streamed: $${streamSummary?.totalPaid || '0'}. Use \`pause_stream\` or \`stop_stream\` to manage.`;
             } else {
-              nextStep = `Stream active via micro-transfer. Total paid: $${streamSummary?.totalPaid || '0'} USDC. Use \`record_stream_tick\` to submit each payment.`;
+              nextStep = `Stream active via micro-transfer. Total paid: $${streamSummary?.totalPaid || '0'}. Use \`record_stream_tick\` to submit each payment.`;
             }
             break;
           case 'PAUSED':
             nextStep = 'Stream is paused. Use `resume_stream` to continue or `stop_stream` to end permanently.';
+            break;
+          case 'PAYMENT_PENDING_CONFIRMATION':
+            nextStep = 'Waiting for the human to confirm they received your fiat payment. They have 7 days to confirm or dispute. Use `get_job_status` to check.';
+            break;
+          case 'PAYMENT_EXPIRED':
+            nextStep = 'The human did not confirm receipt of your payment within 7 days. The payment claim has expired. If you did pay, contact the human directly to resolve.';
             break;
           case 'COMPLETED':
             nextStep = job.review
@@ -1364,7 +1392,7 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
         if (isStream && streamSummary) {
           streamInfo = `\n**Payment Mode:** STREAM (${streamSummary.method})
 **Rate:** $${streamSummary.rateUsdc || '?'}/${(streamSummary.interval || 'DAILY').toLowerCase()}
-**Total Paid:** $${streamSummary.totalPaid || '0'} USDC
+**Total Paid:** $${streamSummary.totalPaid || '0'}
 **Ticks:** ${streamSummary.tickCount || 0}${streamSummary.maxTicks ? `/${streamSummary.maxTicks}` : ''}
 **Network:** ${streamSummary.network || 'Not set'}`;
         }
@@ -1378,7 +1406,7 @@ Once accepted, you can send payment to their wallet and use \`mark_job_paid\` to
 **Job ID:** ${job.id}
 **Status:** ${statusEmoji[job.status] || ''} ${job.status}
 **Title:** ${job.title}
-**Price:** $${job.priceUsdc} USDC
+**Price:** $${job.priceUsdc}
 **Human:** ${job.human.name}
 ${agentInfo ? agentInfo + '\n' : ''}${streamInfo}
 **Next Step:** ${nextStep}`,
@@ -1388,13 +1416,17 @@ ${agentInfo ? agentInfo + '\n' : ''}${streamInfo}
       }
 
       if (name === 'mark_job_paid') {
+        const paymentMethod = args?.payment_method as string;
+        const isCrypto = ['usdc', 'eth', 'sol', 'other_crypto'].includes(paymentMethod);
+
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/paid`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            paymentTxHash: args?.payment_tx_hash,
-            paymentNetwork: args?.payment_network,
+            paymentTxHash: args?.payment_reference,
+            paymentNetwork: isCrypto ? (args?.payment_network || 'base') : (paymentMethod || 'fiat'),
             paymentAmount: args?.payment_amount,
+            paymentMethod: paymentMethod,
           }),
         });
 
@@ -1405,23 +1437,49 @@ ${agentInfo ? agentInfo + '\n' : ''}${streamInfo}
 
         const result = await res.json() as { id: string; status: string; message: string };
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `**Payment Recorded!**
+        if (isCrypto) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `**Payment Verified On-Chain!**
 
 **Job ID:** ${result.id}
 **Status:** ${result.status}
-**Transaction:** ${args?.payment_tx_hash}
+**Method:** ${paymentMethod.toUpperCase()}
+**Transaction:** ${args?.payment_reference}
 **Network:** ${args?.payment_network}
-**Amount:** $${args?.payment_amount} USDC
+**Amount:** $${args?.payment_amount}
 
 The human can now begin work. They will mark the job as complete when finished.
 After completion, you can leave a review using \`leave_review\`.`,
-            },
-          ],
-        };
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `**Fiat Payment Recorded (Pending Human Confirmation)**
+
+**Job ID:** ${result.id}
+**Status:** PAYMENT_PENDING_CONFIRMATION
+**Method:** ${paymentMethod.replace('_', ' ')}
+**Reference:** ${args?.payment_reference}
+**Amount:** $${args?.payment_amount}
+
+The human has been notified to confirm they received the payment. Fiat payments require human confirmation since they cannot be verified on-chain.
+
+- If confirmed: job moves to PAID and work can begin.
+- If disputed: job moves to DISPUTED.
+- If no response within 7 days: payment claim expires automatically.
+
+Use \`get_job_status\` to check for confirmation.`,
+              },
+            ],
+          };
+        }
       }
 
       if (name === 'approve_completion') {
@@ -1542,8 +1600,17 @@ ${human.humanityVerified
           .join('\n');
         const primaryWallet = (human.wallets || []).find((w) => w.isPrimary) || (human.wallets || [])[0];
 
+        // Tiered fiat visibility: show semi-public handles (PayPal.me, Venmo, CashApp)
+        // but redact sensitive bank details — human provides those directly after job acceptance
+        const sensitivePatterns = /bank|iban|swift|routing|account.*number/i;
         const fiatInfo = (human.fiatPaymentMethods || [])
-          .map((f) => `- ${f.platform}${f.label ? ` (${f.label})` : ''}${f.isPrimary ? ' ⭐' : ''}: ${f.handle}`)
+          .map((f) => {
+            const isSensitive = sensitivePatterns.test(f.platform) || sensitivePatterns.test(f.label || '');
+            if (isSensitive) {
+              return `- ${f.platform}${f.label ? ` (${f.label})` : ''}${f.isPrimary ? ' ⭐' : ''}: Available — human will provide details after job acceptance`;
+            }
+            return `- ${f.platform}${f.label ? ` (${f.label})` : ''}${f.isPrimary ? ' ⭐' : ''}: ${f.handle}`;
+          })
           .join('\n');
 
         const fmtFollowers = (n?: number) => n != null ? ` (${n.toLocaleString()} followers)` : '';
@@ -1565,12 +1632,13 @@ ${human.humanityVerified
 - Telegram: ${human.telegram || 'Not provided'}
 - Signal: ${human.signal || 'Not provided'}
 
-## Payment Wallets
+## Crypto Wallets
 ${walletInfo || 'No wallets added'}
 ${primaryWallet ? `\n**Preferred wallet:** ${primaryWallet.chain || primaryWallet.network} - ${primaryWallet.address}` : ''}
 
 ## Fiat Payment Methods
-${fiatInfo || 'No fiat payment methods added'}
+${fiatInfo || 'No fiat payment methods listed'}
+${(human.fiatPaymentMethods || []).length > 0 ? '\n_Note: Fiat payments are self-reported. The human must confirm receipt before the job is marked as paid._' : ''}
 
 ## Social Profiles
 ${socialLinks || 'No social profiles added'}`;
@@ -1724,7 +1792,7 @@ You can now create job offers and view full human profiles using \`get_human_pro
 **Activated:** ${result.activatedAt || 'Not yet'}
 **Expires:** ${result.activationExpiresAt || 'N/A'}
 **Profile views:** ${limits?.profileViewsPerDay ?? 'N/A'}/day
-**Job offers:** ${jobLimit}${result.x402?.enabled ? `\n**x402 pay-per-use:** profile view ${result.x402.prices.profile_view}, job offer ${result.x402.prices.job_offer}` : ''}`,
+**Job offers:** ${jobLimit}${result.x402?.enabled ? `\n**x402 platform fees (pay-per-use):** profile view ${result.x402.prices.profile_view}, job offer ${result.x402.prices.job_offer} — these are platform access fees (USDC on Base), separate from payment you arrange with the human` : ''}`,
             },
           ],
         };
@@ -1865,7 +1933,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
         return {
           content: [{
             type: 'text',
-            text: `**Tick Verified!**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Tick:** #${result.tick?.tickNumber}\n**Amount:** $${result.tick?.amount} USDC\n**Total Paid:** $${result.totalPaid} USDC${result.nextTick ? `\n\n**Next payment due:** ${result.nextTick.expectedAt}` : ''}`,
+            text: `**Tick Verified!**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Tick:** #${result.tick?.tickNumber}\n**Amount:** $${result.tick?.amount}\n**Total Paid:** $${result.totalPaid}${result.nextTick ? `\n\n**Next payment due:** ${result.nextTick.expectedAt}` : ''}`,
           }],
         };
       }
@@ -1946,7 +2014,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
         return {
           content: [{
             type: 'text',
-            text: `**Stream Stopped**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Total Paid:** $${result.totalPaid || '0'} USDC\n\nThe stream has ended. You can now use \`leave_review\` to rate the human.`,
+            text: `**Stream Stopped**\n\n**Job ID:** ${result.id}\n**Status:** ${result.status}\n**Total Paid:** $${result.totalPaid || '0'}\n\nThe stream has ended. You can now use \`leave_review\` to rate the human.`,
           }],
         };
       }
@@ -2025,7 +2093,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
           body: JSON.stringify({
             title: args?.title,
             description: args?.description,
-            budgetUsdc: args?.budget_usdc,
+            budgetUsdc: args?.budget_usd,
             category: args?.category,
             requiredSkills: args?.required_skills || [],
             requiredEquipment: args?.required_equipment || [],
@@ -2106,7 +2174,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
           const agentInfo = agent ? `${agent.name}${agent.domainVerified ? ' ✅' : ''}` : 'Unknown';
           const repInfo = rep?.completedJobs > 0 ? ` | ${rep.completedJobs} jobs, ${rep.avgRating ? `${rep.avgRating.toFixed(1)}★` : 'no ratings'}` : '';
 
-          return `- **${l.title}** [$${l.budgetUsdc} USDC]${l.isPro ? ' 🏆 PRO' : ''}
+          return `- **${l.title}** [$${l.budgetUsdc}]${l.isPro ? ' 🏆 PRO' : ''}
   Agent: ${agentInfo}${repInfo}
   ${l.category ? `Category: ${l.category} | ` : ''}${l.workMode || 'Any'} | ${l._count?.applications || 0} applicant(s)
   ${l.requiredSkills?.length > 0 ? `Skills: ${l.requiredSkills.join(', ')}` : ''}
@@ -2139,7 +2207,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
 **Listing ID:** ${listing.id}
 **Status:** ${listing.status}
-**Budget:** $${listing.budgetUsdc} USDC
+**Budget:** $${listing.budgetUsdc}
 **Category:** ${listing.category || 'Not specified'}
 **Work Mode:** ${listing.workMode || 'Any'}
 **Expires:** ${listing.expiresAt}
