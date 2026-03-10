@@ -31,20 +31,24 @@ fail() {
     cat /tmp/pre-push-stage.log 2>/dev/null
   } > "$ERROR_LOG"
 
-  # Print to stderr so it appears AFTER git's generic message
-  {
-    echo ""
-    echo "═══════════════════════════════════════════════════════════"
-    echo "  PRE-PUSH FAILED at stage: $STAGE"
-    echo "═══════════════════════════════════════════════════════════"
-    echo ""
-    for line in "$@"; do
-      echo "  $line"
-    done
-    echo ""
-    echo "  Full error log: cat $ERROR_LOG"
-    echo "═══════════════════════════════════════════════════════════"
-  } >&2
+  # Build the error message
+  ERROR_MSG=""
+  ERROR_MSG="${ERROR_MSG}
+═══════════════════════════════════════════════════════════
+  PRE-PUSH FAILED at stage: $STAGE
+═══════════════════════════════════════════════════════════
+"
+  for line in "$@"; do
+    ERROR_MSG="${ERROR_MSG}  ${line}
+"
+  done
+  ERROR_MSG="${ERROR_MSG}
+  Full error log: cat $ERROR_LOG
+═══════════════════════════════════════════════════════════"
+
+  # Print to BOTH stdout and stderr so it's visible regardless of how git captures output
+  echo "$ERROR_MSG"
+  echo "$ERROR_MSG" >&2
 
   exit 1
 }
