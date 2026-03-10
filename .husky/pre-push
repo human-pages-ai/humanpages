@@ -116,7 +116,13 @@ fi
 CAN_RUN_FULL=1
 if ! (cd backend && npx tsc --version) >/dev/null 2>&1; then
   CAN_RUN_FULL=0
-  echo "  TypeScript compiler not available — running static checks only"
+elif ! command -v docker >/dev/null 2>&1 && ! pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
+  # No docker and no local postgres — can't run tests or e2e
+  CAN_RUN_FULL=0
+fi
+
+if [ "$CAN_RUN_FULL" = "0" ]; then
+  echo "  Full environment not available — running static checks only"
   MODE="static-only"
 fi
 
