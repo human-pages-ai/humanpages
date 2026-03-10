@@ -38,6 +38,7 @@ export default function ListingDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
   const applyFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -170,14 +171,14 @@ export default function ListingDetail() {
             className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-[#0A66C2] hover:bg-[#004182] shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/30 hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-            Apply with LinkedIn
+            Sign up free with LinkedIn
           </button>
           <button
             onClick={() => handleApplySignup('google')}
             className="w-full py-3 px-4 rounded-lg text-slate-700 font-semibold bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Apply with Google
+            Sign up free with Google
           </button>
           <p className="text-center text-xs text-gray-500">
             Already have an account?{' '}
@@ -321,6 +322,15 @@ export default function ListingDetail() {
         </div>
       </nav>
 
+      {/* Platform one-liner for cold traffic */}
+      {!user && (
+        <div className="bg-blue-50 border-b border-blue-100">
+          <div className="max-w-5xl mx-auto px-4 py-2 text-center text-sm text-blue-800">
+            Human Pages connects freelancers with paid gigs from verified companies
+          </div>
+        </div>
+      )}
+
       <main className="max-w-5xl mx-auto px-4 py-8 pb-32 lg:pb-8">
         {/* Back link */}
         <Link
@@ -372,14 +382,28 @@ export default function ListingDetail() {
                 )}
               </div>
 
-              {/* Description */}
+              {/* Description — truncated on mobile for cold traffic */}
               <div className="mb-6">
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
                   Description
                 </h2>
-                <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-                  {listing.description}
-                </p>
+                {listing.description && listing.description.length > 200 && !descExpanded ? (
+                  <div>
+                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                      {listing.description.substring(0, 200).trimEnd()}...
+                    </p>
+                    <button
+                      onClick={() => setDescExpanded(true)}
+                      className="text-sm text-blue-600 hover:text-blue-500 font-medium mt-1"
+                    >
+                      Read more
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {listing.description}
+                  </p>
+                )}
               </div>
 
               {/* Requirements section */}
@@ -628,13 +652,13 @@ export default function ListingDetail() {
               </div>
 
               <div className="flex-1 min-w-0">
-                {/* Not logged in — Apply button triggers OAuth */}
+                {/* Not logged in — Sign up button triggers OAuth */}
                 {!user && (
                   <button
                     onClick={() => handleApplySignup(inFBBrowser ? 'google' : 'linkedin')}
                     className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all text-center"
                   >
-                    Apply Now
+                    Sign Up Free to Apply
                   </button>
                 )}
 
