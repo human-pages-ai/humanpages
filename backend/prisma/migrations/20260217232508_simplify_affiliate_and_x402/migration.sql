@@ -27,20 +27,20 @@ ALTER TABLE "Affiliate" ALTER COLUMN "status" SET DEFAULT 'APPROVED';
 COMMIT;
 
 -- DropIndex
-DROP INDEX "Affiliate_code_idx";
+DROP INDEX IF EXISTS "Affiliate_code_idx";
 
 -- DropIndex
-DROP INDEX "Affiliate_code_key";
+DROP INDEX IF EXISTS "Affiliate_code_key";
 
 -- AlterTable
-ALTER TABLE "Affiliate" DROP COLUMN "approvedAt",
-DROP COLUMN "approvedBy",
-DROP COLUMN "audience",
-DROP COLUMN "code",
-DROP COLUMN "promotionMethod",
-DROP COLUMN "rejectedReason",
-DROP COLUMN "totalClicks",
-DROP COLUMN "website",
+ALTER TABLE "Affiliate" DROP COLUMN IF EXISTS "approvedAt",
+DROP COLUMN IF EXISTS "approvedBy",
+DROP COLUMN IF EXISTS "audience",
+DROP COLUMN IF EXISTS "code",
+DROP COLUMN IF EXISTS "promotionMethod",
+DROP COLUMN IF EXISTS "rejectedReason",
+DROP COLUMN IF EXISTS "totalClicks",
+DROP COLUMN IF EXISTS "website",
 ALTER COLUMN "status" SET DEFAULT 'APPROVED';
 
 -- AlterTable

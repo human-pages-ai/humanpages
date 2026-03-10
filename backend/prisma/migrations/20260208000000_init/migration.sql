@@ -4,6 +4,9 @@ CREATE TYPE "RateType" AS ENUM ('HOURLY', 'FLAT_TASK', 'NEGOTIABLE');
 -- CreateEnum
 CREATE TYPE "JobStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'PAID', 'COMPLETED', 'CANCELLED', 'DISPUTED');
 
+-- CreateEnum
+CREATE TYPE "PaymentPreference" AS ENUM ('ESCROW', 'UPFRONT', 'BOTH');
+
 -- CreateTable
 CREATE TABLE "Human" (
     "id" TEXT NOT NULL,
@@ -42,6 +45,11 @@ CREATE TABLE "Human" (
     "instagramUrl" TEXT,
     "youtubeUrl" TEXT,
     "websiteUrl" TEXT,
+    "emailNotifications" BOOLEAN NOT NULL DEFAULT true,
+    "emailVerificationToken" TEXT,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "paymentPreference" "PaymentPreference" NOT NULL DEFAULT 'BOTH',
+    "termsAcceptedAt" TIMESTAMP(3),
 
     CONSTRAINT "Human_pkey" PRIMARY KEY ("id")
 );
@@ -159,6 +167,9 @@ CREATE INDEX "Human_lastActiveAt_idx" ON "Human"("lastActiveAt");
 CREATE INDEX "Human_isAvailable_lastActiveAt_idx" ON "Human"("isAvailable", "lastActiveAt");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Human_emailVerificationToken_key" ON "Human"("emailVerificationToken");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Job_paymentTxHash_key" ON "Job"("paymentTxHash");
 
 -- CreateIndex
@@ -217,4 +228,3 @@ ALTER TABLE "Wallet" ADD CONSTRAINT "Wallet_humanId_fkey" FOREIGN KEY ("humanId"
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_humanId_fkey" FOREIGN KEY ("humanId") REFERENCES "Human"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
