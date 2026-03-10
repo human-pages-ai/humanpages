@@ -326,6 +326,7 @@ model Human {
   fiatPaymentMethods FiatPaymentMethod[]
   educations    Education[]
   certificates  Certificate[]
+  pushSubscriptions PushSubscription[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -536,8 +537,8 @@ model PendingNotification {
 
 model NotificationOutbox {
   id        String   @id @default(cuid())
-  channel   String   // "email" | "telegram"
-  recipient String   // email address or telegram chat ID
+  channel   String   // "email" | "telegram" | "webhook"
+  recipient String   // email address, telegram chat ID, or webhook URL
   subject   String?  // email subject (null for telegram)
   payload   Json     // full params needed to re-send
   status    String   @default("PENDING") // PENDING | SENT | FAILED
@@ -1638,4 +1639,47 @@ model MonitoredError {
   @@index([status])
   @@index([lastSeenAt])
   @@index([fingerprint])
+}
+
+// Web Push notification subscriptions
+// SECURITY NOTE: p256dh and auth are cryptographic material. If the DB is compromised,
+// an attacker could send spoofed push notifications (phishing) to users' devices.
+// These fields should be encrypted at rest via database-level encryption (e.g., PostgreSQL TDE)
+// or application-level encryption if available.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  humanId   String
+  human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  endpoint  String   @db.Text // Browser push endpoints (Google/Apple/Mozilla) can be 500+ chars
+  p256dh    String   // ECDH public key for payload encryption
+  auth      String   // Auth secret for payload encryption
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@unique([humanId, endpoint])
+}
+
+// Persistent queue for push notification delivery.
+// Uses a DB-based outbox pattern with polling worker (no Redis/BullMQ dependency).
+model PushNotificationJob {
+  id        String   @id @default(cuid())
+  humanId   String
+  title     String
+  body      String
+  url       String
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  attempts  Int      @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+
+  @@index([status])
+}
+
+// Cached geocoding results to avoid repeated Nominatim calls
+model GeoCache {
+  query       String   @id          // Normalized search text (lowercased, trimmed)
+  displayName String                // Resolved name (e.g., "Richmond, Virginia, USA")
+  lat         Float
+  lng         Float
+  createdAt   DateTime @default(now())
 }

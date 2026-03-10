@@ -10,7 +10,8 @@ import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
 import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
 import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib/x402.js';
-import { calculateDistance } from '../lib/geo.js';
+import { calculateDistance, boundingBox, DEFAULT_SEARCH_RADIUS_KM } from '../lib/geo.js';
+import { geocodeLocation } from '../lib/geocode.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { createOpenAIClient } from '../lib/openai-keys.js';
@@ -395,6 +396,36 @@ router.get('/', browseRateLimiter, async (req, res) => {
       }
     }
 
+    // Location: geocode text → coordinates if lat/lng not provided
+    let centerLat: number | undefined;
+    let centerLng: number | undefined;
+    let searchRadiusKm: number | undefined;
+    let resolvedLocation: string | undefined;
+
+    if (req.query.lat && req.query.lng) {
+      centerLat = parseFloat(req.query.lat as string);
+      centerLng = parseFloat(req.query.lng as string);
+      searchRadiusKm = req.query.radius ? parseFloat(req.query.radius as string) : DEFAULT_SEARCH_RADIUS_KM;
+    } else if (req.query.location) {
+      const geo = await geocodeLocation(req.query.location as string);
+      if (geo) {
+        centerLat = geo.lat;
+        centerLng = geo.lng;
+        searchRadiusKm = req.query.radius ? parseFloat(req.query.radius as string) : DEFAULT_SEARCH_RADIUS_KM;
+        resolvedLocation = geo.displayName;
+      }
+    }
+
+    // Apply bounding-box pre-filter when we have coordinates
+    if (centerLat != null && centerLng != null && searchRadiusKm &&
+        !isNaN(centerLat) && isFinite(centerLat) &&
+        !isNaN(centerLng) && isFinite(centerLng) &&
+        !isNaN(searchRadiusKm) && isFinite(searchRadiusKm) && searchRadiusKm > 0) {
+      const bbox = boundingBox(centerLat, centerLng, searchRadiusKm);
+      where.locationLat = { gte: bbox.minLat, lte: bbox.maxLat };
+      where.locationLng = { gte: bbox.minLng, lte: bbox.maxLng };
+    }
+
     // Fetch listings
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
@@ -423,20 +454,28 @@ router.get('/', browseRateLimiter, async (req, res) => {
       prisma.listing.count({ where }),
     ]);
 
-    // Location filter (post-query filtering for distance calculation)
+    // Precise Haversine distance filter via raw SQL
     let filteredListings = listings;
-    if (req.query.lat && req.query.lng && req.query.radius) {
-      const lat = parseFloat(req.query.lat as string);
-      const lng = parseFloat(req.query.lng as string);
-      const radius = parseFloat(req.query.radius as string);
-
-      if (!isNaN(lat) && !isNaN(lng) && !isNaN(radius)) {
-        filteredListings = listings.filter((listing) => {
-          if (!listing.locationLat || !listing.locationLng) return false;
-          const distance = calculateDistance(lat, lng, listing.locationLat, listing.locationLng);
-          return distance <= radius;
-        });
-      }
+    if (centerLat != null && centerLng != null && searchRadiusKm &&
+        !isNaN(centerLat) && isFinite(centerLat) &&
+        !isNaN(centerLng) && isFinite(centerLng) &&
+        !isNaN(searchRadiusKm) && isFinite(searchRadiusKm) && searchRadiusKm > 0 &&
+        listings.length > 0) {
+      const candidateIds = listings.map(l => l.id);
+      const nearbyIds = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "Listing"
+        WHERE id = ANY(${candidateIds}::text[])
+        AND "locationLat" IS NOT NULL AND "locationLng" IS NOT NULL
+        AND (
+          6371 * acos(
+            LEAST(1.0, cos(radians(${centerLat})) * cos(radians("locationLat"))
+            * cos(radians("locationLng") - radians(${centerLng}))
+            + sin(radians(${centerLat})) * sin(radians("locationLat")))
+          )
+        ) <= ${searchRadiusKm}
+      `;
+      const nearbyIdSet = new Set(nearbyIds.map(r => r.id));
+      filteredListings = listings.filter(l => nearbyIdSet.has(l.id));
     }
 
     // Get agent reputation stats for each listing
@@ -507,9 +546,13 @@ router.get('/', browseRateLimiter, async (req, res) => {
       pagination: {
         page,
         limit,
-        total: req.query.lat ? filteredListings.length : total,
-        totalPages: Math.ceil((req.query.lat ? filteredListings.length : total) / limit),
+        total: centerLat != null ? filteredListings.length : total,
+        totalPages: Math.ceil((centerLat != null ? filteredListings.length : total) / limit),
       },
+      ...(resolvedLocation ? { resolvedLocation } : {}),
+      ...(centerLat != null && centerLng != null && searchRadiusKm ? {
+        searchRadius: { lat: centerLat, lng: centerLng, radiusKm: searchRadiusKm },
+      } : {}),
     });
   } catch (error) {
     logger.error({ err: error }, 'List listings error');

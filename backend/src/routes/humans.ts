@@ -9,7 +9,8 @@ import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
 import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
 import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib/x402.js';
-import { calculateDistance } from '../lib/geo.js';
+import { calculateDistance, boundingBox, DEFAULT_SEARCH_RADIUS_KM } from '../lib/geo.js';
+import { geocodeLocation } from '../lib/geocode.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
@@ -19,6 +20,52 @@ import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 import { queueModeration } from '../lib/moderation.js';
 
 const router = Router();
+
+// Hebrew → English skill synonyms for search expansion
+const SKILL_SYNONYMS: Record<string, string> = {
+  'ניקיון בתים': 'house cleaning',
+  'ניקיון יסודי': 'deep cleaning',
+  'ניקיון משרדים': 'office cleaning',
+  'ניקיון חלונות': 'window cleaning',
+  'ניקיון שטיחים': 'carpet cleaning',
+  'ניקיון לאחר שיפוץ': 'post-construction cleaning',
+  'ניקיון כניסה/יציאה': 'move-in move-out cleaning',
+  'ניקיון פסח': 'passover cleaning',
+  'ניקיון': 'cleaning',
+};
+
+// English synonym expansion: map common alternative terms to canonical skill names
+const ENGLISH_SKILL_SYNONYMS: Record<string, string> = {
+  'cleaner': 'cleaning',
+  'cleaners': 'cleaning',
+  'housekeeper': 'house cleaning',
+  'housekeepers': 'house cleaning',
+  'housekeeping': 'house cleaning',
+  'maid': 'house cleaning',
+  'maids': 'house cleaning',
+  'janitor': 'office cleaning',
+  'janitors': 'office cleaning',
+  'janitorial': 'office cleaning',
+};
+
+/** Expand skill synonyms (Hebrew → English and English → canonical) for search */
+function expandSkillSynonyms(input: string): string {
+  let expanded = input;
+  // Hebrew → English
+  for (const [hebrew, english] of Object.entries(SKILL_SYNONYMS)) {
+    if (expanded.includes(hebrew)) {
+      expanded = expanded.replace(hebrew, english);
+    }
+  }
+  // English alternative terms → canonical skill names
+  const lower = expanded.toLowerCase();
+  for (const [alt, canonical] of Object.entries(ENGLISH_SKILL_SYNONYMS)) {
+    if (lower.includes(alt)) {
+      expanded = expanded.replace(new RegExp(alt, 'gi'), canonical);
+    }
+  }
+  return expanded;
+}
 
 // Tier-based rate limits for profile views (per day)
 const TIER_PROFILE_LIMITS: Record<string, number> = {
@@ -854,9 +901,10 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.humanityVerified = true;
     }
 
-    // Skill search: tokenize for relevance scoring (applied after fetch)
-    const skillTokens = skill
-      ? (skill as string).toLowerCase().split(/[\s,\-_]+/).filter(t => t.length > 2)
+    // Skill search: expand Hebrew synonyms, then tokenize for relevance scoring
+    const skillInput = skill ? expandSkillSynonyms(skill as string) : '';
+    const skillTokens = skillInput
+      ? skillInput.toLowerCase().split(/[\s,\-_]+/).filter(t => t.length > 2)
       : [];
     const isSkillSearch = skillTokens.length > 0;
 
@@ -870,12 +918,40 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.languages = { has: language as string };
     }
 
-    // Filter by location text (search both city and neighborhood)
-    if (location) {
-      where.OR = [
-        { location: { contains: location as string, mode: 'insensitive' } },
-        { neighborhood: { contains: location as string, mode: 'insensitive' } },
-      ];
+    // Location: geocode text → coordinates if lat/lng not provided explicitly
+    let centerLat: number | undefined;
+    let centerLng: number | undefined;
+    let radiusKm: number | undefined;
+    let resolvedLocation: string | undefined;
+
+    if (lat && lng) {
+      centerLat = parseFloat(lat as string);
+      centerLng = parseFloat(lng as string);
+      radiusKm = radius ? parseFloat(radius as string) : DEFAULT_SEARCH_RADIUS_KM;
+    } else if (location) {
+      const geo = await geocodeLocation(location as string);
+      if (geo) {
+        centerLat = geo.lat;
+        centerLng = geo.lng;
+        radiusKm = radius ? parseFloat(radius as string) : DEFAULT_SEARCH_RADIUS_KM;
+        resolvedLocation = geo.displayName;
+      } else {
+        // Geocode failed — fall back to text search
+        where.OR = [
+          { location: { contains: location as string, mode: 'insensitive' } },
+          { neighborhood: { contains: location as string, mode: 'insensitive' } },
+        ];
+      }
+    }
+
+    // Apply bounding-box pre-filter when we have coordinates
+    if (centerLat != null && centerLng != null && radiusKm &&
+        !isNaN(centerLat) && isFinite(centerLat) &&
+        !isNaN(centerLng) && isFinite(centerLng) &&
+        !isNaN(radiusKm) && isFinite(radiusKm) && radiusKm > 0) {
+      const bbox = boundingBox(centerLat, centerLng, radiusKm);
+      where.locationLat = { gte: bbox.minLat, lte: bbox.maxLat };
+      where.locationLng = { gte: bbox.minLng, lte: bbox.maxLng };
     }
 
     // Filter by availability
@@ -992,21 +1068,27 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         .map(s => s.human);
     }
 
-    // Apply radius filter if lat/lng provided
-    if (lat && lng && radius) {
-      const centerLat = parseFloat(lat as string);
-      const centerLng = parseFloat(lng as string);
-      const radiusKm = parseFloat(radius as string);
-
-      if (!isNaN(centerLat) && isFinite(centerLat) &&
-          !isNaN(centerLng) && isFinite(centerLng) &&
-          !isNaN(radiusKm) && isFinite(radiusKm) && radiusKm > 0) {
-        humans = humans.filter((h) => {
-          if (!h.locationLat || !h.locationLng) return false;
-          const dist = calculateDistance(centerLat, centerLng, h.locationLat, h.locationLng);
-          return dist <= radiusKm;
-        });
-      }
+    // Precise Haversine distance filter via raw SQL (bounding box was a pre-filter)
+    if (centerLat != null && centerLng != null && radiusKm &&
+        !isNaN(centerLat) && isFinite(centerLat) &&
+        !isNaN(centerLng) && isFinite(centerLng) &&
+        !isNaN(radiusKm) && isFinite(radiusKm) && radiusKm > 0 &&
+        humans.length > 0) {
+      const candidateIds = humans.map(h => h.id);
+      const nearbyIds = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "Human"
+        WHERE id = ANY(${candidateIds}::text[])
+        AND "locationLat" IS NOT NULL AND "locationLng" IS NOT NULL
+        AND (
+          6371 * acos(
+            LEAST(1.0, cos(radians(${centerLat})) * cos(radians("locationLat"))
+            * cos(radians("locationLng") - radians(${centerLng}))
+            + sin(radians(${centerLat})) * sin(radians("locationLat")))
+          )
+        ) <= ${radiusKm}
+      `;
+      const nearbyIdSet = new Set(nearbyIds.map(r => r.id));
+      humans = humans.filter(h => nearbyIdSet.has(h.id));
     }
 
     // Inject catch-all concierge profiles when organic results are sparse
@@ -1118,7 +1200,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       resultCount: humansWithReputation.length,
     }, req);
 
-    res.json(humansWithReputation);
+    res.json({
+      results: humansWithReputation,
+      ...(resolvedLocation ? { resolvedLocation } : {}),
+      ...(centerLat != null && centerLng != null && radiusKm ? {
+        searchRadius: { lat: centerLat, lng: centerLng, radiusKm },
+      } : {}),
+    });
   } catch (error) {
     logger.error({ err: error }, 'Search error');
     res.status(500).json({ error: 'Internal server error' });

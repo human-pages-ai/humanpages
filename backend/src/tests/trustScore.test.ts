@@ -479,8 +479,8 @@ describe('Trust Score — Integration', () => {
         .get('/api/humans/search?skill=javascript');
 
       expect(response.status).toBe(200);
-      if (response.body.length > 0) {
-        const found = response.body.find((h: any) => h.id === user.id);
+      if (response.body.results.length > 0) {
+        const found = response.body.results.find((h: any) => h.id === user.id);
         if (found) {
           expect(found).not.toHaveProperty('trustScore');
         }

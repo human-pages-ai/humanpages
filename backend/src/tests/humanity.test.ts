@@ -268,9 +268,9 @@ describe('Humanity Verification', () => {
 
       const res = await request(app).get('/api/humans/search');
       expect(res.status).toBe(200);
-      expect(res.body.length).toBeGreaterThan(0);
-      expect(res.body[0].humanityVerified).toBe(true);
-      expect(res.body[0].humanityScore).toBe(32);
+      expect(res.body.results.length).toBeGreaterThan(0);
+      expect(res.body.results[0].humanityVerified).toBe(true);
+      expect(res.body.results[0].humanityScore).toBe(32);
     });
   });
 
@@ -297,8 +297,8 @@ describe('Humanity Verification', () => {
 
       const res = await request(app).get('/api/humans/search?verified=humanity');
       expect(res.status).toBe(200);
-      expect(res.body.length).toBe(1);
-      expect(res.body[0].humanityVerified).toBe(true);
+      expect(res.body.results.length).toBe(1);
+      expect(res.body.results[0].humanityVerified).toBe(true);
     });
 
     it('should return all humans when verified filter is not set', async () => {
@@ -321,7 +321,7 @@ describe('Humanity Verification', () => {
 
       const res = await request(app).get('/api/humans/search');
       expect(res.status).toBe(200);
-      expect(res.body.length).toBe(2);
+      expect(res.body.results.length).toBe(2);
     });
   });
 });

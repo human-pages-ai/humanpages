@@ -62,62 +62,62 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(3);
+      expect(response.body.results).toHaveLength(3);
     });
 
     it('should filter by skill', async () => {
       const response = await request(app).get('/api/humans/search?skill=react');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2); // Alice and Carol
-      expect(response.body.map((h: any) => h.id).sort()).toEqual([alice.id, carol.id].sort());
+      expect(response.body.results).toHaveLength(2); // Alice and Carol
+      expect(response.body.results.map((h: any) => h.id).sort()).toEqual([alice.id, carol.id].sort());
     });
 
     it('should filter by skill - python', async () => {
       const response = await request(app).get('/api/humans/search?skill=python');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(bob.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(bob.id);
     });
 
     it('should filter by location', async () => {
       const response = await request(app).get('/api/humans/search?location=New York');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2); // Bob and Carol
-      expect(response.body.map((h: any) => h.id).sort()).toEqual([bob.id, carol.id].sort());
+      expect(response.body.results).toHaveLength(2); // Bob and Carol
+      expect(response.body.results.map((h: any) => h.id).sort()).toEqual([bob.id, carol.id].sort());
     });
 
     it('should filter by location - case insensitive', async () => {
       const response = await request(app).get('/api/humans/search?location=new york');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2);
+      expect(response.body.results).toHaveLength(2);
     });
 
     it('should filter by availability', async () => {
       const response = await request(app).get('/api/humans/search?available=true');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2); // Alice and Bob
-      expect(response.body.map((h: any) => h.id).sort()).toEqual([alice.id, bob.id].sort());
+      expect(response.body.results).toHaveLength(2); // Alice and Bob
+      expect(response.body.results.map((h: any) => h.id).sort()).toEqual([alice.id, bob.id].sort());
     });
 
     it('should combine skill and location filters', async () => {
       const response = await request(app).get('/api/humans/search?skill=react&location=New York');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(carol.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(carol.id);
     });
 
     it('should combine skill and availability filters', async () => {
       const response = await request(app).get('/api/humans/search?skill=react&available=true');
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(alice.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
     });
 
     it('should combine all filters', async () => {
@@ -126,15 +126,15 @@ describe('Search API', () => {
       );
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(alice.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
     });
 
     it('should return empty array when no matches', async () => {
       const response = await request(app).get('/api/humans/search?skill=rust');
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual([]);
+      expect(response.body.results).toEqual([]);
     });
 
     it('should NOT include wallets in public search results (contact info stripped)', async () => {
@@ -147,7 +147,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       // Wallets should be stripped from public search results
-      expect(response.body[0]).not.toHaveProperty('wallets');
+      expect(response.body.results[0]).not.toHaveProperty('wallets');
     });
 
     it('should include only active services in results', async () => {
@@ -164,15 +164,15 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search?skill=react&available=true');
 
       expect(response.status).toBe(200);
-      expect(response.body[0].services).toHaveLength(1); // Only the active service
-      expect(response.body[0].services[0].title).toBe('Web Development');
+      expect(response.body.results[0].services).toHaveLength(1); // Only the active service
+      expect(response.body.results[0].services[0].title).toBe('Web Development');
     });
 
     it('should not expose passwordHash', async () => {
       const response = await request(app).get('/api/humans/search');
 
       expect(response.status).toBe(200);
-      response.body.forEach((human: any) => {
+      response.body.results.forEach((human: any) => {
         expect(human).not.toHaveProperty('passwordHash');
       });
     });
@@ -181,7 +181,7 @@ describe('Search API', () => {
       const response = await request(app).get('/api/humans/search');
 
       expect(response.status).toBe(200);
-      response.body.forEach((human: any) => {
+      response.body.results.forEach((human: any) => {
         expect(human).toHaveProperty('name');
       });
     });
@@ -196,7 +196,7 @@ describe('Search API', () => {
 
       expect(response.status).toBe(200);
       // contactEmail should NOT be present — public search strips contact info
-      const aliceResult = response.body.find((h: any) => h.id === alice.id);
+      const aliceResult = response.body.results.find((h: any) => h.id === alice.id);
       expect(aliceResult).not.toHaveProperty('contactEmail');
     });
   });
@@ -209,8 +209,8 @@ describe('Search API', () => {
 
       const response = await request(app).get('/api/humans/search?equipment=camera');
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(alice.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
     });
 
     it('should filter by language', async () => {
@@ -220,8 +220,8 @@ describe('Search API', () => {
 
       const response = await request(app).get('/api/humans/search?language=spanish');
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(bob.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(bob.id);
     });
 
     it('should filter by minRate', async () => {
@@ -234,8 +234,8 @@ describe('Search API', () => {
 
       const response = await request(app).get('/api/humans/search?minRate=75');
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(bob.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(bob.id);
     });
 
     it('should filter by maxRate', async () => {
@@ -250,7 +250,7 @@ describe('Search API', () => {
       expect(response.status).toBe(200);
       // Should include Alice (rate 50 <= 75) and Carol (null rate = negotiable)
       // Bob (rate 100) is excluded because 100 > 75
-      const ids = response.body.map((h: any) => h.id);
+      const ids = response.body.results.map((h: any) => h.id);
       expect(ids).toContain(alice.id);
       expect(ids).not.toContain(bob.id);
     });
@@ -258,14 +258,14 @@ describe('Search API', () => {
     it('should respect limit parameter', async () => {
       const response = await request(app).get('/api/humans/search?limit=1');
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
+      expect(response.body.results).toHaveLength(1);
     });
 
     it('should respect offset parameter', async () => {
       const allResponse = await request(app).get('/api/humans/search');
       const offsetResponse = await request(app).get('/api/humans/search?offset=1');
       expect(offsetResponse.status).toBe(200);
-      expect(offsetResponse.body).toHaveLength(allResponse.body.length - 1);
+      expect(offsetResponse.body.results).toHaveLength(allResponse.body.results.length - 1);
     });
 
     it('should filter by distance (lat/lng/radius)', async () => {
@@ -283,8 +283,8 @@ describe('Search API', () => {
         '/api/humans/search?lat=37.7749&lng=-122.4194&radius=100'
       );
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(alice.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
     });
 
     it('should combine equipment + language + rate range filters', async () => {
@@ -299,8 +299,8 @@ describe('Search API', () => {
         '/api/humans/search?equipment=camera&language=english&minRate=25&maxRate=75'
       );
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].id).toBe(alice.id);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
     });
   });
 });
