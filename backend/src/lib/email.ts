@@ -1953,20 +1953,17 @@ export async function sendFeaturedInviteEmail(data: FeaturedInviteEmailData): Pr
 
   const textContent = `Hi ${data.name},
 
-Your profile on Human Pages is looking great! We'd love to feature you on our homepage to showcase the community to new visitors and AI agents.
+We're putting together a set of featured profiles for the Human Pages homepage and yours stood out. Would you be up for being included?
 
-Featured profiles get significantly more visibility — both from people browsing the site and from AI agents looking to hire. Being on the homepage is one of the best ways to attract more job offers.
+What gets shown: your profile photo, name, skills, and location — the same info that's already public on your profile. You can turn it off any time from your privacy settings.
 
-What gets shown: your profile photo, name, skills, and location — all info that's already public on your profile.
-
-To get featured, just click the link below and toggle it on:
+If you'd like to opt in, you can do that here:
 ${dashboardUrl}
 
-You can opt out at any time from your privacy settings.
+Let me know if you have any questions — just reply to this email.
 
-Thanks for being part of the community!
-
-— The Human Pages Team
+Thanks,
+Human Pages
 
 Unsubscribe: ${unsubscribeUrl}`;
 
@@ -1974,40 +1971,24 @@ Unsubscribe: ${unsubscribeUrl}`;
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8" /></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:system-ui,-apple-system,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
-    <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:32px;">
-      <h1 style="font-size:20px;color:#1e293b;margin:0 0 16px;">We'd love to feature you!</h1>
-      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 12px;">
-        Hi ${data.name},
-      </p>
-      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 12px;">
-        Your profile on Human Pages is looking great! We'd love to feature you on our
-        <strong>homepage</strong> to showcase the community to new visitors and AI agents.
-      </p>
-      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 12px;">
-        Featured profiles get significantly more visibility — both from people browsing the site and from AI agents looking to hire.
-        <strong>Being on the homepage is one of the best ways to attract more job offers.</strong>
-      </p>
-      <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 20px;">
-        <strong>What gets shown:</strong> your profile photo, name, skills, and location — all info that's already public on your profile. You can opt out at any time.
-      </p>
-      <div style="text-align:center;margin:24px 0;">
-        <a href="${dashboardUrl}" style="display:inline-block;padding:12px 28px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">
-          Get Featured
-        </a>
-      </div>
-    </div>
-    <p style="color:#94a3b8;font-size:11px;text-align:center;margin:20px 0 0;">
-      <a href="${unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a>
+<body style="margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif;color:#1a1a1a;">
+  <div style="max-width:560px;margin:0 auto;padding:20px;">
+    <p>Hi ${data.name},</p>
+    <p>We're putting together a set of featured profiles for the Human Pages homepage and yours stood out. Would you be up for being included?</p>
+    <p>What gets shown: your profile photo, name, skills, and location — the same info that's already public on your profile. You can turn it off any time from your privacy settings.</p>
+    <p>If you'd like to opt in, you can do that here:<br />
+      <a href="${dashboardUrl}">${dashboardUrl}</a>
     </p>
+    <p>Let me know if you have any questions — just reply to this email.</p>
+    <p>Thanks,<br />Human Pages</p>
+    <p style="color:#999;font-size:12px;margin-top:24px;"><a href="${unsubscribeUrl}" style="color:#999;">Unsubscribe</a></p>
   </div>
 </body>
 </html>`;
 
   return sendEmailWithOutbox({
     to: data.to,
-    subject: 'We\'d love to feature you on our homepage!',
+    subject: `${data.name}, your profile is eligible for the homepage`,
     text: textContent,
     html: htmlContent,
     unsubscribeUrl,
