@@ -174,6 +174,7 @@ export default function Onboarding() {
   const [oauthProvider, setOauthProvider] = useState<string | null>(null);
   const [photoImporting, setPhotoImporting] = useState(false);
   const [photoDismissed, setPhotoDismissed] = useState(false);
+  const [photoAccepted, setPhotoAccepted] = useState(false);
 
   useEffect(() => {
     // Check for OAuth photo URL stored during signup
@@ -249,6 +250,7 @@ export default function Onboarding() {
         ...(neighborhood ? { neighborhood } : {}),
         ...(locationLat != null && locationLng != null ? { locationLat, locationLng } : {}),
         skills,
+        ...(photoAccepted ? { featuredOnHomepage: true } : {}),
       });
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
@@ -363,6 +365,7 @@ export default function Onboarding() {
                         setPhotoImporting(true);
                         try {
                           await api.importOAuthPhoto((oauthProvider || 'google') as 'google' | 'linkedin');
+                          setPhotoAccepted(true);
                           setPhotoDismissed(true);
                         } catch (err: any) {
                           toast.error(err.message || t('onboarding.photoImportFailed', 'Failed to import photo'));
