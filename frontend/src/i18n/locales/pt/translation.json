@@ -26,7 +26,9 @@
     "error": "Algo deu errado",
     "success": "Sucesso!",
     "free": "Sempre grátis",
-    "noFees": "Sem taxas sobre seus ganhos"
+    "noFees": "Sem taxas sobre seus ganhos",
+    "year": "ano",
+    "years": "anos"
   },
   "nav": {
     "home": "Início",
@@ -328,6 +330,7 @@
       "skillsSeparator": "separadas por vírgulas",
       "equipment": "Equipamento",
       "languages": "Idiomas",
+      "yearsOfExperience": "Anos de experiência",
       "contactEmail": "E-mail de Contato",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@usuario",
@@ -526,6 +529,7 @@
     "available": "Disponível para trabalhar",
     "unavailable": "Não disponível",
     "noSkills": "Nenhuma habilidade listada",
+    "ofExperience": "de experiência",
     "noServices": "Nenhum serviço listado",
     "hireMe": "Me Contrate",
     "contactInfo": "Informações de Contato",

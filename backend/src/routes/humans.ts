@@ -38,6 +38,7 @@ const publicHumanSelect = {
   skills: true,
   equipment: true,
   languages: true,
+  yearsOfExperience: true,
   isAvailable: true,
   minRateUsdc: true,
   rateCurrency: true,
@@ -181,6 +182,7 @@ const updateProfileSchema = z.object({
   skills: z.array(z.string().max(100)).max(50).optional(),
   equipment: z.array(z.string().max(100)).max(50).nullable().optional().transform(v => v ?? undefined),
   languages: z.array(z.string().max(100)).max(30).nullable().optional().transform(v => v ?? undefined),
+  yearsOfExperience: z.number().int().min(0).max(70).optional().nullable(),
   preferredLanguage: z.enum(['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th']).optional(),
   isAvailable: z.boolean().optional(),
 
@@ -884,6 +886,15 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     // Filter by work mode
     if (workMode) {
       where.workMode = workMode as string;
+    }
+
+    // Filter by minimum years of experience
+    const { minExperience } = req.query;
+    if (minExperience) {
+      const minExpVal = parseInt(minExperience as string);
+      if (!isNaN(minExpVal) && isFinite(minExpVal) && minExpVal > 0) {
+        where.yearsOfExperience = { gte: minExpVal };
+      }
     }
 
     // Filter by payment type (has overlap with requested types)

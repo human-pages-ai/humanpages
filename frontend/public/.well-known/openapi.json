@@ -95,6 +95,12 @@
             "in": "query",
             "description": "Only return humanity-verified humans",
             "schema": { "type": "boolean" }
+          },
+          {
+            "name": "minExperience",
+            "in": "query",
+            "description": "Minimum years of professional experience",
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {
@@ -795,6 +801,7 @@
           "skills": { "type": "array", "items": { "type": "string" } },
           "equipment": { "type": "array", "items": { "type": "string" } },
           "languages": { "type": "array", "items": { "type": "string" } },
+          "yearsOfExperience": { "type": "integer", "description": "Years of professional experience" },
           "minRateUsdc": { "type": "number", "description": "Minimum rate in USD" },
           "rateType": { "type": "string", "enum": ["HOURLY", "FLAT_TASK", "NEGOTIABLE"] },
           "workMode": { "type": "string", "enum": ["REMOTE", "ONSITE", "HYBRID"] },

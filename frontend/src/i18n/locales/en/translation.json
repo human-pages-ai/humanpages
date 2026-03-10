@@ -28,7 +28,9 @@
     "free": "Always free",
     "noFees": "No fees on earnings",
     "backHome": "Back to home",
-    "done": "Done"
+    "done": "Done",
+    "year": "year",
+    "years": "years"
   },
   "nav": {
     "home": "Home",
@@ -372,6 +374,7 @@
       "skillsSeparator": "comma-separated",
       "equipment": "Equipment",
       "languages": "Languages",
+      "yearsOfExperience": "Years of Experience",
       "contactEmail": "Contact Email",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
@@ -617,6 +620,7 @@
     "available": "Available for work",
     "unavailable": "Not available",
     "noSkills": "No skills listed",
+    "ofExperience": "of experience",
     "noServices": "No services listed",
     "hireMe": "Hire Me",
     "contactInfo": "Contact Info",

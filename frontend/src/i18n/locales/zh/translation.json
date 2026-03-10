@@ -26,7 +26,9 @@
     "success": "成功！",
     "free": "永久免费",
     "noFees": "收入零扣费",
-    "backHome": "返回首页"
+    "backHome": "返回首页",
+    "year": "年",
+    "years": "年"
   },
   "nav": {
     "home": "首页",
@@ -405,6 +407,7 @@
       "skillsSeparator": "用逗号分隔",
       "equipment": "设备",
       "languages": "语言",
+      "yearsOfExperience": "工作年限",
       "contactEmail": "联系邮箱",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@用户名",
@@ -579,6 +582,7 @@
     "available": "可接受工作",
     "unavailable": "暂不接单",
     "noSkills": "未列出技能",
+    "ofExperience": "经验",
     "noServices": "未列出服务",
     "hireMe": "雇佣我",
     "contactInfo": "联系方式",

@@ -26,7 +26,9 @@
     "success": "सफल!",
     "free": "हमेशा मुफ्त",
     "noFees": "कमाई पर कोई शुल्क नहीं",
-    "backHome": "होम पर वापस जाएं"
+    "backHome": "होम पर वापस जाएं",
+    "year": "वर्ष",
+    "years": "वर्ष"
   },
   "nav": {
     "home": "होम",
@@ -404,6 +406,7 @@
       "skillsSeparator": "कॉमा से अलग करें",
       "equipment": "उपकरण",
       "languages": "भाषाएं",
+      "yearsOfExperience": "अनुभव के वर्ष",
       "contactEmail": "कॉन्टैक्ट ईमेल",
       "telegramHandle": "टेलीग्राम",
       "telegramPlaceholder": "@username",
@@ -573,6 +576,7 @@
     "available": "काम के लिए उपलब्ध",
     "unavailable": "उपलब्ध नहीं",
     "noSkills": "कोई स्किल्स लिस्ट नहीं",
+    "ofExperience": "का अनुभव",
     "noServices": "कोई सेवाएं लिस्ट नहीं",
     "hireMe": "मुझे हायर करें",
     "contactInfo": "कॉन्टैक्ट इन्फो",

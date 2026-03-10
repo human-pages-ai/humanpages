@@ -26,7 +26,9 @@
     "success": "Thành công!",
     "free": "Luôn miễn phí",
     "noFees": "Không phí trên thu nhập",
-    "backHome": "Về trang chủ"
+    "backHome": "Về trang chủ",
+    "year": "năm",
+    "years": "năm"
   },
   "nav": {
     "home": "Trang chủ",
@@ -370,6 +372,7 @@
       "skillsSeparator": "phân cách bằng dấu phẩy",
       "equipment": "Thiết bị",
       "languages": "Ngôn ngữ",
+      "yearsOfExperience": "Số năm kinh nghiệm",
       "contactEmail": "Email liên hệ",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
@@ -574,6 +577,7 @@
     "available": "Sẵn sàng làm việc",
     "unavailable": "Không có sẵn",
     "noSkills": "Chưa liệt kê kỹ năng",
+    "ofExperience": "kinh nghiệm",
     "noServices": "Chưa liệt kê dịch vụ",
     "hireMe": "Thuê tôi",
     "contactInfo": "Thông tin liên hệ",

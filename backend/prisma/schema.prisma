@@ -173,6 +173,7 @@ model Human {
   skills        String[] @default([]) // Tags for search
   equipment     String[] @default([]) // Hardware (car, drone, camera, etc.)
   languages     String[] @default([]) // ISO codes (en, es, zh, etc.)
+  yearsOfExperience Int?   // Total professional experience in years
   preferredLanguage String @default("en") // UI/email language preference
   isAvailable   Boolean  @default(true) // Open for work
 

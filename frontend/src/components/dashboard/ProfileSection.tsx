@@ -21,6 +21,7 @@ interface Props {
     skills: string;
     equipment: string[];
     languages: string[];
+    yearsOfExperience: string;
     contactEmail: string;
     telegram: string;
     whatsapp: string;
@@ -309,6 +310,21 @@ export default function ProfileSection({
                 </button>
               ))}
             </div>
+          </div>
+          <div>
+            <label htmlFor="profile-experience" className="block text-sm font-medium text-gray-700">
+              {t('dashboard.profile.yearsOfExperience')}
+            </label>
+            <input
+              id="profile-experience"
+              type="number"
+              min="0"
+              max="70"
+              value={profileForm.yearsOfExperience}
+              onChange={(e) => setProfileForm({ ...profileForm, yearsOfExperience: e.target.value })}
+              className="mt-1 block w-24 px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="0"
+            />
           </div>
           {/* "How to reach you" section moved to Privacy tab (ContactPrivacySection) */}
 
@@ -660,6 +676,14 @@ export default function ProfileSection({
                           </span>
                         ))}
                       </div>
+                    </div>
+                  )}
+                  {profile.yearsOfExperience != null && profile.yearsOfExperience > 0 && (
+                    <div>
+                      <span className="text-gray-500 text-xs">{t('dashboard.profile.yearsOfExperience')}</span>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? t('common.year') : t('common.years')}
+                      </p>
                     </div>
                   )}
                 </div>

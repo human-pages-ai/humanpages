@@ -89,6 +89,7 @@ interface PublicHuman {
     jobsCompleted: number;
   };
   wallets?: Wallet[];
+  yearsOfExperience?: number;
   services: Service[];
   vouches?: PublicVouch[];
 }
@@ -323,6 +324,15 @@ export default function PublicProfile() {
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Years of Experience */}
+            {profile.yearsOfExperience != null && profile.yearsOfExperience > 0 && (
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  {profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? t('common.year') : t('common.years')} {t('publicProfile.ofExperience')}
+                </span>
               </div>
             )}
 

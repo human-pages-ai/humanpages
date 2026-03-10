@@ -26,7 +26,9 @@
     "success": "สำเร็จ!",
     "free": "ฟรีตลอด",
     "noFees": "ไม่หักจากรายได้",
-    "backHome": "กลับหน้าหลัก"
+    "backHome": "กลับหน้าหลัก",
+    "year": "ปี",
+    "years": "ปี"
   },
   "nav": {
     "home": "หน้าแรก",
@@ -370,6 +372,7 @@
       "skillsSeparator": "คั่นด้วยเครื่องหมายจุลภาค",
       "equipment": "อุปกรณ์",
       "languages": "ภาษา",
+      "yearsOfExperience": "ปีประสบการณ์",
       "contactEmail": "อีเมลติดต่อ",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
@@ -574,6 +577,7 @@
     "available": "พร้อมรับงาน",
     "unavailable": "ไม่พร้อมรับงาน",
     "noSkills": "ยังไม่มีทักษะ",
+    "ofExperience": "ประสบการณ์",
     "noServices": "ยังไม่มีบริการ",
     "hireMe": "จ้างฉัน",
     "contactInfo": "ข้อมูลติดต่อ",

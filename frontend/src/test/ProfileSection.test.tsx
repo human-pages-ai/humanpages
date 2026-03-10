@@ -85,6 +85,7 @@ const baseFormState = {
   skills: 'react, typescript',
   equipment: ['laptop'],
   languages: ['English'],
+  yearsOfExperience: '',
   contactEmail: 'test@example.com',
   telegram: '@testhandle',
   whatsapp: '+15551234567',

@@ -28,7 +28,9 @@
     "free": "Toujours gratuit",
     "noFees": "Aucun frais sur vos revenus",
     "backHome": "Retour à l'accueil",
-    "done": "Terminé"
+    "done": "Terminé",
+    "year": "an",
+    "years": "ans"
   },
   "nav": {
     "home": "Accueil",
@@ -367,6 +369,7 @@
       "skillsSeparator": "séparées par des virgules",
       "equipment": "Équipement",
       "languages": "Langues",
+      "yearsOfExperience": "Années d'expérience",
       "contactEmail": "E-mail de contact",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@utilisateur",
@@ -565,6 +568,7 @@
     "available": "Disponible pour travailler",
     "unavailable": "Non disponible",
     "noSkills": "Aucune compétence listée",
+    "ofExperience": "d'expérience",
     "noServices": "Aucun service listé",
     "hireMe": "Embauchez-moi",
     "contactInfo": "Coordonnées",

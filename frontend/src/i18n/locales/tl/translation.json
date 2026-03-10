@@ -26,7 +26,9 @@
     "success": "Tagumpay!",
     "free": "Laging libre",
     "noFees": "Walang kaltas sa kita",
-    "backHome": "Bumalik sa home"
+    "backHome": "Bumalik sa home",
+    "year": "taon",
+    "years": "taon"
   },
   "nav": {
     "home": "Home",
@@ -405,6 +407,7 @@
       "skillsSeparator": "pinaghihiwalay ng comma",
       "equipment": "Kagamitan",
       "languages": "Mga Wika",
+      "yearsOfExperience": "Mga taon ng karanasan",
       "contactEmail": "Contact Email",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@username",
@@ -574,6 +577,7 @@
     "available": "Available para sa trabaho",
     "unavailable": "Hindi available",
     "noSkills": "Walang nakalista na kasanayan",
+    "ofExperience": "ng karanasan",
     "noServices": "Walang nakalista na serbisyo",
     "hireMe": "I-hire Ako",
     "contactInfo": "Contact Info",
