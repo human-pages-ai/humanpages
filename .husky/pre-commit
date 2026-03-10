@@ -1,0 +1,32 @@
+#!/bin/sh
+# ──────────────────────────────────────────────────────────────────
+# pre-commit hook: Block direct commits to master
+#
+# All work must happen on session/* branches (see scripts/git-session.sh).
+# Only the merge script (git-session-merge.sh) can commit on master,
+# by setting ALLOW_MASTER_COMMIT=1.
+# ──────────────────────────────────────────────────────────────────
+
+BRANCH="$(git branch --show-current 2>/dev/null)"
+
+case "$BRANCH" in
+  master|main)
+    if [ "$ALLOW_MASTER_COMMIT" = "1" ]; then
+      exit 0
+    fi
+
+    echo "" >&2
+    echo "══════════════════════════════════════════════════════════" >&2
+    echo "  BLOCKED: Direct commits to $BRANCH are not allowed." >&2
+    echo "══════════════════════════════════════════════════════════" >&2
+    echo "" >&2
+    echo "  Create a session branch first:" >&2
+    echo "    sh scripts/git-session.sh <description>" >&2
+    echo "" >&2
+    echo "  When done, merge back:" >&2
+    echo "    sh scripts/git-session-merge.sh" >&2
+    echo "" >&2
+    echo "══════════════════════════════════════════════════════════" >&2
+    exit 1
+    ;;
+esac

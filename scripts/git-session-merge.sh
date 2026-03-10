@@ -22,6 +22,9 @@
 
 set -e
 
+# Allow the pre-commit hook to let us commit/merge on master
+export ALLOW_MASTER_COMMIT=1
+
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
 SAFE="$REPO_ROOT/scripts/git-safe.sh"
 
