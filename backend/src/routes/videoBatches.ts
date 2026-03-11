@@ -4,6 +4,7 @@ import path from 'path';
 import { jwtOrApiKey, requireStaffOrAdmin } from '../middleware/adminAuth.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
+import { generatePresignedUploadUrl, getSignedDownloadUrl, isStorageConfigured } from '../lib/storage.js';
 
 const router = Router();
 
@@ -128,6 +129,80 @@ router.get('/queue', async (_req, res) => {
   } catch (err) {
     logger.error({ err }, 'Failed to load approval queue');
     res.status(500).json({ error: 'Failed to load queue', detail: errMsg(err) });
+  }
+});
+
+// ─── POST /upload-url — Generate presigned upload URL for batch assets ───
+router.post('/upload-url', async (req, res) => {
+  try {
+    const { key, contentType } = req.body;
+    if (!key || !contentType) {
+      return res.status(400).json({ error: 'key and contentType are required' });
+    }
+    if (!isStorageConfigured()) {
+      return res.status(503).json({ error: 'R2 storage not configured' });
+    }
+    const uploadUrl = await generatePresignedUploadUrl(key, contentType);
+    res.json({ uploadUrl, key });
+  } catch (err) {
+    logger.error({ err }, 'Failed to generate batch upload URL');
+    res.status(500).json({ error: 'Failed to generate upload URL', detail: errMsg(err) });
+  }
+});
+
+// ─── GET /gallery — Flat gallery of all concepts across all batches ───
+router.get('/gallery', async (_req, res) => {
+  try {
+    let entries: string[];
+    try {
+      entries = await fs.readdir(BATCHES_DIR);
+    } catch {
+      return res.json({ concepts: [] });
+    }
+
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    const dateDirs = entries.filter(e => datePattern.test(e)).sort().reverse();
+    const approved = await loadApproved();
+
+    const concepts: Array<{
+      date: string;
+      number: number;
+      title: string;
+      concept: string;
+      hook: string;
+      pillar: string;
+      hasThumbnails: boolean;
+      approved: boolean;
+      approvedTier: string | null;
+      failed: boolean;
+    }> = [];
+
+    for (const date of dateDirs.slice(0, 10)) {
+      const manifest = await loadManifest(date);
+      if (!manifest) continue;
+      const approvedNums = new Set(approved.filter(a => a.date === date).map(a => a.concept));
+
+      for (const c of manifest.concepts) {
+        const entry = approved.find(a => a.date === date && a.concept === c.concept_number);
+        concepts.push({
+          date,
+          number: c.concept_number,
+          title: c.title,
+          concept: c.concept,
+          hook: c.hook,
+          pillar: c.pillar,
+          hasThumbnails: c.thumbnail_paths.length > 0,
+          approved: approvedNums.has(c.concept_number),
+          approvedTier: entry?.tier ?? null,
+          failed: !c.hook && !c.pillar,
+        });
+      }
+    }
+
+    res.json({ concepts });
+  } catch (err) {
+    logger.error({ err }, 'Failed to load gallery');
+    res.status(500).json({ error: 'Failed to load gallery', detail: errMsg(err) });
   }
 });
 
@@ -363,6 +438,85 @@ router.put('/:date/concept/:num/script', async (req, res) => {
   } catch (err) {
     logger.error({ err }, 'Failed to update concept script');
     res.status(500).json({ error: 'Failed to update script', detail: errMsg(err) });
+  }
+});
+
+// ─── GET /:date/concept/:num/r2-image/:filename — Serve image via R2 signed URL ───
+router.get('/:date/concept/:num/r2-image/:filename', async (req, res) => {
+  try {
+    const { date, num, filename } = req.params;
+    const conceptNum = parseInt(num, 10);
+    if (isNaN(conceptNum)) {
+      return res.status(400).json({ error: 'Invalid concept number' });
+    }
+    const safeName = path.basename(filename);
+    const padded = String(conceptNum).padStart(2, '0');
+    const r2Key = `batches/${date}/concept-${padded}/images/${safeName}`;
+
+    if (isStorageConfigured()) {
+      const url = await getSignedDownloadUrl(r2Key);
+      if (url) {
+        return res.json({ url, source: 'r2' });
+      }
+    }
+
+    // Fallback: serve from local filesystem
+    const imagePath = path.join(BATCHES_DIR, date, `concept-${padded}`, 'images', safeName);
+    try {
+      await fs.access(imagePath);
+      return res.json({ url: `/api/admin/video-batches/${date}/concept/${num}/image/${safeName}`, source: 'local' });
+    } catch {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+  } catch (err) {
+    logger.error({ err }, 'Failed to get R2 image URL');
+    res.status(500).json({ error: 'Failed to get image URL', detail: errMsg(err) });
+  }
+});
+
+// ─── POST /:date/concept/:num/promote-draft — One-click promote nano to draft ───
+router.post('/:date/concept/:num/promote-draft', async (req, res) => {
+  try {
+    const { date, num } = req.params;
+    const conceptNum = parseInt(num, 10);
+    if (isNaN(conceptNum)) {
+      return res.status(400).json({ error: 'Invalid concept number' });
+    }
+
+    const manifest = await loadManifest(date);
+    if (!manifest) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+
+    const concept = manifest.concepts.find(c => c.concept_number === conceptNum);
+    if (!concept) {
+      return res.status(404).json({ error: 'Concept not found' });
+    }
+
+    // Approve as draft
+    const approved = await loadApproved();
+    const existing = approved.findIndex(a => a.date === date && a.concept === conceptNum);
+    const entry: ApprovedEntry = {
+      date,
+      concept: conceptNum,
+      title: concept.title,
+      tier: 'draft',
+      approvedAt: new Date().toISOString(),
+    };
+
+    if (existing >= 0) {
+      approved[existing] = entry;
+    } else {
+      approved.push(entry);
+    }
+
+    await saveApproved(approved);
+
+    logger.info({ date, concept: conceptNum }, 'Concept promoted to draft');
+    res.json({ success: true, date, concept: conceptNum, tier: 'draft' });
+  } catch (err) {
+    logger.error({ err }, 'Failed to promote concept');
+    res.status(500).json({ error: 'Failed to promote concept', detail: errMsg(err) });
   }
 });
 

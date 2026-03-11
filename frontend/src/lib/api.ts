@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions } from '../types/admin';
 
 import { safeLocalStorage, safeGetItem, safeSetItem, safeRemoveItem } from './safeStorage';
 // Re-export for backward compatibility (OAuthCallback etc. import from here)
@@ -1020,6 +1020,17 @@ export const api = {
     request<{ success: boolean }>(`/admin/video-batches/${date}/concept/${conceptNum}/script`, {
       method: 'PUT',
       body: JSON.stringify(script),
+    }),
+
+  getVideoBatchGallery: () =>
+    request<{ concepts: GalleryConcept[] }>('/admin/video-batches/gallery'),
+
+  getVideoBatchR2ImageUrl: (date: string, conceptNum: number, filename: string) =>
+    request<{ url: string; source: string }>(`/admin/video-batches/${date}/concept/${conceptNum}/r2-image/${filename}`),
+
+  promoteToDraft: (date: string, conceptNum: number) =>
+    request<{ success: boolean }>(`/admin/video-batches/${date}/concept/${conceptNum}/promote-draft`, {
+      method: 'POST',
     }),
 
   // Photo Concepts

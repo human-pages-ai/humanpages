@@ -752,6 +752,19 @@ export interface BatchConceptDetail {
   approvedAt: string | null;
 }
 
+export interface GalleryConcept {
+  date: string;
+  number: number;
+  title: string;
+  concept: string;
+  hook: string;
+  pillar: string;
+  hasThumbnails: boolean;
+  approved: boolean;
+  approvedTier: string | null;
+  failed: boolean;
+}
+
 // ===== Video Concepts =====
 export type VideoConceptStatus = 'new' | 'nano_done' | 'approved' | 'draft_done' | 'final_done'
   | 'draft_images_ready' | 'final_images_ready' | 'draft_in_production' | 'final_in_production';
