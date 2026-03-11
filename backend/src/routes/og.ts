@@ -163,6 +163,78 @@ export function generateCareersSvg(): string {
 </svg>`;
 }
 
+export function generateListingSvg(title: string, budgetUsdc: number, budgetFlexible: boolean, skills: string[], location: string, description: string): string {
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // Word-wrap title into lines of ~30 chars
+  const words = title.split(' ');
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    if (current && (current + ' ' + word).length > 30) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = current ? current + ' ' + word : word;
+    }
+  }
+  if (current) lines.push(current);
+  const titleLines = lines.slice(0, 3); // Max 3 lines
+
+  const budgetStr = budgetFlexible ? `$${budgetUsdc}+` : `$${budgetUsdc}`;
+  const displaySkills = skills.slice(0, 4);
+
+  // Truncate description for the subtitle
+  const desc = description.length > 100 ? description.substring(0, 97) + '...' : description;
+
+  const titleY = 200;
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="35%" r="50%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="40%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="5" fill="url(#accent)"/>
+
+  <!-- Logo -->
+  <text x="60" y="70" font-family="system-ui, sans-serif" font-size="24" font-weight="700">
+    <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="400">.ai</tspan>
+  </text>
+
+  <!-- Budget badge -->
+  <rect x="60" y="100" width="${budgetStr.length * 22 + 40}" height="48" rx="24" fill="#16a34a"/>
+  <text x="${60 + (budgetStr.length * 22 + 40) / 2}" y="131" font-family="system-ui, sans-serif" font-size="28" font-weight="800" fill="#fff" text-anchor="middle">${esc(budgetStr)}</text>
+
+  <!-- Title -->
+  ${titleLines.map((line, i) => `<text x="60" y="${titleY + i * 48}" font-family="system-ui, sans-serif" font-size="40" font-weight="700" fill="#f1f5f9">${esc(line)}</text>`).join('\n  ')}
+
+  <!-- Location -->
+  ${location ? `<text x="60" y="${titleY + titleLines.length * 48 + 10}" font-family="system-ui, sans-serif" font-size="22" fill="#94a3b8">${esc(location)}</text>` : ''}
+
+  <!-- Skills -->
+  ${displaySkills.map((skill, i) => {
+    const x = 60 + i * 180;
+    const y = 440;
+    return `<rect x="${x}" y="${y}" width="168" height="36" rx="18" fill="#1e3a5f"/>
+    <text x="${x + 84}" y="${y + 23}" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#60a5fa" text-anchor="middle">${esc(skill.length > 16 ? skill.substring(0, 14) + '..' : skill)}</text>`;
+  }).join('\n  ')}
+
+  <!-- Bottom bar -->
+  <rect y="580" width="1200" height="50" fill="#0b1120"/>
+  <text x="60" y="612" font-family="system-ui, sans-serif" font-size="18" fill="#64748b">humanpages.ai/listings</text>
+  <text x="1140" y="612" font-family="system-ui, sans-serif" font-size="16" fill="#64748b" text-anchor="end">Apply free — keep 100% of earnings</text>
+</svg>`;
+}
+
 // Cache default PNG in memory
 let defaultPngCache: Buffer | null = null;
 let careersPngCache: Buffer | null = null;
@@ -216,6 +288,44 @@ router.get('/blog/:slug', (req, res) => {
     const png = svgToPng(svg);
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
+    res.send(png);
+  } catch (error) {
+    res.status(500).send('Error generating image');
+  }
+});
+
+// OG image for a listing (served as PNG)
+router.get('/listing/:id', async (req, res) => {
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id: req.params.id },
+      select: {
+        title: true,
+        budgetUsdc: true,
+        budgetFlexible: true,
+        requiredSkills: true,
+        location: true,
+        workMode: true,
+        description: true,
+      },
+    });
+
+    if (!listing) {
+      return res.status(404).send('Not found');
+    }
+
+    const svg = generateListingSvg(
+      listing.title,
+      Number(listing.budgetUsdc),
+      listing.budgetFlexible,
+      listing.requiredSkills,
+      listing.location || (listing.workMode === 'REMOTE' ? 'Remote' : ''),
+      listing.description || ''
+    );
+
+    const png = svgToPng(svg);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=3600'); // cache 1 hour (listings change more often)
     res.send(png);
   } catch (error) {
     res.status(500).send('Error generating image');

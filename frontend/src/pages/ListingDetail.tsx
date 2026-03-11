@@ -64,6 +64,7 @@ export default function ListingDetail() {
   const [signupLoading, setSignupLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
   const [showInlineSignup, setShowInlineSignup] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const handleInlineSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +97,28 @@ export default function ListingDetail() {
     } finally {
       setSignupLoading(false);
     }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const shareTitle = listing ? `${listing.title} — $${listing.budgetUsdc}${listing.budgetFlexible ? '+' : ''} | Human Pages` : 'Human Pages Listing';
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, url });
+      } catch {
+        // User cancelled or share failed — fall back to clipboard
+        await navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+    analytics.track('listing_share', { listingId: id, title: listing?.title });
+    posthog.capture('listing_share', { listingId: id, title: listing?.title });
   };
 
   useEffect(() => {
@@ -265,7 +288,7 @@ export default function ListingDetail() {
                 autoComplete="new-password"
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
+              <Suspense fallback={<div className="h-[65px]" />}>
                 <LazyTurnstile
                   sitekey={TURNSTILE_SITE_KEY}
                   onVerify={(token: string) => setCaptchaToken(token)}
@@ -394,6 +417,8 @@ export default function ListingDetail() {
         title={listing.title}
         description={listing.description?.substring(0, 160)}
         path={`/listings/${listing.id}`}
+        ogImage={`https://humanpages.ai/api/og/listing/${listing.id}`}
+        ogType="website"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "JobPosting",
@@ -512,10 +537,22 @@ export default function ListingDetail() {
                 </div>
               )}
 
-              {/* Title */}
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                {listing.title}
-              </h1>
+              {/* Title + Share */}
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  {listing.title}
+                </h1>
+                <button
+                  onClick={handleShare}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  title="Share this listing"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  {shareCopied ? 'Copied!' : 'Share'}
+                </button>
+              </div>
 
               {/* Budget on mobile */}
               <div className="mb-4 lg:hidden">
@@ -862,7 +899,7 @@ export default function ListingDetail() {
                   autoComplete="new-password"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
+                <Suspense fallback={<div className="h-[65px]" />}>
                   <LazyTurnstile
                     sitekey={TURNSTILE_SITE_KEY}
                     onVerify={(token: string) => setCaptchaToken(token)}

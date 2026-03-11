@@ -421,6 +421,94 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
+export async function getListingMetaHtml(listingId: string, lang?: string): Promise<string | null> {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id: listingId },
+      select: {
+        title: true,
+        description: true,
+        budgetUsdc: true,
+        budgetFlexible: true,
+        requiredSkills: true,
+        location: true,
+        workMode: true,
+        _count: { select: { applications: true } },
+      },
+    });
+
+    if (!listing) return null;
+
+    const budget = listing.budgetFlexible ? `$${listing.budgetUsdc}+` : `$${listing.budgetUsdc}`;
+    const locationStr = listing.location || (listing.workMode === 'REMOTE' ? 'Remote' : '');
+    const skillsStr = listing.requiredSkills.slice(0, 3).join(', ');
+    const appCount = listing._count.applications;
+
+    const title = escapeHtml(`${listing.title} — ${budget} | Human Pages`);
+    const descParts = [skillsStr, locationStr, appCount > 0 ? `${appCount} applied` : 'Be first to apply'].filter(Boolean);
+    const description = escapeHtml(descParts.join(' · '));
+    const ogImage = `${SITE_URL}/api/og/listing/${listingId}`;
+    const unprefixedPath = `/listings/${listingId}`;
+    const canonicalUrl = lang && lang !== 'en'
+      ? `${SITE_URL}/${lang}${unprefixedPath}`
+      : `${SITE_URL}${unprefixedPath}`;
+
+    const hreflangTags = buildHreflangTags(unprefixedPath);
+
+    const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${description}" />
+    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${description}" />
+    <meta name="twitter:image" content="${ogImage}" />
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "JobPosting",
+      "title": listing.title,
+      "description": listing.description,
+      "url": canonicalUrl,
+      ...(listing.location && {
+        "jobLocation": {
+          "@type": "Place",
+          "address": listing.location,
+        },
+      }),
+      ...(listing.workMode === 'REMOTE' && { "jobLocationType": "TELECOMMUTE" }),
+      "baseSalary": {
+        "@type": "MonetaryAmount",
+        "currency": "USD",
+        "value": Number(listing.budgetUsdc),
+      },
+      "hiringOrganization": { "@type": "Organization", "name": "Human Pages", "url": SITE_URL },
+      "employmentType": "TEMPORARY",
+      ...(listing.requiredSkills.length > 0 && { "skills": listing.requiredSkills.join(", ") }),
+    })}</script>`;
+
+    let modifiedHtml = html;
+    modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
+    modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+    modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
+    modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+    modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
+    modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+
+    return modifiedHtml;
+  } catch {
+    return null;
+  }
+}
+
 // Clear template cache (useful for development)
 export function clearTemplateCache() {
   indexHtmlTemplate = null;

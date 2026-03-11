@@ -26,7 +26,7 @@ import careersRoutes from './routes/careers.js';
 import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import blogApiRoutes from './routes/blog.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { trackServerEvent } from './lib/posthog.js';
 
 const app = express();
@@ -209,6 +209,36 @@ app.get('/:lang/blog/:slug', async (req, res, next) => {
 app.get('/blog/:slug', async (req, res, next) => {
   try {
     const html = await getBlogMetaHtml(req.params.slug);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+// Listing pages: inject dynamic meta tags for social sharing / SEO
+app.get('/:lang/listings/:id', async (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  try {
+    const html = await getListingMetaHtml(req.params.id, req.params.lang);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+app.get('/listings/:id', async (req, res, next) => {
+  // Skip API-like paths (the /api/listings route handles those)
+  if (req.params.id === 'api') return next();
+  try {
+    const html = await getListingMetaHtml(req.params.id);
     if (html) {
       res.set('Content-Type', 'text/html');
       return res.send(html);

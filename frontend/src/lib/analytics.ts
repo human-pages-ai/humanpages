@@ -40,7 +40,8 @@ type EventName =
   | 'wallet_deleted'
   | 'listing_viewed'
   | 'listing_signup_clicked'
-  | 'listing_applied';
+  | 'listing_applied'
+  | 'listing_share';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;
