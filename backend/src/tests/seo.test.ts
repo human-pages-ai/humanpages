@@ -409,4 +409,119 @@ describe('SEO Endpoints', () => {
       }
     });
   });
+
+  // ═══════════════ Listing Status/Expiry Edge Cases ═══════════════
+
+  describe('Closed/expired listing handling', () => {
+    let closedListingId: string;
+    let expiredListingId: string;
+
+    beforeAll(async () => {
+      // Create a CLOSED listing
+      const closed = await prisma.listing.create({
+        data: {
+          agentId: testAgent.id,
+          title: 'Closed Listing',
+          description: 'This listing is closed.',
+          budgetUsdc: 100,
+          budgetFlexible: false,
+          requiredSkills: [],
+          workMode: 'REMOTE',
+          status: 'CLOSED',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+      closedListingId = closed.id;
+
+      // Create an OPEN but expired listing
+      const expired = await prisma.listing.create({
+        data: {
+          agentId: testAgent.id,
+          title: 'Expired Listing',
+          description: 'This listing expired.',
+          budgetUsdc: 200,
+          budgetFlexible: false,
+          requiredSkills: ['React'],
+          workMode: 'REMOTE',
+          expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // expired yesterday
+        },
+      });
+      expiredListingId = expired.id;
+    });
+
+    it('should return 410 for closed listing OG image', async () => {
+      const res = await request(app).get(`/api/og/listing/${closedListingId}`);
+      expect(res.status).toBe(410);
+    });
+
+    it('should return 410 for expired listing OG image', async () => {
+      const res = await request(app).get(`/api/og/listing/${expiredListingId}`);
+      expect(res.status).toBe(410);
+    });
+
+    it('should fall through SSR for closed listing', async () => {
+      const res = await request(app).get(`/listings/${closedListingId}`);
+      // Should NOT inject meta for closed listing — falls through to SPA
+      if (res.status === 200 && res.headers['content-type']?.includes('text/html')) {
+        expect(res.text).not.toContain('Closed Listing');
+      }
+    });
+
+    it('should fall through SSR for expired listing', async () => {
+      const res = await request(app).get(`/listings/${expiredListingId}`);
+      if (res.status === 200 && res.headers['content-type']?.includes('text/html')) {
+        expect(res.text).not.toContain('Expired Listing');
+      }
+    });
+  });
+
+  // ═══════════════ SVG Defensive Input Validation ═══════════════
+
+  describe('Listing SVG defensive validation', () => {
+    it('should handle empty title gracefully', () => {
+      const svg = generateListingSvg('', 100, false, [], '');
+      expect(svg).toContain('Untitled Listing');
+      expect(svg).toContain('<svg width="1200" height="630"');
+    });
+
+    it('should break very long single words (no spaces)', () => {
+      const longWord = 'A'.repeat(60);
+      const svg = generateListingSvg(longWord, 100, false, [], '');
+      expect(svg).toContain('...');
+      // Should not overflow — word broken at 27 chars
+      expect(svg).not.toContain(longWord);
+    });
+
+    it('should truncate very long location', () => {
+      const longLoc = 'A'.repeat(80);
+      const svg = generateListingSvg('Test', 100, false, [], longLoc);
+      expect(svg).toContain('...');
+      expect(svg).not.toContain(longLoc);
+    });
+
+    it('should handle zero budget', () => {
+      const svg = generateListingSvg('Test', 0, false, [], '');
+      expect(svg).toContain('$0');
+    });
+
+    it('should cap extremely large budgets', () => {
+      const svg = generateListingSvg('Test', 99999999, false, [], '');
+      expect(svg).toContain('$9999999');
+      expect(svg).not.toContain('99999999');
+    });
+
+    it('should filter out empty/whitespace skills', () => {
+      const svg = generateListingSvg('Test', 100, false, ['  ', '', 'Valid'], '');
+      expect(svg).toContain('Valid');
+      // Should not render empty skill badges
+      const skillBadges = (svg.match(/fill="#1e3a5f"/g) || []).length;
+      expect(skillBadges).toBe(1);
+    });
+
+    it('should handle null-ish skills array safely', () => {
+      // @ts-expect-error — testing runtime defense
+      const svg = generateListingSvg('Test', 100, false, null, '');
+      expect(svg).toContain('<svg width="1200" height="630"');
+    });
+  });
 });

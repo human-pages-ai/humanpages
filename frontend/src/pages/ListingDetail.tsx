@@ -554,7 +554,9 @@ export default function ListingDetail() {
                 </h1>
                 <button
                   onClick={handleShare}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  disabled={loading || !listing}
+                  aria-label={shareCopied ? 'Link copied to clipboard' : 'Share this listing'}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Share this listing"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

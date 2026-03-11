@@ -6,6 +6,11 @@ import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
+/** Escape text for safe inclusion in SVG/XML */
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function svgToPng(svg: string): Buffer {
   const resvg = new Resvg(svg, {
     fitTo: { mode: 'width', value: 1200 },
@@ -47,8 +52,6 @@ export function generateProfileSvg(name: string, bio: string, location: string, 
   const truncatedBio = bio.length > 120 ? bio.substring(0, 117) + '...' : bio;
   const displaySkills = skills.slice(0, 5);
 
-  // Escape XML special chars
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
@@ -91,8 +94,6 @@ export function generateProfileSvg(name: string, bio: string, location: string, 
 }
 
 export function generateBlogSvg(title: string): string {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
   // Word-wrap title into lines of ~35 chars
   const words = title.split(' ');
   const lines: string[] = [];
@@ -164,14 +165,21 @@ export function generateCareersSvg(): string {
 }
 
 export function generateListingSvg(title: string, budgetUsdc: number, budgetFlexible: boolean, skills: string[], location: string): string {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // Sanitize inputs defensively
+  const safeTitle = (title || 'Untitled Listing').trim() || 'Untitled Listing';
+  const safeLocation = (location || '').length > 50 ? location.substring(0, 47) + '...' : (location || '');
+  const safeSkills = (skills || []).filter(s => typeof s === 'string' && s.trim().length > 0);
 
-  // Word-wrap title into lines of ~30 chars
-  const words = title.split(' ');
+  // Word-wrap title into lines of ~30 chars, handling long single words
+  const words = safeTitle.split(/\s+/).filter(w => w.length > 0);
   const lines: string[] = [];
   let current = '';
   for (const word of words) {
-    if (current && (current + ' ' + word).length > 30) {
+    // Break single words longer than 30 chars
+    if (word.length > 30) {
+      if (current) { lines.push(current); current = ''; }
+      lines.push(word.substring(0, 27) + '...');
+    } else if (current && (current + ' ' + word).length > 30) {
       lines.push(current);
       current = word;
     } else {
@@ -181,10 +189,11 @@ export function generateListingSvg(title: string, budgetUsdc: number, budgetFlex
   if (current) lines.push(current);
   const titleLines = lines.slice(0, 3); // Max 3 lines
 
-  // Format budget — strip trailing .000000 from Decimal type
-  const budgetClean = Number.isInteger(budgetUsdc) ? budgetUsdc.toString() : budgetUsdc.toFixed(0);
+  // Format budget — strip trailing .000000 from Decimal type, cap at 9,999,999
+  const budgetNum = Math.max(0, Math.min(9999999, Math.round(budgetUsdc || 0)));
+  const budgetClean = budgetNum.toString();
   const budgetStr = budgetFlexible ? `$${budgetClean}+` : `$${budgetClean}`;
-  const displaySkills = skills.slice(0, 4);
+  const displaySkills = safeSkills.slice(0, 4);
 
   const titleY = 200;
 
@@ -217,7 +226,7 @@ export function generateListingSvg(title: string, budgetUsdc: number, budgetFlex
   ${titleLines.map((line, i) => `<text x="60" y="${titleY + i * 48}" font-family="system-ui, sans-serif" font-size="40" font-weight="700" fill="#f1f5f9">${esc(line)}</text>`).join('\n  ')}
 
   <!-- Location -->
-  ${location ? `<text x="60" y="${titleY + titleLines.length * 48 + 10}" font-family="system-ui, sans-serif" font-size="22" fill="#94a3b8">${esc(location)}</text>` : ''}
+  ${safeLocation ? `<text x="60" y="${titleY + titleLines.length * 48 + 10}" font-family="system-ui, sans-serif" font-size="22" fill="#94a3b8">${esc(safeLocation)}</text>` : ''}
 
   <!-- Skills -->
   ${displaySkills.map((skill, i) => {
@@ -305,11 +314,18 @@ router.get('/listing/:id', async (req, res) => {
         requiredSkills: true,
         location: true,
         workMode: true,
+        status: true,
+        expiresAt: true,
       },
     });
 
     if (!listing) {
       return res.status(404).send('Not found');
+    }
+
+    // Don't generate OG images for closed/expired listings
+    if (listing.status !== 'OPEN' || new Date(listing.expiresAt) <= new Date()) {
+      return res.status(410).send('Listing no longer available');
     }
 
     const svg = generateListingSvg(

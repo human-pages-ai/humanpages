@@ -436,11 +436,16 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
         requiredSkills: true,
         location: true,
         workMode: true,
+        status: true,
+        expiresAt: true,
         _count: { select: { applications: true } },
       },
     });
 
     if (!listing) return null;
+
+    // Don't inject meta for closed/expired listings — let SPA handle with a proper message
+    if (listing.status !== 'OPEN' || new Date(listing.expiresAt) <= new Date()) return null;
 
     const budgetNum = Number(listing.budgetUsdc);
     const budgetClean = Number.isInteger(budgetNum) ? budgetNum.toString() : budgetNum.toFixed(0);
