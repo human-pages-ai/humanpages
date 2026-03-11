@@ -102,23 +102,33 @@ export default function ListingDetail() {
   const handleShare = async () => {
     const url = window.location.href;
     const shareTitle = listing ? `${listing.title} — $${listing.budgetUsdc}${listing.budgetFlexible ? '+' : ''} | Human Pages` : 'Human Pages Listing';
+    let shared = false;
 
     if (navigator.share) {
       try {
         await navigator.share({ title: shareTitle, url });
+        shared = true;
       } catch {
-        // User cancelled or share failed — fall back to clipboard
+        // User cancelled — not a failure, just don't track
+      }
+    }
+
+    if (!shared) {
+      try {
         await navigator.clipboard.writeText(url);
         setShareCopied(true);
         setTimeout(() => setShareCopied(false), 2000);
+        shared = true;
+      } catch {
+        // Clipboard API not available (e.g. non-HTTPS, permission denied)
+        toast.error('Could not copy link. Try copying from the address bar.');
       }
-    } else {
-      await navigator.clipboard.writeText(url);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
     }
-    analytics.track('listing_share', { listingId: id, title: listing?.title });
-    posthog.capture('listing_share', { listingId: id, title: listing?.title });
+
+    if (shared) {
+      analytics.track('listing_share', { listingId: id, title: listing?.title });
+      posthog.capture('listing_share', { listingId: id, title: listing?.title });
+    }
   };
 
   useEffect(() => {

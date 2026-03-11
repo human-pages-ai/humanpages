@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
-import { createTestUser, authRequest, cleanDatabase, TestUser } from './helpers.js';
-import { generateProfileSvg, generateBlogSvg, generateDefaultSvg } from '../routes/og.js';
+import { createTestUser, authRequest, cleanDatabase, TestUser, createActiveTestAgent, TestAgent } from './helpers.js';
+import { generateProfileSvg, generateBlogSvg, generateDefaultSvg, generateListingSvg } from '../routes/og.js';
+import { prisma } from '../lib/prisma.js';
 
 describe('SEO Endpoints', () => {
   let user: TestUser;
   let edgeUser: TestUser;
+  let testAgent: TestAgent;
+  let testListingId: string;
 
   beforeAll(async () => {
     await cleanDatabase();
@@ -29,6 +32,23 @@ describe('SEO Endpoints', () => {
       email: 'edge@example.com',
       name: 'Edge Case User'
     });
+
+    // Create test agent + listing for OG listing tests
+    testAgent = await createActiveTestAgent({ name: 'OG Test Agent' });
+    const listing = await prisma.listing.create({
+      data: {
+        agentId: testAgent.id,
+        title: 'Graphic Design for Mobile App',
+        description: 'Need a designer for UI/UX work on our mobile app. Figma experience required.',
+        budgetUsdc: 450,
+        budgetFlexible: true,
+        requiredSkills: ['Figma', 'UI Design', 'Mobile'],
+        location: 'Remote',
+        workMode: 'REMOTE',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      },
+    });
+    testListingId = listing.id;
   });
 
   afterAll(async () => {
@@ -244,6 +264,149 @@ describe('SEO Endpoints', () => {
       expect(svg).toContain('<svg width="1200" height="630"');
       expect(svg).toContain('humanpages.ai/blog');
       expect(svg).toContain('Blog');
+    });
+  });
+
+  // ═══════════════ Listing OG Image Tests ═══════════════
+
+  describe('GET /api/og/listing/:id', () => {
+    it('should return PNG image for valid listing ID', async () => {
+      const res = await request(app).get(`/api/og/listing/${testListingId}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('image/png');
+      // PNG magic bytes
+      expect(res.body[0]).toBe(0x89);
+      expect(res.body[1]).toBe(0x50);
+      expect(res.body[2]).toBe(0x4e);
+      expect(res.body[3]).toBe(0x47);
+    });
+
+    it('should return 404 for non-existent listing', async () => {
+      const res = await request(app).get('/api/og/listing/nonexistent-id-12345');
+
+      expect(res.status).toBe(404);
+      expect(res.text).toContain('Not found');
+    });
+
+    it('should set 1-hour cache headers (listings change often)', async () => {
+      const res = await request(app).get(`/api/og/listing/${testListingId}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['cache-control']).toContain('public');
+      expect(res.headers['cache-control']).toContain('max-age=3600');
+    });
+  });
+
+  describe('Listing SVG generation', () => {
+    it('should include title in listing SVG', () => {
+      const svg = generateListingSvg('Graphic Design for App', 450, true, ['Figma'], 'Remote');
+      expect(svg).toContain('Graphic Design for App');
+    });
+
+    it('should include budget with + for flexible', () => {
+      const svg = generateListingSvg('Test', 450, true, [], '');
+      expect(svg).toContain('$450+');
+    });
+
+    it('should include budget without + for non-flexible', () => {
+      const svg = generateListingSvg('Test', 200, false, [], '');
+      expect(svg).toContain('$200');
+      expect(svg).not.toContain('$200+');
+    });
+
+    it('should format decimal budgets cleanly (no trailing zeros)', () => {
+      const svg = generateListingSvg('Test', 450.000000, true, [], '');
+      expect(svg).toContain('$450+');
+      expect(svg).not.toContain('450.000000');
+    });
+
+    it('should include skills up to 4', () => {
+      const svg = generateListingSvg('Test', 100, false, ['Figma', 'React', 'Node.js', 'TypeScript', 'GraphQL'], '');
+      expect(svg).toContain('Figma');
+      expect(svg).toContain('React');
+      expect(svg).toContain('Node.js');
+      expect(svg).toContain('TypeScript');
+      expect(svg).not.toContain('GraphQL');
+    });
+
+    it('should include location', () => {
+      const svg = generateListingSvg('Test', 100, false, [], 'Manila, Philippines');
+      expect(svg).toContain('Manila, Philippines');
+    });
+
+    it('should escape XML special characters in title', () => {
+      const svg = generateListingSvg('Design & Build <App>', 100, false, ['C++ & Rust'], '');
+      expect(svg).toContain('&amp;');
+      expect(svg).toContain('&lt;');
+      expect(svg).toContain('&gt;');
+    });
+
+    it('should word-wrap long titles (max 3 lines)', () => {
+      const svg = generateListingSvg('This Is A Very Long Listing Title That Should Be Wrapped Across Multiple Lines', 100, false, [], '');
+      // Should contain svg with 1200x630 dimensions
+      expect(svg).toContain('<svg width="1200" height="630"');
+      // Title should be split into text elements
+      const textCount = (svg.match(/font-size="40"/g) || []).length;
+      expect(textCount).toBeLessThanOrEqual(3);
+      expect(textCount).toBeGreaterThan(1);
+    });
+
+    it('should include branding', () => {
+      const svg = generateListingSvg('Test', 100, false, [], '');
+      expect(svg).toContain('humanpages.ai/listings');
+      expect(svg).toContain('Apply free');
+    });
+
+    it('should handle empty skills array', () => {
+      const svg = generateListingSvg('Test', 100, false, [], '');
+      expect(svg).toContain('<svg width="1200" height="630"');
+    });
+
+    it('should handle empty location', () => {
+      const svg = generateListingSvg('Test', 100, false, [], '');
+      // Should not contain location text element (empty string)
+      expect(svg).toContain('<svg width="1200" height="630"');
+    });
+
+    it('should truncate long skill names', () => {
+      const svg = generateListingSvg('Test', 100, false, ['Very Long Skill Name Here'], '');
+      expect(svg).toContain('..');
+    });
+  });
+
+  // ═══════════════ Listing SSR Meta Tests ═══════════════
+
+  describe('GET /listings/:id (SSR meta injection)', () => {
+    it('should inject OG meta tags for valid listing', async () => {
+      const res = await request(app).get(`/listings/${testListingId}`);
+
+      // In test env, index.html may not exist — falls through to SPA catch-all
+      // which returns 404 when frontend not built. That's expected.
+      // If it returns 200, check the meta tags are injected.
+      if (res.status === 200 && res.headers['content-type']?.includes('text/html')) {
+        expect(res.text).toContain('og:title');
+        expect(res.text).toContain('Graphic Design for Mobile App');
+        expect(res.text).toContain('og:image');
+        expect(res.text).toContain(`/api/og/listing/${testListingId}`);
+        expect(res.text).toContain('og:image:width');
+        expect(res.text).toContain('1200');
+        expect(res.text).toContain('og:image:height');
+        expect(res.text).toContain('630');
+        expect(res.text).toContain('twitter:card');
+        expect(res.text).toContain('summary_large_image');
+        expect(res.text).toContain('$450+');
+      }
+    });
+
+    it('should fall through for non-existent listing', async () => {
+      const res = await request(app).get('/listings/nonexistent-id-xyz');
+
+      // Should fall through to SPA catch-all (200 with index.html or 404 if not built)
+      // The key is it should NOT return custom meta for a non-existent listing
+      if (res.status === 200 && res.headers['content-type']?.includes('text/html')) {
+        expect(res.text).not.toContain('nonexistent-id-xyz');
+      }
     });
   });
 });

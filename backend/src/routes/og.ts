@@ -163,7 +163,7 @@ export function generateCareersSvg(): string {
 </svg>`;
 }
 
-export function generateListingSvg(title: string, budgetUsdc: number, budgetFlexible: boolean, skills: string[], location: string, description: string): string {
+export function generateListingSvg(title: string, budgetUsdc: number, budgetFlexible: boolean, skills: string[], location: string): string {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   // Word-wrap title into lines of ~30 chars
@@ -181,11 +181,10 @@ export function generateListingSvg(title: string, budgetUsdc: number, budgetFlex
   if (current) lines.push(current);
   const titleLines = lines.slice(0, 3); // Max 3 lines
 
-  const budgetStr = budgetFlexible ? `$${budgetUsdc}+` : `$${budgetUsdc}`;
+  // Format budget — strip trailing .000000 from Decimal type
+  const budgetClean = Number.isInteger(budgetUsdc) ? budgetUsdc.toString() : budgetUsdc.toFixed(0);
+  const budgetStr = budgetFlexible ? `$${budgetClean}+` : `$${budgetClean}`;
   const displaySkills = skills.slice(0, 4);
-
-  // Truncate description for the subtitle
-  const desc = description.length > 100 ? description.substring(0, 97) + '...' : description;
 
   const titleY = 200;
 
@@ -306,7 +305,6 @@ router.get('/listing/:id', async (req, res) => {
         requiredSkills: true,
         location: true,
         workMode: true,
-        description: true,
       },
     });
 
@@ -319,8 +317,7 @@ router.get('/listing/:id', async (req, res) => {
       Number(listing.budgetUsdc),
       listing.budgetFlexible,
       listing.requiredSkills,
-      listing.location || (listing.workMode === 'REMOTE' ? 'Remote' : ''),
-      listing.description || ''
+      listing.location || (listing.workMode === 'REMOTE' ? 'Remote' : '')
     );
 
     const png = svgToPng(svg);

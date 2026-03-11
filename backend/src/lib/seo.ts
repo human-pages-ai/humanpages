@@ -442,7 +442,9 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
 
     if (!listing) return null;
 
-    const budget = listing.budgetFlexible ? `$${listing.budgetUsdc}+` : `$${listing.budgetUsdc}`;
+    const budgetNum = Number(listing.budgetUsdc);
+    const budgetClean = Number.isInteger(budgetNum) ? budgetNum.toString() : budgetNum.toFixed(0);
+    const budget = listing.budgetFlexible ? `$${budgetClean}+` : `$${budgetClean}`;
     const locationStr = listing.location || (listing.workMode === 'REMOTE' ? 'Remote' : '');
     const skillsStr = listing.requiredSkills.slice(0, 3).join(', ');
     const appCount = listing._count.applications;
@@ -465,6 +467,8 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:image" content="${ogImage}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Human Pages" />
@@ -476,7 +480,7 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
       "@context": "https://schema.org",
       "@type": "JobPosting",
       "title": listing.title,
-      "description": listing.description,
+      "description": (listing.description || '').replace(/<\/script/gi, '<\\/script'),
       "url": canonicalUrl,
       ...(listing.location && {
         "jobLocation": {
