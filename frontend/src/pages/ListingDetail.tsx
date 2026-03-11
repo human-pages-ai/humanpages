@@ -45,6 +45,7 @@ export default function ListingDetail() {
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const applyFormRef = useRef<HTMLDivElement>(null);
+  const hasShownWelcomeToast = useRef(false);
 
   // Inline email signup for FB in-app browser (where OAuth is blocked)
   const [signupName, setSignupName] = useState('');
@@ -60,6 +61,10 @@ export default function ListingDetail() {
     if (!signupName.trim() || !signupEmail.trim() || !signupPassword) return;
     if (signupPassword.length < 8) {
       setSignupError('Password must be at least 8 characters');
+      return;
+    }
+    if (!captchaToken) {
+      setSignupError('Please complete the security check');
       return;
     }
     setSignupError('');
@@ -90,9 +95,10 @@ export default function ListingDetail() {
     }
   }, [id]);
 
-  // Show welcome toast when redirected after fast-track signup
+  // Show welcome toast when redirected after fast-track signup (once only)
   useEffect(() => {
-    if (searchParams.get('signedup') === '1') {
+    if (searchParams.get('signedup') === '1' && !hasShownWelcomeToast.current) {
+      hasShownWelcomeToast.current = true;
       toast.success(
         'Welcome! You can now apply to this gig or browse more listings.',
         { duration: 6000 }
@@ -100,7 +106,7 @@ export default function ListingDetail() {
       searchParams.delete('signedup');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [user, listing]);
+  }, [searchParams, setSearchParams]);
 
   const loadListing = async () => {
     setLoading(true);
@@ -250,7 +256,7 @@ export default function ListingDetail() {
                 sitekey={TURNSTILE_SITE_KEY}
                 onVerify={(token) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken('')}
-                size="compact"
+                size="normal"
               />
               {signupError && (
                 <p className="text-xs text-red-600">{signupError}</p>
@@ -278,9 +284,8 @@ export default function ListingDetail() {
                 </Link>
               </p>
               <a
-                href={window.location.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#"
+                onClick={(e) => { e.preventDefault(); window.open(window.location.href, '_blank'); }}
                 className="text-blue-600 hover:text-blue-500"
               >
                 Open in browser &rarr;
@@ -847,7 +852,7 @@ export default function ListingDetail() {
                   sitekey={TURNSTILE_SITE_KEY}
                   onVerify={(token) => setCaptchaToken(token)}
                   onExpire={() => setCaptchaToken('')}
-                  size="compact"
+                  size="normal"
                 />
                 {signupError && (
                   <p className="text-xs text-red-600">{signupError}</p>
@@ -921,17 +926,28 @@ export default function ListingDetail() {
               </div>
             </div>
 
-            {/* Skills hint below the bar for non-logged-in users */}
-            {!user && listing.requiredSkills?.length > 0 && !showInlineSignup && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {listing.requiredSkills.slice(0, 3).map((skill: string, idx: number) => (
-                  <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                    {skill}
-                  </span>
-                ))}
-                {listing.requiredSkills.length > 3 && (
-                  <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3} more</span>
+            {/* Sign in link + skills hint for non-logged-in users */}
+            {!user && !showInlineSignup && !showMobileApplySheet && (
+              <div className="mt-2 flex items-center justify-between">
+                {listing.requiredSkills?.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {listing.requiredSkills.slice(0, 3).map((skill: string, idx: number) => (
+                      <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        {skill}
+                      </span>
+                    ))}
+                    {listing.requiredSkills.length > 3 && (
+                      <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3} more</span>
+                    )}
+                  </div>
                 )}
+                <Link
+                  to="/login"
+                  onClick={() => listing && setListingApplyIntent(id!, listing.title, listing.requiredSkills)}
+                  className="text-xs text-blue-600 hover:text-blue-500 font-medium shrink-0 ml-2"
+                >
+                  Sign in
+                </Link>
               </div>
             )}
           </div>
