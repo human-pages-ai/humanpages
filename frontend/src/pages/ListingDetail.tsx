@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Turnstile } from 'react-turnstile';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import { setListingApplyIntent } from '../lib/applyIntent';
@@ -10,12 +9,17 @@ import { analytics } from '../lib/analytics';
 import { posthog } from '../lib/posthog';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+
+// Lazy-load Turnstile — only downloaded when an embedded browser user opens the signup form
+const LazyTurnstile = lazy(() => import('react-turnstile').then(m => ({ default: m.Turnstile })));
+
+// Lazy-load ReportAgentModal — only downloaded when a logged-in user clicks "Report"
+const ReportAgentModal = lazy(() => import('../components/ReportAgentModal'));
 import SEO from '../components/SEO';
 import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Listing } from '../components/dashboard/types';
 import Footer from '../components/Footer';
-import ReportAgentModal from '../components/ReportAgentModal';
 
 function formatTimeUntil(dateStr: string): string {
   const diff = new Date(dateStr).getTime() - Date.now();
@@ -26,10 +30,14 @@ function formatTimeUntil(dateStr: string): string {
   return `${hours}h`;
 }
 
-/** Detect Facebook/Instagram in-app browser */
-function isFBBrowser(): boolean {
+/**
+ * Detect embedded in-app browsers where Google/LinkedIn OAuth is blocked or unreliable.
+ * Covers: Facebook, Facebook Lite, Instagram, Telegram, Opera Mini, Line, WeChat, Snapchat.
+ * These all use restricted WebViews that break standard OAuth popup/redirect flows.
+ */
+function isEmbeddedBrowser(): boolean {
   const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|Instagram/i.test(ua);
+  return /FBAN|FBAV|FBLC|FB_IAB|Instagram|Telegram|OPiOS|OPR\/.*Mini|Line|KAKAOTALK|Snapchat|MicroMessenger/i.test(ua);
 }
 
 export default function ListingDetail() {
@@ -187,7 +195,7 @@ export default function ListingDetail() {
   const hasApplied = listing.hasApplied || !!listing.myApplication;
   const canApply = user && !hasApplied && !isClosed;
   const showMobileBottomBar = !hasApplied && !isClosed;
-  const inFBBrowser = isFBBrowser();
+  const inEmbeddedBrowser = isEmbeddedBrowser();
 
   // ─── Desktop Sidebar Apply Card ────────────────────────────────────────────
 
@@ -223,7 +231,7 @@ export default function ListingDetail() {
 
       {/* Not logged in — signup options */}
       {!user && !isClosed && (
-        inFBBrowser ? (
+        inEmbeddedBrowser ? (
           /* ── FB in-app browser: inline email signup (OAuth is blocked in webviews) ── */
           <div className="space-y-3">
             <form onSubmit={handleInlineSignup} className="space-y-2.5">
@@ -252,12 +260,14 @@ export default function ListingDetail() {
                 minLength={8}
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <Turnstile
-                sitekey={TURNSTILE_SITE_KEY}
-                onVerify={(token) => setCaptchaToken(token)}
-                onExpire={() => setCaptchaToken('')}
-                size="normal"
-              />
+              <Suspense fallback={<div className="h-[65px]" />}>
+                <LazyTurnstile
+                  sitekey={TURNSTILE_SITE_KEY}
+                  onVerify={(token: string) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken('')}
+                  size="normal"
+                />
+              </Suspense>
               {signupError && (
                 <p className="text-xs text-red-600">{signupError}</p>
               )}
@@ -428,7 +438,7 @@ export default function ListingDetail() {
               </Link>
             ) : (
               <button
-                onClick={() => !inFBBrowser ? handleApplySignup('google') : setShowInlineSignup(true)}
+                onClick={() => !inEmbeddedBrowser ? handleApplySignup('google') : setShowInlineSignup(true)}
                 className="bg-blue-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Sign Up
@@ -791,7 +801,7 @@ export default function ListingDetail() {
           )}
 
           {/* Slide-up inline signup form for FB in-app browser (mobile) */}
-          {showInlineSignup && !user && inFBBrowser && (
+          {showInlineSignup && !user && inEmbeddedBrowser && (
             <div className="bg-white border-t border-gray-200 px-4 pt-4 pb-2 shadow-lg">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-900">Create your free account</p>
@@ -831,12 +841,14 @@ export default function ListingDetail() {
                   minLength={8}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <Turnstile
-                  sitekey={TURNSTILE_SITE_KEY}
-                  onVerify={(token) => setCaptchaToken(token)}
-                  onExpire={() => setCaptchaToken('')}
-                  size="normal"
-                />
+                <Suspense fallback={<div className="h-[65px]" />}>
+                  <LazyTurnstile
+                    sitekey={TURNSTILE_SITE_KEY}
+                    onVerify={(token: string) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken('')}
+                    size="normal"
+                  />
+                </Suspense>
                 {signupError && (
                   <p className="text-xs text-red-600">{signupError}</p>
                 )}
@@ -877,7 +889,7 @@ export default function ListingDetail() {
 
               <div className="flex-1 min-w-0">
                 {/* Not logged in — FB webview: show inline signup form */}
-                {!user && inFBBrowser && (
+                {!user && inEmbeddedBrowser && (
                   <button
                     onClick={() => setShowInlineSignup(true)}
                     className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all text-center"
@@ -887,7 +899,7 @@ export default function ListingDetail() {
                 )}
 
                 {/* Not logged in — Normal browser: OAuth signup */}
-                {!user && !inFBBrowser && (
+                {!user && !inEmbeddedBrowser && (
                   <button
                     onClick={() => handleApplySignup('google')}
                     className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all text-center"
@@ -929,13 +941,15 @@ export default function ListingDetail() {
       {/* Bottom spacer for mobile sticky bar */}
       {showMobileBottomBar && <div className="h-28 lg:hidden" />}
 
-      {listing.agent && (
-        <ReportAgentModal
-          isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
-          agentId={listing.agent.id}
-          agentName={listing.agent.name}
-        />
+      {listing.agent && showReportModal && (
+        <Suspense fallback={null}>
+          <ReportAgentModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            agentId={listing.agent.id}
+            agentName={listing.agent.name}
+          />
+        </Suspense>
       )}
     </div>
   );
