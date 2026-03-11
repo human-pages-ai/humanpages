@@ -288,7 +288,7 @@ export default function ListingDetail() {
                 autoComplete="new-password"
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <Suspense fallback={<div className="h-[65px]" />}>
+              <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
                 <LazyTurnstile
                   sitekey={TURNSTILE_SITE_KEY}
                   onVerify={(token: string) => setCaptchaToken(token)}
@@ -899,7 +899,7 @@ export default function ListingDetail() {
                   autoComplete="new-password"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <Suspense fallback={<div className="h-[65px]" />}>
+                <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
                   <LazyTurnstile
                     sitekey={TURNSTILE_SITE_KEY}
                     onVerify={(token: string) => setCaptchaToken(token)}
