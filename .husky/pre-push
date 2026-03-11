@@ -28,7 +28,7 @@ fail() {
     done
     echo ""
     echo "--- DETAILED OUTPUT ---"
-    cat /tmp/pre-push-stage.log 2>/dev/null
+    cat /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null
   } > "$ERROR_LOG"
 
   # Build the error message
@@ -136,7 +136,7 @@ echo "  Mode: $MODE"
 # Regenerate Prisma client so type checks match the latest schema
 # ------------------------------------------------------------------
 echo "  Regenerating Prisma client..."
-if ! (cd backend && npx prisma generate) >/tmp/pre-push-stage.log 2>&1; then
+if ! (cd backend && npx prisma generate) >/sessions/great-confident-allen/tmp/pre-push-stage.log 2>&1; then
   echo "  WARNING: prisma generate failed — type checks may report false errors"
   echo "  Run 'cd backend && npx prisma generate' manually if tsc fails"
 fi
@@ -145,10 +145,10 @@ fi
 # Migration structure validation (fast, no DB needed)
 # ------------------------------------------------------------------
 echo "  Validating migration structure..."
-if bash backend/scripts/validate-migrations.sh >/tmp/pre-push-stage.log 2>&1; then
+if bash backend/scripts/validate-migrations.sh >/sessions/great-confident-allen/tmp/pre-push-stage.log 2>&1; then
   echo "  Migration structure OK"
 else
-  ISSUES=$(grep "❌" /tmp/pre-push-stage.log || echo "Unknown migration structure error")
+  ISSUES=$(grep "❌" /sessions/great-confident-allen/tmp/pre-push-stage.log || echo "Unknown migration structure error")
   fail "migration-structure" \
     "Migration file issues detected:" \
     "" \
@@ -168,17 +168,17 @@ if (cd backend && npx prisma migrate diff \
     --from-migrations ./prisma/migrations \
     --to-schema-datamodel ./prisma/schema.prisma \
     --exit-code \
-    --shadow-database-url "$SHADOW_URL") >/tmp/pre-push-stage.log 2>&1; then
+    --shadow-database-url "$SHADOW_URL") >/sessions/great-confident-allen/tmp/pre-push-stage.log 2>&1; then
   echo "  No schema drift detected"
 else
   # Check if it's a missing binary vs actual drift
-  if grep -q "Could not find schema-engine\|Failed to fetch sha256" /tmp/pre-push-stage.log 2>/dev/null; then
+  if grep -q "Could not find schema-engine\|Failed to fetch sha256" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
     echo "  WARNING: Prisma schema-engine not available — skipping drift check"
     echo "  (migration structure validation still passed)"
     # Don't fail — the static validation already passed above.
     # The full drift check will run on environments with Prisma installed.
-  elif grep -q "P3018\|P3009\|P3006" /tmp/pre-push-stage.log 2>/dev/null; then
-    DRIFT_DETAIL=$(grep -A3 "ERROR\|DbError\|following migration" /tmp/pre-push-stage.log | head -10)
+  elif grep -q "P3018\|P3009\|P3006" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
+    DRIFT_DETAIL=$(grep -A3 "ERROR\|DbError\|following migration" /sessions/great-confident-allen/tmp/pre-push-stage.log | head -10)
     fail "schema-drift" \
       "Prisma migration error:" \
       "" \
@@ -187,7 +187,7 @@ else
       "Fix: cd backend && npx prisma migrate dev --name <description>" \
       "     or: npx prisma migrate reset  (drops DB!)"
   else
-    DRIFT_DETAIL=$(head -20 /tmp/pre-push-stage.log)
+    DRIFT_DETAIL=$(head -20 /sessions/great-confident-allen/tmp/pre-push-stage.log)
     fail "schema-drift" \
       "schema.prisma doesn't match migration history:" \
       "" \
@@ -208,7 +208,7 @@ fi
 # ------------------------------------------------------------------
 # Lite checks: tsc (parallel) + backend unit tests
 # ------------------------------------------------------------------
-LOG="/tmp/human-pages-pre-push.log"
+LOG="/sessions/great-confident-allen/tmp/human-pages-pre-push.log"
 
 if [ "$MODE" = "lite" ]; then
   echo "  Running lite checks... (log: $LOG)"
@@ -221,25 +221,25 @@ if [ "$MODE" = "lite" ]; then
 
   if [ $? -ne 0 ]; then
     # Strip ANSI color codes for reliable grep matching
-    sed 's/\x1b\[[0-9;]*m//g' "$LOG" > /tmp/pre-push-stage.log
+    sed 's/\x1b\[[0-9;]*m//g' "$LOG" > /sessions/great-confident-allen/tmp/pre-push-stage.log
 
     FAILED_CHECKS=""
-    if grep -q "\[tsc:be\].*error TS" /tmp/pre-push-stage.log 2>/dev/null; then
+    if grep -q "\[tsc:be\].*error TS" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
       FAILED_CHECKS="$FAILED_CHECKS backend TypeScript errors;"
     fi
-    if grep -q "\[tsc:fe\].*error TS" /tmp/pre-push-stage.log 2>/dev/null; then
+    if grep -q "\[tsc:fe\].*error TS" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
       FAILED_CHECKS="$FAILED_CHECKS frontend TypeScript errors;"
     fi
-    if grep -q "\[test\].*FAIL\|failing" /tmp/pre-push-stage.log 2>/dev/null; then
+    if grep -q "\[test\].*FAIL\|failing" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
       FAILED_CHECKS="$FAILED_CHECKS backend test failures;"
     fi
     [ -z "$FAILED_CHECKS" ] && FAILED_CHECKS="see log for details"
 
     # Extract the actual error lines (from color-stripped log)
-    TS_ERRORS=$(grep -h "error TS" /tmp/pre-push-stage.log 2>/dev/null | head -15)
-    TEST_ERRORS=$(grep -h "FAIL\|AssertionError\|Expected\|failing" /tmp/pre-push-stage.log 2>/dev/null | head -10)
+    TS_ERRORS=$(grep -h "error TS" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null | head -15)
+    TEST_ERRORS=$(grep -h "FAIL\|AssertionError\|Expected\|failing" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null | head -10)
     DETAIL=$(printf "%s\n%s" "$TS_ERRORS" "$TEST_ERRORS" | sed '/^$/d' | head -20)
-    [ -z "$DETAIL" ] && DETAIL=$(tail -20 /tmp/pre-push-stage.log)
+    [ -z "$DETAIL" ] && DETAIL=$(tail -20 /sessions/great-confident-allen/tmp/pre-push-stage.log)
 
     fail "lite-checks" \
       "Failed:$FAILED_CHECKS" \
@@ -282,7 +282,7 @@ else
   lsof -ti :3000 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
   lsof -ti :3001 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
   sleep 1
-  npm run dev >/tmp/human-pages-e2e-servers.log 2>&1 &
+  npm run dev >/sessions/great-confident-allen/tmp/human-pages-e2e-servers.log 2>&1 &
   DEV_PID=$!
 fi
 
@@ -297,27 +297,27 @@ npx concurrently --kill-others-on-fail \
 
 if [ $? -ne 0 ]; then
   # Strip ANSI color codes for reliable grep matching
-  sed 's/\x1b\[[0-9;]*m//g' "$LOG" > /tmp/pre-push-stage.log
+  sed 's/\x1b\[[0-9;]*m//g' "$LOG" > /sessions/great-confident-allen/tmp/pre-push-stage.log
 
   FAILED_CHECKS=""
-  if grep -q "\[tsc:be\].*error TS" /tmp/pre-push-stage.log 2>/dev/null; then
+  if grep -q "\[tsc:be\].*error TS" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS backend TypeScript errors;"
   fi
-  if grep -q "\[tsc:fe\].*error TS" /tmp/pre-push-stage.log 2>/dev/null; then
+  if grep -q "\[tsc:fe\].*error TS" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS frontend TypeScript errors;"
   fi
-  if grep -q "\[test\].*FAIL\|failing" /tmp/pre-push-stage.log 2>/dev/null; then
+  if grep -q "\[test\].*FAIL\|failing" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS backend test failures;"
   fi
-  if grep -q "\[e2e\].*failed\|FAILED" /tmp/pre-push-stage.log 2>/dev/null; then
+  if grep -q "\[e2e\].*failed\|FAILED" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS e2e test failures;"
   fi
   [ -z "$FAILED_CHECKS" ] && FAILED_CHECKS="see log for details"
 
-  TS_ERRORS=$(grep -h "error TS" /tmp/pre-push-stage.log 2>/dev/null | head -15)
-  TEST_ERRORS=$(grep -h "FAIL\|AssertionError\|Expected\|failing\|failed" /tmp/pre-push-stage.log 2>/dev/null | head -10)
+  TS_ERRORS=$(grep -h "error TS" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null | head -15)
+  TEST_ERRORS=$(grep -h "FAIL\|AssertionError\|Expected\|failing\|failed" /sessions/great-confident-allen/tmp/pre-push-stage.log 2>/dev/null | head -10)
   DETAIL=$(printf "%s\n%s" "$TS_ERRORS" "$TEST_ERRORS" | sed '/^$/d' | head -20)
-  [ -z "$DETAIL" ] && DETAIL=$(tail -20 /tmp/pre-push-stage.log)
+  [ -z "$DETAIL" ] && DETAIL=$(tail -20 /sessions/great-confident-allen/tmp/pre-push-stage.log)
 
   fail "heavy-checks" \
     "Failed:$FAILED_CHECKS" \
@@ -325,7 +325,7 @@ if [ $? -ne 0 ]; then
     "$DETAIL" \
     "" \
     "Full log: $LOG" \
-    "E2e server log: /tmp/human-pages-e2e-servers.log"
+    "E2e server log: /sessions/great-confident-allen/tmp/human-pages-e2e-servers.log"
 fi
 
 echo "=== Heavy checks passed ==="
