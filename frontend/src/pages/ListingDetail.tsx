@@ -37,7 +37,7 @@ function formatTimeUntil(dateStr: string): string {
  */
 function isEmbeddedBrowser(): boolean {
   const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|FBLC|FB_IAB|Instagram|Telegram|OPiOS|OPR\/.*Mini|Line|KAKAOTALK|Snapchat|MicroMessenger/i.test(ua);
+  return /FBAN|FBAV|FBLC|FB_IAB|Instagram|Telegram|OPiOS|OPR\/.*Mini|Line\/|KAKAOTALK|Snapchat|MicroMessenger/i.test(ua);
 }
 
 export default function ListingDetail() {
@@ -241,6 +241,7 @@ export default function ListingDetail() {
                 onChange={(e) => setSignupName(e.target.value)}
                 placeholder="Your name"
                 required
+                autoComplete="name"
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <input
@@ -249,6 +250,8 @@ export default function ListingDetail() {
                 onChange={(e) => setSignupEmail(e.target.value)}
                 placeholder="Email address"
                 required
+                autoComplete="email"
+                inputMode="email"
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <input
@@ -258,9 +261,10 @@ export default function ListingDetail() {
                 placeholder="Create password (8+ chars)"
                 required
                 minLength={8}
+                autoComplete="new-password"
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <Suspense fallback={<div className="h-[65px]" />}>
+              <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
                 <LazyTurnstile
                   sitekey={TURNSTILE_SITE_KEY}
                   onVerify={(token: string) => setCaptchaToken(token)}
@@ -483,6 +487,8 @@ export default function ListingDetail() {
                 <img
                   src={listing.imageUrl}
                   alt={listing.title}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-56 object-cover"
                 />
               )}
@@ -772,6 +778,7 @@ export default function ListingDetail() {
                 <button
                   onClick={() => setShowMobileApplySheet(false)}
                   className="text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Close apply form"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -808,6 +815,7 @@ export default function ListingDetail() {
                 <button
                   onClick={() => setShowInlineSignup(false)}
                   className="text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Close signup form"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -822,6 +830,7 @@ export default function ListingDetail() {
                   placeholder="Your name"
                   required
                   autoFocus
+                  autoComplete="name"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <input
@@ -830,6 +839,8 @@ export default function ListingDetail() {
                   onChange={(e) => setSignupEmail(e.target.value)}
                   placeholder="Email address"
                   required
+                  autoComplete="email"
+                  inputMode="email"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <input
@@ -839,9 +850,10 @@ export default function ListingDetail() {
                   placeholder="Create password (8+ chars)"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <Suspense fallback={<div className="h-[65px]" />}>
+                <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
                   <LazyTurnstile
                     sitekey={TURNSTILE_SITE_KEY}
                     onVerify={(token: string) => setCaptchaToken(token)}
@@ -863,9 +875,8 @@ export default function ListingDetail() {
               <div className="flex items-center justify-between mt-2 mb-1">
                 <p className="text-xs text-gray-400">Free forever · No fees</p>
                 <a
-                  href={window.location.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); window.open(window.location.href, '_blank'); }}
                   className="text-xs text-blue-600 hover:text-blue-500"
                 >
                   Open in browser &rarr;
@@ -938,8 +949,10 @@ export default function ListingDetail() {
         </div>
       )}
 
-      {/* Bottom spacer for mobile sticky bar */}
-      {showMobileBottomBar && <div className="h-28 lg:hidden" />}
+      {/* Bottom spacer for mobile sticky bar — taller when signup/apply forms are open */}
+      {showMobileBottomBar && (
+        <div className={`lg:hidden ${showInlineSignup || showMobileApplySheet ? 'h-[420px]' : 'h-28'}`} />
+      )}
 
       {listing.agent && showReportModal && (
         <Suspense fallback={null}>
