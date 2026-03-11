@@ -272,25 +272,15 @@ export default function ListingDetail() {
             <p className="text-center text-xs text-gray-400">
               Free forever · No credit card · No fees
             </p>
-            <div className="flex items-center justify-between text-xs">
-              <p className="text-gray-500">
-                Have an account?{' '}
-                <Link
-                  to="/login"
-                  onClick={() => listing && setListingApplyIntent(id!, listing.title, listing.requiredSkills)}
-                  className="text-blue-600 hover:text-blue-500 font-medium"
-                >
-                  Sign in
-                </Link>
-              </p>
+            <p className="text-center">
               <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); window.open(window.location.href, '_blank'); }}
-                className="text-blue-600 hover:text-blue-500"
+                className="text-xs text-blue-600 hover:text-blue-500"
               >
                 Open in browser &rarr;
               </a>
-            </div>
+            </p>
           </div>
         ) : (
           /* ── Normal browser: OAuth buttons ── */
@@ -311,16 +301,6 @@ export default function ListingDetail() {
             </button>
             <p className="text-center text-xs text-gray-400 mt-1">
               Free forever · No credit card · Takes 10 seconds
-            </p>
-            <p className="text-center text-xs text-gray-500">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                onClick={() => listing && setListingApplyIntent(id!, listing.title, listing.requiredSkills)}
-                className="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Sign in
-              </Link>
             </p>
           </div>
         )
@@ -434,21 +414,17 @@ export default function ListingDetail() {
         }}
       />
 
-      {/* Nav bar */}
+      {/* Nav bar — minimal on mobile for cold traffic */}
       <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="whitespace-nowrap">
             <Link to="/"><Logo /></Link>
           </h1>
           <div className="flex items-center gap-4 whitespace-nowrap">
-            <LanguageSwitcher />
-            {user ? (
-              <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
+            <span className="hidden sm:inline"><LanguageSwitcher /></span>
+            {user && (
+              <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium text-sm">
                 {t('nav.dashboard')}
-              </Link>
-            ) : (
-              <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-                {t('nav.login')}
               </Link>
             )}
           </div>
@@ -926,28 +902,17 @@ export default function ListingDetail() {
               </div>
             </div>
 
-            {/* Sign in link + skills hint for non-logged-in users */}
-            {!user && !showInlineSignup && !showMobileApplySheet && (
-              <div className="mt-2 flex items-center justify-between">
-                {listing.requiredSkills?.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {listing.requiredSkills.slice(0, 3).map((skill: string, idx: number) => (
-                      <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                    {listing.requiredSkills.length > 3 && (
-                      <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3} more</span>
-                    )}
-                  </div>
+            {/* Skills hint for non-logged-in users */}
+            {!user && !showInlineSignup && !showMobileApplySheet && listing.requiredSkills?.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {listing.requiredSkills.slice(0, 3).map((skill: string, idx: number) => (
+                  <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {skill}
+                  </span>
+                ))}
+                {listing.requiredSkills.length > 3 && (
+                  <span className="text-xs text-gray-400">+{listing.requiredSkills.length - 3} more</span>
                 )}
-                <Link
-                  to="/login"
-                  onClick={() => listing && setListingApplyIntent(id!, listing.title, listing.requiredSkills)}
-                  className="text-xs text-blue-600 hover:text-blue-500 font-medium shrink-0 ml-2"
-                >
-                  Sign in
-                </Link>
               </div>
             )}
           </div>
