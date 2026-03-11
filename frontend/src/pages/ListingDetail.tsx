@@ -53,6 +53,7 @@ export default function ListingDetail() {
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const applyFormRef = useRef<HTMLDivElement>(null);
+  const desktopApplyRef = useRef<HTMLDivElement>(null);
   const hasShownWelcomeToast = useRef(false);
 
   // Inline email signup for FB in-app browser (where OAuth is blocked)
@@ -200,7 +201,7 @@ export default function ListingDetail() {
   // ─── Desktop Sidebar Apply Card ────────────────────────────────────────────
 
   const renderDesktopApplyCard = () => (
-    <div className="sticky top-6 bg-white rounded-lg shadow p-6">
+    <div ref={desktopApplyRef} className="sticky top-6 bg-white rounded-lg shadow p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t('listings.detail.applyNow')}
       </h2>
@@ -442,7 +443,15 @@ export default function ListingDetail() {
               </Link>
             ) : (
               <button
-                onClick={() => !inEmbeddedBrowser ? handleApplySignup('google') : setShowInlineSignup(true)}
+                onClick={() => {
+                  if (!inEmbeddedBrowser) {
+                    handleApplySignup('google');
+                  } else {
+                    // Mobile: open slide-up form. Desktop: scroll to sidebar form.
+                    setShowInlineSignup(true);
+                    desktopApplyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
                 className="bg-blue-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Sign Up
