@@ -414,18 +414,25 @@ export default function ListingDetail() {
         }}
       />
 
-      {/* Nav bar — minimal on mobile for cold traffic */}
+      {/* Nav bar */}
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="whitespace-nowrap">
             <Link to="/"><Logo /></Link>
           </h1>
-          <div className="flex items-center gap-4 whitespace-nowrap">
-            <span className="hidden sm:inline"><LanguageSwitcher /></span>
-            {user && (
+          <div className="flex items-center gap-2 sm:gap-4 whitespace-nowrap">
+            <LanguageSwitcher />
+            {user ? (
               <Link to="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium text-sm">
                 {t('nav.dashboard')}
               </Link>
+            ) : (
+              <button
+                onClick={() => !inFBBrowser ? handleApplySignup('google') : setShowInlineSignup(true)}
+                className="bg-blue-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Sign Up
+              </button>
             )}
           </div>
         </div>
