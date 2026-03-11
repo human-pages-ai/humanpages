@@ -549,14 +549,14 @@ export default function ListingDetail() {
 
               {/* Title + Share */}
               <div className="flex items-start justify-between gap-3 mb-4">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 min-w-0 break-words">
                   {listing.title}
                 </h1>
                 <button
                   onClick={handleShare}
                   disabled={loading || !listing}
                   aria-label={shareCopied ? 'Link copied to clipboard' : 'Share this listing'}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Share this listing"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -615,7 +615,7 @@ export default function ListingDetail() {
                 </h2>
                 {listing.description && listing.description.length > 200 && !descExpanded ? (
                   <div>
-                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed break-words">
                       {listing.description.substring(0, 200).trimEnd()}...
                     </p>
                     <button
@@ -626,7 +626,7 @@ export default function ListingDetail() {
                     </button>
                   </div>
                 ) : (
-                  <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-gray-800 whitespace-pre-wrap leading-relaxed break-words">
                     {listing.description}
                   </p>
                 )}
@@ -673,7 +673,7 @@ export default function ListingDetail() {
                     <p className="text-sm font-medium text-gray-600 mb-1">
                       {t('listings.detail.location')}
                     </p>
-                    <p className="text-gray-800">
+                    <p className="text-gray-800 break-words">
                       {listing.location}
                       {listing.radiusKm && ` (${listing.radiusKm}km radius)`}
                     </p>
