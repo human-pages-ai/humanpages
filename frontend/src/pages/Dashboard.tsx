@@ -18,6 +18,8 @@ import WorkStatusSection from '../components/dashboard/WorkStatusSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
+import CvUpload from '../components/dashboard/CvUpload';
+import EducationSection from '../components/dashboard/EducationSection';
 
 // Lazy-load wallet stack (Privy) — only fetched when payments tab opens
 const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
@@ -904,7 +906,7 @@ export default function Dashboard() {
               {/* Two-column layout on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Profile info */}
-                <div>
+                <div className="space-y-6">
                   <ProfileSection
                     profile={profile}
                     editingProfile={editingProfile}
@@ -920,6 +922,8 @@ export default function Dashboard() {
                     onUploadPhoto={handleUploadPhoto}
                     onDeletePhoto={handleDeletePhoto}
                   />
+                  <CvUpload profile={profile} onUpload={loadProfile} />
+                  <EducationSection profile={profile} onUpdate={loadProfile} />
                 </div>
 
                 {/* Right: Services + Work status */}

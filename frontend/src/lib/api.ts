@@ -1266,6 +1266,35 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ value }),
     }),
+
+  // ─── CV ───
+  uploadCV: (file: File) => {
+    const formData = new FormData();
+    formData.append('cv', file);
+    return fetch(`${API_BASE}/cv/upload`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    }).then(async res => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(error.error || 'Upload failed');
+      }
+      return res.json();
+    });
+  },
+
+  addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; startYear?: number; endYear?: number }) =>
+    request('/cv/education', { method: 'POST', body: JSON.stringify(data) }),
+
+  deleteEducation: (id: string) =>
+    request(`/cv/education/${id}`, { method: 'DELETE' }),
+
+  addCertificate: (data: { name: string; issuer?: string; issueDate?: string; expiryDate?: string }) =>
+    request('/cv/certificate', { method: 'POST', body: JSON.stringify(data) }),
+
+  deleteCertificate: (id: string) =>
+    request(`/cv/certificate/${id}`, { method: 'DELETE' }),
 };
 
 // Referral Program types (included in profile response)

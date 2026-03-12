@@ -124,6 +124,27 @@ export interface Profile {
   analyticsOptOut?: boolean;
   emailDigestMode?: 'REALTIME' | 'HOURLY' | 'DAILY';
   featuredConsent?: boolean;
+  cvParsedAt?: string;
+  education?: Array<{
+    id: string;
+    institution: string;
+    degree?: string;
+    field?: string;
+    country?: string;
+    startYear?: number;
+    endYear?: number;
+    source?: string;
+  }>;
+  certifications?: Array<{
+    id: string;
+    name: string;
+    issuer?: string;
+    issueDate?: string;
+    expiryDate?: string;
+    source?: string;
+  }>;
+  experienceHighlights?: string[];
+  yearsOfExperience?: number;
 }
 
 export interface AgentProfile {
