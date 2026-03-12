@@ -5,9 +5,11 @@ import { logger } from './logger.js';
 
 // Lazy-initialize Resend to avoid crashing when API key is not set (e.g. in tests)
 let _resend: Resend | null = null;
-function getResend(): Resend {
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) return null;
   if (!_resend) {
-    _resend = new Resend(process.env.RESEND_API_KEY);
+    _resend = new Resend(key);
   }
   return _resend;
 }
@@ -45,8 +47,9 @@ interface SendEmailParams {
 }
 
 async function sendEmailOnce({ to, subject, text, html, unsubscribeUrl }: SendEmailParams): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
-    logger.info('No email provider configured, skipping email');
+  const resend = getResend();
+  if (!resend) {
+    logger.info('No email provider configured (RESEND_API_KEY not set), skipping email');
     return false;
   }
 
@@ -56,7 +59,7 @@ async function sendEmailOnce({ to, subject, text, html, unsubscribeUrl }: SendEm
     headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`;
     headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
   }
-  const { data: response, error } = await getResend().emails.send({
+  const { data: response, error } = await resend.emails.send({
     from,
     to: [to],
     subject,
@@ -66,7 +69,13 @@ async function sendEmailOnce({ to, subject, text, html, unsubscribeUrl }: SendEm
   });
 
   if (error) {
-    throw new Error(typeof error === 'object' ? JSON.stringify(error) : String(error));
+    // Don't retry on authentication errors — the key is invalid/expired
+    const errMsg = typeof error === 'object' ? JSON.stringify(error) : String(error);
+    if (errMsg.includes('API key') || errMsg.includes('authentication') || errMsg.includes('Unauthorized')) {
+      logger.error({ err: errMsg }, 'Email API key is invalid — skipping (fix RESEND_API_KEY)');
+      return false;
+    }
+    throw new Error(errMsg);
   }
 
   logger.info({ messageId: response?.id, provider: 'resend' }, 'Email sent');
@@ -160,7 +169,7 @@ interface JobOfferEmailData {
 }
 
 export async function sendJobOfferEmail(data: JobOfferEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping email');
     return false;
   }
@@ -320,7 +329,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 }
 
 export async function sendJobOfferUpdatedEmail(data: JobOfferEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping email');
     return false;
   }
@@ -492,7 +501,7 @@ interface JobMessageEmailData {
 }
 
 export async function sendJobMessageEmail(data: JobMessageEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping message email');
     return false;
   }
@@ -642,7 +651,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
 }
 
 export async function sendVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ email }, 'No email provider configured, skipping verification email');
     return false;
   }
@@ -779,7 +788,7 @@ Human Pages - Get hired for real-world tasks
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ email }, 'No email provider configured, skipping password reset email');
     return false;
   }
@@ -920,7 +929,7 @@ interface StreamFlowStoppedEmailData {
 }
 
 export async function sendStreamFlowStoppedEmail(data: StreamFlowStoppedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -996,7 +1005,7 @@ interface StreamStartedEmailData {
 }
 
 export async function sendStreamStartedEmail(data: StreamStartedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1068,7 +1077,7 @@ interface StreamCompletedEmailData {
 }
 
 export async function sendStreamCompletedEmail(data: StreamCompletedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1112,7 +1121,7 @@ interface DigestEmailData {
 }
 
 export async function sendDigestEmail(data: DigestEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1382,7 +1391,7 @@ interface ProfileNudgeEmailData {
 }
 
 export async function sendProfileNudgeEmail(data: ProfileNudgeEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
 
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
   const dashboardUrl = `${FRONTEND_URL}/dashboard?tab=profile`;
@@ -1528,7 +1537,7 @@ interface ListingMatchEmailData {
 }
 
 export async function sendListingMatchEmail(data: ListingMatchEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
+  if (!process.env.RESEND_API_KEY?.trim()) return false;
 
   const t = getTranslator(data.language || 'en');
   const unsubscribeUrl = generateUnsubscribeUrl(data.humanId);
@@ -1598,7 +1607,7 @@ interface StaffApiKeyEmailData {
 }
 
 export async function sendStaffApiKeyEmail(data: StaffApiKeyEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ email: data.staffEmail }, 'No email provider configured, skipping staff API key email');
     return false;
   }
@@ -1745,7 +1754,7 @@ interface ModerationDelayEmailData {
 }
 
 export async function sendModerationDelayEmail(data: ModerationDelayEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ jobTitle: data.jobTitle }, 'No email provider configured, skipping moderation delay email');
     return false;
   }
@@ -1883,7 +1892,7 @@ interface PaymentOwedEmailData {
 }
 
 export async function sendPaymentOwedEmail(data: PaymentOwedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info('No email provider configured, skipping payment owed email');
     return false;
   }
@@ -2009,7 +2018,7 @@ export interface ListingTermsChangedEmailData {
 }
 
 export async function sendListingTermsChangedEmail(data: ListingTermsChangedEmailData): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY?.trim()) {
     logger.info({ to: data.humanEmail }, 'Skipping listing terms changed email: no RESEND_API_KEY');
     return false;
   }

@@ -19,9 +19,10 @@ let timer: ReturnType<typeof setInterval> | null = null;
 async function sendEmailDirect(payload: any): Promise<boolean> {
   // Lazy import to avoid circular deps
   const { Resend } = await import('resend');
-  if (!process.env.RESEND_API_KEY) return false;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) return false;
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = new Resend(apiKey);
   const from = `${process.env.FROM_NAME || 'HumanPages'} <${process.env.FROM_EMAIL || 'hello@humanpages.ai'}>`;
 
   const { data: response, error } = await resend.emails.send({
@@ -33,7 +34,13 @@ async function sendEmailDirect(payload: any): Promise<boolean> {
   });
 
   if (error) {
-    throw new Error(typeof error === 'object' ? JSON.stringify(error) : String(error));
+    const errMsg = typeof error === 'object' ? JSON.stringify(error) : String(error);
+    // Don't retry on auth errors — the key is invalid
+    if (errMsg.includes('API key') || errMsg.includes('Unauthorized')) {
+      logger.error({ err: errMsg }, 'Outbox email API key invalid — skipping');
+      return false;
+    }
+    throw new Error(errMsg);
   }
 
   logger.info({ messageId: response?.id, provider: 'resend' }, 'Outbox email sent');

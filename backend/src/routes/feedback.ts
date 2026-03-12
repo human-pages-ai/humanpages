@@ -312,7 +312,7 @@ async function sendAdminNotification(feedback: any) {
 
   // Dynamic import to avoid circular deps
   const { Resend } = await import('resend');
-  const resendKey = process.env.RESEND_API_KEY;
+  const resendKey = process.env.RESEND_API_KEY?.trim();
   if (!resendKey) return;
 
   const resend = new Resend(resendKey);
