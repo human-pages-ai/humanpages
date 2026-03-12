@@ -207,7 +207,7 @@ export default function ProfilePhoto({
         <div className="flex flex-col gap-1">
           {photoStatus === 'pending' && (
             <span className="text-xs text-yellow-600 font-medium">
-              {t('dashboard.photo.reviewing', 'Reviewing...')}
+              {t('dashboard.photo.reviewing', 'Photo under review')}
             </span>
           )}
           {photoStatus === 'rejected' && (

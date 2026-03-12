@@ -862,7 +862,7 @@ export default function LandingPage() {
             <LanguageSwitcher />
             <Link
               to="/signup"
-              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
             >
               {t('nav.startProfile')}
             </Link>
@@ -1101,7 +1101,7 @@ export default function LandingPage() {
       <Footer />
 
       {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 md:hidden safe-area-pb">
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 md:hidden safe-area-pb">
         <Link
           to="/signup"
           className="block w-full text-center px-6 py-3.5 bg-orange-500 text-white text-lg font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/30"

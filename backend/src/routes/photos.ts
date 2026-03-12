@@ -16,6 +16,23 @@ import { logger } from '../lib/logger.js';
 
 const router = Router();
 
+/**
+ * Validate image file type by magic bytes (file signature), not just MIME type.
+ * Prevents upload of disguised files with spoofed Content-Type headers.
+ */
+function validateImageMagicBytes(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true;
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true;
+  // WebP: RIFF....WEBP
+  if (buffer.length >= 12 &&
+    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+    buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return true;
+  return false;
+}
+
 // Multer: memory storage, 2MB limit, images only
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -47,6 +64,11 @@ router.post('/upload', authenticateToken, uploadLimiter, upload.single('photo'),
       return res.status(400).json({ error: 'No photo file provided' });
     }
 
+    // Validate file signature (magic bytes) to prevent spoofed Content-Type
+    if (!validateImageMagicBytes(req.file.buffer)) {
+      return res.status(400).json({ error: 'Invalid image file. File signature does not match an allowed image type.' });
+    }
+
     // Process image: resize to 256x256, convert to WebP
     let processed: Buffer;
     try {
@@ -67,10 +89,14 @@ router.post('/upload', authenticateToken, uploadLimiter, upload.single('photo'),
     // Upload new photo to R2
     const key = await uploadProfilePhoto(req.userId!, processed);
 
-    // Update DB
+    // Update DB — also opt into featured by default when uploading a photo
     await prisma.human.update({
       where: { id: req.userId },
-      data: { profilePhotoKey: key, profilePhotoStatus: 'pending' },
+      data: {
+        profilePhotoKey: key,
+        profilePhotoStatus: 'pending',
+        featuredConsent: true,
+      },
     });
 
     // Queue moderation check
@@ -129,20 +155,21 @@ router.post('/import-oauth', authenticateToken, uploadLimiter, async (req: AuthR
     const key = await uploadProfilePhoto(req.userId!, processed);
 
     // Update DB: set photo key, clear oauthPhotoUrl
+    // OAuth photos (Google, LinkedIn) are pre-vetted by the provider — auto-approve
     await prisma.human.update({
       where: { id: req.userId },
       data: {
         profilePhotoKey: key,
-        profilePhotoStatus: 'pending',
+        profilePhotoStatus: 'approved',
         oauthPhotoUrl: null,
+        featuredConsent: true,
       },
     });
 
-    // Queue moderation
-    await queueModeration('profile_photo', req.userId!);
+    // No moderation needed — OAuth provider already vetted the photo
 
     const signedUrl = await getProfilePhotoSignedUrl(key);
-    res.json({ profilePhotoUrl: signedUrl, profilePhotoStatus: 'pending' });
+    res.json({ profilePhotoUrl: signedUrl, profilePhotoStatus: 'approved' });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });

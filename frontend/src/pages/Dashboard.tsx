@@ -14,6 +14,7 @@ import StatusHeader from '../components/dashboard/StatusHeader';
 import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
+import WhatsAppSection from '../components/dashboard/WhatsAppSection';
 import WorkStatusSection from '../components/dashboard/WorkStatusSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
@@ -24,7 +25,6 @@ import EducationSection from '../components/dashboard/EducationSection';
 // Lazy-load wallet stack (Privy) — only fetched when payments tab opens
 const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
 const WalletsSection = lazy(() => import('../components/dashboard/WalletsSection'));
-const FiatPaymentMethodsSection = lazy(() => import('../components/dashboard/FiatPaymentMethodsSection'));
 import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
@@ -32,7 +32,6 @@ import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
 import PaymentPreferencesSection from '../components/dashboard/PaymentPreferencesSection';
 import ContactPrivacySection from '../components/dashboard/ContactPrivacySection';
-import FeaturedInviteModal from '../components/dashboard/FeaturedInviteModal';
 import ListingsSection from '../components/dashboard/ListingsSection';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
@@ -77,7 +76,6 @@ export default function Dashboard() {
     skills: '',
     equipment: [] as string[],
     languages: [] as string[],
-    yearsOfExperience: '' as string,
     contactEmail: '',
     telegram: '',
     whatsapp: '',
@@ -92,13 +90,6 @@ export default function Dashboard() {
     instagramUrl: '',
     youtubeUrl: '',
     websiteUrl: '',
-    tiktokUrl: '',
-    twitterFollowers: '' as string,
-    instagramFollowers: '' as string,
-    youtubeFollowers: '' as string,
-    tiktokFollowers: '' as string,
-    linkedinFollowers: '' as string,
-    facebookFollowers: '' as string,
     workMode: null as 'REMOTE' | 'ONSITE' | 'HYBRID' | null,
   });
 
@@ -124,6 +115,16 @@ export default function Dashboard() {
   const [telegramLinkUrl, setTelegramLinkUrl] = useState<string | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(false);
 
+  const [whatsappStatus, setWhatsappStatus] = useState<{
+    connected: boolean;
+    botAvailable: boolean;
+    whatsappNumber?: string;
+    botNumber?: string;
+  } | null>(null);
+  const [whatsappLinkCode, setWhatsappLinkCode] = useState<string | null>(null);
+  const [whatsappWaLink, setWhatsappWaLink] = useState<string | null>(null);
+  const [whatsappLoading, setWhatsappLoading] = useState(false);
+
   const [editingFilters, setEditingFilters] = useState(false);
   const [filtersForm, setFiltersForm] = useState({
     minOfferPrice: '',
@@ -139,15 +140,11 @@ export default function Dashboard() {
     onConfirm: () => void;
   }>({ open: false, title: '', message: '', onConfirm: () => {} });
 
-  // Featured invite modal — shown when ?featured=1 is in the URL
-  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
-  const [featuredModalValue, setFeaturedModalValue] = useState(false);
-  const [featuredModalSaving, setFeaturedModalSaving] = useState(false);
-
   useEffect(() => {
     loadProfile();
     loadJobs();
     loadTelegramStatus();
+    loadWhatsAppStatus();
 
     // Handle query param toasts
     if (searchParams.get('unsubscribed') === 'true') {
@@ -168,38 +165,6 @@ export default function Dashboard() {
       loadProfile();
     }
   }, []);
-
-  // Show featured invite modal when ?featured=1 is in the URL
-  useEffect(() => {
-    if (!profile) return;
-    if (searchParams.get('featured') === '1' && !profile.featuredConsent) {
-      setFeaturedModalValue(profile.featuredConsent || false);
-      setShowFeaturedModal(true);
-      searchParams.delete('featured');
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [profile]);
-
-  const saveFeaturedConsent = async () => {
-    setFeaturedModalSaving(true);
-    try {
-      const updated = await api.updateProfile({ featuredConsent: featuredModalValue });
-      setProfile(updated);
-      setProfileForm(prev => ({ ...prev, featuredConsent: featuredModalValue }));
-      initialProfileFormRef.current = { ...initialProfileFormRef.current, featuredConsent: featuredModalValue };
-      setShowFeaturedModal(false);
-      if (featuredModalValue) {
-        toast.success(t('toast.featuredEnabled', { defaultValue: 'You\'re now featured on the homepage!' }));
-      } else {
-        toast.success(t('toast.profileSaved'));
-      }
-      posthog.capture('featured_consent_updated', { enabled: featuredModalValue });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('toast.genericError'));
-    } finally {
-      setFeaturedModalSaving(false);
-    }
-  };
 
   // Poll for email verification when unverified (user may verify on another device)
   useEffect(() => {
@@ -234,7 +199,6 @@ export default function Dashboard() {
         skills: data.skills?.join(', ') || '',
         equipment: data.equipment || [],
         languages: data.languages || [],
-        yearsOfExperience: data.yearsOfExperience?.toString() || '',
         contactEmail: data.contactEmail || '',
         telegram: data.telegram || '',
         whatsapp: data.whatsapp || '',
@@ -249,13 +213,6 @@ export default function Dashboard() {
         instagramUrl: data.instagramUrl || '',
         youtubeUrl: data.youtubeUrl || '',
         websiteUrl: data.websiteUrl || '',
-        tiktokUrl: data.tiktokUrl || '',
-        twitterFollowers: data.twitterFollowers?.toString() || '',
-        instagramFollowers: data.instagramFollowers?.toString() || '',
-        youtubeFollowers: data.youtubeFollowers?.toString() || '',
-        tiktokFollowers: data.tiktokFollowers?.toString() || '',
-        linkedinFollowers: data.linkedinFollowers?.toString() || '',
-        facebookFollowers: data.facebookFollowers?.toString() || '',
         workMode: data.workMode || null,
       });
       setFiltersForm({
@@ -342,6 +299,58 @@ export default function Dashboard() {
     });
   };
 
+  const loadWhatsAppStatus = async () => {
+    try {
+      const status = await api.getWhatsAppStatus();
+      setWhatsappStatus(status);
+    } catch (error) {
+      console.error('Failed to load WhatsApp status:', error);
+    }
+  };
+
+  const connectWhatsApp = async () => {
+    setWhatsappLoading(true);
+    try {
+      const { code, waLink } = await api.linkWhatsApp();
+      setWhatsappLinkCode(code);
+      setWhatsappWaLink(waLink ?? null);
+      // Poll for connection
+      const pollInterval = setInterval(async () => {
+        const status = await api.getWhatsAppStatus();
+        if (status.connected) {
+          clearInterval(pollInterval);
+          setWhatsappStatus(status);
+          setWhatsappLinkCode(null);
+          setWhatsappWaLink(null);
+          toast.success('WhatsApp connected!');
+        }
+      }, 3000);
+      setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
+    } catch (error: any) {
+      toast.error(error.message || t('toast.genericError'));
+    } finally {
+      setWhatsappLoading(false);
+    }
+  };
+
+  const disconnectWhatsApp = async () => {
+    setConfirmDialog({
+      open: true,
+      title: 'Disconnect WhatsApp',
+      message: 'You will no longer receive notifications via WhatsApp. Continue?',
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        try {
+          await api.unlinkWhatsApp();
+          setWhatsappStatus({ connected: false, botAvailable: whatsappStatus?.botAvailable || false });
+          toast.success('WhatsApp disconnected');
+        } catch (error: any) {
+          toast.error(error.message || t('toast.genericError'));
+        }
+      },
+    });
+  };
+
   const toggleAvailability = async () => {
     if (!profile) return;
     if (profile.isAvailable && !window.confirm(t('dashboard.workStatus.confirmSuspend'))) {
@@ -398,7 +407,6 @@ export default function Dashboard() {
     skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
     equipment: form.equipment.length > 0 ? form.equipment : null,
     languages: form.languages.length > 0 ? form.languages : null,
-    yearsOfExperience: form.yearsOfExperience ? parseInt(form.yearsOfExperience, 10) : null,
     contactEmail: form.contactEmail || null,
     telegram: form.telegram || null,
     whatsapp: form.whatsapp || null,
@@ -413,13 +421,6 @@ export default function Dashboard() {
     instagramUrl: form.instagramUrl || null,
     youtubeUrl: form.youtubeUrl || null,
     websiteUrl: form.websiteUrl || null,
-    tiktokUrl: form.tiktokUrl || null,
-    twitterFollowers: form.twitterFollowers ? parseInt(form.twitterFollowers, 10) : null,
-    instagramFollowers: form.instagramFollowers ? parseInt(form.instagramFollowers, 10) : null,
-    youtubeFollowers: form.youtubeFollowers ? parseInt(form.youtubeFollowers, 10) : null,
-    tiktokFollowers: form.tiktokFollowers ? parseInt(form.tiktokFollowers, 10) : null,
-    linkedinFollowers: form.linkedinFollowers ? parseInt(form.linkedinFollowers, 10) : null,
-    facebookFollowers: form.facebookFollowers ? parseInt(form.facebookFollowers, 10) : null,
     workMode: form.workMode || null,
   });
 
@@ -523,10 +524,10 @@ export default function Dashboard() {
     }
   };
 
-  const addWalletManual = async (address: string, source?: 'privy' | 'manual_paste', privyIdToken?: string) => {
+  const addWalletManual = async (address: string) => {
     setSaving(true);
     try {
-      await api.addWalletManual({ address, source }, privyIdToken);
+      await api.addWalletManual({ address });
       analytics.track('wallet_added_manual', { address });
       await loadProfile();
       toast.success(t('toast.walletAdded'));
@@ -569,65 +570,6 @@ export default function Dashboard() {
         }
       },
     });
-  };
-
-  const addFiatPaymentMethod = async (data: { platform: string; handle: string; label?: string }) => {
-    setSaving(true);
-    try {
-      await api.addFiatPaymentMethod(data);
-      await loadProfile();
-      toast.success('Payment method added');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add payment method');
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const updateFiatPaymentMethod = async (id: string, data: { handle?: string; label?: string }) => {
-    setSaving(true);
-    try {
-      await api.updateFiatPaymentMethod(id, data);
-      await loadProfile();
-      toast.success('Payment method updated');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update payment method');
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const deleteFiatPaymentMethod = async (id: string) => {
-    setConfirmDialog({
-      open: true,
-      title: 'Delete payment method?',
-      message: 'This payment method will be removed from your profile.',
-      onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, open: false }));
-        try {
-          await api.deleteFiatPaymentMethod(id);
-          toast.success('Payment method deleted');
-          await loadProfile();
-        } catch (error: any) {
-          toast.error(error.message || 'Failed to delete payment method');
-        }
-      },
-    });
-  };
-
-  const setFiatPaymentMethodPrimary = async (id: string) => {
-    setSaving(true);
-    try {
-      await api.setFiatPaymentMethodPrimary(id);
-      await loadProfile();
-      toast.success('Primary payment method updated');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to set primary');
-    } finally {
-      setSaving(false);
-    }
   };
 
   const addService = async () => {
@@ -798,10 +740,10 @@ export default function Dashboard() {
       <nav className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="whitespace-nowrap"><Link to="/"><Logo /></Link></h1>
-          <div className="flex items-center gap-4 whitespace-nowrap">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <LanguageSwitcher />
-            <span className="text-gray-600">{user?.name}</span>
-            <button onClick={handleLogout} className="text-gray-500 hover:text-gray-700">
+            <span className="text-gray-600 truncate max-w-[120px] sm:max-w-[200px]">{user?.name}</span>
+            <button onClick={handleLogout} className="text-gray-500 hover:text-gray-700 whitespace-nowrap flex-shrink-0">
               {t('nav.logout')}
             </button>
           </div>
@@ -946,6 +888,8 @@ export default function Dashboard() {
                     emailNotifications={profile.emailNotifications !== false}
                     telegramNotifications={profile.telegramNotifications !== false}
                     whatsappNotifications={profile.whatsappNotifications !== false}
+                    whatsappConnected={whatsappStatus?.connected ?? false}
+                    whatsappAvailable={whatsappStatus?.botAvailable ?? false}
                     emailDigestMode={profile.emailDigestMode || 'REALTIME'}
                     saving={saving}
                     onToggleAvailability={toggleAvailability}
@@ -978,16 +922,6 @@ export default function Dashboard() {
                     onUpdateWalletLabel={updateWalletLabel}
                   />
                 </WalletProvider>
-              </Suspense>
-              <Suspense fallback={<div className="bg-white rounded-lg shadow p-6 text-center text-gray-400 animate-pulse">Loading…</div>}>
-                <FiatPaymentMethodsSection
-                  methods={profile.fiatPaymentMethods || []}
-                  saving={saving}
-                  onAdd={addFiatPaymentMethod}
-                  onUpdate={updateFiatPaymentMethod}
-                  onDelete={deleteFiatPaymentMethod}
-                  onSetPrimary={setFiatPaymentMethodPrimary}
-                />
               </Suspense>
               <PaymentPreferencesSection
                 paymentPreferences={profile.paymentPreferences || ['UPFRONT', 'ESCROW', 'UPON_COMPLETION']}
@@ -1025,6 +959,15 @@ export default function Dashboard() {
                 onDisconnect={disconnectTelegram}
               />
 
+              <WhatsAppSection
+                whatsappStatus={whatsappStatus}
+                linkCode={whatsappLinkCode}
+                waLink={whatsappWaLink}
+                loading={whatsappLoading}
+                onConnect={connectWhatsApp}
+                onDisconnect={disconnectWhatsApp}
+              />
+
               <VouchSection />
             </div>
           )}
@@ -1056,15 +999,6 @@ export default function Dashboard() {
         message={confirmDialog.message}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(d => ({ ...d, open: false }))}
-      />
-
-      <FeaturedInviteModal
-        open={showFeaturedModal}
-        enabled={featuredModalValue}
-        saving={featuredModalSaving}
-        onToggle={setFeaturedModalValue}
-        onSave={saveFeaturedConsent}
-        onClose={() => setShowFeaturedModal(false)}
       />
 
       <Footer className="mt-12" />

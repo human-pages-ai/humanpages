@@ -79,6 +79,7 @@ describe('Photo Upload Routes', () => {
       const human = await prisma.human.findUnique({ where: { id: user.id } });
       expect(human!.profilePhotoKey).toBe('photos/test-user/fake-uuid.webp');
       expect(human!.profilePhotoStatus).toBe('pending');
+      expect(human!.featuredConsent).toBe(true);
 
       // Verify moderation was queued
       expect(queueModeration).toHaveBeenCalledWith('profile_photo', user.id);
@@ -174,11 +175,13 @@ describe('Photo Upload Routes', () => {
         .send({ provider: 'google' });
 
       expect(res.status).toBe(200);
-      expect(res.body.profilePhotoStatus).toBe('pending');
+      expect(res.body.profilePhotoStatus).toBe('approved');
 
-      // Verify oauthPhotoUrl was cleared
+      // Verify oauthPhotoUrl was cleared and photo auto-approved
       const human = await prisma.human.findUnique({ where: { id: user.id } });
       expect(human!.oauthPhotoUrl).toBeNull();
+      expect(human!.profilePhotoStatus).toBe('approved');
+      expect(human!.featuredConsent).toBe(true);
     });
 
     it('should reject if no oauth photo URL exists', async () => {

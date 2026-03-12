@@ -61,9 +61,10 @@ export default function LanguageSwitcher() {
     i18n.changeLanguage(code);
     setIsOpen(false);
 
-    // Navigate to lang-prefixed URL if on a SEO page
+    // Navigate to lang-prefixed URL if on a SEO page (skip for logged-in users
+    // on the home route, since they get redirected to /dashboard)
     const strippedPath = stripLangPrefix(location.pathname);
-    if (isLocalizedRoute(strippedPath)) {
+    if (isLocalizedRoute(strippedPath) && !(user && strippedPath === '/')) {
       if (code === 'en') {
         navigate(strippedPath + location.search + location.hash);
       } else {

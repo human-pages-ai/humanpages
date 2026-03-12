@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
-import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
 import { getApplyIntent, clearApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
@@ -177,6 +176,10 @@ export default function Onboarding() {
   const [photoDismissed, setPhotoDismissed] = useState(false);
   const [photoAccepted, setPhotoAccepted] = useState(false);
 
+  // Featured consent — defaults to true when photo is accepted
+  const [featuredConsent, setFeaturedConsent] = useState(true);
+  const [showFeaturedTooltip, setShowFeaturedTooltip] = useState(false);
+
   useEffect(() => {
     // Check for OAuth photo URL stored during signup
     const storedPhotoUrl = safeLocalStorage.getItem('oauthPhotoUrl');
@@ -257,7 +260,7 @@ export default function Onboarding() {
         ...(neighborhood ? { neighborhood } : {}),
         ...(locationLat != null && locationLng != null ? { locationLat, locationLng } : {}),
         skills,
-        ...(photoAccepted ? { featuredOnHomepage: true } : {}),
+        featuredConsent,
       });
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
@@ -326,7 +329,6 @@ export default function Onboarding() {
 
   const handleSkip = () => {
     analytics.track('onboarding_skip');
-    posthog.capture('onboarding_skipped');
 
     // Still auto-submit application on skip if intent exists
     const skipCareerIntent = getApplyIntent();
@@ -414,6 +416,38 @@ export default function Onboarding() {
                 </div>
               </div>
             )}
+
+            {/* Featured on homepage opt-in */}
+            <label className="flex items-start gap-2 mb-6 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={featuredConsent}
+                onChange={(e) => setFeaturedConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm">
+                <span className="font-medium text-gray-900">
+                  {t('onboarding.featuredConsent', 'Feature me on the homepage')}
+                </span>
+                <span className="relative inline-block ml-1">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setShowFeaturedTooltip(!showFeaturedTooltip); }}
+                    onMouseEnter={() => setShowFeaturedTooltip(true)}
+                    onMouseLeave={() => setShowFeaturedTooltip(false)}
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs font-bold hover:bg-gray-300"
+                    aria-label={t('onboarding.featuredConsentInfo', 'What does this mean?')}
+                  >
+                    ?
+                  </button>
+                  {showFeaturedTooltip && (
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-10">
+                      {t('onboarding.featuredConsentTooltip', 'Your photo, name, skills, and location may appear on our homepage to showcase the community. You can change this anytime in your dashboard privacy settings.')}
+                    </span>
+                  )}
+                </span>
+              </span>
+            </label>
 
             {/* Location (optional) */}
             <div className="mb-6">

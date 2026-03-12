@@ -52,8 +52,7 @@ export default function StatusPage() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <Logo className="h-7 w-7" />
-            <span className="font-semibold text-slate-900">Human Pages</span>
+            <Logo />
           </Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
