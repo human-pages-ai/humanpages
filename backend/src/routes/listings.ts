@@ -1709,7 +1709,7 @@ router.put('/:id/links/:code', authenticateAgent, requireActiveAgent, async (req
     const { label } = z.object({ label: z.string().max(100) }).parse(req.body);
 
     const link = await prisma.listingLink.findFirst({
-      where: { code: req.params.code, listingId: listing.id },
+      where: { code: req.params.code.toLowerCase(), listingId: listing.id },
     });
 
     if (!link) {

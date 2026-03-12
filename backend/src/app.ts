@@ -26,6 +26,7 @@ import careersRoutes from './routes/careers.js';
 import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import blogApiRoutes from './routes/blog.js';
+import cvRouter from './routes/cv.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -101,6 +102,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/listings', listingsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/photos', photosRoutes);
+app.use('/api/cv', cvRouter);
 
 // Geo detection
 app.use('/api/geo', geoRoutes);
@@ -259,6 +261,34 @@ app.get('/listings/:id', async (req, res, next) => {
     }
     // No short link yet — serve meta HTML directly
     const html = await getListingMetaHtml(req.params.id);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+// Short listing links with language prefix: /:lang/work/:code → resolve code → serve listing page with OG meta
+app.get('/:lang/work/:code', async (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  try {
+    const link = await prisma.listingLink.findUnique({
+      where: { code: req.params.code.toLowerCase() },
+      select: { listingId: true, code: true },
+    });
+    if (!link) return next(); // Fall through to SPA (shows 404)
+
+    // Increment click count (fire-and-forget)
+    prisma.listingLink.update({
+      where: { code: link.code },
+      data: { clicks: { increment: 1 } },
+    }).catch((err: unknown) => logger.warn({ err, code: link.code }, 'Failed to increment link click count'));
+
+    // Inject OG meta tags so the short link previews correctly on social
+    const html = await getListingMetaHtml(link.listingId, req.params.lang);
     if (html) {
       res.set('Content-Type', 'text/html');
       return res.send(html);

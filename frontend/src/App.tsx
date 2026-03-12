@@ -276,6 +276,7 @@ function AppRoutes() {
       <Route path="/listings" element={<JobBoard />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
       <Route path="/work/:code" element={<ListingDetail />} />
+      <Route path="/:lang/work/:code" element={<LangWrapper><ListingDetail /></LangWrapper>} />
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/ai-agents-hiring-humans" element={<AiAgentsHiringHumans />} />
       <Route path="/blog/getting-paid-usdc-freelancers" element={<GettingPaidUsdc />} />

@@ -1484,7 +1484,7 @@ router.get('/listings/:id', async (req: AuthRequest, res) => {
             status: true,
             createdAt: true,
             jobId: true,
-            human: { select: { id: true, name: true, email: true } },
+            human: { select: { id: true, name: true, email: true, skills: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
