@@ -62,14 +62,21 @@ export default function ListingDetail() {
   const [showInlineSignup, setShowInlineSignup] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
+  // Track whether short code resolution failed (invalid/expired code)
+  const [codeNotFound, setCodeNotFound] = useState(false);
+
   // Resolve short code to listing ID on mount
   useEffect(() => {
     if (params.code && !resolvedId) {
-      api.resolveListingCode(params.code).then(({ listingId, code }: { listingId: string; code: string }) => {
+      const normalizedCode = params.code.toLowerCase();
+      api.resolveListingCode(normalizedCode).then(({ listingId, code }: { listingId: string; code: string }) => {
         setResolvedId(listingId);
         setLinkCode(code);
+        // Persist ref immediately so it survives signup redirect even if listing fetch fails
+        sessionStorage.setItem('hp_listing_ref', code);
       }).catch(() => {
-        setLoading(false); // Will show "not found" state
+        setCodeNotFound(true);
+        setLoading(false);
       });
     }
   }, [params.code]);
@@ -210,12 +217,12 @@ export default function ListingDetail() {
     );
   }
 
-  if (!listing) {
+  if (codeNotFound || !listing) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-600">Listing not found</p>
+        <p className="text-gray-600">{codeNotFound ? 'This link is no longer active' : 'Listing not found'}</p>
         <Link to="/listings" className="text-blue-600 hover:text-blue-800">
-          {t('common.back')} to listings
+          Browse available listings
         </Link>
       </div>
     );

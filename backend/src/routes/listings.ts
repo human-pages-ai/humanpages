@@ -566,7 +566,7 @@ router.get('/by-code/:code', async (req, res) => {
     prisma.listingLink.update({
       where: { code: link.code },
       data: { clicks: { increment: 1 } },
-    }).catch(() => {});
+    }).catch((err: unknown) => logger.warn({ err, code: link.code }, 'Failed to increment link click count'));
 
     res.json({ listingId: link.listingId, code: link.code });
   } catch (error) {

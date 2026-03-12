@@ -263,7 +263,7 @@ app.get('/work/:code', async (req, res, next) => {
     prisma.listingLink.update({
       where: { code: link.code },
       data: { clicks: { increment: 1 } },
-    }).catch(() => {});
+    }).catch((err: unknown) => logger.warn({ err, code: link.code }, 'Failed to increment link click count'));
 
     // Inject OG meta tags so the short link previews correctly on social
     const html = await getListingMetaHtml(link.listingId);
