@@ -169,7 +169,7 @@
     "resetPassword": "Redefinir Senha",
     "sendResetLink": "Enviar Link",
     "sending": "Enviando...",
-    "resetSent": "Link de redefinição enviado! Verifique seu e-mail.",
+    "resetSent": "Link de redefinição enviado! Verifique seu e-mail (e a pasta de spam/lixo eletrônico).",
     "newPassword": "Nova Senha",
     "confirmPassword": "Confirmar Senha",
     "resetting": "Redefinindo...",
@@ -437,7 +437,7 @@
       "statusInactive": "Inativo"
     },
     "emailVerification": {
-      "banner": "Por favor, verifique seu endereço de e-mail. Confira sua caixa de entrada para o link de verificação.",
+      "banner": "Por favor, verifique seu endereço de e-mail. Confira sua caixa de entrada (e a pasta de spam/lixo eletrônico) para o link de verificação.",
       "restricted": "Seu perfil está oculto das buscas e você não pode editar seu perfil, gerenciar carteiras, serviços ou aceitar trabalhos até verificar.",
       "resend": "Reenviar e-mail de verificação",
       "required": "Verificação de e-mail necessária para realizar esta ação."
@@ -636,7 +636,7 @@
     "telegramDisconnected": "Telegram desconectado",
     "accountDeleted": "Conta excluída com sucesso",
     "dataExported": "Dados exportados com sucesso",
-    "verificationSent": "E-mail de verificação enviado",
+    "verificationSent": "E-mail de verificação enviado — verifique sua pasta de spam/lixo eletrônico se não encontrar",
     "emailVerified": "E-mail verificado com sucesso",
     "preferencesSaved": "Preferências salvas",
     "genericError": "Algo deu errado. Tente novamente.",

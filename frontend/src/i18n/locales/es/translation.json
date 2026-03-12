@@ -209,7 +209,7 @@
     "resetPassword": "Restablecer Contraseña",
     "sendResetLink": "Enviar Enlace",
     "sending": "Enviando...",
-    "resetSent": "¡Enlace de restablecimiento enviado! Revisa tu email.",
+    "resetSent": "¡Enlace de restablecimiento enviado! Revisa tu email (y la carpeta de spam/correo no deseado).",
     "newPassword": "Nueva Contraseña",
     "confirmPassword": "Confirmar Contraseña",
     "resetting": "Restableciendo...",
@@ -333,7 +333,7 @@
       "saveFilters": "Guardar Filtros"
     },
     "emailVerification": {
-      "banner": "Por favor verifica tu correo electrónico. Revisa tu bandeja de entrada para el enlace de verificación.",
+      "banner": "Por favor verifica tu correo electrónico. Revisa tu bandeja de entrada (y la carpeta de spam/correo no deseado) para el enlace de verificación.",
       "resend": "Reenviar correo de verificación",
       "restricted": "Tu perfil está oculto de las búsquedas y no puedes editar tu perfil, gestionar billeteras, servicios o aceptar trabajos hasta verificarlo.",
       "required": "Verificación de correo electrónico requerida para realizar esta acción."
@@ -687,7 +687,7 @@
     "telegramDisconnected": "Telegram desconectado",
     "accountDeleted": "Cuenta eliminada exitosamente",
     "dataExported": "Datos exportados exitosamente",
-    "verificationSent": "Correo de verificación enviado",
+    "verificationSent": "Correo de verificación enviado — revisa tu carpeta de spam/correo no deseado si no lo ves",
     "emailVerified": "Email verificado exitosamente",
     "preferencesSaved": "Preferencias guardadas",
     "genericError": "Algo salió mal. Por favor, intenta de nuevo.",

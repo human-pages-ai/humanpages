@@ -209,7 +209,7 @@
     "resetPassword": "I-reset ang Password",
     "sendResetLink": "Magpadala ng Reset Link",
     "sending": "Nagpapadala...",
-    "resetSent": "Naipadala na ang password reset link! Tingnan ang email mo.",
+    "resetSent": "Naipadala na ang password reset link! Tingnan ang email mo (at ang spam/junk folder).",
     "newPassword": "Bagong Password",
     "confirmPassword": "Kumpirmahin ang Password",
     "resetting": "Nagre-reset...",
@@ -319,7 +319,7 @@
       "waiting": "Naghihintay ng confirmation..."
     },
     "emailVerification": {
-      "banner": "Pakiverify ang iyong email address. Tingnan ang iyong inbox para sa verification link.",
+      "banner": "Pakiverify ang iyong email address. Tingnan ang iyong inbox (at ang spam/junk folder) para sa verification link.",
       "resend": "Ipadala muli ang verification email",
       "restricted": "Nakatago ang iyong profile sa mga paghahanap at hindi ka maaaring mag-edit ng profile, pamahalaan ang mga wallet, serbisyo, o tumanggap ng mga trabaho hanggang ma-verify.",
       "required": "Kinakailangan ang pag-verify ng email upang isagawa ang aksyon na ito."
@@ -682,7 +682,7 @@
     "telegramDisconnected": "Nadiskonekta ang Telegram",
     "accountDeleted": "Matagumpay na nabura ang account",
     "dataExported": "Matagumpay na na-export ang data",
-    "verificationSent": "Naipadala na ang verification email",
+    "verificationSent": "Naipadala na ang verification email — tingnan ang spam/junk folder kung hindi mo makita",
     "emailVerified": "Matagumpay na na-verify ang email",
     "preferencesSaved": "Nai-save ang mga kagustuhan",
     "genericError": "May nangyaring mali. Subukan muli.",

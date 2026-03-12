@@ -209,7 +209,7 @@
     "resetPassword": "Şifre Sıfırla",
     "sendResetLink": "Sıfırlama Bağlantısı Gönder",
     "sending": "Gönderiliyor...",
-    "resetSent": "Şifre sıfırlama bağlantısı gönderildi! E-postanızı kontrol edin.",
+    "resetSent": "Şifre sıfırlama bağlantısı gönderildi! E-postanızı (ve spam/gereksiz klasörünü) kontrol edin.",
     "newPassword": "Yeni Şifre",
     "confirmPassword": "Şifreyi Onayla",
     "resetting": "Sıfırlanıyor...",
@@ -333,7 +333,7 @@
       "saveFilters": "Filtreleri Kaydet"
     },
     "emailVerification": {
-      "banner": "Lütfen e-posta adresinizi doğrulayın. Doğrulama bağlantısı için gelen kutunuzu kontrol edin.",
+      "banner": "Lütfen e-posta adresinizi doğrulayın. Doğrulama bağlantısı için gelen kutunuzu (ve spam/gereksiz klasörünü) kontrol edin.",
       "resend": "Doğrulama e-postasını yeniden gönder",
       "restricted": "Profiliniz aramalardan gizlenmiştir ve doğrulanana kadar profilinizi düzenleyemez, cüzdanları, hizmetleri yönetemez veya iş kabul edemezsiniz.",
       "required": "Bu işlemi gerçekleştirmek için e-posta doğrulaması gereklidir."
@@ -688,7 +688,7 @@
     "telegramDisconnected": "Telegram bağlantısı kesildi",
     "accountDeleted": "Hesap başarıyla silindi",
     "dataExported": "Veriler başarıyla dışa aktarıldı",
-    "verificationSent": "Doğrulama e-postası gönderildi",
+    "verificationSent": "Doğrulama e-postası gönderildi — göremiyorsanız spam/gereksiz klasörünü kontrol edin",
     "emailVerified": "E-posta başarıyla doğrulandı",
     "preferencesSaved": "Tercihler kaydedildi",
     "genericError": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",

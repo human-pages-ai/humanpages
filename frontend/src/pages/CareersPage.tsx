@@ -8,7 +8,6 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../hooks/useAuth';
 import { setApplyIntent, getApplyIntent, clearApplyIntent } from '../lib/applyIntent';
 import { analytics } from '../lib/analytics';
-import { posthog } from '../lib/posthog';
 import { api } from '../lib/api';
 import { POSITIONS, CATEGORIES, GENERAL_APPLICATION, type Position, type Category } from '../data/positions';
 import {
@@ -207,14 +206,12 @@ function ReferralShareSection({ referralCode }: { referralCode: string | null })
       await navigator.clipboard.writeText(referralUrl);
       setCopied(true);
       analytics.track('careers_referral_copy', { source: 'apply_success' });
-      posthog.capture('careers_referral_link_copied');
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard may fail in some contexts */ }
   };
 
   const handleShare = (platform: string) => {
     analytics.track('careers_referral_share', { platform, source: 'apply_success' });
-    posthog.capture('careers_referral_shared', { platform });
   };
 
   return (

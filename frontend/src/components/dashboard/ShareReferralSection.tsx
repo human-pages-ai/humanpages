@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { analytics } from '../../lib/analytics';
-import { posthog } from '../../lib/posthog';
 import { Profile } from './types';
 
 interface Props {
@@ -47,7 +46,6 @@ export default function ShareReferralSection({
               navigator.clipboard.writeText(profileUrl);
               setCopiedProfile(true);
               analytics.track('profile_share_copy');
-              posthog.capture('profile_link_copied');
               setTimeout(() => setCopiedProfile(false), 2000);
             }}
             aria-label={copiedProfile ? t('common.copied') : t('dashboard.copyProfileLink')}
@@ -153,7 +151,6 @@ export default function ShareReferralSection({
                   navigator.clipboard.writeText(referralUrl);
                   setCopiedReferral(true);
                   analytics.track('referral_link_copy');
-                  posthog.capture('referral_link_copied');
                   setTimeout(() => setCopiedReferral(false), 2000);
                 }}
                 className="shrink-0 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"

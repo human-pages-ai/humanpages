@@ -533,7 +533,6 @@ describe('CareersPage — referral sharing after application', () => {
     await waitFor(() => {
       expect(mockTrack).toHaveBeenCalledWith('careers_referral_copy', { source: 'apply_success' });
     });
-    expect(mockPosthogCapture).toHaveBeenCalledWith('careers_referral_link_copied');
   });
 
   it('copy button shows "Copied!" feedback after clicking', async () => {
@@ -631,9 +630,6 @@ describe('CareersPage — referral sharing after application', () => {
     expect(mockTrack).toHaveBeenCalledWith('careers_referral_share', {
       platform: 'whatsapp',
       source: 'apply_success',
-    });
-    expect(mockPosthogCapture).toHaveBeenCalledWith('careers_referral_shared', {
-      platform: 'whatsapp',
     });
   });
 

@@ -197,7 +197,7 @@
     "resetPassword": "Reset Password",
     "sendResetLink": "Send Reset Link",
     "sending": "Sending...",
-    "resetSent": "Password reset link sent! Check your email.",
+    "resetSent": "Password reset link sent! Check your email (and spam/junk folder).",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
     "resetting": "Resetting...",
@@ -493,7 +493,7 @@
       "statusInactive": "Inactive"
     },
     "emailVerification": {
-      "banner": "Please verify your email address. Check your inbox for a verification link.",
+      "banner": "Please verify your email address. Check your inbox (and spam/junk folder) for a verification link.",
       "restricted": "Your profile is hidden from search and you cannot edit your profile, manage wallets, services, or accept jobs until verified.",
       "resend": "Resend verification email",
       "required": "Email verification required to perform this action."
@@ -749,7 +749,7 @@
     "telegramDisconnected": "Telegram disconnected",
     "accountDeleted": "Account deleted successfully",
     "dataExported": "Data exported successfully",
-    "verificationSent": "Verification email sent",
+    "verificationSent": "Verification email sent — check your spam/junk folder if you don't see it",
     "emailVerified": "Email verified successfully",
     "preferencesSaved": "Preferences saved",
     "genericError": "Something went wrong. Please try again.",

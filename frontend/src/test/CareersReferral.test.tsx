@@ -192,7 +192,6 @@ describe('CareersPage — referral sharing after application', () => {
       expect.stringContaining('/signup?ref=TEST123')
     );
     expect(mockTrack).toHaveBeenCalledWith('careers_referral_copy', { source: 'apply_success' });
-    expect(mockPosthogCapture).toHaveBeenCalledWith('careers_referral_link_copied');
   });
 
   it('copy button shows "Copied!" feedback after click', async () => {
@@ -256,9 +255,6 @@ describe('CareersPage — referral sharing after application', () => {
     expect(mockTrack).toHaveBeenCalledWith('careers_referral_share', {
       platform: 'facebook',
       source: 'apply_success',
-    });
-    expect(mockPosthogCapture).toHaveBeenCalledWith('careers_referral_shared', {
-      platform: 'facebook',
     });
   });
 

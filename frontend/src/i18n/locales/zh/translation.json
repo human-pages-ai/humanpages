@@ -209,7 +209,7 @@
     "resetPassword": "重置密码",
     "sendResetLink": "发送重置链接",
     "sending": "发送中...",
-    "resetSent": "密码重置链接已发送！请查看邮箱。",
+    "resetSent": "密码重置链接已发送！请查看邮箱（包括垃圾邮件/垃圾箱文件夹）。",
     "newPassword": "新密码",
     "confirmPassword": "确认密码",
     "resetting": "重置中...",
@@ -333,7 +333,7 @@
       "saveFilters": "保存过滤器"
     },
     "emailVerification": {
-      "banner": "请验证您的电子邮件地址。检查您的收件箱中的验证链接。",
+      "banner": "请验证您的电子邮件地址。检查您的收件箱（包括垃圾邮件/垃圾箱文件夹）中的验证链接。",
       "resend": "重新发送验证邮件",
       "restricted": "您的个人资料已从搜索中隐藏，在验证之前您无法编辑个人资料、管理钱包、服务或接受工作。",
       "required": "需要验证电子邮件才能执行此操作。"
@@ -687,7 +687,7 @@
     "telegramDisconnected": "Telegram已断开",
     "accountDeleted": "账户已成功删除",
     "dataExported": "数据导出成功",
-    "verificationSent": "验证邮件已发送",
+    "verificationSent": "验证邮件已发送 — 如果没有看到，请检查垃圾邮件/垃圾箱文件夹",
     "emailVerified": "邮箱验证成功",
     "preferencesSaved": "偏好设置已保存",
     "genericError": "出了点问题。请重试。",

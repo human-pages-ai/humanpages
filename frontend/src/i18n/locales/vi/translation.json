@@ -209,7 +209,7 @@
     "resetPassword": "Đặt lại mật khẩu",
     "sendResetLink": "Gửi liên kết đặt lại",
     "sending": "Đang gửi...",
-    "resetSent": "Đã gửi liên kết đặt lại mật khẩu! Kiểm tra email.",
+    "resetSent": "Đã gửi liên kết đặt lại mật khẩu! Kiểm tra email (và thư mục spam/rác).",
     "newPassword": "Mật khẩu mới",
     "confirmPassword": "Xác nhận mật khẩu",
     "resetting": "Đang đặt lại...",
@@ -486,7 +486,7 @@
       "statusInactive": "Không hoạt động"
     },
     "emailVerification": {
-      "banner": "Vui lòng xác minh địa chỉ email của bạn. Kiểm tra hộp thư đến để tìm liên kết xác minh.",
+      "banner": "Vui lòng xác minh địa chỉ email của bạn. Kiểm tra hộp thư đến (và thư mục spam/rác) để tìm liên kết xác minh.",
       "resend": "Gửi lại email xác minh",
       "restricted": "Hồ sơ của bạn bị ẩn khỏi tìm kiếm và bạn không thể chỉnh sửa hồ sơ, quản lý ví, dịch vụ hoặc nhận việc cho đến khi được xác minh.",
       "required": "Cần xác minh email để thực hiện hành động này."
@@ -682,7 +682,7 @@
     "telegramDisconnected": "Đã ngắt kết nối Telegram",
     "accountDeleted": "Đã xóa tài khoản thành công",
     "dataExported": "Đã xuất dữ liệu thành công",
-    "verificationSent": "Đã gửi email xác minh",
+    "verificationSent": "Đã gửi email xác minh — kiểm tra thư mục spam/rác nếu bạn không thấy",
     "emailVerified": "Đã xác minh email thành công",
     "preferencesSaved": "Đã lưu tùy chọn",
     "genericError": "Đã xảy ra lỗi. Vui lòng thử lại.",

@@ -203,7 +203,7 @@
     "resetPassword": "Réinitialiser le mot de passe",
     "sendResetLink": "Envoyer le lien",
     "sending": "Envoi en cours...",
-    "resetSent": "Lien de réinitialisation envoyé ! Vérifiez votre e-mail.",
+    "resetSent": "Lien de réinitialisation envoyé ! Vérifiez votre e-mail (et le dossier spam/indésirables).",
     "newPassword": "Nouveau mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
     "resetting": "Réinitialisation...",
@@ -471,7 +471,7 @@
       "statusInactive": "Inactif"
     },
     "emailVerification": {
-      "banner": "Veuillez vérifier votre adresse e-mail. Consultez votre boîte de réception pour le lien de vérification.",
+      "banner": "Veuillez vérifier votre adresse e-mail. Consultez votre boîte de réception (et le dossier spam/indésirables) pour le lien de vérification.",
       "restricted": "Votre profil est masqué des recherches et vous ne pouvez pas modifier votre profil, gérer les portefeuilles, services ou accepter des emplois tant qu'il n'est pas vérifié.",
       "resend": "Renvoyer l'e-mail de vérification",
       "required": "Vérification de l'e-mail requise pour effectuer cette action."
@@ -670,7 +670,7 @@
     "telegramDisconnected": "Telegram déconnecté",
     "accountDeleted": "Compte supprimé avec succès",
     "dataExported": "Données exportées avec succès",
-    "verificationSent": "E-mail de vérification envoyé",
+    "verificationSent": "E-mail de vérification envoyé — vérifiez votre dossier spam/indésirables si vous ne le voyez pas",
     "emailVerified": "E-mail vérifié avec succès",
     "preferencesSaved": "Préférences enregistrées",
     "genericError": "Une erreur est survenue. Veuillez réessayer.",
