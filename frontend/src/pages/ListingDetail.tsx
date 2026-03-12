@@ -243,6 +243,7 @@ export default function ListingDetail() {
           onEmailSignup={handleEmailSignup}
           onGoogleSignup={() => handleApplySignup('google')}
           onLinkedInSignup={inEmbeddedBrowser ? undefined : () => handleApplySignup('linkedin')}
+          embeddedBrowser={inEmbeddedBrowser}
         />
       )}
 
@@ -778,6 +779,7 @@ export default function ListingDetail() {
                 onGoogleSignup={() => handleApplySignup('google')}
                 autoFocus
                 compact
+                embeddedBrowser={inEmbeddedBrowser}
               />
             </div>
           )}

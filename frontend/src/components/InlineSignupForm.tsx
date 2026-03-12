@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, FormEvent } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, FormEvent } from 'react';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
@@ -54,6 +54,9 @@ interface InlineSignupFormProps {
 
   /** Compact spacing for mobile bottom sheets. */
   compact?: boolean;
+
+  /** Whether we're in an embedded browser (FB/TG WebView). Enables Turnstile timeout fallback. */
+  embeddedBrowser?: boolean;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -65,6 +68,7 @@ export default function InlineSignupForm({
   onLinkedInSignup,
   autoFocus = false,
   compact = false,
+  embeddedBrowser = false,
 }: InlineSignupFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -72,6 +76,22 @@ export default function InlineSignupForm({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaBypassed, setCaptchaBypassed] = useState(false);
+  const captchaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // In embedded browsers (FB/TG WebView), Turnstile often fails to load.
+  // Start an 8-second timer — if captcha hasn't verified by then, allow bypass.
+  useEffect(() => {
+    if (embeddedBrowser && !captchaToken && !captchaBypassed) {
+      captchaTimerRef.current = setTimeout(() => {
+        setCaptchaBypassed(true);
+        setCaptchaToken('__webview_bypass__');
+      }, 8000);
+    }
+    return () => {
+      if (captchaTimerRef.current) clearTimeout(captchaTimerRef.current);
+    };
+  }, [embeddedBrowser, captchaToken, captchaBypassed]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -161,18 +181,33 @@ export default function InlineSignupForm({
           autoComplete="new-password"
           className={inputClass}
         />
-        <Suspense fallback={
-          <div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
-            <span className="text-xs text-gray-400">Loading security check...</span>
+        {captchaBypassed ? (
+          <div className="h-[65px] bg-green-50 rounded border border-green-200 flex items-center justify-center">
+            <span className="text-xs text-green-600">✓ Verification skipped — you're good to go</span>
           </div>
-        }>
-          <LazyTurnstile
-            sitekey={TURNSTILE_SITE_KEY}
-            onVerify={(token: string) => setCaptchaToken(token)}
-            onExpire={() => setCaptchaToken('')}
-            size="normal"
-          />
-        </Suspense>
+        ) : (
+          <Suspense fallback={
+            <div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
+              <span className="text-xs text-gray-400">Loading security check...</span>
+            </div>
+          }>
+            <LazyTurnstile
+              sitekey={TURNSTILE_SITE_KEY}
+              onVerify={(token: string) => {
+                setCaptchaToken(token);
+                if (captchaTimerRef.current) clearTimeout(captchaTimerRef.current);
+              }}
+              onExpire={() => setCaptchaToken('')}
+              onError={() => {
+                if (embeddedBrowser) {
+                  setCaptchaBypassed(true);
+                  setCaptchaToken('__webview_bypass__');
+                }
+              }}
+              size="normal"
+            />
+          </Suspense>
+        )}
         {error && (
           <p className="text-xs text-red-600">{error}</p>
         )}
