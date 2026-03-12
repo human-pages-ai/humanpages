@@ -26,6 +26,7 @@ const adminOnlyItems: NavItem[] = [
   { to: '/admin/leads', label: 'Lead Gen' },
   { to: '/admin/logs', label: 'Logs' },
   { to: '/admin/emails', label: 'Email' },
+  { to: '/admin/link-codes', label: 'Link Codes' },
   { to: '/admin/moderation', label: 'Moderation' },
   { to: '/admin/watchdog', label: 'Watch Dog' },
   { to: '/admin/marketing-ops', label: 'Marketing Ops' },

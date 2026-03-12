@@ -13,6 +13,7 @@ import { requireActiveOrPaid } from '../middleware/requireActiveOrPaid.js';
 import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib/x402.js';
 import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
 import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
+import { sendWhatsAppNotification, isWhatsAppEnabled } from '../lib/whatsapp.js';
 import {
   verifyUsdcPayment,
   PaymentVerificationError,
@@ -225,6 +226,10 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         isAvailable: true,
         telegramChatId: true,
         telegramNotifications: true,
+        whatsapp: true,
+        whatsappVerified: true,
+        whatsappNotifications: true,
+        whatsappLastInboundAt: true,
         preferredLanguage: true,
         emailNotifications: true,
         paymentPreferences: true,
@@ -413,6 +418,21 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         agentName: displayName,
         dashboardUrl: jobDetailUrl,
       }).catch((err) => logger.error({ err }, 'Telegram notification failed'));
+    }
+
+    // Send WhatsApp notification (async, don't block response)
+    if (isWhatsAppEnabled() && human.whatsapp && human.whatsappVerified && human.whatsappNotifications) {
+      const waBody = `New job offer: ${data.title}\nFrom: ${displayName}\nPay: $${data.priceUsdc} USDC\n\n${data.description.slice(0, 200)}${data.description.length > 200 ? '...' : ''}\n\nView: ${jobDetailUrl}`;
+      sendWhatsAppNotification({
+        to: human.whatsapp,
+        humanId: human.id,
+        lastInboundAt: human.whatsappLastInboundAt,
+        body: waBody,
+        jobId: job.id,
+        templateType: 'offer',
+        templateVars: { '1': data.title, '2': `$${data.priceUsdc} USDC` },
+        prisma,
+      }).catch((err) => logger.error({ err }, 'WhatsApp notification failed'));
     }
 
     // Log x402 payment if this was a paid request
@@ -677,6 +697,10 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         emailNotifications: true,
         telegramChatId: true,
         telegramNotifications: true,
+        whatsapp: true,
+        whatsappVerified: true,
+        whatsappNotifications: true,
+        whatsappLastInboundAt: true,
         preferredLanguage: true,
       },
     });
@@ -711,6 +735,20 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
           agentName: displayName,
           dashboardUrl: jobDetailUrl,
         }).catch((err) => logger.error({ err }, 'Updated offer Telegram notification failed'));
+      }
+
+      if (isWhatsAppEnabled() && human.whatsapp && human.whatsappVerified && human.whatsappNotifications) {
+        const waBody = `Updated job offer: ${updated.title}\nFrom: ${displayName}\nPay: $${updated.priceUsdc.toNumber()} USDC\n\n${updated.description.slice(0, 200)}${updated.description.length > 200 ? '...' : ''}\n\nView: ${jobDetailUrl}`;
+        sendWhatsAppNotification({
+          to: human.whatsapp,
+          humanId: human.id,
+          lastInboundAt: human.whatsappLastInboundAt,
+          body: waBody,
+          jobId: updated.id,
+          templateType: 'offer',
+          templateVars: { '1': updated.title, '2': `$${updated.priceUsdc.toNumber()} USDC` },
+          prisma,
+        }).catch((err) => logger.error({ err }, 'Updated offer WhatsApp notification failed'));
       }
     }
 
@@ -1737,6 +1775,10 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
           emailNotifications: true,
           telegramChatId: true,
           telegramNotifications: true,
+          whatsapp: true,
+          whatsappVerified: true,
+          whatsappNotifications: true,
+          whatsappLastInboundAt: true,
           preferredLanguage: true,
         },
       });
@@ -1765,6 +1807,21 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
             text: `<b>New message from ${req.senderName!.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</b>\n\nOn: ${job.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}\n\n"${preview.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"\n\n<a href="${jobDetailUrl}">View &amp; Reply</a>`,
             parseMode: 'HTML',
           }).catch((err) => logger.error({ err }, 'Agent message Telegram notification failed'));
+        }
+
+        if (isWhatsAppEnabled() && human.whatsapp && human.whatsappVerified && human.whatsappNotifications) {
+          const preview = data.content.length > 200 ? data.content.slice(0, 200) + '...' : data.content;
+          const waBody = `New message from ${req.senderName!}\n\nOn: ${job.title}\n\n"${preview}"\n\nView: ${jobDetailUrl}`;
+          sendWhatsAppNotification({
+            to: human.whatsapp,
+            humanId: human.id,
+            lastInboundAt: human.whatsappLastInboundAt,
+            body: waBody,
+            jobId: job.id,
+            templateType: 'message',
+            templateVars: { '1': '1' },
+            prisma,
+          }).catch((err) => logger.error({ err }, 'Agent message WhatsApp notification failed'));
         }
       }
     }

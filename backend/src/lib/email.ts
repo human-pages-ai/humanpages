@@ -98,7 +98,7 @@ async function sendEmail(params: SendEmailParams): Promise<boolean> {
 
 // Write a failed send to the outbox for the worker to retry later
 export async function writeToOutbox(
-  channel: 'email' | 'telegram',
+  channel: 'email' | 'telegram' | 'whatsapp',
   recipient: string,
   payload: Record<string, any>,
   subject?: string,

@@ -421,4 +421,41 @@ router.post('/logout-all', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// WhatsApp magic link login
+router.post('/magic-login', authRateLimiter, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ error: 'Token required' });
+    }
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; type: string };
+    if (payload.type !== 'whatsapp_login') {
+      return res.status(400).json({ error: 'Invalid token type' });
+    }
+
+    const human = await prisma.human.findUnique({ where: { id: payload.userId } });
+    if (!human) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const authToken = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+    res.json({
+      token: authToken,
+      user: {
+        id: human.id,
+        email: human.email,
+        name: human.name,
+      },
+    });
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Magic link expired. Send LOGIN to WhatsApp to get a new one.' });
+    }
+    logger.error({ err: error }, 'Magic login error');
+    res.status(400).json({ error: 'Invalid or expired token' });
+  }
+});
+
 export default router;

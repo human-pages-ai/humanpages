@@ -197,7 +197,8 @@ model Human {
   contactEmail    String?
   telegram        String?
   telegramChatId  String?  // For sending notifications via bot
-  whatsapp        String?  // WhatsApp number
+  whatsapp        String?  // WhatsApp number (E.164 format from Twilio webhook)
+  whatsappVerified Boolean @default(false) // True once linked via link code or self-connect
   signal          String?  // Signal number
 
   // ===== PAYMENT METHODS =====
@@ -242,6 +243,15 @@ model Human {
 
   // Profile completion nudge tracking
   profileNudgeSentAt DateTime? // When last profile-completion reminder was sent
+
+  // WhatsApp link code (admin-created accounts or self-connect)
+  linkCode          String?   @unique
+  linkCodeExpiresAt DateTime?
+
+  // WhatsApp conversation state
+  whatsappAwaitingJobSelection Boolean  @default(false)
+  whatsappDisambiguationAt     DateTime? // When the "which job?" prompt was sent
+  whatsappLastInboundAt        DateTime? // Tracks 24h session window
 
   // Privacy & legal compliance
   termsAcceptedAt        DateTime?
@@ -327,6 +337,7 @@ model Human {
   educations    Education[]
   certificates  Certificate[]
   pushSubscriptions PushSubscription[]
+  pendingWhatsAppMessages PendingWhatsAppMessage[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -378,6 +389,18 @@ model Certificate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+
+  @@index([humanId])
+}
+
+// Queued WhatsApp messages waiting for the user to re-open the 24h session window
+model PendingWhatsAppMessage {
+  id        String   @id @default(cuid())
+  humanId   String
+  human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  jobId     String?
+  content   String   // The original message (from agent or system)
+  createdAt DateTime @default(now())
 
   @@index([humanId])
 }

@@ -360,6 +360,32 @@ export const api = {
   unlinkTelegram: () =>
     request<{ message: string }>('/telegram/link', { method: 'DELETE' }),
 
+  // WhatsApp
+  getWhatsAppStatus: () =>
+    request<{ connected: boolean; whatsappNumber?: string; botAvailable: boolean; botNumber?: string }>('/whatsapp/status'),
+
+  linkWhatsApp: () =>
+    request<{ code: string; waLink?: string; expiresIn: string }>('/whatsapp/link', { method: 'POST' }),
+
+  unlinkWhatsApp: () =>
+    request<{ message: string }>('/whatsapp/link', { method: 'DELETE' }),
+
+  // Admin Link Codes
+  getAdminLinkCodes: () =>
+    request<{ entries: Array<{ id: string; name: string; linkCode: string | null; expiresAt: string | null; status: 'pending' | 'linked' | 'expired'; whatsapp: string | null; createdAt: string }>; total: number }>('/admin/link-codes'),
+
+  createAdminLinkCode: (data: { name: string }) =>
+    request<{ id: string; name: string; linkCode: string; expiresAt: string; whatsAppEnabled: boolean; botNumber: string | null; message: string }>('/admin/link-codes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  regenerateAdminLinkCode: (id: string) =>
+    request<{ id: string; linkCode: string; expiresAt: string }>(`/admin/link-codes/${id}/regenerate`, { method: 'POST' }),
+
+  deleteAdminLinkCode: (id: string) =>
+    request<{ message: string }>(`/admin/link-codes/${id}`, { method: 'DELETE' }),
+
   // Referral Program
   getAffiliateLeaderboard: () =>
     request<Array<{ rank: number; name: string; username?: string; referrals: number; totalCredits: number; joinedAt: string }>>('/affiliate/leaderboard'),

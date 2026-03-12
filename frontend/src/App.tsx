@@ -38,6 +38,7 @@ const EmailVerified = lazy(() => import('./pages/EmailVerified'));
 const StatusPage = lazy(() => import('./pages/StatusPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const GptSetupPage = lazy(() => import('./pages/GptSetupPage'));
+const PartnersPage = lazy(() => import('./pages/PartnersPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -63,6 +64,9 @@ const AdminCareerApplications = lazy(() => import('./pages/admin/AdminCareerAppl
 const AdminSchedule = lazy(() => import('./pages/admin/AdminSchedule'));
 const AdminLeadGeneration = lazy(() => import('./pages/admin/AdminLeadGeneration'));
 const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+const AdminEmails = lazy(() => import('./pages/admin/AdminEmails'));
+const AdminLinkCodes = lazy(() => import('./pages/admin/AdminLinkCodes'));
+const AdminModeration = lazy(() => import('./pages/admin/AdminModeration'));
 const AdminWatchDog = lazy(() => import('./pages/admin/AdminWatchDog'));
 const AdminMarketingOps = lazy(() => import('./pages/admin/MarketingOps'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
@@ -273,6 +277,7 @@ function AppRoutes() {
       <Route path="/brand" element={<BrandKit />} />
       <Route path="/status" element={<StatusPage />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/partners" element={<PartnersPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/careers/apply/:positionId" element={<CareersPage />} />
@@ -319,6 +324,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/status" element={<LangWrapper><StatusPage /></LangWrapper>} />
       <Route path="/:lang/pricing" element={<LangWrapper><PricingPage /></LangWrapper>} />
+      <Route path="/:lang/partners" element={<LangWrapper><PartnersPage /></LangWrapper>} />
       <Route path="/:lang/about" element={<LangWrapper><AboutPage /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />
       <Route path="/:lang/careers/apply/:positionId" element={<LangWrapper><CareersPage /></LangWrapper>} />
@@ -352,6 +358,9 @@ function AppRoutes() {
         <Route path="productivity" element={<StaffProductivity />} />
         <Route path="leads" element={<AdminLeadGeneration />} />
         <Route path="logs" element={<AdminLogs />} />
+        <Route path="emails" element={<AdminEmails />} />
+        <Route path="link-codes" element={<AdminLinkCodes />} />
+        <Route path="moderation" element={<AdminModeration />} />
         <Route path="watchdog" element={<AdminWatchDog />} />
         <Route path="marketing-ops" element={<AdminMarketingOps />} />
       </Route>

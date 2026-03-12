@@ -5,6 +5,8 @@ interface Props {
   emailNotifications: boolean;
   telegramNotifications: boolean;
   whatsappNotifications: boolean;
+  whatsappConnected: boolean;
+  whatsappAvailable: boolean;
   emailDigestMode: 'REALTIME' | 'HOURLY' | 'DAILY';
   saving: boolean;
   onToggleAvailability: () => void;
@@ -37,6 +39,8 @@ export default function WorkStatusSection({
   emailNotifications,
   telegramNotifications,
   whatsappNotifications,
+  whatsappConnected,
+  whatsappAvailable,
   emailDigestMode,
   saving,
   onToggleAvailability,
@@ -51,24 +55,28 @@ export default function WorkStatusSection({
     { value: 'DAILY', labelKey: 'dashboard.emailDigest.daily' },
   ];
 
-  const channels = [
-    { key: 'email' as const, label: t('dashboard.notifications.emailLabel'), desc: t('dashboard.notifications.emailDesc'), enabled: emailNotifications },
-    { key: 'telegram' as const, label: t('dashboard.notifications.telegramLabel'), desc: t('dashboard.notifications.telegramDesc'), enabled: telegramNotifications },
-    // { key: 'whatsapp' as const, label: t('dashboard.notifications.whatsappLabel'), desc: t('dashboard.notifications.whatsappDesc'), enabled: whatsappNotifications },
+  const channels: { key: 'email' | 'telegram' | 'whatsapp'; label: string; desc: string; enabled: boolean; extraDisabled?: boolean }[] = [
+    { key: 'email', label: t('dashboard.notifications.emailLabel'), desc: t('dashboard.notifications.emailDesc'), enabled: emailNotifications },
+    { key: 'telegram', label: t('dashboard.notifications.telegramLabel'), desc: t('dashboard.notifications.telegramDesc'), enabled: telegramNotifications },
+    ...(whatsappAvailable ? [{
+      key: 'whatsapp' as const,
+      label: 'WhatsApp',
+      desc: whatsappConnected ? 'Receive job offers and messages via WhatsApp' : 'Connect WhatsApp in settings to enable',
+      enabled: whatsappNotifications,
+      extraDisabled: !whatsappConnected,
+    }] : []),
   ];
 
-  // Keep whatsappNotifications in scope to avoid unused variable warning
-  void whatsappNotifications;
-
-  const allChannelsOff = !emailNotifications && !telegramNotifications;
+  const allChannelsOff = !emailNotifications && !telegramNotifications && !(whatsappConnected && whatsappNotifications);
 
   // Check if toggling a channel would turn off all channels
   const wouldDeactivate = (channel: 'email' | 'telegram' | 'whatsapp') => {
     const next = {
       email: channel === 'email' ? !emailNotifications : emailNotifications,
       telegram: channel === 'telegram' ? !telegramNotifications : telegramNotifications,
+      whatsapp: channel === 'whatsapp' ? !whatsappNotifications : whatsappNotifications,
     };
-    return !next.email && !next.telegram;
+    return !next.email && !next.telegram && !(whatsappConnected && next.whatsapp);
   };
 
   const handleToggle = (channel: 'email' | 'telegram' | 'whatsapp') => {
@@ -119,7 +127,7 @@ export default function WorkStatusSection({
               <Toggle
                 enabled={ch.enabled}
                 onToggle={() => handleToggle(ch.key)}
-                disabled={saving || !isAvailable}
+                disabled={saving || !isAvailable || !!ch.extraDisabled}
               />
             </div>
           ))}

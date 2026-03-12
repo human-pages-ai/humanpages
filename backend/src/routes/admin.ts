@@ -1960,4 +1960,158 @@ router.get('/emails', async (req: AuthRequest, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────
+// WhatsApp Link Codes (admin-created accounts)
+// ──────────────────────────────────────────────────────────
+import { generateLinkCode } from './whatsapp.js';
+import { isWhatsAppEnabled, getWhatsAppNumber } from '../lib/whatsapp.js';
+import { generateReferralCode } from '../lib/referralCode.js';
+
+// POST /api/admin/link-codes — create human with link code
+router.post('/link-codes', async (req: AuthRequest, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || name.trim().length < 1) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const code = generateLinkCode();
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    // Create a placeholder human account
+    const placeholderEmail = `linkcode_${code.replace(/-/g, '').toLowerCase()}@hp.internal`;
+
+    const human = await prisma.human.create({
+      data: {
+        name: name.trim(),
+        email: placeholderEmail,
+        referralCode: generateReferralCode(),
+        linkCode: code,
+        linkCodeExpiresAt: expiresAt,
+        emailNotifications: false, // placeholder email, don't send
+        whatsappNotifications: true,
+      },
+    });
+
+    const botNumber = getWhatsAppNumber();
+
+    res.status(201).json({
+      id: human.id,
+      name: human.name,
+      linkCode: code,
+      expiresAt: expiresAt.toISOString(),
+      whatsAppEnabled: isWhatsAppEnabled(),
+      botNumber,
+      message: botNumber
+        ? `Tell them to text "${code}" to ${botNumber} on WhatsApp`
+        : 'WhatsApp not yet configured. Code generated for when it is.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin create link code error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/link-codes — list all link-code accounts
+router.get('/link-codes', async (_req: AuthRequest, res) => {
+  try {
+    const humans = await prisma.human.findMany({
+      where: {
+        email: { endsWith: '@hp.internal' },
+      },
+      select: {
+        id: true,
+        name: true,
+        linkCode: true,
+        linkCodeExpiresAt: true,
+        whatsapp: true,
+        whatsappVerified: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const entries = humans.map(h => ({
+      id: h.id,
+      name: h.name,
+      linkCode: h.linkCode,
+      expiresAt: h.linkCodeExpiresAt?.toISOString() ?? null,
+      status: h.whatsappVerified ? 'linked' as const
+        : h.linkCode && h.linkCodeExpiresAt && h.linkCodeExpiresAt > new Date() ? 'pending' as const
+        : 'expired' as const,
+      whatsapp: h.whatsapp,
+      createdAt: h.createdAt.toISOString(),
+    }));
+
+    res.json({ entries, total: entries.length });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin list link codes error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// POST /api/admin/link-codes/:id/regenerate — new code + fresh TTL
+router.post('/link-codes/:id/regenerate', async (req: AuthRequest, res) => {
+  try {
+    // Only allow regeneration on link-code placeholder accounts
+    const existing = await prisma.human.findUnique({
+      where: { id: req.params.id },
+      select: { email: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!existing.email.endsWith('@hp.internal')) {
+      return res.status(400).json({ error: 'Can only regenerate codes for link-code accounts' });
+    }
+
+    const code = generateLinkCode();
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    await prisma.human.update({
+      where: { id: req.params.id },
+      data: { linkCode: code, linkCodeExpiresAt: expiresAt },
+    });
+
+    res.json({
+      id: req.params.id,
+      linkCode: code,
+      expiresAt: expiresAt.toISOString(),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin regenerate link code error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// DELETE /api/admin/link-codes/:id — remove unlinked account
+router.delete('/link-codes/:id', async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.params.id },
+      select: { whatsappVerified: true, email: true },
+    });
+
+    if (!human) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (human.whatsappVerified) {
+      return res.status(400).json({ error: 'Cannot delete a linked account. Unlink WhatsApp first.' });
+    }
+
+    // Only allow deleting placeholder accounts
+    if (!human.email.endsWith('@hp.internal')) {
+      return res.status(400).json({ error: 'Can only delete link-code placeholder accounts' });
+    }
+
+    await prisma.human.delete({ where: { id: req.params.id } });
+
+    res.json({ message: 'Account deleted' });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin delete link code error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 export default router;

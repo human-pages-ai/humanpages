@@ -4,15 +4,17 @@ interface Props {
   emailNotifications: boolean;
   telegramNotifications: boolean;
   whatsappNotifications: boolean;
+  whatsappConnected: boolean;
+  whatsappAvailable: boolean;
   saving: boolean;
   onToggle: (channel: 'email' | 'telegram' | 'whatsapp') => void;
 }
 
-function Toggle({ enabled, onToggle, saving }: { enabled: boolean; onToggle: () => void; saving: boolean }) {
+function Toggle({ enabled, onToggle, saving, disabled }: { enabled: boolean; onToggle: () => void; saving: boolean; disabled?: boolean }) {
   return (
     <button
       onClick={onToggle}
-      disabled={saving}
+      disabled={saving || disabled}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
         enabled ? 'bg-blue-600' : 'bg-gray-200'
       }`}
@@ -32,6 +34,8 @@ export default function NotificationPreferencesSection({
   emailNotifications,
   telegramNotifications,
   whatsappNotifications,
+  whatsappConnected,
+  whatsappAvailable,
   saving,
   onToggle,
 }: Props) {
@@ -40,11 +44,14 @@ export default function NotificationPreferencesSection({
   const channels = [
     { key: 'email' as const, label: t('dashboard.notifications.emailLabel'), desc: t('dashboard.notifications.emailDesc'), enabled: emailNotifications },
     { key: 'telegram' as const, label: t('dashboard.notifications.telegramLabel'), desc: t('dashboard.notifications.telegramDesc'), enabled: telegramNotifications },
-    // { key: 'whatsapp' as const, label: t('dashboard.notifications.whatsappLabel'), desc: t('dashboard.notifications.whatsappDesc'), enabled: whatsappNotifications },
+    ...(whatsappAvailable ? [{
+      key: 'whatsapp' as const,
+      label: 'WhatsApp',
+      desc: whatsappConnected ? 'Receive job offers and messages via WhatsApp' : 'Connect WhatsApp first to enable notifications',
+      enabled: whatsappNotifications,
+      disabled: !whatsappConnected,
+    }] : []),
   ];
-
-  // Keep whatsappNotifications in scope to avoid unused variable warning
-  void whatsappNotifications;
 
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6">
@@ -60,6 +67,7 @@ export default function NotificationPreferencesSection({
               enabled={ch.enabled}
               onToggle={() => onToggle(ch.key)}
               saving={saving}
+              disabled={'disabled' in ch ? ch.disabled : false}
             />
           </div>
         ))}
