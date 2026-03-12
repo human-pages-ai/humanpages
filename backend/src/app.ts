@@ -220,10 +220,20 @@ app.get('/blog/:slug', async (req, res, next) => {
   next();
 });
 
-// Listing pages: inject dynamic meta tags for social sharing / SEO
+// Listing pages: redirect /listings/:id → /work/:code (short link as canonical URL)
+// If no short link exists yet (pre-backfill), fall through to serve meta HTML directly.
 app.get('/:lang/listings/:id', async (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
   try {
+    const link = await prisma.listingLink.findFirst({
+      where: { listingId: req.params.id },
+      orderBy: { createdAt: 'asc' },
+      select: { code: true },
+    });
+    if (link) {
+      return res.redirect(302, `/${req.params.lang}/work/${link.code}`);
+    }
+    // No short link yet — serve meta HTML directly
     const html = await getListingMetaHtml(req.params.id, req.params.lang);
     if (html) {
       res.set('Content-Type', 'text/html');
@@ -239,6 +249,15 @@ app.get('/listings/:id', async (req, res, next) => {
   // Skip API-like paths (the /api/listings route handles those)
   if (req.params.id === 'api') return next();
   try {
+    const link = await prisma.listingLink.findFirst({
+      where: { listingId: req.params.id },
+      orderBy: { createdAt: 'asc' },
+      select: { code: true },
+    });
+    if (link) {
+      return res.redirect(302, `/work/${link.code}`);
+    }
+    // No short link yet — serve meta HTML directly
     const html = await getListingMetaHtml(req.params.id);
     if (html) {
       res.set('Content-Type', 'text/html');
