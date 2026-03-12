@@ -105,6 +105,19 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // WhatsApp OTP auth
+  whatsappSendOtp: (data: { phone: string; captchaToken: string }) =>
+    request<{ message: string }>('/auth/whatsapp/send-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  whatsappVerifyOtp: (data: { phone: string; code: string; name?: string; termsAccepted?: boolean; referrerId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string }) =>
+    request<AuthResponse & { isNew?: boolean; needsSignup?: boolean }>('/auth/whatsapp/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   // OAuth
   getOAuthUrl: (provider: 'google' | 'linkedin') =>
     request<{ url: string; state: string }>(`/oauth/${provider}`),

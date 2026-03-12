@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
-import { prisma } from '../lib/prisma.js';
+import { prisma, identityVerifiedWhere } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendStaffApiKeyEmail, sendFeaturedInviteEmail } from '../lib/email.js';
 import postingRoutes from './posting.js';
@@ -43,7 +43,7 @@ router.get('/ai/stats', apiKeyAdmin, async (_req, res) => {
 
     const [usersTotal, usersVerified, usersLast7d, feedbackTotal, feedbackNew, humanReportsTotal, humanReportsPending, reportsTotal, reportsPending, moderationPending, moderationRejected, moderationErrors] = await Promise.all([
       prisma.human.count(),
-      prisma.human.count({ where: { emailVerified: true } }),
+      prisma.human.count({ where: identityVerifiedWhere }),
       prisma.human.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
       prisma.feedback.count(),
       prisma.feedback.count({ where: { status: 'NEW' } }),
@@ -288,7 +288,7 @@ router.get('/stats', async (_req, res) => {
       applicationsTotal,
     ] = await Promise.all([
       prisma.human.count(),
-      prisma.human.count({ where: { emailVerified: true } }),
+      prisma.human.count({ where: identityVerifiedWhere }),
       prisma.human.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
       prisma.human.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
       prisma.agent.count(),

@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
-import { prisma } from '../lib/prisma.js';
-import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
+import { prisma, identityVerifiedWhere } from '../lib/prisma.js';
+import { authenticateToken, requireIdentityVerified, AuthRequest } from '../middleware/auth.js';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
 import { x402PaymentCheck, X402Request } from '../middleware/x402PaymentCheck.js';
@@ -435,7 +435,7 @@ const vouchRateLimiter = rateLimit({
 });
 
 // Vouch for another human
-router.post('/me/vouch', authenticateToken, requireEmailVerified, vouchRateLimiter, async (req: AuthRequest, res) => {
+router.post('/me/vouch', authenticateToken, requireIdentityVerified, vouchRateLimiter, async (req: AuthRequest, res) => {
   try {
     const schema = z.object({
       username: z.string().min(1),
@@ -446,11 +446,10 @@ router.post('/me/vouch', authenticateToken, requireEmailVerified, vouchRateLimit
     // Find vouchee by username or ID
     const vouchee = await prisma.human.findFirst({
       where: {
-        OR: [
-          { username },
-          { id: username },
+        AND: [
+          { OR: [{ username }, { id: username }] },
+          identityVerifiedWhere,
         ],
-        emailVerified: true,
       },
       select: { id: true, name: true, username: true },
     });
@@ -623,7 +622,7 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
 
     // Check if profile is now "complete" for affiliate qualification
     // Qualification criteria: has bio, has skills, email verified
-    if (human.bio && human.skills.length > 0 && human.emailVerified && human.referredBy) {
+    if (human.bio && human.skills.length > 0 && (human.emailVerified || human.whatsappVerified) && human.referredBy) {
       qualifyAffiliateReferral(human.id).catch((err) =>
         logger.error({ err }, 'Failed to qualify affiliate referral')
       );
@@ -715,7 +714,7 @@ function getHumanityTier(score: number | null | undefined): string {
 }
 
 // Verify humanity via Gitcoin Passport
-router.post('/me/verify-humanity', authenticateToken, requireEmailVerified, verifyHumanityLimiter, async (req: AuthRequest, res) => {
+router.post('/me/verify-humanity', authenticateToken, requireIdentityVerified, verifyHumanityLimiter, async (req: AuthRequest, res) => {
   try {
     const schema = z.object({
       walletAddress: z.string().min(1),
@@ -802,16 +801,16 @@ router.get('/featured', async (_req, res) => {
     }
 
     const [verifiedCount, withSkillsCount, countriesRaw, featuredRaw] = await Promise.all([
-      prisma.human.count({ where: { emailVerified: true } }),
-      prisma.human.count({ where: { emailVerified: true, skills: { isEmpty: false } } }),
+      prisma.human.count({ where: identityVerifiedWhere }),
+      prisma.human.count({ where: { ...identityVerifiedWhere, skills: { isEmpty: false } } }),
       prisma.human.findMany({
-        where: { emailVerified: true, location: { not: null } },
+        where: { ...identityVerifiedWhere, location: { not: null } },
         select: { location: true },
         distinct: ['location'],
       }),
       prisma.human.findMany({
         where: {
-          emailVerified: true,
+          ...identityVerifiedWhere,
           isAvailable: true,
           featuredConsent: true,
           bio: { not: null },
@@ -892,7 +891,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     } = req.query;
 
     const where: any = {
-      emailVerified: true,
+      ...identityVerifiedWhere,
       humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
     };
 
@@ -1096,7 +1095,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     if (humans.length < CATCH_ALL_THRESHOLD) {
       const catchAllWhere: any = {
         isCatchAll: true,
-        emailVerified: true,
+        ...identityVerifiedWhere,
         humanStatus: 'ACTIVE',
         id: { notIn: humans.map(h => h.id) },
       };
@@ -1266,7 +1265,7 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
     }
 
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, emailVerified: true },
+      where: { id: req.params.id, ...identityVerifiedWhere },
       select: fullHumanSelect,
     });
 
@@ -1303,7 +1302,7 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 router.get('/:id', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, emailVerified: true, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: { id: req.params.id, ...identityVerifiedWhere, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1340,7 +1339,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 router.get('/u/:username', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { username: req.params.username, emailVerified: true, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: { username: req.params.username, ...identityVerifiedWhere, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1426,7 +1425,7 @@ const humanReportSchema = z.object({
 });
 
 // POST /api/humans/:id/report — report a human user for abuse
-router.post('/:id/report', authenticateToken, requireEmailVerified, humanReportLimiter, async (req: AuthRequest, res) => {
+router.post('/:id/report', authenticateToken, requireIdentityVerified, humanReportLimiter, async (req: AuthRequest, res) => {
   try {
     const data = humanReportSchema.parse(req.body);
     const reportedHumanId = req.params.id;

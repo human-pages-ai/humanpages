@@ -350,8 +350,9 @@ describe('Onboarding', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
+      // After profile submit, should show Telegram connect step (not navigate to dashboard)
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+        expect(screen.getByText('Get instant pings from agents')).toBeInTheDocument();
       });
 
       expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith({
@@ -386,8 +387,9 @@ describe('Onboarding', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
+      // After profile submit, should show Telegram connect step
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+        expect(screen.getByText('Get instant pings from agents')).toBeInTheDocument();
       });
 
       // Final submit should include location + skills
@@ -484,8 +486,9 @@ describe('Onboarding', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Content Writing' }));
       fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
 
+      // After profile submit, should show Telegram connect step
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+        expect(screen.getByText('Get instant pings from agents')).toBeInTheDocument();
       });
 
       // Career application should have been auto-submitted

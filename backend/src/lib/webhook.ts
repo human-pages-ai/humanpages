@@ -136,40 +136,6 @@ export async function deliverWebhook(
   logger.error({ url }, 'Webhook delivery failed after all retries');
 }
 
-interface WebhookAgent {
-  id: string;
-  name: string;
-  webhookUrl: string | null;
-  webhookSecret: string | null;
-}
-
-/**
- * Fire an agent-level webhook for platform events (not job-specific).
- * Events: agent.new_match, agent.status_changed, agent.announcement, etc.
- * Runs async (don't await in caller) — fire-and-forget.
- */
-export function fireAgentWebhook(
-  agent: WebhookAgent,
-  event: string,
-  data?: Record<string, unknown>,
-): void {
-  if (!agent.webhookUrl) return;
-
-  const payload = {
-    event,
-    agentId: agent.id,
-    timestamp: new Date().toISOString(),
-    data: {
-      agentName: agent.name,
-      ...data,
-    },
-  };
-
-  deliverWebhook(agent.webhookUrl, payload, agent.webhookSecret).catch((err) =>
-    logger.error({ err, agentId: agent.id, event }, 'Agent webhook fire error'),
-  );
-}
-
 interface WebhookJob {
   id: string;
   title: string;

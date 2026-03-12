@@ -247,10 +247,10 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
       return res.status(404).json({ error: 'Human not found' });
     }
 
-    if (!human.emailVerified) {
+    if (!human.emailVerified && !human.whatsappVerified) {
       return res.status(400).json({
         error: 'Human not available',
-        message: 'This human has not verified their email and cannot receive job offers.',
+        message: 'This human has not verified their identity and cannot receive job offers.',
       });
     }
 

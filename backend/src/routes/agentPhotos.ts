@@ -14,6 +14,23 @@ import { logger } from '../lib/logger.js';
 
 const router = Router();
 
+/**
+ * Validate image file type by magic bytes (file signature), not just MIME type.
+ * Prevents upload of disguised files with spoofed Content-Type headers.
+ */
+function validateImageMagicBytes(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true;
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true;
+  // WebP: RIFF....WEBP
+  if (buffer.length >= 12 &&
+    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+    buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return true;
+  return false;
+}
+
 // Multer: memory storage, 2MB limit, images only
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -54,6 +71,11 @@ router.post('/upload', authenticateAgent, uploadLimiter, dailyUploadLimiter, upl
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No photo file provided' });
+    }
+
+    // Validate file signature (magic bytes) to prevent spoofed Content-Type
+    if (!validateImageMagicBytes(req.file.buffer)) {
+      return res.status(400).json({ error: 'Invalid image file. File signature does not match an allowed image type.' });
     }
 
     // Process image: resize to 256x256, convert to WebP

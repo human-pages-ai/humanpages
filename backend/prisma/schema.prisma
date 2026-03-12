@@ -394,6 +394,19 @@ model Certificate {
 }
 
 // Queued WhatsApp messages waiting for the user to re-open the 24h session window
+model WhatsAppOTP {
+  id        String   @id @default(cuid())
+  phone     String   // E.164 format (e.g. "+972506910990")
+  code      String   // 6-digit OTP
+  attempts  Int      @default(0) // Failed verification attempts
+  usedAt    DateTime? // Set when successfully verified
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, code])
+  @@index([expiresAt])
+}
+
 model PendingWhatsAppMessage {
   id        String   @id @default(cuid())
   humanId   String

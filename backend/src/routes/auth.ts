@@ -458,4 +458,200 @@ router.post('/magic-login', authRateLimiter, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────
+// WhatsApp OTP: Send code
+// ──────────────────────────────────────────────────────────
+const whatsappSendOtpSchema = z.object({
+  phone: z.string().min(8).max(20).regex(/^\+\d+$/, 'Phone must be in E.164 format (e.g. +972506910990)'),
+  captchaToken: z.string().min(1),
+});
+
+router.post('/whatsapp/send-otp', authRateLimiter, async (req, res) => {
+  try {
+    const { phone, captchaToken } = whatsappSendOtpSchema.parse(req.body);
+
+    const captchaValid = await verifyCaptcha(captchaToken);
+    if (!captchaValid) {
+      return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+    }
+
+    const { isWhatsAppEnabled, sendWhatsAppMessage } = await import('../lib/whatsapp.js');
+    if (!isWhatsAppEnabled()) {
+      return res.status(503).json({ error: 'WhatsApp is not available at the moment' });
+    }
+
+    // Rate limit: max 3 OTPs per phone per 15 minutes
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const recentOtps = await prisma.whatsAppOTP.count({
+      where: { phone, createdAt: { gt: fifteenMinAgo } },
+    });
+    if (recentOtps >= 3) {
+      return res.status(429).json({ error: 'Too many codes requested. Please wait a few minutes.' });
+    }
+
+    // Generate 6-digit OTP
+    const code = String(crypto.randomInt(100000, 999999));
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await prisma.whatsAppOTP.create({
+      data: { phone, code, expiresAt },
+    });
+
+    // Send via WhatsApp
+    await sendWhatsAppMessage(phone, `Your Human Pages verification code is: ${code}\n\nThis code expires in 5 minutes.`);
+
+    logger.info({ phone: phone.slice(0, 6) + '***' }, 'WhatsApp OTP sent');
+    res.json({ message: 'Verification code sent to your WhatsApp' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'WhatsApp send OTP error');
+    res.status(500).json({ error: 'Failed to send verification code' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────
+// WhatsApp OTP: Verify code & login/signup
+// ──────────────────────────────────────────────────────────
+const whatsappVerifyOtpSchema = z.object({
+  phone: z.string().min(8).max(20).regex(/^\+\d+$/),
+  code: z.string().length(6),
+  // For signup only (optional — if existing account, these are ignored)
+  name: z.string().min(1).optional(),
+  termsAccepted: z.boolean().optional(),
+  referrerId: z.string().optional(),
+  utmSource: z.string().max(100).optional(),
+  utmMedium: z.string().max(100).optional(),
+  utmCampaign: z.string().max(200).optional(),
+});
+
+router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
+  try {
+    const { phone, code, name, termsAccepted, referrerId, utmSource, utmMedium, utmCampaign } = whatsappVerifyOtpSchema.parse(req.body);
+
+    // Find valid OTP
+    const otp = await prisma.whatsAppOTP.findFirst({
+      where: {
+        phone,
+        code,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!otp) {
+      // Increment attempts on most recent OTP for this phone
+      const latest = await prisma.whatsAppOTP.findFirst({
+        where: { phone, usedAt: null, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (latest) {
+        if (latest.attempts >= 4) {
+          // Burn the OTP after 5 failed attempts
+          await prisma.whatsAppOTP.update({
+            where: { id: latest.id },
+            data: { usedAt: new Date() },
+          });
+          return res.status(400).json({ error: 'Too many attempts. Please request a new code.' });
+        }
+        await prisma.whatsAppOTP.update({
+          where: { id: latest.id },
+          data: { attempts: { increment: 1 } },
+        });
+      }
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+
+    // Check if phone number is already linked to an account
+    let human = await prisma.human.findFirst({
+      where: { whatsapp: phone, whatsappVerified: true },
+      select: { id: true, email: true, name: true },
+    });
+
+    let isNew = false;
+
+    if (human) {
+      // Existing user — login. Consume OTP now.
+      await prisma.whatsAppOTP.update({
+        where: { id: otp.id },
+        data: { usedAt: new Date() },
+      });
+      await prisma.human.update({
+        where: { id: human.id },
+        data: { whatsappLastInboundAt: new Date() },
+      });
+    } else {
+      // New user — need name + terms to complete signup. OTP stays valid.
+      if (!name || !termsAccepted) {
+        return res.json({ needsSignup: true, message: 'Phone verified. Please provide your name to create an account.' });
+      }
+
+      // All fields present — consume OTP now
+      await prisma.whatsAppOTP.update({
+        where: { id: otp.id },
+        data: { usedAt: new Date() },
+      });
+
+      // Validate referrer
+      let validReferrerId: string | undefined;
+      if (referrerId) {
+        const referrer = await prisma.human.findUnique({ where: { referralCode: referrerId } })
+          ?? await prisma.human.findUnique({ where: { id: referrerId } });
+        if (referrer) validReferrerId = referrer.id;
+      }
+
+      // Create account with WhatsApp as primary identity (no email/password needed)
+      const placeholderEmail = `wa_${phone.replace('+', '')}@whatsapp.hp.internal`;
+
+      human = await prisma.human.create({
+        data: {
+          email: placeholderEmail,
+          name,
+          contactEmail: null,
+          whatsapp: phone,
+          whatsappVerified: true,
+          whatsappLastInboundAt: new Date(),
+          referredBy: validReferrerId,
+          referralCode: generateReferralCode(),
+          termsAcceptedAt: new Date(),
+          utmSource: utmSource || undefined,
+          utmMedium: utmMedium || undefined,
+          utmCampaign: utmCampaign || undefined,
+        },
+        select: { id: true, email: true, name: true },
+      });
+
+      isNew = true;
+
+      trackServerEvent(human.id, 'user_signed_up_server', {
+        method: 'whatsapp',
+        utm_source: utmSource || undefined,
+        utm_medium: utmMedium || undefined,
+        utm_campaign: utmCampaign || undefined,
+      }, req);
+
+      if (validReferrerId) {
+        const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip;
+        const userAgentStr = req.headers['user-agent'] as string;
+        recordAffiliateReferral(validReferrerId, human.id, clientIp, userAgentStr).catch((err) =>
+          logger.error({ err }, 'Failed to record affiliate referral')
+        );
+      }
+    }
+
+    const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+    logger.info({ humanId: human.id, isNew, phone: phone.slice(0, 6) + '***' }, 'WhatsApp OTP login');
+    res.json({ human, token, isNew });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'WhatsApp verify OTP error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

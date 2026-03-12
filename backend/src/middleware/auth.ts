@@ -1,31 +1,39 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
 }
 
-export async function requireEmailVerified(req: AuthRequest, res: Response, next: NextFunction) {
+/**
+ * Requires the user to have verified their identity via at least one channel
+ * (email verification link, WhatsApp OTP, etc.).
+ */
+export async function requireIdentityVerified(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const user = await prisma.human.findUnique({
       where: { id: req.userId },
-      select: { emailVerified: true },
+      select: { emailVerified: true, whatsappVerified: true },
     });
 
-    if (!user || !user.emailVerified) {
+    if (!user || (!user.emailVerified && !user.whatsappVerified)) {
       return res.status(403).json({
-        error: 'This feature requires email verification. Please check your inbox and verify your email.',
-        code: 'EMAIL_NOT_VERIFIED',
+        error: 'Please verify your identity first — via email or WhatsApp.',
+        code: 'IDENTITY_NOT_VERIFIED',
       });
     }
 
     next();
   } catch (err) {
-    console.error('requireEmailVerified error:', err);
+    logger.error({ err }, 'requireIdentityVerified error');
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+/** @deprecated Use requireIdentityVerified instead */
+export const requireEmailVerified = requireIdentityVerified;
 
 export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
@@ -59,7 +67,7 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
     }
     next();
   } catch (err) {
-    console.error('authenticateToken error:', err);
+    logger.error({ err }, 'authenticateToken error');
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 }

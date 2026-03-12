@@ -118,8 +118,8 @@ router.post('/incoming', webhookRateLimiter, async (req, res) => {
   };
 
   try {
-    // Verify Twilio signature when credentials are configured
-    if (isWhatsAppEnabled()) {
+    // Verify Twilio signature when credentials are configured (skip in local dev with TWILIO_SKIP_SIGNATURE=1)
+    if (isWhatsAppEnabled() && !process.env.TWILIO_SKIP_SIGNATURE) {
       const sig = req.headers['x-twilio-signature'] as string;
       const baseUrl = process.env.BASE_URL || process.env.FRONTEND_URL?.replace(/:\d+$/, ':3001') || `${req.protocol}://${req.get('host')}`;
       const fullUrl = `${baseUrl}${req.originalUrl}`;
@@ -204,12 +204,13 @@ router.post('/incoming', webhookRateLimiter, async (req, res) => {
 // Link code handler
 // ──────────────────────────────────────────────────────────
 async function handleLinkCode(from: string, body: string): Promise<string | null> {
-  // Link codes look like HP-XXXX-XX
-  if (!/^HP-[A-Z0-9]{4}-[A-Z0-9]{2}$/i.test(body)) {
+  // Extract link code from anywhere in the message (user might quote-reply)
+  const match = body.match(/HP-[A-Z0-9]{4}-[A-Z0-9]{2}/i);
+  if (!match) {
     return null;
   }
 
-  const code = body.toUpperCase();
+  const code = match[0].toUpperCase();
   const human = await prisma.human.findFirst({
     where: {
       linkCode: code,

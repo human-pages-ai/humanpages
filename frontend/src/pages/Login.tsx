@@ -5,14 +5,18 @@ import { Turnstile } from 'react-turnstile';
 import Link from '../components/LocalizedLink';
 import { getApplyRedirect } from '../lib/applyIntent';
 import { useAuth } from '../hooks/useAuth';
+import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import InAppBrowserBanner from '../components/InAppBrowserBanner';
+import PhoneInput from '../components/PhoneInput';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // test key fallback
 const CAPTCHA_TIMEOUT_MS = 10_000;
+
+type WhatsAppStep = 'phone' | 'otp';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -24,8 +28,14 @@ export default function Login() {
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaFailed, setCaptchaFailed] = useState(false);
   const captchaResolved = useRef(false);
-  const { login, loginWithGoogle, loginWithLinkedIn } = useAuth();
+  const { login, loginWithWhatsApp, loginWithGoogle, loginWithLinkedIn } = useAuth();
   const navigate = useNavigate();
+
+  // WhatsApp OTP state
+  const [waStep, setWaStep] = useState<WhatsAppStep | null>(null);
+  const [waPhone, setWaPhone] = useState('');
+  const [waOtp, setWaOtp] = useState('');
+  const [waSending, setWaSending] = useState(false);
 
   // Application-level timeout: if Turnstile hasn't verified within 10s, show fallback
   useEffect(() => {
@@ -45,7 +55,6 @@ export default function Login() {
     try {
       await login(email, password, captchaToken);
       analytics.track('login_success', { method: 'email' });
-      // Check localStorage for apply intent (set by careers page before redirect)
       const applyRedirect = getApplyRedirect();
       navigate(applyRedirect || '/dashboard');
     } catch (err: any) {
@@ -76,6 +85,168 @@ export default function Login() {
       setOauthLoading(null);
     }
   };
+
+  // ── WhatsApp OTP flow ──
+  const handleWhatsAppStart = () => {
+    if (!captchaToken) {
+      setError('Please complete the CAPTCHA first');
+      return;
+    }
+    setError('');
+    setWaStep('phone');
+  };
+
+  const handleSendOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setWaSending(true);
+    try {
+      await api.whatsappSendOtp({ phone: waPhone, captchaToken });
+      setWaStep('otp');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send code');
+    } finally {
+      setWaSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setWaSending(true);
+    try {
+      const result = await loginWithWhatsApp(waPhone, waOtp);
+      if (result.needsSignup) {
+        navigate('/signup');
+      } else {
+        analytics.track('login_success', { method: 'whatsapp' });
+        const applyRedirect = getApplyRedirect();
+        navigate(applyRedirect || '/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid code');
+    } finally {
+      setWaSending(false);
+    }
+  };
+
+  const WhatsAppIcon = () => (
+    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  );
+
+  // ── WhatsApp flow UI ──
+  if (waStep) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <SEO title="Sign in with WhatsApp" noindex />
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+        <div className="max-w-md w-full space-y-8">
+          <div>
+            <h1 className="text-center"><Link to="/"><Logo size="lg" /></Link></h1>
+            <h2 className="mt-2 text-center text-xl text-gray-600">Sign in with WhatsApp</h2>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" role="alert">
+              {error}
+            </div>
+          )}
+
+          {waStep === 'phone' && (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <label htmlFor="wa-phone" className="block text-sm font-medium text-gray-700">
+                  WhatsApp Number
+                </label>
+                <PhoneInput
+                  id="wa-phone"
+                  value={waPhone}
+                  onChange={(val) => setWaPhone(val)}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={waSending || !waPhone}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              >
+                {waSending ? 'Sending...' : 'Send Verification Code'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setWaStep(null); setError(''); }}
+                className="w-full text-sm text-gray-500 hover:text-gray-700"
+              >
+                Back to other options
+              </button>
+            </form>
+          )}
+
+          {waStep === 'otp' && (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <p className="text-sm text-gray-600">
+                We sent a 6-digit code to <strong>{waPhone}</strong> on WhatsApp.
+              </p>
+              <div>
+                <label htmlFor="wa-otp" className="block text-sm font-medium text-gray-700">
+                  Verification Code
+                </label>
+                <input
+                  id="wa-otp"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={6}
+                  placeholder="123456"
+                  value={waOtp}
+                  onChange={(e) => setWaOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-center text-2xl tracking-widest"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={waSending || waOtp.length !== 6}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              >
+                {waSending ? 'Verifying...' : 'Verify & Sign In'}
+              </button>
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  onClick={() => { setWaStep('phone'); setWaOtp(''); setError(''); }}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Change number
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setError('');
+                    setWaSending(true);
+                    try {
+                      await api.whatsappSendOtp({ phone: waPhone, captchaToken });
+                    } catch (err: any) {
+                      setError(err.message || 'Failed to resend');
+                    } finally {
+                      setWaSending(false);
+                    }
+                  }}
+                  disabled={waSending}
+                  className="text-sm text-green-600 hover:text-green-500"
+                >
+                  Resend code
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
@@ -163,6 +334,15 @@ export default function Login() {
           <InAppBrowserBanner />
 
           <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleWhatsAppStart}
+              disabled={oauthLoading !== null || !captchaToken}
+              className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+            >
+              <WhatsAppIcon />
+              WhatsApp
+            </button>
             <button
               type="button"
               onClick={handleGoogleLogin}

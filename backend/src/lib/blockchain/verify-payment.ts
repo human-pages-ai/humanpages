@@ -13,6 +13,7 @@ import {
   type SupportedToken,
 } from './chains.js';
 import { PaymentVerificationError, PaymentErrorCode } from './errors.js';
+import { logger as pinoLogger } from '../logger.js';
 
 // ERC20 Transfer event ABI
 const transferEventAbi = [
@@ -41,16 +42,16 @@ interface PaymentLogger {
   error: (message: string, data?: Record<string, unknown>) => void;
 }
 
-// Default console logger with structured output
+// Default logger using pino (structured, no console.log in production)
 const defaultLogger: PaymentLogger = {
   info: (message, data) => {
-    console.log(`[Payment] ${message}`, data ? JSON.stringify(data) : '');
+    pinoLogger.info(data ?? {}, `[Payment] ${message}`);
   },
   warn: (message, data) => {
-    console.warn(`[Payment] ${message}`, data ? JSON.stringify(data) : '');
+    pinoLogger.warn(data ?? {}, `[Payment] ${message}`);
   },
   error: (message, data) => {
-    console.error(`[Payment] ${message}`, data ? JSON.stringify(data) : '');
+    pinoLogger.error(data ?? {}, `[Payment] ${message}`);
   },
 };
 

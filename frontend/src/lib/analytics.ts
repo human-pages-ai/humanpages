@@ -42,7 +42,10 @@ type EventName =
   | 'listing_viewed'
   | 'listing_signup_clicked'
   | 'listing_applied'
-  | 'listing_share';
+  | 'listing_share'
+  | 'telegram_connected_onboarding'
+  | 'telegram_skipped_onboarding'
+  | 'telegram_connect_attempted';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

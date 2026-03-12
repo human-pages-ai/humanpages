@@ -166,14 +166,14 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Poll for email verification when unverified (user may verify on another device)
+  // Poll for identity verification when unverified (user may verify on another device)
   useEffect(() => {
-    if (!profile || profile.emailVerified !== false) return;
+    if (!profile || profile.emailVerified || profile.whatsappVerified) return;
     const interval = setInterval(async () => {
       try {
         const data = await api.getProfile();
-        if (data.emailVerified) {
-          setProfile(prev => prev ? { ...prev, emailVerified: true } : prev);
+        if (data.emailVerified || data.whatsappVerified) {
+          setProfile(prev => prev ? { ...prev, emailVerified: data.emailVerified, whatsappVerified: data.whatsappVerified } : prev);
           toast.success(t('toast.emailVerified'));
           clearInterval(interval);
         }
@@ -182,7 +182,7 @@ export default function Dashboard() {
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [profile?.emailVerified]);
+  }, [profile?.emailVerified, profile?.whatsappVerified]);
 
   const loadProfile = async () => {
     try {
@@ -751,8 +751,8 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-        {/* Email verification banner */}
-        {profile.emailVerified === false && (
+        {/* Identity verification banner */}
+        {!profile.emailVerified && !profile.whatsappVerified && (
           <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>

@@ -117,6 +117,7 @@ export interface Profile {
   trustScore?: TrustScoreData;
   hasPassword?: boolean;
   emailVerified?: boolean;
+  whatsappVerified?: boolean;
   emailNotifications?: boolean;
   telegramNotifications?: boolean;
   whatsappNotifications?: boolean;

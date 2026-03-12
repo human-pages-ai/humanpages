@@ -12,11 +12,17 @@ interface User {
   hasWallet?: boolean;
 }
 
+interface WhatsAppLoginResult {
+  isNew: boolean;
+  needsSignup?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, captchaToken: string) => Promise<void>;
   signup: (email: string, password: string, name: string, termsAccepted: boolean, captchaToken: string) => Promise<void>;
+  loginWithWhatsApp: (phone: string, code: string, signupData?: { name: string; termsAccepted: boolean }) => Promise<WhatsAppLoginResult>;
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
   loginWithLinkedIn: () => Promise<void>;
@@ -71,6 +77,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     posthog.identify(human.id);
   };
 
+  const loginWithWhatsApp = async (phone: string, code: string, signupData?: { name: string; termsAccepted: boolean }): Promise<WhatsAppLoginResult> => {
+    const referrerId = localStorage.getItem('referrer_id') || undefined;
+    const utmSource = sessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+    const result = await api.whatsappVerifyOtp({
+      phone,
+      code,
+      name: signupData?.name,
+      termsAccepted: signupData?.termsAccepted,
+      referrerId,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+    });
+    // Backend returns { needsSignup: true } when phone is verified but no account exists yet
+    if (result.needsSignup) {
+      return { isNew: true, needsSignup: true };
+    }
+    localStorage.removeItem('referrer_id');
+    localStorage.setItem('token', result.token);
+    setUser(result.human);
+    if (!result.human.analyticsOptOut) {
+      posthog.identify(result.human.id);
+    }
+    return { isNew: !!result.isNew, needsSignup: false };
+  };
+
   const logout = () => {
     safeLocalStorage.removeItem('token');
     setUser(null);
@@ -94,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, loginWithGoogle, loginWithLinkedIn, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, loginWithWhatsApp, logout, loginWithGoogle, loginWithLinkedIn, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
