@@ -32,3 +32,9 @@ frontend/package.json
 # Local assets
 marketing/
 mcp-publisher
+
+# Pre-push hook logs
+.pre-push-errors.log
+.pre-push-stage.log
+.pre-push-run.log
+.pre-push-e2e-servers.log
