@@ -962,11 +962,25 @@ model Listing {
   updatedAt        DateTime      @updatedAt
 
   applications     ListingApplication[]
+  links            ListingLink[]
 
   @@index([status, isPro, createdAt])
   @@index([agentId])
   @@index([status, expiresAt])
   @@index([requiredSkills])
+}
+
+model ListingLink {
+  id        String   @id @default(cuid())
+  code      String   @unique           // 6-char lowercase: a-z, 2-9 (no 0/o/1/l/i)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  label     String?                    // Admin note: "tg-manila", "fb-cebu", etc.
+  clicks    Int      @default(0)       // Simple counter, incremented on each page view via this code
+
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
 }
 
 model ListingApplication {

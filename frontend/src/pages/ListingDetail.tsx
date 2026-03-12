@@ -38,7 +38,7 @@ function isEmbeddedBrowser(): boolean {
 
 export default function ListingDetail() {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id?: string; code?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, signup, loginWithGoogle, loginWithLinkedIn } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
@@ -52,17 +52,36 @@ export default function ListingDetail() {
   const desktopApplyRef = useRef<HTMLDivElement>(null);
   const hasShownWelcomeToast = useRef(false);
 
+  // Resolved listing ID — either from URL directly (/listings/:id) or resolved from short code (/work/:code)
+  const [resolvedId, setResolvedId] = useState<string | undefined>(params.id || undefined);
+  // Short link code for analytics tracking (only set when accessed via /work/:code)
+  const [linkCode, setLinkCode] = useState<string | undefined>(params.code || undefined);
+  const id = resolvedId;
+
   // Controls visibility of mobile slide-up signup form
   const [showInlineSignup, setShowInlineSignup] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
+  // Resolve short code to listing ID on mount
+  useEffect(() => {
+    if (params.code && !resolvedId) {
+      api.resolveListingCode(params.code).then(({ listingId, code }: { listingId: string; code: string }) => {
+        setResolvedId(listingId);
+        setLinkCode(code);
+      }).catch(() => {
+        setLoading(false); // Will show "not found" state
+      });
+    }
+  }, [params.code]);
+
   /** Called by InlineSignupForm after email signup (validation + captcha already handled by the form). */
   const handleEmailSignup = async (data: { name: string; email: string; password: string; captchaToken: string }) => {
+    const ref = linkCode || sessionStorage.getItem('hp_listing_ref') || undefined;
     // Save listing intent before signup so it persists
     if (listing) setListingApplyIntent(id!, listing.title, listing.requiredSkills);
     await signup(data.email, data.password, data.name, true, data.captchaToken);
-    analytics.track('listing_signup_clicked', { listingId: id, method: 'email', title: listing?.title, budget: listing?.budgetUsdc });
-    posthog.capture('listing_signup_clicked', { listingId: id, method: 'email', title: listing?.title, budget: listing?.budgetUsdc });
+    analytics.track('listing_signup_clicked', { listingId: id, method: 'email', title: listing?.title, budget: listing?.budgetUsdc, ref });
+    posthog.capture('listing_signup_clicked', { listingId: id, method: 'email', title: listing?.title, budget: listing?.budgetUsdc, ref });
     // Save skills from listing to profile (non-blocking)
     if (listing?.requiredSkills?.length) {
       api.updateProfile({ skills: listing.requiredSkills }).catch(() => {});
@@ -73,7 +92,8 @@ export default function ListingDetail() {
   };
 
   const handleShare = async () => {
-    const url = window.location.href;
+    // If accessed via short link, share the short URL; otherwise share the current page URL
+    const url = linkCode ? `https://humanpages.ai/work/${linkCode}` : window.location.href;
     const shareTitle = listing ? `${listing.title} — $${listing.budgetUsdc}${listing.budgetFlexible ? '+' : ''} | Human Pages` : 'Human Pages Listing';
     let shared = false;
 
@@ -105,10 +125,10 @@ export default function ListingDetail() {
   };
 
   useEffect(() => {
-    if (id) {
+    if (resolvedId) {
       loadListing();
     }
-  }, [id]);
+  }, [resolvedId]);
 
   // Show welcome toast when redirected after fast-track signup (once only)
   useEffect(() => {
@@ -130,8 +150,11 @@ export default function ListingDetail() {
       setListing(data);
       // Funnel step 1: listing page viewed
       const utmSource = new URLSearchParams(window.location.search).get('utm_source') || undefined;
-      analytics.track('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource });
-      posthog.capture('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource });
+      const ref = linkCode || searchParams.get('ref') || undefined;
+      // Persist ref to sessionStorage so it survives signup redirect
+      if (ref) sessionStorage.setItem('hp_listing_ref', ref);
+      analytics.track('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource, ref });
+      posthog.capture('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource, ref });
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
     } finally {
@@ -167,9 +190,10 @@ export default function ListingDetail() {
 
   const handleApplySignup = (method: 'linkedin' | 'google') => {
     if (!listing) return;
+    const ref = linkCode || sessionStorage.getItem('hp_listing_ref') || undefined;
     // Funnel step 2: signup button clicked
-    analytics.track('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc });
-    posthog.capture('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc });
+    analytics.track('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc, ref });
+    posthog.capture('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc, ref });
     setListingApplyIntent(id!, listing.title, listing.requiredSkills);
     if (method === 'linkedin') {
       loginWithLinkedIn();

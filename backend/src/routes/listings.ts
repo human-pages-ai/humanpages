@@ -23,6 +23,51 @@ import sharp from 'sharp';
 
 const router = Router();
 
+// ─── Short link code generation ──────────────────────────────────────────────
+// Alphabet: lowercase a-z + 2-9, excluding confusing chars (0, o, 1, l, i)
+const LINK_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 32 chars
+const LINK_CODE_LENGTH = 6;
+
+function generateLinkCode(): string {
+  let code = '';
+  for (let i = 0; i < LINK_CODE_LENGTH; i++) {
+    code += LINK_ALPHABET[Math.floor(Math.random() * LINK_ALPHABET.length)];
+  }
+  return code;
+}
+
+/** Create 10 ListingLink rows for a newly created listing. Retries on code collision. */
+async function createListingLinks(listingId: string): Promise<void> {
+  const labels = [
+    'default',
+    'campaign-2', 'campaign-3', 'campaign-4', 'campaign-5',
+    'campaign-6', 'campaign-7', 'campaign-8', 'campaign-9', 'campaign-10',
+  ];
+
+  for (const label of labels) {
+    let attempts = 0;
+    while (attempts < 5) {
+      try {
+        await prisma.listingLink.create({
+          data: {
+            code: generateLinkCode(),
+            listingId,
+            label,
+          },
+        });
+        break;
+      } catch (err: any) {
+        // Unique constraint violation on code — retry with a new code
+        if (err?.code === 'P2002') {
+          attempts++;
+          continue;
+        }
+        throw err;
+      }
+    }
+  }
+}
+
 // Material fields — these are the listing terms that applicants rely on.
 // Changes to these fields trigger the reconfirm flow for existing applicants.
 const MATERIAL_FIELDS = [
@@ -237,6 +282,13 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
         status: 'OPEN',
       },
     });
+
+    // Generate 10 short link codes for this listing
+    try {
+      await createListingLinks(listing.id);
+    } catch (linkErr) {
+      logger.warn({ err: linkErr, listingId: listing.id }, 'Failed to generate listing short links');
+    }
 
     // Generate default SVG cover image (free, no moderation needed)
     try {
@@ -494,6 +546,31 @@ router.get('/my-applications', authenticateToken, async (req: AuthRequest, res) 
     res.json(applications);
   } catch (error) {
     logger.error({ err: error }, 'Get my applications error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /by-code/:code - Resolve short code to listing ID (public, used by frontend /work/:code route)
+router.get('/by-code/:code', async (req, res) => {
+  try {
+    const link = await prisma.listingLink.findUnique({
+      where: { code: req.params.code.toLowerCase() },
+      select: { listingId: true, code: true },
+    });
+
+    if (!link) {
+      return res.status(404).json({ error: 'Link not found' });
+    }
+
+    // Increment click count (fire-and-forget)
+    prisma.listingLink.update({
+      where: { code: link.code },
+      data: { clicks: { increment: 1 } },
+    }).catch(() => {});
+
+    res.json({ listingId: link.listingId, code: link.code });
+  } catch (error) {
+    logger.error({ err: error }, 'Resolve listing link error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1577,6 +1654,79 @@ router.delete('/:id', authenticateAgent, requireActiveAgent, async (req: AgentAu
     });
   } catch (error) {
     logger.error({ err: error }, 'Cancel listing error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Short link endpoints ─────────────────────────────────────────────────────
+
+// GET /:id/links - Get all short links for a listing (admin/agent)
+router.get('/:id/links', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, agentId: true },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    if (listing.agentId !== req.agent!.id) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const links = await prisma.listingLink.findMany({
+      where: { listingId: listing.id },
+      orderBy: { createdAt: 'asc' },
+      select: { code: true, label: true, clicks: true, createdAt: true },
+    });
+
+    res.json(links.map(l => ({
+      ...l,
+      url: `https://humanpages.ai/work/${l.code}`,
+    })));
+  } catch (error) {
+    logger.error({ err: error }, 'Get listing links error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /:id/links/:code - Update link label (admin/agent)
+router.put('/:id/links/:code', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, agentId: true },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    if (listing.agentId !== req.agent!.id) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const { label } = z.object({ label: z.string().max(100) }).parse(req.body);
+
+    const link = await prisma.listingLink.findFirst({
+      where: { code: req.params.code, listingId: listing.id },
+    });
+
+    if (!link) {
+      return res.status(404).json({ error: 'Link not found' });
+    }
+
+    await prisma.listingLink.update({
+      where: { id: link.id },
+      data: { label },
+    });
+
+    res.json({ code: link.code, label, message: 'Label updated' });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update listing link error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

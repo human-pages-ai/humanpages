@@ -27,6 +27,7 @@ import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import blogApiRoutes from './routes/blog.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getListingMetaHtml } from './lib/seo.js';
+import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
 
 const app = express();
@@ -239,6 +240,33 @@ app.get('/listings/:id', async (req, res, next) => {
   if (req.params.id === 'api') return next();
   try {
     const html = await getListingMetaHtml(req.params.id);
+    if (html) {
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+// Short listing links: /work/:code → resolve code → serve listing page with OG meta
+app.get('/work/:code', async (req, res, next) => {
+  try {
+    const link = await prisma.listingLink.findUnique({
+      where: { code: req.params.code.toLowerCase() },
+      select: { listingId: true, code: true },
+    });
+    if (!link) return next(); // Fall through to SPA (shows 404)
+
+    // Increment click count (fire-and-forget)
+    prisma.listingLink.update({
+      where: { code: link.code },
+      data: { clicks: { increment: 1 } },
+    }).catch(() => {});
+
+    // Inject OG meta tags so the short link previews correctly on social
+    const html = await getListingMetaHtml(link.listingId);
     if (html) {
       res.set('Content-Type', 'text/html');
       return res.send(html);

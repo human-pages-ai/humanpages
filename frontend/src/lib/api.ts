@@ -585,6 +585,9 @@ export const api = {
   getListing: (id: string) =>
     request<Listing>(`/listings/${id}`),
 
+  resolveListingCode: (code: string) =>
+    request<{ listingId: string; code: string }>(`/listings/by-code/${code}`),
+
   applyToListing: (id: string, pitch?: string) =>
     request<ListingApplication>(`/listings/${id}/apply`, {
       method: 'POST',

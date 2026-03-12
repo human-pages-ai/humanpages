@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 
+interface ListingLink {
+  code: string;
+  label: string | null;
+  clicks: number;
+  createdAt: string;
+}
+
 interface AdminListingDetail {
   id: string;
   title: string;
@@ -27,6 +34,7 @@ interface AdminListingDetail {
     jobId: string | null;
     human: { id: string; name: string; email: string; skills: string[] };
   }>;
+  links?: ListingLink[];
 }
 
 const statusColors: Record<string, string> = {
@@ -146,6 +154,34 @@ export default function AdminListingDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Short Links */}
+      {listing.links && listing.links.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Short Links ({listing.links.length})
+          </h3>
+          <div className="space-y-2">
+            {listing.links.map(link => (
+              <div key={link.code} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                <code className="text-sm font-mono bg-gray-50 px-2 py-1 rounded text-blue-700 shrink-0">
+                  humanpages.ai/work/{link.code}
+                </code>
+                <span className="text-xs text-gray-500 shrink-0">{link.label || '—'}</span>
+                <span className="text-xs text-gray-400 ml-auto shrink-0">{link.clicks} clicks</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://humanpages.ai/work/${link.code}`);
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 shrink-0"
+                >
+                  Copy
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Applications */}
       <div className="bg-white rounded-lg shadow p-6">

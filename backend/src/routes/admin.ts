@@ -1488,6 +1488,10 @@ router.get('/listings/:id', async (req: AuthRequest, res) => {
           },
           orderBy: { createdAt: 'desc' },
         },
+        links: {
+          select: { code: true, label: true, clicks: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 
