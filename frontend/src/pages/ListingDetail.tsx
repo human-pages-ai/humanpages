@@ -95,12 +95,12 @@ export default function ListingDetail() {
     }
     localStorage.setItem('hp_onboarding_pending', '1');
     // Reload the page so the user state refreshes
-    window.location.href = `/listings/${id}?signedup=1`;
+    window.location.href = `/listings/${id}?signedup=1${ref ? `&ref=${encodeURIComponent(ref)}` : ''}`;
   };
 
   const handleShare = async () => {
     // If accessed via short link, share the short URL; otherwise share the current page URL
-    const url = linkCode ? `https://humanpages.ai/work/${linkCode}` : window.location.href;
+    const url = linkCode ? `https://humanpages.ai/work/${linkCode}` : id ? `https://humanpages.ai/listings/${id}` : window.location.href;
     const shareTitle = listing ? `${listing.title} — $${listing.budgetUsdc}${listing.budgetFlexible ? '+' : ''} | Human Pages` : 'Human Pages Listing';
     let shared = false;
 

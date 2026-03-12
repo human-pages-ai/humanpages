@@ -2,6 +2,8 @@
  * Backfill script: Generate 10 ListingLink short codes for every existing listing
  * that doesn't already have links.
  *
+ * Safe to re-run: only targets listings with zero links.
+ *
  * Usage: npx tsx backend/scripts/backfill-listing-links.ts
  */
 
@@ -38,7 +40,11 @@ async function main() {
   console.log(`Found ${listings.length} listings without short links.`);
 
   let created = 0;
+  let failed = 0;
+  const failures: { listingId: string; label: string; error: string }[] = [];
+
   for (const listing of listings) {
+    let listingCreated = 0;
     for (const label of LABELS) {
       let attempts = 0;
       while (attempts < 5) {
@@ -51,20 +57,38 @@ async function main() {
             },
           });
           created++;
+          listingCreated++;
           break;
         } catch (err: any) {
           if (err?.code === 'P2002') {
+            // Unique constraint collision — retry with a new code
             attempts++;
             continue;
           }
-          throw err;
+          // Non-collision error — log and continue to next label
+          console.error(`  ✗ Failed to create "${label}" for ${listing.id}: ${err.message}`);
+          failures.push({ listingId: listing.id, label, error: err.message });
+          failed++;
+          break;
         }
       }
+      if (attempts >= 5) {
+        console.error(`  ✗ Max retries for "${label}" on ${listing.id} (code collision)`);
+        failures.push({ listingId: listing.id, label, error: '5 consecutive code collisions' });
+        failed++;
+      }
     }
-    console.log(`  ✓ ${listing.title} (${listing.id}) — 10 links created`);
+    console.log(`  ✓ ${listing.title} (${listing.id}) — ${listingCreated}/10 links created`);
   }
 
   console.log(`\nDone. Created ${created} links for ${listings.length} listings.`);
+  if (failures.length > 0) {
+    console.error(`\n⚠ ${failed} links failed to create:`);
+    for (const f of failures) {
+      console.error(`  - ${f.listingId} / ${f.label}: ${f.error}`);
+    }
+    process.exitCode = 1;
+  }
 }
 
 main()
