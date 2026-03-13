@@ -514,7 +514,7 @@ export default function GptSetupPage() {
               {/* Quick Install — primary action */}
               <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
                 <p className="text-slate-700 mb-4">
-                  One click to open GPT with the connector details pre-filled — or copy everything manually.
+                  One click copies the MCP URL and opens GPT — just paste it in Settings.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <a
@@ -523,7 +523,7 @@ export default function GptSetupPage() {
                     rel="noopener noreferrer"
                     className="px-6 py-3 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-colors min-h-[44px] flex items-center justify-center focus:outline-2 focus:outline-offset-2 focus:outline-blue-500 shadow-md pulse-button"
                   >
-                    Add to GPT →
+                    Connect to GPT →
                   </a>
                   <CopyButton
                     text={`Name: Human Pages\nDescription: Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments.\nURL: https://mcp.humanpages.ai/api/mcp\nAuthentication: OAuth`}
@@ -531,7 +531,7 @@ export default function GptSetupPage() {
                   />
                 </div>
                 <p className="text-xs text-slate-500 mt-3">
-                  "Add to GPT" opens ChatGPT and guides you through the setup. Or copy the settings above and add them manually in Settings → Connectors → Create.
+                  "Connect to GPT" copies the server URL to your clipboard and opens GPT. Go to Settings → Apps → Create, paste the URL, and select OAuth. That's it!
                 </p>
               </div>
 
