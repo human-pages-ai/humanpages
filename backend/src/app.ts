@@ -30,6 +30,7 @@ import cvRouter from './routes/cv.js';
 import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
+import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
 
@@ -195,9 +196,9 @@ app.get('/gpt-setup', (req, res, next) => {
   next();
 });
 
-// GPT one-click install — smart landing page
+// GPT one-click install — smart landing page (mobile-first, tap-driven)
 // When we're in the App Directory: redirect straight there (true one-click)
-// Until then: serve a landing page that auto-copies the MCP URL and redirects to ChatGPT
+// Until then: serve a landing page that copies the MCP URL and guides setup
 app.get('/gpt-setup/go', (_req, res) => {
   const appDirectoryUrl = process.env.GPT_APP_DIRECTORY_URL;
   if (appDirectoryUrl) {
@@ -207,152 +208,9 @@ app.get('/gpt-setup/go', (_req, res) => {
   const mcpUrl = 'https://mcp.humanpages.ai/api/mcp';
   const frontendUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
 
-  // Serve a self-contained landing page that:
-  // 1. Auto-copies the MCP server URL to clipboard
-  // 2. Shows a countdown animation
-  // 3. Redirects to ChatGPT after 4 seconds
-  // 4. Gives the user clear instructions on what to do next
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
-  return res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Connect Human Pages to GPT</title>
-  <meta name="description" content="One-click setup for Human Pages MCP connector in GPT">
-  <meta property="og:title" content="Connect Human Pages to GPT">
-  <meta property="og:description" content="Add Human Pages to your GPT in seconds">
-  <meta property="og:url" content="${frontendUrl}/gpt-setup/go">
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#f8fafc;min-height:100vh;display:flex;align-items:center;justify-content:center}
-    .card{max-width:480px;width:100%;margin:24px;padding:48px 36px;background:#1e293b;border-radius:20px;border:1px solid #334155;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,.4)}
-    h1{font-size:28px;font-weight:700;margin-bottom:8px}
-    .subtitle{color:#94a3b8;font-size:15px;margin-bottom:32px}
-    .url-box{background:#0f172a;border:2px solid #f97316;border-radius:12px;padding:14px 18px;font-family:'SF Mono',Monaco,monospace;font-size:14px;color:#f97316;word-break:break-all;margin-bottom:24px;position:relative;cursor:pointer;transition:border-color .2s}
-    .url-box:hover{border-color:#fb923c}
-    .copied-badge{position:absolute;top:-10px;right:12px;background:#16a34a;color:#fff;font-size:11px;font-weight:600;padding:2px 10px;border-radius:99px;opacity:0;transition:opacity .3s}
-    .copied-badge.show{opacity:1}
-    .status{margin-bottom:28px;min-height:60px}
-    .status-text{font-size:18px;font-weight:600;margin-bottom:4px}
-    .status-sub{color:#94a3b8;font-size:13px}
-    .countdown{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;border:3px solid #f97316;font-size:24px;font-weight:700;color:#f97316;margin-bottom:16px;position:relative}
-    .countdown-ring{position:absolute;inset:-3px;border-radius:50%;border:3px solid transparent;border-top-color:#f97316;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .steps{text-align:left;background:#0f172a;border-radius:12px;padding:20px 24px;margin-bottom:24px}
-    .step{display:flex;gap:12px;padding:8px 0;font-size:14px;color:#cbd5e1}
-    .step-num{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#f97316;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
-    .step.active{color:#f8fafc;font-weight:500}
-    .step.done .step-num{background:#16a34a}
-    .btn{display:inline-block;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;transition:all .15s;cursor:pointer;border:none}
-    .btn-primary{background:#f97316;color:#fff}
-    .btn-primary:hover{background:#ea580c;transform:translateY(-1px)}
-    .btn-secondary{background:#334155;color:#e2e8f0;margin-top:8px;font-size:14px;padding:10px 24px}
-    .btn-secondary:hover{background:#475569}
-    .manual{margin-top:20px;font-size:13px;color:#64748b}
-    .manual a{color:#f97316;text-decoration:none}
-    .manual a:hover{text-decoration:underline}
-    .logo{font-size:32px;margin-bottom:16px}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="logo">&#x1F91D;</div>
-    <h1>Connecting to GPT</h1>
-    <p class="subtitle">Human Pages MCP Server</p>
-
-    <div class="url-box" id="urlBox" onclick="copyUrl()">
-      ${mcpUrl}
-      <span class="copied-badge" id="copiedBadge">Copied!</span>
-    </div>
-
-    <div class="status" id="statusArea">
-      <div class="countdown" id="countdown">
-        <span id="countNum">4</span>
-        <div class="countdown-ring"></div>
-      </div>
-      <div class="status-text" id="statusText">Copying URL to clipboard...</div>
-      <div class="status-sub" id="statusSub">Opening GPT in a moment</div>
-    </div>
-
-    <div class="steps">
-      <div class="step done" id="step1">
-        <span class="step-num">1</span>
-        <span>Visit this link (you're here!)</span>
-      </div>
-      <div class="step active" id="step2">
-        <span class="step-num">2</span>
-        <span>In GPT: Settings &rarr; Apps &rarr; Create</span>
-      </div>
-      <div class="step" id="step3">
-        <span class="step-num">3</span>
-        <span>Paste the URL &amp; select OAuth &rarr; done!</span>
-      </div>
-    </div>
-
-    <a class="btn btn-primary" id="goBtn" href="https://chatgpt.com" target="_blank" rel="noopener">
-      Open GPT Now &rarr;
-    </a>
-    <br>
-    <button class="btn btn-secondary" onclick="copyUrl()">
-      Copy URL Again
-    </button>
-
-    <div class="manual">
-      Need help? <a href="${frontendUrl}/en/gpt-setup">View full setup guide</a>
-    </div>
-  </div>
-
-  <script>
-    const MCP_URL = '${mcpUrl}';
-    let copied = false;
-
-    async function copyUrl() {
-      try {
-        await navigator.clipboard.writeText(MCP_URL);
-        copied = true;
-        document.getElementById('copiedBadge').classList.add('show');
-        setTimeout(() => document.getElementById('copiedBadge').classList.remove('show'), 2000);
-      } catch {
-        // Fallback for older browsers
-        const ta = document.createElement('textarea');
-        ta.value = MCP_URL;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        copied = true;
-        document.getElementById('copiedBadge').classList.add('show');
-        setTimeout(() => document.getElementById('copiedBadge').classList.remove('show'), 2000);
-      }
-    }
-
-    // Auto-copy on load
-    copyUrl().then(() => {
-      document.getElementById('statusText').textContent = 'URL copied to clipboard!';
-    }).catch(() => {
-      document.getElementById('statusText').textContent = 'Click the URL above to copy it';
-    });
-
-    // Countdown
-    let count = 4;
-    const timer = setInterval(() => {
-      count--;
-      document.getElementById('countNum').textContent = count;
-      if (count <= 0) {
-        clearInterval(timer);
-        document.getElementById('statusText').textContent = 'GPT is opening...';
-        document.getElementById('statusSub').textContent = 'Go to Settings → Apps → Create → Paste the URL';
-        document.getElementById('step2').classList.add('active');
-        window.open('https://chatgpt.com', '_blank', 'noopener');
-      }
-    }, 1000);
-  </script>
-</body>
-</html>`);
+  return res.send(getGptSetupGoHtml(mcpUrl, frontendUrl));
 });
 
 // Careers page: inject meta tags for social sharing (keeps "Stop chasing clients." OG image)
