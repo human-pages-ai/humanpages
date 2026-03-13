@@ -12,8 +12,8 @@
 #          The script will stop PM2, restore, and restart.
 #
 # Environment variables (same as backup-database.sh):
-#   DATABASE_URL, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
-#   DB_BACKUP_ENCRYPTION_KEY
+#   DATABASE_URL, R2_BACKUP_ACCOUNT_ID, R2_BACKUP_ACCESS_KEY_ID,
+#   R2_BACKUP_SECRET_ACCESS_KEY, DB_BACKUP_ENCRYPTION_KEY
 # ────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -50,7 +50,7 @@ load_config() {
       value="${value%\'}"
       value="${value#\'}"
       case "$key" in
-        DATABASE_URL|DIRECT_DATABASE_URL|R2_ACCOUNT_ID|R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|DB_BACKUP_ENCRYPTION_KEY)
+        DATABASE_URL|DIRECT_DATABASE_URL|R2_BACKUP_ACCOUNT_ID|R2_BACKUP_ACCESS_KEY_ID|R2_BACKUP_SECRET_ACCESS_KEY|DB_BACKUP_ENCRYPTION_KEY)
           export "$key=$value"
           ;;
       esac
@@ -67,14 +67,14 @@ load_config() {
   local display_url="${PG_CONN_URL%%\?*}"
   DB_DISPLAY=$(echo "$display_url" | sed -E 's|(://[^:]+:)[^@]+(@)|\1***\2|')
 
-  if [[ -z "${R2_ACCOUNT_ID:-}" || -z "${R2_ACCESS_KEY_ID:-}" || -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
-    error "R2 credentials not configured"
+  if [[ -z "${R2_BACKUP_ACCOUNT_ID:-}" || -z "${R2_BACKUP_ACCESS_KEY_ID:-}" || -z "${R2_BACKUP_SECRET_ACCESS_KEY:-}" ]]; then
+    error "R2 backup credentials not configured (R2_BACKUP_ACCOUNT_ID, R2_BACKUP_ACCESS_KEY_ID, R2_BACKUP_SECRET_ACCESS_KEY)"
     exit 1
   fi
 
-  R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-  export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
-  export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+  R2_ENDPOINT="https://${R2_BACKUP_ACCOUNT_ID}.r2.cloudflarestorage.com"
+  export AWS_ACCESS_KEY_ID="$R2_BACKUP_ACCESS_KEY_ID"
+  export AWS_SECRET_ACCESS_KEY="$R2_BACKUP_SECRET_ACCESS_KEY"
   export AWS_DEFAULT_REGION="auto"
 
   # Encryption key required for decrypting backups

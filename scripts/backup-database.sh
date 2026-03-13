@@ -11,13 +11,13 @@
 #   sh scripts/backup-database.sh --dry-run        # validate config only
 #
 # Environment variables (loaded from Infisical or backend/.env):
-#   DATABASE_URL              — PostgreSQL connection string
-#   R2_ACCOUNT_ID             — Cloudflare account ID
-#   R2_ACCESS_KEY_ID          — R2 access key
-#   R2_SECRET_ACCESS_KEY      — R2 secret key
-#   DB_BACKUP_ENCRYPTION_KEY  — AES-256 passphrase for encrypting backups
-#   TELEGRAM_BOT_TOKEN        — (optional) for failure/success notifications
-#   TELEGRAM_ADMIN_CHAT_ID    — (optional) Telegram chat for notifications
+#   DATABASE_URL                  — PostgreSQL connection string
+#   R2_BACKUP_ACCOUNT_ID          — Cloudflare account ID for backup bucket
+#   R2_BACKUP_ACCESS_KEY_ID       — R2 API token (scoped to hp-db-backups bucket)
+#   R2_BACKUP_SECRET_ACCESS_KEY   — R2 API token secret
+#   DB_BACKUP_ENCRYPTION_KEY      — AES-256 passphrase for encrypting backups
+#   TELEGRAM_BOT_TOKEN            — (optional) for failure/success notifications
+#   TELEGRAM_ADMIN_CHAT_ID        — (optional) Telegram chat for notifications
 # ────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -100,7 +100,7 @@ load_config() {
       value="${value%\'}"
       value="${value#\'}"
       case "$key" in
-        DATABASE_URL|DIRECT_DATABASE_URL|R2_ACCOUNT_ID|R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|DB_BACKUP_ENCRYPTION_KEY|TELEGRAM_BOT_TOKEN|TELEGRAM_ADMIN_CHAT_ID)
+        DATABASE_URL|DIRECT_DATABASE_URL|R2_BACKUP_ACCOUNT_ID|R2_BACKUP_ACCESS_KEY_ID|R2_BACKUP_SECRET_ACCESS_KEY|DB_BACKUP_ENCRYPTION_KEY|TELEGRAM_BOT_TOKEN|TELEGRAM_ADMIN_CHAT_ID)
           export "$key=$value"
           ;;
       esac
@@ -122,13 +122,13 @@ load_config() {
   # Mask password in display: postgresql://user:***@host:port/db
   DB_DISPLAY=$(echo "$display_url" | sed -E 's|(://[^:]+:)[^@]+(@)|\1***\2|')
 
-  # Validate R2 credentials
-  if [[ -z "${R2_ACCOUNT_ID:-}" || -z "${R2_ACCESS_KEY_ID:-}" || -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
-    log_error "R2 credentials not configured (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY)"
+  # Validate R2 backup credentials (separate from app R2 credentials)
+  if [[ -z "${R2_BACKUP_ACCOUNT_ID:-}" || -z "${R2_BACKUP_ACCESS_KEY_ID:-}" || -z "${R2_BACKUP_SECRET_ACCESS_KEY:-}" ]]; then
+    log_error "R2 backup credentials not configured (R2_BACKUP_ACCOUNT_ID, R2_BACKUP_ACCESS_KEY_ID, R2_BACKUP_SECRET_ACCESS_KEY)"
     exit 1
   fi
 
-  R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+  R2_ENDPOINT="https://${R2_BACKUP_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
   # Validate encryption key
   if [[ -z "${DB_BACKUP_ENCRYPTION_KEY:-}" ]]; then
@@ -245,9 +245,9 @@ upload_to_r2() {
 
   log_info "Uploading to R2: ${s3_path}"
 
-  # Configure AWS CLI for R2 (S3-compatible)
-  export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
-  export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+  # Configure AWS CLI for R2 backup bucket (S3-compatible)
+  export AWS_ACCESS_KEY_ID="$R2_BACKUP_ACCESS_KEY_ID"
+  export AWS_SECRET_ACCESS_KEY="$R2_BACKUP_SECRET_ACCESS_KEY"
   export AWS_DEFAULT_REGION="auto"
 
   # Upload with retry

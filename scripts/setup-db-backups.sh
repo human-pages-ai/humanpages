@@ -94,6 +94,35 @@ if [[ "$HAS_ENC_KEY" == "false" ]]; then
 else
   echo "  Encryption key found"
 fi
+
+# Check for R2 backup credentials
+HAS_R2_BACKUP=false
+if [[ -f "$ENV_FILE" ]]; then
+  if grep -q "^R2_BACKUP_ACCESS_KEY_ID=" "$ENV_FILE" 2>/dev/null; then
+    HAS_R2_BACKUP=true
+  fi
+fi
+if [[ -n "${R2_BACKUP_ACCESS_KEY_ID:-}" ]]; then
+  HAS_R2_BACKUP=true
+fi
+
+if [[ "$HAS_R2_BACKUP" == "false" ]]; then
+  echo ""
+  echo "  ╔══════════════════════════════════════════════════════╗"
+  echo "  ║  WARNING: R2 backup credentials not found.           ║"
+  echo "  ║                                                      ║"
+  echo "  ║  Create an R2 API token in Cloudflare Dashboard      ║"
+  echo "  ║  scoped to the 'hp-db-backups' bucket only,          ║"
+  echo "  ║  then add to Infisical and backend/.env:             ║"
+  echo "  ║                                                      ║"
+  echo "  ║    R2_BACKUP_ACCOUNT_ID=<your-cf-account-id>         ║"
+  echo "  ║    R2_BACKUP_ACCESS_KEY_ID=<token>                   ║"
+  echo "  ║    R2_BACKUP_SECRET_ACCESS_KEY=<secret>              ║"
+  echo "  ╚══════════════════════════════════════════════════════╝"
+  echo ""
+else
+  echo "  R2 backup credentials found"
+fi
 echo ""
 
 # ── 3. Create directories ───────────────────────────────────────────
@@ -155,10 +184,15 @@ echo "╠═══════════════════════�
 echo "║                                                  ║"
 echo "║  Schedule: Daily at 2:00 AM                      ║"
 echo "║  Encryption: AES-256-CBC                         ║"
-echo "║  Retention: 30 days on R2, 7 days local          ║"
-echo "║  Destination: R2 bucket 'db-backups/postgres/'   ║"
-echo "║  Cron log: logs/backup-cron.log                  ║"
-echo "║  Backup log: logs/backup.log                     ║"
+echo "║  R2 bucket: hp-db-backups/postgres/              ║"
+echo "║  R2 retention: set via bucket lifecycle (30d)     ║"
+echo "║  Local retention: 7 days                         ║"
+echo "║                                                  ║"
+echo "║  MANUAL STEP REQUIRED:                           ║"
+echo "║  Set a 30-day lifecycle rule on the               ║"
+echo "║  'hp-db-backups' R2 bucket in Cloudflare:         ║"
+echo "║  Dashboard → R2 → hp-db-backups → Settings →      ║"
+echo "║  Object lifecycle → Add rule → Delete after 30d  ║"
 echo "║                                                  ║"
 echo "║  Useful commands:                                ║"
 echo "║    sh scripts/backup-database.sh        # manual ║"
