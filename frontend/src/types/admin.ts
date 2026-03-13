@@ -1108,3 +1108,20 @@ export interface WatchDogStats {
   alerted: number;
   acknowledged: number;
 }
+
+export interface WatchDogHealth {
+  active: boolean;
+  filesWatched: number;
+  lastErrorAt: string | null;
+  claudeBudget: { used: number; limit: number };
+  telegramBudget: { used: number; limit: number };
+  uptimeMs: number;
+  cursors: Array<{ path: string; byteOffset: number; lastReadAt: number }>;
+}
+
+export interface WatchDogTrend {
+  hour: string;
+  count: number;
+  fatal: number;
+  error: number;
+}

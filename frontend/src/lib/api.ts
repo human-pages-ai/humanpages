@@ -1240,6 +1240,12 @@ export const api = {
     request<any>(`/admin/watchdog/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   triggerWatchDogScan: () =>
     request<{ success: boolean; message: string }>('/admin/watchdog/scan', { method: 'POST' }),
+  getWatchDogHealth: () =>
+    request<any>('/admin/watchdog/health'),
+  reanalyzeWatchDogError: (id: string) =>
+    request<any>(`/admin/watchdog/reanalyze/${id}`, { method: 'POST' }),
+  getWatchDogTrends: () =>
+    request<any[]>('/admin/watchdog/trends'),
 
   // ─── Marketing Ops ───
   getMktOpsLogs: (params: { page?: number; limit?: number; event?: string; staff?: string; from?: string; to?: string } = {}) => {

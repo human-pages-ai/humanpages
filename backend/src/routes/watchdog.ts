@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
-import { runErrorMonitor } from '../lib/error-monitor.js';
+import { runErrorMonitor, analyzeWithClaude, getWatchDogHealth } from '../lib/error-monitor.js';
 import { logger } from '../lib/logger.js';
 
 const router = Router();
@@ -92,6 +92,101 @@ router.get('/stats', async (_req: AuthRequest, res) => {
   } catch (error) {
     logger.error({ err: error }, 'Failed to get watchdog stats');
     res.status(500).json({ error: 'Failed to get stats', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/watchdog/health — Live watcher health & status
+router.get('/health', async (_req: AuthRequest, res) => {
+  try {
+    const health = getWatchDogHealth();
+    res.json(health);
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to get watchdog health');
+    res.status(500).json({ error: 'Failed to get health', detail: errMsg(error) });
+  }
+});
+
+// POST /api/admin/watchdog/reanalyze/:id — Re-run Claude analysis on a specific error
+router.post('/reanalyze/:id', async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const monitoredError = await prisma.monitoredError.findUnique({ where: { id } });
+    if (!monitoredError) {
+      return res.status(404).json({ error: 'Error not found' });
+    }
+
+    const group = {
+      fingerprint: monitoredError.fingerprint,
+      errorType: monitoredError.errorType,
+      message: monitoredError.message,
+      level: monitoredError.level,
+      count: monitoredError.occurrences,
+      category: 'unknown' as const,
+      samples: monitoredError.samplePayload ? [monitoredError.samplePayload as any] : [],
+      firstTime: monitoredError.firstSeenAt.toISOString(),
+      lastTime: monitoredError.lastSeenAt.toISOString(),
+    };
+
+    const analysis = await analyzeWithClaude(group);
+    if (!analysis) {
+      return res.status(503).json({ error: 'Claude analysis unavailable (no API key or budget exhausted)' });
+    }
+
+    const updated = await prisma.monitoredError.update({
+      where: { id },
+      data: {
+        aiAnalysis: analysis,
+        aiAnalyzedAt: new Date(),
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to reanalyze error');
+    res.status(500).json({ error: 'Failed to reanalyze', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/watchdog/trends — Error frequency over last 24h
+router.get('/trends', async (_req: AuthRequest, res) => {
+  try {
+    const since = new Date(Date.now() - 24 * 3600_000);
+
+    const errors = await prisma.monitoredError.findMany({
+      where: { lastSeenAt: { gte: since } },
+      select: { lastSeenAt: true, occurrences: true, level: true },
+      orderBy: { lastSeenAt: 'asc' },
+    });
+
+    // Group by hour
+    const hourBuckets = new Map<string, { count: number; fatal: number; error: number }>();
+
+    for (let i = 0; i < 24; i++) {
+      const hour = new Date(Date.now() - (23 - i) * 3600_000);
+      const key = hour.toISOString().slice(0, 13);
+      hourBuckets.set(key, { count: 0, fatal: 0, error: 0 });
+    }
+
+    for (const err of errors) {
+      const key = err.lastSeenAt.toISOString().slice(0, 13);
+      const bucket = hourBuckets.get(key);
+      if (bucket) {
+        bucket.count += err.occurrences;
+        if (err.level >= 60) bucket.fatal += err.occurrences;
+        else bucket.error += err.occurrences;
+      }
+    }
+
+    const trends = Array.from(hourBuckets.entries()).map(([hour, data]) => ({
+      hour,
+      ...data,
+    }));
+
+    res.json(trends);
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to get watchdog trends');
+    res.status(500).json({ error: 'Failed to get trends', detail: errMsg(error) });
   }
 });
 

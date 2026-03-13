@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
-import type { MonitoredError, WatchDogStats } from '../../types/admin';
+import type { MonitoredError, WatchDogStats, WatchDogHealth, WatchDogTrend } from '../../types/admin';
 
 const STATUS_COLORS: Record<string, string> = {
   new: 'bg-blue-100 text-blue-800',
@@ -26,11 +26,41 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
+function formatUptime(ms: number): string {
+  if (ms < 60_000) return `${Math.floor(ms / 1000)}s`;
+  if (ms < 3600_000) return `${Math.floor(ms / 60_000)}m`;
+  return `${Math.floor(ms / 3600_000)}h ${Math.floor((ms % 3600_000) / 60_000)}m`;
+}
+
+function MiniTrendChart({ trends }: { trends: WatchDogTrend[] }) {
+  if (trends.length === 0) return null;
+  const maxCount = Math.max(...trends.map((t) => t.count), 1);
+  return (
+    <div className="flex items-end gap-px h-8">
+      {trends.map((t, i) => {
+        const height = Math.max(1, (t.count / maxCount) * 100);
+        const hasFatal = t.fatal > 0;
+        return (
+          <div
+            key={i}
+            title={`${t.hour}:00 — ${t.count} errors${hasFatal ? ` (${t.fatal} fatal)` : ''}`}
+            className={`w-1.5 rounded-t ${hasFatal ? 'bg-red-400' : t.count > 0 ? 'bg-orange-300' : 'bg-gray-200'}`}
+            style={{ height: `${height}%` }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AdminWatchDog() {
   const [errors, setErrors] = useState<MonitoredError[]>([]);
   const [stats, setStats] = useState<WatchDogStats | null>(null);
+  const [health, setHealth] = useState<WatchDogHealth | null>(null);
+  const [trends, setTrends] = useState<WatchDogTrend[]>([]);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [reanalyzing, setReanalyzing] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -39,12 +69,16 @@ export default function AdminWatchDog() {
     setLoading(true);
     setError('');
     try {
-      const [errResult, statsResult] = await Promise.all([
+      const [errResult, statsResult, healthResult, trendsResult] = await Promise.all([
         api.getWatchDogErrors({ status: statusFilter || undefined, limit: 50 }),
         api.getWatchDogStats(),
+        api.getWatchDogHealth().catch(() => null),
+        api.getWatchDogTrends().catch(() => []),
       ]);
       setErrors(errResult.errors);
       setStats(statsResult);
+      setHealth(healthResult);
+      setTrends(trendsResult);
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
     } finally {
@@ -54,6 +88,12 @@ export default function AdminWatchDog() {
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const interval = setInterval(loadData, 30_000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
@@ -77,12 +117,25 @@ export default function AdminWatchDog() {
     }
   };
 
+  const handleReanalyze = async (id: string) => {
+    setReanalyzing(id);
+    try {
+      await api.reanalyzeWatchDogError(id);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Re-analysis failed');
+    } finally {
+      setReanalyzing(null);
+    }
+  };
+
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Watch Dog</h2>
-          <p className="text-sm text-gray-500">AI-powered error monitoring and analysis</p>
+          <h2 className="text-xl font-semibold text-gray-900">Watch Dog v2</h2>
+          <p className="text-sm text-gray-500">Near-realtime AI error monitoring</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -102,25 +155,52 @@ export default function AdminWatchDog() {
         </div>
       </div>
 
-      {/* Stats */}
-      {stats && (
-        <div className="flex gap-4 mb-4">
-          <div className="bg-white rounded-lg border px-4 py-2">
-            <p className="text-xs text-gray-500">Total tracked</p>
-            <p className="text-lg font-semibold">{stats.total}</p>
+      {/* Health Status Bar */}
+      {health && (
+        <div className="flex items-center gap-4 mb-4 bg-white rounded-lg border px-4 py-2 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5">
+            <span className={`inline-block w-2 h-2 rounded-full ${health.active ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span>{health.active ? 'Active' : 'Inactive'}</span>
           </div>
-          <div className={`rounded-lg border px-4 py-2 ${(stats.new + stats.alerted) > 0 ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-            <p className="text-xs text-gray-500">Active alerts</p>
-            <p className={`text-lg font-semibold ${(stats.new + stats.alerted) > 0 ? 'text-red-600' : ''}`}>
-              {stats.new + stats.alerted}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg border px-4 py-2">
-            <p className="text-xs text-gray-500">Acknowledged</p>
-            <p className="text-lg font-semibold">{stats.acknowledged}</p>
-          </div>
+          <span>{health.filesWatched} file{health.filesWatched !== 1 ? 's' : ''} watched</span>
+          {health.lastErrorAt && <span>Last error: {timeAgo(health.lastErrorAt)}</span>}
+          <span>Uptime: {formatUptime(health.uptimeMs)}</span>
+          <span className={health.claudeBudget.used >= health.claudeBudget.limit ? 'text-red-500 font-medium' : ''}>
+            Claude: {health.claudeBudget.used}/{health.claudeBudget.limit}
+          </span>
+          <span className={health.telegramBudget.used >= health.telegramBudget.limit ? 'text-red-500 font-medium' : ''}>
+            Telegram: {health.telegramBudget.used}/{health.telegramBudget.limit}
+          </span>
         </div>
       )}
+
+      {/* Stats + Trend */}
+      <div className="flex gap-4 mb-4">
+        {stats && (
+          <>
+            <div className="bg-white rounded-lg border px-4 py-2">
+              <p className="text-xs text-gray-500">Total tracked</p>
+              <p className="text-lg font-semibold">{stats.total}</p>
+            </div>
+            <div className={`rounded-lg border px-4 py-2 ${(stats.new + stats.alerted) > 0 ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
+              <p className="text-xs text-gray-500">Active alerts</p>
+              <p className={`text-lg font-semibold ${(stats.new + stats.alerted) > 0 ? 'text-red-600' : ''}`}>
+                {stats.new + stats.alerted}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border px-4 py-2">
+              <p className="text-xs text-gray-500">Acknowledged</p>
+              <p className="text-lg font-semibold">{stats.acknowledged}</p>
+            </div>
+          </>
+        )}
+        {trends.length > 0 && (
+          <div className="bg-white rounded-lg border px-4 py-2 flex-1">
+            <p className="text-xs text-gray-500 mb-1">24h trend</p>
+            <MiniTrendChart trends={trends} />
+          </div>
+        )}
+      </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4 bg-white rounded-lg border p-3">
@@ -136,6 +216,7 @@ export default function AdminWatchDog() {
           <option value="resolved">Resolved</option>
           <option value="ignored">Ignored</option>
         </select>
+        <span className="text-xs text-gray-400">Auto-refreshes every 30s</span>
       </div>
 
       {/* Error message */}
@@ -149,7 +230,7 @@ export default function AdminWatchDog() {
       <div className="space-y-3">
         {errors.length === 0 && !loading && (
           <div className="bg-white rounded-lg border p-8 text-center text-gray-400 text-sm">
-            No monitored errors found. The Watch Dog scans for errors every 5 minutes.
+            No monitored errors found. Watch Dog monitors your PM2 logs in near-realtime.
           </div>
         )}
 
@@ -165,12 +246,17 @@ export default function AdminWatchDog() {
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[err.status] || ''}`}>
                       {err.status.toUpperCase()}
                     </span>
-                    <span className="text-xs font-mono text-gray-400">
+                    <span className={`text-xs font-mono ${err.level >= 60 ? 'text-red-600 font-bold' : 'text-gray-400'}`}>
                       {LEVEL_LABELS[err.level] || `L${err.level}`}
                     </span>
                     <span className="text-xs text-gray-400">
                       {err.occurrences}x
                     </span>
+                    {err.aiAnalysis && (
+                      <span className="text-xs text-purple-500" title="AI analyzed">
+                        AI
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm font-mono text-gray-800 truncate">
                     {err.errorType ? `${err.errorType}: ` : ''}{err.message}
@@ -210,15 +296,34 @@ export default function AdminWatchDog() {
 
             {expandedId === err.id && (
               <div className="border-t px-4 py-3 bg-gray-50">
-                {err.aiAnalysis && (
+                {err.aiAnalysis ? (
                   <div className="mb-3">
-                    <p className="text-xs font-semibold text-purple-700 mb-1">AI Analysis</p>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs font-semibold text-purple-700">AI Analysis</p>
+                      <button
+                        onClick={() => handleReanalyze(err.id)}
+                        disabled={reanalyzing === err.id}
+                        className="text-xs text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                      >
+                        {reanalyzing === err.id ? 'Analyzing...' : 'Re-analyze'}
+                      </button>
+                    </div>
                     <pre className="text-xs text-gray-700 bg-purple-50 p-3 rounded whitespace-pre-wrap">
                       {err.aiAnalysis}
                     </pre>
                     {err.aiAnalyzedAt && (
                       <p className="text-xs text-gray-400 mt-1">Analyzed {timeAgo(err.aiAnalyzedAt)}</p>
                     )}
+                  </div>
+                ) : (
+                  <div className="mb-3">
+                    <button
+                      onClick={() => handleReanalyze(err.id)}
+                      disabled={reanalyzing === err.id}
+                      className="px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:opacity-50"
+                    >
+                      {reanalyzing === err.id ? 'Analyzing...' : 'Run AI Analysis'}
+                    </button>
                   </div>
                 )}
                 {err.samplePayload && (
