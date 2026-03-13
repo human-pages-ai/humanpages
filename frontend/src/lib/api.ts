@@ -1301,11 +1301,14 @@ export const api = {
 
   // ─── CV ───
   uploadCV: (file: File) => {
+    const token = getToken();
     const formData = new FormData();
     formData.append('cv', file);
     return fetch(`${API_BASE}/cv/upload`, {
       method: 'POST',
-      credentials: 'include',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
       body: formData,
     }).then(async res => {
       if (!res.ok) {

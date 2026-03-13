@@ -226,6 +226,15 @@ router.post(
           logger.warn({ err: error }, 'File extraction error');
           return res.status(400).json({ error: error.message });
         }
+        if (error.message.includes('OPENAI_API_KEY not configured')) {
+          logger.error('CV upload failed: OPENAI_API_KEY not configured');
+          return res.status(503).json({ error: 'CV analysis is temporarily unavailable. Please try again later.' });
+        }
+        // OpenAI API errors (rate limit, auth, etc.)
+        if (error.message.includes('401') || error.message.includes('429') || error.message.includes('OpenAI')) {
+          logger.error({ err: error }, 'CV upload failed: OpenAI API error');
+          return res.status(503).json({ error: 'CV analysis service is temporarily unavailable. Please try again later.' });
+        }
         logger.error({ err: error }, 'CV upload/parse error');
       }
       res.status(500).json({ error: 'Failed to process CV' });
@@ -357,6 +366,22 @@ router.delete('/certificate/:id', authenticateToken, async (req: AuthRequest, re
     logger.error({ err: error }, 'Delete certificate error');
     res.status(500).json({ error: 'Failed to delete certificate' });
   }
+});
+
+// Handle multer errors (file too large, wrong type, etc.)
+// Without this, multer errors crash the request and the browser gets no JSON response,
+// which triggers the generic "Failed to fetch" / "can't fetch" error in the frontend.
+router.use((err: any, _req: any, res: any, next: any) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  if (err?.message?.includes('Only PDF') || err?.message?.includes('DOCX')) {
+    return res.status(400).json({ error: 'Only PDF and DOCX files are allowed' });
+  }
+  next(err);
 });
 
 export default router;
