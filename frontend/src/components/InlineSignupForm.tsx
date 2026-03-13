@@ -77,6 +77,7 @@ export default function InlineSignupForm({
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaBypassed, setCaptchaBypassed] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const captchaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // In embedded browsers (FB/TG WebView), Turnstile often fails to load.
@@ -118,9 +119,44 @@ export default function InlineSignupForm({
   const inputClass = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
   const spacing = compact ? 'space-y-2' : 'space-y-2.5';
 
-  // ── OAuth-primary mode: just the buttons (normal browser) ──
+  // ── OAuth-primary mode: OAuth buttons + expandable email form (normal browser) ──
 
   if (mode === 'oauth-primary') {
+    if (showEmailForm) {
+      // User clicked "sign up with email" — show the email form with OAuth below
+      return (
+        <div className={compact ? 'space-y-2' : 'space-y-3'}>
+          <form onSubmit={handleSubmit} className={spacing}>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required autoFocus autoComplete="name" className={inputClass} />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required autoComplete="email" inputMode="email" className={inputClass} />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create password (8+ chars)" required minLength={8} autoComplete="new-password" className={inputClass} />
+            <Suspense fallback={<div className="h-[65px] bg-gray-50 rounded border border-gray-200 flex items-center justify-center"><span className="text-xs text-gray-400">Loading security check...</span></div>}>
+              <LazyTurnstile sitekey={TURNSTILE_SITE_KEY} onVerify={(token: string) => setCaptchaToken(token)} onExpire={() => setCaptchaToken('')} size="normal" />
+            </Suspense>
+            {error && <p className="text-xs text-red-600">{error}</p>}
+            <button type="submit" disabled={loading || !captchaToken || !name.trim() || !email.trim() || !password} className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50">
+              {loading ? 'Creating account...' : 'Sign Up Free to Apply'}
+            </button>
+          </form>
+          <div className="flex items-center gap-3 my-1">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">or</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+          <button onClick={onGoogleSignup} className="w-full py-2.5 px-4 rounded-lg text-slate-600 font-medium bg-white border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-sm">
+            <GoogleIcon />
+            Sign in with Google
+          </button>
+          {onLinkedInSignup && (
+            <button onClick={onLinkedInSignup} className="w-full py-2.5 px-4 rounded-lg text-slate-600 font-medium bg-white border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-sm">
+              <LinkedInIcon />
+              or continue with LinkedIn
+            </button>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-3">
         <button
@@ -139,6 +175,12 @@ export default function InlineSignupForm({
             or continue with LinkedIn
           </button>
         )}
+        <button
+          onClick={() => setShowEmailForm(true)}
+          className="w-full py-2.5 px-4 rounded-lg text-slate-500 font-medium bg-transparent hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 text-sm"
+        >
+          or sign up with email
+        </button>
         <p className="text-center text-xs text-gray-400 mt-1">
           Free forever · No credit card · Takes 10 seconds
         </p>
