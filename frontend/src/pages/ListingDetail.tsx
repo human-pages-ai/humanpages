@@ -271,7 +271,7 @@ export default function ListingDetail() {
       {/* Not logged in — signup options */}
       {!user && !isClosed && (
         <InlineSignupForm
-          mode={inEmbeddedBrowser ? 'email-primary' : 'oauth-primary'}
+          mode={inEmbeddedBrowser ? 'email-primary' : 'email-and-oauth'}
           onEmailSignup={handleEmailSignup}
           onGoogleSignup={() => handleApplySignup('google')}
           onLinkedInSignup={inEmbeddedBrowser ? undefined : () => handleApplySignup('linkedin')}

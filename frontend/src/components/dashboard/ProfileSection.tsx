@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
 import { Profile } from './types';
-import { api } from '../../lib/api';
 import LocationAutocomplete from '../LocationAutocomplete';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -52,7 +50,6 @@ interface Props {
   onCheckUsername?: (username: string) => Promise<boolean>;
   onUploadPhoto: (file: File) => Promise<void>;
   onDeletePhoto: () => Promise<void>;
-  onEnrichWithCV?: () => void;
 }
 
 export default function ProfileSection({
@@ -69,37 +66,12 @@ export default function ProfileSection({
   onCheckUsername,
   onUploadPhoto,
   onDeletePhoto,
-  onEnrichWithCV,
 }: Props) {
   const { t } = useTranslation();
+  // Hidden: CV upload disabled
   const cvInputRef = useRef<HTMLInputElement>(null);
-  const [cvUploading, setCvUploading] = useState(false);
-
-  const handleCvEnrich = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.includes('pdf') && !file.type.includes('word') && !file.name.endsWith('.docx') && !file.name.endsWith('.pdf')) {
-      toast.error('Please upload a PDF or Word document');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large. Maximum size is 5MB.');
-      return;
-    }
-
-    setCvUploading(true);
-    try {
-      await api.uploadCV(file);
-      toast.success('Skills enriched from CV!');
-      onEnrichWithCV?.();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to process CV');
-    } finally {
-      setCvUploading(false);
-      if (cvInputRef.current) cvInputRef.current.value = '';
-    }
-  };
+  const [cvUploading] = useState(false);
+  const handleCvEnrich = () => {}; // Stub for hidden CV functionality
 
   const [usernameError, setUsernameError] = React.useState<string>('');
   const [checkingUsername, setCheckingUsername] = React.useState(false);
@@ -672,7 +644,7 @@ export default function ProfileSection({
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     {t('dashboard.profile.skills')} & {t('dashboard.profile.equipment')}
                   </h3>
-                  {!profile.cvParsedAt && (
+                  {false && !profile.cvParsedAt && (
                     <>
                       <input
                         ref={cvInputRef}

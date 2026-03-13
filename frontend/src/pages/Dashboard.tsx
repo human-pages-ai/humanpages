@@ -18,7 +18,7 @@ import WorkStatusSection from '../components/dashboard/WorkStatusSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
-import CvUpload from '../components/dashboard/CvUpload';
+// import CvUpload from '../components/dashboard/CvUpload'; // Hidden: CV upload disabled
 import EducationSection from '../components/dashboard/EducationSection';
 
 // Lazy-load wallet stack (Privy) — only fetched when payments tab opens
@@ -922,9 +922,9 @@ export default function Dashboard() {
                     onCheckUsername={checkUsernameAvailability}
                     onUploadPhoto={handleUploadPhoto}
                     onDeletePhoto={handleDeletePhoto}
-                    onEnrichWithCV={loadProfile}
                   />
-                  <CvUpload profile={profile} onUpload={loadProfile} />
+                  {/* <CvUpload profile={profile} onUpload={loadProfile} /> */}
+                  {/* Hidden: CV upload disabled */}
                   <EducationSection profile={profile} onUpdate={loadProfile} />
                 </div>
 

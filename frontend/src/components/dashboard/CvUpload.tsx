@@ -1,14 +1,9 @@
-import { useState, useRef } from 'react';
-import toast from 'react-hot-toast';
-import { api } from '../../lib/api';
-import { Profile } from './types';
+// Hidden: CV upload feature disabled - component renders nothing
+export default function CvUpload() {
+  return null;
 
-interface Props {
-  profile: Profile;
-  onUpload?: () => void;
-}
-
-export default function CvUpload({ profile, onUpload }: Props) {
+  /*
+  // Original implementation (commented out):
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [parseProgress, setParseProgress] = useState(0);
@@ -135,4 +130,5 @@ export default function CvUpload({ profile, onUpload }: Props) {
       </div>
     </div>
   );
+  */
 }
