@@ -27,7 +27,9 @@ import photosRoutes from './routes/photos.js';
 import agentPhotosRoutes from './routes/agentPhotos.js';
 import blogApiRoutes from './routes/blog.js';
 import cvRouter from './routes/cv.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getListingMetaHtml } from './lib/seo.js';
+import mcpOAuthRoutes from './routes/mcp-oauth.js';
+import mcpRemoteRoutes from './routes/mcp-remote.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
 
@@ -62,6 +64,9 @@ app.use(cors({
   },
   credentials: true,
 }));
+// MCP OAuth authorize form uses application/x-www-form-urlencoded
+app.use('/oauth/authorize', express.urlencoded({ extended: false, limit: '10kb' }));
+
 // Routes with larger body limits (before global 10kb parser, API-key protected)
 app.use('/api/admin/content', express.json({ limit: '2mb' }));
 app.use('/api/admin/photo-concepts', express.json({ limit: '2mb' }));
@@ -103,6 +108,11 @@ app.use('/api/listings', listingsRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/api/cv', cvRouter);
+
+// MCP OAuth 2.0 endpoints (well-known discovery, client registration, authorize, token)
+app.use(mcpOAuthRoutes);
+// MCP Streamable HTTP transport (POST/GET/DELETE /mcp)
+app.use('/api', mcpRemoteRoutes);
 
 // Geo detection
 app.use('/api/geo', geoRoutes);
@@ -168,6 +178,16 @@ app.get('/:lang/dev', (req, res, next) => {
 
 app.get('/dev', (req, res, next) => {
   const html = getDevPageMetaHtml();
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+// GPT Setup page: inject meta tags for social sharing / SEO
+app.get('/gpt-setup', (req, res, next) => {
+  const html = getGptSetupMetaHtml();
   if (html) {
     res.set('Content-Type', 'text/html');
     return res.send(html);

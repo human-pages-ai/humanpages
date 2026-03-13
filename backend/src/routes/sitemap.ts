@@ -57,6 +57,7 @@ router.get('/sitemap-static.xml', async (req, res) => {
     const localizedPages = [
       { url: '/', priority: '1.0', changefreq: 'daily' },
       { url: '/dev', priority: '0.8', changefreq: 'weekly' },
+      { url: '/gpt-setup', priority: '0.8', changefreq: 'weekly' },
       { url: '/signup', priority: '0.7', changefreq: 'monthly' },
       { url: '/listings', priority: '0.8', changefreq: 'daily' },
       { url: '/privacy', priority: '0.3', changefreq: 'yearly' },

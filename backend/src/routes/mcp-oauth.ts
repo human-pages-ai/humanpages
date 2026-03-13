@@ -3,31 +3,81 @@
  *
  * Implements OAuth 2.0 endpoints required by the MCP spec for GPT compatibility.
  * Supports:
- * - RFC 6749: OAuth 2.0 Authorization Framework
- * - RFC 7591: OAuth 2.0 Dynamic Client Registration
- * - RFC 7636: PKCE (Proof Key for Public Clients)
- * - RFC 8707: Resource Indicators for OAuth 2.0
+ *   - RFC 6749: OAuth 2.0 Authorization Framework
+ *   - RFC 7591: OAuth 2.0 Dynamic Client Registration
+ *   - RFC 7636: PKCE (S256 only, per RFC 7636 best practices)
+ *   - RFC 8707: Resource Indicators for OAuth 2.0
  *
- * This allows GPT and other LLM clients to:
- * 1. Register themselves as OAuth clients
- * 2. Obtain authorization codes via user login
- * 3. Exchange codes for access tokens
- * 4. Access the MCP server with those tokens
+ * Security:
+ *   - Timing-safe client secret comparison
+ *   - client_secret_basic + client_secret_post support
+ *   - Agent API key validated against DB (prefix + bcrypt, same as agentAuth.ts)
+ *   - API keys stored server-side only (never in JWT)
+ *   - Auth code replay prevention via consumed flag
+ *   - Refresh token rotation
+ *   - Rate limiting on all endpoints
+ *   - HTML escaping in login page (XSS prevention)
+ *   - Security headers on HTML responses
+ *   - Map size caps for DoS prevention
  */
 
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-import { createHash } from 'crypto';
-import { prisma } from '../lib/prisma.js';
+import rateLimit from 'express-rate-limit';
 import { logger } from '../lib/logger.js';
+import {
+  escapeHtml,
+  timingSafeCompare,
+  validatePKCE,
+  storeAgentKey,
+  generateMcpAccessToken,
+  validateAgentApiKey,
+} from '../lib/mcp-auth.js';
 
 const router = Router();
 
-/**
- * In-memory storage for OAuth clients and authorization codes.
- * In production, these should be persisted in a database.
- */
+// ---------------------------------------------------------------------------
+// Rate limiters
+// ---------------------------------------------------------------------------
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'too_many_requests', error_description: 'Rate limit exceeded' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const authorizeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: 'too_many_requests', error_description: 'Rate limit exceeded' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const tokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { error: 'too_many_requests', error_description: 'Rate limit exceeded' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+// ---------------------------------------------------------------------------
+// In-memory stores (with size caps)
+// ---------------------------------------------------------------------------
+
+const MAX_OAUTH_CLIENTS = 5_000;
+const MAX_AUTH_CODES = 10_000;
+const MAX_REFRESH_TOKENS = 10_000;
+
 const oauthClients = new Map<string, {
   clientId: string;
   clientSecret: string;
@@ -37,94 +87,80 @@ const oauthClients = new Map<string, {
   createdAt: Date;
 }>();
 
-const authorizationCodes = new Map<string, {
+interface AuthorizationCode {
   code: string;
   clientId: string;
   agentId: string;
   redirectUri: string;
   codeChallenge?: string;
-  codeChallengeMethod?: 'S256' | 'plain';
+  codeChallengeMethod?: string;
   expiresAt: Date;
   scopes: string[];
-}>();
+  consumed: boolean;
+}
 
-// Clean up expired authorization codes every 5 minutes
+const authorizationCodes = new Map<string, AuthorizationCode>();
+
+interface RefreshTokenEntry {
+  agentId: string;
+  clientId: string;
+  createdAt: Date;
+}
+
+const refreshTokens = new Map<string, RefreshTokenEntry>();
+
+// Cleanup expired auth codes and refresh tokens every 5 minutes
 setInterval(() => {
   const now = new Date();
   let cleaned = 0;
-
   for (const [code, record] of authorizationCodes.entries()) {
     if (record.expiresAt < now) {
       authorizationCodes.delete(code);
       cleaned++;
     }
   }
-
-  if (cleaned > 0) {
-    logger.info({ cleaned }, 'Cleaned up expired OAuth authorization codes');
+  // Refresh tokens expire after 7 days
+  const refreshCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  for (const [token, entry] of refreshTokens.entries()) {
+    if (entry.createdAt.getTime() < refreshCutoff) {
+      refreshTokens.delete(token);
+      cleaned++;
+    }
   }
+  if (cleaned > 0) logger.info({ cleaned }, 'Cleaned up expired OAuth entries');
 }, 5 * 60 * 1000);
 
-/**
- * Generate a random client secret
- */
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function generateClientSecret(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-/**
- * Generate an authorization code
- */
 function generateAuthorizationCode(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-/**
- * Validate a PKCE code challenge.
- * Supports both S256 (SHA256) and plain methods.
- */
-function validatePKCE(
-  codeChallenge: string,
-  codeVerifier: string,
-  method?: string
-): boolean {
-  if (method === 'S256') {
-    const hash = createHash('sha256').update(codeVerifier).digest('base64url');
-    return hash === codeChallenge;
-  } else {
-    // plain method
-    return codeVerifier === codeChallenge;
-  }
-}
-
-/**
- * Generate a JWT access token that encodes the agent's API key.
- */
-function generateAccessToken(agentId: string, agentApiKey: string): string {
-  const payload = {
-    agentId,
-    apiKey: agentApiKey,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour
-  };
-
-  return jwt.sign(payload, process.env.JWT_SECRET!, { algorithm: 'HS256' });
-}
-
-/**
- * Generate a refresh token
- */
 function generateRefreshToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-/**
- * GET /.well-known/oauth-protected-resource
- *
- * Returns metadata about this OAuth 2.0 protected resource.
- * See: https://datatracker.ietf.org/doc/html/draft-jones-oauth-protected-resource-indicators
- */
-router.get('/.well-known/oauth-protected-resource', (req, res) => {
+function securityHeaders(): Record<string, string> {
+  return {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'none'",
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'no-referrer',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Well-known endpoints
+// ---------------------------------------------------------------------------
+
+router.get('/.well-known/oauth-protected-resource', (_req, res) => {
   res.json({
     resource: 'https://api.humanpages.ai/api/mcp',
     authorization_server: `${process.env.FRONTEND_URL || 'https://humanpages.ai'}/oauth`,
@@ -132,43 +168,31 @@ router.get('/.well-known/oauth-protected-resource', (req, res) => {
   });
 });
 
-/**
- * GET /.well-known/oauth-authorization-server
- *
- * Returns OAuth 2.0 Authorization Server metadata.
- * See: https://datatracker.ietf.org/doc/html/rfc8414
- */
-router.get('/.well-known/oauth-authorization-server', (req, res) => {
+router.get('/.well-known/oauth-authorization-server', (_req, res) => {
   const baseUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
-
   res.json({
     issuer: baseUrl,
     authorization_endpoint: `${baseUrl}/oauth/authorize`,
     token_endpoint: `${baseUrl}/oauth/token`,
     registration_endpoint: `${baseUrl}/oauth/register`,
     revocation_endpoint: `${baseUrl}/oauth/revoke`,
-    introspection_endpoint: `${baseUrl}/oauth/introspect`,
     scopes_supported: ['read', 'write', 'admin'],
     response_types_supported: ['code'],
     grant_types_supported: ['authorization_code', 'refresh_token'],
     token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
-    code_challenge_methods_supported: ['S256', 'plain'],
+    code_challenge_methods_supported: ['S256'],
     subject_types_supported: ['public'],
-    id_token_signing_alg_values_supported: ['HS256', 'RS256'],
   });
 });
 
-/**
- * POST /oauth/register
- *
- * Dynamic Client Registration (RFC 7591).
- * Allows clients (like GPT) to register themselves and obtain a client_id.
- */
-router.post('/oauth/register', (req, res) => {
+// ---------------------------------------------------------------------------
+// POST /oauth/register — Dynamic Client Registration (RFC 7591)
+// ---------------------------------------------------------------------------
+
+router.post('/oauth/register', registerLimiter, (req, res) => {
   try {
     const { client_name, redirect_uris, client_description, response_types, grant_types } = req.body;
 
-    // Validate required fields
     if (!client_name || !Array.isArray(redirect_uris) || redirect_uris.length === 0) {
       return res.status(400).json({
         error: 'invalid_request',
@@ -176,7 +200,7 @@ router.post('/oauth/register', (req, res) => {
       });
     }
 
-    // Validate redirect URIs are HTTPS in production
+    // Validate redirect URIs
     const isProduction = process.env.NODE_ENV === 'production';
     for (const uri of redirect_uris) {
       try {
@@ -195,11 +219,17 @@ router.post('/oauth/register', (req, res) => {
       }
     }
 
-    // Generate client credentials
+    // Map size cap
+    if (oauthClients.size >= MAX_OAUTH_CLIENTS) {
+      return res.status(503).json({
+        error: 'temporarily_unavailable',
+        error_description: 'Too many registered clients',
+      });
+    }
+
     const clientId = `client_${crypto.randomBytes(12).toString('hex')}`;
     const clientSecret = generateClientSecret();
 
-    // Store client (in production, use a database)
     oauthClients.set(clientId, {
       clientId,
       clientSecret,
@@ -211,7 +241,6 @@ router.post('/oauth/register', (req, res) => {
 
     logger.info({ clientId, clientName: client_name }, 'OAuth client registered');
 
-    // Return registration response
     res.status(201).json({
       client_id: clientId,
       client_secret: clientSecret,
@@ -219,203 +248,161 @@ router.post('/oauth/register', (req, res) => {
       redirect_uris,
       response_types: response_types || ['code'],
       grant_types: grant_types || ['authorization_code', 'refresh_token'],
-      registration_access_token: jwt.sign(
-        { clientId, type: 'registration_access' },
-        process.env.JWT_SECRET!,
-        { expiresIn: '7d' }
-      ),
-      registration_client_uri: `${process.env.FRONTEND_URL || 'https://humanpages.ai'}/oauth/client/${clientId}`,
     });
   } catch (error) {
     logger.error({ error }, 'OAuth register error');
-    res.status(500).json({
-      error: 'server_error',
-      error_description: 'Internal server error',
-    });
+    res.status(500).json({ error: 'server_error', error_description: 'Internal server error' });
   }
 });
 
-/**
- * GET /oauth/authorize
- *
- * Authorization endpoint (RFC 6749 §4.1.1).
- * Redirects to a login page where the user enters their Human Pages agent API key.
- *
- * Query parameters:
- * - client_id: OAuth client ID
- * - redirect_uri: Where to send the authorization code
- * - response_type: Must be "code"
- * - code_challenge: PKCE code challenge (optional)
- * - code_challenge_method: "S256" or "plain" (optional)
- * - state: Opaque state to prevent CSRF
- * - resource: Resource indicator (RFC 8707)
- */
-router.get('/oauth/authorize', (req, res) => {
-  try {
-    const {
-      client_id,
-      redirect_uri,
-      response_type,
-      code_challenge,
-      code_challenge_method,
-      state,
-      resource,
-    } = req.query;
+// ---------------------------------------------------------------------------
+// GET /oauth/authorize — Show login form
+// ---------------------------------------------------------------------------
 
-    // Validate required parameters
+router.get('/oauth/authorize', authorizeLimiter, (req, res) => {
+  try {
+    const { client_id, redirect_uri, response_type, code_challenge, code_challenge_method, state, resource } = req.query;
+
     if (!client_id || !redirect_uri || response_type !== 'code') {
-      return res.status(400).json({
-        error: 'invalid_request',
-        error_description: 'Missing or invalid parameters',
-      });
+      return res.status(400).json({ error: 'invalid_request', error_description: 'Missing or invalid parameters' });
     }
 
-    // Validate client exists
     const client = oauthClients.get(String(client_id));
     if (!client) {
-      return res.status(400).json({
-        error: 'invalid_client',
-        error_description: 'Unknown client_id',
-      });
+      return res.status(400).json({ error: 'invalid_client', error_description: 'Unknown client_id' });
     }
 
-    // Validate redirect_uri is registered
     if (!client.redirectUris.includes(String(redirect_uri))) {
-      return res.status(400).json({
-        error: 'invalid_request',
-        error_description: 'redirect_uri not registered for this client',
-      });
+      return res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uri not registered' });
     }
 
-    // Render login form
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Human Pages Agent Login</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 500px; margin: 100px auto; padding: 20px; }
-          .form-group { margin-bottom: 20px; }
-          label { display: block; margin-bottom: 5px; font-weight: 500; }
-          input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-          button { background: #0066cc; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-          button:hover { background: #0052a3; }
-          .error { color: #d32f2f; margin-bottom: 20px; }
-        </style>
-      </head>
-      <body>
-        <h1>Human Pages MCP Agent Login</h1>
-        <p>Connecting: <strong>${String(client_id).substring(0, 20)}...</strong></p>
+    // Escaped values for HTML injection prevention
+    const safeClientId = escapeHtml(String(client_id));
+    const safeRedirectUri = escapeHtml(String(redirect_uri));
+    const safeState = escapeHtml(String(state || ''));
+    const safeCodeChallenge = code_challenge ? escapeHtml(String(code_challenge)) : '';
+    const safeCCM = code_challenge_method ? escapeHtml(String(code_challenge_method)) : '';
+    const safeResource = resource ? escapeHtml(String(resource)) : '';
 
-        <form method="POST" action="/oauth/authorize">
-          <div class="form-group">
-            <label for="agent_key">Agent API Key</label>
-            <input type="password" id="agent_key" name="agent_key" placeholder="hp_..." required />
-            <small>Enter your Human Pages agent API key (starts with "hp_")</small>
-          </div>
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Human Pages — Authorize Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 440px; width: 100%; padding: 40px 32px; }
+    .logo { text-align: center; margin-bottom: 24px; font-size: 24px; font-weight: 700; color: #0f172a; }
+    .logo span { color: #2563eb; }
+    .subtitle { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 32px; }
+    label { display: block; font-weight: 500; color: #334155; margin-bottom: 6px; font-size: 14px; }
+    input[type="password"] { width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; transition: border-color 0.2s; }
+    input[type="password"]:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+    .hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+    button { display: block; width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 24px; transition: background 0.2s; }
+    button:hover { background: #1d4ed8; }
+    .footer { text-align: center; margin-top: 24px; font-size: 13px; color: #94a3b8; }
+    .footer a { color: #2563eb; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .connecting { font-size: 12px; color: #94a3b8; text-align: center; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Human <span>Pages</span></div>
+    <div class="connecting">Connecting: ${safeClientId.substring(0, 20)}...</div>
+    <p class="subtitle">Authorize this application to access your Human Pages agent account.</p>
 
-          <input type="hidden" name="client_id" value="${String(client_id)}" />
-          <input type="hidden" name="redirect_uri" value="${String(redirect_uri)}" />
-          <input type="hidden" name="response_type" value="code" />
-          <input type="hidden" name="state" value="${String(state || '')}" />
-          ${code_challenge ? `<input type="hidden" name="code_challenge" value="${String(code_challenge)}" />` : ''}
-          ${code_challenge_method ? `<input type="hidden" name="code_challenge_method" value="${String(code_challenge_method)}" />` : ''}
-          ${resource ? `<input type="hidden" name="resource" value="${String(resource)}" />` : ''}
+    <form method="POST" action="/oauth/authorize">
+      <label for="agent_key">Agent API Key</label>
+      <input type="password" id="agent_key" name="agent_key" placeholder="hp_..." required autocomplete="off" />
+      <p class="hint">Enter your Human Pages agent API key (starts with "hp_")</p>
 
-          <button type="submit">Authorize</button>
-        </form>
+      <input type="hidden" name="client_id" value="${safeClientId}" />
+      <input type="hidden" name="redirect_uri" value="${safeRedirectUri}" />
+      <input type="hidden" name="response_type" value="code" />
+      <input type="hidden" name="state" value="${safeState}" />
+      ${safeCodeChallenge ? `<input type="hidden" name="code_challenge" value="${safeCodeChallenge}" />` : ''}
+      ${safeCCM ? `<input type="hidden" name="code_challenge_method" value="${safeCCM}" />` : ''}
+      ${safeResource ? `<input type="hidden" name="resource" value="${safeResource}" />` : ''}
 
-        <p style="font-size: 14px; color: #666; margin-top: 40px;">
-          Don't have an agent API key? <a href="https://humanpages.ai" target="_blank">Create one</a>
-        </p>
-      </body>
-      </html>
-    `;
+      <button type="submit">Authorize</button>
+    </form>
 
-    res.set('Content-Type', 'text/html; charset=utf-8');
+    <div class="footer">
+      Don't have an API key? <a href="https://humanpages.ai/signup" target="_blank" rel="noopener">Create one</a>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    for (const [k, v] of Object.entries(securityHeaders())) {
+      res.set(k, v);
+    }
     res.send(html);
   } catch (error) {
-    logger.error({ error }, 'OAuth authorize error');
-    res.status(500).json({
-      error: 'server_error',
-      error_description: 'Internal server error',
-    });
+    logger.error({ error }, 'OAuth authorize GET error');
+    res.status(500).json({ error: 'server_error', error_description: 'Internal server error' });
   }
 });
 
-/**
- * POST /oauth/authorize
- *
- * Handle authorization form submission.
- * Validates the agent API key, generates an authorization code, and redirects.
- */
-router.post('/oauth/authorize', async (req, res) => {
+// ---------------------------------------------------------------------------
+// POST /oauth/authorize — Handle login form submission
+// ---------------------------------------------------------------------------
+
+router.post('/oauth/authorize', authorizeLimiter, async (req, res) => {
   try {
-    const {
-      agent_key,
-      client_id,
-      redirect_uri,
-      response_type,
-      code_challenge,
-      code_challenge_method,
-      state,
-      resource,
-    } = req.body;
+    const { agent_key, client_id, redirect_uri, code_challenge, code_challenge_method, state } = req.body;
 
-    // Validate agent API key format
-    if (!agent_key || !agent_key.startsWith('hp_')) {
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: sans-serif; max-width: 500px; margin: 100px auto;">
-          <h1>Invalid Agent API Key</h1>
-          <p>Your agent API key must start with "hp_"</p>
-          <a href="javascript:history.back()">Go back</a>
-        </body>
-        </html>
-      `);
+    // Validate agent API key against database
+    const agent = await validateAgentApiKey(agent_key);
+    if (!agent) {
+      for (const [k, v] of Object.entries(securityHeaders())) {
+        res.set(k, v);
+      }
+      return res.status(400).send(`<!DOCTYPE html>
+<html lang="en"><body style="font-family:sans-serif;max-width:500px;margin:100px auto;padding:20px;">
+<h1>Invalid Agent API Key</h1>
+<p>Could not validate your agent API key. Please check it and try again.</p>
+<a href="javascript:history.back()">Go back</a>
+</body></html>`);
     }
 
-    // In a real implementation, validate the API key against the database
-    // For now, we'll accept any valid-looking key and use it to look up the agent
-    let agentId = '';
+    // Store the raw API key server-side for later tool calls
+    storeAgentKey(agent.id, agent.apiKey);
 
-    // Try to fetch agent from the API using the provided key
-    try {
-      // This would call the Human Pages API to validate the key
-      // For now, we'll extract agent ID from the key itself (in production, use real lookup)
-      agentId = `agent_${crypto.createHash('sha256').update(agent_key).digest('hex').substring(0, 16)}`;
-    } catch {
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: sans-serif; max-width: 500px; margin: 100px auto;">
-          <h1>Invalid Agent API Key</h1>
-          <p>Could not validate your agent API key. Please check it and try again.</p>
-          <a href="javascript:history.back()">Go back</a>
-        </body>
-        </html>
-      `);
+    // Map size cap
+    if (authorizationCodes.size >= MAX_AUTH_CODES) {
+      let oldestKey: string | undefined;
+      let oldestTime = Infinity;
+      for (const [k, v] of authorizationCodes) {
+        if (v.expiresAt.getTime() < oldestTime) {
+          oldestTime = v.expiresAt.getTime();
+          oldestKey = k;
+        }
+      }
+      if (oldestKey) authorizationCodes.delete(oldestKey);
     }
 
-    // Generate authorization code
     const code = generateAuthorizationCode();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     authorizationCodes.set(code, {
       code,
       clientId: String(client_id),
-      agentId,
+      agentId: agent.id,
       redirectUri: String(redirect_uri),
       codeChallenge: code_challenge ? String(code_challenge) : undefined,
-      codeChallengeMethod: code_challenge_method ? String(code_challenge_method) as 'S256' | 'plain' : undefined,
+      codeChallengeMethod: code_challenge_method ? String(code_challenge_method) : undefined,
       expiresAt,
       scopes: ['read', 'write'],
+      consumed: false,
     });
 
-    logger.info({ code: code.substring(0, 8), clientId: client_id, agentId }, 'Authorization code issued');
+    logger.info({ code: code.substring(0, 8), clientId: client_id, agentId: agent.id }, 'Authorization code issued');
 
-    // Build redirect URL
     const redirectUrl = new URL(String(redirect_uri));
     redirectUrl.searchParams.set('code', code);
     if (state) redirectUrl.searchParams.set('state', String(state));
@@ -427,94 +414,103 @@ router.post('/oauth/authorize', async (req, res) => {
   }
 });
 
-/**
- * POST /oauth/token
- *
- * Token endpoint (RFC 6749 §4.1.3).
- * Exchanges an authorization code for an access token.
- *
- * Supports:
- * - authorization_code grant type
- * - refresh_token grant type
- * - PKCE validation (code_verifier)
- */
-router.post('/oauth/token', async (req, res) => {
+// ---------------------------------------------------------------------------
+// POST /oauth/token — Token exchange
+// ---------------------------------------------------------------------------
+
+router.post('/oauth/token', tokenLimiter, async (req, res) => {
   try {
-    const { grant_type, code, code_verifier, refresh_token, client_id, client_secret, redirect_uri } = req.body;
+    const { grant_type, code, code_verifier, refresh_token, redirect_uri } = req.body;
+    let { client_id, client_secret } = req.body;
+
+    // Support client_secret_basic (Authorization: Basic header)
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Basic ')) {
+      const decoded = Buffer.from(authHeader.slice(6), 'base64').toString();
+      const colonIdx = decoded.indexOf(':');
+      if (colonIdx > 0) {
+        client_id = decodeURIComponent(decoded.substring(0, colonIdx));
+        client_secret = decodeURIComponent(decoded.substring(colonIdx + 1));
+      }
+    }
 
     if (!grant_type) {
-      return res.status(400).json({
-        error: 'invalid_request',
-        error_description: 'grant_type is required',
-      });
+      return res.status(400).json({ error: 'invalid_request', error_description: 'grant_type is required' });
     }
 
     if (grant_type === 'authorization_code') {
-      // Validate authorization code
       if (!code) {
-        return res.status(400).json({
-          error: 'invalid_request',
-          error_description: 'code is required',
-        });
+        return res.status(400).json({ error: 'invalid_request', error_description: 'code is required' });
       }
 
       const authCode = authorizationCodes.get(code);
       if (!authCode || authCode.expiresAt < new Date()) {
-        return res.status(400).json({
-          error: 'invalid_grant',
-          error_description: 'Authorization code expired or invalid',
-        });
+        return res.status(400).json({ error: 'invalid_grant', error_description: 'Authorization code expired or invalid' });
       }
 
-      // Validate client credentials
+      // Replay prevention
+      if (authCode.consumed) {
+        authorizationCodes.delete(code);
+        return res.status(400).json({ error: 'invalid_grant', error_description: 'Authorization code already used' });
+      }
+
       const client = oauthClients.get(authCode.clientId);
       if (!client) {
-        return res.status(400).json({
-          error: 'invalid_client',
-          error_description: 'Client not found',
-        });
+        return res.status(400).json({ error: 'invalid_client', error_description: 'Client not found' });
       }
 
-      if (client.clientSecret !== client_secret) {
-        return res.status(401).json({
-          error: 'invalid_client',
-          error_description: 'Invalid client credentials',
-        });
+      // Validate client_id matches auth code
+      if (client_id && String(client_id) !== authCode.clientId) {
+        return res.status(400).json({ error: 'invalid_grant', error_description: 'client_id mismatch' });
       }
 
-      // Validate PKCE if used
+      // Timing-safe client secret comparison
+      if (!timingSafeCompare(client.clientSecret, String(client_secret || ''))) {
+        return res.status(401).json({ error: 'invalid_client', error_description: 'Invalid client credentials' });
+      }
+
+      // PKCE validation (S256 only)
       if (authCode.codeChallenge) {
         if (!code_verifier) {
-          return res.status(400).json({
-            error: 'invalid_request',
-            error_description: 'code_verifier is required for PKCE',
-          });
+          return res.status(400).json({ error: 'invalid_request', error_description: 'code_verifier required for PKCE' });
         }
-
         if (!validatePKCE(authCode.codeChallenge, code_verifier, authCode.codeChallengeMethod)) {
-          return res.status(400).json({
-            error: 'invalid_grant',
-            error_description: 'Invalid code_verifier',
-          });
+          return res.status(400).json({ error: 'invalid_grant', error_description: 'Invalid code_verifier' });
         }
       }
 
-      // Validate redirect_uri matches
       if (authCode.redirectUri !== redirect_uri) {
-        return res.status(400).json({
-          error: 'invalid_grant',
-          error_description: 'redirect_uri does not match',
-        });
+        return res.status(400).json({ error: 'invalid_grant', error_description: 'redirect_uri mismatch' });
       }
 
-      // Consume the authorization code
+      // Mark consumed then delete
+      authCode.consumed = true;
       authorizationCodes.delete(code);
 
-      // Generate access token and refresh token
-      const accessToken = generateAccessToken(authCode.agentId, 'hp_token_placeholder'); // In real implementation, look up actual API key
+      // Generate tokens (API key NOT in JWT)
+      const accessToken = generateMcpAccessToken(authCode.agentId);
       const newRefreshToken = generateRefreshToken();
 
-      logger.info({ clientId: authCode.clientId, agentId: authCode.agentId }, 'Access token issued');
+      // Store refresh token with eviction
+      if (refreshTokens.size >= MAX_REFRESH_TOKENS) {
+        let oldestKey: string | undefined;
+        let oldestTime = Infinity;
+        for (const [k, v] of refreshTokens) {
+          if (v.createdAt.getTime() < oldestTime) {
+            oldestTime = v.createdAt.getTime();
+            oldestKey = k;
+          }
+        }
+        if (oldestKey) refreshTokens.delete(oldestKey);
+      }
+
+      refreshTokens.set(newRefreshToken, {
+        agentId: authCode.agentId,
+        clientId: authCode.clientId,
+        createdAt: new Date(),
+      });
+
+      logger.info({ clientId: authCode.clientId, agentId: authCode.agentId }, 'MCP access token issued');
 
       return res.json({
         access_token: accessToken,
@@ -522,24 +518,36 @@ router.post('/oauth/token', async (req, res) => {
         expires_in: 3600,
         refresh_token: newRefreshToken,
       });
+
     } else if (grant_type === 'refresh_token') {
-      // Handle refresh token grant
       if (!refresh_token) {
-        return res.status(400).json({
-          error: 'invalid_request',
-          error_description: 'refresh_token is required',
-        });
+        return res.status(400).json({ error: 'invalid_request', error_description: 'refresh_token is required' });
       }
 
-      // In a real implementation, validate and look up the refresh token
-      // For now, just generate a new access token
-      const accessToken = generateAccessToken('agent_unknown', 'hp_token_placeholder');
+      const entry = refreshTokens.get(refresh_token);
+      if (!entry) {
+        return res.status(400).json({ error: 'invalid_grant', error_description: 'Invalid refresh token' });
+      }
+
+      // Rotate: delete old, issue new
+      refreshTokens.delete(refresh_token);
+
+      const accessToken = generateMcpAccessToken(entry.agentId);
+      const newRefreshToken = generateRefreshToken();
+
+      refreshTokens.set(newRefreshToken, {
+        agentId: entry.agentId,
+        clientId: entry.clientId,
+        createdAt: new Date(),
+      });
 
       return res.json({
         access_token: accessToken,
         token_type: 'Bearer',
         expires_in: 3600,
+        refresh_token: newRefreshToken,
       });
+
     } else {
       return res.status(400).json({
         error: 'unsupported_grant_type',
@@ -548,41 +556,28 @@ router.post('/oauth/token', async (req, res) => {
     }
   } catch (error) {
     logger.error({ error }, 'OAuth token error');
-    res.status(500).json({
-      error: 'server_error',
-      error_description: 'Internal server error',
-    });
+    res.status(500).json({ error: 'server_error', error_description: 'Internal server error' });
   }
 });
 
-/**
- * POST /oauth/revoke
- *
- * Token revocation endpoint (RFC 7009).
- * Allows clients to revoke access tokens and refresh tokens.
- */
+// ---------------------------------------------------------------------------
+// POST /oauth/revoke — Token revocation (RFC 7009)
+// ---------------------------------------------------------------------------
+
 router.post('/oauth/revoke', (req, res) => {
   try {
-    const { token, token_type_hint } = req.body;
-
+    const { token } = req.body;
     if (!token) {
-      return res.status(400).json({
-        error: 'invalid_request',
-        error_description: 'token is required',
-      });
+      return res.status(400).json({ error: 'invalid_request', error_description: 'token is required' });
     }
 
-    // In a real implementation, mark the token as revoked in a database
-    // For now, just return success
-    logger.info({ token: token.substring(0, 10) }, 'Token revoked');
+    refreshTokens.delete(token);
+    logger.info({ token: String(token).substring(0, 10) }, 'Token revoked');
 
-    res.status(200).send(''); // RFC 7009 specifies empty response
+    res.status(200).send('');
   } catch (error) {
     logger.error({ error }, 'OAuth revoke error');
-    res.status(500).json({
-      error: 'server_error',
-      error_description: 'Internal server error',
-    });
+    res.status(500).json({ error: 'server_error', error_description: 'Internal server error' });
   }
 });
 

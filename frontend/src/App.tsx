@@ -36,6 +36,7 @@ const AboutPage = lazy(() => import('./pages/AboutPage'));
 const EmailVerified = lazy(() => import('./pages/EmailVerified'));
 const StatusPage = lazy(() => import('./pages/StatusPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
+const GptSetupPage = lazy(() => import('./pages/GptSetupPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -186,6 +187,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/dev" element={<DevelopersPage />} />
+      <Route path="/gpt-setup" element={<GptSetupPage />} />
       <Route
         path="/login"
         element={

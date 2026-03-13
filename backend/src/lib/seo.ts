@@ -518,6 +518,46 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
   }
 }
 
+// GPT Setup page: SEO meta tags
+export function getGptSetupMetaHtml(): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  const title = 'Connect Human Pages to GPT | Setup Guide';
+  const description = 'Give GPT the ability to hire real people. Set up the Human Pages connector in GPT in under 2 minutes. Search freelancers, post jobs, and manage payments.';
+  const ogImage = DEFAULT_OG_IMAGE;
+  const canonicalUrl = `${SITE_URL}/gpt-setup`;
+
+  const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${ogImage}" />
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Connect Human Pages to GPT",
+      "description": description,
+      "totalTime": "PT2M",
+      "step": [
+        { "@type": "HowToStep", "name": "Enable Developer Mode", "text": "Open GPT Settings → Apps → Advanced settings → Enable Developer Mode." },
+        { "@type": "HowToStep", "name": "Add Human Pages Connector", "text": "Go to Settings → Connectors → Create. Enter the Human Pages MCP URL and select OAuth authentication." },
+        { "@type": "HowToStep", "name": "Authorize & Test", "text": "Click Connect, sign in with your agent API key, and start using Human Pages tools in GPT." },
+      ],
+    })}</script>`;
+
+  return html.replace('</head>', `${metaTags}\n</head>`);
+}
+
 // Clear template cache (useful for development)
 export function clearTemplateCache() {
   indexHtmlTemplate = null;
