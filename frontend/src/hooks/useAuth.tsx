@@ -78,10 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithWhatsApp = async (phone: string, code: string, signupData?: { name: string; termsAccepted: boolean }): Promise<WhatsAppLoginResult> => {
-    const referrerId = localStorage.getItem('referrer_id') || undefined;
-    const utmSource = sessionStorage.getItem('utm_source') || undefined;
-    const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
-    const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+    const referrerId = safeLocalStorage.getItem('referrer_id') || undefined;
+    const utmSource = safeSessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = safeSessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = safeSessionStorage.getItem('utm_campaign') || undefined;
     const result = await api.whatsappVerifyOtp({
       phone,
       code,
@@ -96,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.needsSignup) {
       return { isNew: true, needsSignup: true };
     }
-    localStorage.removeItem('referrer_id');
-    localStorage.setItem('token', result.token);
+    safeLocalStorage.removeItem('referrer_id');
+    safeLocalStorage.setItem('token', result.token);
     setUser(result.human);
     if (!result.human.analyticsOptOut) {
       posthog.identify(result.human.id);
