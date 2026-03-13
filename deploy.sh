@@ -80,3 +80,11 @@ echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"
+
+# NOTE: Database backups run via system cron (daily at 2 AM).
+# First-time setup on a new server:
+#   sh scripts/setup-db-backups.sh
+# Manual backup:
+#   sh scripts/backup-database.sh
+# List/restore backups:
+#   sh scripts/restore-database.sh --list
