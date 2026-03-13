@@ -4,21 +4,53 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
-import { copyToClipboard } from '../components/InAppBrowserBanner';
+
+// ---------------------------------------------------------------------------
+// Inline clipboard utility (InAppBrowserBanner only exports its default)
+// ---------------------------------------------------------------------------
+
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Fallback for older browsers / in-app webviews
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CopyButton — 44px min touch target per WCAG 2.5.5
+// ---------------------------------------------------------------------------
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await copyToClipboard(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
     <button
       onClick={handleCopy}
-      className={`px-3 py-1 text-xs font-medium rounded transition-all ${
+      aria-label={copied ? 'Copied to clipboard' : `Copy ${label}`}
+      className={`px-3 py-2 text-xs font-medium rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
         copied
           ? 'bg-green-500 text-white'
           : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
@@ -29,22 +61,34 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
   );
 }
 
+// ---------------------------------------------------------------------------
+// FAQItem — accessible accordion with ARIA
+// ---------------------------------------------------------------------------
+
 function FAQItem({
   question,
   answer,
   isOpen,
   onToggle,
+  id,
 }: {
   question: string;
   answer: string;
   isOpen: boolean;
   onToggle: () => void;
+  id: string;
 }) {
+  const headingId = `faq-heading-${id}`;
+  const panelId = `faq-panel-${id}`;
+
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden transition-all">
       <button
+        id={headingId}
         onClick={onToggle}
-        className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left min-h-[48px]"
       >
         <span className="font-semibold text-slate-900">{question}</span>
         <svg
@@ -52,12 +96,18 @@ function FAQItem({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {isOpen && (
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 text-slate-600 animate-in fade-in">
+        <div
+          id={panelId}
+          role="region"
+          aria-labelledby={headingId}
+          className="px-6 py-4 bg-slate-50 border-t border-slate-200 text-slate-600"
+        >
           {answer}
         </div>
       )}
@@ -65,9 +115,14 @@ function FAQItem({
   );
 }
 
+// ---------------------------------------------------------------------------
+// SVG illustrations with accessible titles
+// ---------------------------------------------------------------------------
+
 function SettingsGearSVG() {
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900">
+    <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900" role="img" aria-label="Settings gear illustration">
+      <title>Settings gear</title>
       <defs>
         <style>{`
           @keyframes rotate-gear {
@@ -75,10 +130,12 @@ function SettingsGearSVG() {
             to { transform: rotate(360deg); transform-origin: 50px 30px; }
           }
           .gear { animation: rotate-gear 6s linear infinite; }
+          @media (prefers-reduced-motion: reduce) {
+            .gear { animation: none; }
+          }
         `}</style>
       </defs>
       <g className="gear">
-        {/* Gear teeth */}
         <rect x="45" y="2" width="10" height="12" fill="currentColor" />
         <rect x="73" y="13" width="12" height="10" transform="rotate(45 79 18)" fill="currentColor" />
         <rect x="82" y="45" width="12" height="10" fill="currentColor" />
@@ -87,11 +144,9 @@ function SettingsGearSVG() {
         <rect x="15" y="73" width="12" height="10" transform="rotate(45 21 78)" fill="currentColor" />
         <rect x="6" y="45" width="12" height="10" fill="currentColor" />
         <rect x="15" y="13" width="12" height="10" transform="rotate(45 21 18)" fill="currentColor" />
-        {/* Center circle */}
         <circle cx="50" cy="50" r="18" fill="currentColor" />
         <circle cx="50" cy="50" r="12" fill="white" />
       </g>
-      {/* Toggle switch */}
       <g transform="translate(50, 70)">
         <rect x="-20" y="-6" width="40" height="12" rx="6" fill="#e2e8f0" />
         <circle cx="10" cy="0" r="5" fill="#2563eb" />
@@ -102,22 +157,19 @@ function SettingsGearSVG() {
 
 function ConnectorPlugSVG() {
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-full text-blue-600">
-      {/* Plug prongs */}
+    <svg viewBox="0 0 100 100" className="w-full h-full text-blue-600" role="img" aria-label="Connector plug illustration">
+      <title>Connector plug</title>
       <rect x="20" y="10" width="6" height="30" fill="currentColor" />
       <rect x="38" y="10" width="6" height="30" fill="currentColor" />
       <rect x="56" y="10" width="6" height="30" fill="currentColor" />
       <rect x="74" y="10" width="6" height="30" fill="currentColor" />
-      {/* Plug body */}
       <rect x="16" y="35" width="68" height="16" rx="4" fill="currentColor" />
-      {/* Socket receptacles */}
       <g fill="white">
         <rect x="22" y="52" width="4" height="28" rx="2" />
         <rect x="40" y="52" width="4" height="28" rx="2" />
         <rect x="58" y="52" width="4" height="28" rx="2" />
         <rect x="76" y="52" width="4" height="28" rx="2" />
       </g>
-      {/* Connection lines */}
       <line x1="50" y1="80" x2="50" y2="90" stroke="currentColor" strokeWidth="2" />
       <circle cx="50" cy="95" r="3" fill="currentColor" />
     </svg>
@@ -126,7 +178,8 @@ function ConnectorPlugSVG() {
 
 function ChatBubbleSVG() {
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
+    <svg viewBox="0 0 100 100" className="w-full h-full" role="img" aria-label="Chat bubble illustration">
+      <title>Chat bubble</title>
       <defs>
         <style>{`
           @keyframes float {
@@ -134,14 +187,12 @@ function ChatBubbleSVG() {
             50% { transform: translateY(-4px); }
           }
           .sparkle { animation: float 3s ease-in-out infinite; }
+          @media (prefers-reduced-motion: reduce) {
+            .sparkle { animation: none; }
+          }
         `}</style>
       </defs>
-      {/* Chat bubble */}
-      <path
-        d="M 15 15 L 85 15 L 85 65 L 25 65 L 15 80 L 20 65 L 15 65 Z"
-        fill="#2563eb"
-      />
-      {/* Sparkles */}
+      <path d="M 15 15 L 85 15 L 85 65 L 25 65 L 15 80 L 20 65 L 15 65 Z" fill="#2563eb" />
       <g className="sparkle">
         <circle cx="35" cy="35" r="2" fill="#f97316" />
         <circle cx="35" cy="25" r="2" fill="#f97316" />
@@ -152,13 +203,16 @@ function ChatBubbleSVG() {
         <circle cx="60" cy="40" r="2" fill="#f97316" />
         <circle cx="80" cy="40" r="2" fill="#f97316" />
       </g>
-      {/* Message text indicator */}
       <circle cx="45" cy="40" r="3" fill="white" opacity="0.7" />
       <circle cx="55" cy="40" r="3" fill="white" opacity="0.7" />
       <circle cx="65" cy="40" r="3" fill="white" opacity="0.7" />
     </svg>
   );
 }
+
+// ---------------------------------------------------------------------------
+// ToolCard
+// ---------------------------------------------------------------------------
 
 function ToolCard({
   icon,
@@ -178,9 +232,12 @@ function ToolCard({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
 export default function GptSetupPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [visibleStep, setVisibleStep] = useState(0);
 
   useEffect(() => {
     const observerOptions = {
@@ -260,33 +317,17 @@ export default function GptSetupPage() {
     <div className="min-h-screen bg-slate-50">
       <style>{`
         @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
         @keyframes pulse-glow {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
-          }
-          50% {
-            box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
-          }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+          50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
         }
         .animate-fade-in-up {
           animation: fadeInUp 0.6s ease-out forwards;
@@ -302,6 +343,19 @@ export default function GptSetupPage() {
         .step-card {
           opacity: 0;
         }
+        /* CSS-only fallback: make step cards visible after 2s even without JS */
+        @supports (animation: none) {
+          .step-card { animation: fadeInUp 0.6s ease-out 2s forwards; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fade-in-up,
+          .gradient-bg,
+          .pulse-button,
+          .step-card {
+            animation: none !important;
+            opacity: 1 !important;
+          }
+        }
       `}</style>
 
       <SEO
@@ -316,21 +370,21 @@ export default function GptSetupPage() {
           <Link to="/">
             <Logo />
           </Link>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-sm text-slate-500 hover:text-slate-700">
+          <nav className="flex items-center gap-4 sm:gap-6 overflow-x-auto">
+            <Link to="/" className="text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
               Home
             </Link>
-            <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700">
+            <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
               Developers
             </Link>
             <LanguageSwitcher />
             <Link
               to="/signup?utm_source=gpt_setup"
-              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
             >
               Start Now
             </Link>
-          </div>
+          </nav>
         </div>
       </header>
 
@@ -521,9 +575,10 @@ export default function GptSetupPage() {
                   {examplePrompts.map((prompt, idx) => (
                     <div
                       key={idx}
-                      className="p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                      className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-start gap-2"
                     >
-                      <p className="text-sm text-slate-800">{prompt}</p>
+                      <p className="text-sm text-slate-800 flex-1">{prompt}</p>
+                      <CopyButton text={prompt} label="Copy" />
                     </div>
                   ))}
                 </div>
@@ -547,27 +602,27 @@ export default function GptSetupPage() {
                   <ToolCard
                     icon={
                       idx === 0 ? (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                       ) : idx === 1 ? (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                       ) : idx === 2 ? (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       ) : idx === 3 ? (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       ) : idx === 4 ? (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
                       ) : (
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                       )
@@ -590,6 +645,7 @@ export default function GptSetupPage() {
               {faqs.map((faq, idx) => (
                 <FAQItem
                   key={idx}
+                  id={String(idx)}
                   question={faq.question}
                   answer={faq.answer}
                   isOpen={openFAQ === idx}
@@ -649,7 +705,6 @@ export default function GptSetupPage() {
         </section>
       </main>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
