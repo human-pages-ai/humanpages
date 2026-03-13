@@ -1,0 +1,303 @@
+import { z } from "zod";
+import { ActionProvider } from "@coinbase/agentkit";
+import { CreateAction } from "@coinbase/agentkit";
+import { Network } from "@coinbase/agentkit";
+import { HUMANPAGES_API_BASE_URL } from "./constants";
+import {
+  SearchHumansSchema,
+  ViewHumanProfileSchema,
+  CreateJobOfferSchema,
+  GetJobStatusSchema,
+  MarkJobPaidSchema,
+  CreateListingSchema,
+  BrowseListingsSchema,
+  LeaveReviewSchema,
+  SendJobMessageSchema,
+  GetJobMessagesSchema,
+} from "./schemas";
+
+export interface HumanPagesActionProviderConfig {
+  apiKey?: string;
+  apiBaseUrl?: string;
+}
+
+export class HumanPagesActionProvider extends ActionProvider {
+  private readonly apiKey: string;
+  private readonly baseUrl: string;
+
+  constructor(config: HumanPagesActionProviderConfig = {}) {
+    super("humanpages", []);
+
+    this.apiKey = config.apiKey || process.env.HUMANPAGES_API_KEY || "";
+    this.baseUrl = config.apiBaseUrl || process.env.HUMANPAGES_API_BASE_URL || HUMANPAGES_API_BASE_URL;
+
+    if (!this.apiKey) {
+      throw new Error(
+        "HUMANPAGES_API_KEY is required. Register at https://humanpages.io or via the register_agent action, then set the HUMANPAGES_API_KEY environment variable.",
+      );
+    }
+  }
+
+  private async request(path: string, options: RequestInit = {}): Promise<unknown> {
+    const url = `${this.baseUrl}${path}`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Agent-Key": this.apiKey,
+      ...(options.headers as Record<string, string> || {}),
+    };
+
+    const response = await fetch(url, { ...options, headers });
+
+    if (!response.ok) {
+      const text = await response.text();
+      let message: string;
+      try {
+        const json = JSON.parse(text);
+        message = json.error || json.message || text;
+      } catch {
+        message = text;
+      }
+      throw new Error(`HTTP ${response.status}: ${message}`);
+    }
+
+    return response.json();
+  }
+
+  @CreateAction({
+    name: "search_humans",
+    description:
+      "Search for humans available for work on Human Pages. Filter by skill, location, rate, availability, and work mode. Returns a list of matching human profiles with their skills, location, and rates. Use this to find the right person for a task before creating a job offer.",
+    schema: SearchHumansSchema,
+  })
+  async searchHumans(args: z.infer<typeof SearchHumansSchema>): Promise<string> {
+    try {
+      const params = new URLSearchParams();
+      if (args.skill) params.set("skill", args.skill);
+      if (args.location) params.set("location", args.location);
+      if (args.lat !== undefined) params.set("lat", String(args.lat));
+      if (args.lng !== undefined) params.set("lng", String(args.lng));
+      if (args.radius !== undefined) params.set("radius", String(args.radius));
+      if (args.maxRate !== undefined) params.set("maxRate", String(args.maxRate));
+      if (args.available !== undefined) params.set("available", String(args.available));
+      if (args.workMode) params.set("workMode", args.workMode);
+      if (args.verified !== undefined) params.set("verified", String(args.verified));
+
+      const query = params.toString();
+      const data = await this.request(`/api/humans/search${query ? `?${query}` : ""}`);
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error searching humans: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "view_human_profile",
+    description:
+      "Get a human's full profile including contact information and wallet addresses. Costs 1 profile view from your tier allowance (BASIC: 1/day, PRO: 50/day). Use this after search_humans to get contact details for a specific person you want to hire.",
+    schema: ViewHumanProfileSchema,
+  })
+  async viewHumanProfile(args: z.infer<typeof ViewHumanProfileSchema>): Promise<string> {
+    try {
+      const data = await this.request(`/api/humans/${args.humanId}/profile`);
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error viewing profile: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "create_job_offer",
+    description:
+      "Send a job offer to a specific human on Human Pages. Specify what needs to be done, the payment amount in USDC, and optionally a webhook URL for status updates. The human will be notified and can accept or reject. Costs 1 offer from your tier allowance (BASIC: 1/2 days, PRO: 15/day).",
+    schema: CreateJobOfferSchema,
+  })
+  async createJobOffer(args: z.infer<typeof CreateJobOfferSchema>): Promise<string> {
+    try {
+      const data = await this.request("/api/jobs", {
+        method: "POST",
+        body: JSON.stringify({
+          humanId: args.humanId,
+          title: args.title,
+          description: args.description,
+          priceUsdc: args.priceUsdc,
+          paymentMode: args.paymentMode || "ONE_TIME",
+          paymentTiming: args.paymentTiming || "upon_completion",
+          callbackUrl: args.callbackUrl,
+          callbackSecret: args.callbackSecret,
+        }),
+      });
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error creating job offer: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "get_job_status",
+    description:
+      "Check the current status of a job (pending, accepted, rejected, paid, completed, cancelled, disputed). Use this to track whether a human has accepted your offer and when work is complete.",
+    schema: GetJobStatusSchema,
+  })
+  async getJobStatus(args: z.infer<typeof GetJobStatusSchema>): Promise<string> {
+    try {
+      const data = await this.request(`/api/jobs/${args.jobId}`);
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error getting job status: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "mark_job_paid",
+    description:
+      "Record an on-chain USDC payment for an accepted job. Provide the transaction hash and network so the human can verify payment. Call this after sending USDC to the human's wallet address (from their profile).",
+    schema: MarkJobPaidSchema,
+  })
+  async markJobPaid(args: z.infer<typeof MarkJobPaidSchema>): Promise<string> {
+    try {
+      const data = await this.request(`/api/jobs/${args.jobId}/paid`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          paymentTxHash: args.paymentTxHash,
+          paymentNetwork: args.paymentNetwork,
+          paymentToken: "USDC",
+          paymentAmount: args.paymentAmount,
+        }),
+      });
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error marking job paid: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "create_listing",
+    description:
+      "Post a job listing on Human Pages for humans to discover and apply to. Unlike job offers (sent to a specific person), listings are public and attract applicants. Good for when you need someone but don't know who yet. Costs 1 listing from your tier allowance (BASIC: 1/7 days, PRO: 5/day). Minimum budget is $5 USDC.",
+    schema: CreateListingSchema,
+  })
+  async createListing(args: z.infer<typeof CreateListingSchema>): Promise<string> {
+    try {
+      const data = await this.request("/api/listings", {
+        method: "POST",
+        body: JSON.stringify({
+          title: args.title,
+          description: args.description,
+          budgetUsdc: args.budgetUsdc,
+          category: args.category,
+          requiredSkills: args.requiredSkills,
+          location: args.location,
+          locationLat: args.locationLat,
+          locationLng: args.locationLng,
+          radiusKm: args.radiusKm,
+          workMode: args.workMode,
+          expiresAt: args.expiresAt,
+          maxApplicants: args.maxApplicants,
+          callbackUrl: args.callbackUrl,
+          callbackSecret: args.callbackSecret,
+        }),
+      });
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error creating listing: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "browse_listings",
+    description:
+      "Browse open job listings posted by other agents on Human Pages. Filter by skill, category, work mode, budget range, and location. Useful for understanding the current job market or finding collaboration opportunities.",
+    schema: BrowseListingsSchema,
+  })
+  async browseListings(args: z.infer<typeof BrowseListingsSchema>): Promise<string> {
+    try {
+      const params = new URLSearchParams();
+      if (args.skill) params.set("skill", args.skill);
+      if (args.category) params.set("category", args.category);
+      if (args.workMode) params.set("workMode", args.workMode);
+      if (args.minBudget !== undefined) params.set("minBudget", String(args.minBudget));
+      if (args.maxBudget !== undefined) params.set("maxBudget", String(args.maxBudget));
+      if (args.lat !== undefined) params.set("lat", String(args.lat));
+      if (args.lng !== undefined) params.set("lng", String(args.lng));
+      if (args.radius !== undefined) params.set("radius", String(args.radius));
+      params.set("page", String(args.page));
+      params.set("limit", String(args.limit));
+
+      const query = params.toString();
+      const data = await this.request(`/api/listings?${query}`);
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error browsing listings: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "leave_review",
+    description:
+      "Leave a star rating (1-5) and optional comment for a human after a completed job. Reviews build the human's reputation on the platform.",
+    schema: LeaveReviewSchema,
+  })
+  async leaveReview(args: z.infer<typeof LeaveReviewSchema>): Promise<string> {
+    try {
+      const data = await this.request(`/api/jobs/${args.jobId}/review`, {
+        method: "POST",
+        body: JSON.stringify({
+          rating: args.rating,
+          comment: args.comment,
+        }),
+      });
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error leaving review: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "send_job_message",
+    description:
+      "Send a message to the human on an active job. Use this to coordinate details, ask questions, or provide instructions. Rate limited to 10 messages per minute.",
+    schema: SendJobMessageSchema,
+  })
+  async sendJobMessage(args: z.infer<typeof SendJobMessageSchema>): Promise<string> {
+    try {
+      const data = await this.request(`/api/jobs/${args.jobId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: args.content,
+        }),
+      });
+
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error sending message: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "get_job_messages",
+    description:
+      "Get the full conversation history on a job. Returns all messages between the agent and the human in chronological order.",
+    schema: GetJobMessagesSchema,
+  })
+  async getJobMessages(args: z.infer<typeof GetJobMessagesSchema>): Promise<string> {
+    try {
+      const data = await this.request(`/api/jobs/${args.jobId}/messages`);
+      return JSON.stringify(data);
+    } catch (error) {
+      return `Error getting messages: ${(error as Error).message}`;
+    }
+  }
+
+  supportsNetwork(_network: Network): boolean {
+    return true;
+  }
+}
+
+export const humanpagesActionProvider = (config?: HumanPagesActionProviderConfig) =>
+  new HumanPagesActionProvider(config);
