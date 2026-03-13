@@ -53,7 +53,6 @@ interface Props {
   onUploadPhoto: (file: File) => Promise<void>;
   onDeletePhoto: () => Promise<void>;
   onEnrichWithCV?: () => void;
-  cvParsing?: boolean;
 }
 
 export default function ProfileSection({
@@ -71,7 +70,6 @@ export default function ProfileSection({
   onUploadPhoto,
   onDeletePhoto,
   onEnrichWithCV,
-  cvParsing,
 }: Props) {
   const { t } = useTranslation();
   const cvInputRef = useRef<HTMLInputElement>(null);

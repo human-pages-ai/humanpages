@@ -20,11 +20,25 @@
 const localMemory: Record<string, string> = {};
 const sessionMemory: Record<string, string> = {};
 
-function createSafeStorage(storage: Storage, memory: Record<string, string>) {
+/**
+ * Safely access a Storage object (localStorage or sessionStorage).
+ * Returns null if the storage is completely inaccessible — some in-app
+ * browsers throw just from *referencing* window.localStorage.
+ */
+function getStorage(type: 'local' | 'session'): Storage | null {
+  try {
+    return type === 'local' ? window.localStorage : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+function createSafeStorage(type: 'local' | 'session', memory: Record<string, string>) {
   return {
     getItem(key: string): string | null {
       try {
-        return storage.getItem(key);
+        const s = getStorage(type);
+        return s ? s.getItem(key) : (memory[key] ?? null);
       } catch {
         return memory[key] ?? null;
       }
@@ -32,7 +46,9 @@ function createSafeStorage(storage: Storage, memory: Record<string, string>) {
 
     setItem(key: string, value: string): void {
       try {
-        storage.setItem(key, value);
+        const s = getStorage(type);
+        if (s) s.setItem(key, value);
+        else memory[key] = value;
       } catch {
         memory[key] = value;
       }
@@ -40,7 +56,9 @@ function createSafeStorage(storage: Storage, memory: Record<string, string>) {
 
     removeItem(key: string): void {
       try {
-        storage.removeItem(key);
+        const s = getStorage(type);
+        if (s) s.removeItem(key);
+        else delete memory[key];
       } catch {
         delete memory[key];
       }
@@ -48,7 +66,13 @@ function createSafeStorage(storage: Storage, memory: Record<string, string>) {
 
     clear(): void {
       try {
-        storage.clear();
+        const s = getStorage(type);
+        if (s) s.clear();
+        else {
+          for (const key of Object.keys(memory)) {
+            delete memory[key];
+          }
+        }
       } catch {
         for (const key of Object.keys(memory)) {
           delete memory[key];
@@ -62,9 +86,11 @@ function createSafeStorage(storage: Storage, memory: Record<string, string>) {
      */
     isAvailable(): boolean {
       try {
+        const s = getStorage(type);
+        if (!s) return false;
         const testKey = '__storage_test__';
-        storage.setItem(testKey, '1');
-        storage.removeItem(testKey);
+        s.setItem(testKey, '1');
+        s.removeItem(testKey);
         return true;
       } catch {
         return false;
@@ -73,8 +99,8 @@ function createSafeStorage(storage: Storage, memory: Record<string, string>) {
   };
 }
 
-export const safeLocalStorage = createSafeStorage(localStorage, localMemory);
-export const safeSessionStorage = createSafeStorage(sessionStorage, sessionMemory);
+export const safeLocalStorage = createSafeStorage('local', localMemory);
+export const safeSessionStorage = createSafeStorage('session', sessionMemory);
 
 // Legacy named exports for backward compatibility with existing imports
 // (OAuthCallback.tsx etc. import these from '../lib/api')
