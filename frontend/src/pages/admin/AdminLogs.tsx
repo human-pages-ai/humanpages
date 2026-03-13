@@ -123,6 +123,8 @@ export default function AdminLogs() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [healthCheck, setHealthCheck] = useState<any>(null);
+  const [checkingHealth, setCheckingHealth] = useState(false);
 
   // Filters
   const [timeRange, setTimeRange] = useState('1h');
@@ -159,7 +161,16 @@ export default function AdminLogs() {
       setOffset(newOffset);
       setExpandedRows(new Set());
     } catch (err: any) {
-      setError(err.message || 'Failed to load logs');
+      // Try to extract the detail from the API error response
+      let msg = err.message || 'Failed to load logs';
+      try {
+        if (err.response) {
+          const body = await err.response.json?.();
+          if (body?.detail) msg = `${body.error || 'Error'}: ${body.detail}`;
+          else if (body?.error) msg = body.error;
+        }
+      } catch { /* ignore parse error */ }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -279,7 +290,53 @@ export default function AdminLogs() {
       {/* Error */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-          {error}
+          <p>{error}</p>
+          {!healthCheck && (
+            <button
+              onClick={async () => {
+                setCheckingHealth(true);
+                try {
+                  const h = await api.getLogHealth();
+                  setHealthCheck(h);
+                } catch (err: any) {
+                  try {
+                    // The health endpoint returns errors in the response body
+                    const resp = await fetch('/api/admin/logs/health', {
+                      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    });
+                    const body = await resp.json();
+                    setHealthCheck(body);
+                  } catch {
+                    setHealthCheck({ error: err.message || 'Health check failed' });
+                  }
+                } finally {
+                  setCheckingHealth(false);
+                }
+              }}
+              disabled={checkingHealth}
+              className="mt-2 text-xs underline text-red-600 hover:text-red-800"
+            >
+              {checkingHealth ? 'Checking...' : 'Run diagnostics'}
+            </button>
+          )}
+          {healthCheck && (
+            <div className="mt-2 p-2 bg-white rounded border text-xs font-mono">
+              <p><strong>AXIOM_TOKEN:</strong> {healthCheck.axiomToken ? `✅ Set (${healthCheck.axiomTokenPrefix})` : '❌ Missing'}</p>
+              <p><strong>AXIOM_DATASET:</strong> {healthCheck.axiomDataset ? `✅ "${healthCheck.axiomDataset}"` : '❌ Missing'}</p>
+              {healthCheck.querySuccess !== undefined && (
+                <p><strong>Query test:</strong> {healthCheck.querySuccess ? '✅ OK' : '❌ Failed'}</p>
+              )}
+              {healthCheck.hasData !== undefined && (
+                <p><strong>Has data:</strong> {healthCheck.hasData ? '✅ Yes' : '⚠️ Empty'}</p>
+              )}
+              {healthCheck.error && (
+                <p className="mt-1 text-red-600"><strong>Issue:</strong> {healthCheck.error}</p>
+              )}
+              {healthCheck.warning && (
+                <p className="mt-1 text-yellow-700"><strong>Warning:</strong> {healthCheck.warning}</p>
+              )}
+            </div>
+          )}
         </div>
       )}
 

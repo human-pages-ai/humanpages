@@ -1223,6 +1223,9 @@ export const api = {
   getLogStats: (timeRange = '24h') =>
     request<LogStats>(`/admin/logs/stats?timeRange=${timeRange}`),
 
+  getLogHealth: () =>
+    request<any>('/admin/logs/health'),
+
   // ─── Watch Dog ───
   getWatchDogErrors: (params: { status?: string; limit?: number; offset?: number } = {}) => {
     const query = new URLSearchParams();

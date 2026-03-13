@@ -163,4 +163,54 @@ router.get('/stats', async (req: AuthRequest, res) => {
   }
 });
 
+// GET /api/admin/logs/health — Diagnostic endpoint to check Axiom connectivity
+router.get('/health', async (_req: AuthRequest, res) => {
+  const checks: Record<string, any> = {
+    axiomToken: !!process.env.AXIOM_TOKEN,
+    axiomDataset: process.env.AXIOM_DATASET || null,
+    axiomTokenPrefix: process.env.AXIOM_TOKEN ? process.env.AXIOM_TOKEN.slice(0, 8) + '...' : null,
+  };
+
+  if (!process.env.AXIOM_TOKEN) {
+    checks.error = 'AXIOM_TOKEN is not set. Add it to Infisical and redeploy.';
+    return res.status(503).json(checks);
+  }
+
+  if (!process.env.AXIOM_DATASET) {
+    checks.error = 'AXIOM_DATASET is not set. Add it to Infisical and redeploy.';
+    return res.status(503).json(checks);
+  }
+
+  // Try a simple query to verify connectivity + dataset exists
+  try {
+    const axiom = new Axiom({ token: process.env.AXIOM_TOKEN });
+    const dataset = process.env.AXIOM_DATASET;
+    const testQuery = `['${dataset}'] | take 1`;
+    const result = await axiom.query(testQuery);
+    checks.querySuccess = true;
+    checks.rowsExamined = result.status?.rowsExamined || 0;
+    checks.hasData = (result.matches || []).length > 0;
+
+    if (!checks.hasData && checks.rowsExamined === 0) {
+      checks.warning = 'Dataset exists but is empty. Logs may not be shipping yet — check that initLogShipping() ran on startup.';
+    }
+
+    res.json(checks);
+  } catch (error: any) {
+    checks.querySuccess = false;
+    checks.queryError = errMsg(error);
+
+    // Common error patterns
+    if (error.message?.includes('404') || error.message?.includes('not found')) {
+      checks.error = `Dataset '${process.env.AXIOM_DATASET}' not found in Axiom. Check the exact name in your Axiom dashboard (case-sensitive).`;
+    } else if (error.message?.includes('401') || error.message?.includes('403')) {
+      checks.error = 'Axiom token is invalid or lacks permissions. Regenerate it in the Axiom dashboard.';
+    } else {
+      checks.error = `Axiom query failed: ${errMsg(error)}`;
+    }
+
+    res.status(500).json(checks);
+  }
+});
+
 export default router;
