@@ -90,6 +90,14 @@ export default function Dashboard() {
     instagramUrl: '',
     youtubeUrl: '',
     websiteUrl: '',
+    tiktokUrl: '',
+    twitterFollowers: '',
+    instagramFollowers: '',
+    youtubeFollowers: '',
+    tiktokFollowers: '',
+    linkedinFollowers: '',
+    facebookFollowers: '',
+    yearsOfExperience: '' as string,
     workMode: null as 'REMOTE' | 'ONSITE' | 'HYBRID' | null,
   });
 
@@ -213,6 +221,14 @@ export default function Dashboard() {
         instagramUrl: data.instagramUrl || '',
         youtubeUrl: data.youtubeUrl || '',
         websiteUrl: data.websiteUrl || '',
+        tiktokUrl: data.tiktokUrl || '',
+        twitterFollowers: data.twitterFollowers?.toString() || '',
+        instagramFollowers: data.instagramFollowers?.toString() || '',
+        youtubeFollowers: data.youtubeFollowers?.toString() || '',
+        tiktokFollowers: data.tiktokFollowers?.toString() || '',
+        linkedinFollowers: data.linkedinFollowers?.toString() || '',
+        facebookFollowers: data.facebookFollowers?.toString() || '',
+        yearsOfExperience: data.yearsOfExperience?.toString() || '',
         workMode: data.workMode || null,
       });
       setFiltersForm({

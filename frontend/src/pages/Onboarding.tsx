@@ -175,7 +175,7 @@ export default function Onboarding() {
   const [oauthProvider, setOauthProvider] = useState<string | null>(null);
   const [photoImporting, setPhotoImporting] = useState(false);
   const [photoDismissed, setPhotoDismissed] = useState(false);
-  const [photoAccepted, setPhotoAccepted] = useState(false);
+  const [_photoAccepted, setPhotoAccepted] = useState(false);
 
   // Featured consent — defaults to true when photo is accepted
   const [featuredConsent, setFeaturedConsent] = useState(true);

@@ -96,7 +96,7 @@ describe('Email Service', () => {
       process.env.RESEND_API_KEY = 'test-resend-key';
       mockSend.mockResolvedValue({
         data: null,
-        error: { message: 'Invalid API key', name: 'validation_error' },
+        error: { message: 'Rate limit exceeded', name: 'rate_limit_error' },
       });
 
       const result = await sendJobOfferEmail(jobOfferData);

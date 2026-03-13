@@ -407,6 +407,18 @@ model WhatsAppOTP {
   @@index([expiresAt])
 }
 
+// Conversational WhatsApp signup sessions (for inbound account creation)
+model WhatsAppSignupSession {
+  id        String   @id @default(cuid())
+  phone     String   @unique // E.164 format — one active session per phone
+  step      String   @default("AWAITING_NAME") // AWAITING_NAME | AWAITING_TERMS
+  name      String?  // Collected during conversation
+  createdAt DateTime @default(now())
+  expiresAt DateTime // 30 minutes from creation
+
+  @@index([expiresAt])
+}
+
 model PendingWhatsAppMessage {
   id        String   @id @default(cuid())
   humanId   String

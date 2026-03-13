@@ -5,6 +5,8 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { isWhatsAppEnabled, getWhatsAppNumber, sendWhatsAppMessage, verifyTwilioSignature } from '../lib/whatsapp.js';
 import { logger } from '../lib/logger.js';
+import { generateReferralCode } from '../lib/referralCode.js';
+import { trackServerEvent } from '../lib/posthog.js';
 import jwt from 'jsonwebtoken';
 
 // Rate limit webhook to prevent brute-force on link codes
@@ -160,7 +162,7 @@ router.post('/incoming', webhookRateLimiter, async (req, res) => {
     });
 
     if (!human) {
-      return reply('This number is not linked to a Human Pages account. If you have a link code, please send it now.');
+      return await handleInboundSignup(from, body, reply);
     }
 
     // Update last inbound timestamp (for 24h window tracking)
@@ -400,6 +402,152 @@ async function createJobMessage(jobId: string, humanId: string, humanName: strin
   }
 
   logger.info({ jobId, humanId }, 'WhatsApp message routed to job');
+}
+
+// ──────────────────────────────────────────────────────────
+// Inbound conversational signup
+// ──────────────────────────────────────────────────────────
+const SIGNUP_SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_SIGNUP_SESSIONS_PER_HOUR = 3;
+
+async function handleInboundSignup(from: string, body: string, reply: (msg: string) => void): Promise<void> {
+  // Check for existing session (delete if expired)
+  const existing = await prisma.whatsAppSignupSession.findUnique({ where: { phone: from } });
+  if (existing && existing.expiresAt < new Date()) {
+    await prisma.whatsAppSignupSession.delete({ where: { id: existing.id } });
+  }
+
+  const session = existing && existing.expiresAt >= new Date() ? existing : null;
+
+  if (!session) {
+    // Rate limit: max 3 new sessions per phone per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentCount = await prisma.whatsAppSignupSession.count({
+      where: { phone: from, createdAt: { gte: oneHourAgo } },
+    });
+    // Count is 0 after deletion, so this works for both fresh and expired cases
+    if (recentCount >= MAX_SIGNUP_SESSIONS_PER_HOUR) {
+      return reply('Too many signup attempts. Please try again later.');
+    }
+
+    // If the message looks like a link code, tell them it's invalid rather than starting signup
+    if (/HP-[A-Z0-9]{4}-[A-Z0-9]{2}/i.test(body)) {
+      return reply('Invalid or expired link code. Please request a new one from your dashboard.');
+    }
+
+    // Create new session
+    await prisma.whatsAppSignupSession.create({
+      data: {
+        phone: from,
+        step: 'AWAITING_NAME',
+        expiresAt: new Date(Date.now() + SIGNUP_SESSION_TTL_MS),
+      },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://humanpages.io';
+    return reply(
+      `Welcome to Human Pages! 🤝\n\n` +
+      `I can create an account for you right here.\n\n` +
+      `What's your name?`
+    );
+  }
+
+  if (session.step === 'AWAITING_NAME') {
+    const name = body.slice(0, 100).trim();
+    if (!name || name.length < 2) {
+      return reply('Please send me your name (at least 2 characters).');
+    }
+
+    await prisma.whatsAppSignupSession.update({
+      where: { id: session.id },
+      data: { name, step: 'AWAITING_TERMS' },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://humanpages.io';
+    return reply(
+      `Thanks, ${name}! One more step.\n\n` +
+      `By replying YES, you agree to our Terms of Service and Privacy Policy:\n` +
+      `${frontendUrl}/terms\n\n` +
+      `Reply YES to create your account.`
+    );
+  }
+
+  if (session.step === 'AWAITING_TERMS') {
+    if (body.toUpperCase() !== 'YES') {
+      return reply('Reply YES to accept the terms and create your account, or wait 30 minutes to cancel.');
+    }
+
+    const name = session.name || 'Human';
+    const phone = session.phone;
+    const placeholderEmail = `wa_${phone.replace('+', '')}@whatsapp.hp.internal`;
+
+    // Check if account with this phone already exists (edge case: linked between steps)
+    const existingHuman = await prisma.human.findFirst({
+      where: { whatsapp: phone, whatsappVerified: true },
+    });
+
+    if (existingHuman) {
+      await prisma.whatsAppSignupSession.delete({ where: { id: session.id } });
+      return reply(`You already have an account! Send LOGIN to get a login link, or just reply to any job offer.`);
+    }
+
+    // Check if placeholder email already exists (previous abandoned account)
+    const existingEmail = await prisma.human.findFirst({
+      where: { email: placeholderEmail },
+    });
+
+    if (existingEmail) {
+      // Re-link existing placeholder account
+      await prisma.human.update({
+        where: { id: existingEmail.id },
+        data: {
+          name,
+          whatsapp: phone,
+          whatsappVerified: true,
+          whatsappLastInboundAt: new Date(),
+          termsAcceptedAt: new Date(),
+        },
+      });
+      await prisma.whatsAppSignupSession.delete({ where: { id: session.id } });
+      logger.info({ humanId: existingEmail.id, phone }, 'WhatsApp inbound signup re-linked existing account');
+      return reply(
+        `Welcome back, ${name}! Your account has been reactivated. 🎉\n\n` +
+        `You'll receive job offers from AI agents here. Send LOGIN anytime to access your dashboard.`
+      );
+    }
+
+    // Create new account
+    const human = await prisma.human.create({
+      data: {
+        email: placeholderEmail,
+        name,
+        whatsapp: phone,
+        whatsappVerified: true,
+        whatsappLastInboundAt: new Date(),
+        referralCode: generateReferralCode(),
+        termsAcceptedAt: new Date(),
+        utmSource: 'whatsapp_inbound',
+      },
+      select: { id: true },
+    });
+
+    await prisma.whatsAppSignupSession.delete({ where: { id: session.id } });
+
+    trackServerEvent(human.id, 'user_signed_up_server', {
+      method: 'whatsapp_inbound',
+      phone,
+    });
+
+    logger.info({ humanId: human.id, phone }, 'WhatsApp inbound signup completed');
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://humanpages.io';
+    return reply(
+      `Account created! Welcome to Human Pages, ${name}! 🎉\n\n` +
+      `You'll receive job offers from AI agents right here on WhatsApp.\n\n` +
+      `Send LOGIN anytime to get a link to your dashboard where you can add skills, location, and more to get matched with better gigs.\n\n` +
+      `${frontendUrl}/onboarding`
+    );
+  }
 }
 
 // ──────────────────────────────────────────────────────────
