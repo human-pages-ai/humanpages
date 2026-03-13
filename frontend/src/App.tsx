@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LangWrapper from './components/LangWrapper';
 import { posthog } from './lib/posthog';
 import { api } from './lib/api';
+import { safeSessionStorage } from './lib/safeStorage';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
@@ -175,7 +176,7 @@ function usePageView() {
     const params = new URLSearchParams(window.location.search);
     for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
       const val = params.get(key);
-      if (val) sessionStorage.setItem(key, val);
+      if (val) safeSessionStorage.setItem(key, val);
     }
   }, [location.pathname]);
 }

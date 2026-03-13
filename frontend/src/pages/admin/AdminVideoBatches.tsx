@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '../../lib/api';
 import type { BatchSummary, BatchDetail, BatchConceptDetail, VideoScriptData, VideoScene } from '../../types/admin';
 import toast from 'react-hot-toast';
+import { safeLocalStorage } from '../../lib/safeStorage';
 
 // ─── AuthImage — fetches images with JWT header ───
 function AuthImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
@@ -11,7 +12,7 @@ function AuthImage({ src, alt, className }: { src: string; alt: string; classNam
 
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem('token');
+    const token = safeLocalStorage.getItem('token');
 
     fetch(src, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

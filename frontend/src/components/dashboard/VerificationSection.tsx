@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { Profile } from './types';
 import TrustBadge from '../TrustBadge';
+import { safeSessionStorage } from '../../lib/safeStorage';
 
 interface VerificationSectionProps {
   profile: Profile;
@@ -112,7 +113,7 @@ export default function VerificationSection({ profile, onProfileUpdate }: Verifi
     setConnectingLinkedin(true);
     try {
       const { url, state } = await api.getLinkedInVerifyUrl();
-      sessionStorage.setItem('linkedin_verify_state', state);
+      safeSessionStorage.setItem('linkedin_verify_state', state);
       window.location.href = url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to connect LinkedIn');
@@ -134,7 +135,7 @@ export default function VerificationSection({ profile, onProfileUpdate }: Verifi
     setConnectingGithub(true);
     try {
       const { url, state } = await api.getGitHubVerifyUrl();
-      sessionStorage.setItem('github_verify_state', state);
+      safeSessionStorage.setItem('github_verify_state', state);
       window.location.href = url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to connect GitHub');

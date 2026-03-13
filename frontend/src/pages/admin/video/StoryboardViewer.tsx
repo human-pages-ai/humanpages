@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../../lib/api';
 import type { VideoScriptData, VideoScene } from '../../../types/admin';
+import { safeLocalStorage } from '../../../lib/safeStorage';
 
 // ── AuthImage: fetches image with Bearer token ──────────────
 function AuthImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
@@ -11,7 +12,7 @@ function AuthImage({ src, alt, className }: { src: string; alt: string; classNam
 
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem('token');
+    const token = safeLocalStorage.getItem('token');
 
     fetch(src, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

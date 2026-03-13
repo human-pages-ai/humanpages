@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
 import { getApplyRedirect } from '../lib/applyIntent';
+import { safeSessionStorage } from '../lib/safeStorage';
 
 export default function LinkedInVerifyCallback() {
   const { t } = useTranslation();
@@ -25,8 +26,8 @@ export default function LinkedInVerifyCallback() {
       return;
     }
 
-    const storedState = sessionStorage.getItem('linkedin_verify_state');
-    sessionStorage.removeItem('linkedin_verify_state');
+    const storedState = safeSessionStorage.getItem('linkedin_verify_state');
+    safeSessionStorage.removeItem('linkedin_verify_state');
 
     if (!storedState) {
       setError('Verification state missing. Please try again from the dashboard.');

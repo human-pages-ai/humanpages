@@ -36,6 +36,7 @@ import FeaturedInviteModal from '../components/dashboard/FeaturedInviteModal';
 import ListingsSection from '../components/dashboard/ListingsSection';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
+import { safeLocalStorage } from '../lib/safeStorage';
 
 const VALID_TABS: DashboardTab[] = ['jobs', 'listings', 'profile', 'payments', 'settings', 'privacy'];
 
@@ -827,7 +828,7 @@ export default function Dashboard() {
         )}
 
         {/* Onboarding pending banner — shown for fast-tracked listing signups */}
-        {localStorage.getItem('hp_onboarding_pending') === '1' && profile && !profile.location && (
+        {safeLocalStorage.getItem('hp_onboarding_pending') === '1' && profile && !profile.location && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>

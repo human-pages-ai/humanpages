@@ -8,6 +8,7 @@ import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
 import { getApplyIntent, clearApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
 import toast from 'react-hot-toast';
+import { safeLocalStorage } from '../lib/safeStorage';
 
 // ─── Categorised skill suggestions ──────────────────────────────────────────
 // Covers digital/remote work, creative, professional, and local/physical tasks.
@@ -178,13 +179,13 @@ export default function Onboarding() {
 
   useEffect(() => {
     // Check for OAuth photo URL stored during signup
-    const storedPhotoUrl = localStorage.getItem('oauthPhotoUrl');
-    const storedProvider = localStorage.getItem('oauthProvider');
+    const storedPhotoUrl = safeLocalStorage.getItem('oauthPhotoUrl');
+    const storedProvider = safeLocalStorage.getItem('oauthProvider');
     if (storedPhotoUrl) {
       setOauthPhotoUrl(storedPhotoUrl);
       setOauthProvider(storedProvider);
-      localStorage.removeItem('oauthPhotoUrl');
-      localStorage.removeItem('oauthProvider');
+      safeLocalStorage.removeItem('oauthPhotoUrl');
+      safeLocalStorage.removeItem('oauthProvider');
     }
 
     // Collect skills to pre-select from multiple sources
@@ -203,9 +204,9 @@ export default function Onboarding() {
     }
 
     // Source 2: LinkedIn headline auto-matching
-    const linkedinHeadline = localStorage.getItem('linkedinHeadline');
+    const linkedinHeadline = safeLocalStorage.getItem('linkedinHeadline');
     if (linkedinHeadline) {
-      localStorage.removeItem('linkedinHeadline');
+      safeLocalStorage.removeItem('linkedinHeadline');
       const headlineSkills = matchHeadlineToSkills(linkedinHeadline);
       headlineSkills.forEach((s) => preSelectedSkills.add(s));
     }
@@ -260,7 +261,7 @@ export default function Onboarding() {
       });
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
-      localStorage.removeItem('hp_onboarding_pending');
+      safeLocalStorage.removeItem('hp_onboarding_pending');
 
       // Auto-submit career application if there's a pending apply intent
       const careerIntent = getApplyIntent();

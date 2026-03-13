@@ -1,5 +1,6 @@
 // Analytics tracking with PostHog integration
 import { posthog } from './posthog';
+import { safeLocalStorage } from './safeStorage';
 
 type EventName =
   | 'page_view'
@@ -55,7 +56,7 @@ class Analytics {
     this.optedOut = optedOut;
     if (optedOut) {
       posthog.reset();
-      try { localStorage.removeItem('analytics_events'); } catch { /* ignore */ }
+      try { safeLocalStorage.removeItem('analytics_events'); } catch { /* ignore */ }
     }
   }
 
@@ -84,11 +85,11 @@ class Analytics {
     // Store in localStorage for debugging (skip if opted out)
     if (!this.optedOut) {
       try {
-        const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+        const events = JSON.parse(safeLocalStorage.getItem('analytics_events') || '[]');
         events.push(payload);
         // Keep last 100 events
         if (events.length > 100) events.shift();
-        localStorage.setItem('analytics_events', JSON.stringify(events));
+        safeLocalStorage.setItem('analytics_events', JSON.stringify(events));
       } catch (e) {
         // Ignore storage errors
       }
@@ -103,7 +104,7 @@ class Analytics {
   // Helper to get stored events (for debugging)
   getEvents(): EventProperties[] {
     try {
-      return JSON.parse(localStorage.getItem('analytics_events') || '[]');
+      return JSON.parse(safeLocalStorage.getItem('analytics_events') || '[]');
     } catch {
       return [];
     }

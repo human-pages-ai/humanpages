@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { api } from '../lib/api';
 import { posthog } from '../lib/posthog';
 import { analytics } from '../lib/analytics';
+import { safeLocalStorage, safeSessionStorage } from '../lib/safeStorage';
 
 interface User {
   id: string;
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = safeLocalStorage.getItem('token');
     if (token) {
       api.getProfile()
         .then((profile) => {
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             posthog.identify(profile.id);
           }
         })
-        .catch(() => localStorage.removeItem('token'))
+        .catch(() => safeLocalStorage.removeItem('token'))
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, captchaToken: string) => {
     const { human, token } = await api.login({ email, password, captchaToken });
-    localStorage.setItem('token', token);
+    safeLocalStorage.setItem('token', token);
     setUser(human);
     analytics.setOptOut(!!human.analyticsOptOut);
     if (!human.analyticsOptOut) {
@@ -57,34 +58,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (email: string, password: string, name: string, termsAccepted: boolean = true, captchaToken: string) => {
-    const referrerId = localStorage.getItem('referrer_id') || undefined;
+    const referrerId = safeLocalStorage.getItem('referrer_id') || undefined;
     // Pass UTM attribution from sessionStorage (captured by useUTMParams hook on landing)
-    const utmSource = sessionStorage.getItem('utm_source') || undefined;
-    const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
-    const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+    const utmSource = safeSessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = safeSessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = safeSessionStorage.getItem('utm_campaign') || undefined;
     const { human, token } = await api.signup({ email, password, name, referrerId, termsAccepted, captchaToken, utmSource, utmMedium, utmCampaign });
-    localStorage.removeItem('referrer_id'); // Clean up after use
-    localStorage.setItem('token', token);
+    safeLocalStorage.removeItem('referrer_id'); // Clean up after use
+    safeLocalStorage.setItem('token', token);
     setUser(human);
     // New signups default to analytics enabled
     posthog.identify(human.id);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    safeLocalStorage.removeItem('token');
     setUser(null);
     posthog.reset();
   };
 
   const loginWithGoogle = async () => {
     const { url, state } = await api.getOAuthUrl('google');
-    localStorage.setItem('oauth_state', state);
+    safeLocalStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
 
   const loginWithLinkedIn = async () => {
     const { url, state } = await api.getOAuthUrl('linkedin');
-    localStorage.setItem('oauth_state', state);
+    safeLocalStorage.setItem('oauth_state', state);
     window.location.href = url;
   };
 

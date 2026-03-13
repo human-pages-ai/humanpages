@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { safeSessionStorage } from '../lib/safeStorage';
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 
@@ -14,7 +15,7 @@ export function useUTMParams() {
     for (const key of UTM_KEYS) {
       const value = searchParams.get(key);
       if (value) {
-        sessionStorage.setItem(key, value);
+        safeSessionStorage.setItem(key, value);
       }
     }
   }, [searchParams]);
@@ -30,7 +31,7 @@ export function useUTMParams() {
 export function getStoredUTMParams(): Record<string, string | undefined> {
   const params: Record<string, string | undefined> = {};
   for (const key of UTM_KEYS) {
-    params[key] = sessionStorage.getItem(key) || undefined;
+    params[key] = safeSessionStorage.getItem(key) || undefined;
   }
   return params;
 }

@@ -11,6 +11,7 @@ import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import InAppBrowserBanner from '../components/InAppBrowserBanner';
+import { safeLocalStorage, safeSessionStorage } from '../lib/safeStorage';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // test key fallback
 const CAPTCHA_TIMEOUT_MS = 10_000;
@@ -46,12 +47,12 @@ export default function Signup() {
     // Store referral ID if present
     const ref = searchParams.get('ref');
     if (ref) {
-      localStorage.setItem('referrer_id', ref);
+      safeLocalStorage.setItem('referrer_id', ref);
     }
 
-    const utmSource = searchParams.get('utm_source') || sessionStorage.getItem('utm_source') || undefined;
-    const utmMedium = searchParams.get('utm_medium') || sessionStorage.getItem('utm_medium') || undefined;
-    const utmCampaign = searchParams.get('utm_campaign') || sessionStorage.getItem('utm_campaign') || undefined;
+    const utmSource = searchParams.get('utm_source') || safeSessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = searchParams.get('utm_medium') || safeSessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = searchParams.get('utm_campaign') || safeSessionStorage.getItem('utm_campaign') || undefined;
     analytics.track('signup_start', { utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
   }, [searchParams]);
 
@@ -62,9 +63,9 @@ export default function Signup() {
 
     try {
       await signup(email, password, name, termsAccepted, captchaToken);
-      const utmSource = sessionStorage.getItem('utm_source') || undefined;
-      const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
-      const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+      const utmSource = safeSessionStorage.getItem('utm_source') || undefined;
+      const utmMedium = safeSessionStorage.getItem('utm_medium') || undefined;
+      const utmCampaign = safeSessionStorage.getItem('utm_campaign') || undefined;
       analytics.track('signup_complete', { method: 'email', utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
       // Always go through onboarding for new users.
       // If there's an apply intent in localStorage, Onboarding will chain to /careers after.

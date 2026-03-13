@@ -38,6 +38,25 @@ vi.mock('../lib/api', () => ({
     getReferralCode: () => mockGetReferralCode(),
   },
 }));
+vi.mock('../lib/safeStorage', () => {
+  const store: Record<string, string> = {};
+  const sessionStore: Record<string, string> = {};
+  const makeMock = (s: Record<string, string>) => ({
+    getItem: vi.fn((k: string) => s[k] ?? null),
+    setItem: vi.fn((k: string, v: string) => { s[k] = v; }),
+    removeItem: vi.fn((k: string) => { delete s[k]; }),
+    clear: vi.fn(() => { for (const k of Object.keys(s)) delete s[k]; }),
+    isAvailable: vi.fn(() => true),
+  });
+  return {
+    safeLocalStorage: makeMock(store),
+    safeSessionStorage: makeMock(sessionStore),
+    safeGetItem: vi.fn((k: string) => store[k] ?? null),
+    safeSetItem: vi.fn((k: string, v: string) => { store[k] = v; }),
+    safeRemoveItem: vi.fn((k: string) => { delete store[k]; }),
+  };
+});
+
 
 vi.mock('../lib/applyIntent', () => ({
   setApplyIntent: (...args: any[]) => mockSetApplyIntent(...args),
@@ -712,26 +731,29 @@ describe('CareersPage — deep links', () => {
 });
 
 describe('CareersPage — referral capture', () => {
-  it('stores ref param in localStorage as referrer_id', () => {
+  it('stores ref param in localStorage as referrer_id', async () => {
+    const { safeLocalStorage } = await import('../lib/safeStorage');
     mockSearchParamsValues = { ref: 'AbC3x2' };
 
     renderWithProviders(<CareersPage />);
 
-    expect(localStorage.getItem('referrer_id')).toBe('AbC3x2');
+    expect(safeLocalStorage.setItem).toHaveBeenCalledWith('referrer_id', 'AbC3x2');
   });
 
-  it('stores ref param even without a deep link positionId', () => {
+  it('stores ref param even without a deep link positionId', async () => {
+    const { safeLocalStorage } = await import('../lib/safeStorage');
     mockSearchParamsValues = { ref: 'XyZ9k4' };
 
     renderWithProviders(<CareersPage />);
 
-    expect(localStorage.getItem('referrer_id')).toBe('XyZ9k4');
+    expect(safeLocalStorage.setItem).toHaveBeenCalledWith('referrer_id', 'XyZ9k4');
   });
 
-  it('does not set referrer_id when no ref param present', () => {
+  it('does not set referrer_id when no ref param present', async () => {
+    const { safeLocalStorage } = await import('../lib/safeStorage');
     renderWithProviders(<CareersPage />);
 
-    expect(localStorage.getItem('referrer_id')).toBeNull();
+    expect(safeLocalStorage.setItem).not.toHaveBeenCalledWith('referrer_id', expect.anything());
   });
 });
 

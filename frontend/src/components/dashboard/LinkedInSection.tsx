@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { Profile } from './types';
+import { safeSessionStorage } from '../../lib/safeStorage';
 
 interface Props {
   profile: Profile;
@@ -17,7 +18,7 @@ export default function LinkedInSection({ profile, onProfileUpdate }: Props) {
     setLoading(true);
     try {
       const { url, state } = await api.getLinkedInVerifyUrl();
-      sessionStorage.setItem('linkedin_verify_state', state);
+      safeSessionStorage.setItem('linkedin_verify_state', state);
       window.location.href = url;
     } catch (err: any) {
       toast.error(err.message || t('toast.genericError'));

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
 import type { LogEntry, LogQueryResult, LogStats } from '../../types/admin';
+import { safeLocalStorage } from '../../lib/safeStorage';
 
 const LEVEL_LABELS: Record<number, string> = {
   10: 'TRACE', 20: 'DEBUG', 30: 'INFO', 40: 'WARN', 50: 'ERROR', 60: 'FATAL',
@@ -302,7 +303,7 @@ export default function AdminLogs() {
                   try {
                     // The health endpoint returns errors in the response body
                     const resp = await fetch('/api/admin/logs/health', {
-                      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                      headers: { 'Authorization': `Bearer ${safeLocalStorage.getItem('token')}` },
                     });
                     const body = await resp.json();
                     setHealthCheck(body);

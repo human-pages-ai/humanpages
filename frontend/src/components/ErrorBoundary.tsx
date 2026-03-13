@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react';
+import { safeSessionStorage } from '../lib/safeStorage';
 
 interface Props {
   children: ReactNode;
@@ -29,8 +30,8 @@ export default class ErrorBoundary extends Component<Props, State> {
     // Reload before rendering the error UI so the user never sees it.
     if (ErrorBoundary.isChunkLoadError(error)) {
       const reloadKey = 'chunk-reload-' + window.location.pathname;
-      if (!sessionStorage.getItem(reloadKey)) {
-        sessionStorage.setItem(reloadKey, '1');
+      if (!safeSessionStorage.getItem(reloadKey)) {
+        safeSessionStorage.setItem(reloadKey, '1');
         window.location.reload();
         // Return hasError: false — the reload will happen before React paints.
         return { hasError: false };

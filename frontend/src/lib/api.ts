@@ -1,40 +1,14 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
 import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions } from '../types/admin';
 
+import { safeLocalStorage, safeGetItem, safeSetItem, safeRemoveItem } from './safeStorage';
+// Re-export for backward compatibility (OAuthCallback etc. import from here)
+export { safeGetItem, safeSetItem, safeRemoveItem };
+
 const API_BASE = '/api';
 
-/**
- * Safe localStorage wrapper — some in-app browsers (FB, Instagram)
- * restrict localStorage access. Falls back gracefully to in-memory storage.
- */
-const memoryStore: Record<string, string> = {};
-
-export function safeGetItem(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return memoryStore[key] ?? null;
-  }
-}
-
-export function safeSetItem(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    memoryStore[key] = value;
-  }
-}
-
-export function safeRemoveItem(key: string): void {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    delete memoryStore[key];
-  }
-}
-
 function getToken(): string | null {
-  return safeGetItem('token');
+  return safeLocalStorage.getItem('token');
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -53,7 +27,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (!res.ok) {
     // On 401, token is invalid/expired — clear it and redirect to login
     if (res.status === 401 && token) {
-      safeRemoveItem('token');
+      safeLocalStorage.removeItem('token');
       // Only redirect if not already on a public/auth page
       const path = window.location.pathname;
       if (!path.startsWith('/login') && !path.startsWith('/signup') && !path.startsWith('/forgot-password')) {

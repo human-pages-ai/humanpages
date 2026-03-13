@@ -503,57 +503,84 @@ export default function GptSetupPage() {
             </div>
 
             {/* Step 2 */}
-            <div className="step-card mb-8 grid md:grid-cols-2 gap-8 items-center bg-white rounded-2xl p-8 border border-slate-200">
-              <div className="w-full h-64 md:h-full order-2 md:order-1">
-                <ConnectorPlugSVG />
+            <div className="step-card mb-8 bg-white rounded-2xl p-8 border border-slate-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
+                  2
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900">Add Human Pages Connector</h3>
               </div>
 
-              <div className="order-1 md:order-2">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
-                    2
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900">Add Human Pages Connector</h3>
+              {/* Quick Install — primary action */}
+              <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                <p className="text-slate-700 mb-4">
+                  Copy everything you need in one click, then open GPT to paste it in.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <CopyButton
+                    text={`Name: Human Pages\nDescription: Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments.\nURL: https://mcp.humanpages.ai/api/mcp\nAuthentication: OAuth`}
+                    label="Copy All Settings"
+                  />
+                  <a
+                    href="https://chatgpt.com/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-2 focus:outline-offset-2 focus:outline-blue-500"
+                  >
+                    Open GPT Settings →
+                  </a>
+                </div>
+                <p className="text-xs text-slate-500 mt-3">
+                  In GPT: Settings → Connectors → Create → paste the copied values into each field.
+                </p>
+              </div>
+
+              {/* Detailed fields grid */}
+              <div className="grid md:grid-cols-2 gap-8 items-start">
+                <div className="w-full h-64 md:h-full order-2 md:order-1">
+                  <ConnectorPlugSVG />
                 </div>
 
-                <p className="text-slate-600 mb-6">
-                  Go to Settings → Connectors → Create. Fill in the information below:
-                </p>
+                <div className="order-1 md:order-2">
+                  <p className="text-sm text-slate-500 mb-4 font-medium uppercase tracking-wide">
+                    Individual Fields
+                  </p>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 mb-2">Name</label>
-                    <div className="flex items-center gap-2 bg-slate-100 p-3 rounded-lg">
-                      <code className="flex-1 text-slate-700 font-mono text-sm">Human Pages</code>
-                      <CopyButton text="Human Pages" label="Copy" />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 mb-2">Name</label>
+                      <div className="flex items-center gap-2 bg-slate-100 p-3 rounded-lg">
+                        <code className="flex-1 text-slate-700 font-mono text-sm">Human Pages</code>
+                        <CopyButton text="Human Pages" label="Copy" />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 mb-2">Description</label>
-                    <div className="flex items-start gap-2">
-                      <code className="flex-1 text-slate-700 font-mono text-xs bg-slate-100 p-3 rounded-lg break-words">
-                        Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments.
-                      </code>
-                      <CopyButton
-                        text="Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments."
-                        label="Copy"
-                      />
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 mb-2">Description</label>
+                      <div className="flex items-start gap-2">
+                        <code className="flex-1 text-slate-700 font-mono text-xs bg-slate-100 p-3 rounded-lg break-words">
+                          Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments.
+                        </code>
+                        <CopyButton
+                          text="Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments."
+                          label="Copy"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 mb-2">URL</label>
-                    <div className="flex items-center gap-2 bg-slate-100 p-3 rounded-lg">
-                      <code className="flex-1 text-blue-600 font-mono text-sm break-all">https://mcp.humanpages.ai/api/mcp</code>
-                      <CopyButton text="https://mcp.humanpages.ai/api/mcp" label="Copy" />
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 mb-2">URL</label>
+                      <div className="flex items-center gap-2 bg-slate-100 p-3 rounded-lg">
+                        <code className="flex-1 text-blue-600 font-mono text-sm break-all">https://mcp.humanpages.ai/api/mcp</code>
+                        <CopyButton text="https://mcp.humanpages.ai/api/mcp" label="Copy" />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 mb-2">Authentication</label>
-                    <div className="bg-slate-100 p-3 rounded-lg">
-                      <code className="text-slate-700 font-mono text-sm">OAuth</code>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 mb-2">Authentication</label>
+                      <div className="bg-slate-100 p-3 rounded-lg">
+                        <code className="text-slate-700 font-mono text-sm">OAuth</code>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -694,6 +721,22 @@ export default function GptSetupPage() {
                 Discord community
               </a>
             </p>
+
+            {/* App Directory banner */}
+            <div className="mt-8 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg">
+              <p className="text-sm text-blue-50">
+                Coming soon: install Human Pages directly from the{' '}
+                <a
+                  href="https://chatgpt.com/apps"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white font-medium underline hover:no-underline"
+                >
+                  GPT App Directory
+                </a>
+                {' '}— no manual setup needed.
+              </p>
+            </div>
           </div>
         </section>
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { safeLocalStorage } from '../lib/safeStorage';
 
 interface SSECallbacks {
   onStaffActivity?: (data: unknown) => void;
@@ -11,7 +12,7 @@ export function useProductivitySSE(callbacks: SSECallbacks) {
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const connect = useCallback(() => {
-    const token = localStorage.getItem('token');
+    const token = safeLocalStorage.getItem('token');
     if (!token) return;
 
     // Clean up previous connection

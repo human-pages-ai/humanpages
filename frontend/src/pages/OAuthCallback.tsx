@@ -5,6 +5,7 @@ import Link from '../components/LocalizedLink';
 import { api, safeGetItem, safeSetItem, safeRemoveItem } from '../lib/api';
 import { analytics } from '../lib/analytics';
 import { getApplyRedirect, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
+import { safeSessionStorage } from '../lib/safeStorage';
 
 export default function OAuthCallback() {
   const { t } = useTranslation();
@@ -29,9 +30,9 @@ export default function OAuthCallback() {
     referrerId?: string,
     termsAcceptedFlag?: boolean,
   ) => {
-    const utmSource = sessionStorage.getItem('utm_source') || undefined;
-    const utmMedium = sessionStorage.getItem('utm_medium') || undefined;
-    const utmCampaign = sessionStorage.getItem('utm_campaign') || undefined;
+    const utmSource = safeSessionStorage.getItem('utm_source') || undefined;
+    const utmMedium = safeSessionStorage.getItem('utm_medium') || undefined;
+    const utmCampaign = safeSessionStorage.getItem('utm_campaign') || undefined;
     const result = await api.oauthCallback(oauthProvider, code, state, referrerId, termsAcceptedFlag, utmSource, utmMedium, utmCampaign);
 
     if (result.requiresTerms) {

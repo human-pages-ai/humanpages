@@ -25,6 +25,7 @@ import {
   HandThumbUpIcon,
   LinkIcon,
 } from '@heroicons/react/24/outline';
+import { safeLocalStorage, safeSessionStorage } from '../lib/safeStorage';
 
 // ─── Inline SVG Illustrations ────────────────────────────────────────────────
 
@@ -430,7 +431,7 @@ function ApplyModal({ position, onClose }: ApplyModalProps) {
         about: formData.about,
         portfolioUrl: formData.portfolio || undefined,
         availability: formData.availability,
-        utmSource: sessionStorage.getItem('utm_source') || undefined,
+        utmSource: safeSessionStorage.getItem('utm_source') || undefined,
       });
       setStep('success');
     } catch (err: any) {
@@ -773,12 +774,12 @@ export default function CareersPage() {
     // Capture referral code from ?ref= FIRST (before any navigation)
     const ref = searchParams.get('ref');
     if (ref) {
-      localStorage.setItem('referrer_id', ref);
+      safeLocalStorage.setItem('referrer_id', ref);
     }
 
     const utmSource = searchParams.get('utm_source');
     if (utmSource) {
-      sessionStorage.setItem('utm_source', utmSource);
+      safeSessionStorage.setItem('utm_source', utmSource);
     }
 
     // 1. Check route param (deep link: /careers/apply/software-engineer)

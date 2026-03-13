@@ -1,3 +1,4 @@
+import { safeLocalStorage } from '../lib/safeStorage';
 const CACHE_KEY = 'i18next_ip_lang';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -14,14 +15,14 @@ interface CachedResult {
  * When this flag is set, IP-based detection will NOT override it.
  */
 export function setUserLanguageChoice(lang: string): void {
-  localStorage.setItem(USER_CHOICE_KEY, lang);
+  safeLocalStorage.setItem(USER_CHOICE_KEY, lang);
 }
 
 /**
  * Get the user's explicit language choice, if any.
  */
 export function getUserLanguageChoice(): string | null {
-  return localStorage.getItem(USER_CHOICE_KEY);
+  return safeLocalStorage.getItem(USER_CHOICE_KEY);
 }
 
 /**
@@ -29,7 +30,7 @@ export function getUserLanguageChoice(): string | null {
  */
 export function getCachedIpLanguage(): string | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = safeLocalStorage.getItem(CACHE_KEY);
     if (raw) {
       const cached: CachedResult = JSON.parse(raw);
       if (Date.now() - cached.timestamp < CACHE_TTL) {
@@ -65,7 +66,7 @@ export async function fetchGeoLanguage(timeoutMs = 1500): Promise<string | null>
         language: data.language,
         timestamp: Date.now(),
       };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cached));
+      safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cached));
       return data.language;
     }
   } catch {

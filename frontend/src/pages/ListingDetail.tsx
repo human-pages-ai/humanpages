@@ -16,6 +16,7 @@ import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Listing } from '../components/dashboard/types';
 import Footer from '../components/Footer';
+import { safeLocalStorage, safeSessionStorage } from '../lib/safeStorage';
 
 function formatTimeUntil(dateStr: string): string {
   const diff = new Date(dateStr).getTime() - Date.now();
@@ -73,7 +74,7 @@ export default function ListingDetail() {
         setResolvedId(listingId);
         setLinkCode(code);
         // Persist ref immediately so it survives signup redirect even if listing fetch fails
-        sessionStorage.setItem('hp_listing_ref', code);
+        safeSessionStorage.setItem('hp_listing_ref', code);
       }).catch(() => {
         setCodeNotFound(true);
         setLoading(false);
@@ -83,7 +84,7 @@ export default function ListingDetail() {
 
   /** Called by InlineSignupForm after email signup (validation + captcha already handled by the form). */
   const handleEmailSignup = async (data: { name: string; email: string; password: string; captchaToken: string }) => {
-    const ref = linkCode || sessionStorage.getItem('hp_listing_ref') || undefined;
+    const ref = linkCode || safeSessionStorage.getItem('hp_listing_ref') || undefined;
     // Save listing intent before signup so it persists
     if (listing) setListingApplyIntent(id!, listing.title, listing.requiredSkills);
     await signup(data.email, data.password, data.name, true, data.captchaToken);
@@ -93,7 +94,7 @@ export default function ListingDetail() {
     if (listing?.requiredSkills?.length) {
       api.updateProfile({ skills: listing.requiredSkills }).catch(() => {});
     }
-    localStorage.setItem('hp_onboarding_pending', '1');
+    safeLocalStorage.setItem('hp_onboarding_pending', '1');
     // Reload the page so the user state refreshes
     window.location.href = `/listings/${id}?signedup=1${ref ? `&ref=${encodeURIComponent(ref)}` : ''}`;
   };
@@ -159,7 +160,7 @@ export default function ListingDetail() {
       const utmSource = new URLSearchParams(window.location.search).get('utm_source') || undefined;
       const ref = linkCode || searchParams.get('ref') || undefined;
       // Persist ref to sessionStorage so it survives signup redirect
-      if (ref) sessionStorage.setItem('hp_listing_ref', ref);
+      if (ref) safeSessionStorage.setItem('hp_listing_ref', ref);
       analytics.track('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource, ref });
       posthog.capture('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource, ref });
     } catch (error: any) {
@@ -197,7 +198,7 @@ export default function ListingDetail() {
 
   const handleApplySignup = (method: 'linkedin' | 'google') => {
     if (!listing) return;
-    const ref = linkCode || sessionStorage.getItem('hp_listing_ref') || undefined;
+    const ref = linkCode || safeSessionStorage.getItem('hp_listing_ref') || undefined;
     // Funnel step 2: signup button clicked
     analytics.track('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc, ref });
     posthog.capture('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc, ref });

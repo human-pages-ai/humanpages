@@ -143,6 +143,24 @@ if ! (cd backend && npx prisma generate) >$STAGE_LOG 2>&1; then
 fi
 
 # ------------------------------------------------------------------
+# Safe storage check (fast, no DB needed)
+# Prevents raw localStorage/sessionStorage that crashes in-app browsers
+# ------------------------------------------------------------------
+echo "  Checking for raw storage usage..."
+if bash scripts/check-safe-storage.sh >$STAGE_LOG 2>&1; then
+  echo "  Safe storage check OK"
+else
+  DETAIL=$(cat $STAGE_LOG)
+  fail "safe-storage" \
+    "Raw localStorage/sessionStorage usage found:" \
+    "" \
+    "$DETAIL" \
+    "" \
+    "Fix: use safeLocalStorage / safeSessionStorage from lib/safeStorage.ts" \
+    "Run:  bash scripts/check-safe-storage.sh   (for details)"
+fi
+
+# ------------------------------------------------------------------
 # Migration structure validation (fast, no DB needed)
 # ------------------------------------------------------------------
 echo "  Validating migration structure..."

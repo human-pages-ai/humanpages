@@ -1,20 +1,31 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock fetch before importing the module
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
-// Mock localStorage
-const localStorageStore: Record<string, string> = {};
-const mockLocalStorage = {
-  getItem: vi.fn((key: string) => localStorageStore[key] ?? null),
-  setItem: vi.fn((key: string, value: string) => { localStorageStore[key] = value; }),
-  removeItem: vi.fn((key: string) => { delete localStorageStore[key]; }),
-  clear: vi.fn(() => { Object.keys(localStorageStore).forEach(k => delete localStorageStore[k]); }),
-  length: 0,
-  key: vi.fn(),
-};
-Object.defineProperty(window, 'localStorage', { value: mockLocalStorage, writable: true });
+// Mock safeStorage — ipLanguageDetector uses safeLocalStorage instead of raw localStorage.
+// We delegate to jsdom's built-in localStorage so tests can inspect stored values directly.
+vi.mock('../lib/safeStorage', () => ({
+  safeLocalStorage: {
+    getItem: vi.fn((k: string) => localStorage.getItem(k)),
+    setItem: vi.fn((k: string, v: string) => localStorage.setItem(k, v)),
+    removeItem: vi.fn((k: string) => localStorage.removeItem(k)),
+    clear: vi.fn(() => localStorage.clear()),
+    isAvailable: vi.fn(() => true),
+  },
+  safeSessionStorage: {
+    getItem: vi.fn(() => null),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+    isAvailable: vi.fn(() => true),
+  },
+  safeGetItem: vi.fn((k: string) => localStorage.getItem(k)),
+  safeSetItem: vi.fn((k: string, v: string) => localStorage.setItem(k, v)),
+  safeRemoveItem: vi.fn((k: string) => localStorage.removeItem(k)),
+}));
 
 import {
   setUserLanguageChoice,
@@ -31,8 +42,7 @@ const USER_CHOICE_KEY = 'i18next_user_choice';
 describe('ipLanguageDetector', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLocalStorage.clear();
-    Object.keys(localStorageStore).forEach(k => delete localStorageStore[k]);
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -45,39 +55,39 @@ describe('ipLanguageDetector', () => {
     });
 
     it('should return cached language when cache is fresh', () => {
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'es',
         timestamp: Date.now(),
-      });
+      }));
       expect(getCachedIpLanguage()).toBe('es');
     });
 
     it('should return null when cache is expired', () => {
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'es',
         timestamp: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
-      });
+      }));
       expect(getCachedIpLanguage()).toBeNull();
     });
 
     it('should return null when cache is corrupted', () => {
-      localStorageStore[CACHE_KEY] = 'invalid-json';
+      localStorage.setItem(CACHE_KEY, 'invalid-json');
       expect(getCachedIpLanguage()).toBeNull();
     });
 
     it('should return cached French for French-Canadian user', () => {
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'fr',
         timestamp: Date.now(),
-      });
+      }));
       expect(getCachedIpLanguage()).toBe('fr');
     });
 
     it('should return cached Portuguese for Brazilian user', () => {
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'pt',
         timestamp: Date.now(),
-      });
+      }));
       expect(getCachedIpLanguage()).toBe('pt');
     });
   });
@@ -85,11 +95,11 @@ describe('ipLanguageDetector', () => {
   describe('user choice', () => {
     it('setUserLanguageChoice should save to localStorage', () => {
       setUserLanguageChoice('zh');
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(USER_CHOICE_KEY, 'zh');
+      expect(localStorage.getItem(USER_CHOICE_KEY)).toBe('zh');
     });
 
     it('getUserLanguageChoice should return saved choice', () => {
-      localStorageStore[USER_CHOICE_KEY] = 'fr';
+      localStorage.setItem(USER_CHOICE_KEY, 'fr');
       expect(getUserLanguageChoice()).toBe('fr');
     });
 
@@ -113,11 +123,7 @@ describe('ipLanguageDetector', () => {
       }));
 
       // Should have cached the result
-      const setItemCall = mockLocalStorage.setItem.mock.calls.find(
-        (call: string[]) => call[0] === CACHE_KEY
-      );
-      expect(setItemCall).toBeDefined();
-      const cached = JSON.parse(setItemCall![1]);
+      const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
       expect(cached.language).toBe('es');
     });
 
@@ -145,19 +151,19 @@ describe('ipLanguageDetector', () => {
 
   describe('resolveInitialLanguageSync', () => {
     it('should return user choice first', () => {
-      localStorageStore[USER_CHOICE_KEY] = 'fr';
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(USER_CHOICE_KEY, 'fr');
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'es',
         timestamp: Date.now(),
-      });
+      }));
       expect(resolveInitialLanguageSync()).toBe('fr');
     });
 
     it('should return cached IP language when no user choice', () => {
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'pt',
         timestamp: Date.now(),
-      });
+      }));
       expect(resolveInitialLanguageSync()).toBe('pt');
     });
 
@@ -168,11 +174,11 @@ describe('ipLanguageDetector', () => {
 
   describe('resolveInitialLanguage', () => {
     it('should return user choice first, without fetching', async () => {
-      localStorageStore[USER_CHOICE_KEY] = 'fr';
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(USER_CHOICE_KEY, 'fr');
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'es',
         timestamp: Date.now(),
-      });
+      }));
 
       const result = await resolveInitialLanguage();
       expect(result).toBe('fr');
@@ -180,10 +186,10 @@ describe('ipLanguageDetector', () => {
     });
 
     it('should return cached IP language without fetching', async () => {
-      localStorageStore[CACHE_KEY] = JSON.stringify({
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
         language: 'pt',
         timestamp: Date.now(),
-      });
+      }));
 
       const result = await resolveInitialLanguage();
       expect(result).toBe('pt');

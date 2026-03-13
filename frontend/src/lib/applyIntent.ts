@@ -1,3 +1,4 @@
+import { safeLocalStorage } from './safeStorage';
 /**
  * Apply Intent — durable storage for the careers & listing application flows.
  *
@@ -67,7 +68,7 @@ export const POSITION_SKILL_HINTS: Record<string, string[]> = {
 
 export function setApplyIntent(positionId: string, positionTitle?: string): void {
   const suggestedSkills = POSITION_SKILL_HINTS[positionId] || [];
-  localStorage.setItem(APPLY_INTENT_KEY, JSON.stringify({
+  safeLocalStorage.setItem(APPLY_INTENT_KEY, JSON.stringify({
     positionId,
     positionTitle,
     suggestedSkills,
@@ -77,23 +78,23 @@ export function setApplyIntent(positionId: string, positionTitle?: string): void
 
 export function getApplyIntent(): ApplyIntent | null {
   try {
-    const raw = localStorage.getItem(APPLY_INTENT_KEY);
+    const raw = safeLocalStorage.getItem(APPLY_INTENT_KEY);
     if (!raw) return null;
     const parsed: ApplyIntent = JSON.parse(raw);
     // Expire after 24 hours
     if (Date.now() - parsed.timestamp > INTENT_TTL) {
-      localStorage.removeItem(APPLY_INTENT_KEY);
+      safeLocalStorage.removeItem(APPLY_INTENT_KEY);
       return null;
     }
     return parsed;
   } catch {
-    localStorage.removeItem(APPLY_INTENT_KEY);
+    safeLocalStorage.removeItem(APPLY_INTENT_KEY);
     return null;
   }
 }
 
 export function clearApplyIntent(): void {
-  localStorage.removeItem(APPLY_INTENT_KEY);
+  safeLocalStorage.removeItem(APPLY_INTENT_KEY);
 }
 
 // ─── Listing Apply Intent ────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ export function setListingApplyIntent(
   listingTitle?: string,
   requiredSkills?: string[],
 ): void {
-  localStorage.setItem(LISTING_APPLY_INTENT_KEY, JSON.stringify({
+  safeLocalStorage.setItem(LISTING_APPLY_INTENT_KEY, JSON.stringify({
     listingId,
     listingTitle,
     requiredSkills: requiredSkills || [],
@@ -113,22 +114,22 @@ export function setListingApplyIntent(
 
 export function getListingApplyIntent(): ListingApplyIntent | null {
   try {
-    const raw = localStorage.getItem(LISTING_APPLY_INTENT_KEY);
+    const raw = safeLocalStorage.getItem(LISTING_APPLY_INTENT_KEY);
     if (!raw) return null;
     const parsed: ListingApplyIntent = JSON.parse(raw);
     if (Date.now() - parsed.timestamp > INTENT_TTL) {
-      localStorage.removeItem(LISTING_APPLY_INTENT_KEY);
+      safeLocalStorage.removeItem(LISTING_APPLY_INTENT_KEY);
       return null;
     }
     return parsed;
   } catch {
-    localStorage.removeItem(LISTING_APPLY_INTENT_KEY);
+    safeLocalStorage.removeItem(LISTING_APPLY_INTENT_KEY);
     return null;
   }
 }
 
 export function clearListingApplyIntent(): void {
-  localStorage.removeItem(LISTING_APPLY_INTENT_KEY);
+  safeLocalStorage.removeItem(LISTING_APPLY_INTENT_KEY);
 }
 
 // ─── Redirect Helper ─────────────────────────────────────────────────────────
