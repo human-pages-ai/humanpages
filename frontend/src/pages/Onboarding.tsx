@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { analytics } from '../lib/analytics';
+import { posthog } from '../lib/posthog';
 import SEO from '../components/SEO';
 import LocationAutocomplete from '../components/LocationAutocomplete';
 import { getApplyIntent, clearApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
