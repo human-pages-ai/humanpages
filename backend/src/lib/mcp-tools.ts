@@ -7,6 +7,10 @@
  *
  * Tool execution resolves the agent's API key server-side via mcp-auth
  * and calls the Human Pages API with appropriate headers.
+ *
+ * Compliance: All tools include MCP annotations (readOnlyHint, destructiveHint,
+ * idempotentHint, openWorldHint) as required by the ChatGPT App Directory.
+ * Response minimization strips internal metadata before returning to clients.
  */
 
 import { logger } from './logger.js';
@@ -18,121 +22,226 @@ import { logger } from './logger.js';
 const FETCH_TIMEOUT = 10_000; // 10 seconds per upstream call
 
 // ---------------------------------------------------------------------------
-// Tool definitions (MCP schema)
+// Tool definitions (MCP schema with annotations)
 // ---------------------------------------------------------------------------
+
+export interface McpToolAnnotations {
+  /** Tool only retrieves/reads data — does not create, update, or delete anything. */
+  readOnlyHint?: boolean;
+  /** Tool may permanently modify or delete data. */
+  destructiveHint?: boolean;
+  /** Calling this tool repeatedly with the same args produces no additional effect. */
+  idempotentHint?: boolean;
+  /** Tool interacts with external systems, accounts, or public platforms. */
+  openWorldHint?: boolean;
+}
 
 export interface McpToolDefinition {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations?: McpToolAnnotations;
 }
 
 export const MCP_TOOLS: Record<string, McpToolDefinition> = {
   search_humans: {
     name: 'search_humans',
-    description: 'Search for available humans by skill, location, or availability',
+    description:
+      'Search the Human Pages directory for people by skill, location, or availability. ' +
+      'Returns a list of matching profiles with name, skills, location, and availability status. ' +
+      'Use this to find the right person for a task or project.',
     inputSchema: {
       type: 'object',
       properties: {
-        skill: { type: 'string', description: 'Skill to search for (optional)' },
-        location: { type: 'string', description: 'Location to filter by (optional)' },
-        available_only: { type: 'boolean', description: 'Show only available humans (default: false)' },
+        skill: {
+          type: 'string',
+          description: 'Skill or expertise to search for (e.g. "React developer", "copywriter")',
+        },
+        location: {
+          type: 'string',
+          description: 'Geographic location to filter by (e.g. "New York", "Remote")',
+        },
+        available_only: {
+          type: 'boolean',
+          description: 'If true, only return people currently marked as available',
+        },
       },
     },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
+
   get_human: {
     name: 'get_human',
-    description: 'Get detailed information about a specific human',
+    description:
+      'Retrieve public information about a specific person by their ID. ' +
+      'Returns name, skills, location, availability, and a brief bio.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Human ID' },
+        id: { type: 'string', description: 'The unique Human Pages ID of the person to look up' },
       },
       required: ['id'],
     },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
+
   get_human_profile: {
     name: 'get_human_profile',
-    description: 'Get the full profile of a human (requires agent authentication)',
+    description:
+      'Retrieve the full authenticated profile of a person, including contact details ' +
+      'and extended bio. Requires agent authentication — use this after search_humans ' +
+      'when you need complete profile data to initiate contact.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Human ID' },
+        id: { type: 'string', description: 'The unique Human Pages ID of the person' },
       },
       required: ['id'],
     },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
+
   register_agent: {
     name: 'register_agent',
-    description: 'Register a new agent',
+    description:
+      'Register a new AI agent on Human Pages. Creates a persistent agent identity ' +
+      'that can post jobs and interact with people on the platform.',
     inputSchema: {
       type: 'object',
       properties: {
-        name: { type: 'string', description: 'Agent name' },
-        description: { type: 'string', description: 'Agent description' },
-        website_url: { type: 'string', description: 'Website URL (optional)' },
-        contact_email: { type: 'string', description: 'Contact email (optional)' },
+        name: { type: 'string', description: 'Display name for the agent (e.g. "Acme Hiring Bot")' },
+        description: { type: 'string', description: 'One-sentence summary of what this agent does' },
       },
       required: ['name'],
     },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
   },
+
   get_agent: {
     name: 'get_agent',
-    description: 'Get information about an agent',
+    description:
+      'Retrieve information about a registered agent by ID. ' +
+      'Returns the agent\'s name, description, and registration details.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Agent ID' },
+        id: { type: 'string', description: 'The unique agent ID to look up' },
       },
       required: ['id'],
     },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
+
   create_job: {
     name: 'create_job',
-    description: 'Create a new job posting',
+    description:
+      'Post a new job listing on Human Pages. The job becomes visible to people ' +
+      'on the platform who match the required skills. Requires a title and description; ' +
+      'skills and budget are optional.',
     inputSchema: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'Job title' },
-        description: { type: 'string', description: 'Job description' },
-        required_skills: { type: 'array', items: { type: 'string' }, description: 'Required skills' },
-        budget: { type: 'number', description: 'Budget for the job' },
+        title: { type: 'string', description: 'Job title (e.g. "Senior React Developer needed")' },
+        description: { type: 'string', description: 'Detailed job description with requirements and scope' },
+        required_skills: {
+          type: 'array',
+          items: { type: 'string' },
+          maxItems: 10,
+          description: 'List of skills required for this job, max 10 (e.g. ["React", "TypeScript"])',
+        },
+        budget: { type: 'number', description: 'Budget in USD for the job' },
       },
       required: ['title', 'description'],
     },
-  },
-  browse_listings: {
-    name: 'browse_listings',
-    description: 'Browse available listings',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        limit: { type: 'number', description: 'Number of listings to return (default: 10)' },
-        offset: { type: 'number', description: 'Offset for pagination (default: 0)' },
-        category: { type: 'string', description: 'Filter by category (optional)' },
-      },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
     },
   },
-  create_listing: {
-    name: 'create_listing',
-    description: 'Create a new listing for services or products',
+
+  browse_listings: {
+    name: 'browse_listings',
+    description:
+      'Browse service and product listings on Human Pages. Returns a paginated list ' +
+      'of available offerings. Optionally filter by category.',
     inputSchema: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'Listing title' },
-        description: { type: 'string', description: 'Listing description' },
-        category: { type: 'string', description: 'Category' },
-        price: { type: 'number', description: 'Price' },
+        limit: { type: 'number', description: 'Number of listings to return (default: 10, max: 50)' },
+        offset: { type: 'number', description: 'Pagination offset (default: 0)' },
+        category: { type: 'string', description: 'Filter by category (e.g. "design", "development")' },
+      },
+    },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+  },
+
+  create_listing: {
+    name: 'create_listing',
+    description:
+      'Create a new service or product listing on Human Pages. The listing becomes ' +
+      'publicly visible on the marketplace. Requires title, description, and category.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Listing title (e.g. "Logo Design Package")' },
+        description: { type: 'string', description: 'Detailed description of the service or product' },
+        category: { type: 'string', description: 'Listing category (e.g. "design", "development", "writing")' },
+        price: { type: 'number', description: 'Price in USD' },
       },
       required: ['title', 'description', 'category'],
     },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
   },
+
   ping: {
     name: 'ping',
-    description: 'Test server connectivity and get server status',
+    description: 'Check whether the Human Pages MCP server is reachable and responding.',
     inputSchema: {
       type: 'object',
       properties: {},
+    },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
     },
   },
 };
@@ -149,6 +258,51 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Response minimization
+// ---------------------------------------------------------------------------
+
+/**
+ * Fields to strip from upstream API responses before returning to MCP clients.
+ * OpenAI's App Directory guidelines require responses to exclude diagnostic,
+ * telemetry, and internal metadata that isn't relevant to the user's request.
+ */
+const STRIPPED_METADATA_FIELDS = new Set([
+  // Timing / telemetry
+  'timestamp', 'requestId', 'request_id', 'traceId', 'trace_id',
+  'correlationId', 'correlation_id',
+  // Internal diagnostics
+  'duration', 'durationMs', 'duration_ms', 'latency',
+  'serverVersion', 'server_version', 'apiVersion', 'api_version',
+  // Session / debug info (should never leak to clients)
+  'sessionId', 'session_id', 'internalId', 'internal_id',
+  'debugInfo', 'debug_info', 'stackTrace', 'stack_trace',
+]);
+
+/**
+ * Recursively strip internal metadata from upstream API responses.
+ * Returns a new object with stripped fields removed at all nesting levels.
+ */
+export function minimizeResponse(data: unknown): unknown {
+  if (data === null || data === undefined) return data;
+
+  if (Array.isArray(data)) {
+    return data.map(minimizeResponse);
+  }
+
+  if (typeof data === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      if (!STRIPPED_METADATA_FIELDS.has(key)) {
+        result[key] = minimizeResponse(value);
+      }
+    }
+    return result;
+  }
+
+  return data;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,7 +334,7 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'get_human': {
@@ -188,7 +342,7 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'get_human_profile': {
@@ -196,7 +350,7 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'register_agent': {
@@ -206,12 +360,10 @@ export async function executeMcpTool(
           body: JSON.stringify({
             name: args.name,
             description: args.description,
-            website_url: args.website_url,
-            contact_email: args.contact_email,
           }),
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'get_agent': {
@@ -219,7 +371,7 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'create_job': {
@@ -234,19 +386,19 @@ export async function executeMcpTool(
           }),
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'browse_listings': {
         const qp = new URLSearchParams();
-        qp.set('limit', String(args.limit ?? 10));
+        qp.set('limit', String(Math.min(Number(args.limit) || 10, 50)));
         qp.set('offset', String(args.offset ?? 0));
         if (args.category) qp.set('category', String(args.category));
         const res = await apiFetch(`${baseUrl}/api/listings?${qp}`, {
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'create_listing': {
@@ -261,17 +413,17 @@ export async function executeMcpTool(
           }),
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return await res.json();
+        return minimizeResponse(await res.json());
       }
 
       case 'ping':
-        return { status: 'ok', service: 'humans-api', timestamp: new Date().toISOString() };
+        return { status: 'ok' };
 
       default:
         throw new Error(`Unknown tool: ${toolName}`);
     }
   } catch (error) {
     logger.error({ error, tool: toolName }, 'MCP tool execution failed');
-    return { error: 'Tool execution failed', tool: toolName };
+    return { error: 'Tool execution failed' };
   }
 }

@@ -170,7 +170,9 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
       case 'initialize': {
         result = {
           protocolVersion: '2024-11-05',
-          capabilities: {},
+          capabilities: {
+            tools: { listChanged: false },
+          },
           serverInfo: { name: 'Human Pages MCP Server', version: '1.0.0' },
         };
         break;
@@ -289,11 +291,35 @@ router.get('/mcp', async (req: Request, res: Response) => {
 // DELETE /mcp — Terminate session
 // ---------------------------------------------------------------------------
 
-router.delete('/mcp', async (req: Request, res: Response) => {
+const deleteRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: 'Rate limit exceeded' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+router.delete('/mcp', deleteRateLimiter, async (req: Request, res: Response) => {
   try {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
-    if (!sessionId || !activeSessions.has(sessionId)) {
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Missing session ID' });
+    }
+
+    const session = activeSessions.get(sessionId);
+    if (!session) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Verify the caller owns this session
+    const token = extractBearerToken(req.headers['authorization']);
+    if (token) {
+      const tokenInfo = verifyMcpAccessToken(token);
+      if (!tokenInfo || tokenInfo.agentId !== session.agentId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
     }
 
     activeSessions.delete(sessionId);
