@@ -243,7 +243,7 @@ export default function PublicProfile() {
                   )}
                 </div>
                 <div>
-                <h1 className="text-2xl font-bold text-white">{profile.name || profile.username || t('publicProfile.anonymous')}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-white break-words">{profile.name || profile.username || t('publicProfile.anonymous')}</h1>
                 {profile.username && (
                   <p className="text-blue-200 text-sm mt-0.5">@{profile.username}</p>
                 )}

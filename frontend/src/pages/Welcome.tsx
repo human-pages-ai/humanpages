@@ -85,7 +85,7 @@ export default function Welcome() {
         </div>
 
         {/* Main Message */}
-        <h1 className="text-3xl font-bold text-slate-900 mb-3">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-3">
           {t('welcome.profileLive')}
         </h1>
         <p className="text-lg text-slate-600 mb-8">
@@ -124,7 +124,7 @@ export default function Welcome() {
             </div>
           )}
 
-          <div className="text-sm text-slate-500 font-mono bg-slate-50 rounded-lg px-3 py-2 truncate">
+          <div className="text-xs sm:text-sm text-slate-500 font-mono bg-slate-50 rounded-lg px-3 py-2 truncate min-w-0">
             {getProfileUrl()}
           </div>
         </div>

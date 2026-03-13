@@ -546,11 +546,11 @@ function FeaturedSection() {
         {/* Stats counters */}
         <div className="grid grid-cols-2 gap-6 mb-12 max-w-md mx-auto">
           <div className="text-center">
-            <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.withSkills.toLocaleString()}+</p>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">{stats.withSkills.toLocaleString()}+</p>
             <p className="text-sm text-slate-500 mt-1">{t('landing.stats.withSkills', { defaultValue: 'Skills listed' })}</p>
           </div>
           <div className="text-center">
-            <p className="text-3xl md:text-4xl font-bold text-slate-900">{stats.countries}</p>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">{stats.countries}</p>
             <p className="text-sm text-slate-500 mt-1">{t('landing.stats.countries', { defaultValue: 'Countries' })}</p>
           </div>
         </div>
@@ -558,7 +558,7 @@ function FeaturedSection() {
         {/* Featured profiles */}
         {featured.length > 0 && (
           <>
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8">
               {t('landing.featured.title', { defaultValue: 'Real people, ready to work' })}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -566,7 +566,7 @@ function FeaturedSection() {
                 <Link
                   key={h.id}
                   to={`/humans/${h.id}`}
-                  className="group p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center"
+                  className="group p-3 sm:p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center min-w-0"
                 >
                   {h.profilePhotoUrl ? (
                     <img
@@ -622,8 +622,8 @@ function LiveListingCards() {
               card.isPro ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'
             }`}
           >
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="font-medium text-slate-900">{card.title}</h3>
+            <div className="flex items-start justify-between gap-2 min-w-0">
+              <h3 className="font-medium text-slate-900 min-w-0 break-words">{card.title}</h3>
               {card.isPro && (
                 <span className="shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">PRO</span>
               )}
@@ -880,10 +880,10 @@ export default function LandingPage() {
                 <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full mb-4">
                   {t('landing.hero.tagline')}
                 </span>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+                <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
                   <RotatingHeadline tick={heroTick.tick} visible={heroTick.visible} />
                   <span className="block mt-1">{t('landing.hero.titleLine2Rotating')}</span>
-                  <span className="hidden sm:block mt-2 text-base sm:text-lg md:text-xl font-medium text-slate-500">
+                  <span className="hidden sm:block mt-2 text-sm sm:text-base md:text-lg lg:text-xl font-medium text-slate-500">
                     {t('landing.hero.h1Keyword')}
                   </span>
                 </h1>
@@ -896,7 +896,7 @@ export default function LandingPage() {
                 <div className="mt-6 md:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
                   <Link
                     to="/signup"
-                    className="inline-block px-6 sm:px-8 py-3.5 sm:py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors text-lg sm:text-lg shadow-lg shadow-orange-500/25 text-center"
+                    className="inline-block px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25 text-center"
                   >
                     {t('landing.hero.cta')}
                   </Link>
@@ -927,7 +927,7 @@ export default function LandingPage() {
         {/* How it works — 3-step visual */}
         <section className="py-16 bg-slate-50 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
               {t('landing.howItWorks.title')}
             </h2>
             <div className="grid md:grid-cols-3 gap-8 relative">
@@ -959,7 +959,7 @@ export default function LandingPage() {
               <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-sm font-medium rounded-full mb-4">
                 {t('listings.title')}
               </span>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">
                 {t('landing.jobBoard.title')}
               </h2>
               <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
@@ -979,7 +979,7 @@ export default function LandingPage() {
                 <JobOfferMockup />
               </div>
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">
                   {t('landing.tasks.title')}
                 </h2>
                 <p className="mt-2 text-slate-600 mb-6">
@@ -1009,7 +1009,7 @@ export default function LandingPage() {
         {/* Why list — benefits */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
               {t('landing.benefits.title')}
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
@@ -1049,7 +1049,7 @@ export default function LandingPage() {
         {/* Trust & Controls */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
               {t('landing.trust.title')}
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
@@ -1068,7 +1068,7 @@ export default function LandingPage() {
         {/* FAQ */}
         <section className="py-16 bg-slate-50 px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
               {t('landing.faq.title')}
             </h2>
             <div className="bg-white rounded-xl border border-slate-200 px-6 shadow-sm">
@@ -1082,7 +1082,7 @@ export default function LandingPage() {
         {/* Final CTA */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">
               {t('landing.cta.startGetting')}
             </h2>
             <p className="mt-2 text-slate-600">

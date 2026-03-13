@@ -75,7 +75,7 @@ export default function Badge() {
 
       <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3">
             Get your embed badge
           </h1>
           <p className="text-lg text-slate-600">
@@ -103,7 +103,7 @@ export default function Badge() {
               </svg>
             </div>
             <p className="mt-4 text-sm text-slate-600 text-center">
-              This badge links to: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">{profileUrl}</code>
+              This badge links to: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs break-all">{profileUrl}</code>
             </p>
           </div>
 

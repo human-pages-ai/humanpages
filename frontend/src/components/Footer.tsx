@@ -42,7 +42,7 @@ export default function Footer({ className = '' }: FooterProps) {
   return (
     <footer className={`py-8 bg-white border-t border-slate-200 px-4 ${className}`}>
       <div className="max-w-5xl mx-auto flex flex-col items-center gap-4">
-        <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs sm:text-sm">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-2 sm:gap-x-5 text-xs sm:text-sm">
           <Link to="/privacy" className="text-slate-500 hover:text-slate-700">{t('landing.footer.privacy')}</Link>
           <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
           <Link to="/listings" className="text-slate-500 hover:text-slate-700">{t('nav.jobBoard')}</Link>

@@ -3,8 +3,38 @@ import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminF
 
 const API_BASE = '/api';
 
+/**
+ * Safe localStorage wrapper — some in-app browsers (FB, Instagram)
+ * restrict localStorage access. Falls back gracefully to in-memory storage.
+ */
+const memoryStore: Record<string, string> = {};
+
+export function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return memoryStore[key] ?? null;
+  }
+}
+
+export function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    memoryStore[key] = value;
+  }
+}
+
+export function safeRemoveItem(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    delete memoryStore[key];
+  }
+}
+
 function getToken(): string | null {
-  return localStorage.getItem('token');
+  return safeGetItem('token');
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -23,7 +53,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (!res.ok) {
     // On 401, token is invalid/expired — clear it and redirect to login
     if (res.status === 401 && token) {
-      localStorage.removeItem('token');
+      safeRemoveItem('token');
       // Only redirect if not already on a public/auth page
       const path = window.location.pathname;
       if (!path.startsWith('/login') && !path.startsWith('/signup') && !path.startsWith('/forgot-password')) {

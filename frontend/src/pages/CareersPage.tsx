@@ -232,7 +232,7 @@ function ReferralShareSection({ referralCode }: { referralCode: string | null })
         {/* Copy link */}
         <div className="bg-blue-50/70 rounded-xl p-3 space-y-2">
           <div className="flex gap-2">
-            <div className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 font-mono truncate">
+            <div className="flex-1 min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 font-mono truncate">
               {referralUrl}
             </div>
             <button
