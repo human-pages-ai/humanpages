@@ -499,7 +499,7 @@ export default function Onboarding() {
                       onClick={() => toggleSkill(skill)}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                     >
-                      {skill}
+                      {t(`skillNames.${skill}`, skill)}
                       <span className="text-blue-200 text-xs ml-0.5">&times;</span>
                     </button>
                   ))}
@@ -526,7 +526,7 @@ export default function Onboarding() {
                   {(() => {
                     const query = skillSearch.toLowerCase();
                     const matches = SKILL_SUGGESTIONS.filter(
-                      (s) => s.toLowerCase().includes(query) && !skills.includes(s)
+                      (s) => (s.toLowerCase().includes(query) || t(`skillNames.${s}`, s).toLowerCase().includes(query)) && !skills.includes(s)
                     );
                     if (matches.length === 0) return (
                       <p className="text-xs text-slate-400 mb-2">{t('onboarding.step2.noResults', 'No matching skills — add a custom one below')}</p>
@@ -539,7 +539,7 @@ export default function Onboarding() {
                             onClick={() => { toggleSkill(skill); setSkillSearch(''); }}
                             className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-blue-700 transition-colors"
                           >
-                            + {skill}
+                            + {t(`skillNames.${skill}`, skill)}
                           </button>
                         ))}
                         {matches.length > 12 && (
@@ -563,7 +563,7 @@ export default function Onboarding() {
                           onClick={() => toggleSkill(skill)}
                           className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-blue-700 transition-colors"
                         >
-                          {skill}
+                          {t(`skillNames.${skill}`, skill)}
                         </button>
                       ))}
                     </div>
@@ -588,7 +588,7 @@ export default function Onboarding() {
                               ▸
                             </span>
                             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-hover:text-slate-700">
-                              {category}
+                              {t(`skillCategories.${category}`, category)}
                             </span>
                             {selectedInCategory > 0 ? (
                               <span className="text-xs text-blue-600 font-medium">{selectedInCategory} selected</span>
@@ -608,7 +608,7 @@ export default function Onboarding() {
                                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                   }`}
                                 >
-                                  {skill}
+                                  {t(`skillNames.${skill}`, skill)}
                                 </button>
                               ))}
                             </div>

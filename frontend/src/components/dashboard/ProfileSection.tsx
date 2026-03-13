@@ -686,7 +686,7 @@ export default function ProfileSection({
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {profile.skills.map((skill) => (
                           <span key={skill} className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                            {skill}
+                            {t(`skillNames.${skill}`, skill)}
                           </span>
                         ))}
                       </div>

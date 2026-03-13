@@ -346,7 +346,7 @@ export default function PublicProfile() {
                       key={index}
                       className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
                     >
-                      {skill}
+                      {t(`skillNames.${skill}`, skill)}
                     </span>
                   ))}
                 </div>

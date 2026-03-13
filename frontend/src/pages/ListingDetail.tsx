@@ -261,7 +261,7 @@ export default function ListingDetail() {
           <div className="flex flex-wrap gap-1.5">
             {listing.requiredSkills.map((skill: string, idx: number) => (
               <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
-                {skill}
+                {t(`skillNames.${skill}`, skill)}
               </span>
             ))}
           </div>
@@ -571,7 +571,7 @@ export default function ListingDetail() {
                     <div className="flex flex-wrap gap-2">
                       {listing.requiredSkills.map((skill: string, idx: number) => (
                         <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded">
-                          {skill}
+                          {t(`skillNames.${skill}`, skill)}
                         </span>
                       ))}
                     </div>
@@ -868,7 +868,7 @@ export default function ListingDetail() {
               <div className="mt-2 flex flex-wrap gap-1">
                 {listing.requiredSkills.slice(0, 3).map((skill: string, idx: number) => (
                   <span key={idx} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                    {skill}
+                    {t(`skillNames.${skill}`, skill)}
                   </span>
                 ))}
                 {listing.requiredSkills.length > 3 && (

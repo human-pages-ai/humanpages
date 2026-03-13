@@ -287,7 +287,7 @@ export default function JobBoard() {
                       <div className="flex flex-wrap gap-1">
                         {listing.requiredSkills.slice(0, 3).map((skill, idx) => (
                           <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
-                            {skill}
+                            {t(`skillNames.${skill}`, skill)}
                           </span>
                         ))}
                         {listing.requiredSkills.length > 3 && (
