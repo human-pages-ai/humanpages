@@ -922,6 +922,7 @@ export default function Dashboard() {
                     onCheckUsername={checkUsernameAvailability}
                     onUploadPhoto={handleUploadPhoto}
                     onDeletePhoto={handleDeletePhoto}
+                    onEnrichWithCV={loadProfile}
                   />
                   <CvUpload profile={profile} onUpload={loadProfile} />
                   <EducationSection profile={profile} onUpdate={loadProfile} />

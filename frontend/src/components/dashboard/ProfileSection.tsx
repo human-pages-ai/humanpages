@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { Profile } from './types';
+import { api } from '../../lib/api';
 import LocationAutocomplete from '../LocationAutocomplete';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -50,6 +52,8 @@ interface Props {
   onCheckUsername?: (username: string) => Promise<boolean>;
   onUploadPhoto: (file: File) => Promise<void>;
   onDeletePhoto: () => Promise<void>;
+  onEnrichWithCV?: () => void;
+  cvParsing?: boolean;
 }
 
 export default function ProfileSection({
@@ -66,8 +70,38 @@ export default function ProfileSection({
   onCheckUsername,
   onUploadPhoto,
   onDeletePhoto,
+  onEnrichWithCV,
+  cvParsing,
 }: Props) {
   const { t } = useTranslation();
+  const cvInputRef = useRef<HTMLInputElement>(null);
+  const [cvUploading, setCvUploading] = useState(false);
+
+  const handleCvEnrich = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('pdf') && !file.type.includes('word') && !file.name.endsWith('.docx') && !file.name.endsWith('.pdf')) {
+      toast.error('Please upload a PDF or Word document');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setCvUploading(true);
+    try {
+      await api.uploadCV(file);
+      toast.success('Skills enriched from CV!');
+      onEnrichWithCV?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to process CV');
+    } finally {
+      setCvUploading(false);
+      if (cvInputRef.current) cvInputRef.current.value = '';
+    }
+  };
 
   const [usernameError, setUsernameError] = React.useState<string>('');
   const [checkingUsername, setCheckingUsername] = React.useState(false);
@@ -636,9 +670,45 @@ export default function ProfileSection({
 
               {/* Skills & Equipment Card */}
               <div className={`bg-gray-50 rounded-lg p-4${!hasSocial ? ' md:col-span-2' : ''}`}>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                  {t('dashboard.profile.skills')} & {t('dashboard.profile.equipment')}
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    {t('dashboard.profile.skills')} & {t('dashboard.profile.equipment')}
+                  </h3>
+                  {!profile.cvParsedAt && (
+                    <>
+                      <input
+                        ref={cvInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleCvEnrich}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => cvInputRef.current?.click()}
+                        disabled={cvUploading}
+                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                      >
+                        {cvUploading ? (
+                          <>
+                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            Enrich with CV
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="text-gray-500 text-xs">{t('dashboard.profile.skills')}</span>
