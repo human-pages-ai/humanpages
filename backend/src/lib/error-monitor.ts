@@ -1,10 +1,14 @@
 /**
  * Watch Dog — AI Error Monitor
  *
- * Periodically queries Axiom for new errors, fingerprints them,
- * asks Claude to analyze root causes, and sends Telegram alerts.
+ * Reads PM2 log files directly from disk, parses pino JSON lines,
+ * fingerprints errors, asks Claude to analyze root causes, and
+ * sends Telegram alerts. Zero external dependencies — no Axiom needed.
  */
-import { Axiom } from '@axiomhq/js';
+import fs from 'fs/promises';
+import { existsSync, statSync } from 'fs';
+import path from 'path';
+import os from 'os';
 import crypto from 'crypto';
 import { prisma } from './prisma.js';
 import { sendTelegramMessage } from './telegram.js';
@@ -12,9 +16,13 @@ import { logger } from './logger.js';
 
 // ── Types ──────────────────────────────────────────────────────────
 
-interface AxiomMatch {
-  _time?: string;
-  data?: Record<string, any>;
+interface LogLine {
+  level: number;
+  time: number;
+  msg?: string;
+  message?: string;
+  err?: { name?: string; type?: string; message?: string; stack?: string };
+  [key: string]: any;
 }
 
 interface ErrorGroup {
@@ -23,30 +31,43 @@ interface ErrorGroup {
   message: string;
   level: number;
   count: number;
-  sample: Record<string, any>;
+  sample: LogLine;
   firstTime: string;
   lastTime: string;
 }
 
 // ── Configuration ──────────────────────────────────────────────────
 
-const LOOKBACK_MINUTES = 10; // overlap by 2× the check interval to avoid gaps
-const MAX_ERRORS_PER_RUN = 20; // cap to avoid runaway costs
-const ALERT_COOLDOWN_HOURS = 4; // don't re-alert same fingerprint within this window
+const LOOKBACK_MINUTES = 10;
+const MAX_ERRORS_PER_RUN = 20;
+const ALERT_COOLDOWN_HOURS = 4;
+const MAX_LOG_BYTES = 5 * 1024 * 1024; // Read last 5MB of log file
+
+// PM2 log paths — check common locations
+function getLogPaths(): string[] {
+  const home = os.homedir();
+  const appName = process.env.PM2_APP_NAME || 'human-pages';
+  return [
+    // PM2 default locations
+    path.join(home, '.pm2', 'logs', `${appName}-out.log`),
+    path.join(home, '.pm2', 'logs', `${appName}-error.log`),
+    // Custom log dir if set
+    ...(process.env.PM2_LOG_DIR ? [
+      path.join(process.env.PM2_LOG_DIR, `${appName}-out.log`),
+      path.join(process.env.PM2_LOG_DIR, `${appName}-error.log`),
+    ] : []),
+  ];
+}
 
 // ── Fingerprinting ─────────────────────────────────────────────────
 
-/**
- * Normalize an error message by stripping variable parts:
- * UUIDs, numbers, timestamps, file paths, etc.
- */
 function normalizeMessage(msg: string): string {
   return msg
-    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<UUID>') // UUIDs
-    .replace(/\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}[^\s]*/g, '<TIMESTAMP>') // timestamps
-    .replace(/\/[\w./-]+\.(js|ts|mjs):\d+:\d+/g, '<FILE>') // file:line:col
-    .replace(/\b\d{4,}\b/g, '<NUM>') // long numbers (IDs, ports)
-    .replace(/\b0x[0-9a-f]+\b/gi, '<HEX>') // hex values
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<UUID>')
+    .replace(/\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}[^\s]*/g, '<TIMESTAMP>')
+    .replace(/\/[\w./-]+\.(js|ts|mjs):\d+:\d+/g, '<FILE>')
+    .replace(/\b\d{4,}\b/g, '<NUM>')
+    .replace(/\b0x[0-9a-f]+\b/gi, '<HEX>')
     .trim();
 }
 
@@ -56,47 +77,110 @@ function createFingerprint(errorType: string | null, message: string): string {
   return crypto.createHash('sha256').update(input).digest('hex').slice(0, 16);
 }
 
-// ── Axiom Query ────────────────────────────────────────────────────
+// ── Log File Reading ───────────────────────────────────────────────
 
-function getAxiomClient(): Axiom | null {
-  const token = process.env.AXIOM_TOKEN;
-  if (!token) return null;
-  return new Axiom({ token });
+/**
+ * Read the tail of a file (last N bytes) efficiently.
+ */
+async function readTail(filePath: string, maxBytes: number): Promise<string> {
+  try {
+    const stat = statSync(filePath);
+    if (stat.size === 0) return '';
+
+    const fd = await fs.open(filePath, 'r');
+    try {
+      const readStart = Math.max(0, stat.size - maxBytes);
+      const readSize = Math.min(stat.size, maxBytes);
+      const buffer = Buffer.alloc(readSize);
+      await fd.read(buffer, 0, readSize, readStart);
+
+      let content = buffer.toString('utf-8');
+
+      // If we started mid-file, skip the first partial line
+      if (readStart > 0) {
+        const firstNewline = content.indexOf('\n');
+        if (firstNewline >= 0) {
+          content = content.slice(firstNewline + 1);
+        }
+      }
+
+      return content;
+    } finally {
+      await fd.close();
+    }
+  } catch {
+    return '';
+  }
 }
 
 /**
- * Query Axiom for recent errors (level >= 50)
+ * Parse pino JSON log lines, filter to errors from the last N minutes.
  */
-async function fetchRecentErrors(): Promise<AxiomMatch[]> {
-  const axiom = getAxiomClient();
-  if (!axiom) return [];
+function parseRecentErrors(content: string, lookbackMs: number): LogLine[] {
+  const cutoff = Date.now() - lookbackMs;
+  const errors: LogLine[] = [];
 
-  const dataset = process.env.AXIOM_DATASET;
-  if (!dataset) return [];
+  for (const line of content.split('\n')) {
+    if (!line.trim()) continue;
 
-  const apl = `['${dataset}'] | where _time > ago(${LOOKBACK_MINUTES}m) | where level >= 50 | sort by _time desc | take 200`;
+    try {
+      const parsed = JSON.parse(line) as LogLine;
 
-  try {
-    const result = await axiom.query(apl);
-    return (result.matches || []) as AxiomMatch[];
-  } catch (err) {
-    logger.error({ err }, 'Watch Dog: Failed to query Axiom');
-    return [];
+      // Skip non-error lines (pino: 50=error, 60=fatal)
+      if (!parsed.level || parsed.level < 50) continue;
+
+      // Skip old entries
+      if (parsed.time && parsed.time < cutoff) continue;
+
+      // Skip Watch Dog's own log lines to avoid infinite loops
+      const msg = parsed.msg || parsed.message || '';
+      if (msg.startsWith('Watch Dog:')) continue;
+
+      errors.push(parsed);
+    } catch {
+      // Not valid JSON — skip (could be a raw stderr line)
+    }
   }
+
+  return errors;
+}
+
+/**
+ * Fetch recent errors from PM2 log files.
+ */
+async function fetchRecentErrors(): Promise<LogLine[]> {
+  const logPaths = getLogPaths();
+  const lookbackMs = LOOKBACK_MINUTES * 60_000;
+  const allErrors: LogLine[] = [];
+
+  for (const logPath of logPaths) {
+    if (!existsSync(logPath)) continue;
+
+    const content = await readTail(logPath, MAX_LOG_BYTES);
+    if (!content) continue;
+
+    const errors = parseRecentErrors(content, lookbackMs);
+    allErrors.push(...errors);
+
+    if (errors.length > 0) {
+      logger.debug({ logPath, errorCount: errors.length }, 'Watch Dog: Errors found in log file');
+    }
+  }
+
+  return allErrors;
 }
 
 // ── Group Errors ───────────────────────────────────────────────────
 
-function groupErrors(matches: AxiomMatch[]): ErrorGroup[] {
+function groupErrors(logLines: LogLine[]): ErrorGroup[] {
   const groups = new Map<string, ErrorGroup>();
 
-  for (const match of matches) {
-    const data = match.data || {};
-    const errObj = data.err || {};
-    const message = errObj.message || data.msg || data.message || '(unknown error)';
+  for (const line of logLines) {
+    const errObj = line.err || {};
+    const message = errObj.message || line.msg || line.message || '(unknown error)';
     const errorType = errObj.name || errObj.type || null;
-    const level = data.level || 50;
-    const time = match._time || data._time || new Date().toISOString();
+    const level = line.level || 50;
+    const time = line.time ? new Date(line.time).toISOString() : new Date().toISOString();
 
     const fingerprint = createFingerprint(errorType, message);
 
@@ -105,7 +189,7 @@ function groupErrors(matches: AxiomMatch[]): ErrorGroup[] {
       existing.count++;
       if (time > existing.lastTime) {
         existing.lastTime = time;
-        existing.sample = data; // keep newest sample
+        existing.sample = line;
       }
       if (time < existing.firstTime) {
         existing.firstTime = time;
@@ -117,7 +201,7 @@ function groupErrors(matches: AxiomMatch[]): ErrorGroup[] {
         message,
         level,
         count: 1,
-        sample: data,
+        sample: line,
         firstTime: time,
         lastTime: time,
       });
@@ -215,16 +299,16 @@ export async function runErrorMonitor(): Promise<void> {
   logger.info('Watch Dog: Starting error scan');
 
   try {
-    // 1. Fetch recent errors from Axiom
-    const matches = await fetchRecentErrors();
-    if (matches.length === 0) {
+    // 1. Fetch recent errors from PM2 log files
+    const errors = await fetchRecentErrors();
+    if (errors.length === 0) {
       logger.debug('Watch Dog: No errors found');
       return;
     }
 
     // 2. Group by fingerprint
-    const groups = groupErrors(matches);
-    logger.info({ errorGroups: groups.length, rawErrors: matches.length }, 'Watch Dog: Errors grouped');
+    const groups = groupErrors(errors);
+    logger.info({ errorGroups: groups.length, rawErrors: errors.length }, 'Watch Dog: Errors grouped');
 
     // 3. Process each group (up to cap)
     const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
@@ -267,7 +351,6 @@ export async function runErrorMonitor(): Promise<void> {
         const analysis = await analyzeWithClaude(group);
 
         if (existing) {
-          // Update existing record with new analysis
           await prisma.monitoredError.update({
             where: { id: existing.id },
             data: {
@@ -278,7 +361,6 @@ export async function runErrorMonitor(): Promise<void> {
             },
           });
         } else {
-          // Create new tracked error
           await prisma.monitoredError.create({
             data: {
               fingerprint: group.fingerprint,

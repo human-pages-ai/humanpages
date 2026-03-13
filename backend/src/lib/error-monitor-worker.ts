@@ -15,13 +15,7 @@ export function startErrorMonitorWorker(): void {
     return;
   }
 
-  // Check if required config is present
-  if (!process.env.AXIOM_TOKEN || !process.env.AXIOM_DATASET) {
-    logger.info('Watch Dog: Axiom not configured, worker disabled');
-    return;
-  }
-
-  logger.info({ intervalMs: CHECK_INTERVAL_MS }, 'Watch Dog worker started');
+  logger.info({ intervalMs: CHECK_INTERVAL_MS }, 'Watch Dog worker started (reads PM2 logs from disk)');
 
   // Run first check after a short delay (let server finish starting)
   setTimeout(() => {
