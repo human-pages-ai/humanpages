@@ -195,6 +195,23 @@ app.get('/gpt-setup', (req, res, next) => {
   next();
 });
 
+// GPT one-click install redirect
+// When we're in the App Directory: env GPT_APP_DIRECTORY_URL → redirect there (true one-click)
+// Until then: redirect to ChatGPT with pre-filled prompt to guide setup
+app.get('/gpt-setup/go', (_req, res) => {
+  const appDirectoryUrl = process.env.GPT_APP_DIRECTORY_URL;
+  if (appDirectoryUrl) {
+    return res.redirect(302, appDirectoryUrl);
+  }
+  // Pre-fill ChatGPT with a setup prompt — user lands in a chat that walks them through it
+  const prompt = encodeURIComponent(
+    'I want to connect the Human Pages MCP connector. ' +
+    'The MCP server URL is https://mcp.humanpages.ai/api/mcp and it uses OAuth authentication. ' +
+    'Please help me add it as a connector in my settings.'
+  );
+  return res.redirect(302, `https://chatgpt.com/?q=${prompt}`);
+});
+
 // Careers page: inject meta tags for social sharing (keeps "Stop chasing clients." OG image)
 app.get('/:lang/careers', (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
