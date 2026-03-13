@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
-import { api } from '../lib/api';
+import { api, safeGetItem, safeSetItem, safeRemoveItem } from '../lib/api';
 import { analytics } from '../lib/analytics';
 import { getApplyRedirect, getListingApplyIntent, clearListingApplyIntent } from '../lib/applyIntent';
 
@@ -40,8 +40,8 @@ export default function OAuthCallback() {
       return;
     }
 
-    localStorage.removeItem('referrer_id');
-    localStorage.setItem('token', result.token);
+    safeRemoveItem('referrer_id');
+    safeSetItem('token', result.token);
     if (result.isNew) {
       analytics.track('signup_complete', { method: oauthProvider, utm_source: utmSource, utm_medium: utmMedium, utm_campaign: utmCampaign });
 
@@ -56,7 +56,7 @@ export default function OAuthCallback() {
           api.updateProfile({ skills: listingIntent.requiredSkills }).catch(() => {});
         }
         clearListingApplyIntent();
-        localStorage.setItem('hp_onboarding_pending', '1');
+        safeSetItem('hp_onboarding_pending', '1');
         window.location.href = `/listings/${listingIntent.listingId}?signedup=1`;
         return;
       }
@@ -64,18 +64,18 @@ export default function OAuthCallback() {
       // No listing intent — go through normal onboarding
       // Store OAuth photo URL for import prompt on onboarding page
       if (result.oauthPhotoUrl) {
-        localStorage.setItem('oauthPhotoUrl', result.oauthPhotoUrl);
-        localStorage.setItem('oauthProvider', oauthProvider);
+        safeSetItem('oauthPhotoUrl', result.oauthPhotoUrl);
+        safeSetItem('oauthProvider', oauthProvider);
       }
       // Store LinkedIn headline for skill auto-matching on onboarding
       if (result.linkedinHeadline) {
-        localStorage.setItem('linkedinHeadline', result.linkedinHeadline);
+        safeSetItem('linkedinHeadline', result.linkedinHeadline);
       }
       window.location.href = '/onboarding';
     } else {
       // Store LinkedIn headline for existing users too (in case they revisit onboarding)
       if (result.linkedinHeadline) {
-        localStorage.setItem('linkedinHeadline', result.linkedinHeadline);
+        safeSetItem('linkedinHeadline', result.linkedinHeadline);
       }
       // Existing users: check if they have a pending apply intent
       const applyRedirect = getApplyRedirect();
@@ -103,15 +103,15 @@ export default function OAuthCallback() {
     }
 
     // Retrieve and consume the stored OAuth state
-    const storedState = localStorage.getItem('oauth_state');
-    localStorage.removeItem('oauth_state');
+    const storedState = safeGetItem('oauth_state');
+    safeRemoveItem('oauth_state');
 
     if (!storedState) {
       setError('OAuth state missing. Please try logging in again.');
       return;
     }
 
-    const referrerId = localStorage.getItem('referrer_id') || undefined;
+    const referrerId = safeGetItem('referrer_id') || undefined;
 
     completeOAuth(provider as 'google' | 'linkedin', code, storedState, referrerId)
       .catch((err) => {
