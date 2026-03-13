@@ -1250,6 +1250,14 @@ export const api = {
     request<any>(`/admin/watchdog/reanalyze/${id}`, { method: 'POST' }),
   getWatchDogTrends: () =>
     request<any[]>('/admin/watchdog/trends'),
+  triggerAutoFix: (id: string) =>
+    request<any>(`/admin/watchdog/${id}/auto-fix`, { method: 'POST' }),
+  approveAutoFix: (id: string) =>
+    request<any>(`/admin/watchdog/${id}/approve-fix`, { method: 'POST' }),
+  rejectAutoFix: (id: string) =>
+    request<any>(`/admin/watchdog/${id}/reject-fix`, { method: 'POST' }),
+  triggerTestAlert: (data: { errorType?: string; message: string; level?: number; category?: string }) =>
+    request<any>('/admin/watchdog/test-alert', { method: 'POST', body: JSON.stringify(data) }),
 
   // ─── Marketing Ops ───
   getMktOpsLogs: (params: { page?: number; limit?: number; event?: string; staff?: string; from?: string; to?: string } = {}) => {

@@ -1098,8 +1098,30 @@ export interface MonitoredError {
   acknowledgedAt: string | null;
   resolvedAt: string | null;
   samplePayload: any;
+  autoFixStatus: string | null;
+  autoFixProposal: string | null;
+  autoFixBranch: string | null;
+  autoFixTestOutput: string | null;
+  autoFixAttemptedAt: string | null;
+  autoFixMergedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AutoFixProposal {
+  rootCause: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  affectedFiles: string[];
+  proposedFix: string;
+  reasoning: string;
+  estimatedRisk: string;
+}
+
+export interface TestAlertPayload {
+  errorType?: string;
+  message: string;
+  level?: number;
+  category?: string;
 }
 
 export interface WatchDogStats {

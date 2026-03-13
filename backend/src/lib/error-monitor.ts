@@ -14,6 +14,7 @@ import crypto from 'crypto';
 import { prisma } from './prisma.js';
 import { sendTelegramMessage } from './telegram.js';
 import { logger } from './logger.js';
+import { proposeAutoFix, applyAutoFix, sendFixApprovalTelegram, shouldAttemptAutoFix } from './error-autofix.js';
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -636,7 +637,7 @@ export async function processErrorGroups(groups: ErrorGroup[]): Promise<{ newAle
           },
         });
       } else {
-        await prisma.monitoredError.create({
+        const newError = await prisma.monitoredError.create({
           data: {
             fingerprint: group.fingerprint,
             level: group.level,
@@ -652,6 +653,25 @@ export async function processErrorGroups(groups: ErrorGroup[]): Promise<{ newAle
             samplePayload: group.samples[0] as any,
           },
         });
+
+        // Auto-fix: attempt for new FATAL errors with stack traces
+        if (group.level >= 60 && shouldAttemptAutoFix(group)) {
+          try {
+            const proposal = await proposeAutoFix(group);
+            if (proposal && proposal.severity !== 'critical') {
+              const fixResult = await applyAutoFix(newError.id, proposal);
+              if (fixResult.status === 'staged') {
+                await sendFixApprovalTelegram(newError.id, proposal);
+                logger.info(
+                  { errorId: newError.id, branch: fixResult.branchName },
+                  'Watch Dog: Auto-fix staged for FATAL error, awaiting approval',
+                );
+              }
+            }
+          } catch (fixErr) {
+            logger.error({ err: fixErr, errorId: newError.id }, 'Watch Dog: Auto-fix attempt failed');
+          }
+        }
       }
 
       // Telegram: FATAL gets individual alert, ERROR gets batched

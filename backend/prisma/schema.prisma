@@ -1624,6 +1624,14 @@ model MonitoredError {
   // Sample data
   samplePayload Json?    // raw log entry for context
 
+  // Auto-fix (self-healing)
+  autoFixStatus      String?   // none | diagnosing | proposed | applying | testing | staged | approved | merged | failed | rejected
+  autoFixProposal    String?   // proposed diff from Claude Code
+  autoFixBranch      String?   // git branch name where fix is staged
+  autoFixTestOutput  String?   // tsc + test output for debugging
+  autoFixAttemptedAt DateTime?
+  autoFixMergedAt    DateTime?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -10,6 +10,18 @@ const STATUS_COLORS: Record<string, string> = {
   ignored: 'bg-gray-100 text-gray-600',
 };
 
+const AUTOFIX_COLORS: Record<string, string> = {
+  diagnosing: 'bg-purple-100 text-purple-800',
+  proposed: 'bg-indigo-100 text-indigo-800',
+  applying: 'bg-purple-100 text-purple-800',
+  testing: 'bg-yellow-100 text-yellow-800',
+  staged: 'bg-blue-100 text-blue-800',
+  approved: 'bg-cyan-100 text-cyan-800',
+  merged: 'bg-green-100 text-green-800',
+  failed: 'bg-red-100 text-red-800',
+  rejected: 'bg-gray-100 text-gray-600',
+};
+
 const LEVEL_LABELS: Record<number, string> = {
   50: 'ERROR',
   60: 'FATAL',
@@ -61,8 +73,11 @@ export default function AdminWatchDog() {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [reanalyzing, setReanalyzing] = useState<string | null>(null);
+  const [autoFixing, setAutoFixing] = useState<string | null>(null);
+  const [approvingFix, setApprovingFix] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showDiff, setShowDiff] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const loadData = useCallback(async () => {
@@ -129,13 +144,48 @@ export default function AdminWatchDog() {
     }
   };
 
+  const handleAutoFix = async (id: string) => {
+    setAutoFixing(id);
+    setError('');
+    try {
+      await api.triggerAutoFix(id);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Auto-fix failed');
+    } finally {
+      setAutoFixing(null);
+    }
+  };
+
+  const handleApproveFix = async (id: string) => {
+    setApprovingFix(id);
+    setError('');
+    try {
+      await api.approveAutoFix(id);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Approve failed');
+    } finally {
+      setApprovingFix(null);
+    }
+  };
+
+  const handleRejectFix = async (id: string) => {
+    try {
+      await api.rejectAutoFix(id);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Reject failed');
+    }
+  };
+
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Watch Dog v2</h2>
-          <p className="text-sm text-gray-500">Near-realtime AI error monitoring</p>
+          <p className="text-sm text-gray-500">Near-realtime AI error monitoring + self-healing</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -242,7 +292,7 @@ export default function AdminWatchDog() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[err.status] || ''}`}>
                       {err.status.toUpperCase()}
                     </span>
@@ -255,6 +305,12 @@ export default function AdminWatchDog() {
                     {err.aiAnalysis && (
                       <span className="text-xs text-purple-500" title="AI analyzed">
                         AI
+                      </span>
+                    )}
+                    {/* Auto-fix status badge */}
+                    {err.autoFixStatus && err.autoFixStatus !== 'none' && (
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${AUTOFIX_COLORS[err.autoFixStatus] || 'bg-gray-100 text-gray-600'}`}>
+                        Fix: {err.autoFixStatus}
                       </span>
                     )}
                   </div>
@@ -296,6 +352,7 @@ export default function AdminWatchDog() {
 
             {expandedId === err.id && (
               <div className="border-t px-4 py-3 bg-gray-50">
+                {/* AI Analysis section */}
                 {err.aiAnalysis ? (
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1">
@@ -326,6 +383,104 @@ export default function AdminWatchDog() {
                     </button>
                   </div>
                 )}
+
+                {/* Auto-Fix section */}
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Auto-Fix</p>
+
+                  {/* Auto-fix actions */}
+                  {(!err.autoFixStatus || err.autoFixStatus === 'failed' || err.autoFixStatus === 'rejected') && (
+                    <button
+                      onClick={() => handleAutoFix(err.id)}
+                      disabled={autoFixing === err.id}
+                      className="px-3 py-1.5 text-xs bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 disabled:opacity-50"
+                    >
+                      {autoFixing === err.id ? 'Diagnosing...' : 'Auto-Fix with Claude'}
+                    </button>
+                  )}
+
+                  {err.autoFixStatus === 'diagnosing' && (
+                    <div className="flex items-center gap-2 text-xs text-purple-600">
+                      <span className="animate-pulse">Claude is diagnosing the error...</span>
+                    </div>
+                  )}
+
+                  {err.autoFixStatus === 'testing' && (
+                    <div className="flex items-center gap-2 text-xs text-yellow-600">
+                      <span className="animate-pulse">Running TypeScript + unit tests...</span>
+                    </div>
+                  )}
+
+                  {/* Staged: show approve/reject */}
+                  {err.autoFixStatus === 'staged' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                      <p className="text-xs text-blue-900 font-medium mb-2">
+                        Fix staged on branch: <code className="bg-blue-100 px-1 rounded">{err.autoFixBranch}</code>
+                      </p>
+                      <p className="text-xs text-blue-700 mb-2">{err.autoFixTestOutput}</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApproveFix(err.id)}
+                          disabled={approvingFix === err.id}
+                          className="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {approvingFix === err.id ? 'Merging...' : 'Approve & Merge'}
+                        </button>
+                        <button
+                          onClick={() => handleRejectFix(err.id)}
+                          className="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                        >
+                          Reject
+                        </button>
+                        {err.autoFixProposal && (
+                          <button
+                            onClick={() => setShowDiff(showDiff === err.id ? null : err.id)}
+                            className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                          >
+                            {showDiff === err.id ? 'Hide Diff' : 'View Diff'}
+                          </button>
+                        )}
+                      </div>
+                      {showDiff === err.id && err.autoFixProposal && (
+                        <pre className="mt-2 text-xs text-gray-700 bg-white p-3 rounded border overflow-x-auto whitespace-pre-wrap max-h-80">
+                          {err.autoFixProposal}
+                        </pre>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Proposed (critical severity) */}
+                  {err.autoFixStatus === 'proposed' && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded p-3">
+                      <p className="text-xs text-indigo-900 font-medium mb-1">Fix proposed — manual review required (critical severity)</p>
+                      {err.autoFixTestOutput && (
+                        <pre className="text-xs text-gray-600 bg-white p-2 rounded border mt-1 whitespace-pre-wrap">{err.autoFixTestOutput}</pre>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Merged */}
+                  {err.autoFixStatus === 'merged' && (
+                    <div className="bg-green-50 border border-green-200 rounded p-3">
+                      <p className="text-xs text-green-800 font-medium">
+                        Fix merged & deployed
+                        {err.autoFixMergedAt && ` · ${timeAgo(err.autoFixMergedAt)}`}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Failed */}
+                  {err.autoFixStatus === 'failed' && err.autoFixTestOutput && (
+                    <div className="mt-2 bg-red-50 border border-red-200 rounded p-3">
+                      <p className="text-xs text-red-800 font-medium mb-1">Auto-fix failed</p>
+                      <pre className="text-xs text-red-700 bg-white p-2 rounded border whitespace-pre-wrap max-h-40 overflow-y-auto">
+                        {err.autoFixTestOutput}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sample payload */}
                 {err.samplePayload && (
                   <div>
                     <p className="text-xs font-semibold text-gray-500 mb-1">Sample Log Entry</p>
