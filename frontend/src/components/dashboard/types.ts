@@ -40,7 +40,6 @@ export interface Profile {
   skills: string[];
   equipment?: string[];
   languages?: string[];
-  yearsOfExperience?: number;
   contactEmail?: string;
   telegram?: string;
   whatsapp?: string;
