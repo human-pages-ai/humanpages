@@ -50,7 +50,7 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
     <button
       onClick={handleCopy}
       aria-label={copied ? 'Copied to clipboard' : `Copy ${label}`}
-      className={`px-3 py-2 text-xs font-medium rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+      className={`px-3 py-2 text-xs font-medium rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-2 focus:outline-offset-2 focus:outline-blue-500 ${
         copied
           ? 'bg-green-500 text-white'
           : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
@@ -88,7 +88,7 @@ function FAQItem({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left min-h-[48px]"
+        className="w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left min-h-[48px] focus:outline-2 focus:outline-offset-2 focus:outline-blue-500"
       >
         <span className="font-semibold text-slate-900">{question}</span>
         <svg
@@ -245,10 +245,11 @@ export default function GptSetupPage() {
       rootMargin: '0px 0px -100px 0px',
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries, obs) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('animate-fade-in-up');
+          obs.unobserve(entry.target);
         }
       });
     }, observerOptions);
@@ -315,6 +316,14 @@ export default function GptSetupPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Skip to main content link for keyboard/screen reader users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:outline-2 focus:outline-offset-2 focus:outline-blue-500"
+      >
+        Skip to main content
+      </a>
+
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -371,10 +380,10 @@ export default function GptSetupPage() {
             <Logo />
           </Link>
           <nav className="flex items-center gap-4 sm:gap-6 overflow-x-auto">
-            <Link to="/" className="text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+            <Link to="/" className="text-sm text-slate-700 hover:text-slate-900 whitespace-nowrap">
               Home
             </Link>
-            <Link to="/dev" className="text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+            <Link to="/dev" className="text-sm text-slate-700 hover:text-slate-900 whitespace-nowrap">
               Developers
             </Link>
             <LanguageSwitcher />
@@ -388,7 +397,7 @@ export default function GptSetupPage() {
         </div>
       </header>
 
-      <main>
+      <main id="main-content">
         {/* Hero Section */}
         <section className="relative overflow-hidden py-20 md:py-32 px-4">
           <div className="absolute inset-0 gradient-bg opacity-10 -z-10" />

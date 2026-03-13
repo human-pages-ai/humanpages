@@ -302,6 +302,17 @@ export default function DevelopersPage() {
             <p className="text-slate-600 mb-4" dangerouslySetInnerHTML={{ __html: t('dev.install.optionCDesc') }} />
             <CodeBlock code={CLAWHUB_INSTALL} />
           </div>
+
+          {/* GPT cross-link */}
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-slate-700">
+              <strong>Using GPT 5.3 + Agent Mode?</strong>{' '}
+              We have a dedicated setup guide with OAuth connector integration.{' '}
+              <Link to="/gpt-setup" className="text-blue-600 font-medium hover:text-blue-700">
+                Go to GPT Setup →
+              </Link>
+            </p>
+          </div>
         </div>
       </section>
 

@@ -6,8 +6,8 @@
  *   - JWT access token generation (sub-only, no API key in payload)
  *   - Server-side agent key store (in-memory with TTL)
  *   - JWT verification (proper jwt.verify, not jwt.decode)
- *   - Timing-safe string comparison
- *   - PKCE validation (S256 only, per RFC 7636)
+ *   - Timing-safe string comparison (constant-time, no length leak)
+ *   - PKCE validation (S256 only, per RFC 7636, with base64url charset check)
  *   - HTML escaping for rendered pages
  *
  * Used by:
@@ -27,6 +27,24 @@ import { logger } from './logger.js';
 
 const AGENT_KEY_TTL = 30 * 60 * 1000; // 30 minutes
 const MAX_AGENT_KEYS = 5_000;
+const MIN_JWT_SECRET_LENGTH = 32;
+
+// ---------------------------------------------------------------------------
+// JWT_SECRET validation at module load — fail fast
+// ---------------------------------------------------------------------------
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < MIN_JWT_SECRET_LENGTH) {
+    throw new Error(
+      `JWT_SECRET must be set and at least ${MIN_JWT_SECRET_LENGTH} characters long. ` +
+      `Current length: ${secret?.length ?? 0}`,
+    );
+  }
+  return secret;
+}
+
+const JWT_SECRET: string = getJwtSecret();
 
 // ---------------------------------------------------------------------------
 // HTML escaping (for OAuth login page)
@@ -42,12 +60,18 @@ export function escapeHtml(str: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Timing-safe compare
+// Timing-safe compare (constant-time, no length leak)
 // ---------------------------------------------------------------------------
 
 export function timingSafeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  // Pad to equal length to avoid leaking length information via timing
+  const maxLen = Math.max(a.length, b.length);
+  const bufA = Buffer.alloc(maxLen, 0);
+  const bufB = Buffer.alloc(maxLen, 0);
+  Buffer.from(a).copy(bufA);
+  Buffer.from(b).copy(bufB);
+  // Length check after constant-time compare to avoid short-circuit timing leak
+  return crypto.timingSafeEqual(bufA, bufB) && a.length === b.length;
 }
 
 // ---------------------------------------------------------------------------
@@ -63,8 +87,8 @@ export function validatePKCE(
   if (method !== 'S256') return false;
   // RFC 7636 §4.1: code_verifier is 43-128 unreserved characters
   if (!/^[A-Za-z0-9\-._~]{43,128}$/.test(codeVerifier)) return false;
-  // S256 challenge is a 43-char base64url hash
-  if (codeChallenge.length !== 43) return false;
+  // S256 challenge must be a 43-char base64url string (only [A-Za-z0-9\-_])
+  if (!/^[A-Za-z0-9\-_]{43}$/.test(codeChallenge)) return false;
 
   const hash = createHash('sha256').update(codeVerifier).digest('base64url');
   return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(codeChallenge));
@@ -184,7 +208,7 @@ export async function validateAgentApiKey(
 export function generateMcpAccessToken(agentId: string): string {
   return jwt.sign(
     { sub: agentId, type: 'mcp_access' },
-    process.env.JWT_SECRET!,
+    JWT_SECRET,
     { algorithm: 'HS256', expiresIn: '1h' },
   );
 }
@@ -195,10 +219,16 @@ export function generateMcpAccessToken(agentId: string): string {
 
 export function verifyMcpAccessToken(token: string): { agentId: string } | null {
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as Record<string, unknown>;
+    const payload = jwt.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+    }) as Record<string, unknown>;
     if (payload.type !== 'mcp_access' || typeof payload.sub !== 'string') return null;
     return { agentId: payload.sub };
-  } catch {
+  } catch (err) {
+    // Log unexpected errors (not expired/invalid tokens which are expected)
+    if (err instanceof jwt.JsonWebTokenError && !(err instanceof jwt.TokenExpiredError)) {
+      logger.warn({ err: err.message }, 'MCP JWT verification failed');
+    }
     return null;
   }
 }
