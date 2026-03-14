@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Feedback" ADD COLUMN "diagnostics" JSONB;
+ALTER TABLE "Feedback" ADD COLUMN IF NOT EXISTS "diagnostics" JSONB;

@@ -13,18 +13,21 @@
 
 */
 -- AlterEnum
-ALTER TYPE "ActivationMethod" ADD VALUE 'ADMIN';
+ALTER TYPE "ActivationMethod" ADD VALUE IF NOT EXISTS 'ADMIN';
 
--- AlterEnum
-BEGIN;
-CREATE TYPE "AffiliateStatus_new" AS ENUM ('APPROVED', 'SUSPENDED');
-ALTER TABLE "Affiliate" ALTER COLUMN "status" DROP DEFAULT;
-ALTER TABLE "Affiliate" ALTER COLUMN "status" TYPE "AffiliateStatus_new" USING ("status"::text::"AffiliateStatus_new");
-ALTER TYPE "AffiliateStatus" RENAME TO "AffiliateStatus_old";
-ALTER TYPE "AffiliateStatus_new" RENAME TO "AffiliateStatus";
-DROP TYPE "AffiliateStatus_old";
-ALTER TABLE "Affiliate" ALTER COLUMN "status" SET DEFAULT 'APPROVED';
-COMMIT;
+-- AlterEnum (idempotent: only run if PENDING still exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'PENDING' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'AffiliateStatus')) THEN
+    CREATE TYPE "AffiliateStatus_new" AS ENUM ('APPROVED', 'SUSPENDED');
+    ALTER TABLE "Affiliate" ALTER COLUMN "status" DROP DEFAULT;
+    ALTER TABLE "Affiliate" ALTER COLUMN "status" TYPE "AffiliateStatus_new" USING ("status"::text::"AffiliateStatus_new");
+    ALTER TYPE "AffiliateStatus" RENAME TO "AffiliateStatus_old";
+    ALTER TYPE "AffiliateStatus_new" RENAME TO "AffiliateStatus";
+    DROP TYPE "AffiliateStatus_old";
+    ALTER TABLE "Affiliate" ALTER COLUMN "status" SET DEFAULT 'APPROVED';
+  END IF;
+END $$;
 
 -- DropIndex
 DROP INDEX IF EXISTS "Affiliate_code_idx";
@@ -47,7 +50,7 @@ ALTER COLUMN "status" SET DEFAULT 'APPROVED';
 ALTER TABLE "Human" ALTER COLUMN "referralCode" DROP DEFAULT;
 
 -- CreateTable
-CREATE TABLE "X402Payment" (
+CREATE TABLE IF NOT EXISTS "X402Payment" (
     "id" TEXT NOT NULL,
     "agentId" TEXT NOT NULL,
     "resourceType" TEXT NOT NULL,
@@ -63,10 +66,15 @@ CREATE TABLE "X402Payment" (
 );
 
 -- CreateIndex
-CREATE INDEX "X402Payment_agentId_createdAt_idx" ON "X402Payment"("agentId", "createdAt");
+CREATE INDEX IF NOT EXISTS "X402Payment_agentId_createdAt_idx" ON "X402Payment"("agentId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "X402Payment_resourceType_createdAt_idx" ON "X402Payment"("resourceType", "createdAt");
+CREATE INDEX IF NOT EXISTS "X402Payment_resourceType_createdAt_idx" ON "X402Payment"("resourceType", "createdAt");
 
 -- AddForeignKey
-ALTER TABLE "X402Payment" ADD CONSTRAINT "X402Payment_agentId_fkey" FOREIGN KEY ("agentId") REFERENCES "Agent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'X402Payment_agentId_fkey') THEN
+    ALTER TABLE "X402Payment" ADD CONSTRAINT "X402Payment_agentId_fkey" FOREIGN KEY ("agentId") REFERENCES "Agent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
