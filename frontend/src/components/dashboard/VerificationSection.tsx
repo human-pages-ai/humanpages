@@ -214,8 +214,8 @@ export default function VerificationSection({ profile, onProfileUpdate }: Verifi
           </div>
         </div>
 
-        {/* WhatsApp verification */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+        {/* WhatsApp verification — hidden until ready for production */}
+        <div className="!hidden flex items-center justify-between p-3 rounded-lg bg-gray-50">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${profile.whatsappVerified ? 'bg-green-100' : 'bg-gray-100'}`}>
               <svg className={`w-5 h-5 ${profile.whatsappVerified ? 'text-green-600' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 24 24">
