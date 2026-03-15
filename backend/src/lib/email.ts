@@ -14,7 +14,7 @@ function getResend(): Resend | null {
   return _resend;
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'hello@humanpages.ai';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@humanpages.ai';
 const FROM_NAME = process.env.FROM_NAME || 'HumanPages';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
@@ -199,6 +199,7 @@ ${t('email.jobOffer.footer')}
 
 ${reportUrl ? `Report this agent: ${reportUrl}` : ''}
 To unsubscribe from email notifications: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const jobUrl = data.jobDetailUrl || `${FRONTEND_URL}/dashboard`;
@@ -308,6 +309,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
               <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
               ${reportUrl ? `<p style="margin: 8px 0 0;"><a href="${reportUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Report this agent</a></p>` : ''}
               <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+              <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" class="email-link" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
             </td>
           </tr>
         </table>
@@ -358,6 +360,7 @@ ${t('email.jobOffer.footer')}
 
 
 To unsubscribe from email notifications: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const jobUrl = data.jobDetailUrl || `${FRONTEND_URL}/dashboard`;
@@ -469,6 +472,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
             <td style="padding: 24px 40px 32px;">
               <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
               <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+              <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" class="email-link" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
             </td>
           </tr>
         </table>
@@ -528,6 +532,7 @@ ${data.jobDetailUrl}
 ${t('email.jobOffer.footer')}
 
 To unsubscribe from email notifications: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const escapedPreview = preview.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -630,6 +635,7 @@ To unsubscribe from email notifications: ${unsubscribeUrl}
             <td style="padding: 24px 40px 32px;">
               <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
               <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+              <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" class="email-link" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
             </td>
           </tr>
         </table>
@@ -951,6 +957,7 @@ View your dashboard: ${FRONTEND_URL}/dashboard
 ${t('email.jobOffer.footer')}
 
 To unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const htmlContent = `
@@ -976,6 +983,7 @@ To unsubscribe: ${unsubscribeUrl}
         <tr><td style="padding: 24px 40px 32px;">
           <p style="margin: 0; font-size: 12px; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
           <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" style="color: #8b8ba0; font-size: 12px;">Unsubscribe</a></p>
+          <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -1024,6 +1032,7 @@ View your dashboard: ${FRONTEND_URL}/dashboard
 ${t('email.jobOffer.footer')}
 
 To unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const htmlContent = `
@@ -1049,6 +1058,7 @@ To unsubscribe: ${unsubscribeUrl}
         <tr><td style="padding: 24px 40px 32px;">
           <p style="margin: 0; font-size: 12px; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
           <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" style="color: #8b8ba0; font-size: 12px;">Unsubscribe</a></p>
+          <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -1095,6 +1105,7 @@ View your dashboard: ${FRONTEND_URL}/dashboard
 ${t('email.jobOffer.footer')}
 
 To unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   return sendEmailWithOutbox({
@@ -1151,6 +1162,7 @@ View your dashboard: ${FRONTEND_URL}/dashboard
 ${t('email.jobOffer.footer')}
 
 To unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   let htmlCards = '';
@@ -1282,6 +1294,7 @@ To unsubscribe: ${unsubscribeUrl}
             <td style="padding: 24px 40px 32px;">
               <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
               <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+              <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" class="email-link" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
             </td>
           </tr>
         </table>
@@ -1418,6 +1431,7 @@ Profiles with complete information get significantly more job offers. Don't miss
 Human Pages — Get hired for real-world tasks
 
 To unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const htmlContent = `
@@ -1504,6 +1518,7 @@ To unsubscribe: ${unsubscribeUrl}
             <td style="padding: 24px 40px 32px;">
               <p class="email-muted" style="margin: 0; font-size: 12px; line-height: 1.5; color: #8b8ba0;">Human Pages — Get hired for real-world tasks</p>
               <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" class="email-link" style="color: #8b8ba0; font-size: 12px; text-decoration: underline;">Unsubscribe from email notifications</a></p>
+              <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" class="email-link" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
             </td>
           </tr>
         </table>
@@ -1555,6 +1570,7 @@ Apply now: ${data.listingUrl}
 ${t('email.jobOffer.footer')}
 
 To unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const htmlContent = `
@@ -1581,6 +1597,7 @@ To unsubscribe: ${unsubscribeUrl}
         <tr><td style="padding: 24px 40px 32px;">
           <p style="margin: 0; font-size: 12px; color: #8b8ba0;">${t('email.jobOffer.footer')}</p>
           <p style="margin: 8px 0 0;"><a href="${unsubscribeUrl}" style="color: #8b8ba0; font-size: 12px;">Unsubscribe</a></p>
+          <p style="margin: 8px 0 0;"><a href="${FRONTEND_URL}/dashboard" style="color: #8b8ba0; font-size: 11px; text-decoration: none;">Send feedback</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -1778,6 +1795,7 @@ Thanks for your patience!
 Human Pages — Get hired for real-world tasks
 
 To unsubscribe from email notifications: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard
   `.trim();
 
   const htmlContent = `
@@ -1969,12 +1987,13 @@ What gets shown: your profile photo, name, skills, and location — the same inf
 If you'd like to opt in, you can do that here:
 ${dashboardUrl}
 
-Let me know if you have any questions — just reply to this email.
+Let me know if you have any questions on the platform.
 
 Thanks,
 Human Pages
 
-Unsubscribe: ${unsubscribeUrl}`;
+Unsubscribe: ${unsubscribeUrl}
+Send feedback: ${FRONTEND_URL}/dashboard`;
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -1988,7 +2007,7 @@ Unsubscribe: ${unsubscribeUrl}`;
     <p>If you'd like to opt in, you can do that here:<br />
       <a href="${dashboardUrl}">${dashboardUrl}</a>
     </p>
-    <p>Let me know if you have any questions — just reply to this email.</p>
+    <p>Let me know if you have any questions on the platform.</p>
     <p>Thanks,<br />Human Pages</p>
     <p style="color:#999;font-size:12px;margin-top:24px;"><a href="${unsubscribeUrl}" style="color:#999;">Unsubscribe</a></p>
   </div>
@@ -2042,6 +2061,7 @@ export async function sendListingTermsChangedEmail(data: ListingTermsChangedEmai
     `— The HumanPages Team`,
     '',
     `Unsubscribe: ${unsubUrl}`,
+    `Send feedback: ${FRONTEND_URL}/dashboard`,
   ].join('\n');
 
   const htmlContent = `
@@ -2058,6 +2078,7 @@ export async function sendListingTermsChangedEmail(data: ListingTermsChangedEmai
 <p style="color: #666; font-size: 14px;">If you take no action, your application will remain paused until you reconfirm or withdraw.</p>
 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
 <p style="color: #999; font-size: 12px;"><a href="${unsubUrl}" style="color: #999;">Unsubscribe</a></p>
+<p style="color: #999; font-size: 11px;"><a href="${FRONTEND_URL}/dashboard" style="color: #999; text-decoration: none;">Send feedback</a></p>
 </body></html>`;
 
   return sendEmailWithOutbox({

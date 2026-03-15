@@ -23,7 +23,7 @@ async function sendEmailDirect(payload: any): Promise<boolean> {
   if (!apiKey) return false;
 
   const resend = new Resend(apiKey);
-  const from = `${process.env.FROM_NAME || 'HumanPages'} <${process.env.FROM_EMAIL || 'hello@humanpages.ai'}>`;
+  const from = `${process.env.FROM_NAME || 'HumanPages'} <${process.env.FROM_EMAIL || 'noreply@humanpages.ai'}>`;
 
   const { data: response, error } = await resend.emails.send({
     from,

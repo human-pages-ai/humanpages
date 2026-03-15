@@ -316,7 +316,7 @@ async function sendAdminNotification(feedback: any) {
   if (!resendKey) return;
 
   const resend = new Resend(resendKey);
-  const fromEmail = process.env.FROM_EMAIL || 'hello@humanpages.ai';
+  const fromEmail = process.env.FROM_EMAIL || 'noreply@humanpages.ai';
   const fromName = process.env.FROM_NAME || 'HumanPages';
 
   const typeLabel = feedback.type === 'BUG' ? '🐛 Bug Report' : feedback.type === 'FEATURE' ? '💡 Feature Request' : '💬 Feedback';
