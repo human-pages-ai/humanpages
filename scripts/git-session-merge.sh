@@ -38,6 +38,17 @@ safe_git() {
 }
 
 # -------------------------------------------------------------------
+# Acquire workflow lock — prevents other sessions from interleaving
+# their git workflows (stash, checkout, merge, push) with ours.
+# -------------------------------------------------------------------
+WF_LOCK="$REPO_ROOT/scripts/git-workflow-lock.sh"
+if [ -f "$WF_LOCK" ]; then
+  . "$WF_LOCK"
+  acquire_workflow_lock
+  trap 'release_workflow_lock' EXIT INT TERM HUP
+fi
+
+# -------------------------------------------------------------------
 # Check we're on a session branch
 # -------------------------------------------------------------------
 CURRENT="$(git branch --show-current 2>/dev/null)"
