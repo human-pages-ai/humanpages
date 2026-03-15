@@ -5,6 +5,7 @@ import SearchableCombobox from '../common/SearchableCombobox';
 import degrees from '../../data/degrees';
 import certIssuers from '../../data/certIssuers';
 import countries from '../../data/countries';
+import universitiesByCountry from '../../data/universitiesByCountry';
 import { Profile } from './types';
 
 interface EducationEntry {
@@ -30,8 +31,11 @@ interface Props {
   onUpdate?: () => void;
 }
 
-const loadUniversities = () => import('../../data/universities').then(m => m.default);
 const loadFields = () => import('../../data/fieldsOfStudy').then(m => m.default);
+
+const getUniversitiesForCountry = (countryName: string): string[] => {
+  return universitiesByCountry[countryName] || [];
+};
 
 export default function EducationSection({ profile, onUpdate }: Props) {
   const [editingEducation, setEditingEducation] = useState(false);
@@ -122,16 +126,7 @@ export default function EducationSection({ profile, onUpdate }: Props) {
 
         {editingEducation ? (
           <div className="space-y-4">
-            <SearchableCombobox
-              id="edu-inst"
-              label="Institution"
-              value={educationForm.institution}
-              onChange={v => setEducationForm(f => ({ ...f, institution: v }))}
-              options={loadUniversities}
-              placeholder="University / institution"
-              required
-            />
-
+            {/* Row 1: Degree (50%) | Field of Study (50%) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SearchableCombobox
                 id="edu-degree"
@@ -154,17 +149,41 @@ export default function EducationSection({ profile, onUpdate }: Props) {
               />
             </div>
 
-            <SearchableCombobox
-              id="edu-country"
-              label="Country"
-              value={educationForm.country}
-              onChange={v => setEducationForm(f => ({ ...f, country: v }))}
-              options={countries}
-              placeholder="Country"
-              required
-            />
+            {/* Row 2: Country (40%) | Institution (60%) */}
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+              <div className="sm:col-span-2">
+                <SearchableCombobox
+                  id="edu-country"
+                  label="Country"
+                  value={educationForm.country}
+                  onChange={v => {
+                    setEducationForm(f => ({ ...f, country: v, institution: '' }));
+                  }}
+                  options={countries}
+                  placeholder="Country"
+                  required
+                />
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-3">
+                <SearchableCombobox
+                  id="edu-inst"
+                  label="Institution"
+                  value={educationForm.institution}
+                  onChange={v => setEducationForm(f => ({ ...f, institution: v }))}
+                  options={educationForm.country ? getUniversitiesForCountry(educationForm.country) : []}
+                  placeholder="Select or type your institution"
+                  required
+                  allowFreeText
+                />
+                {educationForm.country && (
+                  <p className="text-xs text-gray-500 mt-1">Can't find your institution? Just type the name.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Row 3: Start Year (50%) | End Year (50%) */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Year</label>
                 <input
