@@ -111,7 +111,7 @@ describe("HumanPagesActionProvider", () => {
         humanId: "h1",
         title: "Deliver package",
         description: "Pick up from 123 Main St, deliver to 456 Oak Ave",
-        priceUsdc: 25,
+        priceUsd: 25,
       });
       const parsed = JSON.parse(result);
 
@@ -134,7 +134,7 @@ describe("HumanPagesActionProvider", () => {
         humanId: "h1",
         title: "Test",
         description: "Test",
-        priceUsdc: 5,
+        priceUsd: 5,
       });
       expect(result).toContain("Rate limit exceeded");
     });
@@ -165,7 +165,8 @@ describe("HumanPagesActionProvider", () => {
 
       const result = await provider.markJobPaid({
         jobId: "j1",
-        paymentTxHash: "0xabc123",
+        paymentReference: "0xabc123",
+        paymentMethod: "usdc",
         paymentNetwork: "base",
         paymentAmount: "25.00",
       });
@@ -190,7 +191,7 @@ describe("HumanPagesActionProvider", () => {
       const result = await provider.createListing({
         title: "Need photographer",
         description: "Product photography for e-commerce store",
-        budgetUsdc: 100,
+        budgetUsd: 100,
         workMode: "onsite",
         location: "San Francisco",
       });
