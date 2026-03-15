@@ -1028,8 +1028,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Mid CTA — early mover */}
-        <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-700 px-4">
+        {/* Mid CTA — early mover (hidden) */}
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-700 px-4 hidden">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
               {t('landing.cta.ready')}
@@ -1079,8 +1079,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="py-16 px-4 bg-white">
+        {/* Final CTA (hidden) */}
+        <section className="py-16 px-4 bg-white hidden">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">
               {t('landing.cta.startGetting')}
@@ -1100,8 +1100,8 @@ export default function LandingPage() {
 
       <Footer />
 
-      {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 md:hidden safe-area-pb">
+      {/* Sticky Mobile CTA (hidden) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 md:hidden safe-area-pb hidden">
         <Link
           to="/signup"
           className="block w-full text-center px-6 py-3.5 bg-orange-500 text-white text-lg font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/30"

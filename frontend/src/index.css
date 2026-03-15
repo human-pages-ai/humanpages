@@ -17,3 +17,20 @@ body {
 .safe-area-pt {
   padding-top: env(safe-area-inset-top, 0px);
 }
+
+/* Auto-save feedback animation */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out {
+  animation: fadeOut 2s ease-out forwards;
+}

@@ -48,7 +48,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [showSavedFeedback, setShowSavedFeedback] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tab state — driven by URL search param
   const tabParam = searchParams.get('tab') as DashboardTab | null;
@@ -465,6 +467,12 @@ export default function Dashboard() {
       posthog.capture('profile_updated');
       setProfile(updated);
       initialProfileFormRef.current = form;
+      // Show "Saved" feedback
+      setShowSavedFeedback(true);
+      if (savedFeedbackTimer.current) clearTimeout(savedFeedbackTimer.current);
+      savedFeedbackTimer.current = setTimeout(() => {
+        setShowSavedFeedback(false);
+      }, 2000);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('toast.genericError'));
     } finally {
@@ -769,15 +777,15 @@ export default function Dashboard() {
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
         {/* Identity verification banner */}
         {!profile.emailVerified && !profile.whatsappVerified && (
-          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-yellow-800">{t('dashboard.emailVerification.banner')}</p>
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <p className="text-xs sm:text-sm font-semibold text-yellow-800">{t('dashboard.emailVerification.banner')}</p>
                 <p className="text-xs text-yellow-700 mt-1">{t('dashboard.emailVerification.restricted')}</p>
               </div>
               <button
                 onClick={resendVerification}
-                className="ml-4 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 px-3 py-1.5 rounded whitespace-nowrap"
+                className="w-full sm:w-auto sm:ml-4 text-xs sm:text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 px-3 py-2 sm:py-1.5 rounded whitespace-nowrap"
               >
                 {t('dashboard.emailVerification.resend')}
               </button>
@@ -866,6 +874,15 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Profile info */}
                 <div className="space-y-6">
+                  {/* Auto-save feedback */}
+                  {showSavedFeedback && (
+                    <div className="animate-fade-out flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm font-medium text-green-700">Saved</span>
+                    </div>
+                  )}
                   <ProfileSection
                     profile={profile}
                     editingProfile={editingProfile}
