@@ -6,7 +6,7 @@ export default defineConfig({
     environment: 'node',
     // No setupFiles — unit tests don't need database
     testTimeout: 10000,
-    include: ['src/tests/email.test.ts', 'src/tests/geoLanguage.test.ts'],
+    include: ['src/tests/email.test.ts', 'src/tests/geoLanguage.test.ts', 'src/tests/mcp-unit.test.ts'],
     exclude: ['dist/**', 'node_modules/**'],
     env: {
       JWT_SECRET: 'test-jwt-secret-for-testing-only',
