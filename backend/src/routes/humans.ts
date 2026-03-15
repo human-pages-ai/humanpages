@@ -12,6 +12,7 @@ import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib
 import { calculateDistance, boundingBox, DEFAULT_SEARCH_RADIUS_KM } from '../lib/geo.js';
 import { geocodeLocation } from '../lib/geocode.js';
 import { logger } from '../lib/logger.js';
+import { normalizeCountry } from '../lib/countries.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 import { computeTrustScore } from '../lib/trustScore.js';

@@ -22,6 +22,7 @@ import videoBatchRoutes from './videoBatches.js';
 import watchdogRoutes from './watchdog.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
+import { normalizeCountry } from '../lib/countries.js';
 
 const router = Router();
 
@@ -462,7 +463,8 @@ router.get('/people/filter-options', async (_req: AuthRequest, res) => {
       if (!row.location) continue;
       const parts = row.location.split(',').map((s: string) => s.trim());
       if (parts.length >= 2) {
-        countrySet.add(parts[parts.length - 1]);
+        const normalized = normalizeCountry(parts[parts.length - 1]);
+        if (normalized) countrySet.add(normalized);
       }
     }
     const countries = [...countrySet].sort();
