@@ -833,14 +833,24 @@ router.get('/featured', async (_req, res) => {
       }),
     ]);
 
-    // Deduplicate countries from location strings
-    const countries = new Set<string>();
+    // Extract and deduplicate countries from location strings.
+    // Use a Map keyed by lowercase country name to catch variations (e.g., "Nigeria", "nigeria", "NIGERIA")
+    // and deduplicate them to the canonical form returned by normalizeCountry.
+    const canonicalCountries = new Map<string, string>();
     for (const { location } of countriesRaw) {
       if (!location) continue;
       const parts = location.split(',').map(s => s.trim());
-      const normalized = normalizeCountry(parts[parts.length - 1]);
-      if (normalized) countries.add(normalized);
+      const countryRaw = parts[parts.length - 1];
+      const normalized = normalizeCountry(countryRaw);
+      if (normalized) {
+        // Key by lowercase to deduplicate variations, value is canonical form
+        const lowerKey = normalized.toLowerCase();
+        if (!canonicalCountries.has(lowerKey)) {
+          canonicalCountries.set(lowerKey, normalized);
+        }
+      }
     }
+    const countries = new Set(canonicalCountries.values());
 
     // Quality filter: require 2+ skills and a real bio (20+ chars, not just a date or junk)
     const quality = featuredRaw.filter(h =>
