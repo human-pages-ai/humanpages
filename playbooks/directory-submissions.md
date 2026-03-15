@@ -7,7 +7,7 @@ Hire a human to submit your product to startup directories, SaaS listings, and b
 ## When to Use
 
 - A new product or major version has launched
-- Monthly maintenance submissions are due (new directories appear constantly)
+- New directories have emerged since your last submission sweep (check every 6-12 months)
 - SEO audit reveals low domain authority or few backlinks
 - A competitor appears in directories where you are absent
 
