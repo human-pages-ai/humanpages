@@ -126,10 +126,10 @@ describe('PublicProfile', () => {
     // Check location
     expect(screen.getByText('San Francisco')).toBeInTheDocument();
 
-    // Check skills
-    expect(screen.getByText('react')).toBeInTheDocument();
-    expect(screen.getByText('typescript')).toBeInTheDocument();
-    expect(screen.getByText('node')).toBeInTheDocument();
+    // Check skills (i18n mock returns key, so skillNames.X is rendered)
+    expect(screen.getByText('skillNames.react')).toBeInTheDocument();
+    expect(screen.getByText('skillNames.typescript')).toBeInTheDocument();
+    expect(screen.getByText('skillNames.node')).toBeInTheDocument();
   });
 
   it('shows wallets section', async () => {

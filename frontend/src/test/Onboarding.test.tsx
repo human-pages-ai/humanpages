@@ -9,8 +9,14 @@ vi.mock('../lib/api', () => ({
   api: {
     getProfile: vi.fn(),
     updateProfile: vi.fn(),
-    submitCareerApplication: vi.fn(),
+    uploadProfilePhoto: vi.fn(),
     importOAuthPhoto: vi.fn(),
+    addEducation: vi.fn(),
+    createService: vi.fn(),
+    uploadCV: vi.fn(),
+    submitCareerApplication: vi.fn(),
+    getLinkedInVerifyUrl: vi.fn(),
+    getGitHubVerifyUrl: vi.fn(),
   },
   safeGetItem: vi.fn((key: string) => {
     try { return localStorage.getItem(key); } catch { return null; }
@@ -41,7 +47,6 @@ vi.mock('../lib/safeStorage', () => {
   };
 });
 
-
 // Mock analytics
 vi.mock('../lib/analytics', () => ({
   analytics: {
@@ -62,6 +67,7 @@ vi.mock('react-hot-toast', () => ({
   default: {
     success: vi.fn(),
     error: vi.fn(),
+    promise: vi.fn(),
   },
 }));
 
@@ -77,7 +83,7 @@ vi.mock('../lib/applyIntent', () => ({
   clearListingApplyIntent: () => mockClearListingApplyIntent(),
 }));
 
-// Mock LocationAutocomplete — typing calls onChange(text), selecting calls onChange(text, lat, lng, nbhd)
+// Mock LocationAutocomplete
 vi.mock('../components/LocationAutocomplete', () => ({
   default: ({ id, value, onChange, placeholder }: any) => (
     <div>
@@ -107,27 +113,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-/**
- * Helper: advance past the welcome step by clicking "Get started"
- */
-async function goToSkillsStep() {
-  // Wait for profile to load (skeleton disappears, welcome step appears)
-  await waitFor(() => {
-    expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
-  });
-  // Click "Get started" to move to location step
-  fireEvent.click(screen.getByText('onboarding.getStarted'));
-  // Now on location step — click continue/skip to go to skills
-  await waitFor(() => {
-    expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
-  });
-  fireEvent.click(screen.getByText('onboarding.skipLocation'));
-  // Now on skills step
-  await waitFor(() => {
-    expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
-  });
-}
-
 describe('Onboarding', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
@@ -136,96 +121,88 @@ describe('Onboarding', () => {
     mockGetListingApplyIntent.mockReturnValue(null);
     mockClearListingApplyIntent.mockClear();
 
-    // Set up default mocks
     vi.mocked(api.getProfile).mockResolvedValue({
       id: 'test-id',
       name: 'Test User',
       email: 'test@example.com',
     } as any);
     vi.mocked(api.updateProfile).mockResolvedValue({} as any);
+    vi.mocked(api.createService).mockResolvedValue({} as any);
     vi.mocked(api.submitCareerApplication).mockResolvedValue({} as any);
-
-    // Clean up localStorage
-    localStorage.removeItem('linkedinHeadline');
-    localStorage.removeItem('oauthPhotoUrl');
-    localStorage.removeItem('oauthProvider');
-    localStorage.removeItem('hp_onboarding_step');
-    localStorage.removeItem('hp_onboarding_data');
   });
 
-  describe('Wizard step navigation', () => {
-    it('starts on the welcome step', async () => {
+  describe('Step 1 — Identity', () => {
+    it('starts on step 1 with profile fields', async () => {
       renderWithProviders(<Onboarding />);
 
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
 
-      // Benefits should be visible
-      expect(screen.getByText('onboarding.benefit1')).toBeInTheDocument();
-      expect(screen.getByText('onboarding.getStarted')).toBeInTheDocument();
+      expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
+      expect(screen.getByLabelText('Short Bio')).toBeInTheDocument();
     });
 
-    it('navigates from welcome → location → skills', async () => {
+    it('pre-fills name from profile', async () => {
       renderWithProviders(<Onboarding />);
 
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
-      });
-
-      // Step 0 → 1: Welcome → Location
-      fireEvent.click(screen.getByText('onboarding.getStarted'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
-      });
-
-      // Step 1 → 2: Location → Skills (skip location)
-      fireEvent.click(screen.getByText('onboarding.skipLocation'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
+        expect(screen.getByLabelText('Full Name')).toHaveValue('Test User');
       });
     });
 
-    it('can navigate back from skills → location', async () => {
+    it('requires name to continue', async () => {
+      vi.mocked(api.getProfile).mockResolvedValue({ id: 'test-id', email: 'test@example.com' } as any);
       renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
 
-      // Go back
-      fireEvent.click(screen.getByText('common.back'));
       await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
+
+      // Clear name and submit
+      fireEvent.change(screen.getByLabelText('Full Name'), { target: { value: '' } });
+      fireEvent.click(screen.getByText('Continue to Skills'));
+
+      expect(screen.getByText('Name is required')).toBeInTheDocument();
     });
 
-    it('skip button navigates directly to dashboard from any step', async () => {
+    it('advances to step 2 on submit', async () => {
       renderWithProviders(<Onboarding />);
 
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
 
-      const skipButton = screen.getByText('onboarding.skipToDashboard');
-      fireEvent.click(skipButton);
+      fireEvent.click(screen.getByText('Continue to Skills'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+      await waitFor(() => {
+        expect(screen.getByText('What can you do?')).toBeInTheDocument();
+      });
     });
   });
 
-  describe('Skills step', () => {
-    it('renders skills and location on the skills step', async () => {
+  describe('Step 2 — Skills', () => {
+    async function goToStep2() {
       renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
+      await waitFor(() => {
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByText('Continue to Skills'));
+      await waitFor(() => {
+        expect(screen.getByText('What can you do?')).toBeInTheDocument();
+      });
+    }
 
-      // Popular skills are shown
+    it('shows popular skills', async () => {
+      await goToStep2();
+
       expect(screen.getByText('Content Writing')).toBeInTheDocument();
       expect(screen.getByText('Social Media Management')).toBeInTheDocument();
     });
 
     it('shows skill categories with collapsible sections', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
+      await goToStep2();
 
-      // Category headers are rendered
       expect(screen.getByText(/Local & In-Person/)).toBeInTheDocument();
       expect(screen.getByText(/Home & Personal Services/)).toBeInTheDocument();
 
@@ -234,240 +211,135 @@ describe('Onboarding', () => {
       expect(screen.queryByText('Mystery Shopping')).not.toBeInTheDocument();
     });
 
-    it('can expand collapsed categories and select skills', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
+    it('can expand categories and select skills', async () => {
+      await goToStep2();
 
-      // Expand "Home & Personal Services" category
       fireEvent.click(screen.getByText(/Home & Personal Services/));
 
-      // Skills in expanded category should now be visible
       expect(screen.getByText('Pet Care')).toBeInTheDocument();
       expect(screen.getByText('Dog Walking')).toBeInTheDocument();
-
-      // Select a skill
-      const skillButton = screen.getByRole('button', { name: 'Pet Care' });
-      fireEvent.click(skillButton);
-      expect(skillButton.className).toContain('bg-blue-600');
-    });
-
-    it('can select skills from popular skills section', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
-
-      // Click a popular skill
-      const popularButton = screen.getByRole('button', { name: 'Content Writing' });
-      fireEvent.click(popularButton);
-
-      // Skill should appear as selected chip
-      const selectedChip = screen.getByRole('button', { name: /Content Writing/ });
-      expect(selectedChip.className).toContain('bg-blue-600');
     });
 
     it('can add custom skill', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
+      await goToStep2();
 
-      const customSkillInput = screen.getByPlaceholderText('onboarding.step2.addCustomSkill');
-      fireEvent.change(customSkillInput, {
-        target: { value: 'custom-skill' },
+      const customSkillInput = screen.getByPlaceholderText('Add custom skill...');
+      fireEvent.change(customSkillInput, { target: { value: 'Basket Weaving' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+      expect(screen.getByText('Basket Weaving')).toBeInTheDocument();
+    });
+
+    it('can navigate back to step 1', async () => {
+      await goToStep2();
+
+      fireEvent.click(screen.getByText('← Back to previous step'));
+
+      await waitFor(() => {
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
-
-      const addButton = screen.getByRole('button', { name: 'onboarding.step2.add' });
-      fireEvent.click(addButton);
-
-      expect(screen.getByText(/custom-skill/i)).toBeInTheDocument();
     });
   });
 
-  describe('Location step', () => {
-    it('shows location as optional with helper text', async () => {
+  describe('Step 3 — Service', () => {
+    async function goToStep3() {
       renderWithProviders(<Onboarding />);
-
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
-
-      // Navigate to location step
-      fireEvent.click(screen.getByText('onboarding.getStarted'));
+      fireEvent.click(screen.getByText('Continue to Skills'));
       await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.locationOptional')).toBeInTheDocument();
+        expect(screen.getByText('What can you do?')).toBeInTheDocument();
       });
+      // Select a skill to enable submit
+      fireEvent.click(screen.getByText('Content Writing'));
+      fireEvent.click(screen.getByText('Continue to Service'));
+      await waitFor(() => {
+        expect(screen.getByText('Offer your first service')).toBeInTheDocument();
+      });
+    }
+
+    it('shows service form fields', async () => {
+      await goToStep3();
+
+      expect(screen.getByLabelText('Service Title')).toBeInTheDocument();
+      expect(screen.getByLabelText('Category')).toBeInTheDocument();
+      expect(screen.getByLabelText('Description')).toBeInTheDocument();
     });
 
-    it('shows amber hint when location is typed but not selected from dropdown', async () => {
+    it('can skip step 3', async () => {
+      await goToStep3();
+
+      fireEvent.click(screen.getByText('Skip for now'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Build trust')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Step 4 — Verify', () => {
+    async function goToStep4() {
       renderWithProviders(<Onboarding />);
-
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
-
-      fireEvent.click(screen.getByText('onboarding.getStarted'));
+      fireEvent.click(screen.getByText('Continue to Skills'));
       await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
+        expect(screen.getByText('What can you do?')).toBeInTheDocument();
       });
+      fireEvent.click(screen.getByText('Content Writing'));
+      fireEvent.click(screen.getByText('Continue to Service'));
+      await waitFor(() => {
+        expect(screen.getByText('Offer your first service')).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByText('Skip for now'));
+      await waitFor(() => {
+        expect(screen.getByText('Build trust')).toBeInTheDocument();
+      });
+    }
 
-      const locationInput = screen.getByPlaceholderText('onboarding.step2.locationPlaceholder');
-      fireEvent.change(locationInput, { target: { value: 'manila' } });
+    it('shows verification options', async () => {
+      await goToStep4();
 
-      expect(screen.getByText('onboarding.step2.locationHint')).toBeInTheDocument();
+      expect(screen.getByText('LinkedIn')).toBeInTheDocument();
+      expect(screen.getByText('GitHub')).toBeInTheDocument();
+      expect(screen.getByText('Crypto Wallet')).toBeInTheDocument();
     });
 
-    it('shows green checkmark when location is selected from dropdown', async () => {
-      renderWithProviders(<Onboarding />);
+    it('navigates to dashboard on completion', async () => {
+      await goToStep4();
+
+      fireEvent.click(screen.getByText(/Go to Dashboard/));
 
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
       });
-
-      fireEvent.click(screen.getByText('onboarding.getStarted'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByTestId('select-location'));
-
-      // Location should show with green checkmark
-      expect(screen.getByText('New York, NY, United States')).toBeInTheDocument();
     });
   });
 
   describe('Validation', () => {
-    it('disables submit button when no skills selected', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
-
-      const submitButton = screen.getByRole('button', { name: /onboarding.completeProfile/i });
-      expect(submitButton).toBeDisabled();
-    });
-
-    it('completes with skills only (no location needed)', async () => {
-      renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
-
-      // Select a skill
-      fireEvent.click(screen.getByRole('button', { name: 'Content Writing' }));
-
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
-
-      // After profile submit, should show Telegram connect step (not navigate to dashboard)
-      await waitFor(() => {
-        expect(screen.getByText('Get instant pings from agents')).toBeInTheDocument();
-      });
-
-      expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith({
-        skills: ['Content Writing'],
-      });
-    });
-
-    it('completes with both location and skills', async () => {
-      renderWithProviders(<Onboarding />);
-
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
-      });
-
-      // Navigate to location
-      fireEvent.click(screen.getByText('onboarding.getStarted'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
-      });
-
-      // Select location
-      fireEvent.click(screen.getByTestId('select-location'));
-
-      // Continue to skills (location auto-saves to backend)
-      fireEvent.click(screen.getByText('onboarding.continue'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
-      });
-
-      // Select a skill
-      fireEvent.click(screen.getByRole('button', { name: 'Content Writing' }));
-
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
-
-      // After profile submit, should show Telegram connect step
-      await waitFor(() => {
-        expect(screen.getByText('Get instant pings from agents')).toBeInTheDocument();
-      });
-
-      // Final submit should include location + skills
-      expect(vi.mocked(api.updateProfile)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          location: 'New York, NY, United States',
-          locationLat: 40.7,
-          locationLng: -74.0,
-          skills: ['Content Writing'],
-        })
-      );
-    });
-
-    it('shows error when API call fails', async () => {
-      vi.mocked(api.updateProfile).mockRejectedValueOnce(new Error('Network error'));
+    it('shows error when step 2 API call fails', async () => {
+      vi.mocked(api.updateProfile)
+        .mockResolvedValueOnce({} as any) // step 1 succeeds
+        .mockRejectedValueOnce(new Error('Network error')); // step 2 fails
 
       renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
+      await waitFor(() => {
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
+      });
 
-      fireEvent.click(screen.getByRole('button', { name: 'Content Writing' }));
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
+      fireEvent.click(screen.getByText('Continue to Skills'));
+      await waitFor(() => {
+        expect(screen.getByText('What can you do?')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Content Writing'));
+      fireEvent.click(screen.getByText('Continue to Service'));
 
       await waitFor(() => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('Step persistence', () => {
-    it('resumes from saved step when returning', async () => {
-      // Simulate previously saved wizard state at the skills step (step 2 for 3-step wizard)
-      localStorage.setItem('hp_onboarding_step', '2');
-      localStorage.setItem('hp_onboarding_data', JSON.stringify({
-        skills: ['Content Writing'],
-        location: 'Lagos, Nigeria',
-        locationLat: 6.5,
-        locationLng: 3.4,
-      }));
-
-      renderWithProviders(<Onboarding />);
-
-      // Should resume at skills step with pre-filled data
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
-      });
-
-      // Pre-filled skill should be selected
-      const selectedChip = screen.getByRole('button', { name: /Content Writing/ });
-      expect(selectedChip.className).toContain('bg-blue-600');
-    });
-  });
-
-  describe('LinkedIn headline skill matching', () => {
-    it('pre-selects skills based on LinkedIn headline and expands relevant categories', async () => {
-      localStorage.setItem('linkedinHeadline', 'Software Engineer at Acme Corp');
-
-      renderWithProviders(<Onboarding />);
-
-      // Navigate to skills step
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
-      });
-      fireEvent.click(screen.getByText('onboarding.getStarted'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.location')).toBeInTheDocument();
-      });
-      fireEvent.click(screen.getByText('onboarding.skipLocation'));
-      await waitFor(() => {
-        expect(screen.getByText('onboarding.step2.title')).toBeInTheDocument();
-      });
-
-      // Development & Tech category should be auto-expanded (contains matched skills)
-      expect(screen.getAllByText('Software Development').length).toBeGreaterThanOrEqual(1);
-
-      // Matched skills should be pre-selected
-      const swDevButtons = screen.getAllByRole('button', { name: 'Software Development' });
-      const selectedBtn = swDevButtons.find((btn) => btn.className.includes('bg-blue-600'));
-      expect(selectedBtn).toBeTruthy();
     });
   });
 
@@ -480,41 +352,46 @@ describe('Onboarding', () => {
       });
 
       renderWithProviders(<Onboarding />);
-      await goToSkillsStep();
-
-      // Select a skill and submit
-      fireEvent.click(screen.getByRole('button', { name: 'Content Writing' }));
-      fireEvent.click(screen.getByRole('button', { name: /onboarding.completeProfile/i }));
-
-      // After profile submit, should show Telegram connect step
       await waitFor(() => {
-        expect(screen.getByText('Get instant pings from agents')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
 
-      // Career application should have been auto-submitted
-      expect(vi.mocked(api.submitCareerApplication)).toHaveBeenCalledWith({
-        positionId: 'software-engineer',
-        positionTitle: 'Software Engineer',
-        about: 'Excited to contribute as a Software Engineer.',
-        availability: 'flexible',
+      // Step 1
+      fireEvent.click(screen.getByText('Continue to Skills'));
+      await waitFor(() => { expect(screen.getByText('What can you do?')).toBeInTheDocument(); });
+
+      // Step 2
+      fireEvent.click(screen.getByText('Content Writing'));
+      fireEvent.click(screen.getByText('Continue to Service'));
+      await waitFor(() => { expect(screen.getByText('Offer your first service')).toBeInTheDocument(); });
+
+      // Step 3 skip
+      fireEvent.click(screen.getByText('Skip for now'));
+      await waitFor(() => { expect(screen.getByText('Build trust')).toBeInTheDocument(); });
+
+      // Step 4 complete
+      fireEvent.click(screen.getByText(/Go to Dashboard/));
+
+      await waitFor(() => {
+        expect(vi.mocked(api.submitCareerApplication)).toHaveBeenCalledWith({
+          positionId: 'software-engineer',
+          positionTitle: 'Software Engineer',
+          about: 'Excited to contribute as a Software Engineer.',
+          availability: 'flexible',
+        });
       });
       expect(mockClearApplyIntent).toHaveBeenCalled();
     });
   });
 
   describe('Loading state', () => {
-    it('shows skeleton while profile is loading', async () => {
-      // Make getProfile hang
+    it('shows step 1 after profile loads', async () => {
       let resolveProfile: (value: any) => void;
       vi.mocked(api.getProfile).mockReturnValue(new Promise((resolve) => {
         resolveProfile = resolve;
       }));
 
       renderWithProviders(<Onboarding />);
-
-      // Skeleton should be visible (animate-pulse elements)
-      const pulsingElements = document.querySelectorAll('.animate-pulse');
-      expect(pulsingElements.length).toBeGreaterThan(0);
 
       // Resolve profile
       resolveProfile!({
@@ -523,9 +400,8 @@ describe('Onboarding', () => {
         email: 'test@example.com',
       });
 
-      // Welcome step should appear
       await waitFor(() => {
-        expect(screen.getByText('onboarding.welcomeTitle')).toBeInTheDocument();
+        expect(screen.getByText("Let's get to know you")).toBeInTheDocument();
       });
     });
   });

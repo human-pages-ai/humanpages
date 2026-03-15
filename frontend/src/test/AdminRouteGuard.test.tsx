@@ -53,7 +53,7 @@ vi.mock('../lib/api', () => ({
     getMyReviews: vi.fn().mockResolvedValue({ stats: null }),
     checkAdmin: vi.fn().mockImplementation(() => {
       if (mockCheckAdminResult === 'admin') {
-        return Promise.resolve({ isAdmin: true });
+        return Promise.resolve({ isAdmin: true, isStaff: false, capabilities: [] });
       }
       return Promise.reject(new Error('Admin access required'));
     }),

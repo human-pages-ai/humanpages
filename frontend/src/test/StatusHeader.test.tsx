@@ -127,7 +127,7 @@ describe('StatusHeader', () => {
     });
 
     it('uses correct weights for profile completeness', () => {
-      // Name only = 15/105*100 = 14.28 -> rounds to 14%
+      // Name only = 15/100 = 15%
       const profile = {
         ...mockProfile,
         name: 'John',
@@ -136,7 +136,6 @@ describe('StatusHeader', () => {
         contactEmail: '',
         skills: [],
         services: [],
-        cvParsedAt: undefined,
         wallets: [],
       };
       renderWithProviders(
@@ -149,52 +148,7 @@ describe('StatusHeader', () => {
         />
       );
 
-      expect(screen.getByText('14%')).toBeInTheDocument();
-    });
-
-    it('includes CV as 5% weight in completeness', () => {
-      const profileWithoutCV = {
-        ...mockProfile,
-        name: 'John',
-        bio: '',
-        location: '',
-        contactEmail: '',
-        skills: [],
-        services: [],
-        cvParsedAt: undefined,
-        wallets: [],
-      };
-
-      const profileWithCV = {
-        ...profileWithoutCV,
-        cvParsedAt: '2024-01-15T10:00:00Z',
-      };
-
-      const { rerender } = renderWithProviders(
-        <StatusHeader
-          profile={profileWithoutCV}
-          jobs={[]}
-          reviewStats={null}
-          saving={false}
-          onToggleAvailability={vi.fn()}
-        />
-      );
-
-      // Without CV: 15/105*100 = 14.28 -> rounds to 14%
-      expect(screen.getByText('14%')).toBeInTheDocument();
-
-      rerender(
-        <StatusHeader
-          profile={profileWithCV}
-          jobs={[]}
-          reviewStats={null}
-          saving={false}
-          onToggleAvailability={vi.fn()}
-        />
-      );
-
-      // With CV: 20/105*100 = 19.05 -> rounds to 19%
-      expect(screen.getByText('19%')).toBeInTheDocument();
+      expect(screen.getByText('15%')).toBeInTheDocument();
     });
 
     it('includes wallets as 10% weight in completeness', () => {
@@ -206,7 +160,6 @@ describe('StatusHeader', () => {
         contactEmail: '',
         skills: [],
         services: [],
-        cvParsedAt: undefined,
         wallets: [],
       };
 
@@ -225,8 +178,8 @@ describe('StatusHeader', () => {
         />
       );
 
-      // Without wallet: 15/105*100 = 14.28 -> rounds to 14%
-      expect(screen.getByText('14%')).toBeInTheDocument();
+      // Without wallet: 15/100 = 15%
+      expect(screen.getByText('15%')).toBeInTheDocument();
 
       rerender(
         <StatusHeader
@@ -238,8 +191,8 @@ describe('StatusHeader', () => {
         />
       );
 
-      // With wallet: 25/105*100 = 23.81 -> rounds to 24%
-      expect(screen.getByText('24%')).toBeInTheDocument();
+      // With wallet: 25/100 = 25%
+      expect(screen.getByText('25%')).toBeInTheDocument();
     });
   });
 

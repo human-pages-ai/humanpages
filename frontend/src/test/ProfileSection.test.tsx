@@ -7,8 +7,9 @@ import { Profile } from '../components/dashboard/types';
 // Mock react-i18next – pass through keys as text
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: Record<string, string>) => {
-      if (opts?.username) return key.replace('{{username}}', opts.username);
+    t: (key: string, fallback?: any) => {
+      if (typeof fallback === 'string') return fallback;
+      if (fallback?.username) return key.replace('{{username}}', fallback.username);
       return key;
     },
     i18n: { language: 'en' },

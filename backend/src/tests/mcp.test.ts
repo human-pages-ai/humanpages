@@ -183,11 +183,19 @@ describe('MCP OAuth', () => {
 
   describe('GET /oauth/authorize', () => {
     it('should return an HTML authorization form', async () => {
+      // First register a client to get a valid client_id
+      const regRes = await request(app)
+        .post('/oauth/register')
+        .send({
+          client_name: 'Authorize Test Client',
+          redirect_uris: ['https://chatgpt.com/oauth/callback'],
+        });
+
       const res = await request(app)
         .get('/oauth/authorize')
         .query({
           response_type: 'code',
-          client_id: 'test-client',
+          client_id: regRes.body.client_id,
           redirect_uri: 'https://chatgpt.com/oauth/callback',
           code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
           code_challenge_method: 'S256',
