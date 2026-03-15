@@ -271,7 +271,7 @@ export default function ListingDetail() {
       {/* Not logged in — signup options */}
       {!user && !isClosed && (
         <InlineSignupForm
-          mode={inEmbeddedBrowser ? 'email-primary' : 'email-and-oauth'}
+          mode={inEmbeddedBrowser ? 'email-primary' : 'oauth-primary'}
           onEmailSignup={handleEmailSignup}
           onGoogleSignup={() => handleApplySignup('google')}
           onLinkedInSignup={inEmbeddedBrowser ? undefined : () => handleApplySignup('linkedin')}
@@ -790,8 +790,8 @@ export default function ListingDetail() {
             </div>
           )}
 
-          {/* Slide-up inline signup form for FB in-app browser (mobile) */}
-          {showInlineSignup && !user && inEmbeddedBrowser && (
+          {/* Slide-up inline signup form (mobile — all browsers) */}
+          {showInlineSignup && !user && (
             <div className="bg-white border-t border-gray-200 px-4 pt-4 pb-2 shadow-lg">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-900">Create your free account</p>
@@ -806,9 +806,10 @@ export default function ListingDetail() {
                 </button>
               </div>
               <InlineSignupForm
-                mode="email-primary"
+                mode={inEmbeddedBrowser ? 'email-primary' : 'oauth-primary'}
                 onEmailSignup={handleEmailSignup}
                 onGoogleSignup={() => handleApplySignup('google')}
+                onLinkedInSignup={inEmbeddedBrowser ? undefined : () => handleApplySignup('linkedin')}
                 autoFocus
                 compact
                 embeddedBrowser={inEmbeddedBrowser}
@@ -840,10 +841,10 @@ export default function ListingDetail() {
                   </button>
                 )}
 
-                {/* Not logged in — Normal browser: OAuth signup */}
+                {/* Not logged in — Normal browser: open signup form */}
                 {!user && !inEmbeddedBrowser && (
                   <button
-                    onClick={() => handleApplySignup('google')}
+                    onClick={() => setShowInlineSignup(true)}
                     className="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all text-center"
                   >
                     Sign Up Free to Apply
