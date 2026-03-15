@@ -93,18 +93,23 @@ describe('Email Service', () => {
     });
 
     it('should retry on Resend error and return false after all retries fail', async () => {
+      vi.useFakeTimers();
       process.env.RESEND_API_KEY = 'test-resend-key';
       mockSend.mockResolvedValue({
         data: null,
         error: { message: 'Rate limit exceeded', name: 'rate_limit_error' },
       });
 
-      const result = await sendJobOfferEmail(jobOfferData);
+      const resultPromise = sendJobOfferEmail(jobOfferData);
+      // Advance past all retry delays (1s + 2s + 4s)
+      await vi.advanceTimersByTimeAsync(10_000);
+      const result = await resultPromise;
 
       expect(result).toBe(false);
       // Should have retried 3 times
       expect(mockSend).toHaveBeenCalledTimes(3);
-    }, 15000);
+      vi.useRealTimers();
+    });
   });
 
   describe('sendPasswordResetEmail', () => {
@@ -135,26 +140,34 @@ describe('Email Service', () => {
 
   describe('retry behavior', () => {
     it('should retry on Resend throw and succeed on second attempt', async () => {
+      vi.useFakeTimers();
       process.env.RESEND_API_KEY = 'test-resend-key';
       mockSend
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({ data: { id: 'msg-retry' }, error: null });
 
-      const result = await sendVerificationEmail('user@example.com', 'http://localhost:3000/verify?token=abc');
+      const resultPromise = sendVerificationEmail('user@example.com', 'http://localhost:3000/verify?token=abc');
+      await vi.advanceTimersByTimeAsync(5_000);
+      const result = await resultPromise;
 
       expect(result).toBe(true);
       expect(mockSend).toHaveBeenCalledTimes(2);
-    }, 10000);
+      vi.useRealTimers();
+    });
 
     it('should return false when all retries fail', async () => {
+      vi.useFakeTimers();
       process.env.RESEND_API_KEY = 'test-resend-key';
       mockSend.mockRejectedValue(new Error('Persistent failure'));
 
-      const result = await sendPasswordResetEmail('user@example.com', 'http://example.com/reset');
+      const resultPromise = sendPasswordResetEmail('user@example.com', 'http://example.com/reset');
+      await vi.advanceTimersByTimeAsync(10_000);
+      const result = await resultPromise;
 
       expect(result).toBe(false);
       expect(mockSend).toHaveBeenCalledTimes(3);
-    }, 15000);
+      vi.useRealTimers();
+    });
 
     it('should return false when no provider is configured', async () => {
       delete process.env.RESEND_API_KEY;

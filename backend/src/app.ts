@@ -94,14 +94,15 @@ app.use('/api/feedback', express.json({ limit: '2mb' }));
 app.use('/api/admin/videos', express.json({ limit: '2mb' }));
 
 // Multipart file upload routes MUST be mounted before the global JSON body parser
-// to avoid the parser rejecting multipart/form-data requests
-app.use('/api/photos', photosRoutes);
+// to avoid the parser rejecting multipart/form-data requests.
+// JSON body parser is added per-path so non-multipart endpoints (PATCH, import-oauth) work.
+app.use('/api/photos', express.json({ limit: '10kb' }), photosRoutes);
 app.use('/api/agents/photos', agentPhotosRoutes);
-app.use('/api/listings', listingsRoutes);
+app.use('/api/listings', express.json({ limit: '10kb' }), listingsRoutes);
 app.use('/api/cv', cvRouter);
 
 // Global body parser — 10kb limit for all other routes (bot/abuse protection)
-// Skip JSON parser for multipart/file upload routes to avoid interfering with multer
+// Skip JSON parser for multipart/file upload routes (already handled per-path above)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/cv') || req.path.startsWith('/api/photos') || req.path.startsWith('/api/agents/photos') || req.path.startsWith('/api/listings')) {
     return next();
@@ -136,6 +137,7 @@ app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/blog', blogApiRoutes);
 app.use('/api/careers', careersRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // MCP OAuth 2.0 endpoints (well-known discovery, client registration, authorize, token)
 app.use(mcpOAuthRoutes);
