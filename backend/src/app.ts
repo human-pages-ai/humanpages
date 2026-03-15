@@ -93,8 +93,21 @@ app.use('/api/admin/leads', express.json({ limit: '2mb' }));
 app.use('/api/feedback', express.json({ limit: '2mb' }));
 app.use('/api/admin/videos', express.json({ limit: '2mb' }));
 
+// Multipart file upload routes MUST be mounted before the global JSON body parser
+// to avoid the parser rejecting multipart/form-data requests
+app.use('/api/photos', photosRoutes);
+app.use('/api/agents/photos', agentPhotosRoutes);
+app.use('/api/listings', listingsRoutes);
+app.use('/api/cv', cvRouter);
+
 // Global body parser — 10kb limit for all other routes (bot/abuse protection)
-app.use(express.json({ limit: '10kb' }));
+// Skip JSON parser for multipart/file upload routes to avoid interfering with multer
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/cv') || req.path.startsWith('/api/photos') || req.path.startsWith('/api/agents/photos') || req.path.startsWith('/api/listings')) {
+    return next();
+  }
+  express.json({ limit: '10kb' })(req, res, next);
+});
 app.use(pinoHttp({
   logger,
   autoLogging: {
@@ -116,18 +129,13 @@ app.use('/api/fiat-payment-methods', fiatPaymentMethodsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/agents/activate', agentActivationRoutes);
-app.use('/api/agents/photos', agentPhotosRoutes);
 app.use('/api/agents', agentsRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/blog', blogApiRoutes);
-app.use('/api/feedback', feedbackRoutes);
-app.use('/api/listings', listingsRoutes);
 app.use('/api/careers', careersRoutes);
-app.use('/api/photos', photosRoutes);
-app.use('/api/cv', cvRouter);
 
 // MCP OAuth 2.0 endpoints (well-known discovery, client registration, authorize, token)
 app.use(mcpOAuthRoutes);
