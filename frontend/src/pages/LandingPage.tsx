@@ -561,12 +561,12 @@ function FeaturedSection() {
             <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8">
               {t('landing.featured.title', { defaultValue: 'Real people, ready to work' })}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
               {featured.map((h) => (
                 <Link
                   key={h.id}
                   to={`/humans/${h.id}`}
-                  className="group p-3 sm:p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center min-w-0"
+                  className="group p-3 sm:p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center min-w-0 w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)]"
                 >
                   {h.profilePhotoUrl ? (
                     <img

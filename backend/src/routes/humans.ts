@@ -838,7 +838,8 @@ router.get('/featured', async (_req, res) => {
     for (const { location } of countriesRaw) {
       if (!location) continue;
       const parts = location.split(',').map(s => s.trim());
-      countries.add(parts[parts.length - 1]);
+      const normalized = normalizeCountry(parts[parts.length - 1]);
+      if (normalized) countries.add(normalized);
     }
 
     // Quality filter: require 2+ skills and a real bio (20+ chars, not just a date or junk)
@@ -848,8 +849,40 @@ router.get('/featured', async (_req, res) => {
       h.name.length >= 3
     );
 
-    // Pick up to 8 random profiles and attach signed photo URLs
-    const shuffled = quality.sort(() => Math.random() - 0.5).slice(0, 8);
+    // Pick up to 8 profiles with geographic diversity (max 2 per country)
+    // Group by country, shuffle within each group, then round-robin across countries
+    const byCountry = new Map<string, typeof quality>();
+    for (const h of quality.sort(() => Math.random() - 0.5)) {
+      const parts = h.location?.split(',').map(s => s.trim()) ?? [];
+      const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
+      if (!byCountry.has(country)) byCountry.set(country, []);
+      byCountry.get(country)!.push(h);
+    }
+    // Shuffle the country order, then round-robin pick (max 2 per country)
+    const countryGroups = [...byCountry.values()].sort(() => Math.random() - 0.5);
+    const picked: typeof quality = [];
+    const perCountry = new Map<string, number>();
+    let round = 0;
+    while (picked.length < 8) {
+      let addedAny = false;
+      for (const group of countryGroups) {
+        if (picked.length >= 8) break;
+        if (round < group.length) {
+          const h = group[round];
+          const parts = h.location?.split(',').map(s => s.trim()) ?? [];
+          const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
+          const count = perCountry.get(country) ?? 0;
+          if (count < 2) {
+            picked.push(h);
+            perCountry.set(country, count + 1);
+            addedAny = true;
+          }
+        }
+      }
+      round++;
+      if (!addedAny) break;
+    }
+    const shuffled = picked;
     const featured = await Promise.all(shuffled.map(h => attachPhotoUrl({ ...h })));
 
     const data = {
