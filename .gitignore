@@ -33,6 +33,9 @@ frontend/package.json
 marketing/
 mcp-publisher
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # Pre-push hook logs
 .pre-push-errors.log
 .pre-push-stage.log

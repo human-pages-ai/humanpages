@@ -55,6 +55,13 @@ fail() {
   exit 1
 }
 
+# Helper: print elapsed time for a stage
+stage_time() {
+  STAGE_END=$(date +%s)
+  echo "  $1 (${2}$((STAGE_END - STAGE_START))s)"
+  STAGE_START=$STAGE_END
+}
+
 if [ "$NODE_ENV" = "production" ]; then
   fail "env-check" "NODE_ENV=production. Refusing to run checks against production."
 fi
@@ -67,6 +74,13 @@ fi
 #   PUSH_HEAVY=1  → force heavy
 # ------------------------------------------------------------------
 
+# Figure out what we're pushing vs the remote (used for mode detection + tsc skip)
+UPSTREAM=$(git rev-parse --verify "@{push}" 2>/dev/null \
+  || git merge-base HEAD origin/main 2>/dev/null \
+  || echo "HEAD~1")
+
+CHANGED=$(git diff --name-only "$UPSTREAM" HEAD 2>/dev/null || echo "")
+
 if [ "$PUSH_LITE" = "1" ]; then
   echo "  PUSH_LITE=1 → forcing lite mode"
   MODE="lite"
@@ -76,13 +90,6 @@ elif [ "$PUSH_HEAVY" = "1" ]; then
 else
   # --- Hybrid detection ---
   MODE="lite"
-
-  # Figure out what we're pushing vs the remote
-  UPSTREAM=$(git rev-parse --verify "@{push}" 2>/dev/null \
-    || git merge-base HEAD origin/main 2>/dev/null \
-    || echo "HEAD~1")
-
-  CHANGED=$(git diff --name-only "$UPSTREAM" HEAD 2>/dev/null || echo "")
 
   # Step 1 — File pattern gate (instant)
   for file in $CHANGED; do
@@ -116,6 +123,17 @@ else
 fi
 
 # ------------------------------------------------------------------
+# Detect whether any TS/TSX files changed (used to skip tsc)
+# ------------------------------------------------------------------
+HAS_TS_CHANGES=0
+for file in $CHANGED; do
+  case "$file" in
+    *.ts|*.tsx)
+      HAS_TS_CHANGES=1; break ;;
+  esac
+done
+
+# ------------------------------------------------------------------
 # Environment check: can we run full checks?
 # If tsc isn't available, only run static validation (migrations, lint)
 # ------------------------------------------------------------------
@@ -134,6 +152,8 @@ fi
 
 echo "  Mode: $MODE"
 
+STAGE_START=$(date +%s)
+
 # ------------------------------------------------------------------
 # Regenerate Prisma client so type checks match the latest schema
 # ------------------------------------------------------------------
@@ -142,6 +162,7 @@ if ! (cd backend && npx prisma generate) >$STAGE_LOG 2>&1; then
   echo "  WARNING: prisma generate failed — type checks may report false errors"
   echo "  Run 'cd backend && npx prisma generate' manually if tsc fails"
 fi
+stage_time "Prisma generate" ""
 
 # ------------------------------------------------------------------
 # Safe storage check (fast, no DB needed)
@@ -149,7 +170,7 @@ fi
 # ------------------------------------------------------------------
 echo "  Checking for raw storage usage..."
 if bash scripts/check-safe-storage.sh >$STAGE_LOG 2>&1; then
-  echo "  Safe storage check OK"
+  stage_time "Safe storage check OK" ""
 else
   DETAIL=$(cat $STAGE_LOG)
   fail "safe-storage" \
@@ -166,7 +187,7 @@ fi
 # ------------------------------------------------------------------
 echo "  Validating migration structure..."
 if bash backend/scripts/validate-migrations.sh >$STAGE_LOG 2>&1; then
-  echo "  Migration structure OK"
+  stage_time "Migration structure OK" ""
 else
   ISSUES=$(grep "❌" $STAGE_LOG || echo "Unknown migration structure error")
   fail "migration-structure" \
@@ -189,12 +210,13 @@ if (cd backend && npx prisma migrate diff \
     --to-schema-datamodel ./prisma/schema.prisma \
     --exit-code \
     --shadow-database-url "$SHADOW_URL") >$STAGE_LOG 2>&1; then
-  echo "  No schema drift detected"
+  stage_time "No schema drift detected" ""
 else
   # Check if it's a missing binary vs actual drift
   if grep -q "Could not find schema-engine\|Failed to fetch sha256" $STAGE_LOG 2>/dev/null; then
     echo "  WARNING: Prisma schema-engine not available — skipping drift check"
     echo "  (migration structure validation still passed)"
+    STAGE_START=$(date +%s)
     # Don't fail — the static validation already passed above.
     # The full drift check will run on environments with Prisma installed.
   elif grep -q "P3018\|P3009\|P3006" $STAGE_LOG 2>/dev/null; then
@@ -221,25 +243,73 @@ fi
 # Static-only mode: migration + drift checks passed, skip compile/test
 # ------------------------------------------------------------------
 if [ "$MODE" = "static-only" ]; then
-  echo "=== Static checks passed (compile/test skipped — not available) ==="
+  PUSH_END=$(date +%s)
+  echo "=== Static checks passed in $((PUSH_END - PUSH_START))s (compile/test skipped — not available) ==="
   exit 0
 fi
 
 # ------------------------------------------------------------------
-# Lite checks: tsc (parallel) + backend unit tests
+# Build the concurrently command list dynamically
 # ------------------------------------------------------------------
 LOG="$REPO_ROOT/.pre-push-run.log"
+LITE_TIMEOUT="${PUSH_TIMEOUT_LITE:-90}"
 
+# Names and commands for concurrently — built dynamically
+NAMES=""
+CMDS=""
+
+add_task() {
+  if [ -z "$NAMES" ]; then
+    NAMES="$1"
+    CMDS="$2"
+  else
+    NAMES="$NAMES,$1"
+    # Use a NULL byte separator to handle complex commands
+    CMDS="$CMDS
+$2"
+  fi
+}
+
+# ── TypeScript checks (skip if no .ts/.tsx files changed) ──
+if [ "$HAS_TS_CHANGES" = "1" ]; then
+  add_task "tsc:be" "cd backend && npx tsc --noEmit --incremental --tsBuildInfoFile .tsbuildinfo"
+  add_task "tsc:fe" "cd frontend && npx tsc --noEmit --incremental --tsBuildInfoFile .tsbuildinfo"
+else
+  echo "  Skipping tsc — no .ts/.tsx files changed"
+fi
+
+# ── Backend unit tests ──
+add_task "test:be" "cd backend && npm test"
+
+# ── Frontend unit tests ──
+add_task "test:fe" "cd frontend && npm test"
+
+# ------------------------------------------------------------------
+# Lite checks
+# ------------------------------------------------------------------
 if [ "$MODE" = "lite" ]; then
-  echo "  Running lite checks... (log: $LOG)"
-  npx concurrently --kill-others-on-fail \
-    -n "tsc:be,tsc:fe,test" \
-    "cd backend && npx tsc --noEmit" \
-    "cd frontend && npx tsc --noEmit" \
-    "cd backend && npm test" \
+  echo "  Running lite checks with ${LITE_TIMEOUT}s timeout... (log: $LOG)"
+
+  # Build the concurrently command
+  eval "timeout --signal=TERM --kill-after=10 $LITE_TIMEOUT \
+    npx concurrently --kill-others-on-fail \
+    -n \"$NAMES\" \
+    $(echo "$CMDS" | while IFS= read -r cmd; do printf ' \"%s\"' "$cmd"; done)" \
     >"$LOG" 2>&1
 
-  if [ $? -ne 0 ]; then
+  LITE_EXIT=$?
+
+  if [ $LITE_EXIT -eq 124 ]; then
+    echo "TIMEOUT" > $STAGE_LOG
+    fail "lite-checks-timeout" \
+      "Lite checks exceeded ${LITE_TIMEOUT}s timeout and were killed." \
+      "" \
+      "This usually means tsc or tests are hanging." \
+      "You can retry with: git push" \
+      "Or increase the timeout: PUSH_TIMEOUT_LITE=120 git push" \
+      "" \
+      "Full log: $LOG"
+  elif [ $LITE_EXIT -ne 0 ]; then
     # Strip ANSI color codes for reliable grep matching
     sed 's/\x1b\[[0-9;]*m//g' "$LOG" > $STAGE_LOG
 
@@ -250,8 +320,11 @@ if [ "$MODE" = "lite" ]; then
     if grep -q "\[tsc:fe\].*error TS" $STAGE_LOG 2>/dev/null; then
       FAILED_CHECKS="$FAILED_CHECKS frontend TypeScript errors;"
     fi
-    if grep -q "\[test\].*FAIL\|failing" $STAGE_LOG 2>/dev/null; then
+    if grep -q "\[test:be\].*FAIL\|failing" $STAGE_LOG 2>/dev/null; then
       FAILED_CHECKS="$FAILED_CHECKS backend test failures;"
+    fi
+    if grep -q "\[test:fe\].*FAIL\|failing" $STAGE_LOG 2>/dev/null; then
+      FAILED_CHECKS="$FAILED_CHECKS frontend test failures;"
     fi
     [ -z "$FAILED_CHECKS" ] && FAILED_CHECKS="see log for details"
 
@@ -310,18 +383,18 @@ else
   DEV_PID=$!
 fi
 
+# Add e2e task to the command list (uses extracted script)
+add_task "e2e" "sh scripts/wait-and-e2e.sh $UPSTREAM"
+
 echo "  Running heavy checks (lite + e2e) with ${HEAVY_TIMEOUT}s timeout... (log: $LOG)"
 
 # --- Run with timeout to prevent SIGTERM from git/OS ---
 # Uses `timeout` which sends SIGTERM then SIGKILL after 10s grace
-timeout --signal=TERM --kill-after=10 "$HEAVY_TIMEOUT" \
+eval "timeout --signal=TERM --kill-after=10 $HEAVY_TIMEOUT \
   npx concurrently --kill-others-on-fail \
-    -n "tsc:be,tsc:fe,test,e2e" \
-    "cd backend && npx tsc --noEmit" \
-    "cd frontend && npx tsc --noEmit" \
-    "cd backend && npm test" \
-    "i=0; while [ \$i -lt 30 ]; do curl -sf http://localhost:3001/health >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done; if [ \$i -eq 30 ]; then echo 'Backend failed to start within 30s' >&2; exit 1; fi; i=0; while [ \$i -lt 30 ]; do curl -sf http://localhost:3000 >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done; if [ \$i -eq 30 ]; then echo 'Frontend failed to start within 30s' >&2; exit 1; fi; npx playwright test --config e2e/playwright.config.ts" \
-    >"$LOG" 2>&1
+  -n \"$NAMES\" \
+  $(echo "$CMDS" | while IFS= read -r cmd; do printf ' \"%s\"' "$cmd"; done)" \
+  >"$LOG" 2>&1
 
 HEAVY_EXIT=$?
 
@@ -349,8 +422,11 @@ elif [ $HEAVY_EXIT -ne 0 ]; then
   if grep -q "\[tsc:fe\].*error TS" $STAGE_LOG 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS frontend TypeScript errors;"
   fi
-  if grep -q "\[test\].*FAIL\|failing" $STAGE_LOG 2>/dev/null; then
+  if grep -q "\[test:be\].*FAIL\|failing" $STAGE_LOG 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS backend test failures;"
+  fi
+  if grep -q "\[test:fe\].*FAIL\|failing" $STAGE_LOG 2>/dev/null; then
+    FAILED_CHECKS="$FAILED_CHECKS frontend test failures;"
   fi
   if grep -q "\[e2e\].*failed\|FAILED" $STAGE_LOG 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS e2e test failures;"
