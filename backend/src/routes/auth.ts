@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { BCRYPT_ROUNDS } from '../lib/bcrypt-rounds.js';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
@@ -97,7 +98,7 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
       }
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
     const human = await prisma.human.create({
       data: {
         email,
@@ -278,7 +279,7 @@ router.post('/reset-password', authRateLimiter, async (req, res) => {
     }
 
     // Update password and mark token as used
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     await prisma.$transaction([
       prisma.human.update({

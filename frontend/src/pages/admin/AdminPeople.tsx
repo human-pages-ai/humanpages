@@ -157,7 +157,10 @@ export default function AdminPeople() {
   function extractCountry(location: string | null) {
     if (!location) return '';
     const parts = location.split(',').map((s) => s.trim());
-    return parts.length >= 2 ? parts[parts.length - 1] : '';
+    if (parts.length < 2) return '';
+    let country = parts[parts.length - 1];
+    country = country.replace(/\s*\(.*\)\s*$/, '').replace(/[.,;]+$/, '').trim();
+    return country;
   }
 
   return (

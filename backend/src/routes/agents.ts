@@ -3,6 +3,7 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import dns from 'dns/promises';
 import bcrypt from 'bcryptjs';
+import { BCRYPT_ROUNDS } from '../lib/bcrypt-rounds.js';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
@@ -64,7 +65,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     const keyBytes = crypto.randomBytes(24).toString('hex');
     const apiKey = `hp_${keyBytes}`;
     const apiKeyPrefix = apiKey.substring(0, 8); // "hp_xxxxx"
-    const apiKeyHash = await bcrypt.hash(apiKey, 12);
+    const apiKeyHash = await bcrypt.hash(apiKey, BCRYPT_ROUNDS);
 
     // SSRF prevention: validate webhook URL points to public endpoint
     if (data.webhookUrl && !(await isAllowedUrl(data.webhookUrl))) {

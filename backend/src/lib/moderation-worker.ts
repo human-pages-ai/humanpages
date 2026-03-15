@@ -31,7 +31,7 @@ export function stopModerationWorker(): void {
   }
 }
 
-async function processModerationQueue(): Promise<void> {
+export async function processModerationQueue(): Promise<void> {
   // If we're backing off due to a rate limit, skip processing but still check for delayed items
   if (Date.now() < rateLimitBackoffUntil) {
     const remainingSec = Math.ceil((rateLimitBackoffUntil - Date.now()) / 1000);

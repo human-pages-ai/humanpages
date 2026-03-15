@@ -1,5 +1,6 @@
 #!/bin/sh
 
+PUSH_START=$(date +%s)
 echo "=== Pre-push checks ==="
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -268,7 +269,8 @@ if [ "$MODE" = "lite" ]; then
       "Full log: $LOG"
   fi
 
-  echo "=== Lite checks passed ==="
+  PUSH_END=$(date +%s)
+  echo "=== Lite checks passed in $((PUSH_END - PUSH_START))s ==="
   exit 0
 fi
 
@@ -301,7 +303,7 @@ else
   lsof -ti :3000 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
   lsof -ti :3001 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
   sleep 1
-  npm run dev >$REPO_ROOT/.pre-push-e2e-servers.log 2>&1 &
+  setsid npm run dev >$REPO_ROOT/.pre-push-e2e-servers.log 2>&1 &
   DEV_PID=$!
 fi
 
@@ -347,4 +349,5 @@ if [ $? -ne 0 ]; then
     "E2e server log: $REPO_ROOT/.pre-push-e2e-servers.log"
 fi
 
-echo "=== Heavy checks passed ==="
+PUSH_END=$(date +%s)
+echo "=== Heavy checks passed in $((PUSH_END - PUSH_START))s ==="

@@ -103,7 +103,7 @@ export async function createTestAgent(overrides?: {
   const keyBytes = crypto.randomBytes(24).toString('hex');
   const apiKey = `hp_${keyBytes}`;
   const apiKeyPrefix = apiKey.substring(0, 8);
-  const apiKeyHash = await bcrypt.hash(apiKey, 10);
+  const apiKeyHash = await bcrypt.hash(apiKey, parseInt(process.env.BCRYPT_ROUNDS || '10', 10));
   const verificationToken = crypto.randomBytes(32).toString('hex');
 
   const agent = await prisma.agent.create({

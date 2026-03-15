@@ -44,7 +44,7 @@ describe('Jobs API - Mutual Handshake', () => {
 
   beforeAll(async () => {
     // Create a test human
-    const passwordHash = await bcrypt.hash('password123', 10);
+    const passwordHash = await bcrypt.hash('password123', parseInt(process.env.BCRYPT_ROUNDS || '10', 10));
     const human = await prisma.human.create({
       data: {
         email: 'job-test@example.com',
@@ -68,7 +68,7 @@ describe('Jobs API - Mutual Handshake', () => {
     const keyBytes = crypto.randomBytes(24).toString('hex');
     agentApiKey = `hp_${keyBytes}`;
     const apiKeyPrefix = agentApiKey.substring(0, 8);
-    const apiKeyHash = await bcrypt.hash(agentApiKey, 10);
+    const apiKeyHash = await bcrypt.hash(agentApiKey, parseInt(process.env.BCRYPT_ROUNDS || '10', 10));
     const agent = await prisma.agent.create({
       data: {
         name: 'Test Agent',
@@ -655,7 +655,7 @@ describe('Jobs API - Mutual Handshake', () => {
       const keyBytes2 = crypto.randomBytes(24).toString('hex');
       const otherApiKey = `hp_${keyBytes2}`;
       const apiKeyPrefix2 = otherApiKey.substring(0, 8);
-      const apiKeyHash2 = await bcrypt.hash(otherApiKey, 10);
+      const apiKeyHash2 = await bcrypt.hash(otherApiKey, parseInt(process.env.BCRYPT_ROUNDS || '10', 10));
       const otherAgent = await prisma.agent.create({
         data: {
           name: 'Other Agent',

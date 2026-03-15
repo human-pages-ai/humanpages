@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { BCRYPT_ROUNDS } from '../lib/bcrypt-rounds.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
 import { prisma, identityVerifiedWhere } from '../lib/prisma.js';
@@ -1630,7 +1631,7 @@ router.post('/staff/:id/api-key', async (req: AuthRequest, res) => {
     const randomBytes = crypto.randomBytes(24).toString('hex');
     const apiKey = `hp_${randomBytes}`;
     const apiKeyPrefix = apiKey.substring(0, 8);
-    const apiKeyHash = await bcrypt.hash(apiKey, 12);
+    const apiKeyHash = await bcrypt.hash(apiKey, BCRYPT_ROUNDS);
 
     // Delete existing key if any, then create new (atomic rotation)
     await prisma.$transaction([

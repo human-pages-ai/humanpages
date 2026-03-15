@@ -71,7 +71,7 @@ describe('Time Tracking API', () => {
     it('should authenticate with staff API key', async () => {
       const keyBytes = crypto.randomBytes(24).toString('hex');
       const apiKey = `hp_${keyBytes}`;
-      const apiKeyHash = await bcrypt.hash(apiKey, 12);
+      const apiKeyHash = await bcrypt.hash(apiKey, parseInt(process.env.BCRYPT_ROUNDS || '12', 10));
 
       await prisma.staffApiKey.create({
         data: {

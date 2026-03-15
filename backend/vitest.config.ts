@@ -29,6 +29,7 @@ export default defineConfig({
       NODE_ENV: 'test',
       PHOTO_PIPELINE_DIR: photoPipelineDir,
       AI_ADMIN_API_KEY: 'test-admin-api-key-12345',
+      BCRYPT_ROUNDS: '1',
     },
   },
 });

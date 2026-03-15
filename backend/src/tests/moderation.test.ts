@@ -195,16 +195,10 @@ describe('Moderation Worker', () => {
       data: { contentType: 'profile_photo', contentId: user.id },
     });
 
-    // Import and manually trigger the worker's processing function
+    // Directly invoke the queue processor instead of waiting for a poll cycle
     vi.resetModules();
-    // We need to access the private processModerationQueue function
-    // Instead, we test through the public API by checking state changes
-    const mod = await import('../lib/moderation-worker.js');
-
-    // Start worker, wait a tick, then stop
-    mod.startModerationWorker();
-    await new Promise(r => setTimeout(r, 12_000)); // Wait for one poll cycle
-    mod.stopModerationWorker();
+    const { processModerationQueue } = await import('../lib/moderation-worker.js');
+    await processModerationQueue();
 
     const entry = await prisma.moderationQueue.findFirst({
       where: { contentType: 'profile_photo', contentId: user.id },
@@ -213,7 +207,7 @@ describe('Moderation Worker', () => {
 
     const human = await prisma.human.findUnique({ where: { id: user.id } });
     expect(human!.profilePhotoStatus).toBe('approved');
-  }, 15_000);
+  });
 
   it('should reject flagged profile photos', async () => {
     mockCreate.mockResolvedValueOnce({
@@ -235,10 +229,8 @@ describe('Moderation Worker', () => {
     });
 
     vi.resetModules();
-    const mod = await import('../lib/moderation-worker.js');
-    mod.startModerationWorker();
-    await new Promise(r => setTimeout(r, 12_000));
-    mod.stopModerationWorker();
+    const { processModerationQueue } = await import('../lib/moderation-worker.js');
+    await processModerationQueue();
 
     const entry = await prisma.moderationQueue.findFirst({
       where: { contentType: 'profile_photo', contentId: user.id },
@@ -247,7 +239,7 @@ describe('Moderation Worker', () => {
 
     const human = await prisma.human.findUnique({ where: { id: user.id } });
     expect(human!.profilePhotoStatus).toBe('rejected');
-  }, 15_000);
+  });
 
   it('should handle deleted source records gracefully', async () => {
     // Create a queue entry for a user that no longer exists
@@ -256,10 +248,8 @@ describe('Moderation Worker', () => {
     });
 
     vi.resetModules();
-    const mod = await import('../lib/moderation-worker.js');
-    mod.startModerationWorker();
-    await new Promise(r => setTimeout(r, 12_000));
-    mod.stopModerationWorker();
+    const { processModerationQueue } = await import('../lib/moderation-worker.js');
+    await processModerationQueue();
 
     const entry = await prisma.moderationQueue.findFirst({
       where: { contentId: 'nonexistent-id' },
@@ -267,5 +257,5 @@ describe('Moderation Worker', () => {
     // Should mark as approved (skipped) since source was deleted
     expect(entry!.status).toBe('approved');
     expect(entry!.errorMessage).toMatch(/deleted|no photo/i);
-  }, 15_000);
+  });
 });
