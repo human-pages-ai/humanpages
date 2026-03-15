@@ -278,6 +278,9 @@ fi
 # Heavy checks: lite + e2e (start servers, run playwright)
 # ------------------------------------------------------------------
 
+# Overall timeout for heavy checks (seconds). Override: PUSH_TIMEOUT=300
+HEAVY_TIMEOUT="${PUSH_TIMEOUT:-180}"
+
 # Cleanup trap — kill dev servers on exit
 STARTED_SERVERS=0
 DEV_PID=""
@@ -307,16 +310,35 @@ else
   DEV_PID=$!
 fi
 
-echo "  Running heavy checks (lite + e2e)... (log: $LOG)"
-npx concurrently --kill-others-on-fail \
-  -n "tsc:be,tsc:fe,test,e2e" \
-  "cd backend && npx tsc --noEmit" \
-  "cd frontend && npx tsc --noEmit" \
-  "cd backend && npm test" \
-  "i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3001/health >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && i=0; while [ \$i -lt 60 ]; do curl -sf http://localhost:3000 >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done && npx playwright test --config e2e/playwright.config.ts" \
-  >"$LOG" 2>&1
+echo "  Running heavy checks (lite + e2e) with ${HEAVY_TIMEOUT}s timeout... (log: $LOG)"
 
-if [ $? -ne 0 ]; then
+# --- Run with timeout to prevent SIGTERM from git/OS ---
+# Uses `timeout` which sends SIGTERM then SIGKILL after 10s grace
+timeout --signal=TERM --kill-after=10 "$HEAVY_TIMEOUT" \
+  npx concurrently --kill-others-on-fail \
+    -n "tsc:be,tsc:fe,test,e2e" \
+    "cd backend && npx tsc --noEmit" \
+    "cd frontend && npx tsc --noEmit" \
+    "cd backend && npm test" \
+    "i=0; while [ \$i -lt 30 ]; do curl -sf http://localhost:3001/health >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done; if [ \$i -eq 30 ]; then echo 'Backend failed to start within 30s' >&2; exit 1; fi; i=0; while [ \$i -lt 30 ]; do curl -sf http://localhost:3000 >/dev/null 2>&1 && break; i=\$((i+1)); sleep 1; done; if [ \$i -eq 30 ]; then echo 'Frontend failed to start within 30s' >&2; exit 1; fi; npx playwright test --config e2e/playwright.config.ts" \
+    >"$LOG" 2>&1
+
+HEAVY_EXIT=$?
+
+if [ $HEAVY_EXIT -eq 124 ]; then
+  # Exit 124 = timeout expired (GNU coreutils timeout)
+  echo "TIMEOUT" > $STAGE_LOG
+  fail "heavy-checks-timeout" \
+    "Heavy checks exceeded ${HEAVY_TIMEOUT}s timeout and were killed." \
+    "" \
+    "This usually means dev servers were slow to start or e2e tests hung." \
+    "You can retry with: git push" \
+    "Or increase the timeout: PUSH_TIMEOUT=300 git push" \
+    "Or skip e2e: PUSH_LITE=1 git push" \
+    "" \
+    "Full log: $LOG" \
+    "E2e server log: $REPO_ROOT/.pre-push-e2e-servers.log"
+elif [ $HEAVY_EXIT -ne 0 ]; then
   # Strip ANSI color codes for reliable grep matching
   sed 's/\x1b\[[0-9;]*m//g' "$LOG" > $STAGE_LOG
 
@@ -332,6 +354,9 @@ if [ $? -ne 0 ]; then
   fi
   if grep -q "\[e2e\].*failed\|FAILED" $STAGE_LOG 2>/dev/null; then
     FAILED_CHECKS="$FAILED_CHECKS e2e test failures;"
+  fi
+  if grep -q "Backend failed to start\|Frontend failed to start" "$LOG" 2>/dev/null; then
+    FAILED_CHECKS="$FAILED_CHECKS dev server startup failed;"
   fi
   [ -z "$FAILED_CHECKS" ] && FAILED_CHECKS="see log for details"
 
