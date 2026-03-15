@@ -106,7 +106,7 @@ describe('MCP Server', () => {
   });
 
   describe('tools/list', () => {
-    it('should list all 16 tools', async () => {
+    it('should list all 35 tools', async () => {
       const res = await client.send({
         jsonrpc: '2.0',
         id: id(),
@@ -115,7 +115,7 @@ describe('MCP Server', () => {
       });
 
       const tools = res.result.tools;
-      expect(tools).toHaveLength(16);
+      expect(tools).toHaveLength(35);
 
       const names = tools.map((t: any) => t.name);
       expect(names).toContain('search_humans');
@@ -134,6 +134,8 @@ describe('MCP Server', () => {
       expect(names).toContain('get_activation_status');
       expect(names).toContain('get_payment_activation');
       expect(names).toContain('verify_payment_activation');
+      expect(names).toContain('list_playbooks');
+      expect(names).toContain('get_playbook');
     });
 
     it('should have input schemas for all tools', async () => {
@@ -189,6 +191,7 @@ describe('MCP Server', () => {
       });
 
       expect(res.result.content[0].text).toContain('No humans found');
+      expect(res.result.content[0].text).toContain('create_listing');
     });
 
     it('should include skills but not contact or wallet in results', async () => {

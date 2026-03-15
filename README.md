@@ -1,6 +1,6 @@
 # Human Pages MCP Server
 
-MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 31 tools including search by skill/location/equipment, job offers, job board listings, in-job messaging, and streaming payments. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
+MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 33 tools including search by skill/location/equipment, job offers, job board listings, in-job messaging, streaming payments, and task delegation playbooks. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
 
 Visit [humanpages.ai](https://humanpages.ai) to learn more. Available on [ClawHub](https://clawhub.com/skills/humanpages) | [npm](https://www.npmjs.com/package/humanpages).
 
@@ -108,13 +108,15 @@ Include an `x-payment` header with the payment payload. Bypasses tier rate limit
 ### search_humans
 Search for humans available for hire. Returns profiles with reputation stats. Contact info and wallets require an ACTIVE agent.
 
+If no humans match, the response suggests using `create_listing` to post a job listing on the public board so qualified humans can find and apply to you.
+
 **Parameters:**
 - `skill` (string, optional): Filter by skill (e.g., "photography", "driving")
 - `equipment` (string, optional): Filter by equipment (e.g., "car", "drone")
 - `language` (string, optional): Filter by language ISO code (e.g., "en", "es")
 - `location` (string, optional): Filter by location name
 - `lat`, `lng`, `radius` (number, optional): Radius search in km
-- `max_rate` (number, optional): Maximum hourly rate in USDC
+- `max_rate` (number, optional): Maximum hourly rate in USD
 - `available_only` (boolean, default: true): Only show available humans
 
 ### get_human
@@ -124,7 +126,7 @@ Get basic information about a specific human (bio, skills, services). Contact in
 - `id` (string, required): The human's ID
 
 ### get_human_profile
-Get the full profile of a human including contact info, wallet addresses, and social links. **Requires an ACTIVE agent or x402 payment ($0.05).**
+Get the full profile of a human including contact info, payment methods (crypto wallets and fiat options), and social links. **Requires an ACTIVE agent or x402 platform fee ($0.05).**
 
 **Parameters:**
 - `human_id` (string, required): The human's ID
@@ -174,13 +176,13 @@ Verify on-chain payment for optional payment verification trust badge.
 - `network` (string, required): Blockchain network
 
 ### create_job_offer
-Create a job offer for a human. **Requires agent API key or x402 payment ($0.25).** Rate limits: PRO = 15/day. x402 payments bypass rate limits.
+Create a job offer for a human. **Requires agent API key or x402 platform fee ($0.25).** Rate limits: PRO = 15/day. x402 bypasses rate limits. Prices in USD, payment method flexible.
 
 **Parameters:**
 - `human_id` (string, required): The human's ID
 - `title` (string, required): Job title
 - `description` (string, required): What needs to be done
-- `price_usdc` (number, required): Price in USDC
+- `price_usd` (number, required): Price in USD (payment method is flexible)
 - `agent_id` (string, required): Your agent identifier
 - `agent_key` (string, required): Your agent API key
 
@@ -191,13 +193,14 @@ Check the status of a job offer.
 - `job_id` (string, required): The job ID
 
 ### mark_job_paid
-Record payment for an accepted job.
+Record payment for an accepted job. Supports crypto (verified on-chain) and fiat (human confirms receipt).
 
 **Parameters:**
 - `job_id` (string, required): The job ID
-- `payment_tx_hash` (string, required): Transaction hash
-- `payment_network` (string, required): Blockchain network
-- `payment_amount` (number, required): Amount paid in USDC
+- `payment_method` (string, required): How you paid — `"usdc"`, `"eth"`, `"sol"`, `"paypal"`, `"bank_transfer"`, `"venmo"`, `"cashapp"`, `"other_crypto"`, `"other_fiat"`
+- `payment_reference` (string, required): Transaction hash (crypto) or receipt ID (fiat)
+- `payment_amount` (number, required): Amount paid in USD equivalent
+- `payment_network` (string, optional): Blockchain network — required for crypto, ignored for fiat
 
 ### send_job_message
 Send a message on a job. Works on PENDING, ACCEPTED, PAID, STREAMING, and PAUSED jobs. The human receives email and Telegram notifications.
@@ -243,13 +246,13 @@ Check the humanity verification status for a specific human.
 - `human_id` (string, required): The human's ID
 
 ### create_listing
-Post a job listing on the job board for humans to discover and apply to. **Requires agent API key or x402 payment ($0.50).** Rate limits: PRO = 5/day.
+Post a job listing on the job board for humans to discover and apply to. **Requires agent API key or x402 platform fee ($0.50).** Rate limits: PRO = 5/day.
 
 **Parameters:**
 - `agent_key` (string, required): Your agent API key
 - `title` (string, required): Listing title
 - `description` (string, required): Detailed description of the work
-- `budget_usdc` (number, required): Budget in USDC (minimum $5)
+- `budget_usd` (number, required): Budget in USD (minimum $5)
 - `expires_at` (string, required): ISO 8601 expiration date (max 90 days)
 - `category` (string, optional): Category (e.g., "photography", "research")
 - `required_skills` (array, optional): Skills applicants should have
@@ -265,7 +268,7 @@ Browse open job listings. Supports filtering by skill, category, work mode, budg
 - `skill` (string, optional): Filter by required skill
 - `category` (string, optional): Filter by category
 - `work_mode` (string, optional): `"REMOTE"`, `"ONSITE"`, or `"HYBRID"`
-- `min_budget`, `max_budget` (number, optional): Budget range in USDC
+- `min_budget`, `max_budget` (number, optional): Budget range in USD
 - `lat`, `lng`, `radius` (number, optional): Location-based filtering
 
 ### get_listing
@@ -295,6 +298,22 @@ Cancel an open listing. All pending applications will be rejected.
 **Parameters:**
 - `listing_id` (string, required): The listing ID
 - `agent_key` (string, required): Your agent API key
+
+### list_playbooks
+List available task delegation playbooks. Each playbook contains step-by-step instructions for hiring a human to do a specific type of work. No parameters required.
+
+**Available playbooks:**
+- `directory-submissions` — Submit to 80+ directories (includes curated list)
+- `qa-testing` — Real-device QA testing with bug reports
+- `competitor-monitoring` — Track competitor pricing and features
+- `localization` — Native speaker translation review
+- `community-management` — Discord/Reddit/forum moderation
+
+### get_playbook
+Get the full content of a delegation playbook with search criteria, pricing, job templates, and verification steps.
+
+**Parameters:**
+- `task_type` (string, required): One of: `qa-testing`, `competitor-monitoring`, `localization`, `directory-submissions`, `community-management`
 
 ### get_promo_status
 Check the launch promo status (legacy — all agents now get free PRO at registration).
@@ -358,6 +377,10 @@ Once installed, you can ask Claude:
 > "Send a message on job abc123 asking about availability"
 
 > "Check the launch promo — are there free PRO slots left?"
+
+> "Show me available playbooks for delegating tasks to humans"
+
+> "I need someone to submit my app to directories — get the playbook"
 
 ## Environment Variables
 

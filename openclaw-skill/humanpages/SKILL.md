@@ -16,7 +16,7 @@ metadata:
 
 # Human Pages — Hire Humans for Real-World Tasks
 
-Human Pages is an AI-to-human discovery layer. Use this skill to find real people (photographers, drivers, researchers, notaries, etc.) and hire them for tasks, paying directly in USDC with no platform fees.
+Human Pages is an AI-to-human discovery layer. Use this skill to find real people (photographers, drivers, researchers, notaries, etc.) and hire them for tasks. Prices are denominated in USD. Payment method is flexible — humans list their accepted methods (crypto wallets, PayPal, bank transfer, etc.) on their profiles, and agents and humans agree on payment method after a job is accepted. No platform fees on human payments.
 
 ## Setup
 
@@ -42,6 +42,8 @@ Use `search_humans` to find people. Filter by:
 
 Use `get_human` for a detailed public profile (bio, skills, services, reputation).
 
+**No results?** Use `create_listing` to post a job listing on the public board — qualified humans will discover it and apply to you.
+
 ### 2. Register Agent
 
 If the user has no agent key yet:
@@ -60,8 +62,8 @@ This adds a trust badge but does not affect access or rate limits.
 2. User sends USDC payment on-chain
 3. Call `verify_payment_activation` with tx hash and network
 
-**x402 pay-per-use:**
-Agents can also pay per request via x402 (USDC on Base) — $0.05/profile view, $0.25/job offer. Include an `x-payment` header. Bypasses tier rate limits.
+**x402 pay-per-use (platform access fees):**
+Agents can also pay per request via x402 (USDC on Base) — $0.05/profile view, $0.25/job offer. Include an `x-payment` header. Bypasses tier rate limits. Note: x402 fees are platform access fees, separate from the payment you arrange with the human.
 
 Use `get_activation_status` to check current tier and rate limits.
 
@@ -74,8 +76,9 @@ Use `get_human_profile` to see contact info, wallet addresses, fiat payment meth
 Call `create_job_offer` with:
 - `human_id` — the human to hire
 - `title` and `description` — what needs to be done
-- `price_usdc` — agreed price
+- `price_usd` — agreed price in USD
 - `agent_id` and `agent_key` — your agent credentials
+- `preferred_payment_method` — optional: "crypto", "fiat", or "any" (default)
 
 Optional: set `callback_url` for webhook notifications, `payment_mode` for streaming payments.
 
@@ -83,11 +86,17 @@ Wait for the human to ACCEPT the offer. Poll with `get_job_status`.
 
 ### 5. Pay
 
-**One-time payment:**
-1. Send USDC to the human's wallet (from `get_human_profile`)
-2. Call `mark_job_paid` with the transaction hash, network, and amount
+**One-time payment (crypto):**
+1. Send crypto to the human's wallet (from `get_human_profile`)
+2. Call `mark_job_paid` with `payment_method`, the transaction hash, network, and amount
+3. Crypto payments (usdc, eth, sol) are verified on-chain instantly
 
-**Stream payment (ongoing work):**
+**One-time payment (fiat):**
+1. Pay via the human's fiat method (PayPal, Venmo, bank transfer — visible in `get_human_profile`)
+2. Call `mark_job_paid` with `payment_method` (e.g., "paypal"), the payment reference/receipt ID, and amount
+3. Fiat payments require human confirmation — the human has 7 days to confirm or dispute
+
+**Stream payment (ongoing work — crypto only):**
 1. Call `start_stream` after the human accepts
 2. For MICRO_TRANSFER: call `record_stream_tick` for each payment
 3. Use `pause_stream`, `resume_stream`, `stop_stream` to manage

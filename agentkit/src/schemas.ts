@@ -25,7 +25,7 @@ export const SearchHumansSchema = z
     maxRate: z
       .number()
       .optional()
-      .describe("Maximum hourly rate in USDC"),
+      .describe("Maximum hourly rate in USD"),
     available: z
       .boolean()
       .optional()
@@ -70,9 +70,9 @@ export const CreateJobOfferSchema = z
     description: z
       .string()
       .describe("Detailed description of what needs to be done"),
-    priceUsdc: z
+    priceUsd: z
       .number()
-      .describe("Payment amount in USDC"),
+      .describe("Payment amount in USD. Payment method (crypto or fiat) is flexible — agreed after acceptance."),
     paymentMode: z
       .enum(["ONE_TIME", "STREAM"])
       .optional()
@@ -107,19 +107,22 @@ export const MarkJobPaidSchema = z
     jobId: z
       .string()
       .describe("The ID of the job to mark as paid"),
-    paymentTxHash: z
+    paymentMethod: z
+      .enum(["usdc", "eth", "sol", "paypal", "bank_transfer", "venmo", "cashapp", "other_crypto", "other_fiat"])
+      .describe("How you paid. Crypto (usdc, eth, sol, other_crypto) = verified on-chain. Fiat (paypal, bank_transfer, venmo, cashapp, other_fiat) = human confirms receipt."),
+    paymentReference: z
       .string()
-      .describe("On-chain transaction hash of the payment"),
+      .describe("Transaction hash (crypto) or receipt ID / reference number (fiat)"),
     paymentNetwork: z
       .string()
-      .default("base")
-      .describe("Network the payment was sent on (e.g. 'base', 'ethereum')"),
+      .optional()
+      .describe("Blockchain network (e.g. 'base', 'ethereum'). Required for crypto, ignored for fiat."),
     paymentAmount: z
       .string()
-      .describe("Amount paid (as string to preserve precision)"),
+      .describe("Amount paid in USD equivalent (as string to preserve precision)"),
   })
   .strip()
-  .describe("Record an on-chain payment for an accepted job");
+  .describe("Record payment for an accepted job (crypto or fiat)");
 
 export const CreateListingSchema = z
   .object({
@@ -129,10 +132,10 @@ export const CreateListingSchema = z
     description: z
       .string()
       .describe("Detailed description of the work needed"),
-    budgetUsdc: z
+    budgetUsd: z
       .number()
       .min(5)
-      .describe("Budget in USDC (minimum $5)"),
+      .describe("Budget in USD (minimum $5)"),
     category: z
       .string()
       .optional()
@@ -198,11 +201,11 @@ export const BrowseListingsSchema = z
     minBudget: z
       .number()
       .optional()
-      .describe("Minimum budget in USDC"),
+      .describe("Minimum budget in USD"),
     maxBudget: z
       .number()
       .optional()
-      .describe("Maximum budget in USDC"),
+      .describe("Maximum budget in USD"),
     lat: z
       .number()
       .optional()

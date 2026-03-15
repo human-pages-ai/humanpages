@@ -111,7 +111,7 @@ export class HumanPagesActionProvider extends ActionProvider {
   @CreateAction({
     name: "create_job_offer",
     description:
-      "Send a job offer to a specific human on Human Pages. Specify what needs to be done, the payment amount in USDC, and optionally a webhook URL for status updates. The human will be notified and can accept or reject. Costs 1 offer from your tier allowance (BASIC: 1/2 days, PRO: 15/day).",
+      "Send a job offer to a specific human on Human Pages. Specify what needs to be done and the payment amount in USD. Payment method (crypto or fiat) is flexible — agreed between agent and human after acceptance. The human will be notified and can accept or reject. Costs 1 offer from your tier allowance (BASIC: 1/2 days, PRO: 15/day).",
     schema: CreateJobOfferSchema,
   })
   async createJobOffer(args: z.infer<typeof CreateJobOfferSchema>): Promise<string> {
@@ -123,7 +123,7 @@ export class HumanPagesActionProvider extends ActionProvider {
           agentId: args.agentId || this.agentId || "agentkit",
           title: args.title,
           description: args.description,
-          priceUsdc: args.priceUsdc,
+          priceUsdc: args.priceUsd,
           paymentMode: args.paymentMode || "ONE_TIME",
           paymentTiming: args.paymentTiming || "upon_completion",
           callbackUrl: args.callbackUrl,
@@ -155,18 +155,19 @@ export class HumanPagesActionProvider extends ActionProvider {
   @CreateAction({
     name: "mark_job_paid",
     description:
-      "Record an on-chain USDC payment for an accepted job. Provide the transaction hash and network so the human can verify payment. Call this after sending USDC to the human's wallet address (from their profile).",
+      "Record payment for an accepted job. For crypto: provide the transaction hash and network for on-chain verification. For fiat (PayPal, bank transfer, etc.): provide the receipt reference — the human will be asked to confirm receipt. Call this after paying the human via any of their accepted payment methods.",
     schema: MarkJobPaidSchema,
   })
   async markJobPaid(args: z.infer<typeof MarkJobPaidSchema>): Promise<string> {
     try {
+      const isCrypto = ["usdc", "eth", "sol", "other_crypto"].includes(args.paymentMethod);
       const data = await this.request(`/api/jobs/${args.jobId}/paid`, {
         method: "PATCH",
         body: JSON.stringify({
-          paymentTxHash: args.paymentTxHash,
-          paymentNetwork: args.paymentNetwork,
-          paymentToken: "USDC",
+          paymentTxHash: args.paymentReference,
+          paymentNetwork: isCrypto ? (args.paymentNetwork || "base") : (args.paymentMethod || "fiat"),
           paymentAmount: args.paymentAmount,
+          paymentMethod: args.paymentMethod,
         }),
       });
 
@@ -179,7 +180,7 @@ export class HumanPagesActionProvider extends ActionProvider {
   @CreateAction({
     name: "create_listing",
     description:
-      "Post a job listing on Human Pages for humans to discover and apply to. Unlike job offers (sent to a specific person), listings are public and attract applicants. Good for when you need someone but don't know who yet. Costs 1 listing from your tier allowance (BASIC: 1/7 days, PRO: 5/day). Minimum budget is $5 USDC.",
+      "Post a job listing on Human Pages for humans to discover and apply to. Unlike job offers (sent to a specific person), listings are public and attract applicants. Good for when you need someone but don't know who yet. Costs 1 listing from your tier allowance (BASIC: 1/7 days, PRO: 5/day). Minimum budget is $5.",
     schema: CreateListingSchema,
   })
   async createListing(args: z.infer<typeof CreateListingSchema>): Promise<string> {
@@ -189,7 +190,7 @@ export class HumanPagesActionProvider extends ActionProvider {
         body: JSON.stringify({
           title: args.title,
           description: args.description,
-          budgetUsdc: args.budgetUsdc,
+          budgetUsdc: args.budgetUsd,
           category: args.category,
           requiredSkills: args.requiredSkills,
           location: args.location,

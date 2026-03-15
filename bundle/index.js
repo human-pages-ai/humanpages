@@ -124,7 +124,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       if (humans.length === 0) {
         return {
-          content: [{ type: 'text', text: 'No humans found matching the criteria.' }],
+          content: [{ type: 'text', text: 'No humans found matching the criteria. You can use `create_listing` to post a job listing on the Human Pages job board — qualified humans will discover it and apply to you.' }],
         };
       }
 

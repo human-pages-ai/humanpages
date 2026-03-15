@@ -3,8 +3,37 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:3001';
+
+const PLAYBOOKS = [
+  { type: 'directory-submissions', name: 'Directory & Listing Submissions', description: 'Submit your product to 80+ directories with CAPTCHAs, manual forms, and account creation. Includes a curated directory list.' },
+  { type: 'qa-testing', name: 'Real-Device QA Testing', description: 'Test your app on real phones, browsers, and networks. Get bug reports with screenshots and device info.' },
+  { type: 'competitor-monitoring', name: 'Competitor Monitoring', description: 'Track competitor pricing, features, and changes — including pages gated behind "contact sales."' },
+  { type: 'localization', name: 'Localization Smoke Testing', description: 'Native speaker flags mistranslations, cultural mismatches, and text overflow in your localized app.' },
+  { type: 'community-management', name: 'Community Management', description: 'Moderate your Discord, subreddit, or forum. Welcome members, answer questions, enforce rules.' },
+] as const;
+
+const PLAYBOOK_TYPES: string[] = PLAYBOOKS.map(p => p.type);
+
+function getPlaybookContent(taskType: string): string {
+  // Try to find playbooks relative to the compiled output (dist/) or source
+  const possibleBases = [
+    join(dirname(fileURLToPath(import.meta.url)), '..', 'playbooks'),
+    join(dirname(fileURLToPath(import.meta.url)), 'playbooks'),
+  ];
+  for (const base of possibleBases) {
+    try {
+      return readFileSync(join(base, `${taskType}.md`), 'utf-8');
+    } catch {
+      continue;
+    }
+  }
+  throw new Error(`Playbook not found: ${taskType}. Available: ${PLAYBOOK_TYPES.join(', ')}`);
+}
 
 interface Human {
   id: string;
@@ -996,6 +1025,31 @@ export function createServer(): Server {
             },
           },
           required: ['agent_key'],
+        },
+      },
+      {
+        name: 'list_playbooks',
+        description:
+          'List available task delegation playbooks. Each playbook contains step-by-step instructions for hiring a human to do a specific type of work (QA testing, competitor monitoring, directory submissions, etc.).',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+        },
+      },
+      {
+        name: 'get_playbook',
+        description:
+          'Get the full content of a delegation playbook. Returns detailed instructions including search criteria, job offer templates, pricing, verification steps, and communication templates.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            task_type: {
+              type: 'string',
+              description: 'The playbook type to retrieve',
+              enum: ['qa-testing', 'competitor-monitoring', 'localization', 'directory-submissions', 'community-management'],
+            },
+          },
+          required: ['task_type'],
         },
       },
     ],
@@ -2405,6 +2459,30 @@ ${args?.comment ? `**Comment:** ${args?.comment}` : ''}
 Thank you for your feedback. This helps build the human's reputation.`,
             },
           ],
+        };
+      }
+
+      if (name === 'list_playbooks') {
+        const list = PLAYBOOKS.map(p => `- **${p.name}** (\`${p.type}\`): ${p.description}`).join('\n');
+        return {
+          content: [{
+            type: 'text',
+            text: `**Available Delegation Playbooks**\n\n${list}\n\nUse \`get_playbook(task_type)\` to get full instructions for any playbook.`,
+          }],
+        };
+      }
+
+      if (name === 'get_playbook') {
+        const taskType = args?.task_type as string;
+        if (!taskType || !PLAYBOOK_TYPES.includes(taskType)) {
+          return {
+            content: [{ type: 'text', text: `Invalid task_type. Must be one of: ${PLAYBOOK_TYPES.join(', ')}` }],
+            isError: true,
+          };
+        }
+        const content = getPlaybookContent(taskType);
+        return {
+          content: [{ type: 'text', text: content }],
         };
       }
 
