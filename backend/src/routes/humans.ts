@@ -791,25 +791,47 @@ router.post('/me/verify-humanity', authenticateToken, requireIdentityVerified, v
 });
 
 // GET /featured — Public stats + featured profiles for homepage
-// Cached in-memory for 5 minutes to avoid DB pressure
-let featuredCache: { data: any; expiresAt: number } | null = null;
+// Both stats and profiles cached 24h; profiles rotate on server restart or cache expiry
+let statsCache: { data: any; expiresAt: number } | null = null;
+let profilesCache: { data: any; expiresAt: number } | null = null;
 
 router.get('/featured', async (_req, res) => {
   try {
     const now = Date.now();
-    if (featuredCache && featuredCache.expiresAt > now) {
-      return res.json(featuredCache.data);
+    if (statsCache && statsCache.expiresAt > now && profilesCache && profilesCache.expiresAt > now) {
+      return res.json({ stats: statsCache.data, featured: profilesCache.data });
     }
 
-    const [verifiedCount, withSkillsCount, countriesRaw, featuredRaw] = await Promise.all([
-      prisma.human.count({ where: identityVerifiedWhere }),
-      prisma.human.count({ where: { ...identityVerifiedWhere, skills: { isEmpty: false } } }),
-      prisma.human.findMany({
-        where: { ...identityVerifiedWhere, location: { not: null } },
-        select: { location: true },
-        distinct: ['location'],
-      }),
-      prisma.human.findMany({
+    // Stats: refresh once per day
+    let stats = statsCache && statsCache.expiresAt > now ? statsCache.data : null;
+    if (!stats) {
+      const [verifiedCount, uniqueSkillsResult, uniqueCountriesResult] = await Promise.all([
+        prisma.human.count({ where: identityVerifiedWhere }),
+        prisma.$queryRaw<[{ count: bigint }]>`
+          SELECT COUNT(DISTINCT LOWER(skill)) as count
+          FROM "Human", LATERAL unnest(skills) AS skill
+          WHERE "identityVerifiedAt" IS NOT NULL
+        `,
+        prisma.$queryRaw<[{ count: bigint }]>`
+          SELECT COUNT(DISTINCT TRIM(
+            REVERSE(SPLIT_PART(REVERSE(location), ',', 1))
+          )) as count
+          FROM "Human"
+          WHERE location IS NOT NULL AND location LIKE '%,%'
+        `,
+      ]);
+      stats = {
+        verifiedHumans: verifiedCount,
+        withSkills: Number(uniqueSkillsResult[0]?.count ?? 0),
+        countries: Number(uniqueCountriesResult[0]?.count ?? 0),
+      };
+      statsCache = { data: stats, expiresAt: now + 24 * 60 * 60 * 1000 };
+    }
+
+    // Profiles: refresh once per day, rotate on restart
+    let featured = profilesCache && profilesCache.expiresAt > now ? profilesCache.data : null;
+    if (!featured) {
+      const featuredRaw = await prisma.human.findMany({
         where: {
           ...identityVerifiedWhere,
           isAvailable: true,
@@ -830,82 +852,51 @@ router.get('/featured', async (_req, res) => {
         },
         orderBy: { lastActiveAt: 'desc' },
         take: 50,
-      }),
-    ]);
+      });
 
-    // Extract and deduplicate countries from location strings.
-    // Use a Map keyed by lowercase country name to catch variations (e.g., "Nigeria", "nigeria", "NIGERIA")
-    // and deduplicate them to the canonical form returned by normalizeCountry.
-    const canonicalCountries = new Map<string, string>();
-    for (const { location } of countriesRaw) {
-      if (!location) continue;
-      const parts = location.split(',').map(s => s.trim());
-      const countryRaw = parts[parts.length - 1];
-      const normalized = normalizeCountry(countryRaw);
-      if (normalized) {
-        // Key by lowercase to deduplicate variations, value is canonical form
-        const lowerKey = normalized.toLowerCase();
-        if (!canonicalCountries.has(lowerKey)) {
-          canonicalCountries.set(lowerKey, normalized);
-        }
+      // Quality filter: require 2+ skills and a real bio (20+ chars, not just a date or junk)
+      const quality = featuredRaw.filter(h =>
+        h.skills.length >= 2 &&
+        h.bio && h.bio.length >= 20 &&
+        h.name.length >= 3
+      );
+
+      // Pick up to 8 profiles with geographic diversity (max 2 per country)
+      const byCountry = new Map<string, typeof quality>();
+      for (const h of quality.sort(() => Math.random() - 0.5)) {
+        const parts = h.location?.split(',').map(s => s.trim()) ?? [];
+        const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
+        if (!byCountry.has(country)) byCountry.set(country, []);
+        byCountry.get(country)!.push(h);
       }
-    }
-    const countries = new Set(canonicalCountries.values());
-
-    // Quality filter: require 2+ skills and a real bio (20+ chars, not just a date or junk)
-    const quality = featuredRaw.filter(h =>
-      h.skills.length >= 2 &&
-      h.bio && h.bio.length >= 20 &&
-      h.name.length >= 3
-    );
-
-    // Pick up to 8 profiles with geographic diversity (max 2 per country)
-    // Group by country, shuffle within each group, then round-robin across countries
-    const byCountry = new Map<string, typeof quality>();
-    for (const h of quality.sort(() => Math.random() - 0.5)) {
-      const parts = h.location?.split(',').map(s => s.trim()) ?? [];
-      const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
-      if (!byCountry.has(country)) byCountry.set(country, []);
-      byCountry.get(country)!.push(h);
-    }
-    // Shuffle the country order, then round-robin pick (max 2 per country)
-    const countryGroups = [...byCountry.values()].sort(() => Math.random() - 0.5);
-    const picked: typeof quality = [];
-    const perCountry = new Map<string, number>();
-    let round = 0;
-    while (picked.length < 8) {
-      let addedAny = false;
-      for (const group of countryGroups) {
-        if (picked.length >= 8) break;
-        if (round < group.length) {
-          const h = group[round];
-          const parts = h.location?.split(',').map(s => s.trim()) ?? [];
-          const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
-          const count = perCountry.get(country) ?? 0;
-          if (count < 2) {
-            picked.push(h);
-            perCountry.set(country, count + 1);
-            addedAny = true;
+      const countryGroups = [...byCountry.values()].sort(() => Math.random() - 0.5);
+      const picked: typeof quality = [];
+      const perCountry = new Map<string, number>();
+      let round = 0;
+      while (picked.length < 8) {
+        let addedAny = false;
+        for (const group of countryGroups) {
+          if (picked.length >= 8) break;
+          if (round < group.length) {
+            const h = group[round];
+            const parts = h.location?.split(',').map(s => s.trim()) ?? [];
+            const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
+            const count = perCountry.get(country) ?? 0;
+            if (count < 2) {
+              picked.push(h);
+              perCountry.set(country, count + 1);
+              addedAny = true;
+            }
           }
         }
+        round++;
+        if (!addedAny) break;
       }
-      round++;
-      if (!addedAny) break;
+      featured = await Promise.all(picked.map(h => attachPhotoUrl({ ...h })));
+      profilesCache = { data: featured, expiresAt: now + 24 * 60 * 60 * 1000 };
     }
-    const shuffled = picked;
-    const featured = await Promise.all(shuffled.map(h => attachPhotoUrl({ ...h })));
 
-    const data = {
-      stats: {
-        verifiedHumans: verifiedCount,
-        withSkills: withSkillsCount,
-        countries: countries.size,
-      },
-      featured,
-    };
-
-    featuredCache = { data, expiresAt: now + 5 * 60 * 1000 };
-    res.json(data);
+    res.json({ stats, featured });
   } catch (error) {
     logger.error({ err: error }, 'Featured profiles error');
     res.status(500).json({ error: 'Internal server error' });
