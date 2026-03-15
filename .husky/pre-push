@@ -256,18 +256,16 @@ LITE_TIMEOUT="${PUSH_TIMEOUT_LITE:-90}"
 
 # Names and commands for concurrently — built dynamically
 NAMES=""
-CMDS=""
+CMD_FILE="$REPO_ROOT/.pre-push-cmds.txt"
+> "$CMD_FILE"
 
 add_task() {
   if [ -z "$NAMES" ]; then
     NAMES="$1"
-    CMDS="$2"
   else
     NAMES="$NAMES,$1"
-    # Use a NULL byte separator to handle complex commands
-    CMDS="$CMDS
-$2"
   fi
+  echo "$2" >> "$CMD_FILE"
 }
 
 # ── TypeScript checks (skip if no .ts/.tsx files changed) ──
@@ -290,11 +288,15 @@ add_task "test:fe" "cd frontend && npm test"
 if [ "$MODE" = "lite" ]; then
   echo "  Running lite checks with ${LITE_TIMEOUT}s timeout... (log: $LOG)"
 
-  # Build the concurrently command
+  # Build concurrently args from command file
+  CONC_ARGS=""
+  while IFS= read -r cmd; do
+    CONC_ARGS="$CONC_ARGS \"$cmd\""
+  done < "$CMD_FILE"
+
   eval "timeout --signal=TERM --kill-after=10 $LITE_TIMEOUT \
     npx concurrently --kill-others-on-fail \
-    -n \"$NAMES\" \
-    $(echo "$CMDS" | while IFS= read -r cmd; do printf ' \"%s\"' "$cmd"; done)" \
+    -n \"$NAMES\" $CONC_ARGS" \
     >"$LOG" 2>&1
 
   LITE_EXIT=$?
@@ -390,10 +392,14 @@ echo "  Running heavy checks (lite + e2e) with ${HEAVY_TIMEOUT}s timeout... (log
 
 # --- Run with timeout to prevent SIGTERM from git/OS ---
 # Uses `timeout` which sends SIGTERM then SIGKILL after 10s grace
+CONC_ARGS=""
+while IFS= read -r cmd; do
+  CONC_ARGS="$CONC_ARGS \"$cmd\""
+done < "$CMD_FILE"
+
 eval "timeout --signal=TERM --kill-after=10 $HEAVY_TIMEOUT \
   npx concurrently --kill-others-on-fail \
-  -n \"$NAMES\" \
-  $(echo "$CMDS" | while IFS= read -r cmd; do printf ' \"%s\"' "$cmd"; done)" \
+  -n \"$NAMES\" $CONC_ARGS" \
   >"$LOG" 2>&1
 
 HEAVY_EXIT=$?
