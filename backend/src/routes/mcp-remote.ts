@@ -169,7 +169,7 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
     switch (method) {
       case 'initialize': {
         result = {
-          protocolVersion: '2024-11-05',
+          protocolVersion: '2025-06-18',
           capabilities: {
             tools: { listChanged: false },
           },
@@ -256,13 +256,11 @@ router.get('/mcp', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
     res.set({
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'Mcp-Session-Id': sessionInfo.sessionId,
-      'Access-Control-Allow-Origin': frontendUrl,
     });
 
     const maxDurationTimer = setTimeout(() => {

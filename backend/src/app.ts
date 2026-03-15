@@ -57,14 +57,31 @@ app.use(helmet({
 app.use(cors({
   origin: (origin, callback) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    // Allow: frontend, chrome extensions, no-origin (CLI/server-to-server)
-    if (!origin || origin === frontendUrl || origin.startsWith('chrome-extension://')) {
+    const allowedOrigins = [
+      frontendUrl,
+      // ChatGPT MCP connector origins (required for Developer Mode + App Directory)
+      'https://chatgpt.com',
+      'https://chat.openai.com',
+    ];
+    // Allow: listed origins, chrome extensions, no-origin (CLI/server-to-server)
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('chrome-extension://')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'MCP-Protocol-Version',
+    'Mcp-Session-Id',
+    'Last-Event-ID',
+  ],
+  exposedHeaders: [
+    'Mcp-Session-Id',
+  ],
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
 }));
 // MCP OAuth authorize form uses application/x-www-form-urlencoded
 app.use('/oauth/authorize', express.urlencoded({ extended: false, limit: '10kb' }));
