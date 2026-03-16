@@ -5,6 +5,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     pool: 'forks',              // Each worker is a separate process with its own pid
+    poolOptions: {
+      forks: {
+        maxForks: 8,            // Cap workers to avoid exhausting PG max_connections (100)
+      },
+    },
     setupFiles: ['./src/tests/setup.ts'],
     testTimeout: 10000,
     hookTimeout: 30000,

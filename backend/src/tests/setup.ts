@@ -8,7 +8,7 @@ const adminUrl = 'postgresql://humans:humans_secret@localhost:5432/postgres';
 
 // Each forked worker has its own process.pid — use it for a unique DB & photo dir
 const dbName = `humans_test_${process.pid}_${Date.now()}`;
-const dbUrl = `postgresql://humans:humans_secret@localhost:5432/${dbName}?schema=public`;
+const dbUrl = `postgresql://humans:humans_secret@localhost:5432/${dbName}?schema=public&connection_limit=3`;
 
 // Set env vars BEFORE any module (e.g. prisma) reads them
 process.env.DATABASE_URL = dbUrl;
