@@ -12,6 +12,8 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl } from '../lib/webhook.js';
+import { getPublicClient, getTokenAddress, TOKEN_CONFIGS, SUPPORTED_NETWORKS } from '../lib/blockchain/chains.js';
+import { formatUnits } from 'viem';
 
 const router = Router();
 
@@ -39,6 +41,8 @@ const registerSchema = z.object({
   websiteUrl: z.string().url().optional(),
   contactEmail: z.string().email().optional(),
   webhookUrl: z.string().url().optional(),
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+  walletNetwork: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]).optional(),
   source: z.enum(['direct', 'mcp_directory', 'search', 'llm', 'blog', 'other']).optional(),
   sourceDetail: z.string().max(500).optional(),
 });
@@ -98,6 +102,8 @@ router.post('/register', registerLimiter, async (req, res) => {
         erc8004AgentId,
         webhookUrl: data.webhookUrl,
         webhookSecret,
+        ...(data.walletAddress && { walletAddress: data.walletAddress }),
+        ...(data.walletNetwork && { walletNetwork: data.walletNetwork }),
         discoverySource: data.source,
         discoveryDetail: data.sourceDetail,
         // Auto-activate as PRO with no expiry (free launch offer)
@@ -348,6 +354,98 @@ router.post('/:id/verify-domain', authenticateAgent, async (req: AgentAuthReques
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Verify domain error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/agents/:id/wallet — set agent wallet address
+const walletSchema = z.object({
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid EVM address (must be 0x + 40 hex chars)'),
+  walletNetwork: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]).optional().default('base'),
+});
+
+router.patch('/:id/wallet', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    if (req.agent!.id !== req.params.id) {
+      return res.status(403).json({ error: 'Not authorized to update this agent' });
+    }
+
+    const data = walletSchema.parse(req.body);
+
+    const updated = await prisma.agent.update({
+      where: { id: req.params.id },
+      data: {
+        walletAddress: data.walletAddress,
+        walletNetwork: data.walletNetwork,
+      },
+      select: {
+        id: true,
+        name: true,
+        walletAddress: true,
+        walletNetwork: true,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Set agent wallet error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/agents/:id/balance — check agent wallet USDC balance on-chain
+router.get('/:id/balance', async (req, res) => {
+  try {
+    const agent = await prisma.agent.findUnique({
+      where: { id: req.params.id },
+      select: { walletAddress: true, walletNetwork: true },
+    });
+
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    if (!agent.walletAddress) {
+      return res.json({
+        balance: null,
+        currency: 'USDC',
+        network: agent.walletNetwork || 'base',
+        walletAddress: null,
+        message: 'No wallet registered. Use PATCH /api/agents/:id/wallet to set one.',
+      });
+    }
+
+    const network = agent.walletNetwork || 'base';
+    const client = getPublicClient(network);
+    if (!client) {
+      return res.status(400).json({ error: `Unsupported network: ${network}` });
+    }
+
+    const usdcAddress = getTokenAddress('USDC', network);
+    if (!usdcAddress) {
+      return res.status(400).json({ error: `USDC not available on ${network}` });
+    }
+
+    const balanceRaw = await client.readContract({
+      address: usdcAddress,
+      abi: [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }],
+      functionName: 'balanceOf',
+      args: [agent.walletAddress as `0x${string}`],
+    });
+
+    const balance = formatUnits(balanceRaw as bigint, TOKEN_CONFIGS.USDC.decimals);
+
+    res.json({
+      balance,
+      currency: 'USDC',
+      network,
+      walletAddress: agent.walletAddress,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Get agent balance error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

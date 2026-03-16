@@ -116,6 +116,9 @@ const publicHumanSelect = {
     where: { isActive: true },
     select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
   },
+  fiatPaymentMethods: {
+    select: { platform: true },
+  },
 } as const;
 
 // Full select fields for active agents (includes contact info + wallets + name)
@@ -921,6 +924,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       workMode,
       verified,
       paymentType,
+      fiatPlatform,
       limit = '20',
       offset = '0',
     } = req.query;
@@ -1010,6 +1014,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     // Filter by payment type (has overlap with requested types)
     if (paymentType) {
       where.paymentPreferences = { has: paymentType as string };
+    }
+
+    // Filter by fiat payment platform (e.g., WISE, PAYPAL)
+    if (fiatPlatform) {
+      where.fiatPaymentMethods = {
+        some: { platform: (fiatPlatform as string).toUpperCase() },
+      };
     }
 
     // Filter by rate range (search params are in USD, compare against USD estimate)
@@ -1213,10 +1224,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = await Promise.all(humans.map(async (h) => {
-      const { locationLat, locationLng, ...rest } = h;
+      const { locationLat, locationLng, fiatPaymentMethods, ...rest } = h;
       await attachPhotoUrl(rest);
       return {
         ...rest,
+        paymentMethods: (fiatPaymentMethods || []).map((f: { platform: string }) => f.platform),
         vouchCount: vouchCountMap.get(h.id) || 0,
         reputation: {
           jobsCompleted: jobCountMap.get(h.id) || 0,

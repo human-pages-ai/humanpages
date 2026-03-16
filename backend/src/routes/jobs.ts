@@ -33,7 +33,7 @@ import {
 import { calculateDistance } from '../lib/geo.js';
 import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
-import { isAllowedUrl, fireWebhook } from '../lib/webhook.js';
+import { isAllowedUrl, fireWebhook, deliverWebhook } from '../lib/webhook.js';
 import { convertToUsd } from '../lib/exchangeRates.js';
 import { starRatingToERC8004Value, buildFeedbackJSON, hashFeedbackJSON } from '../lib/erc8004.js';
 import { queueModeration, isModerationEnabled } from '../lib/moderation.js';
@@ -859,6 +859,54 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
           },
         },
       );
+    }
+
+    // Fire agent.funding_needed webhook (async, non-blocking) if USDC balance is insufficient
+    // The agent can ignore this if they plan to use fiat direct payment
+    if (job.registeredAgentId) {
+      // Fire-and-forget: check balance and notify agent
+      (async () => {
+        try {
+          const agent = await prisma.agent.findUnique({
+            where: { id: job.registeredAgentId! },
+            select: { walletAddress: true, walletNetwork: true, webhookUrl: true, webhookSecret: true },
+          });
+          if (!agent?.webhookUrl || !agent.walletAddress) return;
+
+          // Lazy-import to avoid circular deps
+          const { getPublicClient, getTokenAddress, TOKEN_CONFIGS } = await import('../lib/blockchain/chains.js');
+          const { formatUnits } = await import('viem');
+
+          const network = agent.walletNetwork || 'base';
+          const client = getPublicClient(network);
+          const usdcAddr = getTokenAddress('USDC', network);
+          if (!client || !usdcAddr) return;
+
+          const balanceRaw = await client.readContract({
+            address: usdcAddr,
+            abi: [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }],
+            functionName: 'balanceOf',
+            args: [agent.walletAddress as `0x${string}`],
+          });
+          const balance = parseFloat(formatUnits(balanceRaw as bigint, TOKEN_CONFIGS.USDC.decimals));
+          const required = parseFloat(job.priceUsdc.toString());
+
+          if (balance < required) {
+            deliverWebhook(agent.webhookUrl, {
+              event: 'agent.funding_needed',
+              agentId: job.registeredAgentId,
+              jobId: job.id,
+              requiredAmount: required.toFixed(2),
+              currentBalance: balance.toFixed(2),
+              currency: 'USDC',
+              network,
+              timestamp: new Date().toISOString(),
+            }, agent.webhookSecret);
+          }
+        } catch (err) {
+          logger.error({ err, agentId: job.registeredAgentId, jobId: job.id, network: 'base' }, 'funding_needed webhook failed — agent may not know they need funding');
+        }
+      })();
     }
 
     res.json({

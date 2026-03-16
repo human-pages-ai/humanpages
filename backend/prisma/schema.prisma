@@ -503,6 +503,10 @@ model Agent {
   webhookUrl    String?   // Persistent webhook URL for platform events (new matches, status changes, announcements)
   webhookSecret String?   // Secret for HMAC-SHA256 signature verification
 
+  // ===== WALLET =====
+  walletAddress    String?
+  walletNetwork    String?   @default("base")
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)

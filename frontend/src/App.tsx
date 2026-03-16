@@ -13,6 +13,7 @@ import { safeSessionStorage } from './lib/safeStorage';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
+const FundingPage = lazy(() => import('./pages/FundingPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -192,6 +193,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/dev" element={<DevelopersPage />} />
+      <Route path="/funding" element={<FundingPage />} />
       <Route path="/gpt-setup" element={<GptSetupPage />} />
       <Route
         path="/login"
