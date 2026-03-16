@@ -1076,11 +1076,29 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       });
     }
 
+    // Pre-filter by minCompletedJobs at the DB level using a subquery
+    if (minCompletedJobs) {
+      const minJobs = parseInt(minCompletedJobs as string);
+      if (!isNaN(minJobs) && isFinite(minJobs) && minJobs > 0) {
+        const qualifiedHumans = await prisma.job.groupBy({
+          by: ['humanId'],
+          where: { status: 'COMPLETED' },
+          _count: true,
+          having: { humanId: { _count: { gte: minJobs } } },
+        });
+        const qualifiedIds = qualifiedHumans.map(q => q.humanId);
+        if (qualifiedIds.length === 0) {
+          return res.json({ total: 0, results: [] });
+        }
+        where.id = { in: qualifiedIds };
+      }
+    }
+
     // Count total matching humans (before pagination)
     const total = await prisma.human.count({ where });
 
     // Determine if we need a larger fetch pool for post-fetch sorting
-    const reputationSort = sortBy === 'completed_jobs' || sortBy === 'rating';
+    const reputationSort = sortBy === 'completed_jobs' || sortBy === 'rating' || !sortBy;
     const needsLargePool = isSkillSearch || reputationSort;
 
     // Choose DB-level ordering based on sortBy
@@ -1275,14 +1293,8 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       resultCount: humansWithReputation.length,
     }, req);
 
-    // Filter by minimum completed jobs
+    // minCompletedJobs is now handled at the DB level (pre-filter above)
     let filteredResults = humansWithReputation;
-    if (minCompletedJobs) {
-      const minJobs = parseInt(minCompletedJobs as string);
-      if (!isNaN(minJobs) && isFinite(minJobs) && minJobs > 0) {
-        filteredResults = filteredResults.filter(h => h.reputation.jobsCompleted >= minJobs);
-      }
-    }
 
     // Sort by reputation: humans with completed jobs and reviews first
     // sortBy param controls primary sort key
