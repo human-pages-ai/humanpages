@@ -1073,6 +1073,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       });
     }
 
+    // Count total matching humans (before pagination)
+    const total = await prisma.human.count({ where });
+
     // Fetch humans (public: no contact info, no wallets)
     // When doing skill search, fetch more candidates for relevance scoring
     let humans = await prisma.human.findMany({
@@ -1257,7 +1260,19 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       resultCount: humansWithReputation.length,
     }, req);
 
+    // Sort by reputation: humans with completed jobs and reviews first
+    humansWithReputation.sort((a, b) => {
+      const aJobs = a.reputation.jobsCompleted;
+      const bJobs = b.reputation.jobsCompleted;
+      if (aJobs !== bJobs) return bJobs - aJobs;
+      const aRating = a.reputation.avgRating;
+      const bRating = b.reputation.avgRating;
+      if (aRating !== bRating) return bRating - aRating;
+      return (b.yearsOfExperience || 0) - (a.yearsOfExperience || 0);
+    });
+
     res.json({
+      total,
       results: humansWithReputation,
       ...(resolvedLocation ? { resolvedLocation } : {}),
       ...(centerLat != null && centerLng != null && radiusKm ? {
