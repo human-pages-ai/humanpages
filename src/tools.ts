@@ -199,7 +199,7 @@ export function createServer(): Server {
       {
         name: 'search_humans',
         description:
-          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates with radius), and rate. Use sort_by to control result ordering — "completed_jobs" surfaces workers with proven platform experience first, "rating" sorts by reviews, "experience" by years of professional experience. Use min_completed_jobs to only see workers who have successfully completed jobs on the platform. When using text location, provide a fully-qualified name (e.g., "Richmond, Virginia, USA" not just "Richmond") for accurate geocoding. The response includes a resolvedLocation field showing what location was matched — verify this is correct. Default search radius is 30km. Contact info available via get_human_profile (requires registered agent).',
+          'Search for humans available for hire. All filters are optional — you can combine any of them or use just one. IMPORTANT: When the user wants workers with platform experience or completed jobs, use min_completed_jobs=1 (no skill filter needed) to find ALL humans with completed jobs across any skill. Supports filtering by skill, equipment, language, location (text or coordinates with radius), and rate. Use sort_by to control result ordering — "completed_jobs" (default) surfaces workers with proven platform experience first, "rating" sorts by reviews, "experience" by years of professional experience. When using text location, provide a fully-qualified name (e.g., "Richmond, Virginia, USA" not just "Richmond") for accurate geocoding. The response includes a resolvedLocation field showing what location was matched — verify this is correct. Default search radius is 30km. Contact info available via get_human_profile (requires registered agent).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -265,7 +265,7 @@ export function createServer(): Server {
             },
             min_completed_jobs: {
               type: 'number',
-              description: 'Only return humans who have completed at least this many jobs on the platform. Useful for finding experienced, proven workers.',
+              description: 'Only return humans who have completed at least this many jobs on the platform. Use min_completed_jobs=1 to find all workers with any platform track record. Works with or without other filters — no skill filter needed.',
             },
           },
         },
@@ -1127,16 +1127,17 @@ export function createServer(): Server {
               : h.location || 'Location not specified';
 
             const displayName = h.name || h.username || 'Name hidden';
+            const jobsCompleted = rep?.jobsCompleted || 0;
+            const jobsBadge = jobsCompleted > 0 ? ` | 🏆 ${jobsCompleted} job${jobsCompleted !== 1 ? 's' : ''} completed` : '';
             return `- **${displayName}**${h.username && h.name ? ` (@${h.username})` : ''} [${displayLocation}]
-  ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}
+  ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}${jobsBadge}
   ${humanityStatus}
   Skills: ${h.skills.join(', ') || 'None listed'}
   Equipment: ${h.equipment.join(', ') || 'None listed'}
   Languages: ${h.languages.join(', ') || 'Not specified'}
   Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
   Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}
-  Notification channels: ${h.channelCount || 0}/4 active
-  Jobs completed: ${rep?.jobsCompleted || 0}`;
+  Notification channels: ${h.channelCount || 0}/4 active`;
           })
           .join('\n\n');
 
@@ -1467,6 +1468,8 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
             streamInterval: args?.stream_interval,
             streamRateUsdc: args?.stream_rate_usd,
             streamMaxTicks: args?.stream_max_ticks,
+            agentLat: args?.agent_lat,
+            agentLng: args?.agent_lng,
             preferredPaymentMethod: args?.preferred_payment_method,
             callbackUrl: args?.callback_url,
             callbackSecret: args?.callback_secret,

@@ -1,6 +1,6 @@
 {
   "name": "humanpages",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "mcpName": "io.github.human-pages-ai/humanpages",
   "description": "MCP server (+ OpenClaw SKILL.md) that gives AI agents access to real-world people who listed themselves to be hired by agents. 31 tools including search by skill/location/equipment, job offers, job board listings, in-job messaging, streaming payments, and agent funding.",
   "main": "dist/index.js",
