@@ -370,9 +370,9 @@ FINAL_EXIT=0
 stop_servers() {
   if [ "$STARTED_SERVERS" = "1" ] && [ -n "$DEV_PID" ]; then
     echo "  Stopping dev servers..."
-    pkill -P "$DEV_PID" 2>/dev/null
-    kill "$DEV_PID" 2>/dev/null
-    wait "$DEV_PID" 2>/dev/null
+    pkill -P "$DEV_PID" 2>/dev/null || true
+    kill "$DEV_PID" 2>/dev/null || true
+    wait "$DEV_PID" 2>/dev/null || true
   fi
 }
 trap 'FINAL_EXIT=$?; stop_servers; exit $FINAL_EXIT' INT TERM
@@ -384,8 +384,8 @@ if curl -sf http://localhost:3001/health >/dev/null 2>&1 && curl -sf http://loca
 else
   echo "  Starting dev servers in background..."
   STARTED_SERVERS=1
-  lsof -ti :3000 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
-  lsof -ti :3001 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null
+  lsof -ti :3000 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
+  lsof -ti :3001 -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
   sleep 1
   setsid npm run dev >$REPO_ROOT/.pre-push-e2e-servers.log 2>&1 &
   DEV_PID=$!
