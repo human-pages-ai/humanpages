@@ -56,6 +56,7 @@ interface Human {
   wallets?: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
   fiatPaymentMethods?: { platform: string; handle: string; label?: string; isPrimary?: boolean }[];
   paymentMethods?: string[];
+  channelCount?: number;
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
 }
 
@@ -139,6 +140,7 @@ interface SearchParams {
 }
 
 interface SearchResponse {
+  total: number;
   results: Human[];
   resolvedLocation?: string;
   searchRadius?: { lat: number; lng: number; radiusKm: number };
@@ -1120,12 +1122,16 @@ export function createServer(): Server {
   Languages: ${h.languages.join(', ') || 'Not specified'}
   Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
   Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}
+  Notification channels: ${h.channelCount || 0}/4 active
   Jobs completed: ${rep?.jobsCompleted || 0}`;
           })
           .join('\n\n');
 
+        const totalNote = response.total > humans.length
+          ? ` (showing ${humans.length} of ${response.total} total matches — use offset/limit or filters to see more)`
+          : '';
         return {
-          content: [{ type: 'text', text: `Found ${humans.length} human(s):${locationNote}\n\n${summary}\n\n_Contact info and wallets available via get_human_profile (requires registered agent)._` }],
+          content: [{ type: 'text', text: `Found ${response.total} human(s):${totalNote}${locationNote}\n\n${summary}\n\n_Contact info and wallets available via get_human_profile (requires registered agent)._` }],
         };
       }
 
