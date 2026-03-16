@@ -3,7 +3,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:3001';
+const API_BASE = process.env.API_BASE_URL || 'https://humanpages.ai';
 
 interface Human {
   id: string;
