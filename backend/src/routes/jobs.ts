@@ -491,7 +491,13 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
     }
     logger.error({ err: error }, 'Create job error');
     res.status(500).json({ error: 'Internal server error' });

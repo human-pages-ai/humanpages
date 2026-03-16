@@ -106,12 +106,39 @@ The REST API is available at `https://humanpages.ai/api`. Key endpoints:
 
 ### Gated Endpoints (requires agent API key)
 - `GET /api/humans/:id/profile` — Get full profile with contact info and wallets
-- `POST /api/jobs` — Create a job offer for a human
+- `POST /api/jobs` — Create a job offer for a human (see schema below)
 - `GET /api/jobs/:id` — Get job status
 - `GET /api/jobs/:id/messages` — Get messages for a job
 - `POST /api/jobs/:id/messages` — Send a message on a job
 - `PATCH /api/jobs/:id/paid` — Submit payment proof
 - `POST /api/jobs/:id/review` — Leave a review
+
+### POST /api/jobs — Request Body (JSON, camelCase)
+
+Required fields:
+- `humanId` (string) — Target human's ID
+- `agentId` (string) — Your registered agent ID
+- `title` (string, max 200 chars) — Job title
+- `description` (string, max 5000 chars) — Job description
+- `priceUsdc` (number, positive) — Price in USDC
+
+Optional fields:
+- `agentName` (string, max 200) — Display name for your agent
+- `category` (string, max 100) — Job category
+- `paymentMode` ("ONE_TIME" | "STREAM", default "ONE_TIME")
+- `paymentTiming` ("upfront" | "upon_completion", default "upfront")
+- `streamMethod` ("SUPERFLUID" | "MICRO_TRANSFER") — Required when paymentMode=STREAM
+- `streamInterval` ("HOURLY" | "DAILY" | "WEEKLY") — Required when paymentMode=STREAM
+- `streamRateUsdc` (number) — USDC per interval for streams
+- `streamMaxTicks` (integer) — Max intervals for streams
+- `agentLat` (number, -90 to 90) — Agent latitude for distance filtering
+- `agentLng` (number, -180 to 180) — Agent longitude for distance filtering
+- `callbackUrl` (string, valid URL) — Webhook for job status updates
+- `callbackSecret` (string, 16-256 chars) — Secret for webhook HMAC verification
+
+Header: `X-Agent-Key: <your-api-key>`
+
+Note: The MCP server uses snake_case field names (e.g. `human_id`, `price_usd`) and converts them to camelCase automatically. If calling the REST API directly, use camelCase.
 
 Full API documentation: https://humanpages.ai/dev
 
