@@ -216,7 +216,7 @@ async function sendTelegram(chatId, text, env) {
 
 function formatResults(humans) {
   return humans.map((h, i) =>
-    \`\${i+1}. \${h.name}\${h.location ? " — " + h.location : ""}\\n\` +
+    \`\${i+1}. \${h.username}\${h.location ? " — " + h.location : ""}\\n\` +
     \`   Skills: \${(h.skills || []).join(", ")}\\n\` +
     \`   Rating: \${h.reputation?.avgRating ?? "new"} | \` +
     \`Jobs: \${h.reputation?.jobsCompleted || 0}\`

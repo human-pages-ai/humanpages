@@ -156,8 +156,9 @@ describe('Agent Access Gating', () => {
       expect(res.body.results.length).toBeGreaterThan(0);
 
       const result = res.body.results[0];
-      // Should have public info
-      expect(result.name).toBeDefined();
+      // Should have public info (name excluded for privacy)
+      expect(result.name).toBeUndefined();
+      expect(result.username).toBeDefined();
       expect(result.bio).toBe('Test bio');
       expect(result.skills).toContain('javascript');
 

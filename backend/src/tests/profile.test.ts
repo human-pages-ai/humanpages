@@ -129,7 +129,7 @@ describe('Profile API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.id).toBe(user.id);
-      expect(response.body.name).toBe('Profile User');
+      expect(response.body).not.toHaveProperty('name');
       expect(response.body).not.toHaveProperty('passwordHash');
       expect(response.body).not.toHaveProperty('email'); // Public profile shouldn't expose email directly
     });
@@ -443,7 +443,7 @@ describe('Profile API', () => {
       const response = await request(app).get('/api/humans/u/profileuser');
       expect(response.status).toBe(200);
       expect(response.body.username).toBe('profileuser');
-      expect(response.body.name).toBe('Profile User');
+      expect(response.body).not.toHaveProperty('name');
     });
 
     it('should return 404 for non-existent username', async () => {

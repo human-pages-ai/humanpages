@@ -171,14 +171,15 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     expect(photographer).not.toHaveProperty('email');
     expect(photographer).not.toHaveProperty('telegram');
     expect(photographer).not.toHaveProperty('wallets');
-    expect(photographer).toHaveProperty('name');
+    expect(photographer).not.toHaveProperty('name');
   });
 
   it('should view public profile by ID without contact info', async () => {
     const res = await request(app).get(`/api/humans/${photographerId}`);
     expect(res.status).toBe(200);
 
-    expect(res.body.name).toBe('SF Photographer');
+    expect(res.body).not.toHaveProperty('name');
+    expect(res.body.username).toBe('sf_photographer');
     expect(res.body.skills).toContain('photography');
     expect(res.body.reputation).toBeDefined();
     expect(res.body).not.toHaveProperty('trustScore');
@@ -191,7 +192,7 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
   it('should look up profile by username', async () => {
     const res = await request(app).get('/api/humans/u/sf_photographer');
     expect(res.status).toBe(200);
-    expect(res.body.name).toBe('SF Photographer');
+    expect(res.body).not.toHaveProperty('name');
     expect(res.body.username).toBe('sf_photographer');
   });
 
@@ -267,7 +268,8 @@ describe('Flow: Profile Discovery — Agent Searches & Views Humans', () => {
     // Unverified users should not appear — just verify count matches verified users only
     expect(res.body.results.length).toBeGreaterThanOrEqual(1);
     res.body.results.forEach((h: any) => {
-      expect(h).toHaveProperty('name');
+      expect(h).not.toHaveProperty('name');
+      expect(h).toHaveProperty('username');
     });
   });
 

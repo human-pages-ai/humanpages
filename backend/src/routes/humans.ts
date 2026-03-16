@@ -77,7 +77,6 @@ const TIER_PROFILE_LIMITS: Record<string, number> = {
 // Public select fields (no contact info, no wallets)
 const publicHumanSelect = {
   id: true,
-  name: true,
   username: true,
   bio: true,
   location: true,
@@ -938,7 +937,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     } = req.query;
 
     const where: any = {
-      ...identityVerifiedWhere,
+      // Identity verified OR has completed at least one job (proven real)
+      OR: [
+        ...identityVerifiedWhere.OR,
+        { jobs: { some: { status: 'COMPLETED' } } },
+      ],
       humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
     };
 
@@ -1123,6 +1126,15 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Score and filter by skill relevance
     if (isSkillSearch) {
+      // Pre-fetch completed job counts to boost experienced workers in skill ranking
+      const skillHumanIds = humans.map(h => h.id);
+      const skillJobCounts = await prisma.job.groupBy({
+        by: ['humanId'],
+        where: { humanId: { in: skillHumanIds }, status: 'COMPLETED' },
+        _count: true,
+      });
+      const skillJobMap = new Map(skillJobCounts.map(jc => [jc.humanId, jc._count]));
+
       const scored = humans.map(h => {
         let score = 0;
         const skillsLower = (h.skills || []).map(s => s.toLowerCase());
@@ -1142,6 +1154,10 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           if (bioLower.includes(token)) score += 2;
           if (servicesText.includes(token)) score += 3;
         }
+
+        // Boost workers with proven track record (min 3 jobs, capped at 10)
+        const completedJobs = skillJobMap.get(h.id) || 0;
+        if (completedJobs >= 3) score += Math.min(completedJobs, 10) * 3;
 
         return { human: h, score };
       });
@@ -1402,7 +1418,7 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
     const human = await prisma.human.findFirst({
       where: {
         ...(isCuid ? { id: idParam } : { username: idParam }),
-        ...identityVerifiedWhere,
+        OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }],
       },
       select: fullHumanSelect,
     });
@@ -1444,7 +1460,7 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 router.get('/:id', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, ...identityVerifiedWhere, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: { id: req.params.id, OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }], humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1452,7 +1468,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, name: true, username: true } },
+            voucher: { select: { id: true, username: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -1481,7 +1497,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 router.get('/u/:username', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { username: req.params.username, ...identityVerifiedWhere, humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: { username: req.params.username, OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }], humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1489,7 +1505,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, name: true, username: true } },
+            voucher: { select: { id: true, username: true } },
           },
           orderBy: { createdAt: 'desc' },
         },

@@ -177,12 +177,13 @@ describe('Search API', () => {
       });
     });
 
-    it('should include name in search results', async () => {
+    it('should NOT include name in public search results', async () => {
       const response = await request(app).get('/api/humans/search');
 
       expect(response.status).toBe(200);
       response.body.results.forEach((human: any) => {
-        expect(human).toHaveProperty('name');
+        expect(human).not.toHaveProperty('name');
+        expect(human).toHaveProperty('username');
       });
     });
 
