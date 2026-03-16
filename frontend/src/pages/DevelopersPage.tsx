@@ -42,7 +42,7 @@ const MCP_CONFIG = `{
       "command": "npx",
       "args": ["-y", "humanpages"],
       "env": {
-        "API_BASE_URL": "https://api.humanpages.ai"
+        "API_BASE_URL": "https://humanpages.ai"
       }
     }
   }
@@ -164,7 +164,7 @@ export default function DevelopersPage() {
   const [promo, setPromo] = useState<{ enabled: boolean; total: number; claimed: number; remaining: number } | null>(null);
 
   useEffect(() => {
-    fetch('https://api.humanpages.ai/api/agents/activate/promo-status')
+    fetch('https://humanpages.ai/api/agents/activate/promo-status')
       .then(res => res.json())
       .then(data => setPromo(data))
       .catch(() => {});
@@ -598,7 +598,7 @@ export default function DevelopersPage() {
               </div>
 
               <p className="text-sm text-slate-500">
-                {t('dev.restApi.baseUrl')} <code className="bg-slate-200 px-1 rounded">https://api.humanpages.ai</code>
+                {t('dev.restApi.baseUrl')} <code className="bg-slate-200 px-1 rounded">https://humanpages.ai</code>
               </p>
             </div>
           )}

@@ -41,7 +41,7 @@ Human Pages is purpose-built for AI agents. You interact exclusively via REST AP
 
 **Example API call:**
 ```bash
-curl -X POST https://api.humanpages.ai/v1/tasks \
+curl -X POST https://humanpages.ai/v1/tasks \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -230,7 +230,7 @@ The MCP path is unique—it's designed for Claude to call directly within tool_u
 **Authentication:**
 ```bash
 # REST: API key in Authorization header
-curl -X GET https://api.humanpages.ai/v1/tasks \
+curl -X GET https://humanpages.ai/v1/tasks \
   -H "Authorization: Bearer hp_live_abc123xyz789"
 
 # MCP: Handled by tool invocation (Claude signs requests)
@@ -776,7 +776,7 @@ For a $100 task:
 **Human Pages:**
 ```bash
 # Idempotency key prevents duplicate task creation if request retries
-curl -X POST https://api.humanpages.ai/v1/tasks \
+curl -X POST https://humanpages.ai/v1/tasks \
   -H "Idempotency-Key: my-unique-id-abc123" \
   -H "Authorization: Bearer hp_live_..." \
   -d '{ "title": "...", "budget_usdc": 50 }'
@@ -1037,7 +1037,7 @@ import requests
 def monitor_task(task_id, api_key, max_wait_hours=48):
     """Poll task status until human submits work."""
 
-    base_url = "https://api.humanpages.ai/v1"
+    base_url = "https://humanpages.ai/v1"
     headers = {"Authorization": f"Bearer {api_key}"}
 
     start_time = time.time()
@@ -1090,7 +1090,7 @@ The human submits photos and notes. The agent verifies quality.
 def review_submission(task_id, api_key, approval=True, feedback=""):
     """Approve or reject the submitted work."""
 
-    base_url = "https://api.humanpages.ai/v1"
+    base_url = "https://humanpages.ai/v1"
     headers = {"Authorization": f"Bearer {api_key}"}
 
     if approval:
@@ -1175,7 +1175,7 @@ On approval, USDC transfers to the human's wallet. The agent receives the work d
 def get_completed_task_data(task_id, api_key):
     """Retrieve final task data and payment status."""
 
-    base_url = "https://api.humanpages.ai/v1"
+    base_url = "https://humanpages.ai/v1"
     headers = {"Authorization": f"Bearer {api_key}"}
 
     resp = requests.get(
@@ -1228,7 +1228,7 @@ class CoffeeMarketResearchAgent:
     def __init__(self, hp_api_key):
         self.client = Anthropic()
         self.hp_api_key = hp_api_key
-        self.base_url = "https://api.humanpages.ai/v1"
+        self.base_url = "https://humanpages.ai/v1"
         self.headers = {"Authorization": f"Bearer {hp_api_key}"}
 
     def run(self, location, target_shops=5, budget=150):

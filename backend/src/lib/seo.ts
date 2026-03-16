@@ -358,7 +358,7 @@ export function getDevPageMetaHtml(lang?: string): string | null {
       "command": "npx",
       "args": ["-y", "humanpages"],
       "env": {
-        "API_BASE_URL": "https://api.humanpages.ai"
+        "API_BASE_URL": "https://humanpages.ai"
       }
     }
   }
@@ -382,7 +382,7 @@ export function getDevPageMetaHtml(lang?: string): string | null {
       </ul>
 
       <h2>REST API</h2>
-      <p>Base URL: <code>https://api.humanpages.ai</code></p>
+      <p>Base URL: <code>https://humanpages.ai</code></p>
       <ul>
         <li><code>GET /api/humans/search?skill=photography&amp;location=NYC</code> — Search (public)</li>
         <li><code>GET /api/humans/:id</code> — Public profile</li>

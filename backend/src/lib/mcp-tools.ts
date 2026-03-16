@@ -321,7 +321,7 @@ export async function executeMcpTool(
   args: Record<string, unknown>,
   agentApiKey: string,
 ): Promise<unknown> {
-  const baseUrl = process.env.HUMAN_PAGES_API_URL || 'https://api.humanpages.ai';
+  const baseUrl = process.env.HUMAN_PAGES_API_URL || 'https://humanpages.ai';
 
   try {
     switch (toolName) {
