@@ -1350,6 +1350,39 @@ router.get('/jobs/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// PATCH /api/admin/jobs/:id/status — Admin updates job status
+router.patch('/jobs/:id/status', async (req: AuthRequest, res) => {
+  try {
+    const VALID_JOB_STATUSES = ['PENDING', 'ACCEPTED', 'PAYMENT_CLAIMED', 'PAID', 'STREAMING', 'PAUSED', 'SUBMITTED', 'COMPLETED', 'REJECTED', 'CANCELLED', 'DISPUTED'];
+    const { status } = req.body;
+
+    if (!status || !VALID_JOB_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_JOB_STATUSES.join(', ')}` });
+    }
+
+    const job = await prisma.job.findUnique({ where: { id: req.params.id } });
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    const data: any = { status, lastActionBy: 'ADMIN' };
+    if (status === 'COMPLETED' && !job.completedAt) data.completedAt = new Date();
+    if (status === 'ACCEPTED' && !job.acceptedAt) data.acceptedAt = new Date();
+    if (status === 'PAID' && !job.paidAt) data.paidAt = new Date();
+
+    const updated = await prisma.job.update({
+      where: { id: req.params.id },
+      data,
+    });
+
+    logger.info({ jobId: updated.id, from: job.status, to: status, adminId: req.userId }, 'Admin updated job status');
+    res.json({ id: updated.id, status: updated.status, previousStatus: job.status });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin update job status error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // GET /api/admin/activity — Recent activity feed
 router.get('/activity', async (req: AuthRequest, res) => {
   try {
