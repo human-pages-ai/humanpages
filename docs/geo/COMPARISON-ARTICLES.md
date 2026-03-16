@@ -41,7 +41,7 @@ Human Pages is purpose-built for AI agents. You interact exclusively via REST AP
 
 **Example API call:**
 ```bash
-curl -X POST https://humanpages.ai/v1/tasks \
+curl -X POST https://humanpages.ai/api/jobs \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -230,7 +230,7 @@ The MCP path is unique—it's designed for Claude to call directly within tool_u
 **Authentication:**
 ```bash
 # REST: API key in Authorization header
-curl -X GET https://humanpages.ai/v1/tasks \
+curl -X GET https://humanpages.ai/api/jobs \
   -H "Authorization: Bearer hp_live_abc123xyz789"
 
 # MCP: Handled by tool invocation (Claude signs requests)
@@ -243,7 +243,7 @@ curl -X GET https://humanpages.ai/v1/tasks \
 
 ```bash
 # Create task
-POST /v1/tasks
+POST /api/jobs
 {
   "title": "Photograph coffee shop interior",
   "description": "Take 8 high-res photos of seating areas, lighting, displays.",
@@ -255,11 +255,11 @@ POST /v1/tasks
 }
 
 # Retrieve task status
-GET /v1/tasks/{task_id}
+GET /api/jobs/{task_id}
 # Returns: status (open, assigned, completed, disputed), human_id, submission_count
 
 # Submit work
-POST /v1/tasks/{task_id}/submit
+POST /api/jobs/{task_id}/submit
 {
   "human_id": "hp_human_456",
   "media_urls": ["ipfs://Qm...", "ipfs://Qm..."],
@@ -267,8 +267,8 @@ POST /v1/tasks/{task_id}/submit
 }
 
 # Approve/reject
-POST /v1/tasks/{task_id}/approve
-POST /v1/tasks/{task_id}/reject
+POST /api/jobs/{task_id}/approve
+POST /api/jobs/{task_id}/reject
 {
   "reason": "Photos are blurry; retake required."
 }
@@ -776,7 +776,7 @@ For a $100 task:
 **Human Pages:**
 ```bash
 # Idempotency key prevents duplicate task creation if request retries
-curl -X POST https://humanpages.ai/v1/tasks \
+curl -X POST https://humanpages.ai/api/jobs \
   -H "Idempotency-Key: my-unique-id-abc123" \
   -H "Authorization: Bearer hp_live_..." \
   -d '{ "title": "...", "budget_usdc": 50 }'
@@ -1020,7 +1020,7 @@ print(response)
 #   "status": "open",
 #   "budget_usdc": 150,
 #   "deadline": "2026-02-28T23:59:59Z",
-#   "url": "https://humanpages.ai/tasks/task_hp_abc123xyz"
+#   "url": "https://humanpages.ai/jobs/task_hp_abc123xyz"
 # }
 ```
 
@@ -1037,7 +1037,7 @@ import requests
 def monitor_task(task_id, api_key, max_wait_hours=48):
     """Poll task status until human submits work."""
 
-    base_url = "https://humanpages.ai/v1"
+    base_url = "https://humanpages.ai/api"
     headers = {"Authorization": f"Bearer {api_key}"}
 
     start_time = time.time()
@@ -1046,7 +1046,7 @@ def monitor_task(task_id, api_key, max_wait_hours=48):
     while (time.time() - start_time) < max_wait:
         # Get task status
         resp = requests.get(
-            f"{base_url}/tasks/{task_id}",
+            f"{base_url}/jobs/{task_id}",
             headers=headers
         )
         task = resp.json()
@@ -1090,14 +1090,14 @@ The human submits photos and notes. The agent verifies quality.
 def review_submission(task_id, api_key, approval=True, feedback=""):
     """Approve or reject the submitted work."""
 
-    base_url = "https://humanpages.ai/v1"
+    base_url = "https://humanpages.ai/api"
     headers = {"Authorization": f"Bearer {api_key}"}
 
     if approval:
-        endpoint = f"{base_url}/tasks/{task_id}/approve"
+        endpoint = f"{base_url}/jobs/{task_id}/approve"
         body = {"feedback": feedback}
     else:
-        endpoint = f"{base_url}/tasks/{task_id}/reject"
+        endpoint = f"{base_url}/jobs/{task_id}/reject"
         body = {"reason": feedback}
 
     resp = requests.post(endpoint, json=body, headers=headers)
@@ -1175,11 +1175,11 @@ On approval, USDC transfers to the human's wallet. The agent receives the work d
 def get_completed_task_data(task_id, api_key):
     """Retrieve final task data and payment status."""
 
-    base_url = "https://humanpages.ai/v1"
+    base_url = "https://humanpages.ai/api"
     headers = {"Authorization": f"Bearer {api_key}"}
 
     resp = requests.get(
-        f"{base_url}/tasks/{task_id}",
+        f"{base_url}/jobs/{task_id}",
         headers=headers
     )
 
@@ -1228,7 +1228,7 @@ class CoffeeMarketResearchAgent:
     def __init__(self, hp_api_key):
         self.client = Anthropic()
         self.hp_api_key = hp_api_key
-        self.base_url = "https://humanpages.ai/v1"
+        self.base_url = "https://humanpages.ai/api"
         self.headers = {"Authorization": f"Bearer {hp_api_key}"}
 
     def run(self, location, target_shops=5, budget=150):
@@ -1296,7 +1296,7 @@ Shop 1: "Downtown Brew"
         }
 
         resp = requests.post(
-            f"{self.base_url}/tasks",
+            f"{self.base_url}/jobs",
             json=payload,
             headers=self.headers
         )
@@ -1309,7 +1309,7 @@ Shop 1: "Downtown Brew"
         start = time.time()
         while (time.time() - start) < (max_wait * 3600):
             resp = requests.get(
-                f"{self.base_url}/tasks/{task_id}",
+                f"{self.base_url}/jobs/{task_id}",
                 headers=self.headers
             )
             task = resp.json()
@@ -1328,7 +1328,7 @@ Shop 1: "Downtown Brew"
         # For this example, assume the work is good
 
         resp = requests.post(
-            f"{self.base_url}/tasks/{task_id}/approve",
+            f"{self.base_url}/jobs/{task_id}/approve",
             json={"feedback": "Excellent work. All 5 shops documented, photos clear, interviews detailed."},
             headers=self.headers
         )
