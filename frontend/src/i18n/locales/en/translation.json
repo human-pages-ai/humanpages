@@ -505,7 +505,27 @@
       "telegramLabel": "Telegram",
       "telegramDesc": "Receive Telegram messages for job offers",
       "whatsappLabel": "WhatsApp",
-      "whatsappDesc": "Receive WhatsApp messages for job offers"
+      "whatsappDesc": "Receive WhatsApp messages for job offers",
+      "pushLabel": "Push",
+      "pushDesc": "Instant browser notifications for job offers"
+    },
+    "push": {
+      "explainerTitle": "Enable push notifications",
+      "explainer": "We'll only notify you about job offers and messages. You can turn this off anytime.\n\nAfter clicking Confirm, tap 'Allow' on the browser popup.",
+      "denied": "Push notifications were blocked. To enable, allow notifications in your browser settings."
+    },
+    "reachability": {
+      "title": "Reachability",
+      "count": "{{active}} of {{total}} channels",
+      "full": "You're fully reachable — agents are more likely to send you offers",
+      "partial": "Enable more channels so agents are more likely to reach you",
+      "agentsSee": "Agents can see your reachability score ({{count}}/{{total}})"
+    },
+    "installApp": {
+      "title": "Install HumanPages",
+      "description": "Install for instant push notifications and quick access",
+      "iosInstructions": "In Safari, tap Share then \"Add to Home Screen\" for instant notifications",
+      "install": "Install"
     },
     "emailDigest": {
       "title": "Email Frequency",

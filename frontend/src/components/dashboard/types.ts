@@ -121,6 +121,7 @@ export interface Profile {
   emailNotifications?: boolean;
   telegramNotifications?: boolean;
   whatsappNotifications?: boolean;
+  pushNotifications?: boolean;
   analyticsOptOut?: boolean;
   emailDigestMode?: 'REALTIME' | 'HOURLY' | 'DAILY';
   featuredConsent?: boolean;

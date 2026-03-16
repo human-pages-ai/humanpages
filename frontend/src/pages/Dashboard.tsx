@@ -16,6 +16,7 @@ import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
 import WhatsAppSection from '../components/dashboard/WhatsAppSection';
 import WorkStatusSection from '../components/dashboard/WorkStatusSection';
+import InstallAppBanner from '../components/dashboard/InstallAppBanner';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
@@ -682,10 +683,44 @@ export default function Dashboard() {
     }
   };
 
-  const toggleNotification = async (channel: 'email' | 'telegram' | 'whatsapp') => {
+  const toggleNotification = async (channel: 'email' | 'telegram' | 'whatsapp' | 'push') => {
     if (!profile) return;
     setSaving(true);
     try {
+      if (channel === 'push') {
+        const { subscribeToPush, unsubscribeFromPush } = await import('../lib/pushNotifications');
+        if (profile.pushNotifications) {
+          // Disable push
+          await unsubscribeFromPush();
+          const updated = await api.updateProfile({ pushNotifications: false });
+          setProfile(updated);
+        } else {
+          // Pre-permission explainer before triggering the browser prompt
+          setConfirmDialog({
+            open: true,
+            title: t('dashboard.push.explainerTitle', 'Enable push notifications'),
+            message: t('dashboard.push.explainer', "We'll only notify you about job offers and messages. You can turn this off anytime.\n\nAfter clicking Confirm, tap 'Allow' on the browser popup."),
+            onConfirm: async () => {
+              setConfirmDialog(d => ({ ...d, open: false }));
+              try {
+                const ok = await subscribeToPush();
+                if (!ok) {
+                  toast.error(t('dashboard.push.denied', 'Push notifications were blocked. To enable, allow notifications in your browser settings.'));
+                  return;
+                }
+                const updated = await api.updateProfile({ pushNotifications: true });
+                setProfile(updated);
+                toast.success(t('toast.preferencesSaved'));
+              } catch {
+                toast.error(t('dashboard.push.denied', 'Push notifications were blocked. To enable, allow notifications in your browser settings.'));
+              }
+            },
+          });
+          return;
+        }
+        toast.success(t('toast.preferencesSaved'));
+        return;
+      }
       const key = channel === 'email' ? 'emailNotifications'
         : channel === 'telegram' ? 'telegramNotifications'
         : 'whatsappNotifications';
@@ -921,6 +956,7 @@ export default function Dashboard() {
                     emailNotifications={profile.emailNotifications !== false}
                     telegramNotifications={profile.telegramNotifications !== false}
                     whatsappNotifications={profile.whatsappNotifications !== false}
+                    pushNotifications={profile.pushNotifications === true}
                     whatsappConnected={whatsappStatus?.connected ?? false}
                     whatsappAvailable={whatsappStatus?.botAvailable ?? false}
                     emailDigestMode={profile.emailDigestMode || 'REALTIME'}
@@ -929,6 +965,7 @@ export default function Dashboard() {
                     onToggleNotification={toggleNotification}
                     onEmailDigestModeChange={changeEmailDigestMode}
                   />
+                  <InstallAppBanner hasReceivedOffer={jobs.length > 0} />
                 </div>
               </div>
 

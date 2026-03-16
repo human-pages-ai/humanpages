@@ -30,6 +30,11 @@ if (!syncLang) {
 // Initialize PostHog
 initPostHog();
 
+// Register service worker for push notifications
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
 // Log build version (check with: document.querySelector('meta[name="build-version"]')?.content)
 console.log(`[humanpages] build ${__COMMIT_HASH__} @ ${__BUILD_TIME__}`);
 const meta = document.createElement('meta');

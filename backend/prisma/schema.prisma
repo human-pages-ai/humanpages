@@ -260,6 +260,7 @@ model Human {
   emailNotifications     Boolean    @default(true)
   telegramNotifications  Boolean    @default(true)
   whatsappNotifications  Boolean    @default(true)
+  pushNotifications      Boolean    @default(false)
   analyticsOptOut        Boolean    @default(false) // GDPR: user can opt out of analytics tracking
 
   // Proof of humanity (Gitcoin Passport)
@@ -698,6 +699,10 @@ model Job {
 
   // Audit: who last moved the workflow forward
   lastActionBy    String?    // "AGENT" | "HUMAN" | "SYSTEM"
+
+  // Response time tracking (minutes from creation to first human action)
+  // NOTE: Normalize for timezone/active-hours before using in ranking or badges
+  responseTimeMinutes  Float?
 
   // Timestamps
   createdAt       DateTime  @default(now())
@@ -1711,21 +1716,6 @@ model PushSubscription {
   @@unique([humanId, endpoint])
 }
 
-// Persistent queue for push notification delivery.
-// Uses a DB-based outbox pattern with polling worker (no Redis/BullMQ dependency).
-model PushNotificationJob {
-  id        String   @id @default(cuid())
-  humanId   String
-  title     String
-  body      String
-  url       String
-  status    String   @default("PENDING") // PENDING, SENT, FAILED
-  attempts  Int      @default(0)
-  lastError String?
-  createdAt DateTime @default(now())
-
-  @@index([status])
-}
 
 // Cached geocoding results to avoid repeated Nominatim calls
 model GeoCache {

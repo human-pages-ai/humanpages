@@ -14,6 +14,7 @@ import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib
 import { sendJobOfferEmail, sendJobOfferUpdatedEmail, sendJobMessageEmail } from '../lib/email.js';
 import { sendJobOfferTelegram, sendJobOfferUpdatedTelegram, sendTelegramMessage } from '../lib/telegram.js';
 import { sendWhatsAppNotification, isWhatsAppEnabled } from '../lib/whatsapp.js';
+import { sendJobOfferPush, sendJobOfferUpdatedPush, sendJobMessagePush } from '../lib/push.js';
 import {
   verifyUsdcPayment,
   PaymentVerificationError,
@@ -232,6 +233,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         whatsappLastInboundAt: true,
         preferredLanguage: true,
         emailNotifications: true,
+        pushNotifications: true,
         paymentPreferences: true,
         // Filter settings
         minOfferPrice: true,
@@ -433,6 +435,11 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         templateVars: { '1': data.title, '2': `$${data.priceUsdc} USDC` },
         prisma,
       }).catch((err) => logger.error({ err }, 'WhatsApp notification failed'));
+    }
+
+    // Send push notification (async, don't block response)
+    if (human.pushNotifications) {
+      sendJobOfferPush(human.id, job.id).catch((err) => logger.error({ err }, 'Push notification failed'));
     }
 
     // Log x402 payment if this was a paid request
@@ -701,6 +708,7 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         whatsappVerified: true,
         whatsappNotifications: true,
         whatsappLastInboundAt: true,
+        pushNotifications: true,
         preferredLanguage: true,
       },
     });
@@ -749,6 +757,11 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
           templateVars: { '1': updated.title, '2': `$${updated.priceUsdc.toNumber()} USDC` },
           prisma,
         }).catch((err) => logger.error({ err }, 'Updated offer WhatsApp notification failed'));
+      }
+
+      // Push notification
+      if (human.pushNotifications) {
+        sendJobOfferUpdatedPush(human.id, updated.id).catch((err) => logger.error({ err }, 'Updated offer push notification failed'));
       }
     }
 
@@ -824,12 +837,16 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
       return res.status(400).json({ error: `Cannot accept job in ${job.status} status` });
     }
 
+    // Compute response time (minutes from creation to first human action)
+    const responseTimeMinutes = (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60);
+
     const updated = await prisma.job.update({
       where: { id: job.id },
       data: {
         status: 'ACCEPTED',
         acceptedAt: new Date(),
         lastActionBy: 'HUMAN',
+        responseTimeMinutes: Math.round(responseTimeMinutes * 10) / 10,
       },
     });
 
@@ -939,9 +956,16 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(400).json({ error: `Cannot reject job in ${job.status} status` });
     }
 
+    // Compute response time (minutes from creation to first human action)
+    const rejectResponseTime = (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60);
+
     const updated = await prisma.job.update({
       where: { id: job.id },
-      data: { status: 'REJECTED', lastActionBy: 'HUMAN' },
+      data: {
+        status: 'REJECTED',
+        lastActionBy: 'HUMAN',
+        responseTimeMinutes: Math.round(rejectResponseTime * 10) / 10,
+      },
     });
 
     // Fire webhook on rejection
@@ -1827,6 +1851,7 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
           whatsappVerified: true,
           whatsappNotifications: true,
           whatsappLastInboundAt: true,
+          pushNotifications: true,
           preferredLanguage: true,
         },
       });
@@ -1870,6 +1895,11 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
             templateVars: { '1': '1' },
             prisma,
           }).catch((err) => logger.error({ err }, 'Agent message WhatsApp notification failed'));
+        }
+
+        // Push notification
+        if (human.pushNotifications) {
+          sendJobMessagePush(human.id, job.id).catch((err) => logger.error({ err }, 'Agent message push notification failed'));
         }
       }
     }

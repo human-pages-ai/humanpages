@@ -88,6 +88,7 @@ interface PublicHuman {
     reviewCount: number;
     jobsCompleted: number;
   };
+  channelCount?: number;
   wallets?: Wallet[];
   yearsOfExperience?: number;
   services: Service[];
@@ -268,6 +269,17 @@ export default function PublicProfile() {
                 >
                   {profile.isAvailable ? t('publicProfile.available') : t('publicProfile.unavailable')}
                 </span>
+                {/* Reachability indicator — shows channel count, not names (privacy) */}
+                {profile.channelCount != null && profile.channelCount > 0 && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      profile.channelCount >= 3 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                    }`}
+                    title={`${profile.channelCount} notification channel${profile.channelCount > 1 ? 's' : ''} active`}
+                  >
+                    {profile.channelCount}/4 reachable
+                  </span>
+                )}
               </div>
             </div>
           </div>

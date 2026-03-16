@@ -104,6 +104,10 @@ const publicHumanSelect = {
   linkedinVerified: true,
   githubVerified: true,
   githubUsername: true,
+  emailNotifications: true,
+  telegramNotifications: true,
+  whatsappNotifications: true,
+  pushNotifications: true,
   humanityVerified: true,
   humanityScore: true,
   humanityProvider: true,
@@ -273,6 +277,7 @@ const updateProfileSchema = z.object({
   emailNotifications: z.boolean().optional(),
   telegramNotifications: z.boolean().optional(),
   whatsappNotifications: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
 
   // Analytics opt-out (GDPR)
   analyticsOptOut: z.boolean().optional(),
@@ -572,15 +577,16 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     // If a notification toggle is being changed, check if all channels will be off
-    if (updates.emailNotifications !== undefined || updates.telegramNotifications !== undefined || updates.whatsappNotifications !== undefined) {
+    if (updates.emailNotifications !== undefined || updates.telegramNotifications !== undefined || updates.whatsappNotifications !== undefined || updates.pushNotifications !== undefined) {
       const current = await prisma.human.findUnique({
         where: { id: req.userId },
-        select: { emailNotifications: true, telegramNotifications: true, whatsappNotifications: true },
+        select: { emailNotifications: true, telegramNotifications: true, whatsappNotifications: true, pushNotifications: true },
       });
       const email = updates.emailNotifications ?? current?.emailNotifications ?? true;
       const telegram = updates.telegramNotifications ?? current?.telegramNotifications ?? true;
       const whatsapp = updates.whatsappNotifications ?? current?.whatsappNotifications ?? true;
-      if (!email && !telegram && !whatsapp) {
+      const push = updates.pushNotifications ?? current?.pushNotifications ?? false;
+      if (!email && !telegram && !whatsapp && !push) {
         // All channels off — deactivate account so agents don't send unreachable offers
         updates.isAvailable = false;
       }
@@ -1224,12 +1230,17 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = await Promise.all(humans.map(async (h) => {
-      const { locationLat, locationLng, fiatPaymentMethods, ...rest } = h;
+      const { locationLat, locationLng, fiatPaymentMethods, emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...rest } = h as any;
       await attachPhotoUrl(rest);
+
+      // Compute channel count for agent visibility (names not exposed for privacy)
+      const channelCount = [emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications].filter(Boolean).length;
+
       return {
         ...rest,
         paymentMethods: (fiatPaymentMethods || []).map((f: { platform: string }) => f.platform),
         vouchCount: vouchCountMap.get(h.id) || 0,
+        channelCount,
         reputation: {
           jobsCompleted: jobCountMap.get(h.id) || 0,
           avgRating: reviewStatsMap.get(h.id)?.avgRating || 0,
@@ -1338,7 +1349,11 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 
     const reputation = await getReputationStats(human.id);
     const profileWithPhoto = await attachPhotoUrl({ ...human });
-    res.json(filterHiddenContact({ ...profileWithPhoto, reputation }));
+
+    // Compute channel count for agent visibility (names not exposed for privacy)
+    const channelCount = [(human as any).emailNotifications, (human as any).telegramNotifications, (human as any).whatsappNotifications, (human as any).pushNotifications].filter(Boolean).length;
+
+    res.json(filterHiddenContact({ ...profileWithPhoto, reputation, channelCount }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });

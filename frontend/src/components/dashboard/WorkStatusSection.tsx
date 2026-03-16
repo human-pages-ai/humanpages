@@ -1,16 +1,18 @@
 import { useTranslation } from 'react-i18next';
+import { isPushSupported } from '../../lib/pushNotifications';
 
 interface Props {
   isAvailable: boolean;
   emailNotifications: boolean;
   telegramNotifications: boolean;
   whatsappNotifications: boolean;
+  pushNotifications: boolean;
   whatsappConnected: boolean;
   whatsappAvailable: boolean;
   emailDigestMode: 'REALTIME' | 'HOURLY' | 'DAILY';
   saving: boolean;
   onToggleAvailability: () => void;
-  onToggleNotification: (channel: 'email' | 'telegram' | 'whatsapp') => void;
+  onToggleNotification: (channel: 'email' | 'telegram' | 'whatsapp' | 'push') => void;
   onEmailDigestModeChange: (mode: 'REALTIME' | 'HOURLY' | 'DAILY') => void;
 }
 
@@ -34,11 +36,14 @@ function Toggle({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: (
   );
 }
 
+const TOTAL_CHANNELS = 4;
+
 export default function WorkStatusSection({
   isAvailable,
   emailNotifications,
   telegramNotifications,
   whatsappNotifications,
+  pushNotifications,
   whatsappConnected,
   whatsappAvailable,
   emailDigestMode,
@@ -48,6 +53,7 @@ export default function WorkStatusSection({
   onEmailDigestModeChange,
 }: Props) {
   const { t } = useTranslation();
+  const pushSupported = isPushSupported();
 
   const DIGEST_OPTIONS: { value: 'REALTIME' | 'HOURLY' | 'DAILY'; labelKey: string }[] = [
     { value: 'REALTIME', labelKey: 'dashboard.emailDigest.realtime' },
@@ -55,7 +61,7 @@ export default function WorkStatusSection({
     { value: 'DAILY', labelKey: 'dashboard.emailDigest.daily' },
   ];
 
-  const channels: { key: 'email' | 'telegram' | 'whatsapp'; label: string; desc: string; enabled: boolean; extraDisabled?: boolean }[] = [
+  const channels: { key: 'email' | 'telegram' | 'whatsapp' | 'push'; label: string; desc: string; enabled: boolean; extraDisabled?: boolean }[] = [
     { key: 'email', label: t('dashboard.notifications.emailLabel'), desc: t('dashboard.notifications.emailDesc'), enabled: emailNotifications },
     { key: 'telegram', label: t('dashboard.notifications.telegramLabel'), desc: t('dashboard.notifications.telegramDesc'), enabled: telegramNotifications },
     ...(whatsappAvailable ? [{
@@ -65,21 +71,31 @@ export default function WorkStatusSection({
       enabled: whatsappNotifications,
       extraDisabled: !whatsappConnected,
     }] : []),
+    ...(pushSupported ? [{
+      key: 'push' as const,
+      label: t('dashboard.notifications.pushLabel', 'Push'),
+      desc: t('dashboard.notifications.pushDesc', 'Instant browser notifications for job offers'),
+      enabled: pushNotifications,
+    }] : []),
   ];
 
-  const allChannelsOff = !emailNotifications && !telegramNotifications && !(whatsappConnected && whatsappNotifications);
+  const allChannelsOff = !emailNotifications && !telegramNotifications && !(whatsappConnected && whatsappNotifications) && !pushNotifications;
+
+  // Count active channels for reachability meter
+  const activeCount = [emailNotifications, telegramNotifications, whatsappConnected && whatsappNotifications, pushNotifications].filter(Boolean).length;
 
   // Check if toggling a channel would turn off all channels
-  const wouldDeactivate = (channel: 'email' | 'telegram' | 'whatsapp') => {
+  const wouldDeactivate = (channel: 'email' | 'telegram' | 'whatsapp' | 'push') => {
     const next = {
       email: channel === 'email' ? !emailNotifications : emailNotifications,
       telegram: channel === 'telegram' ? !telegramNotifications : telegramNotifications,
       whatsapp: channel === 'whatsapp' ? !whatsappNotifications : whatsappNotifications,
+      push: channel === 'push' ? !pushNotifications : pushNotifications,
     };
-    return !next.email && !next.telegram && !(whatsappConnected && next.whatsapp);
+    return !next.email && !next.telegram && !(whatsappConnected && next.whatsapp) && !next.push;
   };
 
-  const handleToggle = (channel: 'email' | 'telegram' | 'whatsapp') => {
+  const handleToggle = (channel: 'email' | 'telegram' | 'whatsapp' | 'push') => {
     if (wouldDeactivate(channel)) {
       if (!window.confirm(t('dashboard.workStatus.allChannelsOffWarning', 'Turning off all notification channels will deactivate your account. Agents will no longer be able to reach you. Continue?'))) {
         return;
@@ -138,6 +154,38 @@ export default function WorkStatusSection({
           </p>
         )}
       </div>
+
+      {/* Reachability meter */}
+      {isAvailable && (
+        <div className="pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-gray-700">
+              {t('dashboard.reachability.title', 'Reachability')}
+            </h3>
+            <span className="text-xs text-gray-500">
+              {t('dashboard.reachability.count', '{{active}} of {{total}} channels', { active: activeCount, total: TOTAL_CHANNELS })}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className={`h-2 rounded-full transition-all ${
+                activeCount === TOTAL_CHANNELS ? 'bg-green-500' : activeCount >= 2 ? 'bg-blue-500' : 'bg-amber-500'
+              }`}
+              style={{ width: `${(activeCount / TOTAL_CHANNELS) * 100}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {activeCount === TOTAL_CHANNELS
+              ? t('dashboard.reachability.full', "You're fully reachable — agents are more likely to send you offers")
+              : t('dashboard.reachability.partial', 'Enable more channels so agents are more likely to reach you')}
+          </p>
+          {activeCount > 0 && (
+            <p className="text-xs text-gray-400 mt-1">
+              {t('dashboard.reachability.agentsSee', 'Agents can see your reachability score ({{count}}/{{total}})', { count: activeCount, total: TOTAL_CHANNELS })}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Email frequency / digest mode */}
       {emailNotifications && isAvailable && (
