@@ -40,6 +40,7 @@ const StatusPage = lazy(() => import('./pages/StatusPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const GptSetupPage = lazy(() => import('./pages/GptSetupPage'));
 const PartnersPage = lazy(() => import('./pages/PartnersPage'));
+const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -260,6 +261,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/agents/:id" element={<AgentProfile />} />
       <Route path="/humans/:id" element={<PublicProfile />} />
       <Route path="/u/:username" element={<PublicProfile />} />
       <Route

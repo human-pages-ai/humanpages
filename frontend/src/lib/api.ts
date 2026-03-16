@@ -303,7 +303,9 @@ export const api = {
       name: string;
       description?: string;
       websiteUrl?: string;
+      contactEmail?: string;
       domainVerified: boolean;
+      lastActiveAt?: string;
       createdAt: string;
       reputation: {
         totalJobs: number;
