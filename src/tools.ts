@@ -137,6 +137,8 @@ interface SearchParams {
   verified?: string;
   min_experience?: number;
   fiat_platform?: string;
+  sort_by?: string;
+  min_completed_jobs?: number;
 }
 
 interface SearchResponse {
@@ -161,6 +163,8 @@ async function searchHumans(params: SearchParams): Promise<SearchResponse> {
   if (params.verified) query.set('verified', params.verified);
   if (params.min_experience) query.set('minExperience', params.min_experience.toString());
   if (params.fiat_platform) query.set('fiatPlatform', params.fiat_platform);
+  if (params.sort_by) query.set('sortBy', params.sort_by);
+  if (params.min_completed_jobs) query.set('minCompletedJobs', params.min_completed_jobs.toString());
 
   const res = await fetch(`${API_BASE}/api/humans/search?${query}`);
   if (!res.ok) {
@@ -195,7 +199,7 @@ export function createServer(): Server {
       {
         name: 'search_humans',
         description:
-          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates with radius), and rate. When using text location, provide a fully-qualified name (e.g., "Richmond, Virginia, USA" not just "Richmond") for accurate geocoding. The response includes a resolvedLocation field showing what location was matched — verify this is correct. Default search radius is 30km. Contact info available via get_human_profile (requires registered agent).',
+          'Search for humans available for hire. Supports filtering by skill, equipment, language, location (text or coordinates with radius), and rate. Use sort_by to control result ordering — "completed_jobs" surfaces workers with proven platform experience first, "rating" sorts by reviews, "experience" by years of professional experience. Use min_completed_jobs to only see workers who have successfully completed jobs on the platform. When using text location, provide a fully-qualified name (e.g., "Richmond, Virginia, USA" not just "Richmond") for accurate geocoding. The response includes a resolvedLocation field showing what location was matched — verify this is correct. Default search radius is 30km. Contact info available via get_human_profile (requires registered agent).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -253,6 +257,15 @@ export function createServer(): Server {
             fiat_platform: {
               type: 'string',
               description: 'Filter by fiat payment platform the human accepts (e.g., "WISE", "PAYPAL", "VENMO", "REVOLUT", "CASHAPP", "ZELLE", "MONZO", "N26", "MERCADOPAGO")',
+            },
+            sort_by: {
+              type: 'string',
+              enum: ['completed_jobs', 'rating', 'experience', 'recent'],
+              description: 'Sort results by: "completed_jobs" (humans with platform experience first), "rating" (highest rated first), "experience" (most years of professional experience first), "recent" (most recently active first). Default sorts by completed jobs, then rating, then experience.',
+            },
+            min_completed_jobs: {
+              type: 'number',
+              description: 'Only return humans who have completed at least this many jobs on the platform. Useful for finding experienced, proven workers.',
             },
           },
         },

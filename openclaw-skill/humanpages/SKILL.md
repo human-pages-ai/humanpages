@@ -39,6 +39,8 @@ Use `search_humans` to find people. Filter by:
 - `max_rate` — maximum hourly rate in USD
 - `work_mode` — REMOTE, ONSITE, or HYBRID
 - `verified` — set to "humanity" for identity-verified humans only
+- `sort_by` — `completed_jobs` (proven workers first), `rating`, `experience`, or `recent`
+- `min_completed_jobs` — only return humans with at least N completed platform jobs
 
 Use `get_human` for a detailed public profile (bio, skills, services, reputation).
 

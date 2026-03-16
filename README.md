@@ -118,6 +118,8 @@ If no humans match, the response suggests using `create_listing` to post a job l
 - `lat`, `lng`, `radius` (number, optional): Radius search in km
 - `max_rate` (number, optional): Maximum hourly rate in USD
 - `available_only` (boolean, default: true): Only show available humans
+- `sort_by` (string, optional): Sort results — `completed_jobs` (proven workers first), `rating`, `experience`, or `recent`
+- `min_completed_jobs` (number, optional): Only return humans with at least N completed jobs on the platform
 
 ### get_human
 Get basic information about a specific human (bio, skills, services). Contact info and wallets are not included — use `get_human_profile`.
