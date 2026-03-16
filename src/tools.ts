@@ -1129,7 +1129,7 @@ export function createServer(): Server {
             const displayName = h.name || h.username || 'Name hidden';
             const jobsCompleted = rep?.jobsCompleted || 0;
             const jobsBadge = jobsCompleted > 0 ? ` | 🏆 ${jobsCompleted} job${jobsCompleted !== 1 ? 's' : ''} completed` : '';
-            return `- **${displayName}**${h.username && h.name ? ` (@${h.username})` : ''} [${displayLocation}]
+            return `- **${displayName}**${h.username && h.name ? ` (@${h.username})` : ''} | human_id: \`${h.id}\` [${displayLocation}]
   ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}${jobsBadge}
   ${humanityStatus}
   Skills: ${h.skills.join(', ') || 'None listed'}
