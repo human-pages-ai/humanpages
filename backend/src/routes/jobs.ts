@@ -1171,7 +1171,7 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
     } else if (isUponCompletion && job.status === 'ACCEPTED') {
       // Upon-completion flow: ACCEPTED → SUBMITTED (requires evidence)
       const body = z.object({
-        message: z.string().min(20, 'Please describe what you did in at least 20 characters'),
+        message: z.string().min(20, 'Please describe what you did in at least 20 characters').max(2000, 'Message must be 2000 characters or fewer'),
       }).parse(req.body);
 
       // Post evidence to chat before status update
