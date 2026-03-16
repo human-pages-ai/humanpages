@@ -77,6 +77,18 @@ else
 fi
 
 echo ""
+echo "=== Deploying MCP Server ==="
+if [ -d /opt/humanpages ]; then
+  cd /opt/humanpages
+  git pull
+  npm ci --include=dev
+  npm run build
+  echo "MCP server updated"
+else
+  echo "SKIP: /opt/humanpages not found"
+fi
+
+echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"
