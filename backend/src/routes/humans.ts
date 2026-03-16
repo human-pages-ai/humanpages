@@ -997,9 +997,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.isAvailable = true;
     }
 
-    // Filter by work mode
+    // Filter by work mode (include humans who haven't set a preference)
     if (workMode) {
-      where.workMode = workMode as string;
+      where.workMode = { in: [workMode as string, null] };
     }
 
     // Filter by minimum years of experience
