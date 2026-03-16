@@ -288,15 +288,21 @@ add_task "test:fe" "cd frontend && npm test"
 if [ "$MODE" = "lite" ]; then
   echo "  Running lite checks with ${LITE_TIMEOUT}s timeout... (log: $LOG)"
 
-  # Build concurrently args from command file
-  CONC_ARGS=""
-  while IFS= read -r cmd; do
-    CONC_ARGS="$CONC_ARGS \"$cmd\""
-  done < "$CMD_FILE"
+  # Generate a runner script to avoid eval quoting issues with && in commands
+  RUNNER="$REPO_ROOT/.pre-push-runner.sh"
+  {
+    echo '#!/bin/sh'
+    printf 'exec npx concurrently --kill-others-on-fail -n "%s"' "$NAMES"
+    while IFS= read -r cmd; do
+      # Single-quote each command so shell metacharacters (&&, etc.) are preserved
+      printf " '%s'" "$cmd"
+    done < "$CMD_FILE"
+    echo
+  } > "$RUNNER"
+  chmod +x "$RUNNER"
 
-  eval "timeout --signal=TERM --kill-after=10 $LITE_TIMEOUT \
-    npx concurrently --kill-others-on-fail \
-    -n \"$NAMES\" $CONC_ARGS" \
+  timeout --signal=TERM --kill-after=10 "$LITE_TIMEOUT" \
+    "$RUNNER" \
     >"$LOG" 2>&1
 
   LITE_EXIT=$?

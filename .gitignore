@@ -41,3 +41,5 @@ mcp-publisher
 .pre-push-stage.log
 .pre-push-run.log
 .pre-push-e2e-servers.log
+.pre-push-cmds.txt
+.pre-push-runner.sh
