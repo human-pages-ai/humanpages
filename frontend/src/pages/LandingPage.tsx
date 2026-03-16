@@ -571,15 +571,15 @@ function FeaturedSection() {
                   {h.profilePhotoUrl ? (
                     <img
                       src={h.profilePhotoUrl}
-                      alt={h.username}
+                      alt={h.name}
                       className="w-16 h-16 rounded-full mx-auto mb-3 object-cover ring-2 ring-slate-100 group-hover:ring-blue-200 transition-all"
                     />
                   ) : (
                     <div className="w-16 h-16 rounded-full mx-auto mb-3 bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">
-                      {(h.username || '?').charAt(0).toUpperCase()}
+                      {(h.name || '?').charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <h3 className="font-medium text-slate-900 text-sm truncate">{h.username}</h3>
+                  <h3 className="font-medium text-slate-900 text-sm truncate">{h.name}</h3>
                   {h.location && (
                     <p className="text-xs text-slate-400 mt-0.5 truncate">{h.location}</p>
                   )}
