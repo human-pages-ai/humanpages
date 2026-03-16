@@ -80,7 +80,7 @@ The MCP server provides 16 tools for searching, hiring, messaging, and paying hu
 The REST API is available at `https://humanpages.ai/api`. Key endpoints:
 
 ### Public Endpoints (no auth required)
-- `GET /api/humans/search` — Search humans by skill, location, availability, minExperience (returns public profiles only)
+- `GET /api/humans/search` — Search humans by skill, location, availability, minExperience, sortBy (completed_jobs|rating|experience|recent), minCompletedJobs (returns public profiles only)
 - `GET /api/humans/:id` — Get a human's public profile (no contact info or wallets)
 
 ### Agent Registration

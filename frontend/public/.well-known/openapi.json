@@ -101,6 +101,18 @@
             "in": "query",
             "description": "Minimum years of professional experience",
             "schema": { "type": "integer" }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Sort results: completed_jobs (proven workers first), rating (highest rated), experience (most years), recent (last active). Default sorts by completed jobs, then rating, then experience.",
+            "schema": { "type": "string", "enum": ["completed_jobs", "rating", "experience", "recent"] }
+          },
+          {
+            "name": "minCompletedJobs",
+            "in": "query",
+            "description": "Only return humans who have completed at least this many jobs on the platform",
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {

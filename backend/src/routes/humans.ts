@@ -931,6 +931,8 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       verified,
       paymentType,
       fiatPlatform,
+      sortBy,
+      minCompletedJobs,
       limit = '20',
       offset = '0',
     } = req.query;
@@ -1077,13 +1079,23 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     // Count total matching humans (before pagination)
     const total = await prisma.human.count({ where });
 
+    // Determine if we need a larger fetch pool for post-fetch sorting
+    const reputationSort = sortBy === 'completed_jobs' || sortBy === 'rating';
+    const needsLargePool = isSkillSearch || reputationSort;
+
+    // Choose DB-level ordering based on sortBy
+    let orderBy: any = { lastActiveAt: 'desc' };
+    if (sortBy === 'experience') {
+      orderBy = [{ yearsOfExperience: 'desc' }, { lastActiveAt: 'desc' }];
+    }
+
     // Fetch humans (public: no contact info, no wallets)
-    // When doing skill search, fetch more candidates for relevance scoring
+    // When doing skill search or reputation sort, fetch more candidates for post-fetch scoring/sorting
     let humans = await prisma.human.findMany({
       where,
-      take: isSkillSearch ? 500 : requestedLimit,
-      skip: isSkillSearch ? 0 : requestedOffset,
-      orderBy: { lastActiveAt: 'desc' },
+      take: needsLargePool ? 500 : requestedLimit,
+      skip: needsLargePool ? 0 : requestedOffset,
+      orderBy,
       select: {
         ...publicHumanSelect,
         locationLat: true,
@@ -1258,11 +1270,40 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     trackServerEvent(ip, 'humans_searched', {
       skill,
       location,
+      sortBy,
+      minCompletedJobs,
       resultCount: humansWithReputation.length,
     }, req);
 
+    // Filter by minimum completed jobs
+    let filteredResults = humansWithReputation;
+    if (minCompletedJobs) {
+      const minJobs = parseInt(minCompletedJobs as string);
+      if (!isNaN(minJobs) && isFinite(minJobs) && minJobs > 0) {
+        filteredResults = filteredResults.filter(h => h.reputation.jobsCompleted >= minJobs);
+      }
+    }
+
     // Sort by reputation: humans with completed jobs and reviews first
-    humansWithReputation.sort((a, b) => {
+    // sortBy param controls primary sort key
+    filteredResults.sort((a, b) => {
+      if (sortBy === 'recent') {
+        // Preserve DB ordering (lastActiveAt desc) — no re-sort needed
+        return 0;
+      }
+      if (sortBy === 'rating') {
+        const aRating = a.reputation.avgRating;
+        const bRating = b.reputation.avgRating;
+        if (aRating !== bRating) return bRating - aRating;
+        return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
+      }
+      if (sortBy === 'experience') {
+        const aExp = a.yearsOfExperience || 0;
+        const bExp = b.yearsOfExperience || 0;
+        if (aExp !== bExp) return bExp - aExp;
+        return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
+      }
+      // Default and sortBy=completed_jobs: jobs first, then rating, then experience
       const aJobs = a.reputation.jobsCompleted;
       const bJobs = b.reputation.jobsCompleted;
       if (aJobs !== bJobs) return bJobs - aJobs;
@@ -1272,9 +1313,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       return (b.yearsOfExperience || 0) - (a.yearsOfExperience || 0);
     });
 
+    // Apply pagination for reputation-sorted results (fetched in larger pool)
+    if (reputationSort && !isSkillSearch) {
+      filteredResults = filteredResults.slice(requestedOffset, requestedOffset + requestedLimit);
+    }
+
     res.json({
       total,
-      results: humansWithReputation,
+      results: filteredResults,
       ...(resolvedLocation ? { resolvedLocation } : {}),
       ...(centerLat != null && centerLng != null && radiusKm ? {
         searchRadius: { lat: centerLat, lng: centerLng, radiusKm },
