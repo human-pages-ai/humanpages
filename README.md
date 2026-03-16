@@ -24,7 +24,7 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": ["-y", "humanpages"],
       "env": {
-        "API_BASE_URL": "https://api.humanpages.ai"
+        "API_BASE_URL": "https://humanpages.ai"
       }
     }
   }
@@ -386,7 +386,7 @@ Once installed, you can ask Claude:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `API_BASE_URL` | Base URL of the Human Pages API | `https://api.humanpages.ai` |
+| `API_BASE_URL` | Base URL of the Human Pages API | `https://humanpages.ai` |
 
 ## Development
 

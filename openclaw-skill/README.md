@@ -47,7 +47,7 @@ Or manually add to your `mcporter.json`:
       "command": "npx",
       "args": ["-y", "humanpages"],
       "env": {
-        "API_BASE_URL": "https://api.humanpages.ai"
+        "API_BASE_URL": "https://humanpages.ai"
       }
     }
   }

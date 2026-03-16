@@ -11,7 +11,7 @@ describe("HumanPagesActionProvider", () => {
     jest.clearAllMocks();
     provider = new HumanPagesActionProvider({
       apiKey: "hp_testapikey123456789012345678901234567890abcdef",
-      apiBaseUrl: "https://api.humanpages.ai",
+      apiBaseUrl: "https://humanpages.ai",
     });
   });
 
@@ -42,7 +42,7 @@ describe("HumanPagesActionProvider", () => {
 
       expect(parsed.humans).toHaveLength(1);
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.humanpages.ai/api/humans/search?skill=photography",
+        "https://humanpages.ai/api/humans/search?skill=photography",
         expect.objectContaining({
           headers: expect.objectContaining({ "X-Agent-Key": expect.any(String) }),
         }),
@@ -93,7 +93,7 @@ describe("HumanPagesActionProvider", () => {
 
       expect(parsed.contactEmail).toBe("alice@example.com");
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.humanpages.ai/api/humans/h1/profile",
+        "https://humanpages.ai/api/humans/h1/profile",
         expect.any(Object),
       );
     });
@@ -118,7 +118,7 @@ describe("HumanPagesActionProvider", () => {
       expect(parsed.id).toBe("j1");
       expect(parsed.status).toBe("PENDING");
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.humanpages.ai/api/jobs",
+        "https://humanpages.ai/api/jobs",
         expect.objectContaining({ method: "POST" }),
       );
     });
@@ -174,7 +174,7 @@ describe("HumanPagesActionProvider", () => {
 
       expect(parsed.status).toBe("PAID");
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.humanpages.ai/api/jobs/j1/paid",
+        "https://humanpages.ai/api/jobs/j1/paid",
         expect.objectContaining({ method: "PATCH" }),
       );
     });

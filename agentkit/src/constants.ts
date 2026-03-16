@@ -1,4 +1,4 @@
-export const HUMANPAGES_API_BASE_URL = "https://api.humanpages.ai";
+export const HUMANPAGES_API_BASE_URL = "https://humanpages.ai";
 
 // x402 platform access fees (USDC on Base) — separate from human payment
 export const HUMANPAGES_PRICING = {
