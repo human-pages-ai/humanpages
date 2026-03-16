@@ -3,37 +3,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:3001';
-
-const PLAYBOOKS = [
-  { type: 'directory-submissions', name: 'Directory & Listing Submissions', description: 'Submit your product to 80+ directories with CAPTCHAs, manual forms, and account creation. Includes a curated directory list.' },
-  { type: 'qa-testing', name: 'Real-Device QA Testing', description: 'Test your app on real phones, browsers, and networks. Get bug reports with screenshots and device info.' },
-  { type: 'competitor-monitoring', name: 'Competitor Monitoring', description: 'Track competitor pricing, features, and changes — including pages gated behind "contact sales."' },
-  { type: 'localization', name: 'Localization Smoke Testing', description: 'Native speaker flags mistranslations, cultural mismatches, and text overflow in your localized app.' },
-  { type: 'community-management', name: 'Community Management', description: 'Moderate your Discord, subreddit, or forum. Welcome members, answer questions, enforce rules.' },
-] as const;
-
-const PLAYBOOK_TYPES: string[] = PLAYBOOKS.map(p => p.type);
-
-function getPlaybookContent(taskType: string): string {
-  // Try to find playbooks relative to the compiled output (dist/) or source
-  const possibleBases = [
-    join(dirname(fileURLToPath(import.meta.url)), '..', 'playbooks'),
-    join(dirname(fileURLToPath(import.meta.url)), 'playbooks'),
-  ];
-  for (const base of possibleBases) {
-    try {
-      return readFileSync(join(base, `${taskType}.md`), 'utf-8');
-    } catch {
-      continue;
-    }
-  }
-  throw new Error(`Playbook not found: ${taskType}. Available: ${PLAYBOOK_TYPES.join(', ')}`);
-}
 
 interface Human {
   id: string;
@@ -85,6 +55,7 @@ interface Human {
   };
   wallets?: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
   fiatPaymentMethods?: { platform: string; handle: string; label?: string; isPrimary?: boolean }[];
+  paymentMethods?: string[];
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
 }
 
@@ -94,6 +65,8 @@ interface AgentProfile {
   description?: string;
   websiteUrl?: string;
   contactEmail?: string;
+  walletAddress?: string;
+  walletNetwork?: string;
   domainVerified: boolean;
   verifiedAt?: string;
   lastActiveAt?: string;
@@ -162,6 +135,7 @@ interface SearchParams {
   work_mode?: string;
   verified?: string;
   min_experience?: number;
+  fiat_platform?: string;
 }
 
 interface SearchResponse {
@@ -184,6 +158,7 @@ async function searchHumans(params: SearchParams): Promise<SearchResponse> {
   if (params.work_mode) query.set('workMode', params.work_mode);
   if (params.verified) query.set('verified', params.verified);
   if (params.min_experience) query.set('minExperience', params.min_experience.toString());
+  if (params.fiat_platform) query.set('fiatPlatform', params.fiat_platform);
 
   const res = await fetch(`${API_BASE}/api/humans/search?${query}`);
   if (!res.ok) {
@@ -273,6 +248,10 @@ export function createServer(): Server {
               type: 'number',
               description: 'Minimum years of professional experience',
             },
+            fiat_platform: {
+              type: 'string',
+              description: 'Filter by fiat payment platform the human accepts (e.g., "WISE", "PAYPAL", "VENMO", "REVOLUT", "CASHAPP", "ZELLE", "MONZO", "N26", "MERCADOPAGO")',
+            },
           },
         },
       },
@@ -318,6 +297,10 @@ export function createServer(): Server {
               type: 'string',
               description: 'Webhook URL for receiving platform events (new job matches, status changes, announcements). Must be a public HTTPS endpoint.',
             },
+            wallet_address: {
+              type: 'string',
+              description: 'Optional EVM wallet address (0x...) for USDC payments. Can also be set later with set_wallet.',
+            },
           },
           required: ['name'],
         },
@@ -335,6 +318,53 @@ export function createServer(): Server {
             },
           },
           required: ['agent_id'],
+        },
+      },
+      {
+        name: 'set_wallet',
+        description:
+          'Set the wallet address for a registered agent. This is used for receiving USDC payments and checking balance. The address must be a valid EVM address (0x + 40 hex chars). Network defaults to "base" (recommended for low fees).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            agent_id: {
+              type: 'string',
+              description: 'Your registered agent ID',
+            },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (starts with hp_)',
+            },
+            wallet_address: {
+              type: 'string',
+              description: 'EVM wallet address (0x...)',
+            },
+            wallet_network: {
+              type: 'string',
+              enum: ['base', 'ethereum', 'polygon', 'arbitrum', 'base-sepolia'],
+              description: 'Blockchain network (default: "base"). Options: base, ethereum, polygon, arbitrum',
+            },
+          },
+          required: ['agent_id', 'agent_key', 'wallet_address'],
+        },
+      },
+      {
+        name: 'get_funding_info',
+        description:
+          'Get funding instructions and current wallet balance for a registered agent. Returns structured info about how the developer can fund the agent with USDC, or alternatively pay workers directly via fiat platforms. Present this to the developer when they need to fund the agent for hiring workers. Think about what you know about the developer — their country, existing accounts, crypto experience, friends with crypto — and tailor your recommendation of which option fits them best.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            agent_id: {
+              type: 'string',
+              description: 'Your registered agent ID',
+            },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (starts with hp_)',
+            },
+          },
+          required: ['agent_id', 'agent_key'],
         },
       },
       {
@@ -1027,31 +1057,6 @@ export function createServer(): Server {
           required: ['agent_key'],
         },
       },
-      {
-        name: 'list_playbooks',
-        description:
-          'List available task delegation playbooks. Each playbook contains step-by-step instructions for hiring a human to do a specific type of work (QA testing, competitor monitoring, directory submissions, etc.).',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-        },
-      },
-      {
-        name: 'get_playbook',
-        description:
-          'Get the full content of a delegation playbook. Returns detailed instructions including search criteria, job offer templates, pricing, verification steps, and communication templates.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            task_type: {
-              type: 'string',
-              description: 'The playbook type to retrieve',
-              enum: ['qa-testing', 'competitor-monitoring', 'localization', 'directory-submissions', 'community-management'],
-            },
-          },
-          required: ['task_type'],
-        },
-      },
     ],
   }));
 
@@ -1073,6 +1078,7 @@ export function createServer(): Server {
           work_mode: args?.work_mode as string | undefined,
           verified: args?.verified as string | undefined,
           min_experience: args?.min_experience as number | undefined,
+          fiat_platform: args?.fiat_platform as string | undefined,
         });
 
         const humans = response.results;
@@ -1113,6 +1119,7 @@ export function createServer(): Server {
   Equipment: ${h.equipment.join(', ') || 'None listed'}
   Languages: ${h.languages.join(', ') || 'Not specified'}
   Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
+  Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}
   Jobs completed: ${rep?.jobsCompleted || 0}`;
           })
           .join('\n\n');
@@ -1199,6 +1206,7 @@ ${servicesInfo || 'No services listed'}`;
             websiteUrl: args?.website_url,
             contactEmail: args?.contact_email,
             webhookUrl: args?.webhook_url,
+            walletAddress: args?.wallet_address,
           }),
         });
 
@@ -1262,6 +1270,121 @@ To get a verified badge, set up domain verification using \`verify_agent_domain\
 
         return {
           content: [{ type: 'text', text: details }],
+        };
+      }
+
+      if (name === 'set_wallet') {
+        const agentKey = args?.agent_key as string;
+        if (!agentKey) {
+          throw new Error('agent_key is required.');
+        }
+
+        const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/wallet`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Agent-Key': agentKey,
+          },
+          body: JSON.stringify({
+            walletAddress: args?.wallet_address,
+            walletNetwork: args?.wallet_network || 'base',
+          }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.error || `API error: ${res.status}`);
+        }
+
+        const result = await res.json() as { id: string; name: string; walletAddress: string; walletNetwork: string };
+
+        return {
+          content: [{
+            type: 'text',
+            text: `**Wallet Set!**
+
+**Agent:** ${result.name}
+**Wallet Address:** \`${result.walletAddress}\`
+**Network:** ${result.walletNetwork}
+
+Your wallet is now configured. Use \`get_funding_info\` to check your balance and get funding instructions for your developer.`,
+          }],
+        };
+      }
+
+      if (name === 'get_funding_info') {
+        const agentKey = args?.agent_key as string;
+        if (!agentKey) {
+          throw new Error('agent_key is required.');
+        }
+
+        // Fetch balance
+        const balanceRes = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/balance`);
+        if (!balanceRes.ok) {
+          throw new Error(`Could not fetch balance: ${balanceRes.status}`);
+        }
+        const balanceData = await balanceRes.json() as {
+          balance: string | null;
+          currency: string;
+          network: string;
+          walletAddress: string | null;
+          message?: string;
+        };
+
+        const hasWallet = balanceData.walletAddress != null;
+        const balance = balanceData.balance ?? '0.00';
+        const network = balanceData.network || 'base';
+        const addr = balanceData.walletAddress || '(not set)';
+
+        // Build Transak URL (pre-filled with wallet, params encoded for safety)
+        const transakUrl = hasWallet
+          ? `https://global.transak.com/?cryptoCurrencyCode=USDC&network=${encodeURIComponent(network)}&walletAddress=${encodeURIComponent(addr)}`
+          : 'https://global.transak.com/?cryptoCurrencyCode=USDC&network=base';
+
+        const fundingMethods = [
+          { method: 'crypto_transfer', label: 'Send USDC', description: `Send USDC to ${addr} on ${network}` },
+          { method: 'credit_card', label: 'Buy with card', provider: 'Transak', url: transakUrl },
+          { method: 'peer_exchange', label: 'Convert via Peer', provider: 'Peer (peer.xyz)', url: 'https://peer.xyz', description: 'Convert from Wise, PayPal, Venmo, or 15+ other platforms to USDC' },
+          { method: 'ask_friend', label: 'Ask someone with crypto', description: `Have them send USDC to ${addr}` },
+        ];
+
+        const fiatAlternative = {
+          description: 'You can also pay workers directly via shared payment platforms (Wise, PayPal, Venmo, Revolut, etc.) without needing crypto. Search for workers who accept your preferred platform.',
+          useSearchParam: 'fiat_platform',
+        };
+
+        const message = `I need funding to hire workers on your behalf.
+
+Current balance: $${balance} USDC${hasWallet ? '' : ' (no wallet set — use set_wallet first)'}
+Wallet address: ${addr}
+Network: ${network}
+
+**Option A — Fund with USDC (for crypto payments):**
+
+1. Already have crypto? Send USDC to my wallet address above on ${network}.
+2. Buy with card: [Transak](${transakUrl})
+3. Convert from Wise/PayPal/Venmo/etc: [Peer (peer.xyz)](https://peer.xyz)
+4. Know someone with crypto? Ask them to send USDC to my address.
+
+**Option B — Pay workers directly with fiat:**
+I can find workers who accept payment platforms you already use (Wise, PayPal, Venmo, Revolut, etc.). You'd pay them directly — no crypto needed.
+
+**Think about what works best for you** — consider what accounts you already have, whether you or anyone you know holds crypto, and what payment methods are common where you are. I can help figure out the easiest path.
+
+Which option works best for you?`;
+
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              currentBalance: balance,
+              walletAddress: addr,
+              walletNetwork: network,
+              fundingMethods,
+              fiatAlternative,
+              message,
+            }, null, 2),
+          }],
         };
       }
 
@@ -2459,30 +2582,6 @@ ${args?.comment ? `**Comment:** ${args?.comment}` : ''}
 Thank you for your feedback. This helps build the human's reputation.`,
             },
           ],
-        };
-      }
-
-      if (name === 'list_playbooks') {
-        const list = PLAYBOOKS.map(p => `- **${p.name}** (\`${p.type}\`): ${p.description}`).join('\n');
-        return {
-          content: [{
-            type: 'text',
-            text: `**Available Delegation Playbooks**\n\n${list}\n\nUse \`get_playbook(task_type)\` to get full instructions for any playbook.`,
-          }],
-        };
-      }
-
-      if (name === 'get_playbook') {
-        const taskType = args?.task_type as string;
-        if (!taskType || !PLAYBOOK_TYPES.includes(taskType)) {
-          return {
-            content: [{ type: 'text', text: `Invalid task_type. Must be one of: ${PLAYBOOK_TYPES.join(', ')}` }],
-            isError: true,
-          };
-        }
-        const content = getPlaybookContent(taskType);
-        return {
-          content: [{ type: 'text', text: content }],
         };
       }
 

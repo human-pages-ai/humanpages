@@ -134,8 +134,6 @@ describe('MCP Server', () => {
       expect(names).toContain('get_activation_status');
       expect(names).toContain('get_payment_activation');
       expect(names).toContain('verify_payment_activation');
-      expect(names).toContain('list_playbooks');
-      expect(names).toContain('get_playbook');
     });
 
     it('should have input schemas for all tools', async () => {
