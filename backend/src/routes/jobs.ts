@@ -216,8 +216,10 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
     }
 
     // Verify human exists, is email-verified, and get contact info + filter settings
-    const human = await prisma.human.findUnique({
-      where: { id: data.humanId },
+    // Accept either CUID or username as humanId
+    const isCuid = data.humanId.length >= 20 && /^[a-z0-9]+$/.test(data.humanId);
+    const human = await prisma.human.findFirst({
+      where: isCuid ? { id: data.humanId } : { username: data.humanId },
       select: {
         id: true,
         name: true,
@@ -348,7 +350,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
 
     const job = await prisma.job.create({
       data: {
-        humanId: data.humanId,
+        humanId: human.id,
         agentId: data.agentId,
         agentName: data.agentName || agent.name,
         registeredAgentId: agent.id,

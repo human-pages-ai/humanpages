@@ -1396,8 +1396,14 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
       }
     }
 
+    // Accept either CUID or username as the :id parameter
+    const idParam = req.params.id;
+    const isCuid = idParam.length >= 20 && /^[a-z0-9]+$/.test(idParam);
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, ...identityVerifiedWhere },
+      where: {
+        ...(isCuid ? { id: idParam } : { username: idParam }),
+        ...identityVerifiedWhere,
+      },
       select: fullHumanSelect,
     });
 
