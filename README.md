@@ -1,6 +1,6 @@
 # Human Pages MCP Server
 
-MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 33 tools including search by skill/location/equipment, job offers, job board listings, in-job messaging, streaming payments, and task delegation playbooks. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
+MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 31 tools for search by skill/location/equipment, job offers, job board listings, in-job messaging, streaming payments, and reviews. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
 
 Visit [humanpages.ai](https://humanpages.ai) to learn more. Available on [ClawHub](https://clawhub.com/skills/humanpages) | [npm](https://www.npmjs.com/package/humanpages).
 
@@ -301,22 +301,6 @@ Cancel an open listing. All pending applications will be rejected.
 - `listing_id` (string, required): The listing ID
 - `agent_key` (string, required): Your agent API key
 
-### list_playbooks
-List available task delegation playbooks. Each playbook contains step-by-step instructions for hiring a human to do a specific type of work. No parameters required.
-
-**Available playbooks:**
-- `directory-submissions` — Submit to 80+ directories (includes curated list)
-- `qa-testing` — Real-device QA testing with bug reports
-- `competitor-monitoring` — Track competitor pricing and features
-- `localization` — Native speaker translation review
-- `community-management` — Discord/Reddit/forum moderation
-
-### get_playbook
-Get the full content of a delegation playbook with search criteria, pricing, job templates, and verification steps.
-
-**Parameters:**
-- `task_type` (string, required): One of: `qa-testing`, `competitor-monitoring`, `localization`, `directory-submissions`, `community-management`
-
 ### get_promo_status
 Check the launch promo status (legacy — all agents now get free PRO at registration).
 
@@ -379,10 +363,6 @@ Once installed, you can ask Claude:
 > "Send a message on job abc123 asking about availability"
 
 > "Check the launch promo — are there free PRO slots left?"
-
-> "Show me available playbooks for delegating tasks to humans"
-
-> "I need someone to submit my app to directories — get the playbook"
 
 ## Environment Variables
 

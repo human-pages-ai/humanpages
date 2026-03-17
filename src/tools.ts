@@ -174,9 +174,18 @@ async function searchHumans(params: SearchParams): Promise<SearchResponse> {
 }
 
 async function getHuman(id: string): Promise<Human> {
-  const res = await fetch(`${API_BASE}/api/humans/${id}`);
+  // Try by ID first, then by username if it looks like one
+  let res = await fetch(`${API_BASE}/api/humans/${encodeURIComponent(id)}`);
+  if (!res.ok && !id.match(/^[0-9a-f-]{36}$/i)) {
+    // Might be a username — sanitize and try the username endpoint
+    const cleanId = id.startsWith('@') ? id.slice(1) : id;
+    if (!/^[a-zA-Z0-9_-]+$/.test(cleanId)) {
+      throw new Error(`Invalid human ID or username: "${id}". Usernames can only contain letters, numbers, hyphens, and underscores. Use search_humans to find valid human IDs.`);
+    }
+    res = await fetch(`${API_BASE}/api/humans/u/${encodeURIComponent(cleanId)}`);
+  }
   if (!res.ok) {
-    throw new Error(`Human not found: ${id}`);
+    throw new Error(`Human not found: "${id}". Use search_humans to find valid human IDs, or try a username (e.g., "johndoe" or "@johndoe").`);
   }
   return res.json() as Promise<Human>;
 }
@@ -199,7 +208,7 @@ export function createServer(): Server {
       {
         name: 'search_humans',
         description:
-          'Search for humans available for hire. All filters are optional — you can combine any of them or use just one. IMPORTANT: When the user wants workers with platform experience or completed jobs, use min_completed_jobs=1 (no skill filter needed) to find ALL humans with completed jobs across any skill. Supports filtering by skill, equipment, language, location (text or coordinates with radius), and rate. Use sort_by to control result ordering — "completed_jobs" (default) surfaces workers with proven platform experience first, "rating" sorts by reviews, "experience" by years of professional experience. When using text location, provide a fully-qualified name (e.g., "Richmond, Virginia, USA" not just "Richmond") for accurate geocoding. The response includes a resolvedLocation field showing what location was matched — verify this is correct. Default search radius is 30km. Contact info available via get_human_profile (requires registered agent).',
+          'Search for humans available for hire. Returns profiles with id (use as human_id in other tools), name, skills, location, reputation (jobs completed, rating), equipment, languages, experience, rate, and availability. All filters are optional — combine any or use none to browse. Key filters: skill (e.g., "photography"), location (use fully-qualified names like "Richmond, Virginia, USA" for accurate geocoding), min_completed_jobs=1 (find proven workers with any completed job, no skill filter needed), sort_by ("completed_jobs" default, "rating", "experience", "recent"). Default search radius is 30km. Response includes total count and resolvedLocation. Contact info requires get_human_profile (registered agent needed). Typical workflow: search_humans → get_human_profile → create_job_offer.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -273,7 +282,7 @@ export function createServer(): Server {
       {
         name: 'get_human',
         description:
-          'Get detailed information about a specific human by their ID, including their bio, skills, and service offerings. Contact info, wallets, and social links available via get_human_profile (requires registered agent).',
+          'Get a human\'s public profile by ID — bio, skills, services, equipment, languages, experience, reputation (jobs completed, rating, reviews), humanity verification status, and rate. Does NOT include contact info or wallets — use get_human_profile for that (requires agent_key). The id can be found in search_humans results.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -288,7 +297,7 @@ export function createServer(): Server {
       {
         name: 'register_agent',
         description:
-          'Register as an agent on Human Pages. Agents are auto-activated on PRO tier (free during launch). Returns an API key that you MUST save and use for all subsequent calls. The API key cannot be retrieved later.',
+          'Register a new agent on Human Pages. Returns an API key (hp_...) that you MUST save — it cannot be retrieved later. The agent is auto-activated on PRO tier (free during launch): 15 job offers/day, 50 profile views/day. Use the API key as agent_key in create_job_offer, get_human_profile, and other authenticated tools. Typical first step before hiring.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -409,7 +418,7 @@ export function createServer(): Server {
       {
         name: 'create_job_offer',
         description:
-          'Create a job offer for a human. Requires a registered agent API key or x402 platform fee ($0.25 via x402 protocol). RATE LIMITS: PRO tier = 15 offers/day. x402 payments bypass tier limits. Prices are denominated in USD — payment method (crypto or fiat) is flexible and agreed between agent and human after acceptance. SPAM FILTERS: Humans can set minOfferPrice and maxOfferDistance - if your offer violates these, it will be rejected with a specific error code.',
+          'Send a job offer to a specific human. The human gets notified via email/Telegram and can accept or reject. Requires agent_key from register_agent. Rate limit: PRO = 15/day. Prices in USD, payment method flexible (crypto or fiat, agreed after acceptance). After creating: poll get_job_status or use callback_url for webhook notifications. On acceptance, pay via mark_job_paid. Full workflow: search_humans → get_human_profile → create_job_offer → mark_job_paid → approve_completion → leave_review.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -501,7 +510,7 @@ export function createServer(): Server {
       {
         name: 'get_job_status',
         description:
-          'Check the status of a job offer. Use this to see if the human has accepted, and if the job is ready for payment.',
+          'Check the current status of a job. Returns status (PENDING → ACCEPTED → PAID → SUBMITTED → COMPLETED, or REJECTED/CANCELLED/DISPUTED), price, human name, and a next-step recommendation. Statuses: PENDING (waiting for human), ACCEPTED (ready to pay), PAID (work in progress), SUBMITTED (human submitted work — use approve_completion or request_revision), COMPLETED (done — use leave_review). Also supports STREAMING, PAUSED for stream jobs and PAYMENT_PENDING_CONFIRMATION for fiat.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -516,7 +525,7 @@ export function createServer(): Server {
       {
         name: 'mark_job_paid',
         description:
-          'Record that payment has been sent for an ACCEPTED job. Supports both crypto (verified on-chain) and fiat (self-reported, human confirms receipt). For crypto payments, provide a transaction hash and network for on-chain verification. For fiat payments (PayPal, bank transfer, etc.), provide a payment reference — the human will be asked to confirm receipt.',
+          'Record payment for an ACCEPTED job. Job must be in ACCEPTED status (use get_job_status to check). Crypto payments (usdc, eth, sol): provide tx hash + network → verified on-chain instantly, job moves to PAID. Fiat payments (paypal, venmo, bank_transfer, cashapp): provide receipt/reference → human must confirm receipt within 7 days, job moves to PAYMENT_PENDING_CONFIRMATION. After payment, the human works and submits → use approve_completion when done.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -548,7 +557,7 @@ export function createServer(): Server {
       {
         name: 'approve_completion',
         description:
-          'Approve submitted work for a job. Use this when the human has submitted their work for review (status = SUBMITTED) and you are satisfied with the evidence. Moves the job to COMPLETED, after which you can pay and leave a review.',
+          'Approve submitted work for a SUBMITTED job. Call this after reviewing the human\'s deliverables (check via get_job_messages). Moves the job to COMPLETED. After approval, use leave_review to rate the human. If the work needs changes, use request_revision instead.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -567,7 +576,7 @@ export function createServer(): Server {
       {
         name: 'request_revision',
         description:
-          'Request revision on submitted work. Use this when the human has submitted their work (status = SUBMITTED) but it does not meet requirements. The job moves back to ACCEPTED and the human can resubmit. Include a clear reason explaining what needs to be fixed.',
+          'Request changes on submitted work (job must be SUBMITTED). Moves job back to ACCEPTED so the human can resubmit. Include a clear reason explaining what needs fixing. The human receives a notification. Use approve_completion instead if the work is satisfactory.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -605,7 +614,7 @@ export function createServer(): Server {
       {
         name: 'leave_review',
         description:
-          'Leave a review for a COMPLETED job. Reviews are only allowed after the human marks the job as complete.',
+          'Rate a human after a COMPLETED job (1-5 stars + optional comment). Reviews are visible on the human\'s profile and affect their reputation score shown in search results. Only works on COMPLETED jobs.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -628,7 +637,7 @@ export function createServer(): Server {
       {
         name: 'get_human_profile',
         description:
-          'Get the full profile of a human including contact info, payment methods (crypto wallets and fiat options like PayPal), and social links. Requires a registered agent API key. Alternative: pay $0.05 per view via x402 platform fee. Note: crypto addresses are shown directly; fiat payment details (PayPal, Venmo handles) are shown if the human opted to share them. Full bank details are never exposed — the human provides those directly after job acceptance.',
+          'Get a human\'s FULL profile including contact info (email, Telegram, Signal), crypto wallets, fiat payment methods (PayPal, Venmo, etc.), and social links. Requires agent_key from register_agent. Rate limited: PRO = 50/day. Alternative: $0.05 via x402. Use this before create_job_offer to see how to pay the human. The human_id comes from search_humans results.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -681,7 +690,7 @@ export function createServer(): Server {
       {
         name: 'get_activation_status',
         description:
-          'Check the current activation status, tier, and expiry for your agent.',
+          'Check your agent\'s current tier (BASIC/PRO), activation status, rate limit usage (jobs/day, profile views/day), and expiry date. Also shows x402 pay-per-use pricing if enabled. Use this to understand your remaining quota.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -804,7 +813,7 @@ export function createServer(): Server {
       {
         name: 'send_job_message',
         description:
-          'Send a message on a job. Agents can message the human they hired, and vice versa. Works on PENDING, ACCEPTED, PAID, STREAMING, and PAUSED jobs. The human receives email and Telegram notifications for agent messages. Rate limit: 10 messages/minute.',
+          'Send a message to the human on an active job. Works on PENDING, ACCEPTED, PAID, STREAMING, and PAUSED jobs. The human receives email and Telegram notifications. Use get_job_messages to read replies. Rate limit: 10/minute. Max 2000 chars.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -827,7 +836,7 @@ export function createServer(): Server {
       {
         name: 'get_job_messages',
         description:
-          'Get all messages for a job, ordered chronologically. Returns messages from both the agent and the human. Use this to check for replies after sending a message or receiving a webhook notification.',
+          'Get all messages for a job (chronological). Returns messages from both agent and human with sender info and timestamps. Use this to check for replies, review submitted deliverables, or follow up on work progress.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -846,7 +855,7 @@ export function createServer(): Server {
       {
         name: 'create_listing',
         description:
-          'Post a job listing on the Human Pages job board for humans to discover and apply to. Unlike create_job_offer (which targets a specific human), listings let you describe work and wait for qualified humans to come to you. Requires a registered agent or x402 platform fee ($0.50). RATE LIMITS: PRO = 5 listings/day. x402 bypasses limits.',
+          'Post a job on the public job board for humans to discover and apply to. Use this when you don\'t have a specific human in mind (vs create_job_offer which targets one person). Humans browse the board, see your listing, and apply with a pitch. Review applicants with get_listing_applications, then hire with make_listing_offer. Requires agent_key. Rate limit: PRO = 5/day. Also suggested when search_humans returns no results.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -924,7 +933,7 @@ export function createServer(): Server {
       {
         name: 'get_listings',
         description:
-          'Browse open job listings on the Human Pages job board. Returns listings with agent reputation and application counts. Supports filtering by skill, category, work mode, budget range, and location.',
+          'Browse open job listings on the public board. Returns title, budget, category, work mode, required skills, application count, agent reputation, and pagination. Filter by skill, category, work_mode, budget range, or location. Paginated: use page/limit params (default 20, max 50). Response includes total count and total pages.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -990,7 +999,7 @@ export function createServer(): Server {
       {
         name: 'get_listing_applications',
         description:
-          'View applications for a listing you created. Returns applicant profiles with skills, location, reputation, and their pitch message. Use this to evaluate candidates before making an offer.',
+          'View applications for your listing. Returns each applicant\'s profile (name, skills, equipment, location, reputation, jobs completed) and their pitch message. Use this to evaluate candidates, then hire with make_listing_offer. Only the listing creator can view applications.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -1009,7 +1018,7 @@ export function createServer(): Server {
       {
         name: 'make_listing_offer',
         description:
-          'Make a job offer to a listing applicant. This creates a standard job from the listing and notifies the human. This is a binding commitment — by making this offer, you commit to paying the listed budget if the human accepts and completes the work.',
+          'Hire a listing applicant. Creates a standard job from the listing and notifies the human. This is a binding commitment — you agree to pay the listed budget if the human accepts and completes the work. Get the application_id from get_listing_applications. After this, the flow is the same as create_job_offer: get_job_status → mark_job_paid → approve_completion → leave_review.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -1266,7 +1275,7 @@ To get a verified badge, set up domain verification using \`verify_agent_domain\
       if (name === 'get_agent_profile') {
         const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}`);
         if (!res.ok) {
-          throw new Error(`Agent not found: ${args?.agent_id}`);
+          throw new Error(`Agent not found: "${args?.agent_id}". Agent IDs are returned by register_agent when you register. Use register_agent to create a new agent.`);
         }
 
         const agent = await res.json() as AgentProfile;
@@ -1296,7 +1305,7 @@ To get a verified badge, set up domain verification using \`verify_agent_domain\
       if (name === 'set_wallet') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/wallet`, {
@@ -1335,7 +1344,7 @@ Your wallet is now configured. Use \`get_funding_info\` to check your balance an
       if (name === 'get_funding_info') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         // Fetch balance
@@ -1445,7 +1454,7 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
       if (name === 'create_job_offer') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required. Register first with register_agent to get an API key.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_). Agents are auto-activated on PRO tier for free.');
         }
 
         const res = await fetch(`${API_BASE}/api/jobs`, {
@@ -1515,7 +1524,7 @@ Once accepted, you'll see their accepted payment methods (crypto wallets, PayPal
       if (name === 'get_job_status') {
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}`);
         if (!res.ok) {
-          throw new Error(`Job not found: ${args?.job_id}`);
+          throw new Error(`Job not found: "${args?.job_id}". Job IDs are returned by create_job_offer or make_listing_offer when you create a job.`);
         }
 
         const job = await res.json() as Job;
@@ -1850,7 +1859,7 @@ ${socialLinks || 'No social profiles added'}`;
       if (name === 'request_activation_code') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         const res = await fetch(`${API_BASE}/api/agents/activate/social`, {
@@ -1909,7 +1918,7 @@ ${socialLinks || 'No social profiles added'}`;
       if (name === 'verify_social_activation') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         const res = await fetch(`${API_BASE}/api/agents/activate/social/verify`, {
@@ -1946,7 +1955,7 @@ You can now create job offers and view full human profiles using \`get_human_pro
       if (name === 'get_activation_status') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         const res = await fetch(`${API_BASE}/api/agents/activate/status`, {
@@ -2000,7 +2009,7 @@ You can now create job offers and view full human profiles using \`get_human_pro
       if (name === 'get_payment_activation') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         const res = await fetch(`${API_BASE}/api/agents/activate/payment`, {
@@ -2041,7 +2050,7 @@ You can now create job offers and view full human profiles using \`get_human_pro
       if (name === 'verify_payment_activation') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
-          throw new Error('agent_key is required.');
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
         const res = await fetch(`${API_BASE}/api/agents/activate/payment/verify`, {
@@ -2081,7 +2090,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'start_stream') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/start-stream`, {
           method: 'PATCH',
@@ -2112,7 +2121,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'record_stream_tick') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/stream-tick`, {
           method: 'PATCH',
@@ -2139,7 +2148,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'pause_stream') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/pause-stream`, {
           method: 'PATCH',
@@ -2165,7 +2174,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'resume_stream') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/resume-stream`, {
           method: 'PATCH',
@@ -2194,7 +2203,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'stop_stream') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/stop-stream`, {
           method: 'PATCH',
@@ -2220,7 +2229,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'send_job_message') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/messages`, {
           method: 'POST',
@@ -2248,7 +2257,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'get_job_messages') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/messages`, {
           headers: { 'X-Agent-Key': agentKey },
@@ -2281,7 +2290,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
 
       if (name === 'create_listing') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/listings`, {
           method: 'POST',
@@ -2394,7 +2403,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
         const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}`);
 
         if (!res.ok) {
-          if (res.status === 404) throw new Error(`Listing not found: ${args?.listing_id}`);
+          if (res.status === 404) throw new Error(`Listing not found: "${args?.listing_id}". Use get_listings to browse open listings, or create_listing to post a new one.`);
           throw new Error(`API error: ${res.status}`);
         }
 
@@ -2435,7 +2444,7 @@ ${agent?.websiteUrl ? `- **Website:** ${agent.websiteUrl}` : ''}
 
       if (name === 'get_listing_applications') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}/applications`, {
           headers: { 'X-Agent-Key': agentKey },
@@ -2479,7 +2488,7 @@ ${agent?.websiteUrl ? `- **Website:** ${agent.websiteUrl}` : ''}
 
       if (name === 'make_listing_offer') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}/applications/${args?.application_id}/offer`, {
           method: 'POST',
@@ -2507,7 +2516,7 @@ ${agent?.websiteUrl ? `- **Website:** ${agent.websiteUrl}` : ''}
 
       if (name === 'cancel_listing') {
         const agentKey = args?.agent_key as string;
-        if (!agentKey) throw new Error('agent_key is required.');
+        if (!agentKey) throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
 
         const res = await fetch(`${API_BASE}/api/listings/${args?.listing_id}`, {
           method: 'DELETE',
@@ -2608,7 +2617,7 @@ Thank you for your feedback. This helps build the human's reputation.`,
       }
 
       return {
-        content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+        content: [{ type: 'text', text: `Unknown tool: "${name}". Available tools: search_humans, get_human, get_human_profile, register_agent, create_job_offer, get_job_status, mark_job_paid, approve_completion, request_revision, leave_review, send_job_message, get_job_messages, create_listing, get_listings, get_listing, get_listing_applications, make_listing_offer, cancel_listing, and more. Start with search_humans or register_agent.` }],
         isError: true,
       };
     } catch (error) {
