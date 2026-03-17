@@ -346,10 +346,15 @@ export default function AboutPage() {
 
       {/* Featured On */}
       <div className="py-6 bg-slate-50 border-t border-slate-200 text-center">
-        <p className="text-xs text-slate-400">
-          {t('about.featuredOn')}{' '}
-          <a href="https://dang.ai/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-500">Dang AI</a>
-        </p>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <p className="text-xs text-slate-400">
+            {t('about.featuredOn')}{' '}
+            <a href="https://dang.ai/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-500">Dang AI</a>
+          </p>
+          <a href="https://fazier.com/launches/humanpages.ai" target="_blank" rel="noopener noreferrer">
+            <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral" width={250} alt="Fazier badge" />
+          </a>
+        </div>
       </div>
 
       <Footer />
