@@ -1126,10 +1126,10 @@ export function createServer(): Server {
               ? `${h.neighborhood}, ${h.location}`
               : h.location || 'Location not specified';
 
-            const displayName = h.name || h.username || 'Name hidden';
+            const displayName = h.username || 'Anonymous';
             const jobsCompleted = rep?.jobsCompleted || 0;
             const jobsBadge = jobsCompleted > 0 ? ` | 🏆 ${jobsCompleted} job${jobsCompleted !== 1 ? 's' : ''} completed` : '';
-            return `- **${displayName}**${h.username && h.name ? ` (@${h.username})` : ''} | human_id: \`${h.id}\` [${displayLocation}]
+            return `- **${displayName}** | human_id: \`${h.id}\` [${displayLocation}]
   ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}${jobsBadge}
   ${humanityStatus}
   Skills: ${h.skills.join(', ') || 'None listed'}
