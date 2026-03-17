@@ -316,6 +316,20 @@ router.get('/stats', async (_req, res) => {
       prisma.listingApplication.count(),
     ]);
 
+    // Time-to-first-job: avg and median hours from agent registration to first job offer
+    const ttfjResult = await prisma.$queryRaw<{ avg_hours: number | null; median_hours: number | null; agent_count: number }[]>`
+      SELECT
+        AVG(EXTRACT(EPOCH FROM (first_job - agent_created)) / 3600)::float AS avg_hours,
+        (PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (first_job - agent_created)) / 3600))::float AS median_hours,
+        COUNT(*)::int AS agent_count
+      FROM (
+        SELECT a."createdAt" AS agent_created, MIN(j."createdAt") AS first_job
+        FROM "Agent" a
+        JOIN "Job" j ON j."agentId" = a.id
+        GROUP BY a.id, a."createdAt"
+      ) sub
+    `;
+
     const agentStatusMap: Record<string, number> = {};
     for (const g of agentsByStatus) {
       agentStatusMap[g.status] = g._count;
@@ -366,6 +380,11 @@ router.get('/stats', async (_req, res) => {
         open: listingsOpen,
         byStatus: Object.fromEntries(listingsByStatus.map(g => [g.status, g._count])),
         applications: applicationsTotal,
+      },
+      timeToFirstJob: {
+        avgHours: ttfjResult[0]?.avg_hours ?? null,
+        medianHours: ttfjResult[0]?.median_hours ?? null,
+        agentsWithJobs: ttfjResult[0]?.agent_count ?? 0,
       },
     });
   } catch (error) {
