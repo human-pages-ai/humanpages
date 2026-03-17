@@ -71,7 +71,7 @@ export async function uploadProfilePhoto(userId: string, imageBuffer: Buffer): P
 /**
  * Generate a pre-signed GET URL for reading a photo.
  * Returns null if the key is empty/undefined.
- * URL expires in 1 hour.
+ * URL expires in 24 hours.
  */
 export async function getProfilePhotoSignedUrl(key: string): Promise<string | null> {
   if (!key) return null;
@@ -80,7 +80,7 @@ export async function getProfilePhotoSignedUrl(key: string): Promise<string | nu
     const url = await getSignedUrl(
       getR2Client(),
       new GetObjectCommand({ Bucket: getBucket(), Key: key }),
-      { expiresIn: 3600 },
+      { expiresIn: 86400 },
     );
     return url;
   } catch (err) {

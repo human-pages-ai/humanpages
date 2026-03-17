@@ -89,13 +89,12 @@ router.post('/upload', authenticateToken, uploadLimiter, upload.single('photo'),
     // Upload new photo to R2
     const key = await uploadProfilePhoto(req.userId!, processed);
 
-    // Update DB — also opt into featured by default when uploading a photo
+    // Update DB
     await prisma.human.update({
       where: { id: req.userId },
       data: {
         profilePhotoKey: key,
         profilePhotoStatus: 'pending',
-        featuredConsent: true,
       },
     });
 
@@ -162,7 +161,6 @@ router.post('/import-oauth', authenticateToken, uploadLimiter, async (req: AuthR
         profilePhotoKey: key,
         profilePhotoStatus: 'approved',
         oauthPhotoUrl: null,
-        featuredConsent: true,
       },
     });
 

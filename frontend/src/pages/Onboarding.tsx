@@ -184,7 +184,7 @@ export default function Onboarding() {
   const handleStep4Submit = async () => {
     setLoading(true);
     try {
-      await api.updateProfile({ featuredConsent: true });
+      await api.updateProfile({});
       analytics.track('onboarding_complete', { skillCount: skills.length });
       posthog.capture('onboarding_completed', { skillCount: skills.length });
       safeLocalStorage.removeItem('hp_onboarding_pending');
