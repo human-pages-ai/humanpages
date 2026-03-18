@@ -144,20 +144,21 @@ export default function Onboarding() {
     cvData: cv.cvData,
   });
 
-  // When CV upload completes, switch to CV flow and navigate to equipment
-  // (the first step after cv-upload in the CV flow).
-  // We do NOT auto-advance when processing starts — the progress indicator
-  // in the header shows the upload is in progress. Only navigate when done.
-  const prevCvUploadedRef = useRef(cv.cvUploaded);
+  // When CV upload completes, switch to CV flow and navigate to equipment.
+  // We track the previous value to detect the false→true transition.
+  // Using a ref + effect ensures we only navigate once per upload.
+  const cvUploadedPrev = useRef(false);
   useEffect(() => {
-    if (cv.cvUploaded && !prevCvUploadedRef.current) {
-      // CV upload just completed — auto-advance to equipment step
-      setSearchParams({ step: 'equipment' }, { replace: true });
-      window.scrollTo({ top: 0 });
-      toast.success('CV analyzed! Moving to next step...');
+    // Only navigate on false→true transition (fresh upload, not draft restore or page reload)
+    if (cv.cvUploaded && !cvUploadedPrev.current && currentStepId === 'cv-upload') {
+      // Small delay to let React finish batching state updates from applyParsedCvData
+      setTimeout(() => {
+        setSearchParams({ step: 'equipment' }, { replace: true });
+        window.scrollTo({ top: 0 });
+      }, 100);
     }
-    prevCvUploadedRef.current = cv.cvUploaded;
-  }, [cv.cvUploaded, setSearchParams]);
+    cvUploadedPrev.current = cv.cvUploaded;
+  }, [cv.cvUploaded, currentStepId, setSearchParams]);
 
   // ─── Navigation ───
   const submittingRef = useRef(false);
