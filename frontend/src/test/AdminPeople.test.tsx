@@ -306,8 +306,8 @@ describe('AdminPeople — Skills Filter', () => {
     const reactOption = await screen.findByRole('button', { name: /^react$/i });
     await user.click(reactOption);
 
-    // Skill should appear as tag
-    expect(screen.getByText('React')).toBeInTheDocument();
+    // Skill should appear as filter tag
+    expect(screen.getAllByText('React').find(el => el.closest('span.bg-blue-100'))).toBeTruthy();
 
     await waitFor(() => {
       expect(mockGetAdminPeople).toHaveBeenCalledWith(
@@ -333,9 +333,9 @@ describe('AdminPeople — Skills Filter', () => {
     optionButton = await screen.findByRole('button', { name: /^python$/i });
     await user.click(optionButton);
 
-    // Both skills should appear as tags
-    expect(screen.getByText('React')).toBeInTheDocument();
-    expect(screen.getByText('Python')).toBeInTheDocument();
+    // Both skills should appear as filter tags
+    expect(screen.getAllByText('React').find(el => el.closest('span.bg-blue-100'))).toBeTruthy();
+    expect(screen.getAllByText('Python').find(el => el.closest('span.bg-blue-100'))).toBeTruthy();
 
     await waitFor(() => {
       expect(mockGetAdminPeople).toHaveBeenCalledWith(
@@ -353,19 +353,24 @@ describe('AdminPeople — Skills Filter', () => {
     const reactOption = await screen.findByRole('button', { name: /^react$/i });
     await user.click(reactOption);
 
-    // Wait for skill tag to appear
+    // Wait for skill filter tag to appear (scoped to filter area, not table data)
+    let reactTag: HTMLElement;
     await waitFor(() => {
-      expect(screen.getByText('React')).toBeInTheDocument();
+      const matches = screen.getAllByText('React');
+      const filterTag = matches.find(el => el.closest('span.bg-blue-100'));
+      expect(filterTag).toBeTruthy();
+      reactTag = filterTag!.closest('span')!;
     });
 
     // Find and click the remove button (× symbol in the tag)
-    const reactTag = screen.getByText('React').closest('span');
     const removeBtn = within(reactTag!).getByText(/×/);
     await user.click(removeBtn);
 
-    // Skill should be removed
+    // Skill filter tag should be removed
     await waitFor(() => {
-      expect(screen.queryByText('React')).not.toBeInTheDocument();
+      const matches = screen.queryAllByText('React');
+      const filterTag = matches.find(el => el.closest('span.bg-blue-100'));
+      expect(filterTag).toBeFalsy();
     });
   });
 });
