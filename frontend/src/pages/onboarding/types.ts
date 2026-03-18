@@ -10,6 +10,12 @@ export interface Service {
   unit: string;
 }
 
+export interface PlatformEntry {
+  platform: string;
+  url: string;
+  details: string;
+}
+
 export interface LanguageEntry {
   language: string;
   proficiency: string;
@@ -57,7 +63,7 @@ export interface OnboardingDraft {
   freelancerJobsRange: string;
   industries: string[];
   equipment: string[];
-  platformPresence: string[];
+  platformPresence: PlatformEntry[];
   username: string;
 }
 

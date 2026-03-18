@@ -1,9 +1,15 @@
 import { useState } from 'react';
+import type { PlatformEntry } from '../types';
+
+const PLATFORM_SUGGESTIONS = [
+  'YouTube', 'Instagram', 'TikTok', 'Twitter/X', 'LinkedIn', 'GitHub',
+  'Behance', 'Dribbble', 'Medium', 'Substack', 'Personal Website', 'Marketplace'
+];
 
 interface StepFinishProps {
   emailVerified: boolean;
-  platformPresence: string[];
-  setPlatformPresence: (v: string[]) => void;
+  platformPresence: PlatformEntry[];
+  setPlatformPresence: (v: PlatformEntry[]) => void;
   onLinkedInConnect: () => Promise<void>;
   onGitHubConnect: () => Promise<void>;
   onNext: () => void;
@@ -33,7 +39,9 @@ export function StepFinish({
 }: StepFinishProps) {
   const [connectingLI, setConnectingLI] = useState(false);
   const [connectingGH, setConnectingGH] = useState(false);
-  const [newPlatformPresence, setNewPlatformPresence] = useState('');
+  const [newPlatform, setNewPlatform] = useState('');
+  const [newUrl, setNewUrl] = useState('');
+  const [newDetails, setNewDetails] = useState('');
 
   const handleLI = async () => { setConnectingLI(true); try { await onLinkedInConnect(); } finally { setConnectingLI(false); } };
   const handleGH = async () => { setConnectingGH(true); try { await onGitHubConnect(); } finally { setConnectingGH(false); } };
@@ -74,7 +82,7 @@ export function StepFinish({
       <div className="space-y-3 mb-6">
         <div className="p-3 sm:p-4 border border-slate-200 rounded-lg flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-slate-50">
           <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${emailVerified ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-600'}`}><span aria-hidden="true">{emailVerified ? '✓' : '📧'}</span></div>
-          <div><p className="font-medium text-slate-900">Email Verification</p><p className="text-xs text-slate-600">{emailVerified ? 'Verified' : 'Check your email'}</p></div></div>
+          <div><p className="font-medium text-slate-900">Email Verification</p><p className="text-xs text-slate-600">{emailVerified ? 'Verified' : 'Check your email (including spam)'}</p></div></div>
           {emailVerified && <span className="text-xs font-medium text-green-600">Connected</span>}
         </div>
         <div className="p-3 sm:p-4 border border-slate-200 rounded-lg flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-slate-50">
@@ -93,34 +101,97 @@ export function StepFinish({
       {/* Platform Presence */}
       <div className="mb-6 pt-4 border-t border-slate-200">
         <h3 className="text-sm font-semibold text-slate-900 mb-1">Platform Presence (Optional)</h3>
-        <p className="text-xs text-slate-500 mb-3">Add your reputation badges and platform achievements</p>
+        <p className="text-xs text-slate-500 mb-3">Share your online presence — followers, ratings, achievements</p>
         {platformPresence.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {platformPresence.map((item, idx) => (
-              <button key={idx} type="button" onClick={() => setPlatformPresence(platformPresence.filter((_, i) => i !== idx))} aria-label={`Remove: ${item}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 min-h-[44px]">
-                {item}<span aria-hidden="true" className="text-orange-200 ml-0.5 text-base leading-none">&times;</span>
-              </button>
+          <div className="mb-4 space-y-2">
+            {platformPresence.map((entry, idx) => (
+              <div key={idx} className="p-3 border border-slate-200 rounded-lg bg-slate-50 flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-slate-900 text-sm">{entry.platform}</p>
+                  {entry.url && <p className="text-xs text-slate-600 truncate">{entry.url}</p>}
+                  {entry.details && <p className="text-xs text-slate-500 mt-1">{entry.details}</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPlatformPresence(platformPresence.filter((_, i) => i !== idx))}
+                  aria-label={`Remove: ${entry.platform}`}
+                  className="text-slate-400 hover:text-red-500 font-bold flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
             ))}
           </div>
         )}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newPlatformPresence}
-            onChange={(e) => setNewPlatformPresence(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const val = newPlatformPresence.trim(); if (val && !platformPresence.some(p => p.toLowerCase() === val.toLowerCase())) { setPlatformPresence([...platformPresence, val]); setNewPlatformPresence(''); } } }}
-            placeholder="e.g., Top Rated seller, 50k followers, 5-star rating on marketplace..."
-            className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-          />
-          <button
-            type="button"
-            onClick={() => { const val = newPlatformPresence.trim(); if (val && !platformPresence.some(p => p.toLowerCase() === val.toLowerCase())) { setPlatformPresence([...platformPresence, val]); setNewPlatformPresence(''); } }}
-            disabled={!newPlatformPresence.trim()}
-            className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
-          >
-            Add
-          </button>
-        </div>
+        {platformPresence.length < 10 && (
+          <div className="p-4 border border-slate-200 rounded-lg bg-white space-y-3">
+            <div>
+              <label htmlFor="platform-name" className="block text-sm font-medium text-slate-700 mb-1">Platform Name</label>
+              <input
+                id="platform-name"
+                list="platform-list"
+                type="text"
+                value={newPlatform}
+                onChange={(e) => setNewPlatform(e.target.value)}
+                placeholder="e.g., YouTube, Instagram, LinkedIn..."
+                className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              <datalist id="platform-list">
+                {PLATFORM_SUGGESTIONS.map((p) => (
+                  <option key={p} value={p} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label htmlFor="platform-url" className="block text-sm font-medium text-slate-700 mb-1">URL (Optional)</label>
+              <input
+                id="platform-url"
+                type="url"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                placeholder="e.g., https://youtube.com/@yourhandle"
+                className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="platform-details" className="block text-sm font-medium text-slate-700 mb-1">Details (Optional)</label>
+              <input
+                id="platform-details"
+                type="text"
+                value={newDetails}
+                onChange={(e) => setNewDetails(e.target.value)}
+                placeholder="e.g., 50k subscribers, Top Rated seller, 5-star average"
+                className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (newPlatform.trim()) {
+                    setPlatformPresence([...platformPresence, { platform: newPlatform.trim(), url: newUrl.trim(), details: newDetails.trim() }]);
+                    setNewPlatform('');
+                    setNewUrl('');
+                    setNewDetails('');
+                  }
+                }}
+                disabled={!newPlatform.trim()}
+                className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]"
+              >
+                Add Platform
+              </button>
+              {(newPlatform || newUrl || newDetails) && (
+                <button
+                  type="button"
+                  onClick={() => { setNewPlatform(''); setNewUrl(''); setNewDetails(''); }}
+                  className="px-4 py-2.5 sm:py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Profile Completeness */}

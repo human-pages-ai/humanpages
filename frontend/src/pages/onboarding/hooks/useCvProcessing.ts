@@ -12,6 +12,7 @@ interface CvAutoFillTargets {
   setSkills: React.Dispatch<React.SetStateAction<string[]>>;
   setLanguageEntries: React.Dispatch<React.SetStateAction<LanguageEntry[]>>;
   setEducationEntries: React.Dispatch<React.SetStateAction<EducationEntry[]>>;
+  setYearsOfExperience: (v: number | null) => void;
   /** These setters need to support "only set if empty" — we pass refs to current values */
   setLinkedinUrl: (v: string) => void;
   setGithubUrl: (v: string) => void;
@@ -117,6 +118,11 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
         }
         return merged;
       });
+    }
+
+    // Years of Experience
+    if (result.yearsOfExperience != null) {
+      targets.setYearsOfExperience(result.yearsOfExperience);
     }
 
     // Social links (auto-fill only if empty)

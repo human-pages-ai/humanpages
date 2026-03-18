@@ -18,7 +18,7 @@ interface StepAboutYouProps {
 export function StepAboutYou({
   name, setName, bio, setBio,
   photoPreview, photoInputRef, onPhotoChange, onPhotoRemove,
-  oauthPhotoUrl, cvUploaded, cvData,
+  oauthPhotoUrl, cvUploaded: _cvUploaded, cvData: _cvData,
   onNext, error, setError,
 }: StepAboutYouProps) {
 
@@ -26,18 +26,6 @@ export function StepAboutYou({
     <>
       <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Your Profile</h2>
       <p className="text-slate-600 mb-6">Complete your profile information</p>
-
-      {cvUploaded && cvData && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold flex-shrink-0 text-sm">✓</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-green-800">CV analyzed</p>
-              <p className="text-xs text-green-600">Your information has been pre-filled below</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
 

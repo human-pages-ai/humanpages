@@ -4,6 +4,11 @@ import { isInAppBrowser } from '../utils';
 import { WhatsAppSection } from '../components/WhatsAppSection';
 import type { TelegramState } from '../types';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 interface StepConnectProps {
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
@@ -29,11 +34,13 @@ export function StepConnect({
   onNext, onSkip: _onSkip, error,
 }: StepConnectProps) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState('');
+  const [showInstallButton, setShowInstallButton] = useState(false);
 
-  // Check if notifications are already enabled
+  // Check if notifications are already enabled and capture beforeinstallprompt event
   useEffect(() => {
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
@@ -42,16 +49,42 @@ export function StepConnect({
         setNotificationStatus('denied');
       }
     }
+
+    // Capture beforeinstallprompt event for PWA installation
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      installPromptRef.current = e as BeforeInstallPromptEvent;
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     api.getTelegramStatus().then(status => setTelegramStatus(status)).catch(() => {
       // Initial status check failed — user may not have bot available
     });
+
     return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       if (pollRef.current) {
         clearInterval(pollRef.current);
         pollRef.current = null;
       }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps — runs only on mount to fetch initial telegram status
+
+  const handleInstallApp = async () => {
+    if (!installPromptRef.current) return;
+    try {
+      await installPromptRef.current.prompt();
+      const { outcome } = await installPromptRef.current.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstallButton(false);
+      }
+      installPromptRef.current = null;
+    } catch (err) {
+      console.error('Installation prompt failed:', err);
+    }
+  };
 
   const handleEnablePushNotifications = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -223,9 +256,18 @@ export function StepConnect({
             >
               {isRegistering ? 'Enabling...' : 'Enable Push Notifications'}
             </button>
+            {showInstallButton && (
+              <button
+                type="button"
+                onClick={handleInstallApp}
+                className="w-full py-2.5 bg-purple-500 text-white font-medium rounded-lg hover:bg-purple-600 active:bg-purple-700 transition-colors text-sm"
+              >
+                Install App
+              </button>
+            )}
             <div className="text-sm bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="font-medium text-blue-900 mb-1">For the best experience, install HumanPages as an app</p>
-              <p className="text-xs text-blue-700">In Chrome: Menu → Install app. In Safari: Share → Add to Home Screen.</p>
+              <p className="text-xs text-blue-700">{showInstallButton ? 'Click "Install App" above, or: ' : ''}In Chrome: Menu → Install app. In Safari: Share → Add to Home Screen.</p>
             </div>
           </div>
         )}

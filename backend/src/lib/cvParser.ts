@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 
 export interface CVParseResult {
+  name: string | null;
   skills: string[];
   inferredSkills: string[];
   bio: string | null;
@@ -26,6 +27,7 @@ export interface CVParseResult {
 
 // Zod schema for validating CV parser output
 const cvOutputSchema = z.object({
+  name: z.string().nullable().default(null),
   explicitSkills: z.array(z.string()).default([]),
   inferredSkills: z.array(z.string()).default([]),
   bio: z.string().nullable().default(null),
@@ -63,6 +65,7 @@ export async function parseCvWithOpenAI(
   // Validate input
   if (!cvText || cvText.trim().length === 0) {
     return {
+      name: null,
       skills: [],
       inferredSkills: [],
       bio: null,
@@ -93,6 +96,7 @@ ${cvText}
 
 Extract the following information and return as JSON:
 {
+  "name": "Full Name",
   "explicitSkills": ["skill1", "skill2"],
   "inferredSkills": ["inferred_skill1", "inferred_skill2"],
   "bio": "A 2-3 sentence professional summary, max 500 chars",
@@ -114,16 +118,17 @@ Extract the following information and return as JSON:
   ],
   "experienceHighlights": ["highlight1", "highlight2"],
   "yearsOfExperience": 5,
-  "languages": ["English", "Spanish"]
+  "languages": ["English (Native)", "Spanish (Fluent)"]
 }
 
 IMPORTANT GUIDELINES:
+- Name: Extract the person's full name from the CV (usually at the top)
 - Explicit skills: Only mention skills that are directly listed as skills/technologies (e.g., "React", "Python")
 - Inferred skills: Extract capabilities from job descriptions and achievements (e.g., "managed team of 12" → "Team Leadership", "shipped 3 products" → "Product Development")
 - Bio: Write in conversational tone, 2-3 sentences, under 500 characters
 - Experience highlights: Extract 3-5 achievements/highlights, each under 80 characters
 - Years of experience: Try to calculate from dates in the CV, null if not clear
-- Languages: Detect from CV content or any language information
+- Languages: Detect from CV content or any language information. Format as "Language (Proficiency)" e.g., "English (Native)", "Spanish (Fluent)", "French (Intermediate)"
 - Education: Extract all institutions, degrees, and fields mentioned
 - Certificates: Extract professional certifications, training, and credentials`;
 
@@ -172,6 +177,7 @@ IMPORTANT GUIDELINES:
     );
 
     return {
+      name: validated.name,
       skills: validated.explicitSkills || [],
       inferredSkills: deduplicatedInferred,
       bio: validated.bio,

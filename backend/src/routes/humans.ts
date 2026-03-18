@@ -297,8 +297,7 @@ const updateProfileSchema = z.object({
   preferredTaskDuration: z.enum(['micro', 'half_day', 'full_project', 'any']).optional().nullable(),
   industries: z.array(z.string().max(100)).max(30).optional().nullable().transform(v => v ?? undefined),
 
-  // External profiles (Fiverr, Upwork, etc.)
-  externalProfiles: z.array(z.string().min(1).max(500)).max(10).optional(),
+  // External profiles removed — dashboard-only feature, not in onboarding
 
   // Privacy
   hideContact: z.boolean().optional(),

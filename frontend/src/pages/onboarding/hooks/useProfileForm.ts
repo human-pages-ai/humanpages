@@ -4,7 +4,7 @@ import { api } from '../../../lib/api';
 import { analytics } from '../../../lib/analytics';
 import { safeLocalStorage } from '../../../lib/safeStorage';
 import toast from 'react-hot-toast';
-import type { OnboardingDraft, LanguageEntry, EducationEntry, Service } from '../types';
+import type { OnboardingDraft, LanguageEntry, EducationEntry, Service, PlatformEntry } from '../types';
 import { parseLanguageString } from '../utils';
 
 export interface UseProfileFormReturn {
@@ -105,8 +105,8 @@ export interface UseProfileFormReturn {
   setIndustries: React.Dispatch<React.SetStateAction<string[]>>;
   equipment: string[];
   setEquipment: React.Dispatch<React.SetStateAction<string[]>>;
-  platformPresence: string[];
-  setPlatformPresence: React.Dispatch<React.SetStateAction<string[]>>;
+  platformPresence: PlatformEntry[];
+  setPlatformPresence: React.Dispatch<React.SetStateAction<PlatformEntry[]>>;
 
   // Profile state
   emailVerified: boolean;
@@ -169,14 +169,14 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   // ─── Availability (agent-facing) ───
   const [timezone, setTimezone] = useState(draft?.timezone || '');
   const [weeklyCapacityHours, setWeeklyCapacityHours] = useState<number | null>(draft?.weeklyCapacityHours ?? 0);
-  const [workType, setWorkType] = useState(draft?.workType || '');
+  const [workType, setWorkType] = useState(draft?.workType || 'both');
 
   // Agent-facing structured fields
   const [yearsOfExperience, setYearsOfExperience] = useState<number | null>(draft?.yearsOfExperience ?? null);
   const [freelancerJobsRange, setFreelancerJobsRange] = useState(draft?.freelancerJobsRange || '');
   const [industries, setIndustries] = useState<string[]>(draft?.industries || []);
   const [equipment, setEquipment] = useState<string[]>(draft?.equipment || []);
-  const [platformPresence, setPlatformPresence] = useState<string[]>(draft?.platformPresence || []);
+  const [platformPresence, setPlatformPresence] = useState<PlatformEntry[]>(draft?.platformPresence || []);
 
   // ─── Profile state ───
   const [emailVerified, setEmailVerified] = useState(false);

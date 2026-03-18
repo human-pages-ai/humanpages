@@ -224,6 +224,7 @@ router.post(
 
       res.json({
         message: 'CV parsed successfully',
+        name: parseResult.name,
         skills: {
           explicit: parseResult.skills,
           inferred: parseResult.inferredSkills,

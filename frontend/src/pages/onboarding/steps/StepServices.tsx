@@ -38,6 +38,164 @@ const formatUnitLabel = (unit: string): string => {
   return labels[unit] || unit;
 };
 
+// Timezone to currency mapping
+const TIMEZONE_CURRENCY_MAP: Record<string, string> = {
+  'Asia/Saigon': 'VND',
+  'Asia/Ho_Chi_Minh': 'VND',
+  'Asia/Kolkata': 'INR',
+  'Asia/Calcutta': 'INR',
+  'Europe/London': 'GBP',
+  'Europe/Paris': 'EUR',
+  'Europe/Berlin': 'EUR',
+  'Asia/Tokyo': 'JPY',
+  'Asia/Seoul': 'KRW',
+  'America/Sao_Paulo': 'BRL',
+  'Africa/Lagos': 'NGN',
+  'Asia/Manila': 'PHP',
+  'Asia/Jakarta': 'IDR',
+  'Asia/Bangkok': 'THB',
+  'America/Mexico_City': 'MXN',
+  'America/Bogota': 'COP',
+  'America/Lima': 'PEN',
+  'America/Argentina/Buenos_Aires': 'ARS',
+};
+
+// All currencies with flags
+const ALL_CURRENCIES = [
+  { code: 'USD', name: 'US Dollar', flag: '🇺🇸' },
+  { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+  { code: 'GBP', name: 'British Pound', flag: '🇬🇧' },
+  { code: 'JPY', name: 'Japanese Yen', flag: '🇯🇵' },
+  { code: 'CAD', name: 'Canadian Dollar', flag: '🇨🇦' },
+  { code: 'AUD', name: 'Australian Dollar', flag: '🇦🇺' },
+  { code: 'CHF', name: 'Swiss Franc', flag: '🇨🇭' },
+  { code: 'CNY', name: 'Chinese Yuan', flag: '🇨🇳' },
+  { code: 'INR', name: 'Indian Rupee', flag: '🇮🇳' },
+  { code: 'BRL', name: 'Brazilian Real', flag: '🇧🇷' },
+  { code: 'MXN', name: 'Mexican Peso', flag: '🇲🇽' },
+  { code: 'KRW', name: 'South Korean Won', flag: '🇰🇷' },
+  { code: 'SGD', name: 'Singapore Dollar', flag: '🇸🇬' },
+  { code: 'HKD', name: 'Hong Kong Dollar', flag: '🇭🇰' },
+  { code: 'TRY', name: 'Turkish Lira', flag: '🇹🇷' },
+  { code: 'ZAR', name: 'South African Rand', flag: '🇿🇦' },
+  { code: 'NGN', name: 'Nigerian Naira', flag: '🇳🇬' },
+  { code: 'KES', name: 'Kenyan Shilling', flag: '🇰🇪' },
+  { code: 'GHS', name: 'Ghanaian Cedi', flag: '🇬🇭' },
+  { code: 'PHP', name: 'Philippine Peso', flag: '🇵🇭' },
+  { code: 'IDR', name: 'Indonesian Rupiah', flag: '🇮🇩' },
+  { code: 'THB', name: 'Thai Baht', flag: '🇹🇭' },
+  { code: 'VND', name: 'Vietnamese Dong', flag: '🇻🇳' },
+  { code: 'PKR', name: 'Pakistani Rupee', flag: '🇵🇰' },
+  { code: 'BDT', name: 'Bangladeshi Taka', flag: '🇧🇩' },
+  { code: 'EGP', name: 'Egyptian Pound', flag: '🇪🇬' },
+  { code: 'COP', name: 'Colombian Peso', flag: '🇨🇴' },
+  { code: 'PEN', name: 'Peruvian Sol', flag: '🇵🇪' },
+  { code: 'ARS', name: 'Argentine Peso', flag: '🇦🇷' },
+  { code: 'CLP', name: 'Chilean Peso', flag: '🇨🇱' },
+  { code: 'NZD', name: 'New Zealand Dollar', flag: '🇳🇿' },
+  { code: 'SEK', name: 'Swedish Krona', flag: '🇸🇪' },
+  { code: 'NOK', name: 'Norwegian Krone', flag: '🇳🇴' },
+  { code: 'DKK', name: 'Danish Krone', flag: '🇩🇰' },
+  { code: 'PLN', name: 'Polish Zloty', flag: '🇵🇱' },
+  { code: 'CZK', name: 'Czech Koruna', flag: '🇨🇿' },
+  { code: 'HUF', name: 'Hungarian Forint', flag: '🇭🇺' },
+  { code: 'RON', name: 'Romanian Leu', flag: '🇷🇴' },
+  { code: 'BGN', name: 'Bulgarian Lev', flag: '🇧🇬' },
+  { code: 'RUB', name: 'Russian Ruble', flag: '🇷🇺' },
+  { code: 'UAH', name: 'Ukrainian Hryvnia', flag: '🇺🇦' },
+  { code: 'GEL', name: 'Georgian Lari', flag: '🇬🇪' },
+  { code: 'AMD', name: 'Armenian Dram', flag: '🇦🇲' },
+  { code: 'AZN', name: 'Azerbaijani Manat', flag: '🇦🇿' },
+  { code: 'KZT', name: 'Kazakhstani Tenge', flag: '🇰🇿' },
+  { code: 'UZS', name: 'Uzbekistani Som', flag: '🇺🇿' },
+  { code: 'ILS', name: 'Israeli Shekel', flag: '🇮🇱' },
+  { code: 'AED', name: 'UAE Dirham', flag: '🇦🇪' },
+  { code: 'SAR', name: 'Saudi Riyal', flag: '🇸🇦' },
+  { code: 'QAR', name: 'Qatari Riyal', flag: '🇶🇦' },
+  { code: 'KWD', name: 'Kuwaiti Dinar', flag: '🇰🇼' },
+  { code: 'BHD', name: 'Bahraini Dinar', flag: '🇧🇭' },
+  { code: 'OMR', name: 'Omani Rial', flag: '🇴🇲' },
+  { code: 'JOD', name: 'Jordanian Dinar', flag: '🇯🇴' },
+  { code: 'MAD', name: 'Moroccan Dirham', flag: '🇲🇦' },
+  { code: 'TND', name: 'Tunisian Dinar', flag: '🇹🇳' },
+  { code: 'TWD', name: 'Taiwan Dollar', flag: '🇹🇼' },
+  { code: 'MYR', name: 'Malaysian Ringgit', flag: '🇲🇾' },
+  { code: 'LKR', name: 'Sri Lankan Rupee', flag: '🇱🇰' },
+  { code: 'NPR', name: 'Nepalese Rupee', flag: '🇳🇵' },
+  { code: 'MMK', name: 'Myanmar Kyat', flag: '🇲🇲' },
+  { code: 'UGX', name: 'Ugandan Shilling', flag: '🇺🇬' },
+  { code: 'TZS', name: 'Tanzanian Shilling', flag: '🇹🇿' },
+  { code: 'ETB', name: 'Ethiopian Birr', flag: '🇪🇹' },
+  { code: 'XOF', name: 'West African CFA Franc', flag: '🌍' },
+  { code: 'JMD', name: 'Jamaican Dollar', flag: '🇯🇲' },
+  { code: 'TTD', name: 'Trinidad Dollar', flag: '🇹🇹' },
+];
+
+const detectUserCurrency = (): string => {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return TIMEZONE_CURRENCY_MAP[timezone] || 'USD';
+  } catch {
+    return 'USD';
+  }
+};
+
+/**
+ * Generate service suggestions from CV data (skills and experience highlights)
+ * Maps common skills to service categories
+ */
+const generateServiceSuggestions = (cvData: any): any[] => {
+  if (!cvData) return [];
+
+  const suggestions: any[] = [];
+  const allSkills = [
+    ...(cvData.skills?.explicit || []),
+    ...(cvData.skills?.inferred || []),
+  ];
+  const experienceHighlights = cvData.experienceHighlights || [];
+
+  // Skill to service mapping
+  const skillToService: Record<string, { title: string; category: string; description: string }> = {
+    'react': { title: 'React Development', category: 'Software Development', description: 'Custom React applications' },
+    'javascript': { title: 'JavaScript Development', category: 'Software Development', description: 'Full-stack JavaScript projects' },
+    'python': { title: 'Python Development', category: 'Software Development', description: 'Python scripting and automation' },
+    'design': { title: 'UI/UX Design', category: 'Design & Creative', description: 'Website and app design' },
+    'graphic design': { title: 'Graphic Design', category: 'Design & Creative', description: 'Logos, banners, and marketing materials' },
+    'writing': { title: 'Content Writing', category: 'Writing & Content', description: 'Articles, blogs, and website copy' },
+    'video': { title: 'Video Editing', category: 'Video & Media', description: 'Professional video production' },
+    'photography': { title: 'Photography', category: 'Photography', description: 'Professional photo services' },
+    'marketing': { title: 'Digital Marketing', category: 'Marketing & SEO', description: 'SEO, social media, and campaigns' },
+  };
+
+  // Check skills for matches
+  for (const skill of allSkills) {
+    const skillLower = skill.toLowerCase();
+    for (const [key, service] of Object.entries(skillToService)) {
+      if (skillLower.includes(key) && !suggestions.some(s => s.title === service.title)) {
+        suggestions.push(service);
+        if (suggestions.length >= 3) break; // Cap at 3 suggestions
+      }
+    }
+    if (suggestions.length >= 3) break;
+  }
+
+  // If not enough suggestions from skills, use highlights
+  if (suggestions.length < 3 && experienceHighlights.length > 0) {
+    const highlightLower = experienceHighlights.join(' ').toLowerCase();
+    const remainingMappings = Object.entries(skillToService).filter(
+      ([_, s]) => !suggestions.some(sg => sg.title === s.title)
+    );
+    for (const [key, service] of remainingMappings) {
+      if (highlightLower.includes(key) && !suggestions.some(s => s.title === service.title)) {
+        suggestions.push(service);
+        if (suggestions.length >= 3) break;
+      }
+    }
+  }
+
+  return suggestions;
+};
+
 interface StepServicesProps {
   cvProcessing: boolean;
   cvData: any;
@@ -61,6 +219,9 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [newEquipmentType, setNewEquipmentType] = useState('');
   const [newEquipmentDetails, setNewEquipmentDetails] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
+
+  // Generate service suggestions from CV
+  const cvSuggestedServices = cvData ? generateServiceSuggestions(cvData) : [];
 
   const categoryTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -295,11 +456,11 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
 
       {/* CV-suggested services */}
-      {cvData?.suggestedServices?.length > 0 && services.length === 0 && (
+      {cvSuggestedServices.length > 0 && services.length === 0 && (
         <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <p className="text-sm font-medium text-orange-900 mb-2">Based on your CV, we suggest these services:</p>
+          <p className="text-sm font-medium text-orange-900 mb-2">Based on your CV, you might offer these services:</p>
           <div className="space-y-2">
-            {cvData.suggestedServices.map((svc: any, idx: number) => (
+            {cvSuggestedServices.map((svc: any, idx: number) => (
               <button key={idx} type="button" onClick={() => addSuggestedService(svc)} className="w-full text-left p-3 bg-white border border-orange-200 rounded-lg hover:border-orange-400 transition-colors">
                 <p className="font-medium text-slate-900 text-sm">{svc.title}</p>
                 <p className="text-xs text-slate-500">{svc.category} — {svc.description}</p>
@@ -450,73 +611,26 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                     className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                   <datalist id="currency-list">
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
-                    <option value="JPY">JPY - Japanese Yen</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
-                    <option value="AUD">AUD - Australian Dollar</option>
-                    <option value="CHF">CHF - Swiss Franc</option>
-                    <option value="CNY">CNY - Chinese Yuan</option>
-                    <option value="INR">INR - Indian Rupee</option>
-                    <option value="BRL">BRL - Brazilian Real</option>
-                    <option value="MXN">MXN - Mexican Peso</option>
-                    <option value="KRW">KRW - South Korean Won</option>
-                    <option value="SGD">SGD - Singapore Dollar</option>
-                    <option value="HKD">HKD - Hong Kong Dollar</option>
-                    <option value="TRY">TRY - Turkish Lira</option>
-                    <option value="ZAR">ZAR - South African Rand</option>
-                    <option value="NGN">NGN - Nigerian Naira</option>
-                    <option value="KES">KES - Kenyan Shilling</option>
-                    <option value="GHS">GHS - Ghanaian Cedi</option>
-                    <option value="PHP">PHP - Philippine Peso</option>
-                    <option value="IDR">IDR - Indonesian Rupiah</option>
-                    <option value="THB">THB - Thai Baht</option>
-                    <option value="VND">VND - Vietnamese Dong</option>
-                    <option value="PKR">PKR - Pakistani Rupee</option>
-                    <option value="BDT">BDT - Bangladeshi Taka</option>
-                    <option value="EGP">EGP - Egyptian Pound</option>
-                    <option value="COP">COP - Colombian Peso</option>
-                    <option value="PEN">PEN - Peruvian Sol</option>
-                    <option value="ARS">ARS - Argentine Peso</option>
-                    <option value="CLP">CLP - Chilean Peso</option>
-                    <option value="NZD">NZD - New Zealand Dollar</option>
-                    <option value="SEK">SEK - Swedish Krona</option>
-                    <option value="NOK">NOK - Norwegian Krone</option>
-                    <option value="DKK">DKK - Danish Krone</option>
-                    <option value="PLN">PLN - Polish Zloty</option>
-                    <option value="CZK">CZK - Czech Koruna</option>
-                    <option value="HUF">HUF - Hungarian Forint</option>
-                    <option value="RON">RON - Romanian Leu</option>
-                    <option value="BGN">BGN - Bulgarian Lev</option>
-                    <option value="RUB">RUB - Russian Ruble</option>
-                    <option value="UAH">UAH - Ukrainian Hryvnia</option>
-                    <option value="GEL">GEL - Georgian Lari</option>
-                    <option value="AMD">AMD - Armenian Dram</option>
-                    <option value="AZN">AZN - Azerbaijani Manat</option>
-                    <option value="KZT">KZT - Kazakhstani Tenge</option>
-                    <option value="UZS">UZS - Uzbekistani Som</option>
-                    <option value="ILS">ILS - Israeli Shekel</option>
-                    <option value="AED">AED - UAE Dirham</option>
-                    <option value="SAR">SAR - Saudi Riyal</option>
-                    <option value="QAR">QAR - Qatari Riyal</option>
-                    <option value="KWD">KWD - Kuwaiti Dinar</option>
-                    <option value="BHD">BHD - Bahraini Dinar</option>
-                    <option value="OMR">OMR - Omani Rial</option>
-                    <option value="JOD">JOD - Jordanian Dinar</option>
-                    <option value="MAD">MAD - Moroccan Dirham</option>
-                    <option value="TND">TND - Tunisian Dinar</option>
-                    <option value="TWD">TWD - Taiwan Dollar</option>
-                    <option value="MYR">MYR - Malaysian Ringgit</option>
-                    <option value="LKR">LKR - Sri Lankan Rupee</option>
-                    <option value="NPR">NPR - Nepalese Rupee</option>
-                    <option value="MMK">MMK - Myanmar Kyat</option>
-                    <option value="UGX">UGX - Ugandan Shilling</option>
-                    <option value="TZS">TZS - Tanzanian Shilling</option>
-                    <option value="ETB">ETB - Ethiopian Birr</option>
-                    <option value="XOF">XOF - West African CFA Franc</option>
-                    <option value="JMD">JMD - Jamaican Dollar</option>
-                    <option value="TTD">TTD - Trinidad Dollar</option>
+                    {(() => {
+                      const suggestedCurrency = detectUserCurrency();
+                      const suggested = [
+                        ALL_CURRENCIES.find(c => c.code === 'USD'),
+                        suggestedCurrency !== 'USD' ? ALL_CURRENCIES.find(c => c.code === suggestedCurrency) : null,
+                      ].filter(Boolean);
+                      const rest = ALL_CURRENCIES.filter(c => !suggested.some(s => s?.code === c.code));
+
+                      return (
+                        <>
+                          {suggested.map(curr => (
+                            <option key={curr!.code} value={curr!.code}>{curr!.flag} {curr!.code} - {curr!.name}</option>
+                          ))}
+                          <option disabled>────────</option>
+                          {rest.map(curr => (
+                            <option key={curr.code} value={curr.code}>{curr.flag} {curr.code} - {curr.name}</option>
+                          ))}
+                        </>
+                      );
+                    })()}
                   </datalist>
                 </div>
                 <div>
