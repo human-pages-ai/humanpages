@@ -118,18 +118,16 @@ const detectUserCurrency = (): string => {
 };
 
 /**
- * Generate service suggestions from CV data (skills and experience highlights)
- * Maps common skills to service categories
+ * Generate service suggestions from CV data OR from the user's skills array.
+ * When returning from dashboard, cvData is null but skills are loaded from profile API.
  */
-const generateServiceSuggestions = (cvData: any): any[] => {
-  if (!cvData) return [];
-
+const generateServiceSuggestions = (cvData: any, profileSkills?: string[]): any[] => {
   const suggestions: any[] = [];
-  const allSkills = [
-    ...(cvData.skills?.explicit || []),
-    ...(cvData.skills?.inferred || []),
-  ];
-  const experienceHighlights = cvData.experienceHighlights || [];
+  const allSkills = cvData
+    ? [...(cvData.skills?.explicit || []), ...(cvData.skills?.inferred || [])]
+    : (profileSkills || []);
+  if (allSkills.length === 0) return [];
+  const experienceHighlights = cvData?.experienceHighlights || [];
 
   // Skill to service mapping
   const skillToService: Record<string, { title: string; category: string; description: string }> = {
@@ -176,6 +174,8 @@ const generateServiceSuggestions = (cvData: any): any[] => {
 interface StepServicesProps {
   cvProcessing: boolean;
   cvData: any;
+  /** User's skills from profile — used for suggestions when cvData is unavailable */
+  skills?: string[];
   services: Service[];
   setServices: React.Dispatch<React.SetStateAction<Service[]>>;
   equipment: string[];
@@ -187,7 +187,7 @@ interface StepServicesProps {
   error: string;
 }
 
-export function StepServices({ cvProcessing, cvData, services, setServices, equipment, setEquipment, equipmentOnly, onNext, onSkip: _onSkip, error }: StepServicesProps) {
+export function StepServices({ cvProcessing, cvData, skills, services, setServices, equipment, setEquipment, equipmentOnly, onNext, onSkip: _onSkip, error }: StepServicesProps) {
   const [addingService, setAddingService] = useState(false);
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
@@ -196,8 +196,8 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
   const [editingServiceIndex, setEditingServiceIndex] = useState<number | null>(null);
 
-  // Generate service suggestions from CV
-  const cvSuggestedServices = cvData ? generateServiceSuggestions(cvData) : [];
+  // Generate service suggestions from CV data or profile skills
+  const cvSuggestedServices = generateServiceSuggestions(cvData, skills);
 
   const categoryTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout>>();

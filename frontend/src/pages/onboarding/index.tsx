@@ -443,6 +443,7 @@ export default function Onboarding() {
         return (
           <StepServices
             cvProcessing={cv.cvProcessing} cvData={cv.cvData}
+            skills={form.skills}
             services={form.services} setServices={form.setServices}
             equipment={form.equipment} setEquipment={form.setEquipment}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
