@@ -908,7 +908,7 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
       (async () => {
         try {
           const agent = await prisma.agent.findUnique({
-            where: { id: job.registeredAgentId! },
+            where: { id: updated.registeredAgentId! },
             select: { webhookUrl: true, webhookSecret: true, wallets: { orderBy: { createdAt: 'asc' as const }, take: 1, select: { address: true, network: true } } },
           });
           const firstWallet = agent?.wallets?.[0];
