@@ -6,35 +6,42 @@ interface StepVouchProps {
   onNext: () => void;
   onSkip: () => void;
   error: string;
-  userEmail?: string;
+  userName?: string;
 }
 
-const ADJECTIVES = ['Happy', 'Clever', 'Bright', 'Swift', 'Smart', 'Creative', 'Diligent', 'Energetic', 'Friendly', 'Keen', 'Lively', 'Nimble', 'Quick', 'Reliable', 'Stellar'];
-const NOUNS = ['Bear', 'Eagle', 'Fox', 'Lion', 'Otter', 'Panda', 'Raven', 'Tiger', 'Wolf', 'Zebra', 'Atlas', 'Beacon', 'Comet', 'Dragon', 'Echo'];
+const ADJECTIVES = ['swift', 'bright', 'clever', 'smart', 'keen', 'nimble', 'quick', 'ready', 'bold', 'calm', 'epic', 'great', 'kind', 'lucky', 'noble', 'rare', 'sure', 'vital', 'wise', 'zippy'];
 
-function generateUsername(email?: string): string {
-  if (email && email.includes('@')) {
-    const localPart = email.split('@')[0].replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
-    if (localPart.length > 3) return localPart;
+function generateUsername(name?: string): string {
+  // Try to use first name from email or provided name
+  let baseName = '';
+  if (name) {
+    baseName = name.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 15);
   }
+
+  if (baseName && baseName.length >= 2) {
+    // Use first name + 2-3 digit random number
+    const randomDigits = String(Math.floor(Math.random() * 1000)).padStart(2, '0');
+    return `${baseName}${randomDigits}`;
+  }
+
+  // Fallback: adjective + 1-2 digit random number
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  const random = Math.random().toString(36).slice(2, 6);
-  return `${adj}${noun}${random}`.toLowerCase();
+  const randomDigits = String(Math.floor(Math.random() * 100)).padStart(1, '0');
+  return `${adj}${randomDigits}`;
 }
 
 export function StepVouch({
   username,
   setUsername,
   onNext,
-  onSkip,
+  onSkip: _onSkip,
   error,
-  userEmail,
+  userName,
 }: StepVouchProps) {
   // Pre-generate username on mount if empty
   useEffect(() => {
     if (!username) {
-      setUsername(generateUsername(userEmail));
+      setUsername(generateUsername(userName));
     }
   }, []);
 
@@ -125,9 +132,10 @@ export function StepVouch({
         </button>
       </div>
 
-      <div className="space-y-3">
-        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Next →</button>
-        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip →</button>
+      <div className="flex justify-end mt-6">
+        <button type="button" onClick={onNext} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
       </div>
     </>
   );

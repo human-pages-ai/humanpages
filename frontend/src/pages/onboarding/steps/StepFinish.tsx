@@ -45,7 +45,7 @@ export function StepFinish({
   instagramUrl, setInstagramUrl, youtubeUrl, setYoutubeUrl,
   facebookUrl, setFacebookUrl, tiktokUrl, setTiktokUrl,
   onLinkedInConnect, onGitHubConnect,
-  onNext, onSkip, isLoading, error, setError,
+  onNext, onSkip: _onSkip, isLoading, error, setError,
   profileData,
 }: StepFinishProps) {
   const [connectingLI, setConnectingLI] = useState(false);
@@ -140,9 +140,10 @@ export function StepFinish({
         <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completeness"><div className={`h-full ${c.bar} rounded-full transition-all`} style={{ width: `${pct}%` }} /></div>
       </div>
 
-      <div className="space-y-3">
-        <button type="button" onClick={onNext} disabled={isLoading} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">{isLoading ? 'Saving your profile...' : 'Go to Dashboard'}</button>
-        <button type="button" onClick={onSkip} disabled={isLoading} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50">{isLoading ? 'Saving...' : 'Finish without verifying'}</button>
+      <div className="flex justify-end mt-6">
+        <button type="button" onClick={onNext} disabled={isLoading} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Complete profile">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
       </div>
     </>
   );

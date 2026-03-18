@@ -122,6 +122,7 @@ export const COUNTRY_CODES = [
   { code: '+234', country: 'NG', flag: '🇳🇬', label: 'Nigeria (+234)' },
   { code: '+47', country: 'NO', flag: '🇳🇴', label: 'Norway (+47)' },
   { code: '+48', country: 'PL', flag: '🇵🇱', label: 'Poland (+48)' },
+  { code: '+680', country: 'PW', flag: '🇵🇼', label: 'Palau (+680)' },
   { code: '+351', country: 'PT', flag: '🇵🇹', label: 'Portugal (+351)' },
   { code: '+974', country: 'QA', flag: '🇶🇦', label: 'Qatar (+974)' },
   { code: '+40', country: 'RO', flag: '🇷🇴', label: 'Romania (+40)' },
@@ -153,7 +154,6 @@ export const COUNTRY_CODES = [
   { code: '+216', country: 'TN', flag: '🇹🇳', label: 'Tunisia (+216)' },
   { code: '+231', country: 'LR', flag: '🇱🇷', label: 'Liberia (+231)' },
   { code: '+232', country: 'SL', flag: '🇸🇱', label: 'Sierra Leone (+232)' },
-  { code: '+212', country: 'MA', flag: '🇲🇦', label: 'Morocco (+212)' },
   { code: '+251', country: 'ET', flag: '🇪🇹', label: 'Ethiopia (+251)' },
   { code: '+260', country: 'ZM', flag: '🇿🇲', label: 'Zambia (+260)' },
   { code: '+263', country: 'ZW', flag: '🇿🇼', label: 'Zimbabwe (+263)' },
@@ -167,15 +167,12 @@ export const COUNTRY_CODES = [
   { code: '+855', country: 'KH', flag: '🇰🇭', label: 'Cambodia (+855)' },
   { code: '+95', country: 'MM', flag: '🇲🇲', label: 'Myanmar (+95)' },
   { code: '+856', country: 'LA', flag: '🇱🇦', label: 'Laos (+856)' },
-  { code: '+65', country: 'SG', flag: '🇸🇬', label: 'Singapore (+65)' },
   { code: '+886', country: 'TW', flag: '🇹🇼', label: 'Taiwan (+886)' },
   { code: '+93', country: 'AF', flag: '🇦🇫', label: 'Afghanistan (+93)' },
   { code: '+880', country: 'BD', flag: '🇧🇩', label: 'Bangladesh (+880)' },
   { code: '+977', country: 'NP', flag: '🇳🇵', label: 'Nepal (+977)' },
   { code: '+94', country: 'LK', flag: '🇱🇰', label: 'Sri Lanka (+94)' },
-  { code: '+880', country: 'BD', flag: '🇧🇩', label: 'Bangladesh (+880)' },
   { code: '+92', country: 'PK', flag: '🇵🇰', label: 'Pakistan (+92)' },
-  { code: '+880', country: 'BD', flag: '🇧🇩', label: 'Bangladesh (+880)' },
   { code: '+98', country: 'IR', flag: '🇮🇷', label: 'Iran (+98)' },
   { code: '+964', country: 'IQ', flag: '🇮🇶', label: 'Iraq (+964)' },
   { code: '+962', country: 'JO', flag: '🇯🇴', label: 'Jordan (+962)' },
@@ -185,18 +182,17 @@ export const COUNTRY_CODES = [
   { code: '+593', country: 'EC', flag: '🇪🇨', label: 'Ecuador (+593)' },
   { code: '+595', country: 'PY', flag: '🇵🇾', label: 'Paraguay (+595)' },
   { code: '+598', country: 'UY', flag: '🇺🇾', label: 'Uruguay (+598)' },
-  { code: '+56', country: 'CL', flag: '🇨🇱', label: 'Chile (+56)' },
 ] as const;
 
 // ─── Availability step options ───
 
 export const WEEKLY_CAPACITY_OPTIONS = [
+  { value: 0, label: 'Flexible', description: 'Hours vary per task' },
   { value: 5, label: '~5 hours/week', description: 'Side hustle' },
   { value: 10, label: '~10 hours/week', description: 'Part-time light' },
   { value: 20, label: '~20 hours/week', description: 'Part-time' },
   { value: 30, label: '~30 hours/week', description: 'Near full-time' },
   { value: 40, label: '40+ hours/week', description: 'Full-time' },
-  { value: 0, label: 'Flexible', description: 'Hours vary per task' },
 ];
 
 export const WORK_TYPE_OPTIONS = [

@@ -14,7 +14,7 @@ interface StepCvUploadProps {
   error: string;
 }
 
-export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessing, cvUploaded, cvData, onReupload, onNext, onSkip, error }: StepCvUploadProps) {
+export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessing, cvUploaded, cvData, onReupload, onNext, onSkip: _onSkip, error }: StepCvUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   return (
     <>
@@ -79,11 +79,10 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
         <input ref={cvInputRef} type="file" accept=".pdf,.docx,.doc,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={onCVChange} className="hidden" />
       </div>
 
-      <div className="space-y-3">
-        <button type="button" onClick={onNext} disabled={!cvUploaded && !cvProcessing} className={`w-full py-3 font-semibold rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500 ${cvUploaded || cvProcessing ? 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-          {cvProcessing ? 'Analyzing...' : 'Next →'}
+      <div className="flex justify-end mt-6">
+        <button type="button" onClick={onNext} disabled={!cvUploaded && !cvProcessing} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500 ${cvUploaded || cvProcessing ? 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`} aria-label="Next step">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
-        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip →</button>
       </div>
     </>
   );

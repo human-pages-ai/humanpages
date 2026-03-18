@@ -75,8 +75,10 @@ export function StepAboutYou({
         <p id="bio-count" className={`text-xs mt-1 ${bio.length >= 480 ? 'text-red-500 font-medium' : bio.length >= 400 ? 'text-orange-600 font-medium' : 'text-slate-400'}`}>{bio.length}/500 characters{bio.length === 0 && ' — a good bio helps you stand out'}</p>
       </div>
 
-      <div className="space-y-3">
-        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Next →</button>
+      <div className="flex justify-end mt-6">
+        <button type="button" onClick={onNext} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
       </div>
     </>
   );

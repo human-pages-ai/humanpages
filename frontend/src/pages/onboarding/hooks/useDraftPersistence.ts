@@ -87,7 +87,8 @@ export type DraftSaveStatus = 'idle' | 'saving' | 'saved';
 
 /**
  * Hook: auto-saves wizard state to sessionStorage, debounced at 500ms.
- * Returns save status for UI indicator.
+ * Also provides a saveNow() function for immediate saves (e.g., on navigation).
+ * Returns save status for UI indicator and saveNow callback.
  * @param draftData - current form state to persist
  */
 export function useDraftPersistence(draftData: Partial<OnboardingDraft>): DraftSaveStatus {
@@ -101,6 +102,25 @@ export function useDraftPersistence(draftData: Partial<OnboardingDraft>): DraftS
     if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
   }, []);
 
+  // Expose saveNow as a function that can be called from outside
+  const saveNowRef = useRef(() => {
+    saveDraft(draftData);
+  });
+
+  // Keep saveNowRef updated with latest draftData
+  useEffect(() => {
+    saveNowRef.current = () => saveDraft(draftData);
+  }, [draftData]);
+
+  // Attach to window for access from goToPosition
+  useEffect(() => {
+    (window as any).__draftSaveNow = saveNowRef.current;
+    return () => {
+      delete (window as any).__draftSaveNow;
+    };
+  }, []);
+
+  // Debounced save on data changes
   useEffect(() => {
     let active = true;
     // Don't show indicator on first render (loading draft data)
@@ -124,6 +144,15 @@ export function useDraftPersistence(draftData: Partial<OnboardingDraft>): DraftS
     // Intentionally using JSON.stringify for deep comparison — these are plain objects
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(draftData)]);
+
+  // Synchronous save on beforeunload to handle network loss
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveDraft(draftData);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [draftData]);
 
   return saveStatus;
 }

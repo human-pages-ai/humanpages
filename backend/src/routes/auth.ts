@@ -134,24 +134,16 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    // In non-production, auto-verify email for easier testing
-    if (process.env.NODE_ENV !== 'production') {
-      await prisma.human.update({
-        where: { id: human.id },
-        data: { emailVerified: true },
-      });
-    } else {
-      // Send verification email
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      await prisma.human.update({
-        where: { id: human.id },
-        data: { emailVerificationToken: verificationToken },
-      });
-      const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
-      sendVerificationEmail(email, verifyUrl).catch((err) =>
-        logger.error({ err }, 'Failed to send verification email')
-      );
-    }
+    // Send verification email
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { emailVerificationToken: verificationToken },
+    });
+    const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
+    sendVerificationEmail(email, verifyUrl).catch((err) =>
+      logger.error({ err }, 'Failed to send verification email')
+    );
 
     res.status(201).json({ human, token });
   } catch (error) {

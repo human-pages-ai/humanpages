@@ -168,7 +168,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
 
   // ─── Availability (agent-facing) ───
   const [timezone, setTimezone] = useState(draft?.timezone || '');
-  const [weeklyCapacityHours, setWeeklyCapacityHours] = useState<number | null>(draft?.weeklyCapacityHours ?? null);
+  const [weeklyCapacityHours, setWeeklyCapacityHours] = useState<number | null>(draft?.weeklyCapacityHours ?? 0);
   const [workType, setWorkType] = useState(draft?.workType || '');
 
   // Agent-facing structured fields

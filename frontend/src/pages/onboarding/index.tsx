@@ -139,6 +139,10 @@ export default function Onboarding() {
     const clamped = Math.max(1, Math.min(nextPos, total));
     if (submittingRef.current || clamped === position) return;
 
+    // Save draft immediately before transitioning (for slow internet)
+    const saveNow = (window as any).__draftSaveNow;
+    if (saveNow) saveNow();
+
     setTransitioning(true);
     prevPositionRef.current = position;
 
@@ -344,10 +348,6 @@ export default function Onboarding() {
             addCustomSkill={form.addCustomSkill}
             skillSearch={form.skillSearch} setSkillSearch={form.setSkillSearch}
             expandedCategories={form.expandedCategories} toggleCategory={form.toggleCategory}
-            languageEntries={form.languageEntries}
-            addLanguageEntry={form.addLanguageEntry}
-            removeLanguageEntry={form.removeLanguageEntry}
-            updateLanguageEntry={form.updateLanguageEntry}
             onNext={handleNext} {...stepProps}
           />
         );
@@ -367,6 +367,7 @@ export default function Onboarding() {
         return (
           <StepVouch
             username={form.username} setUsername={form.setUsername}
+            userName={form.name}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );
@@ -378,6 +379,10 @@ export default function Onboarding() {
             setLocationLat={form.setLocationLat} setLocationLng={form.setLocationLng}
             setNeighborhood={form.setNeighborhood}
             timezone={form.timezone} setTimezone={form.setTimezone}
+            languageEntries={form.languageEntries}
+            addLanguageEntry={form.addLanguageEntry}
+            removeLanguageEntry={form.removeLanguageEntry}
+            updateLanguageEntry={form.updateLanguageEntry}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );
@@ -427,7 +432,6 @@ export default function Onboarding() {
       case 'availability':
         return (
           <StepAvailability
-            timezone={form.timezone} setTimezone={form.setTimezone}
             weeklyCapacityHours={form.weeklyCapacityHours} setWeeklyCapacityHours={form.setWeeklyCapacityHours}
             workType={form.workType} setWorkType={form.setWorkType}
             cvProcessing={cv.cvProcessing}
@@ -471,7 +475,7 @@ export default function Onboarding() {
       <div className="bg-white border-b border-slate-200 px-4 py-4 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <p className="text-sm font-medium text-slate-600">
-            Complete Your Profile &bull; Step {position} of {total}
+            Complete Your Profile &bull; {labels[position - 1]}
           </p>
           <div aria-live="polite" aria-atomic="true" className="flex items-center gap-1.5">
             {saveStatus === 'saving' && (
@@ -506,9 +510,6 @@ export default function Onboarding() {
                 aria-label="Onboarding progress"
               />
             </div>
-            <p className="mt-2 text-sm text-slate-600 text-center font-medium">
-              Step {position} of {total}
-            </p>
           </div>
 
           {/* CV processing indicator */}

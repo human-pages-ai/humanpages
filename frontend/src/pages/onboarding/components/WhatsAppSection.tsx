@@ -134,9 +134,11 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
                   />
                 </div>
                 <div className="overflow-y-auto max-h-48">
-                  {COUNTRY_CODES.filter(c =>
-                    !codeSearch || c.label.toLowerCase().includes(codeSearch.toLowerCase()) || c.code.includes(codeSearch)
-                  ).map(c => (
+                  {COUNTRY_CODES.filter(c => {
+                    if (!codeSearch) return true;
+                    const searchLower = codeSearch.toLowerCase();
+                    return c.label.toLowerCase().includes(searchLower) || c.code.includes(codeSearch) || c.country.toLowerCase().includes(searchLower);
+                  }).map(c => (
                     <button
                       key={c.country}
                       type="button"
@@ -225,9 +227,11 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
                     />
                   </div>
                   <div className="overflow-y-auto max-h-48">
-                    {COUNTRY_CODES.filter(c =>
-                      !smsCpdeSearch || c.label.toLowerCase().includes(smsCpdeSearch.toLowerCase()) || c.code.includes(smsCpdeSearch)
-                    ).map(c => (
+                    {COUNTRY_CODES.filter(c => {
+                      if (!smsCpdeSearch) return true;
+                      const searchLower = smsCpdeSearch.toLowerCase();
+                      return c.label.toLowerCase().includes(searchLower) || c.code.includes(smsCpdeSearch) || c.country.toLowerCase().includes(searchLower);
+                    }).map(c => (
                       <button
                         key={c.country}
                         type="button"
