@@ -818,7 +818,7 @@ router.get('/featured', async (_req, res) => {
         prisma.$queryRaw<[{ count: bigint }]>`
           SELECT COUNT(DISTINCT LOWER(skill)) as count
           FROM "Human", LATERAL unnest(skills) AS skill
-          WHERE "identityVerifiedAt" IS NOT NULL
+          WHERE ("emailVerified" = true OR "whatsappVerified" = true)
         `,
         prisma.$queryRaw<[{ count: bigint }]>`
           SELECT COUNT(DISTINCT TRIM(
