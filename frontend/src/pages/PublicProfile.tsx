@@ -43,7 +43,7 @@ interface PublicVouch {
   id: string;
   comment?: string;
   createdAt: string;
-  voucher: { id: string; name: string; username?: string };
+  voucher: { id: string; username?: string }; // Public profiles show username only, not full name
 }
 
 interface PublicHuman {
@@ -314,11 +314,11 @@ export default function PublicProfile() {
                   {(showAllVouches ? profile.vouches : profile.vouches.slice(0, 3)).map((v) => (
                     <div key={v.id} className="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg">
                       <div className="shrink-0 w-7 h-7 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-medium">
-                        {(v.voucher.name || v.voucher.username || '?').charAt(0).toUpperCase()}
+                        {(v.voucher.username || 'User').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 text-sm">{v.voucher.name || v.voucher.username}</span>
+                          <span className="font-medium text-gray-900 text-sm">{v.voucher.username || 'Anonymous'}</span>
                           <span className="text-xs text-gray-400">
                             {new Date(v.createdAt).toLocaleDateString(i18n.language, { month: 'short', year: 'numeric' })}
                           </span>

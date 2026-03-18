@@ -74,7 +74,12 @@ const TIER_PROFILE_LIMITS: Record<string, number> = {
   PRO: 50,
 };
 
-// Public select fields (no contact info, no wallets)
+// Public select fields (no contact info, no wallets, no notification preferences)
+// Privacy boundaries:
+// - INCLUDED: public profile info, skills, rates, availability, social URLs, verification status, photo
+// - EXCLUDED: contact email/phone, notification channel settings, payment wallet addresses, R2 keys
+// - COMPUTED SEPARATELY: channelCount (derived from notification flags for visibility without exposing individual settings)
+// Future developers: do NOT add notification prefs (emailNotifications, etc.) or contact fields here.
 const publicHumanSelect = {
   id: true,
   username: true,
@@ -117,10 +122,6 @@ const publicHumanSelect = {
   linkedinVerified: true,
   githubVerified: true,
   githubUsername: true,
-  emailNotifications: true,
-  telegramNotifications: true,
-  whatsappNotifications: true,
-  pushNotifications: true,
   humanityVerified: true,
   humanityScore: true,
   humanityProvider: true,
@@ -137,6 +138,14 @@ const publicHumanSelect = {
   fiatPaymentMethods: {
     select: { platform: true },
   },
+} as const;
+
+// Notification flags for internal search computation (not exposed in public response)
+const notificationSelect = {
+  emailNotifications: true,
+  telegramNotifications: true,
+  whatsappNotifications: true,
+  pushNotifications: true,
 } as const;
 
 // Full select fields for active agents (includes contact info + wallets + name)
@@ -1323,6 +1332,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Fetch humans (public: no contact info, no wallets)
     // When doing skill search or reputation sort, fetch more candidates for post-fetch scoring/sorting
+    // Also fetch notification flags separately for channelCount calculation (not exposed in response)
     let humans = await prisma.human.findMany({
       where,
       take: needsLargePool ? 500 : requestedLimit,
@@ -1332,6 +1342,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         ...publicHumanSelect,
         locationLat: true,
         locationLng: true,
+        ...notificationSelect,
       },
     });
 
@@ -1447,6 +1458,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           ...publicHumanSelect,
           locationLat: true,
           locationLng: true,
+          ...notificationSelect,
         },
       });
 
@@ -1496,11 +1508,11 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       return h;
     }));
 
-    // Attach stats to each human and strip coords (contact info already excluded from select)
+    // Attach stats to each human and strip coords + notification flags (contact info already excluded from select)
     const humansWithReputation = humansWithUrls.map((h) => {
       const { locationLat, locationLng, profilePhotoKey, fiatPaymentMethods, emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...rest } = h as any;
 
-      // Compute channel count for agent visibility (names not exposed for privacy)
+      // Compute channel count for agent visibility (notification preference details not exposed for privacy)
       const channelCount = [emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications].filter(Boolean).length;
 
       return {
@@ -1670,15 +1682,13 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
     const reputation = await getReputationStats(human.id);
     const profileWithPhoto = await attachPhotoUrl({ ...human });
 
-    // Compute reachability for agent visibility
-    const activeChannels: string[] = [];
-    if ((human as any).emailNotifications) activeChannels.push('email');
-    if ((human as any).telegramNotifications && (human as any).telegramChatId) activeChannels.push('telegram');
-    if ((human as any).whatsappNotifications && (human as any).whatsappVerified) activeChannels.push('whatsapp');
-    if ((human as any).pushNotifications) activeChannels.push('push');
-    const channelCount = activeChannels.length;
+    // Compute channel count for agent visibility (notification preference details not exposed for privacy)
+    const channelCount = [(human as any).emailNotifications, (human as any).telegramNotifications, (human as any).whatsappNotifications, (human as any).pushNotifications].filter(Boolean).length;
 
-    res.json(filterHiddenContact({ ...profileWithPhoto, reputation, channelCount, activeChannels }));
+    // Strip notification flags from response
+    const { emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...profileWithoutNotifs } = profileWithPhoto as any;
+
+    res.json(filterHiddenContact({ ...profileWithoutNotifs, reputation, channelCount }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -1697,7 +1707,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, username: true } },
+            voucher: { select: { id: true, username: true } }, // Public profile: username only, not name
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -1734,7 +1744,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, username: true } },
+            voucher: { select: { id: true, username: true } }, // Public profile: username only, not name
           },
           orderBy: { createdAt: 'desc' },
         },
