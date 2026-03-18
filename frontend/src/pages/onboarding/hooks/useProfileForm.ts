@@ -21,6 +21,8 @@ export interface UseProfileFormReturn {
   setLocationLat: (v: number | undefined) => void;
   locationLng: number | undefined;
   setLocationLng: (v: number | undefined) => void;
+  id: string;
+  setId: (v: string) => void;
 
   // Photo
   photoFile: File | null;
@@ -124,6 +126,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   const navigate = useNavigate();
 
   // ─── Identity ───
+  const [id, setId] = useState(draft?.id || '');
   const [name, setName] = useState(draft?.name || '');
   const [bio, setBio] = useState(draft?.bio || '');
   const [location, setLocation] = useState(draft?.location || '');
@@ -239,6 +242,9 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
       if (signal?.aborted) return;
       analytics.identify(data.id);
 
+      // Always set ID from profile
+      setId(data.id);
+
       const hasDraft = draft != null;
       if (data.name && !hasDraft) setName(data.name);
       if (data.bio && !hasDraft) setBio(data.bio);
@@ -249,6 +255,18 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
       if (data.skills?.length && !hasDraft) setSkills(data.skills);
       if (data.languages?.length && !hasDraft) setLanguageEntries(data.languages.map((l: string) => parseLanguageString(l)));
       setEmailVerified(data.emailVerified || false);
+
+      // If user has a username, use it; otherwise auto-generate one from name
+      if (data.username && !hasDraft) {
+        setUsername(data.username);
+      } else if (!hasDraft && data.name?.trim()) {
+        const firstName = data.name.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 15);
+        if (firstName.length >= 2) {
+          const autogenUsername = `${firstName}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`;
+          setUsername(autogenUsername);
+        }
+      }
+
       // If user already has name + skills, they've completed onboarding before
       if (data.name?.trim() && data.skills?.length > 0) {
         setProfileCompleted(true);
@@ -354,7 +372,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   };
 
   return {
-    name, setName, bio, setBio, location, setLocation,
+    id, setId, name, setName, bio, setBio, location, setLocation,
     neighborhood, setNeighborhood, locationLat, setLocationLat, locationLng, setLocationLng,
     photoFile, setPhotoFile, photoPreview, setPhotoPreview, photoInputRef, oauthPhotoUrl, setOauthPhotoUrl,
     handlePhotoChange, handlePhotoRemove,

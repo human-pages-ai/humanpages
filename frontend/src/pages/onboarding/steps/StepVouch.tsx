@@ -1,33 +1,17 @@
-import { useEffect } from 'react';
 import { VouchCard } from '../../../components/shared/VouchCard';
 
 interface StepVouchProps {
+  userId: string;
   username: string;
   setUsername: (v: string) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
-  userName?: string;
 }
 
-const ADJECTIVES = ['swift', 'bright', 'clever', 'smart', 'keen', 'nimble', 'quick', 'ready', 'bold', 'calm'];
-
-function generateUsername(name?: string): string {
-  let baseName = '';
-  if (name) {
-    baseName = name.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 15);
-  }
-  if (baseName && baseName.length >= 2) {
-    return `${baseName}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`;
-  }
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  return `${adj}${Math.floor(Math.random() * 100)}`;
-}
-
-export function StepVouch({ username, setUsername, onNext, onSkip: _onSkip, error, userName }: StepVouchProps) {
-  useEffect(() => {
-    if (!username) setUsername(generateUsername(userName));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+export function StepVouch({ userId, username, setUsername, onNext, onSkip: _onSkip, error }: StepVouchProps) {
+  // Username is now auto-generated and set in useProfileForm.loadProfile
+  // No need to generate it here, just display what's already set
 
   return (
     <>
@@ -36,7 +20,7 @@ export function StepVouch({ username, setUsername, onNext, onSkip: _onSkip, erro
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error}</div>}
 
-      <VouchCard username={username} onUsernameChange={setUsername} />
+      <VouchCard userId={userId} username={username} onUsernameChange={setUsername} />
 
       <div className="flex justify-end mt-6">
         <button type="button" onClick={onNext} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">

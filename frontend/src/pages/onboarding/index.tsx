@@ -107,6 +107,7 @@ export default function Onboarding() {
   // ─── Draft persistence ───
   const saveStatus = useDraftPersistence({
     step: position,
+    id: form.id,
     name: form.name, bio: form.bio, location: form.location,
     neighborhood: form.neighborhood, locationLat: form.locationLat, locationLng: form.locationLng,
     skills: form.skills, educationEntries: form.educationEntries, languageEntries: form.languageEntries,
@@ -367,8 +368,8 @@ export default function Onboarding() {
       case 'vouch':
         return (
           <StepVouch
+            userId={form.id}
             username={form.username} setUsername={form.setUsername}
-            userName={form.name}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );

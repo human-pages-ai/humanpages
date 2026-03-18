@@ -3,9 +3,11 @@
  * and the dashboard (VouchSection). Single source of truth for the share UX.
  */
 import toast from 'react-hot-toast';
+import { getProfileUrl, getProfileDisplayUrl } from '../../lib/profileUrl';
 
 interface VouchCardProps {
-  username: string;
+  username?: string;
+  userId: string;
   /** Editable username input — only shown in wizard mode */
   onUsernameChange?: (v: string) => void;
   /** Number of vouches received */
@@ -16,9 +18,9 @@ interface VouchCardProps {
 
 const SHARE_TEXT = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
 
-export function VouchCard({ username, onUsernameChange, vouchCount = 0, vouchTarget = 10 }: VouchCardProps) {
-  const profileUrl = `humanpages.ai/u/${username}`;
-  const shareUrl = `https://${profileUrl}`;
+export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, vouchTarget = 10 }: VouchCardProps) {
+  const profileUrl = getProfileDisplayUrl({ username, id: userId });
+  const shareUrl = getProfileUrl({ username, id: userId });
   const pct = Math.min(100, Math.round((vouchCount / vouchTarget) * 100));
 
   const handleShare = async () => {

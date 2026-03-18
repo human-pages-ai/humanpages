@@ -32,6 +32,7 @@ export interface EducationEntry {
 
 export interface OnboardingDraft {
   step: number;
+  id: string;
   name: string;
   bio: string;
   location: string;

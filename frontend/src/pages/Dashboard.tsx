@@ -695,7 +695,7 @@ export default function Dashboard() {
               </div>
 
               {/* Wizard Module Tiles Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* 1. Notifications & Connect */}
                 <WizardModuleTile
                   title="Notifications & Connect"

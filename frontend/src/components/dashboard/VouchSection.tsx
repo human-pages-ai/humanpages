@@ -70,11 +70,12 @@ export default function VouchSection() {
   return (
     <div className="space-y-4">
       {/* Share & Vouch Card — same component as wizard */}
-      {profile?.username && (
+      {profile && (
         <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Get Vouched</h2>
           <VouchCard
             username={profile.username}
+            userId={profile.id}
             vouchCount={received.length}
             vouchTarget={10}
           />

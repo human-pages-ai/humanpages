@@ -32,9 +32,9 @@ export default function WizardModuleTile({
   const c = colorMap[color];
 
   return (
-    <div className={`rounded-xl border p-4 sm:p-5 ${isEmpty ? 'bg-white border-slate-200' : `${c.bg} ${c.border}`}`}>
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${isEmpty ? 'bg-slate-100' : c.icon}`}>
+    <div className={`rounded-xl border p-3 sm:p-4 ${isEmpty ? 'bg-white border-slate-200' : `${c.bg} ${c.border}`}`}>
+      <div className="flex items-center gap-3 mb-2">
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${isEmpty ? 'bg-slate-100' : c.icon}`}>
           {icon}
         </div>
         <h3 className={`text-sm font-semibold flex-1 ${isEmpty ? 'text-slate-400' : 'text-slate-800'}`}>
