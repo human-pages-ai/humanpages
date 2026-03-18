@@ -39,7 +39,7 @@ export default function WizardModuleTile({
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${isEmpty ? 'bg-slate-100' : c.icon}`}>
           {icon}
         </div>
-        <h3 className={`text-sm font-semibold flex-1 ${isEmpty ? 'text-slate-400' : 'text-slate-800'}`}>
+        <h3 className={`text-sm font-semibold flex-1 min-w-0 truncate ${isEmpty ? 'text-slate-400' : 'text-slate-800'}`}>
           {title}
         </h3>
         <Link

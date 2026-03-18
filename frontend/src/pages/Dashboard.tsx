@@ -535,7 +535,7 @@ export default function Dashboard() {
             <div className="space-y-6">
               {/* Profile card with photo, name, progress ring, level */}
               <div className="bg-white rounded-xl shadow border border-slate-200 p-6">
-                <div className="flex items-center gap-5">
+                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-5">
                   {/* Progress ring with photo inside */}
                   <div className="relative w-24 h-24 shrink-0">
                     <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
@@ -572,7 +572,7 @@ export default function Dashboard() {
                   {firstIncomplete && (
                     <Link
                       to={`/onboarding?step=${firstIncomplete.stepId}`}
-                      className="px-4 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 shadow whitespace-nowrap"
+                      className="w-full sm:w-auto px-4 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 shadow whitespace-nowrap text-center"
                     >
                       + {firstIncomplete.label}
                     </Link>
@@ -700,9 +700,9 @@ export default function Dashboard() {
                       {profile.education && profile.education.length > 0 ? (
                         <div className="space-y-1 mt-1">
                           {profile.education.map((edu) => (
-                            <div key={edu.id} className="text-xs">
-                              <span className="font-medium text-gray-900">{edu.institution}</span>
-                              {edu.degree && <span className="text-gray-600"> — {edu.degree}</span>}
+                            <div key={edu.id} className="text-xs min-w-0">
+                              <span className="font-medium text-gray-900 truncate block">{edu.institution}</span>
+                              {edu.degree && <span className="text-gray-600 truncate block"> — {edu.degree}</span>}
                             </div>
                           ))}
                         </div>
@@ -725,8 +725,8 @@ export default function Dashboard() {
                   {profile.services && profile.services.length > 0 ? (
                     <div className="space-y-2">
                       {profile.services.map((service) => (
-                        <div key={service.id} className="text-xs">
-                          <span className="font-medium text-gray-900">{service.title}</span>
+                        <div key={service.id} className="text-xs min-w-0">
+                          <span className="font-medium text-gray-900 truncate block">{service.title}</span>
                           {service.priceMin && (
                             <span className="text-gray-600 ml-2">
                               {service.priceCurrency || 'USD'} {service.priceMin} {service.priceUnit || 'flat'}

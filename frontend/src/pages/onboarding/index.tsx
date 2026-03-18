@@ -510,7 +510,7 @@ export default function Onboarding() {
                 Dashboard
               </button>
             )}
-            <p className="text-sm font-medium text-slate-600">
+            <p className="text-sm font-medium text-slate-600 truncate">
               {labels[position - 1]}
             </p>
           </div>

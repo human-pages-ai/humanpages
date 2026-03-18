@@ -389,7 +389,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
               type="button"
               onClick={handleAddEquipment}
               disabled={!newEquipmentCategory.trim()}
-              className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
+              className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px] flex-shrink-0"
             >
               Add
             </button>
@@ -439,7 +439,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                   <div className="p-3 border border-orange-300 rounded-lg bg-orange-50">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm">{svc.title}</p>
+                        <p className="font-medium text-slate-900 text-sm truncate">{svc.title}</p>
                         <p className="text-xs text-slate-500">{svc.category}{svc.subcategory ? ` • ${svc.subcategory}` : ''}</p>
                       </div>
                     </div>
@@ -524,7 +524,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                   <div className="p-3 border border-slate-200 rounded-lg bg-white hover:border-orange-300 transition-colors cursor-pointer" onClick={() => setEditingServiceIndex(idx)}>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm">{svc.title}</p>
+                        <p className="font-medium text-slate-900 text-sm truncate">{svc.title}</p>
                         <p className="text-xs text-slate-500">{svc.category}{svc.subcategory ? ` • ${svc.subcategory}` : ''}</p>
                       </div>
                       <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveService(idx); }} className="text-slate-400 hover:text-red-500 font-bold flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`Remove service: ${svc.title}`}>×</button>

@@ -121,7 +121,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
               <svg className={`w-3 h-3 text-slate-400 transition-transform ${codeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             {codeDropdownOpen && (
-              <div className="absolute z-[70] mt-1 w-64 max-h-60 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden" role="listbox">
+              <div className="absolute z-[70] mt-1 w-full max-w-xs max-h-60 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden" role="listbox">
                 <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
                   <input
                     type="text"
@@ -214,7 +214,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
                 <svg className={`w-3 h-3 text-slate-400 transition-transform ${smsCpdeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </button>
               {smsCpdeDropdownOpen && (
-                <div className="absolute z-[70] mt-1 w-64 max-h-60 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden" role="listbox">
+                <div className="absolute z-[70] mt-1 w-full max-w-xs max-h-60 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden" role="listbox">
                   <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
                     <input
                       type="text"

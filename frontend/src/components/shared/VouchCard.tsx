@@ -80,7 +80,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
             {!username && (
               <p className="text-xs text-slate-500 mb-1.5">Set a username to get a shorter link</p>
             )}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-slate-500 whitespace-nowrap">
                 {username ? getProfileDisplayUrl({ username, id: userId }).replace(username, '') : 'humanpages.ai/u/'}
               </span>
@@ -90,7 +90,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
                 value={username || ''}
                 onChange={(e) => onUsernameChange(e.target.value.slice(0, 50).replace(/\s+/g, '-').toLowerCase())}
                 placeholder="your-username"
-                className="flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="flex-1 min-w-0 px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
             </div>
           </>
