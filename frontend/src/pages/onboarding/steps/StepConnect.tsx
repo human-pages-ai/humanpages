@@ -206,84 +206,35 @@ export function StepConnect({
 
       {(error || registrationError) && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error || registrationError}</div>}
 
-      {/* Visual Install Instruction — always visible */}
-      <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">📲</span>
-          <div>
-            <p className="font-semibold text-purple-900 text-sm">Install HumanPages for instant notifications</p>
-            <p className="text-xs text-purple-700 mt-1">Look for the install icon <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 rounded text-purple-800 font-mono text-[10px]">⬇</span> in your browser's address bar (top right), or go to Menu → "Install HumanPages"</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Urgency banner */}
-      <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-        <div className="flex gap-3">
-          <svg className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          <div>
-            <p className="text-sm font-semibold text-amber-800">Agents are more likely to hire you if you respond fast</p>
-            <p className="text-xs text-amber-700 mt-1">Enable push notifications and connect Telegram or WhatsApp to receive instant job notifications and never miss an opportunity.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Push Notifications Section */}
-      <div className="mb-6 p-4 border border-slate-200 rounded-lg">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-slate-900">Push Notifications</h3>
-            <p className="text-xs text-slate-500">Enable notifications to get discovered faster by agents</p>
-          </div>
-          {notificationStatus === 'granted' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              Enabled
-            </span>
-          )}
-        </div>
-
+      {/* Push Notifications — compact */}
+      <div className="mb-4 p-4 border border-slate-200 rounded-lg">
         {notificationStatus === 'granted' ? (
-          <div className="space-y-3">
-            <p className="text-sm text-green-700 bg-green-50 rounded-lg p-3">Push notifications are enabled! You'll receive instant alerts when agents want to hire you.</p>
-            <div className="text-sm bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="font-medium text-blue-900 mb-1">For the best experience, install HumanPages as an app</p>
-              <p className="text-xs text-blue-700">In Chrome: Menu → Install app. In Safari: Share → Add to Home Screen.</p>
-            </div>
+          <div className="flex items-center gap-3">
+            <span className="text-green-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+            </span>
+            <span className="text-sm text-green-700 flex-1">Push notifications enabled</span>
+            {showInstallButton && (
+              <button type="button" onClick={handleInstallApp} className="text-xs text-purple-600 hover:text-purple-700 font-medium">Install App</button>
+            )}
           </div>
         ) : notificationStatus === 'denied' ? (
-          <div className="space-y-2">
-            <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3">You've declined push notifications. You can enable them anytime in your browser settings.</p>
-            <button
-              type="button"
-              onClick={() => setNotificationStatus('idle')}
-              className="w-full py-2.5 bg-slate-500 text-white font-medium rounded-lg hover:bg-slate-600 active:bg-slate-700 transition-colors text-sm"
-            >
-              Try Again
-            </button>
+          <div className="flex items-center gap-3">
+            <span className="text-slate-400">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            </span>
+            <span className="text-sm text-slate-500 flex-1">Notifications declined</span>
+            <button type="button" onClick={() => setNotificationStatus('idle')} className="text-xs text-blue-600 hover:text-blue-700 font-medium">Try Again</button>
           </div>
         ) : (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleEnablePushNotifications}
-              disabled={isRegistering}
-              className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
-            >
-              {isRegistering ? 'Enabling...' : 'Enable Push Notifications'}
+          <div className="flex items-center gap-3">
+            <span className="text-blue-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            </span>
+            <span className="text-sm text-slate-700 flex-1">Get notified when agents want to hire you</span>
+            <button type="button" onClick={handleEnablePushNotifications} disabled={isRegistering} className="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50">
+              {isRegistering ? '...' : 'Enable'}
             </button>
-            {showInstallButton && (
-              <button
-                type="button"
-                onClick={handleInstallApp}
-                className="w-full py-2.5 bg-purple-500 text-white font-medium rounded-lg hover:bg-purple-600 active:bg-purple-700 transition-colors text-sm"
-              >
-                Install App
-              </button>
-            )}
           </div>
         )}
       </div>
