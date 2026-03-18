@@ -41,6 +41,24 @@ import { safeLocalStorage } from '../lib/safeStorage';
 
 const VALID_TABS: DashboardTab[] = ['jobs', 'listings', 'profile', 'payments', 'settings', 'privacy'];
 
+// Helper component for rendering chips in a consistent style
+function ChipList({ items, color = 'blue' }: { items: string[]; color?: 'blue' | 'amber' | 'green' }) {
+  const colors = {
+    blue: 'bg-blue-100 text-blue-700',
+    amber: 'bg-amber-100 text-amber-700',
+    green: 'bg-green-100 text-green-800',
+  };
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((item, i) => (
+        <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium ${colors[color]}`}>
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, logout, updateUser } = useAuth();
@@ -945,13 +963,7 @@ export default function Dashboard() {
                   isEmpty={!profile.skills || profile.skills.length === 0}
                 >
                   {profile.skills && profile.skills.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.skills.map((skill) => (
-                        <span key={skill} className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
+                    <ChipList items={profile.skills} color="blue" />
                   ) : (
                     <span className="text-gray-400">Not set</span>
                   )}
@@ -964,13 +976,7 @@ export default function Dashboard() {
                   isEmpty={!profile.equipment || profile.equipment.length === 0}
                 >
                   {profile.equipment && profile.equipment.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.equipment.map((item) => (
-                        <span key={item} className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
+                    <ChipList items={profile.equipment} color="amber" />
                   ) : (
                     <span className="text-gray-400">Not set</span>
                   )}
@@ -995,6 +1001,12 @@ export default function Dashboard() {
                         <span className="text-sm text-gray-400">Not set</span>
                       )}
                     </div>
+                    {profile.timezone && (
+                      <div>
+                        <span className="text-gray-500 text-xs">Timezone:</span>{' '}
+                        <span className="text-sm font-medium text-gray-900">{profile.timezone}</span>
+                      </div>
+                    )}
                   </div>
                 </WizardModuleTile>
 
@@ -1042,7 +1054,7 @@ export default function Dashboard() {
                           <span className="font-medium text-gray-900">{service.title}</span>
                           {service.priceMin && (
                             <span className="text-gray-600 ml-2">
-                              ${service.priceMin} {service.priceUnit || 'flat'}
+                              {service.priceCurrency || 'USD'} {service.priceMin} {service.priceUnit || 'flat'}
                             </span>
                           )}
                         </div>
@@ -1081,20 +1093,20 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Availability"
                   stepId="availability"
-                  isEmpty={!profile.workMode && !profile.minRateUsdEstimate}
+                  isEmpty={!profile.workType && !profile.weeklyCapacityHours}
                 >
                   <div className="space-y-2">
-                    {profile.workMode && (
+                    {profile.workType && (
                       <div>
-                        <span className="text-gray-500 text-xs">Work Mode:</span>{' '}
-                        <span className="text-sm font-medium text-gray-900">{profile.workMode}</span>
+                        <span className="text-gray-500 text-xs">Work Type:</span>{' '}
+                        <span className="text-sm font-medium text-gray-900">{profile.workType}</span>
                       </div>
                     )}
-                    {profile.minRateUsdEstimate && (
+                    {profile.weeklyCapacityHours != null && profile.weeklyCapacityHours > 0 && (
                       <div>
-                        <span className="text-gray-500 text-xs">Minimum Rate:</span>{' '}
+                        <span className="text-gray-500 text-xs">Weekly Capacity:</span>{' '}
                         <span className="text-sm font-medium text-gray-900">
-                          ${profile.minRateUsdEstimate}/hour
+                          {profile.weeklyCapacityHours} hours/week
                         </span>
                       </div>
                     )}

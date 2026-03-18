@@ -104,6 +104,9 @@ export interface Profile {
   rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
   paymentPreferences?: ('UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM')[];
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
+  workType?: string;
+  weeklyCapacityHours?: number | null;
+  timezone?: string;
   preferredLanguage?: string;
   linkedinVerified?: boolean;
   githubVerified?: boolean;
