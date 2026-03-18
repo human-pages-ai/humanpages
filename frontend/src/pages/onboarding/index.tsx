@@ -17,13 +17,16 @@ import type { StepId } from './useStepFlow';
 import type { LanguageEntry } from './types';
 
 // Step components — each is a self-contained module
-import { StepNotifications } from './steps/StepNotifications';
-import { StepCvUpload } from './steps/StepCvUpload';
 import { StepConnect } from './steps/StepConnect';
-import { StepAvailability } from './steps/StepAvailability';
-import { StepServices } from './steps/StepServices';
-import { StepAboutYou } from './steps/StepAboutYou';
+import { StepCvUpload } from './steps/StepCvUpload';
 import { StepSkills } from './steps/StepSkills';
+import { StepServices } from './steps/StepServices';
+import { StepVouch } from './steps/StepVouch';
+import { StepLocation } from './steps/StepLocation';
+import { StepEducation } from './steps/StepEducation';
+import { StepPayment } from './steps/StepPayment';
+import { StepAboutYou } from './steps/StepAboutYou';
+import { StepAvailability } from './steps/StepAvailability';
 import { StepFinish } from './steps/StepFinish';
 import { StepErrorBoundary } from './components/StepErrorBoundary';
 
@@ -143,14 +146,8 @@ export default function Onboarding() {
 
   // Universal next/skip/back — every step uses these
   const handleNext = useCallback(() => {
-    // Per-step validation before advancing
-    if (currentStepId === 'about' && !form.name.trim()) {
-      form.setError('Name is required');
-      scrollToError();
-      return;
-    }
     goToPosition(position + 1);
-  }, [currentStepId, form, goToPosition, position]);
+  }, [goToPosition, position]);
 
   const handleSkip = useCallback(() => {
     goToPosition(position + 1);
@@ -164,13 +161,6 @@ export default function Onboarding() {
   const handleFinalSubmit = async () => {
     if (submittingRef.current || loading) return;
     submittingRef.current = true;
-
-    if (!form.name.trim()) {
-      submittingRef.current = false;
-      form.setError('Name is required. Go back to the About You step.');
-      scrollToError();
-      return;
-    }
 
     if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {
       submittingRef.current = false;
@@ -316,9 +306,6 @@ export default function Onboarding() {
 
   function renderStep(id: StepId) {
     switch (id) {
-      case 'notifications':
-        return <StepNotifications onNext={handleNext} onSkip={handleSkip} {...stepProps} />;
-
       case 'connect':
         return (
           <StepConnect
@@ -369,14 +356,61 @@ export default function Onboarding() {
           />
         );
 
-      case 'about':
+      case 'vouch':
+        return (
+          <StepVouch
+            username={form.username} setUsername={form.setUsername}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'location':
+        return (
+          <StepLocation
+            location={form.location} setLocation={form.setLocation}
+            setLocationLat={form.setLocationLat} setLocationLng={form.setLocationLng}
+            setNeighborhood={form.setNeighborhood}
+            timezone={form.timezone} setTimezone={form.setTimezone}
+            languageEntries={form.languageEntries}
+            addLanguageEntry={form.addLanguageEntry}
+            removeLanguageEntry={form.removeLanguageEntry}
+            updateLanguageEntry={form.updateLanguageEntry}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'education':
+        return (
+          <StepEducation
+            educationEntries={form.educationEntries} setEducationEntries={form.setEducationEntries}
+            yearsOfExperience={form.yearsOfExperience} setYearsOfExperience={form.setYearsOfExperience}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'payment':
+        return (
+          <StepPayment
+            walletAddress={form.walletAddress} setWalletAddress={form.setWalletAddress}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'services':
+        return (
+          <StepServices
+            cvProcessing={cv.cvProcessing} cvData={cv.cvData}
+            services={form.services} setServices={form.setServices}
+            equipment={form.equipment} setEquipment={form.setEquipment}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'profile':
         return (
           <StepAboutYou
             name={form.name} setName={form.setName}
             bio={form.bio} setBio={form.setBio}
-            location={form.location} setLocation={form.setLocation}
-            setLocationLat={form.setLocationLat} setLocationLng={form.setLocationLng}
-            setNeighborhood={form.setNeighborhood}
             photoPreview={form.photoPreview} photoInputRef={form.photoInputRef}
             onPhotoChange={form.handlePhotoChange} onPhotoRemove={form.handlePhotoRemove}
             oauthPhotoUrl={form.oauthPhotoUrl}
@@ -393,16 +427,6 @@ export default function Onboarding() {
             responseTimeCommitment={form.responseTimeCommitment} setResponseTimeCommitment={form.setResponseTimeCommitment}
             workType={form.workType} setWorkType={form.setWorkType}
             cvProcessing={cv.cvProcessing}
-            onNext={handleNext} onSkip={handleSkip} {...stepProps}
-          />
-        );
-
-      case 'services':
-        return (
-          <StepServices
-            cvProcessing={cv.cvProcessing} cvData={cv.cvData}
-            services={form.services} setServices={form.setServices}
-            equipment={form.equipment} setEquipment={form.setEquipment}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );

@@ -1,16 +1,8 @@
-import { useState, useEffect } from 'react';
-import LocationAutocomplete from '../../../components/LocationAutocomplete';
-
 interface StepAboutYouProps {
   name: string;
   setName: (v: string) => void;
   bio: string;
   setBio: (v: string) => void;
-  location: string;
-  setLocation: (v: string) => void;
-  setLocationLat: (v: number | undefined) => void;
-  setLocationLng: (v: number | undefined) => void;
-  setNeighborhood: (v: string) => void;
   photoPreview: string | null;
   photoInputRef: React.RefObject<HTMLInputElement>;
   onPhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -25,43 +17,14 @@ interface StepAboutYouProps {
 
 export function StepAboutYou({
   name, setName, bio, setBio,
-  location, setLocation, setLocationLat, setLocationLng, setNeighborhood,
   photoPreview, photoInputRef, onPhotoChange, onPhotoRemove,
   oauthPhotoUrl, cvUploaded, cvData,
   onNext, error, setError,
 }: StepAboutYouProps) {
-  const [isRemote, setIsRemote] = useState(location === 'Remote');
-  const [defaultLocationDetected, setDefaultLocationDetected] = useState(false);
-
-  // Auto-detect location on mount if not already set
-  useEffect(() => {
-    if (!location && !isRemote && !defaultLocationDetected) {
-      try {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (timezone) {
-          // Extract city name from timezone string (e.g., "America/New_York" → "New York")
-          const parts = timezone.split('/');
-          if (parts.length > 1) {
-            const cityName = parts[parts.length - 1].replace(/_/g, ' ');
-            setLocation(cityName);
-            setDefaultLocationDetected(true);
-          }
-        }
-      } catch (e) {
-        // Silently fail if timezone detection doesn't work
-      }
-    }
-  }, [location, isRemote, defaultLocationDetected, setLocation]);
-
-  useEffect(() => {
-    if (isRemote) {
-      setLocation('Remote');
-    }
-  }, [isRemote, setLocation]);
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">About You</h2>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Your Profile</h2>
       <p className="text-slate-600 mb-6">Complete your profile information</p>
 
       {cvUploaded && cvData && (
@@ -101,50 +64,15 @@ export function StepAboutYou({
 
       {/* Name */}
       <div className="mb-4">
-        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
         <input id="name" type="text" value={name} onChange={(e) => { setName(e.target.value.slice(0, 100)); setError(''); }} onBlur={(e) => { setName(e.target.value.trim()); }} maxLength={100} placeholder="John Doe" autoComplete="name" className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
       </div>
 
       {/* Bio */}
-      <div className="mb-4">
+      <div className="mb-6">
         <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-1">Short Bio</label>
         <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself..." maxLength={500} rows={2} aria-describedby="bio-count" className="w-full px-4 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
         <p id="bio-count" className={`text-xs mt-1 ${bio.length >= 480 ? 'text-red-500 font-medium' : bio.length >= 400 ? 'text-orange-600 font-medium' : 'text-slate-400'}`}>{bio.length}/500 characters{bio.length === 0 && ' — a good bio helps you stand out'}</p>
-      </div>
-
-      {/* Location */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <label htmlFor="location-input" className="block text-sm font-medium text-slate-700">Location</label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isRemote}
-              onChange={(e) => setIsRemote(e.target.checked)}
-              className="w-4 h-4 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
-            />
-            <span className="text-sm font-medium text-slate-700">Remote</span>
-          </label>
-        </div>
-        {!isRemote ? (
-          <>
-            <LocationAutocomplete
-              id="location-input"
-              value={location}
-              onChange={(loc: string, lat?: number, lng?: number, nbhd?: string) => {
-                setLocation(loc);
-                if (lat != null && lng != null) { setLocationLat(lat); setLocationLng(lng); setNeighborhood(nbhd || ''); } else { setLocationLat(undefined); setLocationLng(undefined); setNeighborhood(''); }
-              }}
-              placeholder="City or address"
-              className="w-full px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-            {!location && (
-              <p className="text-xs text-slate-500 mt-2">Location helps agents find you for local tasks</p>
-            )}
-          </>
-        ) : (
-          <div className="px-4 py-2.5 sm:py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-medium text-slate-700">Remote</div>
-        )}
       </div>
 
       <div className="space-y-3">

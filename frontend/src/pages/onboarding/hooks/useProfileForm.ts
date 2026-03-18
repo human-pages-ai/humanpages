@@ -81,6 +81,8 @@ export interface UseProfileFormReturn {
   setExternalProfiles: React.Dispatch<React.SetStateAction<string[]>>;
   walletAddress: string;
   setWalletAddress: (v: string) => void;
+  username: string;
+  setUsername: (v: string) => void;
 
   // Messaging
   whatsappNumber: string;
@@ -157,6 +159,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   const [tiktokUrl, setTiktokUrl] = useState(draft?.tiktokUrl || '');
   const [externalProfiles, setExternalProfiles] = useState<string[]>(draft?.externalProfiles || []);
   const [walletAddress, setWalletAddress] = useState(draft?.walletAddress || '');
+  const [username, setUsername] = useState(draft?.username || '');
 
   // ─── Messaging ───
   const [whatsappNumber, setWhatsappNumber] = useState(draft?.whatsappNumber || '');
@@ -360,7 +363,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
     linkedinUrl, setLinkedinUrl, githubUrl, setGithubUrl, twitterUrl, setTwitterUrl,
     websiteUrl, setWebsiteUrl, instagramUrl, setInstagramUrl, youtubeUrl, setYoutubeUrl,
     facebookUrl, setFacebookUrl, tiktokUrl, setTiktokUrl,
-    externalProfiles, setExternalProfiles, walletAddress, setWalletAddress,
+    externalProfiles, setExternalProfiles, walletAddress, setWalletAddress, username, setUsername,
     whatsappNumber, setWhatsappNumber,
     timezone, setTimezone, weeklyCapacityHours, setWeeklyCapacityHours,
     responseTimeCommitment, setResponseTimeCommitment, workType, setWorkType,

@@ -57,6 +57,7 @@ export interface OnboardingDraft {
   yearsOfExperience: number | null;
   industries: string[];
   equipment: string[];
+  username: string;
 }
 
 /** All form state managed by useProfileForm */

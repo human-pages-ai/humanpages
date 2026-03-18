@@ -6,17 +6,19 @@
  * All navigation logic lives here — index.tsx just renders the current step.
  */
 
-/** All possible step IDs */
 export type StepId =
-  | 'notifications'
-  | 'connect'
-  | 'cv-upload'
-  | 'skills'
-  | 'equipment'
-  | 'about'
-  | 'availability'
-  | 'services'
-  | 'verification';
+  | 'connect'           // Push notifications + Telegram + WhatsApp/SMS
+  | 'cv-upload'         // CV upload
+  | 'skills'            // Skills selection
+  | 'equipment'         // Equipment & tools
+  | 'vouch'             // Vouch system + username
+  | 'location'          // Location + timezone + languages
+  | 'education'         // Education + experience + freelancer history
+  | 'payment'           // Payment methods + crypto wallet (Privy)
+  | 'services'          // Service offerings + pricing
+  | 'profile'           // Photo + name + bio
+  | 'availability'      // Availability + hourly rate
+  | 'verification';     // GitHub/LinkedIn verify + social presence
 
 export interface StepDef {
   id: StepId;
@@ -24,35 +26,47 @@ export interface StepDef {
 }
 
 /**
- * Default flow: user has NOT uploaded a CV.
- * They need to fill skills, equipment, etc. manually.
+ * Flow when CV is NOT uploaded.
+ * User fills everything manually.
  */
 const FLOW_NO_CV: StepDef[] = [
-  { id: 'notifications', label: 'Notifications' },
   { id: 'connect',       label: 'Connect' },
-  { id: 'cv-upload',     label: 'CV Upload' },
+  { id: 'cv-upload',     label: 'CV' },
   { id: 'skills',        label: 'Skills' },
   { id: 'equipment',     label: 'Equipment' },
-  { id: 'about',         label: 'About You' },
-  { id: 'availability',  label: 'Availability' },
+  { id: 'vouch',         label: 'Vouch' },
+  { id: 'location',      label: 'Location' },
+  { id: 'education',     label: 'Education' },
+  { id: 'payment',       label: 'Payment' },
   { id: 'services',      label: 'Services' },
-  { id: 'verification',  label: 'Verification' },
+  { id: 'profile',       label: 'Profile' },
+  { id: 'availability',  label: 'Availability' },
+  { id: 'verification',  label: 'Verify' },
 ];
 
 /**
- * CV-uploaded flow: CV pre-fills skills, education, location.
- * We prioritize what CV can't infer: equipment, then verify pre-filled data.
+ * Flow when CV IS uploaded.
+ * CV pre-fills: skills, location, languages, education (partial),
+ * services (partial, no price), profile (partial).
+ * So we prioritize what CV can't infer first, then let user verify pre-filled steps.
+ *
+ * Order: equipment → vouch → payment → skills(verify) → location(verify) →
+ *        education(verify) → services(add pricing) → profile(verify) →
+ *        availability → verification
  */
 const FLOW_CV_UPLOADED: StepDef[] = [
-  { id: 'notifications', label: 'Notifications' },
   { id: 'connect',       label: 'Connect' },
-  { id: 'cv-upload',     label: 'CV Upload' },
+  { id: 'cv-upload',     label: 'CV' },
   { id: 'equipment',     label: 'Equipment' },
-  { id: 'about',         label: 'About You' },
+  { id: 'vouch',         label: 'Vouch' },
+  { id: 'payment',       label: 'Payment' },
   { id: 'skills',        label: 'Skills' },
-  { id: 'availability',  label: 'Availability' },
+  { id: 'location',      label: 'Location' },
+  { id: 'education',     label: 'Education' },
   { id: 'services',      label: 'Services' },
-  { id: 'verification',  label: 'Verification' },
+  { id: 'profile',       label: 'Profile' },
+  { id: 'availability',  label: 'Availability' },
+  { id: 'verification',  label: 'Verify' },
 ];
 
 /** Get the step flow based on CV upload status */
@@ -60,15 +74,9 @@ export function getFlow(cvUploaded: boolean): StepDef[] {
   return cvUploaded ? FLOW_CV_UPLOADED : FLOW_NO_CV;
 }
 
-/** Get step labels array for the current flow (for progress bar) */
+/** Get step labels array for the current flow */
 export function getStepLabels(flow: StepDef[]): string[] {
   return flow.map(s => s.label);
-}
-
-/** Find the 1-based position of a step ID in a flow */
-export function stepIndex(flow: StepDef[], id: StepId): number {
-  const idx = flow.findIndex(s => s.id === id);
-  return idx === -1 ? 1 : idx + 1;
 }
 
 /** Get the step ID at a 1-based position */
