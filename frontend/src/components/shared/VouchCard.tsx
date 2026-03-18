@@ -20,8 +20,8 @@ interface VouchCardProps {
 const SHARE_TEXT = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
 
 export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, vouchTarget = 10 }: VouchCardProps) {
-  const displayUrl = getProfileDisplayUrl({ username, id: userId });
-  const shareUrl = getProfileUrl({ username, id: userId });
+  const displayUrl = getProfileDisplayUrl({ id: userId });
+  const shareUrl = getProfileUrl({ id: userId });
   const pct = Math.min(100, Math.round((vouchCount / vouchTarget) * 100));
 
   const handleShare = async () => {
@@ -82,7 +82,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
             )}
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-slate-500 whitespace-nowrap">
-                {username ? getProfileDisplayUrl({ username, id: userId }).replace(username, '') : 'humanpages.ai/u/'}
+                {getProfileDisplayUrl({ id: userId }).replace(/\/[^/]+$/, '/')}
               </span>
               <input
                 id="vouch-username"

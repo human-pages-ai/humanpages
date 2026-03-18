@@ -26,7 +26,7 @@ export default function ShareReferralSection({
   const { t, i18n } = useTranslation();
   const [copiedReferral, setCopiedReferral] = useState(false);
 
-  const profileUrl = getProfileUrl({ username: profile.username, id: profile.id });
+  const profileUrl = getProfileUrl({ id: profile.id });
   const referralUrl = `${window.location.origin}/signup?ref=${profile.referralCode}`;
   const rp = profile.referralProgram;
   const tier = rp ? getCurrentTier(rp.qualifiedSignups) : null;
