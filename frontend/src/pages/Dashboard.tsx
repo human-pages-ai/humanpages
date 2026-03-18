@@ -582,6 +582,23 @@ export default function Dashboard() {
 
               {/* Wizard Module Tiles Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* 0. CV */}
+                <WizardModuleTile
+                  title="CV"
+                  stepId="cv-upload"
+                  icon="📄"
+                  color="slate"
+                  isEmpty={!profile.cvParsedAt}
+                  emptyHint="Upload a CV to auto-fill your profile"
+                >
+                  {profile.cvParsedAt && (
+                    <div className="space-y-1">
+                      <p className="text-sm text-green-600 font-medium">✓ CV uploaded</p>
+                      <p className="text-xs text-slate-500">Parsed {new Date(profile.cvParsedAt).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                </WizardModuleTile>
+
                 {/* 1. Notifications & Connect */}
                 <WizardModuleTile
                   title="Notifications & Connect"

@@ -108,11 +108,11 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
             existing.add(key);
             merged.push({
               institution: edu.institution || '',
-              degree: edu.degree || '',
+              degree: edu.degree || edu.field || '',
               field: edu.field || '',
               country: edu.country || '',
-              startYear: edu.startYear || edu.year,
-              endYear: edu.endYear,
+              startYear: undefined,
+              endYear: edu.year,
             });
           }
         }
