@@ -177,18 +177,6 @@ export default function Onboarding() {
       if (completion) {
         toast(completion.message, { icon: completion.emoji, duration: 2000 });
       }
-
-      // Check for level-up milestones
-      const prevPercent = Math.round((position / total) * 100);
-      const nextPercent = Math.round((clamped / total) * 100);
-
-      if (prevPercent < 25 && nextPercent >= 25) {
-        toast('🟦 Level: Starter', { duration: 2500 });
-      } else if (prevPercent < 50 && nextPercent >= 50) {
-        toast('🟧 Level: Rising', { duration: 2500 });
-      } else if (prevPercent < 75 && nextPercent >= 75) {
-        toast('🟨 Level: Almost Pro', { duration: 2500 });
-      }
     }
 
     setTransitioning(true);

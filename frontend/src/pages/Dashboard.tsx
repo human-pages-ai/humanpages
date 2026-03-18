@@ -634,9 +634,7 @@ export default function Dashboard() {
             const doneCount = checks.filter(c => c.done).length;
             const pct = Math.round((doneCount / checks.length) * 100);
             const firstIncomplete = checks.find(c => !c.done);
-            const level = pct >= 100 ? 'Pro' : pct >= 75 ? 'Rising' : pct >= 50 ? 'Starter' : 'New';
-            const levelColor = pct >= 100 ? 'text-green-600' : pct >= 75 ? 'text-blue-600' : pct >= 50 ? 'text-orange-600' : 'text-slate-500';
-            const ringColor = pct >= 100 ? '#22c55e' : pct >= 75 ? '#3b82f6' : pct >= 50 ? '#f97316' : '#94a3b8';
+            const ringColor = pct >= 100 ? '#22c55e' : pct >= 50 ? '#f97316' : '#94a3b8';
             const circumference = 2 * Math.PI * 40;
             const dashOffset = circumference - (pct / 100) * circumference;
 
@@ -666,10 +664,7 @@ export default function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <h2 className="text-lg font-bold text-slate-900 truncate">{profile.name || 'Complete your profile'}</h2>
                     {profile.username && <p className="text-sm text-slate-500">@{profile.username}</p>}
-                    <div className="mt-2 flex items-center gap-3">
-                      <span className={`text-xs font-bold uppercase tracking-wide ${levelColor}`}>{level}</span>
-                      <span className="text-xs text-slate-400">{pct}% complete</span>
-                    </div>
+                    <p className="mt-2 text-xs text-slate-500">{pct}% complete</p>
                     {/* Checklist pills */}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {checks.map(c => (
