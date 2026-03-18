@@ -570,17 +570,25 @@ export default function Dashboard() {
                     {profile.bio && <p className="text-sm text-slate-500 line-clamp-2 mt-0.5">{profile.bio}</p>}
                     {profile.username && <p className="text-xs text-slate-400">@{profile.username}</p>}
                     <p className="mt-2 text-xs text-slate-500">{pct}% complete</p>
-                    {/* Checklist pills */}
-                    <div className="mt-2 flex flex-wrap gap-1.5">
+                    {/* Checklist — clickable items */}
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {sortedChecks.map(c => (
                         <Link
                           key={c.label}
                           to={`/onboarding?step=${c.stepId}`}
-                          className={`text-[10px] px-2 py-0.5 rounded-full hover:opacity-80 transition-opacity ${
-                            c.done ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600'
+                          className={`group inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                            c.done
+                              ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300'
+                              : 'bg-white border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300 hover:shadow-sm'
                           }`}
                         >
-                          {c.done ? '✓' : '+'} {c.label}
+                          {c.done ? (
+                            <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5 text-orange-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                          )}
+                          <span>{c.label}</span>
+                          {!c.done && <svg className="w-3 h-3 text-orange-300 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>}
                         </Link>
                       ))}
                     </div>
