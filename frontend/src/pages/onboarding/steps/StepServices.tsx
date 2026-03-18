@@ -177,26 +177,36 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
                 <select value={newService.currency} onChange={(e) => setNewService({ ...newService, currency: e.target.value })} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="ILS">ILS (₪)</option>
-                  <option value="INR">INR (₹)</option>
-                  <option value="BRL">BRL (R$)</option>
-                  <option value="CAD">CAD ($)</option>
-                  <option value="AUD">AUD ($)</option>
-                  <option value="JPY">JPY (¥)</option>
-                  <option value="CNY">CNY (¥)</option>
-                  <option value="KRW">KRW (₩)</option>
-                  <option value="MXN">MXN ($)</option>
-                  <option value="PLN">PLN (zł)</option>
-                  <option value="CHF">CHF</option>
-                  <option value="SEK">SEK (kr)</option>
-                  <option value="SGD">SGD ($)</option>
-                  <option value="HKD">HKD ($)</option>
-                  <option value="PHP">PHP (₱)</option>
-                  <option value="THB">THB (฿)</option>
-                  <option value="ZAR">ZAR (R)</option>
+                  <option value="USD">🇺🇸 USD</option>
+                  <option value="EUR">🇪🇺 EUR</option>
+                  <option value="GBP">🇬🇧 GBP</option>
+                  <option value="JPY">🇯🇵 JPY</option>
+                  <option value="CAD">🇨🇦 CAD</option>
+                  <option value="AUD">🇦🇺 AUD</option>
+                  <option value="CHF">🇨🇭 CHF</option>
+                  <option value="CNY">🇨🇳 CNY</option>
+                  <option value="INR">🇮🇳 INR</option>
+                  <option value="BRL">🇧🇷 BRL</option>
+                  <option value="MXN">🇲🇽 MXN</option>
+                  <option value="KRW">🇰🇷 KRW</option>
+                  <option value="SGD">🇸🇬 SGD</option>
+                  <option value="HKD">🇭🇰 HKD</option>
+                  <option value="TRY">🇹🇷 TRY</option>
+                  <option value="ZAR">🇿🇦 ZAR</option>
+                  <option value="NGN">🇳🇬 NGN</option>
+                  <option value="KES">🇰🇪 KES</option>
+                  <option value="GHS">🇬🇭 GHS</option>
+                  <option value="PHP">🇵🇭 PHP</option>
+                  <option value="IDR">🇮🇩 IDR</option>
+                  <option value="THB">🇹🇭 THB</option>
+                  <option value="VND">🇻🇳 VND</option>
+                  <option value="PKR">🇵🇰 PKR</option>
+                  <option value="BDT">🇧🇩 BDT</option>
+                  <option value="EGP">🇪🇬 EGP</option>
+                  <option value="COP">🇨🇴 COP</option>
+                  <option value="PEN">🇵🇪 PEN</option>
+                  <option value="ARS">🇦🇷 ARS</option>
+                  <option value="CLP">🇨🇱 CLP</option>
                 </select>
               </div>
               <div>
