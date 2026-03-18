@@ -7,8 +7,6 @@ interface StepAvailabilityProps {
   setTimezone: (v: string) => void;
   weeklyCapacityHours: number | null;
   setWeeklyCapacityHours: (v: number | null) => void;
-  responseTimeCommitment: string;
-  setResponseTimeCommitment: (v: string) => void;
   workType: string;
   setWorkType: (v: string) => void;
   cvProcessing: boolean;

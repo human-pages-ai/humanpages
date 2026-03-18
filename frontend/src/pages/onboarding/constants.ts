@@ -199,67 +199,8 @@ export const WEEKLY_CAPACITY_OPTIONS = [
   { value: 0, label: 'Flexible', description: 'Hours vary per task' },
 ];
 
-export const RESPONSE_TIME_OPTIONS = [
-  { value: 'within_1h', label: 'Within 1 hour', description: 'Best for urgent tasks' },
-  { value: 'within_4h', label: 'Within 4 hours', description: 'Same-day response' },
-  { value: 'within_24h', label: 'Within 24 hours', description: 'Next-day response' },
-  { value: 'flexible', label: 'Flexible', description: 'Response time varies' },
-];
-
 export const WORK_TYPE_OPTIONS = [
   { value: 'digital', label: 'Digital / Remote', description: 'Online work only' },
   { value: 'physical', label: 'Physical / In-Person', description: 'On-site work' },
   { value: 'both', label: 'Both', description: 'Open to either' },
 ];
-
-// Reserved for future dashboard use (previously used in removed UI)
-// export const SCHEDULE_PATTERN_OPTIONS = [
-//   { value: 'morning', label: 'Mornings', description: '6am – 12pm local' },
-//   { value: 'afternoon', label: 'Afternoons', description: '12pm – 6pm local' },
-//   { value: 'evening', label: 'Evenings', description: '6pm – 12am local' },
-//   { value: 'flexible', label: 'Flexible', description: 'Any time of day' },
-// ];
-
-// Reserved for future dashboard use (previously used in removed UI)
-// export const TASK_DURATION_OPTIONS = [
-//   { value: 'micro', label: 'Quick tasks', description: '1-2 hours' },
-//   { value: 'half_day', label: 'Half-day', description: '3-5 hours' },
-//   { value: 'full_project', label: 'Full projects', description: '10+ hours' },
-//   { value: 'any', label: 'Any length', description: 'Open to all' },
-// ];
-
-// Reserved for future dashboard use (previously used in removed UI)
-// export const EARLIEST_START_OPTIONS = [
-//   { value: 'today', label: 'Today', description: 'Available immediately' },
-//   { value: 'tomorrow', label: 'Tomorrow', description: 'Can start next day' },
-//   { value: 'this_week', label: 'This week', description: 'Within a few days' },
-//   { value: 'next_week', label: 'Next week', description: 'Need some lead time' },
-// ];
-
-// Reserved for future dashboard use (previously used in removed UI)
-// export const INDUSTRIES = [
-//   'Healthcare', 'Finance & Banking', 'E-commerce & Retail', 'Education',
-//   'Legal', 'Real Estate', 'Travel & Hospitality', 'Food & Restaurant',
-//   'Manufacturing', 'Logistics & Supply Chain', 'Media & Entertainment',
-//   'SaaS & Technology', 'Gaming', 'Non-profit', 'Government',
-//   'Agriculture', 'Energy & Utilities', 'Construction', 'Automotive',
-//   'Telecommunications',
-// ];
-
-// Reserved for future dashboard use (replaced by free-text input in StepServices)
-// export const EQUIPMENT_OPTIONS = [
-//   'Laptop/Computer', 'Smartphone', 'DSLR Camera', 'Video Camera',
-//   'Microphone', 'Ring Light', 'Drone', 'Car/Vehicle',
-//   'Printer/Scanner', 'Drawing Tablet', 'VR Headset', '3D Printer',
-// ];
-
-// Reserved for future dashboard use (previously used in removed UI)
-// export const PAYMENT_METHOD_OPTIONS = [
-//   { value: 'paypal', label: 'PayPal', icon: '💳' },
-//   { value: 'wise', label: 'Wise', icon: '💸' },
-//   { value: 'bank_transfer', label: 'Bank Transfer', icon: '🏦' },
-//   { value: 'crypto', label: 'Crypto (USDC/ETH)', icon: '₿' },
-//   { value: 'mobile_money', label: 'Mobile Money (M-Pesa)', icon: '📱' },
-//   { value: 'venmo', label: 'Venmo', icon: '💰' },
-//   { value: 'cash_app', label: 'Cash App', icon: '💵' },
-// ];

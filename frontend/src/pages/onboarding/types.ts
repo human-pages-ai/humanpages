@@ -51,7 +51,6 @@ export interface OnboardingDraft {
   cvData: any;
   timezone: string;
   weeklyCapacityHours: number | null;
-  responseTimeCommitment: string;
   workType: string;
   // Agent-facing structured fields
   yearsOfExperience: number | null;
@@ -87,7 +86,6 @@ export interface ProfileFormState {
   whatsappNumber: string;
   timezone: string;
   weeklyCapacityHours: number | null;
-  responseTimeCommitment: string;
   workType: string;
 }
 

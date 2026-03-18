@@ -103,7 +103,7 @@ export function StepLocation({
   return (
     <>
       <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Where Are You?</h2>
-      <p className="text-slate-600 mb-6">Tell us your location and languages</p>
+      <p className="text-slate-600 mb-6">Tell us your location and timezone</p>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error}</div>}
 

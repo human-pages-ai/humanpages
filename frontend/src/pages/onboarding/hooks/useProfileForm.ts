@@ -93,8 +93,6 @@ export interface UseProfileFormReturn {
   setTimezone: (v: string) => void;
   weeklyCapacityHours: number | null;
   setWeeklyCapacityHours: (v: number | null) => void;
-  responseTimeCommitment: string;
-  setResponseTimeCommitment: (v: string) => void;
   workType: string;
   setWorkType: (v: string) => void;
 
@@ -171,7 +169,6 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   // ─── Availability (agent-facing) ───
   const [timezone, setTimezone] = useState(draft?.timezone || '');
   const [weeklyCapacityHours, setWeeklyCapacityHours] = useState<number | null>(draft?.weeklyCapacityHours ?? null);
-  const [responseTimeCommitment, setResponseTimeCommitment] = useState(draft?.responseTimeCommitment || '');
   const [workType, setWorkType] = useState(draft?.workType || '');
 
   // Agent-facing structured fields
@@ -372,7 +369,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
     externalProfiles, setExternalProfiles, walletAddress, setWalletAddress, username, setUsername,
     whatsappNumber, setWhatsappNumber,
     timezone, setTimezone, weeklyCapacityHours, setWeeklyCapacityHours,
-    responseTimeCommitment, setResponseTimeCommitment, workType, setWorkType,
+    workType, setWorkType,
     yearsOfExperience, setYearsOfExperience,
     freelancerJobsRange, setFreelancerJobsRange, freelancePlatforms, setFreelancePlatforms,
     industries, setIndustries,

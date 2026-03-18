@@ -114,7 +114,7 @@ export default function Onboarding() {
     externalProfiles: form.externalProfiles, walletAddress: form.walletAddress,
     whatsappNumber: form.whatsappNumber,
     timezone: form.timezone, weeklyCapacityHours: form.weeklyCapacityHours,
-    responseTimeCommitment: form.responseTimeCommitment, workType: form.workType,
+    workType: form.workType,
     yearsOfExperience: form.yearsOfExperience,
     freelancerJobsRange: form.freelancerJobsRange, freelancePlatforms: form.freelancePlatforms,
     industries: form.industries,
@@ -218,7 +218,6 @@ export default function Onboarding() {
           whatsapp: form.whatsappNumber.trim() || null,
           timezone: form.timezone.trim() || null,
           weeklyCapacityHours: form.weeklyCapacityHours,
-          responseTimeCommitment: form.responseTimeCommitment.trim() || null,
           workType: form.workType.trim() || null,
           yearsOfExperience: form.yearsOfExperience,
           equipment: form.equipment.length > 0 ? form.equipment : [],
@@ -345,7 +344,6 @@ export default function Onboarding() {
             addCustomSkill={form.addCustomSkill}
             skillSearch={form.skillSearch} setSkillSearch={form.setSkillSearch}
             expandedCategories={form.expandedCategories} toggleCategory={form.toggleCategory}
-            educationEntries={form.educationEntries} setEducationEntries={form.setEducationEntries}
             languageEntries={form.languageEntries}
             addLanguageEntry={form.addLanguageEntry}
             removeLanguageEntry={form.removeLanguageEntry}
@@ -431,7 +429,6 @@ export default function Onboarding() {
           <StepAvailability
             timezone={form.timezone} setTimezone={form.setTimezone}
             weeklyCapacityHours={form.weeklyCapacityHours} setWeeklyCapacityHours={form.setWeeklyCapacityHours}
-            responseTimeCommitment={form.responseTimeCommitment} setResponseTimeCommitment={form.setResponseTimeCommitment}
             workType={form.workType} setWorkType={form.setWorkType}
             cvProcessing={cv.cvProcessing}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}

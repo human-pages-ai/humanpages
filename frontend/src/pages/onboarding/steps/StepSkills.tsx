@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import SearchableCombobox from '../../../components/common/SearchableCombobox';
-import degrees from '../../../data/degrees';
-import countries from '../../../data/countries';
-import universitiesByCountry from '../../../data/universitiesByCountry';
 import toast from 'react-hot-toast';
 import { SKILL_CATEGORIES, POPULAR_SKILLS, SKILL_SUGGESTIONS, COMMON_LANGUAGES, PROFICIENCY_LEVELS } from '../constants';
-import type { EducationEntry, LanguageEntry } from '../types';
-
-const loadFields = () => import('../../../data/fieldsOfStudy').then(m => m.default);
-const getUniversitiesForCountry = (countryName: string): string[] => universitiesByCountry[countryName] || [];
+import type { LanguageEntry } from '../types';
 
 interface StepSkillsProps {
   skills: string[];
@@ -20,8 +14,6 @@ interface StepSkillsProps {
   setSkillSearch: (v: string) => void;
   expandedCategories: Set<string>;
   toggleCategory: (cat: string) => void;
-  educationEntries: EducationEntry[];
-  setEducationEntries: React.Dispatch<React.SetStateAction<EducationEntry[]>>;
   languageEntries: LanguageEntry[];
   addLanguageEntry: (entry: LanguageEntry) => void;
   removeLanguageEntry: (index: number) => void;
@@ -33,12 +25,9 @@ interface StepSkillsProps {
 export function StepSkills({
   skills, toggleSkill, customSkill, setCustomSkill, addCustomSkill,
   skillSearch, setSkillSearch, expandedCategories, toggleCategory,
-  educationEntries, setEducationEntries,
   languageEntries, addLanguageEntry, removeLanguageEntry, updateLanguageEntry,
   onNext, error,
 }: StepSkillsProps) {
-  const [addingEducation, setAddingEducation] = useState(false);
-  const [newEducation, setNewEducation] = useState<EducationEntry>({ institution: '', degree: '', field: '', country: '' });
   const [newLang, setNewLang] = useState('');
   const [newProficiency, setNewProficiency] = useState('');
   const [addingLanguage, setAddingLanguage] = useState(false);
@@ -58,25 +47,6 @@ export function StepSkills({
     setNewLang('');
     setNewProficiency('');
     setAddingLanguage(false);
-  };
-
-  const handleAddEducation = () => {
-    if (!newEducation.institution.trim() || !newEducation.degree.trim() || !newEducation.field.trim()) return;
-    if ((newEducation.startYear && !newEducation.endYear) || (!newEducation.startYear && newEducation.endYear)) {
-      toast.error('Please enter both start and end years, or leave both empty');
-      return;
-    }
-    if (newEducation.startYear && newEducation.endYear && newEducation.startYear > newEducation.endYear) {
-      toast.error('Start year must be before or equal to end year');
-      return;
-    }
-    setEducationEntries(prev => [...prev, { ...newEducation, institution: newEducation.institution.trim(), degree: newEducation.degree.trim(), field: newEducation.field.trim() }]);
-    setNewEducation({ institution: '', degree: '', field: '', country: '' });
-    setAddingEducation(false);
-  };
-
-  const handleRemoveEducation = (index: number) => {
-    setEducationEntries(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -208,64 +178,6 @@ export function StepSkills({
             <div className="flex gap-2">
               <button type="button" onClick={handleAddLanguage} disabled={!newLang.trim()} className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg font-medium text-sm hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]">Add Language</button>
               <button type="button" onClick={() => { setAddingLanguage(false); setNewLang(''); setNewProficiency(''); }} className="px-4 py-2.5 sm:py-2 text-slate-600 bg-slate-100 rounded-lg font-medium text-sm hover:bg-slate-200 active:bg-slate-300 transition-colors min-h-[44px]">Cancel</button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Education Section ─── */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Education (Optional)</label>
-        {educationEntries.length === 0 ? (
-          <p className="text-xs text-slate-400 mb-4">No education added yet</p>
-        ) : (
-          <div className="space-y-3 mb-4">
-            {educationEntries.map((edu, idx) => (
-              <div key={idx} className="p-3 border border-slate-200 rounded-lg bg-slate-50">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 text-sm">{edu.degree} in {edu.field}</p>
-                    <p className="text-xs text-slate-600">{edu.institution}</p>
-                    <p className="text-xs text-slate-500">{edu.country}</p>
-                  </div>
-                  <button type="button" onClick={() => handleRemoveEducation(idx)} className="text-slate-400 hover:text-red-500 font-bold flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`Remove education: ${edu.degree} in ${edu.field}`}>×</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        {educationEntries.length < 5 && !addingEducation && (
-          <button type="button" onClick={() => setAddingEducation(true)} className="w-full py-3 min-h-[44px] border-2 border-dashed border-orange-300 rounded-lg text-sm text-orange-600 hover:text-orange-700 hover:border-orange-400 hover:bg-orange-50 active:bg-orange-100 font-medium mb-4 transition-colors">+ Add Education</button>
-        )}
-        {addingEducation && (
-          <div className="border border-slate-300 rounded-lg p-4 mb-4 bg-white">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <SearchableCombobox id="onb-edu-degree" label="Degree" value={newEducation.degree} onChange={(v) => setNewEducation({ ...newEducation, degree: v })} options={degrees} placeholder="e.g., Bachelor of Science" required />
-              <SearchableCombobox id="onb-edu-field" label="Field of Study" value={newEducation.field} onChange={(v) => setNewEducation({ ...newEducation, field: v })} options={loadFields} placeholder="e.g., Computer Science" required />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <div>
-                <SearchableCombobox id="onb-edu-country" label="Country" value={newEducation.country} onChange={(v) => setNewEducation({ ...newEducation, country: v, institution: '' })} options={countries} placeholder="Country" required />
-                <p className="text-xs text-slate-400 mt-1">Changing country resets the institution field</p>
-              </div>
-              <div>
-                <SearchableCombobox id="onb-edu-inst" label="Institution" value={newEducation.institution} onChange={(v) => setNewEducation({ ...newEducation, institution: v })} options={newEducation.country ? getUniversitiesForCountry(newEducation.country) : []} placeholder="Type your institution name..." required allowFreeText />
-                <p className="text-xs text-slate-500 font-medium mt-1">💡 Tip: Type any institution name, even if it's not in the list</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Start Year (Optional)</label>
-                <input type="number" value={newEducation.startYear || ''} onChange={(e) => setNewEducation({ ...newEducation, startYear: e.target.value ? parseInt(e.target.value) : undefined })} placeholder="2015" min="1900" max={new Date().getFullYear()} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">End Year (Optional)</label>
-                <input type="number" value={newEducation.endYear || ''} onChange={(e) => setNewEducation({ ...newEducation, endYear: e.target.value ? parseInt(e.target.value) : undefined })} placeholder="2019" min="1900" max={new Date().getFullYear() + 5} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={handleAddEducation} disabled={!newEducation.institution.trim() || !newEducation.degree.trim() || !newEducation.field.trim()} className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg font-medium text-sm hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]">Add Education</button>
-              <button type="button" onClick={() => { setAddingEducation(false); setNewEducation({ institution: '', degree: '', field: '', country: '' }); }} className="px-4 py-2.5 sm:py-2 border border-slate-300 text-slate-700 rounded-lg font-medium text-sm hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]">Cancel</button>
             </div>
           </div>
         )}
