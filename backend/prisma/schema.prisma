@@ -297,6 +297,7 @@ model Human {
   role            HumanRole   @default(USER)
   abuseScore      Int         @default(0)
   abuseStrikes    Int         @default(0)
+  vouchCount      Int         @default(0) // Denormalized count of vouches received (updated on vouch create/delete)
 
   // ===== STAFF CAPABILITIES =====
   isCatchAll      Boolean  @default(false) // Catch-all concierge profile injected into sparse search results
@@ -378,6 +379,9 @@ model Education {
   human       Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
 
   @@index([humanId])
+  @@index([degree])
+  @@index([field])
+  @@index([institution])
 }
 
 model Certificate {
@@ -392,6 +396,8 @@ model Certificate {
   human     Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
 
   @@index([humanId])
+  @@index([name])
+  @@index([issuer])
 }
 
 // Queued WhatsApp messages waiting for the user to re-open the 24h session window

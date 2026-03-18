@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app.js';
 import { prisma } from '../lib/prisma.js';
-import { createTestUser, createTestUserWithProfile, authRequest, cleanDatabase, TestUser } from './helpers.js';
+import { createTestUser, authRequest, cleanDatabase, TestUser } from './helpers.js';
 
 describe('Search API', () => {
   let alice: TestUser;
@@ -302,6 +302,114 @@ describe('Search API', () => {
       expect(response.status).toBe(200);
       expect(response.body.results).toHaveLength(1);
       expect(response.body.results[0].id).toBe(alice.id);
+    });
+  });
+
+  describe('GET /api/humans/search - Education, Certificate & Trust Filters', () => {
+    beforeEach(async () => {
+      // Add education to Alice
+      await prisma.education.create({
+        data: {
+          humanId: alice.id,
+          institution: 'MIT',
+          degree: 'Bachelor of Science',
+          field: 'Computer Science',
+          year: 2020,
+        },
+      });
+
+      // Add certificate to Bob
+      await prisma.certificate.create({
+        data: {
+          humanId: bob.id,
+          name: 'AWS Solutions Architect',
+          issuer: 'Amazon',
+        },
+      });
+
+      // Add vouch for Alice (Bob vouches for Alice)
+      await prisma.vouch.create({
+        data: { voucherId: bob.id, voucheeId: alice.id, comment: 'Great dev' },
+      });
+      await prisma.human.update({
+        where: { id: alice.id },
+        data: { vouchCount: 1 },
+      });
+    });
+
+    it('should filter by degree', async () => {
+      const response = await request(app).get('/api/humans/search?degree=Bachelor');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
+    });
+
+    it('should filter by field of study', async () => {
+      const response = await request(app).get('/api/humans/search?field=Computer');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
+    });
+
+    it('should filter by institution', async () => {
+      const response = await request(app).get('/api/humans/search?institution=MIT');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
+    });
+
+    it('should filter by certificate', async () => {
+      const response = await request(app).get('/api/humans/search?certificate=AWS');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(bob.id);
+    });
+
+    it('should filter by certificate issuer', async () => {
+      const response = await request(app).get('/api/humans/search?certificate=Amazon');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(bob.id);
+    });
+
+    it('should filter by minVouches', async () => {
+      const response = await request(app).get('/api/humans/search?minVouches=1');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
+    });
+
+    it('should return empty when minVouches too high', async () => {
+      const response = await request(app).get('/api/humans/search?minVouches=10');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(0);
+    });
+
+    it('should filter by hasPhoto', async () => {
+      // No one has approved photo
+      const response = await request(app).get('/api/humans/search?hasPhoto=true');
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(0);
+    });
+
+    it('should combine all new filters without clobbering', async () => {
+      // Alice has education + vouch, available, has react skill
+      const response = await request(app).get(
+        '/api/humans/search?skill=react&institution=MIT&minVouches=1&available=true'
+      );
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].id).toBe(alice.id);
+    });
+
+    it('should not clobber identity verification with location text fallback', async () => {
+      // Use a location that won't geocode to force text fallback
+      const response = await request(app).get(
+        '/api/humans/search?location=xyznonexistentplace'
+      );
+      expect(response.status).toBe(200);
+      // Should return 0 results (no one matches that location) — NOT unverified users
+      expect(response.body.results).toHaveLength(0);
     });
   });
 });

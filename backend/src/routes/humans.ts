@@ -113,6 +113,7 @@ const publicHumanSelect = {
   humanityVerifiedAt: true,
   profilePhotoKey: true,
   profilePhotoStatus: true,
+  vouchCount: true,
   lastActiveAt: true,
   createdAt: true,
   services: {
@@ -501,6 +502,12 @@ router.post('/me/vouch', authenticateToken, requireIdentityVerified, vouchRateLi
       },
     });
 
+    // Increment denormalized vouch count
+    await prisma.human.update({
+      where: { id: vouchee.id },
+      data: { vouchCount: { increment: 1 } },
+    });
+
     logger.info({ voucherId: req.userId, voucheeId: vouchee.id }, 'Vouch created');
     trackServerEvent(req.userId!, 'vouch_created', { voucheeId: vouchee.id }, req);
 
@@ -531,6 +538,12 @@ router.delete('/me/vouch/:voucheeId', authenticateToken, async (req: AuthRequest
     }
 
     await prisma.vouch.delete({ where: { id: vouch.id } });
+
+    // Decrement denormalized vouch count
+    await prisma.human.update({
+      where: { id: req.params.voucheeId },
+      data: { vouchCount: { decrement: 1 } },
+    });
 
     logger.info({ voucherId: req.userId, voucheeId: req.params.voucheeId }, 'Vouch revoked');
     res.json({ message: 'Vouch revoked' });
@@ -934,6 +947,15 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       sortBy,
       minCompletedJobs,
       minChannels,
+      // Education & credentials
+      degree,
+      field,
+      institution,
+      certificate,
+      // Trust signals
+      minVouches,
+      hasVerifiedLogin,
+      hasPhoto,
       limit = '20',
       offset = '0',
     } = req.query;
@@ -987,11 +1009,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         radiusKm = radius ? parseFloat(radius as string) : DEFAULT_SEARCH_RADIUS_KM;
         resolvedLocation = geo.displayName;
       } else {
-        // Geocode failed — fall back to text search
-        where.OR = [
-          { location: { contains: location as string, mode: 'insensitive' } },
-          { neighborhood: { contains: location as string, mode: 'insensitive' } },
-        ];
+        // Geocode failed — fall back to text search (push into AND to preserve identity verification OR)
+        where.AND = [...(where.AND || []), {
+          OR: [
+            { location: { contains: location as string, mode: 'insensitive' } },
+            { neighborhood: { contains: location as string, mode: 'insensitive' } },
+          ],
+        }];
       }
     }
 
@@ -1035,6 +1059,51 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.fiatPaymentMethods = {
         some: { platform: (fiatPlatform as string).toUpperCase() },
       };
+    }
+
+    // Filter by education (degree, field of study, or institution)
+    if (degree || field || institution) {
+      const eduFilter: any = {};
+      if (degree) eduFilter.degree = { contains: degree as string, mode: 'insensitive' };
+      if (field) eduFilter.field = { contains: field as string, mode: 'insensitive' };
+      if (institution) eduFilter.institution = { contains: institution as string, mode: 'insensitive' };
+      where.educations = { some: eduFilter };
+    }
+
+    // Filter by certificate (name or issuer)
+    if (certificate) {
+      where.certificates = {
+        some: {
+          OR: [
+            { name: { contains: certificate as string, mode: 'insensitive' } },
+            { issuer: { contains: certificate as string, mode: 'insensitive' } },
+          ],
+        },
+      };
+    }
+
+    // Filter by minimum vouch count (uses denormalized column)
+    if (minVouches) {
+      const minV = parseInt(minVouches as string);
+      if (!isNaN(minV) && isFinite(minV) && minV > 0) {
+        where.vouchCount = { gte: minV };
+      }
+    }
+
+    // Filter by verified login (has any OAuth connection — doesn't reveal which provider)
+    if (hasVerifiedLogin === 'true') {
+      where.AND = [...(where.AND || []), {
+        OR: [
+          { googleId: { not: null } },
+          { linkedinVerified: true },
+          { githubVerified: true },
+        ],
+      }];
+    }
+
+    // Filter by profile photo
+    if (hasPhoto === 'true') {
+      where.profilePhotoStatus = 'approved';
     }
 
     // Filter by rate range (search params are in USD, compare against USD estimate)
@@ -1095,7 +1164,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         if (qualifiedIds.length === 0) {
           return res.json({ total: 0, results: [] });
         }
-        where.id = { in: qualifiedIds };
+        where.AND = [...(where.AND || []), { id: { in: qualifiedIds } }];
       }
     }
 
@@ -1157,17 +1226,10 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           if (servicesText.includes(token)) score += 3;
         }
 
-        // Only apply secondary boosts when there's actual skill relevance
+        // Only apply track-record boost when there's actual skill relevance
         if (score > 0) {
-          // Boost workers with proven track record (min 3 jobs, capped at 10)
           const completedJobs = skillJobMap.get(h.id) || 0;
           if (completedJobs >= 3) score += Math.min(completedJobs, 10) * 3;
-
-          // Boost reachable humans — agents want fast responders
-          const chCount = [(h as any).emailNotifications, (h as any).telegramNotifications, (h as any).whatsappNotifications, (h as any).pushNotifications].filter(Boolean).length;
-          if (chCount >= 3) score += 8;
-          else if (chCount >= 2) score += 4;
-          else if (chCount >= 1) score += 1;
         }
 
         return { human: h, score };
@@ -1269,13 +1331,6 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       _count: { rating: true },
     });
 
-    // Batch query for vouch counts
-    const vouchCounts = await prisma.vouch.groupBy({
-      by: ['voucheeId'],
-      where: { voucheeId: { in: humanIds } },
-      _count: true,
-    });
-
     // Build lookup maps
     const jobCountMap = new Map(jobCounts.map((jc) => [jc.humanId, jc._count]));
     const reviewStatsMap = new Map(
@@ -1287,7 +1342,6 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         },
       ])
     );
-    const vouchCountMap = new Map(vouchCounts.map((vc) => [vc.voucheeId, vc._count]));
 
     // Attach stats to each human and strip coords (contact info already excluded from select)
     const humansWithReputation = await Promise.all(humans.map(async (h) => {
@@ -1300,7 +1354,6 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       return {
         ...rest,
         paymentMethods: (fiatPaymentMethods || []).map((f: { platform: string }) => f.platform),
-        vouchCount: vouchCountMap.get(h.id) || 0,
         channelCount,
         reputation: {
           jobsCompleted: jobCountMap.get(h.id) || 0,
@@ -1340,17 +1393,15 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         const aRating = a.reputation.avgRating;
         const bRating = b.reputation.avgRating;
         if (aRating !== bRating) return bRating - aRating;
-        if (b.reputation.jobsCompleted !== a.reputation.jobsCompleted) return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
-        return (b.channelCount || 0) - (a.channelCount || 0);
+        return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
       }
       if (sortBy === 'experience') {
         const aExp = a.yearsOfExperience || 0;
         const bExp = b.yearsOfExperience || 0;
         if (aExp !== bExp) return bExp - aExp;
-        if (b.reputation.jobsCompleted !== a.reputation.jobsCompleted) return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
-        return (b.channelCount || 0) - (a.channelCount || 0);
+        return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
       }
-      // Default and sortBy=completed_jobs: jobs first, then rating, then experience, then reachability
+      // Default and sortBy=completed_jobs: jobs first, then rating, then experience
       const aJobs = a.reputation.jobsCompleted;
       const bJobs = b.reputation.jobsCompleted;
       if (aJobs !== bJobs) return bJobs - aJobs;
@@ -1359,8 +1410,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       if (aRating !== bRating) return bRating - aRating;
       const aExp = a.yearsOfExperience || 0;
       const bExp = b.yearsOfExperience || 0;
-      if (aExp !== bExp) return bExp - aExp;
-      return (b.channelCount || 0) - (a.channelCount || 0);
+      return bExp - aExp;
     });
 
     // Apply pagination for reputation-sorted results (fetched in larger pool)
