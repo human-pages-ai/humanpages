@@ -31,7 +31,7 @@ import blogApiRoutes from './routes/blog.js';
 import cvRouter from './routes/cv.js';
 import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getUseCasesMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -155,6 +155,35 @@ app.use('/api', sitemapRoutes);
 app.use('/api/og', ogRoutes);
 app.use('/api/badge', badgeRoutes);
 
+// Newsletter signup (public, rate-limited by IP via express defaults)
+app.post('/api/newsletter', express.json({ limit: '1kb' }), async (req, res) => {
+  const { email, source } = req.body;
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    return res.status(400).json({ error: 'Valid email required' });
+  }
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    await prisma.influencerLead.upsert({
+      where: { dedupeKey: `newsletter:${normalizedEmail}` },
+      update: {},
+      create: {
+        name: normalizedEmail,
+        email: normalizedEmail,
+        dedupeKey: `newsletter:${normalizedEmail}`,
+        list: 'newsletter',
+        notes: `Newsletter signup from ${source || 'unknown'} page`,
+        platforms: ['newsletter'],
+        status: 'NEW',
+        source: 'MANUAL',
+      },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, 'Newsletter signup failed');
+    res.status(500).json({ error: 'Failed to subscribe' });
+  }
+});
+
 // ===== Bot crawl tracking for GEO-sensitive routes =====
 const AI_BOT_PATTERNS: Record<string, RegExp> = {
   'GPTBot': /GPTBot/i,
@@ -210,6 +239,26 @@ app.get('/:lang/dev', (req, res, next) => {
 
 app.get('/dev', (req, res, next) => {
   const html = getDevPageMetaHtml();
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+// Use cases page: inject meta tags + crawler-visible content
+app.get('/:lang/use-cases', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  const html = getUseCasesMetaHtml(req.params.lang);
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+app.get('/use-cases', (req, res, next) => {
+  const html = getUseCasesMetaHtml();
   if (html) {
     res.set('Content-Type', 'text/html');
     return res.send(html);

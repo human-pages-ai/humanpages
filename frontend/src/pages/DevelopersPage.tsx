@@ -12,6 +12,7 @@ import {
   LanguageIcon,
   EyeIcon,
   ChatBubbleLeftRightIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 
 const SUGGESTED_SERVICES = [
@@ -49,7 +50,13 @@ const SUGGESTED_SERVICES = [
     icon: <ChatBubbleLeftRightIcon className="w-6 h-6" />,
     title: 'Community Management',
     desc: 'Daily moderation and engagement for Discord, Slack, or Telegram.',
-    price: '$50\u2013100/week',
+    price: '$25/week',
+  },
+  {
+    icon: <UserIcon className="w-6 h-6" />,
+    title: 'Virtual Assistant',
+    desc: 'Admin, research, scheduling, and recurring tasks handled by a dedicated human.',
+    price: '$5\u201315/hour',
   },
 ];
 

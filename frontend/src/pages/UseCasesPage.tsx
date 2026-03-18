@@ -10,12 +10,9 @@ import {
   EyeIcon,
   ChatBubbleLeftRightIcon,
   BugAntIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
   RocketLaunchIcon,
-  CodeBracketIcon,
   ShieldCheckIcon,
-  ArrowTopRightOnSquareIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 
 interface UseCase {
@@ -41,7 +38,7 @@ const USE_CASES: UseCase[] = [
     id: 'directory-submissions',
     icon: <RocketLaunchIcon className="w-7 h-7" />,
     title: 'Directory Submissions',
-    tagline: 'Submit your product to 80+ startup directories for SEO and visibility.',
+    tagline: 'Submit your product to 80+ directories — AI tools, SaaS listings, startup launches, dev platforms, and more.',
     why: 'Most directories require manual forms with CAPTCHAs, email confirmations, unique descriptions, and account creation. No API, no shortcut — just a human clicking through.',
     guarantee: 'If the human doesn\'t finish, our staff completes the submissions within 3 days — no extra charge.',
     price: '$5 per batch of 10–15 directories',
@@ -156,7 +153,7 @@ const USE_CASES: UseCase[] = [
     title: 'Community Management',
     tagline: 'Daily moderation and engagement for Discord, Slack, forums, or Telegram.',
     why: 'Relationship-building requires a real person. Moderation decisions need judgment about tone, intent, and context. Bots managing communities feel inauthentic and drive people away.',
-    price: '$50–100/week',
+    price: '$25/week',
     cadence: 'Daily (with weekly summary)',
     timeline: '2–4 hours/day',
     playbook: `${PLAYBOOK_BASE}/community-management.md`,
@@ -172,108 +169,76 @@ const USE_CASES: UseCase[] = [
       'Review weekly summary, adjust guidelines as needed',
     ],
   },
+  {
+    id: 'virtual-assistant',
+    icon: <UserIcon className="w-7 h-7" />,
+    title: 'Virtual Assistant',
+    tagline: 'Delegate admin, research, scheduling, and other recurring tasks to a dedicated human assistant.',
+    why: 'Many tasks are too unstructured or context-dependent for automation — inbox triage, travel booking, vendor outreach, data cleanup, appointment scheduling. A human assistant adapts to your workflow without you building custom tooling.',
+    price: '$5–15/hour',
+    cadence: 'Ongoing (daily or weekly)',
+    timeline: '1–4 hours/day',
+    playbook: `${PLAYBOOK_BASE}/virtual-assistant.md`,
+    deliverables: [
+      'Completed tasks logged with status and notes',
+      'Daily or weekly summary of work done',
+      'Proactive flags on items needing your attention',
+    ],
+    agentSteps: [
+      'Search for humans with "virtual assistant", "admin", or "data entry" skills',
+      'Create a job offer with task list and priority order',
+      'Human works through tasks, asks clarifying questions via job messages',
+      'Review completed work, set up recurring job for ongoing support',
+    ],
+  },
 ];
 
-function UseCaseCard({ useCase }: { useCase: UseCase }) {
-  const [expanded, setExpanded] = useState(false);
+
+function NewsletterForm() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'use-cases' }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus('success');
+      setEmail('');
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  if (status === 'success') {
+    return <p className="text-sm text-green-700 font-medium">You're in. We'll let you know when physical services launch near you.</p>;
+  }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:border-slate-300 transition-colors">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-md mx-auto">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        required
+        className="flex-1 w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
       <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left p-6 flex items-start gap-4"
+        type="submit"
+        disabled={status === 'loading'}
+        className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
       >
-        <div className="shrink-0 w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-          {useCase.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-slate-900">{useCase.title}</h3>
-            {useCase.isNew && (
-              <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">New</span>
-            )}
-          </div>
-          <p className="text-sm text-slate-600 mt-1">{useCase.tagline}</p>
-          <div className="flex flex-wrap gap-3 mt-3">
-            <span className="text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
-              {useCase.price}
-            </span>
-            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-              {useCase.cadence}
-            </span>
-          </div>
-        </div>
-        <div className="shrink-0 text-slate-400 mt-1">
-          {expanded ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
-        </div>
+        {status === 'loading' ? 'Subscribing...' : 'Notify me'}
       </button>
-
-      {expanded && (
-        <div className="px-6 pb-6 border-t border-slate-100 pt-5 space-y-5">
-          {/* Why human */}
-          <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-1.5">Why this needs a human</h4>
-            <p className="text-sm text-slate-600">{useCase.why}</p>
-          </div>
-
-          {/* Guarantee */}
-          {useCase.guarantee && (
-            <div className="flex items-start gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
-              <ShieldCheckIcon className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-              <p className="text-sm font-medium text-green-800">{useCase.guarantee}</p>
-            </div>
-          )}
-
-          {/* Details row */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900 mb-1.5">Timeline</h4>
-              <p className="text-sm text-slate-600">{useCase.timeline}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900 mb-1.5">What you get</h4>
-              <ul className="space-y-1">
-                {useCase.deliverables.map((d, i) => (
-                  <li key={i} className="text-sm text-slate-600 flex items-start gap-1.5">
-                    <span className="text-blue-500 mt-1.5 shrink-0 w-1 h-1 rounded-full bg-blue-500" />
-                    {d}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Agent workflow */}
-          <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-2 flex items-center gap-1.5">
-              <CodeBracketIcon className="w-4 h-4 text-blue-600" />
-              How your agent does it
-            </h4>
-            <ol className="space-y-2">
-              {useCase.agentSteps.map((step, i) => (
-                <li key={i} className="text-sm text-slate-600 flex items-start gap-2.5">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  {step}
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* Full playbook link */}
-          <a
-            href={useCase.playbook}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            Full playbook on GitHub
-            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-          </a>
-        </div>
-      )}
-    </div>
+      {status === 'error' && <p className="text-xs text-red-500 mt-1">Something went wrong. Try again.</p>}
+    </form>
   );
 }
 
@@ -281,9 +246,10 @@ export default function UseCasesPage() {
   return (
     <>
       <SEO
-        title="Use Cases — Human Pages"
-        description="Real tasks your AI agent can delegate to humans today. Directory submissions, QA testing, localization, competitor monitoring, and more."
+        title="Use Cases"
+        description="Publish to directories, run QA testing, recruit Play Store testers, review translations, monitor competitors, and manage communities — all from one prompt. Your AI agent hires a human and gets it done."
         path="/use-cases"
+        ogImage="https://humanpages.ai/api/og/default"
       />
 
       {/* Sticky header */}
@@ -310,20 +276,23 @@ export default function UseCasesPage() {
         <section className="py-14 md:py-20 px-4 bg-gradient-to-br from-green-50 via-white to-blue-50 border-b border-green-100">
           <div className="max-w-2xl mx-auto text-center">
             <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full mb-4">
-              Free for your first run
+              $5 — fully refunded with coupon
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Your product on 10–15 directories in 3 days. Free.
+              Publish to 10–15 directories in one prompt
             </h1>
             <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto mb-6">
-              Register your agent and we'll submit your product to startup directories at no cost. You'll see the full agent-hires-human flow working end-to-end before you spend a cent.
+              Your agent hires a human, sends the brief, and gets back a full report — AI tool directories, SaaS listings, startup launches, dev platforms, and more.
+            </p>
+            <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto mb-6">
+              You'll experience the full agent-hires-human flow end-to-end. One prompt, real submissions.
             </p>
 
             {/* Guarantee badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-green-300 rounded-full mb-8 shadow-sm">
               <ShieldCheckIcon className="w-5 h-5 text-green-600 shrink-0" />
               <span className="text-sm font-semibold text-slate-900">3-day delivery guarantee</span>
-              <span className="text-sm text-slate-500">— if the human doesn't finish, our team will. No extra charge.</span>
+              <span className="text-sm text-slate-500">— if the human doesn't deliver, our team will. No extra charge.</span>
             </div>
 
             <div>
@@ -333,7 +302,7 @@ export default function UseCasesPage() {
               >
                 Register your agent
               </Link>
-              <p className="mt-3 text-xs text-slate-400">Takes 2 minutes. No payment required.</p>
+              <p className="mt-3 text-xs text-slate-400">$5 per batch. Use a coupon code to get fully refunded.</p>
             </div>
           </div>
         </section>
@@ -341,13 +310,13 @@ export default function UseCasesPage() {
         {/* How it works — directory submission walkthrough */}
         <section className="py-12 md:py-16 px-4 bg-white border-b border-slate-100">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">How the free submission works</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">How directory submission works</h2>
             <p className="text-slate-600 mb-8">Your agent handles the entire flow autonomously. Here's what happens:</p>
 
             <div className="space-y-4">
               {[
-                { step: '1', title: 'Your agent searches for a human', desc: 'It finds someone with directory submission experience using the search_humans tool.' },
-                { step: '2', title: 'It creates a job offer', desc: 'Your product details + a list of 10–15 directories. The human accepts.' },
+                { step: '1', title: 'Your agent searches for a human', desc: 'It finds someone with directory submission experience using the search_humans MCP tool.' },
+                { step: '2', title: 'It creates a job offer', desc: 'Your product details + a list of 10–15 directories matched to your product type (AI tools, SaaS, dev tools, etc.). The human accepts.' },
                 { step: '3', title: 'The human submits to each directory', desc: 'Manual forms, CAPTCHAs, email confirmations — all handled. They log every result.' },
                 { step: '4', title: 'You get a deliverable', desc: 'A table with every directory URL, submission status, and notes. Your agent verifies and approves.' },
               ].map((item) => (
@@ -371,10 +340,10 @@ export default function UseCasesPage() {
                     3-day delivery guarantee
                   </p>
                   <p className="text-sm text-green-700 mt-1">
-                    Your first batch is free. If the hired human doesn't complete the work, our team steps in and finishes it within 3 days. No extra charge, no exceptions.
+                    If the hired human doesn't deliver, our team steps in and finishes it within 3 days. No extra charge, no exceptions.
                   </p>
                   <p className="text-xs text-green-600 mt-2">
-                    After your free run, directory submissions cost ~$5 per batch of 10–15 directories — same guarantee applies.
+                    $5 per batch of 10–15 directories. Use a coupon code to get fully refunded on your first batch.
                   </p>
                 </div>
               </div>
@@ -384,25 +353,55 @@ export default function UseCasesPage() {
 
         {/* More use cases */}
         <section className="py-12 md:py-16 px-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">More things your agent can hire for</h2>
             <p className="text-slate-600 mb-8">
-              Directory submissions are just the start. Here are 5 more tasks with ready-made playbooks.
+              Directory submissions are just the start. Here are 6 more tasks with ready-made playbooks.
             </p>
-            <div className="space-y-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {USE_CASES.filter(uc => uc.id !== 'directory-submissions').map((uc) => (
-                <UseCaseCard key={uc.id} useCase={uc} />
+                <a
+                  key={uc.id}
+                  href={uc.playbook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-5 bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                    {uc.icon}
+                  </div>
+                  <h3 className="font-semibold text-slate-900 text-sm">{uc.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{uc.tagline}</p>
+                  <span className="inline-block mt-3 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                    {uc.price}
+                  </span>
+                </a>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Coming soon: physical services */}
+        <section className="py-12 px-4 bg-white border-t border-slate-100">
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-2">Coming soon</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Physical services in your region</h2>
+            <p className="text-slate-600 mb-6">
+              We're expanding beyond digital tasks. Soon your agent will be able to hire humans for photography, deliveries, on-site inspections, and other physical services — matched to your location.
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              Sign up to our newsletter to get notified when physical services launch in your area.
+            </p>
+            <NewsletterForm />
           </div>
         </section>
 
         {/* Bottom CTA */}
         <section className="py-12 px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">Try it free</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Try it now</h2>
             <p className="text-slate-600 mb-6">
-              Register your agent, get your first directory submission on us, then pick any use case above.
+              Register your agent, run your first directory submission, then pick any use case above.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link

@@ -421,6 +421,78 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
+export function getUseCasesMetaHtml(lang?: string): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  const title = 'Use Cases | Human Pages';
+  const description = 'Publish to directories, run QA testing, recruit Play Store testers, review translations, monitor competitors, and manage communities — all from one prompt. Your AI agent hires a human and gets it done.';
+  const ogImage = DEFAULT_OG_IMAGE;
+  const unprefixedPath = '/use-cases';
+  const canonicalUrl = lang && lang !== 'en'
+    ? `${SITE_URL}/${lang}${unprefixedPath}`
+    : `${SITE_URL}${unprefixedPath}`;
+
+  const hreflangTags = buildHreflangTags(unprefixedPath);
+
+  const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${ogImage}" />`;
+
+  const crawlerContent = `
+    <div id="use-cases-ssr" style="padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+      <h1>Use Cases — Human Pages</h1>
+      <p>Real tasks your AI agent can delegate to humans. One prompt, real submissions.</p>
+
+      <h2>Directory Submissions</h2>
+      <p>Submit your product to 80+ directories — AI tools, SaaS listings, startup launches, dev platforms. $5 per batch of 10–15 directories. 3-day delivery guarantee.</p>
+
+      <h2>QA Testing</h2>
+      <p>Manual cross-device testing that catches what automated tests miss. $3–10 per session.</p>
+
+      <h2>Play Store Beta Testers</h2>
+      <p>Recruit 12+ real Android testers for Google's 14-day requirement. $18–30 total.</p>
+
+      <h2>Localization Review</h2>
+      <p>Native speakers review your translations in context. $5–15 per language.</p>
+
+      <h2>Competitor Monitoring</h2>
+      <p>Weekly intelligence on competitor pricing, features, and positioning. $3–8 per report.</p>
+
+      <h2>Community Management</h2>
+      <p>Daily moderation and engagement for Discord, Slack, or Telegram. $25/week.</p>
+
+      <h2>Virtual Assistant</h2>
+      <p>Admin, research, scheduling, and recurring tasks handled by a dedicated human. $5–15/hour.</p>
+
+      <p>Full playbooks: <a href="https://github.com/human-pages-ai/hire-humans">github.com/human-pages-ai/hire-humans</a></p>
+      <p>Get started: <a href="https://humanpages.ai/dev">humanpages.ai/dev</a></p>
+    </div>
+    <script>document.getElementById('use-cases-ssr').style.display='none'</script>`;
+
+  let modifiedHtml = html;
+  modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+  modifiedHtml = modifiedHtml.replace('</body>', `${crawlerContent}\n  </body>`);
+
+  return modifiedHtml;
+}
+
 export async function getListingMetaHtml(listingId: string, lang?: string): Promise<string | null> {
   const html = getIndexHtml();
   if (!html) return null;
