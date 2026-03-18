@@ -621,8 +621,39 @@ export default function Dashboard() {
           )}
 
           {/* ───── PROFILE TAB ───── */}
-          {activeTab === 'profile' && (
+          {activeTab === 'profile' && (() => {
+            // Count incomplete sections to show nudge
+            const incomplete: { label: string; stepId: string }[] = [];
+            if (!profile.skills?.length) incomplete.push({ label: 'Skills', stepId: 'skills' });
+            if (!profile.location?.trim()) incomplete.push({ label: 'Location', stepId: 'location' });
+            if (!profile.services?.some(s => s.isActive)) incomplete.push({ label: 'Services', stepId: 'services' });
+            if (!profile.name?.trim()) incomplete.push({ label: 'Name & Photo', stepId: 'profile' });
+            if (!profile.equipment?.length) incomplete.push({ label: 'Equipment', stepId: 'equipment' });
+            if (profile.wallets.length === 0) incomplete.push({ label: 'Payment', stepId: 'payment' });
+
+            return (
             <div className="space-y-6">
+              {/* Completion nudge — only show if there are incomplete items */}
+              {incomplete.length > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-orange-900">
+                      {incomplete.length === 1 ? '1 section' : `${incomplete.length} sections`} left to complete
+                    </p>
+                    <p className="text-xs text-orange-700 mt-0.5">
+                      Complete your profile to get discovered by agents faster.
+                      Missing: {incomplete.map(i => i.label).join(', ')}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/onboarding?step=${incomplete[0].stepId}`}
+                    className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 whitespace-nowrap"
+                  >
+                    Continue
+                  </Link>
+                </div>
+              )}
+
               {/* Wizard Module Tiles Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 1. Notifications & Connect */}
@@ -845,7 +876,8 @@ export default function Dashboard() {
                 setCopiedProfile={setCopiedProfile}
               />
             </div>
-          )}
+            );
+          })()}
 
           {/* ───── PAYMENTS TAB ───── */}
           {activeTab === 'payments' && (
