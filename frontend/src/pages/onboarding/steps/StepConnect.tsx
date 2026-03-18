@@ -112,7 +112,7 @@ export function StepConnect({
         ) : (
           <>
             <button type="button" onClick={handleConnectTelegram} disabled={telegramLoading} className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm">
-              {telegramLoading ? 'Connecting...' : 'Connect Telegram Bot'}
+              {telegramLoading ? 'Connecting...' : 'Connect Telegram'}
             </button>
             {telegramLinkUrl && (
               <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">

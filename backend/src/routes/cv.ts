@@ -8,15 +8,31 @@ import { prisma } from '../lib/prisma.js';
 import { parseCvWithOpenAI } from '../lib/cvParser.js';
 import { logger } from '../lib/logger.js';
 
-// Lazy load pdf-parse to avoid issues with its CommonJS export
-let pdfParseModule: any = null;
-async function getPdfParse() {
-  if (!pdfParseModule) {
-    const imported = await import('pdf-parse');
-    // Handle both default export and named export
-    pdfParseModule = (imported as any).default || imported;
+// pdf-parse v2 exports a PDFParse class; v1 exports a callable function.
+// Detect which version is installed and provide a unified interface.
+let pdfExtractor: ((buf: Buffer) => Promise<{ text: string }>) | null = null;
+async function getPdfExtractor() {
+  if (!pdfExtractor) {
+    const mod = await import('pdf-parse');
+    const PDFParse = (mod as any).PDFParse;
+    if (PDFParse && typeof PDFParse === 'function' && PDFParse.prototype?.getText) {
+      // v2 class API: new PDFParse({ data }) → .getText() → { text }
+      pdfExtractor = async (buf: Buffer) => {
+        const parser = new PDFParse({ data: new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength) });
+        try {
+          const result = await parser.getText();
+          return { text: result.text };
+        } finally {
+          await parser.destroy().catch(() => {});
+        }
+      };
+    } else {
+      // v1 function API: pdfParse(buffer) → { text }
+      const fn = (mod as any).default || mod;
+      pdfExtractor = (buf: Buffer) => fn(buf);
+    }
   }
-  return pdfParseModule;
+  return pdfExtractor;
 }
 
 const router = Router();
@@ -55,8 +71,8 @@ const uploadLimiter = rateLimit({
  */
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   try {
-    const pdfParse = await getPdfParse();
-    const data = await pdfParse(buffer);
+    const extract = await getPdfExtractor();
+    const data = await extract(buffer);
     return data.text;
   } catch (error) {
     logger.error({ err: error }, 'PDF extraction error');

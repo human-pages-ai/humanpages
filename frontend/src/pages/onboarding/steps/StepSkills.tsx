@@ -199,7 +199,7 @@ export function StepSkills({
         {addingLanguage && (
           <div className="border border-slate-300 rounded-lg p-4 mb-4 bg-white">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <SearchableCombobox id="onb-lang-name" label="Language" value={newLang} onChange={(v) => setNewLang(v)} options={COMMON_LANGUAGES} placeholder="e.g., English" required allowFreeText />
+              <SearchableCombobox id="onb-lang-name" label="Language" value={newLang} onChange={(v) => setNewLang(v)} options={COMMON_LANGUAGES.filter(lang => !languageEntries.some(entry => entry.language.toLowerCase() === lang.toLowerCase()))} placeholder="e.g., English" required allowFreeText />
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Proficiency</label>
                 <select value={newProficiency} onChange={(e) => setNewProficiency(e.target.value)} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white" aria-label="Proficiency level" aria-required="true">

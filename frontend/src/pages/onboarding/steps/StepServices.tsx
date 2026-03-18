@@ -202,10 +202,11 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
                 <select value={newService.unit} onChange={(e) => setNewService({ ...newService, unit: e.target.value })} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                  <option value="per hour">per hour</option>
-                  <option value="per task">per task</option>
-                  <option value="fixed">fixed</option>
-                  <option value="negotiable">negotiable</option>
+                  <option value="per hour">Per Hour</option>
+                  <option value="per task">Per Task</option>
+                  <option value="per word">Per Word</option>
+                  <option value="per page">Per Page</option>
+                  <option value="negotiable">Negotiable</option>
                 </select>
               </div>
             </div>

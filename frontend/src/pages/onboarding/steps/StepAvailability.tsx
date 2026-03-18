@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { CompactCvProcessingBar } from '../components/CvProcessingBar';
-import { WEEKLY_CAPACITY_OPTIONS, RESPONSE_TIME_OPTIONS, WORK_TYPE_OPTIONS } from '../constants';
+import { WEEKLY_CAPACITY_OPTIONS, WORK_TYPE_OPTIONS } from '../constants';
 
 interface StepAvailabilityProps {
   timezone: string;
@@ -20,7 +20,6 @@ interface StepAvailabilityProps {
 export function StepAvailability({
   timezone, setTimezone,
   weeklyCapacityHours, setWeeklyCapacityHours,
-  responseTimeCommitment, setResponseTimeCommitment,
   workType, setWorkType,
   cvProcessing, onNext, onSkip, error,
 }: StepAvailabilityProps) {
@@ -96,28 +95,6 @@ export function StepAvailability({
               onClick={() => setWeeklyCapacityHours(weeklyCapacityHours === opt.value ? null : opt.value)}
               className={`p-3 rounded-lg border-2 text-left transition-colors min-h-[44px] ${
                 weeklyCapacityHours === opt.value
-                  ? 'border-orange-500 bg-orange-50 text-orange-900'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700'
-              }`}
-            >
-              <p className="text-sm font-medium">{opt.label}</p>
-              <p className="text-xs text-slate-500">{opt.description}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Response Time */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">How quickly can you respond to new tasks?</label>
-        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
-          {RESPONSE_TIME_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setResponseTimeCommitment(responseTimeCommitment === opt.value ? '' : opt.value)}
-              className={`p-3 rounded-lg border-2 text-left transition-colors min-h-[44px] ${
-                responseTimeCommitment === opt.value
                   ? 'border-orange-500 bg-orange-50 text-orange-900'
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700'
               }`}
