@@ -15,6 +15,7 @@ import {
   RocketLaunchIcon,
   CodeBracketIcon,
   ShieldCheckIcon,
+  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 
 interface UseCase {
@@ -28,7 +29,12 @@ interface UseCase {
   timeline: string;
   deliverables: string[];
   agentSteps: string[];
+  playbook: string;
+  guarantee?: string;
+  isNew?: boolean;
 }
+
+const PLAYBOOK_BASE = 'https://github.com/human-pages-ai/hire-humans/blob/main/playbooks';
 
 const USE_CASES: UseCase[] = [
   {
@@ -37,9 +43,11 @@ const USE_CASES: UseCase[] = [
     title: 'Directory Submissions',
     tagline: 'Submit your product to 80+ startup directories for SEO and visibility.',
     why: 'Most directories require manual forms with CAPTCHAs, email confirmations, unique descriptions, and account creation. No API, no shortcut — just a human clicking through.',
+    guarantee: 'If the human doesn\'t finish, our staff completes the submissions within 3 days — no extra charge.',
     price: '$5 per batch of 10–15 directories',
     cadence: 'One-time (revisit every 6–12 months)',
     timeline: '2–4 hours per batch',
+    playbook: `${PLAYBOOK_BASE}/directory-submissions.md`,
     deliverables: [
       'Markdown table with directory URL, status (submitted/pending/live/failed), and notes',
       'Account credentials stored securely for future updates',
@@ -60,6 +68,7 @@ const USE_CASES: UseCase[] = [
     price: '$3–10 per testing session',
     cadence: 'Per release',
     timeline: '2–8 hours',
+    playbook: `${PLAYBOOK_BASE}/qa-testing.md`,
     deliverables: [
       'Bug report with steps to reproduce, expected vs. actual behavior, severity',
       'Screenshots and screen recordings',
@@ -76,11 +85,14 @@ const USE_CASES: UseCase[] = [
     id: 'play-store-testing',
     icon: <DevicePhoneMobileIcon className="w-7 h-7" />,
     title: 'Play Store Beta Testers',
-    tagline: 'Recruit 12+ real Android testers to meet Google\'s 14-day requirement.',
-    why: 'Google requires 14 days of real human testing before you can publish. Each tester needs a real Google account on a real Android device — can\'t automate or fake it.',
-    price: '$1.50–5 per tester ($18–30 total)',
+    isNew: true,
+    tagline: 'Meet Google\'s 12-tester / 14-day requirement. Your agent handles recruitment via API — no manual dashboards.',
+    why: 'Google Play requires 12 testers for 14 days before you can publish. Existing solutions like TestersCommunity ($15) are manual web UIs that your AI agent can\'t use, and their credit/barter incentive model means testers participate mainly to earn credits for their own apps — not because they\'re invested in yours. With Human Pages, testers get paid real money (USDC), so they\'re motivated to actually engage with your app.',
+    guarantee: 'If a tester doesn\'t complete the 14-day requirement, our staff steps in within 3 days — no extra charge.',
+    price: '~$3.50 for 12 testers (or included on Pro)',
     cadence: 'Per app launch',
     timeline: '~18 days (recruitment + 14-day testing window)',
+    playbook: `${PLAYBOOK_BASE}/play-store-testing.md`,
     deliverables: [
       'Day 1 screenshot: enrollment confirmation',
       'Day 14 screenshot: app still installed',
@@ -102,6 +114,7 @@ const USE_CASES: UseCase[] = [
     price: '$5–15 per language',
     cadence: 'Per release with new strings',
     timeline: '3–12 hours depending on app size',
+    playbook: `${PLAYBOOK_BASE}/localization.md`,
     deliverables: [
       'Issue table: screen, original text, current translation, suggested fix, severity',
       'Overall quality score (1–10)',
@@ -123,6 +136,7 @@ const USE_CASES: UseCase[] = [
     price: '$3–8 per weekly report',
     cadence: 'Weekly',
     timeline: '2–4 hours per report',
+    playbook: `${PLAYBOOK_BASE}/competitor-monitoring.md`,
     deliverables: [
       'Structured diff report by competitor and category',
       'Screenshots of visual/pricing changes',
@@ -145,6 +159,7 @@ const USE_CASES: UseCase[] = [
     price: '$50–100/week',
     cadence: 'Daily (with weekly summary)',
     timeline: '2–4 hours/day',
+    playbook: `${PLAYBOOK_BASE}/community-management.md`,
     deliverables: [
       'Daily presence during agreed hours with <4h response time',
       'Moderation actions logged',
@@ -172,7 +187,12 @@ function UseCaseCard({ useCase }: { useCase: UseCase }) {
           {useCase.icon}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-slate-900">{useCase.title}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-slate-900">{useCase.title}</h3>
+            {useCase.isNew && (
+              <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">New</span>
+            )}
+          </div>
           <p className="text-sm text-slate-600 mt-1">{useCase.tagline}</p>
           <div className="flex flex-wrap gap-3 mt-3">
             <span className="text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
@@ -195,6 +215,14 @@ function UseCaseCard({ useCase }: { useCase: UseCase }) {
             <h4 className="text-sm font-semibold text-slate-900 mb-1.5">Why this needs a human</h4>
             <p className="text-sm text-slate-600">{useCase.why}</p>
           </div>
+
+          {/* Guarantee */}
+          {useCase.guarantee && (
+            <div className="flex items-start gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+              <ShieldCheckIcon className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+              <p className="text-sm font-medium text-green-800">{useCase.guarantee}</p>
+            </div>
+          )}
 
           {/* Details row */}
           <div className="grid sm:grid-cols-2 gap-4">
@@ -232,6 +260,17 @@ function UseCaseCard({ useCase }: { useCase: UseCase }) {
               ))}
             </ol>
           </div>
+
+          {/* Full playbook link */}
+          <a
+            href={useCase.playbook}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            Full playbook on GitHub
+            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+          </a>
         </div>
       )}
     </div>
