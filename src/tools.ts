@@ -57,6 +57,7 @@ interface Human {
   fiatPaymentMethods?: { platform: string; handle: string; label?: string; isPrimary?: boolean }[];
   paymentMethods?: string[];
   channelCount?: number;
+  activeChannels?: string[];
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
 }
 
@@ -66,8 +67,7 @@ interface AgentProfile {
   description?: string;
   websiteUrl?: string;
   contactEmail?: string;
-  walletAddress?: string;
-  walletNetwork?: string;
+  wallets?: { address: string; network: string; verified: boolean; createdAt: string }[];
   domainVerified: boolean;
   verifiedAt?: string;
   lastActiveAt?: string;
@@ -137,8 +137,17 @@ interface SearchParams {
   verified?: string;
   min_experience?: number;
   fiat_platform?: string;
+  payment_type?: string;
+  degree?: string;
+  field?: string;
+  institution?: string;
+  certificate?: string;
+  min_vouches?: number;
+  has_verified_login?: boolean;
+  has_photo?: boolean;
   sort_by?: string;
   min_completed_jobs?: number;
+  min_channels?: number;
 }
 
 interface SearchResponse {
@@ -163,8 +172,17 @@ async function searchHumans(params: SearchParams): Promise<SearchResponse> {
   if (params.verified) query.set('verified', params.verified);
   if (params.min_experience) query.set('minExperience', params.min_experience.toString());
   if (params.fiat_platform) query.set('fiatPlatform', params.fiat_platform);
+  if (params.payment_type) query.set('paymentType', params.payment_type);
+  if (params.degree) query.set('degree', params.degree);
+  if (params.field) query.set('field', params.field);
+  if (params.institution) query.set('institution', params.institution);
+  if (params.certificate) query.set('certificate', params.certificate);
+  if (params.min_vouches) query.set('minVouches', params.min_vouches.toString());
+  if (params.has_verified_login) query.set('hasVerifiedLogin', 'true');
+  if (params.has_photo) query.set('hasPhoto', 'true');
   if (params.sort_by) query.set('sortBy', params.sort_by);
   if (params.min_completed_jobs) query.set('minCompletedJobs', params.min_completed_jobs.toString());
+  if (params.min_channels) query.set('minChannels', params.min_channels.toString());
 
   const res = await fetch(`${API_BASE}/api/humans/search?${query}`);
   if (!res.ok) {
@@ -267,6 +285,39 @@ export function createServer(): Server {
               type: 'string',
               description: 'Filter by fiat payment platform the human accepts (e.g., "WISE", "PAYPAL", "VENMO", "REVOLUT", "CASHAPP", "ZELLE", "MONZO", "N26", "MERCADOPAGO")',
             },
+            payment_type: {
+              type: 'string',
+              enum: ['UPFRONT', 'ESCROW', 'UPON_COMPLETION'],
+              description: 'Filter by accepted payment type (UPFRONT, ESCROW, or UPON_COMPLETION)',
+            },
+            degree: {
+              type: 'string',
+              description: 'Filter by education degree (e.g., "Bachelor", "MBA", "PhD"). Partial match, case-insensitive.',
+            },
+            field: {
+              type: 'string',
+              description: 'Filter by field of study (e.g., "Computer Science", "Marketing"). Partial match, case-insensitive.',
+            },
+            institution: {
+              type: 'string',
+              description: 'Filter by educational institution name (e.g., "MIT", "Oxford"). Partial match, case-insensitive.',
+            },
+            certificate: {
+              type: 'string',
+              description: 'Filter by certificate name or issuer (e.g., "AWS", "PMP", "Google"). Partial match, case-insensitive.',
+            },
+            min_vouches: {
+              type: 'number',
+              description: 'Only return humans vouched for by at least this many other users.',
+            },
+            has_verified_login: {
+              type: 'boolean',
+              description: 'Only return humans who have verified their identity via an OAuth provider (Google, LinkedIn, or GitHub). Does not reveal which provider.',
+            },
+            has_photo: {
+              type: 'boolean',
+              description: 'Only return humans with an approved profile photo.',
+            },
             sort_by: {
               type: 'string',
               enum: ['completed_jobs', 'rating', 'experience', 'recent'],
@@ -275,6 +326,10 @@ export function createServer(): Server {
             min_completed_jobs: {
               type: 'number',
               description: 'Only return humans who have completed at least this many jobs on the platform. Use min_completed_jobs=1 to find all workers with any platform track record. Works with or without other filters — no skill filter needed.',
+            },
+            min_channels: {
+              type: 'number',
+              description: 'Only return humans with at least this many notification channels active (0-4). Channels: email, telegram, whatsapp, push. Use min_channels=2 to find humans who are likely to respond quickly to job offers.',
             },
           },
         },
@@ -345,9 +400,32 @@ export function createServer(): Server {
         },
       },
       {
+        name: 'get_wallet_nonce',
+        description:
+          'Request a signing challenge (nonce) for wallet verification. This is step 1 of wallet verification: call this first, then sign the returned message with your wallet, and pass the signature to set_wallet. The nonce expires in 5 minutes.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            agent_id: {
+              type: 'string',
+              description: 'Your registered agent ID',
+            },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (starts with hp_)',
+            },
+            wallet_address: {
+              type: 'string',
+              description: 'EVM wallet address to verify (0x...)',
+            },
+          },
+          required: ['agent_id', 'agent_key', 'wallet_address'],
+        },
+      },
+      {
         name: 'set_wallet',
         description:
-          'Set the wallet address for a registered agent. This is used for receiving USDC payments and checking balance. The address must be a valid EVM address (0x + 40 hex chars). Network defaults to "base" (recommended for low fees).',
+          'Set the wallet address for a registered agent. Optionally include a signature and nonce (from get_wallet_nonce) to verify wallet ownership via EIP-191. Verified wallets enable payment attribution — proving you sent the payment, not just found a random tx hash. Without signature, the wallet is set but unverified.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -367,6 +445,14 @@ export function createServer(): Server {
               type: 'string',
               enum: ['base', 'ethereum', 'polygon', 'arbitrum', 'base-sepolia'],
               description: 'Blockchain network (default: "base"). Options: base, ethereum, polygon, arbitrum',
+            },
+            signature: {
+              type: 'string',
+              description: 'EIP-191 signature of the challenge message from get_wallet_nonce',
+            },
+            nonce: {
+              type: 'string',
+              description: 'The nonce returned by get_wallet_nonce',
             },
           },
           required: ['agent_id', 'agent_key', 'wallet_address'],
@@ -630,8 +716,12 @@ export function createServer(): Server {
               type: 'string',
               description: 'Optional review comment',
             },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (starts with hp_)',
+            },
           },
-          required: ['job_id', 'rating'],
+          required: ['job_id', 'rating', 'agent_key'],
         },
       },
       {
@@ -1103,6 +1193,17 @@ export function createServer(): Server {
           verified: args?.verified as string | undefined,
           min_experience: args?.min_experience as number | undefined,
           fiat_platform: args?.fiat_platform as string | undefined,
+          payment_type: args?.payment_type as string | undefined,
+          degree: args?.degree as string | undefined,
+          field: args?.field as string | undefined,
+          institution: args?.institution as string | undefined,
+          certificate: args?.certificate as string | undefined,
+          min_vouches: args?.min_vouches as number | undefined,
+          has_verified_login: args?.has_verified_login as boolean | undefined,
+          has_photo: args?.has_photo as boolean | undefined,
+          sort_by: args?.sort_by as string | undefined,
+          min_completed_jobs: args?.min_completed_jobs as number | undefined,
+          min_channels: args?.min_channels as number | undefined,
         });
 
         const humans = response.results;
@@ -1146,7 +1247,7 @@ export function createServer(): Server {
   Languages: ${h.languages.join(', ') || 'Not specified'}
   Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
   Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}
-  Notification channels: ${h.channelCount || 0}/4 active`;
+  Reachability: ${(h.channelCount || 0) >= 3 ? '🟢 Highly reachable' : (h.channelCount || 0) >= 2 ? '🟡 Reachable' : (h.channelCount || 0) >= 1 ? '🟠 Limited' : '🔴 Low'} (${h.channelCount || 0}/4 channels)`;
           })
           .join('\n\n');
 
@@ -1302,21 +1403,20 @@ To get a verified badge, set up domain verification using \`verify_agent_domain\
         };
       }
 
-      if (name === 'set_wallet') {
+      if (name === 'get_wallet_nonce') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
           throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
         }
 
-        const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/wallet`, {
-          method: 'PATCH',
+        const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/wallet/nonce`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Agent-Key': agentKey,
           },
           body: JSON.stringify({
-            walletAddress: args?.wallet_address,
-            walletNetwork: args?.wallet_network || 'base',
+            address: args?.wallet_address,
           }),
         });
 
@@ -1325,18 +1425,75 @@ To get a verified badge, set up domain verification using \`verify_agent_domain\
           throw new Error(error.error || `API error: ${res.status}`);
         }
 
-        const result = await res.json() as { id: string; name: string; walletAddress: string; walletNetwork: string };
+        const result = await res.json() as { nonce: string; message: string };
 
         return {
           content: [{
             type: 'text',
-            text: `**Wallet Set!**
+            text: `**Wallet Verification Challenge**
+
+**Nonce:** \`${result.nonce}\`
+**Message to sign:**
+\`\`\`
+${result.message}
+\`\`\`
+
+**Next step:** Sign this message using your wallet's \`signMessage()\` function (EIP-191 personal_sign), then call \`set_wallet\` with the \`signature\` and \`nonce\` parameters to complete verification.
+
+The nonce expires in 5 minutes.`,
+          }],
+        };
+      }
+
+      if (name === 'set_wallet') {
+        const agentKey = args?.agent_key as string;
+        if (!agentKey) {
+          throw new Error('agent_key is required. Call register_agent first to get an API key (starts with hp_).');
+        }
+
+        const body: Record<string, string> = {
+          walletAddress: args?.wallet_address as string,
+          walletNetwork: (args?.wallet_network as string) || 'base',
+        };
+        if (args?.signature) body.signature = args.signature as string;
+        if (args?.nonce) body.nonce = args.nonce as string;
+
+        const res = await fetch(`${API_BASE}/api/agents/${args?.agent_id}/wallet`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Agent-Key': agentKey,
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.error || `API error: ${res.status}`);
+        }
+
+        const result = await res.json() as { id: string; name: string; walletAddress: string; walletNetwork: string; walletVerified: boolean };
+
+        const verifiedStatus = result.walletVerified ? '(Verified)' : '(Unverified)';
+        const verifyHint = result.walletVerified
+          ? 'Your wallet is verified. Payments from this wallet will be attributed to you on-chain.'
+          : `Your wallet is set but **unverified**. To verify ownership and enable payment attribution:
+1. Call \`get_wallet_nonce\` with your wallet address
+2. Sign the returned message with your wallet
+3. Call \`set_wallet\` again with the \`signature\` and \`nonce\` parameters`;
+
+        return {
+          content: [{
+            type: 'text',
+            text: `**Wallet Set! ${verifiedStatus}**
 
 **Agent:** ${result.name}
 **Wallet Address:** \`${result.walletAddress}\`
 **Network:** ${result.walletNetwork}
 
-Your wallet is now configured. Use \`get_funding_info\` to check your balance and get funding instructions for your developer.`,
+${verifyHint}
+
+Use \`get_funding_info\` to check your balance and get funding instructions for your developer.`,
           }],
         };
       }
@@ -1833,7 +1990,17 @@ ${human.humanityVerified
           human.websiteUrl && `- Website: ${human.websiteUrl}`,
         ].filter(Boolean).join('\n');
 
+        // Reachability info for agents
+        const channels = human.activeChannels || [];
+        const chCount = human.channelCount ?? channels.length;
+        const reachabilityLabel = chCount >= 3 ? 'Highly reachable' : chCount >= 2 ? 'Reachable' : chCount >= 1 ? 'Limited reachability' : 'Low reachability';
+        const channelList = channels.length > 0 ? channels.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ') : 'None configured';
+
         const details = `# ${human.name}${human.username ? ` (@${human.username})` : ''} — Full Profile
+
+## Reachability — ${reachabilityLabel} (${chCount}/4 channels)
+Active channels: ${channelList}
+_Humans with more notification channels respond faster to job offers._
 
 ## Contact
 - Email: ${human.contactEmail || 'Not provided'}
@@ -2587,7 +2754,7 @@ ${agent?.websiteUrl ? `- **Website:** ${agent.websiteUrl}` : ''}
       if (name === 'leave_review') {
         const res = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/review`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Agent-Key': args?.agent_key as string },
           body: JSON.stringify({
             rating: args?.rating,
             comment: args?.comment,

@@ -106,7 +106,7 @@ describe('MCP Server', () => {
   });
 
   describe('tools/list', () => {
-    it('should list all 35 tools', async () => {
+    it('should list all 36 tools', async () => {
       const res = await client.send({
         jsonrpc: '2.0',
         id: id(),
@@ -115,7 +115,7 @@ describe('MCP Server', () => {
       });
 
       const tools = res.result.tools;
-      expect(tools).toHaveLength(35);
+      expect(tools).toHaveLength(36);
 
       const names = tools.map((t: any) => t.name);
       expect(names).toContain('search_humans');

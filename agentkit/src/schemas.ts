@@ -269,3 +269,13 @@ export const GetJobMessagesSchema = z
   })
   .strict()
   .describe("Get the conversation history on a job");
+
+export const SetWalletSchema = z
+  .object({
+    walletAddress: z
+      .string()
+      .optional()
+      .describe("EVM wallet address. If omitted, uses the agent's own wallet address from the wallet provider."),
+  })
+  .strip()
+  .describe("Set and verify the agent's wallet address on Human Pages using EIP-191 signature");

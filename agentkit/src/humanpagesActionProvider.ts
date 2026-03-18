@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ActionProvider, CreateAction, Network } from "@coinbase/agentkit";
+import { ActionProvider, CreateAction, Network, EvmWalletProvider } from "@coinbase/agentkit";
 import { HUMANPAGES_API_BASE_URL } from "./constants";
 import {
   SearchHumansSchema,
@@ -12,6 +12,7 @@ import {
   LeaveReviewSchema,
   SendJobMessageSchema,
   GetJobMessagesSchema,
+  SetWalletSchema,
 } from "./schemas";
 
 export interface HumanPagesActionProviderConfig {
@@ -295,6 +296,44 @@ export class HumanPagesActionProvider extends ActionProvider {
       return JSON.stringify(data);
     } catch (error) {
       return `Error getting messages: ${(error as Error).message}`;
+    }
+  }
+
+  @CreateAction({
+    name: "set_wallet",
+    description:
+      "Set and verify your wallet on Human Pages. Signs a challenge message with your wallet to prove ownership. This enables payment attribution — proving you actually sent the payment. If no wallet address is provided, your agent's own wallet address is used.",
+    schema: SetWalletSchema,
+  })
+  async setWallet(walletProvider: EvmWalletProvider, args: z.infer<typeof SetWalletSchema>): Promise<string> {
+    try {
+      // 1. Get address from args or walletProvider
+      const address = args.walletAddress || await walletProvider.getAddress();
+
+      // 2. Request nonce
+      const nonceData = await this.request(`/api/agents/${this.agentId}/wallet/nonce`, {
+        method: "POST",
+        body: JSON.stringify({ address }),
+      }) as { nonce: string; message: string };
+
+      // 3. Sign the challenge message
+      const signature = await walletProvider.signMessage(nonceData.message);
+
+      // 4. Set wallet with signature + nonce
+      const result = await this.request(`/api/agents/${this.agentId}/wallet`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          walletAddress: address,
+          walletNetwork: "base",
+          signature,
+          nonce: nonceData.nonce,
+        }),
+      }) as { id: string; name: string; walletAddress: string; walletNetwork: string; walletVerified: boolean };
+
+      const status = result.walletVerified ? "Verified" : "Unverified";
+      return `Wallet set and ${status.toLowerCase()}!\nAgent: ${result.name}\nAddress: ${result.walletAddress}\nNetwork: ${result.walletNetwork}\nVerified: ${result.walletVerified}`;
+    } catch (error) {
+      return `Error setting wallet: ${(error as Error).message}`;
     }
   }
 
