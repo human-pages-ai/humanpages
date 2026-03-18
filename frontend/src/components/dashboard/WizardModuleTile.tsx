@@ -3,32 +3,53 @@ import { Link } from 'react-router-dom';
 interface WizardModuleTileProps {
   title: string;
   stepId: string;
+  icon: string;
+  color: 'blue' | 'green' | 'orange' | 'purple' | 'amber' | 'rose' | 'teal' | 'indigo' | 'slate';
   children: React.ReactNode;
   isEmpty?: boolean;
 }
 
+const colorMap = {
+  blue:   { bg: 'bg-blue-50',   border: 'border-blue-200',   icon: 'bg-blue-100 text-blue-600',   accent: 'text-blue-600' },
+  green:  { bg: 'bg-green-50',  border: 'border-green-200',  icon: 'bg-green-100 text-green-600',  accent: 'text-green-600' },
+  orange: { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'bg-orange-100 text-orange-600', accent: 'text-orange-600' },
+  purple: { bg: 'bg-purple-50', border: 'border-purple-200', icon: 'bg-purple-100 text-purple-600', accent: 'text-purple-600' },
+  amber:  { bg: 'bg-amber-50',  border: 'border-amber-200',  icon: 'bg-amber-100 text-amber-600',  accent: 'text-amber-600' },
+  rose:   { bg: 'bg-rose-50',   border: 'border-rose-200',   icon: 'bg-rose-100 text-rose-600',   accent: 'text-rose-600' },
+  teal:   { bg: 'bg-teal-50',   border: 'border-teal-200',   icon: 'bg-teal-100 text-teal-600',   accent: 'text-teal-600' },
+  indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', icon: 'bg-indigo-100 text-indigo-600', accent: 'text-indigo-600' },
+  slate:  { bg: 'bg-slate-50',  border: 'border-slate-200',  icon: 'bg-slate-100 text-slate-600',  accent: 'text-slate-600' },
+};
+
 export default function WizardModuleTile({
   title,
   stepId,
+  icon,
+  color,
   children,
   isEmpty = false,
 }: WizardModuleTileProps) {
+  const c = colorMap[color];
+
   return (
-    <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+    <div className={`rounded-xl border p-4 sm:p-5 ${isEmpty ? 'bg-white border-slate-200' : `${c.bg} ${c.border}`}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${isEmpty ? 'bg-slate-100' : c.icon}`}>
+          {icon}
+        </div>
+        <h3 className={`text-sm font-semibold flex-1 ${isEmpty ? 'text-slate-400' : 'text-slate-800'}`}>
           {title}
         </h3>
         <Link
           to={`/onboarding?step=${stepId}`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-500"
+          className={`text-xs font-medium ${isEmpty ? 'text-orange-500 hover:text-orange-600' : `${c.accent} hover:opacity-80`}`}
         >
-          Edit
+          {isEmpty ? '+ Add' : 'Edit'}
         </Link>
       </div>
 
-      <div className={isEmpty ? 'text-sm text-gray-400 italic' : 'text-sm text-gray-900'}>
-        {children}
+      <div className={`text-sm ${isEmpty ? 'text-slate-400 italic' : 'text-slate-700'}`}>
+        {isEmpty ? 'Not set yet' : children}
       </div>
     </div>
   );

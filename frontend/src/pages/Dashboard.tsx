@@ -700,6 +700,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Notifications & Connect"
                   stepId="connect"
+                  icon="🔔"
+                  color="blue"
                   isEmpty={!profile.pushNotifications && !telegramStatus?.connected && !profile.whatsapp}
                 >
                   <div className="space-y-2">
@@ -730,6 +732,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Skills"
                   stepId="skills"
+                  icon="⚡"
+                  color="purple"
                   isEmpty={!profile.skills || profile.skills.length === 0}
                 >
                   {profile.skills && profile.skills.length > 0 ? (
@@ -743,6 +747,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Equipment"
                   stepId="equipment"
+                  icon="🔧"
+                  color="amber"
                   isEmpty={!profile.equipment || profile.equipment.length === 0}
                 >
                   {profile.equipment && profile.equipment.length > 0 ? (
@@ -756,6 +762,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Location"
                   stepId="location"
+                  icon="📍"
+                  color="green"
                   isEmpty={!profile.location}
                 >
                   <div className="space-y-2">
@@ -784,6 +792,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Education"
                   stepId="education"
+                  icon="🎓"
+                  color="indigo"
                   isEmpty={(!profile.education || profile.education.length === 0) && !profile.yearsOfExperience}
                 >
                   <div className="space-y-2">
@@ -815,6 +825,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Services"
                   stepId="services"
+                  icon="💼"
+                  color="teal"
                   isEmpty={!profile.services || profile.services.length === 0}
                 >
                   {profile.services && profile.services.length > 0 ? (
@@ -839,6 +851,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Profile"
                   stepId="profile"
+                  icon="👤"
+                  color="rose"
                   isEmpty={!profile.name}
                 >
                   <div className="space-y-2">
@@ -863,6 +877,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Availability"
                   stepId="availability"
+                  icon="📅"
+                  color="orange"
                   isEmpty={!profile.workType && !profile.weeklyCapacityHours}
                 >
                   <div className="space-y-2">
@@ -887,6 +903,8 @@ export default function Dashboard() {
                 <WizardModuleTile
                   title="Verification"
                   stepId="verification"
+                  icon="✅"
+                  color="green"
                   isEmpty={!profile.linkedinVerified && !profile.githubVerified}
                 >
                   <div className="space-y-2">
