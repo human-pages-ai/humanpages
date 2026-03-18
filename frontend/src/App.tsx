@@ -40,6 +40,7 @@ const StatusPage = lazy(() => import('./pages/StatusPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const GptSetupPage = lazy(() => import('./pages/GptSetupPage'));
 const PartnersPage = lazy(() => import('./pages/PartnersPage'));
+const UseCasesPage = lazy(() => import('./pages/UseCasesPage'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -281,6 +282,7 @@ function AppRoutes() {
       <Route path="/brand" element={<BrandKit />} />
       <Route path="/status" element={<StatusPage />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/use-cases" element={<UseCasesPage />} />
       <Route path="/partners" element={<PartnersPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/careers" element={<CareersPage />} />
@@ -328,6 +330,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/status" element={<LangWrapper><StatusPage /></LangWrapper>} />
       <Route path="/:lang/pricing" element={<LangWrapper><PricingPage /></LangWrapper>} />
+      <Route path="/:lang/use-cases" element={<LangWrapper><UseCasesPage /></LangWrapper>} />
       <Route path="/:lang/partners" element={<LangWrapper><PartnersPage /></LangWrapper>} />
       <Route path="/:lang/about" element={<LangWrapper><AboutPage /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />

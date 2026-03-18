@@ -5,6 +5,53 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
+import {
+  RocketLaunchIcon,
+  BugAntIcon,
+  DevicePhoneMobileIcon,
+  LanguageIcon,
+  EyeIcon,
+  ChatBubbleLeftRightIcon,
+} from '@heroicons/react/24/outline';
+
+const SUGGESTED_SERVICES = [
+  {
+    icon: <RocketLaunchIcon className="w-6 h-6" />,
+    title: 'Directory Submissions',
+    desc: 'Submit your product to 80+ startup directories for SEO backlinks.',
+    price: '~$5 per batch',
+  },
+  {
+    icon: <BugAntIcon className="w-6 h-6" />,
+    title: 'QA Testing',
+    desc: 'Manual cross-device testing that catches what automated tests miss.',
+    price: '$3\u201310/session',
+  },
+  {
+    icon: <DevicePhoneMobileIcon className="w-6 h-6" />,
+    title: 'Play Store Testers',
+    desc: 'Recruit 12+ real Android testers for Google\u2019s 14-day requirement.',
+    price: '$18\u201330 total',
+  },
+  {
+    icon: <LanguageIcon className="w-6 h-6" />,
+    title: 'Localization Review',
+    desc: 'Native speakers review your translations in context \u2014 not just grammar.',
+    price: '$5\u201315/language',
+  },
+  {
+    icon: <EyeIcon className="w-6 h-6" />,
+    title: 'Competitor Monitoring',
+    desc: 'Weekly intelligence on competitor pricing, features, and positioning.',
+    price: '$3\u20138/week',
+  },
+  {
+    icon: <ChatBubbleLeftRightIcon className="w-6 h-6" />,
+    title: 'Community Management',
+    desc: 'Daily moderation and engagement for Discord, Slack, or Telegram.',
+    price: '$50\u2013100/week',
+  },
+];
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -312,6 +359,49 @@ export default function DevelopersPage() {
                 Go to GPT Setup →
               </Link>
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Suggested Services */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+            What to hire humans for
+          </h2>
+          <p className="text-slate-600 mb-8">
+            Concrete tasks your agent can delegate today. Each one has a ready-made playbook.
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {SUGGESTED_SERVICES.map((svc) => (
+              <div
+                key={svc.title}
+                className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    {svc.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-slate-900 text-sm">{svc.title}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{svc.desc}</p>
+                    <span className="inline-block mt-2 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                      {svc.price}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/use-cases"
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              View full playbooks with agent workflows &rarr;
+            </Link>
           </div>
         </div>
       </section>
