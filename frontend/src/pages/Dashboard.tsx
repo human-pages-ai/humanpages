@@ -924,9 +924,6 @@ export default function Dashboard() {
                 </WizardModuleTile>
               </div>
 
-              {/* Vouch Section */}
-              <VouchSection />
-
               {/* Sharing & Referral — full width below the grid */}
               <ShareReferralSection
                 profile={profile}
@@ -973,6 +970,9 @@ export default function Dashboard() {
           {/* ───── BOOST YOUR PROFILE TAB ───── */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
+              {/* Vouching — share profile and get vouched */}
+              <VouchSection />
+
               {/* Verification + Humanity side-by-side on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <VerificationSection profile={profile} onProfileUpdate={loadProfile} />

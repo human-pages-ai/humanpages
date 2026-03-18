@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
+import { VouchCard } from '../shared/VouchCard';
 import { Vouch, Profile } from './types';
 
 export default function VouchSection() {
@@ -24,9 +25,7 @@ export default function VouchSection() {
     try {
       const data = await api.getProfile();
       setProfile(data);
-    } catch {
-      // silently fail
-    }
+    } catch { /* profile load failed */ }
   };
 
   const loadVouches = async () => {
@@ -34,23 +33,16 @@ export default function VouchSection() {
       const data = await api.getMyVouches();
       setGiven(data.given);
       setReceived(data.received);
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* vouch load failed */ }
+    finally { setLoading(false); }
   };
 
   const handleVouch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
-
     setSubmitting(true);
     try {
-      await api.createVouch({
-        username: username.trim(),
-        comment: comment.trim() || undefined,
-      });
+      await api.createVouch({ username: username.trim(), comment: comment.trim() || undefined });
       toast.success(t('dashboard.vouches.vouchSuccess'));
       setUsername('');
       setComment('');
@@ -73,95 +65,19 @@ export default function VouchSection() {
     }
   };
 
-  const handleShare = async () => {
-    if (!profile?.username) return;
-
-    const profileUrl = `https://humanpages.ai/u/${profile.username}`;
-    const shareText = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
-    const shareData = {
-      title: 'HumanPages',
-      text: shareText,
-      url: profileUrl,
-    };
-
-    // Use Web Share API if available
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          await fallbackCopy(shareText, profileUrl);
-        }
-      }
-    } else {
-      // Fallback to clipboard copy
-      await fallbackCopy(shareText, profileUrl);
-    }
-  };
-
-  const fallbackCopy = async (text: string, url: string) => {
-    try {
-      await navigator.clipboard.writeText(`${text} ${url}`);
-      toast.success(t('common.copied', 'Copied to clipboard!'));
-    } catch {
-      toast.error('Failed to copy link');
-    }
-  };
-
   if (loading) return null;
 
   return (
     <div className="space-y-4">
-      {/* Profile URL & Share Section */}
+      {/* Share & Vouch Card — same component as wizard */}
       {profile?.username && (
         <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('dashboard.vouches.yourProfile', 'Your Profile')}</h2>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Profile URL</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={`humanpages.ai/u/${profile.username}`}
-                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50"
-              />
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(`https://humanpages.ai/u/${profile.username}`);
-                  toast.success('Copied to clipboard!');
-                }}
-                className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-
-          {/* Vouch Progress */}
-          <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-700">Vouches Received</p>
-              <span className="text-2xl font-bold text-orange-500">{received.length}/10</span>
-            </div>
-            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-orange-500 transition-all"
-                style={{ width: `${Math.min((received.length / 10) * 100, 100)}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-slate-500 mt-2">Share your profile and ask colleagues to vouch for you</p>
-          </div>
-
-          <button
-            onClick={handleShare}
-            className="w-full py-2.5 bg-blue-50 text-blue-700 font-medium rounded-lg hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Share Profile
-          </button>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Get Vouched</h2>
+          <VouchCard
+            username={profile.username}
+            vouchCount={received.length}
+            vouchTarget={10}
+          />
         </div>
       )}
 
@@ -186,18 +102,13 @@ export default function VouchSection() {
             {received.map((v) => (
               <div key={v.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <div className="shrink-0 w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-medium">
-                  {v.voucher.name.charAt(0).toUpperCase()}
+                  {(v.voucher.username || '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900 text-sm">{v.voucher.name}</span>
-                    {v.voucher.username && (
-                      <span className="text-xs text-slate-400">@{v.voucher.username}</span>
-                    )}
-                  </div>
-                  {v.comment && (
-                    <p className="text-sm text-slate-600 mt-0.5">{v.comment}</p>
-                  )}
+                  <span className="font-medium text-slate-900 text-sm">
+                    {v.voucher.username ? `@${v.voucher.username}` : 'Anonymous'}
+                  </span>
+                  {v.comment && <p className="text-sm text-slate-600 mt-0.5">{v.comment}</p>}
                   <span className="text-xs text-slate-400 mt-1 block">
                     {new Date(v.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
@@ -227,7 +138,6 @@ export default function VouchSection() {
           )}
         </div>
 
-        {/* Vouch form */}
         {showForm && (
           <form onSubmit={handleVouch} className="mb-4 p-4 bg-slate-50 rounded-lg space-y-3">
             <div>
@@ -276,10 +186,9 @@ export default function VouchSection() {
             {given.map((v) => (
               <div key={v.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-medium text-slate-900 text-sm">{v.vouchee.name}</span>
-                  {v.vouchee.username && (
-                    <span className="text-xs text-slate-400">@{v.vouchee.username}</span>
-                  )}
+                  <span className="font-medium text-slate-900 text-sm">
+                    {v.vouchee.username ? `@${v.vouchee.username}` : 'Anonymous'}
+                  </span>
                   {v.comment && (
                     <span className="text-xs text-slate-500 truncate hidden sm:inline">— {v.comment}</span>
                   )}
