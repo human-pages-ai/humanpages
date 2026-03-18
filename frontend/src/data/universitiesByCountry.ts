@@ -5,6 +5,20 @@
  */
 
 const universitiesByCountry: Record<string, string[]> = {
+  // Albania - Top 10
+  'Albania': [
+    'University of Tirana',
+    'Polytechnic University of Tirana',
+    'Aleksandër Moisiu University',
+    'University of Vlora',
+    'University of Durrës',
+    'Luigj Gurakuqi University Shkodra',
+    'Ismail Qemali University of Vlorë',
+    'University of Korça',
+    'Epoka University',
+    'Albanian University',
+  ],
+
   // Nigeria - Top 15
   'Nigeria': [
     'University of Lagos',

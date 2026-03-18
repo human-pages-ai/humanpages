@@ -115,7 +115,9 @@ export default function Onboarding() {
     whatsappNumber: form.whatsappNumber,
     timezone: form.timezone, weeklyCapacityHours: form.weeklyCapacityHours,
     responseTimeCommitment: form.responseTimeCommitment, workType: form.workType,
-    yearsOfExperience: form.yearsOfExperience, industries: form.industries,
+    yearsOfExperience: form.yearsOfExperience,
+    freelancerJobsRange: form.freelancerJobsRange, freelancePlatforms: form.freelancePlatforms,
+    industries: form.industries,
     equipment: form.equipment,
     cvUploaded: cv.cvUploaded && cv.cvData != null,
     cvData: cv.cvData,
@@ -387,6 +389,8 @@ export default function Onboarding() {
           <StepEducation
             educationEntries={form.educationEntries} setEducationEntries={form.setEducationEntries}
             yearsOfExperience={form.yearsOfExperience} setYearsOfExperience={form.setYearsOfExperience}
+            freelancerJobsRange={form.freelancerJobsRange} setFreelancerJobsRange={form.setFreelancerJobsRange}
+            freelancePlatforms={form.freelancePlatforms} setFreelancePlatforms={form.setFreelancePlatforms}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );

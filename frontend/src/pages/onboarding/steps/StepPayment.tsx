@@ -51,7 +51,10 @@ export function StepPayment({
 
         {/* Wallet Address Input */}
         <div className="mb-3">
-          <label htmlFor="wallet-address" className="block text-sm font-medium text-slate-700 mb-1">Ethereum / Base wallet address</label>
+          <label htmlFor="wallet-address" className="block text-sm font-medium text-slate-700 mb-2">Ethereum / Base wallet address</label>
+          <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+            You can set your wallet address now or connect it later from your dashboard using Privy for a verified connection.
+          </p>
           <input
             id="wallet-address"
             type="text"
@@ -60,7 +63,7 @@ export function StepPayment({
             placeholder="0x..."
             className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono"
           />
-          <p className="text-xs text-slate-500 mt-1">Used for USDC payments. You can connect via Privy from your dashboard later.</p>
+          <p className="text-xs text-slate-500 mt-2">Or paste your wallet address manually. You'll be able to connect via Privy from your dashboard.</p>
         </div>
       </div>
 

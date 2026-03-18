@@ -101,6 +101,10 @@ export interface UseProfileFormReturn {
   // Agent-facing structured fields
   yearsOfExperience: number | null;
   setYearsOfExperience: (v: number | null) => void;
+  freelancerJobsRange: string;
+  setFreelancerJobsRange: (v: string) => void;
+  freelancePlatforms: string;
+  setFreelancePlatforms: (v: string) => void;
   industries: string[];
   setIndustries: React.Dispatch<React.SetStateAction<string[]>>;
   equipment: string[];
@@ -172,6 +176,8 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
 
   // Agent-facing structured fields
   const [yearsOfExperience, setYearsOfExperience] = useState<number | null>(draft?.yearsOfExperience ?? null);
+  const [freelancerJobsRange, setFreelancerJobsRange] = useState(draft?.freelancerJobsRange || '');
+  const [freelancePlatforms, setFreelancePlatforms] = useState(draft?.freelancePlatforms || '');
   const [industries, setIndustries] = useState<string[]>(draft?.industries || []);
   const [equipment, setEquipment] = useState<string[]>(draft?.equipment || []);
 
@@ -367,7 +373,9 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
     whatsappNumber, setWhatsappNumber,
     timezone, setTimezone, weeklyCapacityHours, setWeeklyCapacityHours,
     responseTimeCommitment, setResponseTimeCommitment, workType, setWorkType,
-    yearsOfExperience, setYearsOfExperience, industries, setIndustries,
+    yearsOfExperience, setYearsOfExperience,
+    freelancerJobsRange, setFreelancerJobsRange, freelancePlatforms, setFreelancePlatforms,
+    industries, setIndustries,
     equipment, setEquipment,
     emailVerified, profileLoading, profileCompleted, error, setError,
     mountedRef, draft,

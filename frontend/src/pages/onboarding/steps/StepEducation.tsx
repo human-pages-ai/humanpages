@@ -13,6 +13,10 @@ interface StepEducationProps {
   setEducationEntries: React.Dispatch<React.SetStateAction<EducationEntry[]>>;
   yearsOfExperience: number | null;
   setYearsOfExperience: (v: number | null) => void;
+  freelancerJobsRange: string;
+  setFreelancerJobsRange: (v: string) => void;
+  freelancePlatforms: string;
+  setFreelancePlatforms: (v: string) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
@@ -23,13 +27,16 @@ export function StepEducation({
   setEducationEntries,
   yearsOfExperience,
   setYearsOfExperience,
+  freelancerJobsRange,
+  setFreelancerJobsRange,
+  freelancePlatforms,
+  setFreelancePlatforms,
   onNext,
   onSkip,
   error,
 }: StepEducationProps) {
   const [addingEducation, setAddingEducation] = useState(false);
   const [newEducation, setNewEducation] = useState<EducationEntry>({ institution: '', degree: '', field: '', country: '' });
-  const [jobsCompleted, setJobsCompleted] = useState(0);
 
   const handleAddEducation = () => {
     if (!newEducation.institution.trim() || !newEducation.degree.trim() || !newEducation.field.trim()) return;
@@ -82,25 +89,38 @@ export function StepEducation({
         <p className="text-xs text-slate-400 mt-1">Helps agents find experienced professionals</p>
       </div>
 
-      {/* Jobs Completed */}
+      {/* Jobs Completed as Freelancer */}
       <div className="mb-6">
-        <label htmlFor="jobs-completed" className="block text-sm font-medium text-slate-700 mb-2">Jobs completed as freelancer</label>
+        <label htmlFor="jobs-range" className="block text-sm font-medium text-slate-700 mb-2">Jobs completed as freelancer</label>
+        <select
+          id="jobs-range"
+          value={freelancerJobsRange}
+          onChange={(e) => setFreelancerJobsRange(e.target.value)}
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white"
+        >
+          <option value="">Select a range...</option>
+          <option value="new">New to freelancing</option>
+          <option value="1-10">1-10 jobs</option>
+          <option value="10-50">10-50 jobs</option>
+          <option value="50-100">50-100 jobs</option>
+          <option value="100-500">100-500 jobs</option>
+          <option value="500+">500+ jobs</option>
+        </select>
+        <p className="text-xs text-slate-400 mt-1">Your experience level on platforms like Upwork, Fiverr, etc.</p>
+      </div>
+
+      {/* Freelance Platforms */}
+      <div className="mb-6">
+        <label htmlFor="freelance-platforms" className="block text-sm font-medium text-slate-700 mb-2">Freelance platforms (Optional)</label>
         <input
-          id="jobs-completed"
-          type="number"
-          inputMode="numeric"
-          value={jobsCompleted}
-          onChange={(e) => {
-            const val = e.target.value;
-            const num = parseInt(val) || 0;
-            if (!isNaN(num) && num >= 0 && num <= 1000) setJobsCompleted(num);
-          }}
-          min={0}
-          max={1000}
-          placeholder="0"
+          id="freelance-platforms"
+          type="text"
+          value={freelancePlatforms}
+          onChange={(e) => setFreelancePlatforms(e.target.value)}
+          placeholder="e.g., Level 2 Seller on Fiverr, Top Rated on Upwork..."
           className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
         />
-        <p className="text-xs text-slate-400 mt-1">Total projects completed on platforms like Upwork, Fiverr, etc.</p>
+        <p className="text-xs text-slate-400 mt-1">Share your reputation or badges (e.g., seller level, badges, ratings) without sharing profile links</p>
       </div>
 
       {/* Education Section */}
@@ -143,7 +163,7 @@ export function StepEducation({
               </div>
               <div>
                 <SearchableCombobox id="edu-inst" label="Institution" value={newEducation.institution} onChange={(v) => setNewEducation({ ...newEducation, institution: v })} options={newEducation.country ? getUniversitiesForCountry(newEducation.country) : []} placeholder="Type your institution name..." required allowFreeText />
-                <p className="text-xs text-slate-500 font-medium mt-1">Tip: Type any institution name, even if it's not in the list</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">Type any name — school, bootcamp, online course, or self-taught</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
