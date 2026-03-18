@@ -2,22 +2,6 @@ import { useState } from 'react';
 
 interface StepFinishProps {
   emailVerified: boolean;
-  linkedinUrl: string;
-  setLinkedinUrl: (v: string) => void;
-  githubUrl: string;
-  setGithubUrl: (v: string) => void;
-  twitterUrl: string;
-  setTwitterUrl: (v: string) => void;
-  websiteUrl: string;
-  setWebsiteUrl: (v: string) => void;
-  instagramUrl: string;
-  setInstagramUrl: (v: string) => void;
-  youtubeUrl: string;
-  setYoutubeUrl: (v: string) => void;
-  facebookUrl: string;
-  setFacebookUrl: (v: string) => void;
-  tiktokUrl: string;
-  setTiktokUrl: (v: string) => void;
   platformPresence: string[];
   setPlatformPresence: (v: string[]) => void;
   onLinkedInConnect: () => Promise<void>;
@@ -42,18 +26,13 @@ interface StepFinishProps {
 
 export function StepFinish({
   emailVerified,
-  linkedinUrl, setLinkedinUrl, githubUrl, setGithubUrl,
-  twitterUrl, setTwitterUrl, websiteUrl, setWebsiteUrl,
-  instagramUrl, setInstagramUrl, youtubeUrl, setYoutubeUrl,
-  facebookUrl, setFacebookUrl, tiktokUrl, setTiktokUrl,
   platformPresence, setPlatformPresence,
   onLinkedInConnect, onGitHubConnect,
-  onNext, onSkip: _onSkip, isLoading, error, setError,
+  onNext, onSkip: _onSkip, isLoading, error,
   profileData,
 }: StepFinishProps) {
   const [connectingLI, setConnectingLI] = useState(false);
   const [connectingGH, setConnectingGH] = useState(false);
-  const [showMoreSocials, setShowMoreSocials] = useState(true);
   const [newPlatformPresence, setNewPlatformPresence] = useState('');
 
   const handleLI = async () => { setConnectingLI(true); try { await onLinkedInConnect(); } finally { setConnectingLI(false); } };
@@ -67,7 +46,6 @@ export function StepFinish({
     (d.skills?.length || 0) > 0, (d.skills?.length || 0) >= 5,
     (d.languageEntries?.length || 0) > 0, (d.educationEntries?.length || 0) > 0,
     (d.services?.length || 0) > 0,
-    !!linkedinUrl?.trim() || !!githubUrl?.trim() || !!twitterUrl?.trim() || !!websiteUrl?.trim(),
     emailVerified,
   ];
   const filled = checks.filter(Boolean).length;
@@ -79,7 +57,6 @@ export function StepFinish({
     slate: { bg: 'bg-slate-50 border-slate-200', bar: 'bg-slate-500', text: 'text-slate-600' },
   };
   const c = colorMap[color];
-  const inputCls = "w-full px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500";
 
   return (
     <>
@@ -112,31 +89,6 @@ export function StepFinish({
         </div>
       </div>
 
-      {/* Social & Web Presence */}
-      <div className="mb-6 pt-4 border-t border-slate-200">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1">Social & Web Presence</h3>
-        <p className="text-xs text-slate-500 mb-3">Help clients find you across the web</p>
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label htmlFor="linkedin-url" className="block text-xs font-medium text-slate-600 mb-1">LinkedIn</label><input id="linkedin-url" type="url" value={linkedinUrl} onChange={(e) => { setLinkedinUrl(e.target.value); if (error) setError(''); }} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setLinkedinUrl('https://' + val); }} placeholder="linkedin.com/in/..." className={inputCls} /></div>
-            <div><label htmlFor="github-url" className="block text-xs font-medium text-slate-600 mb-1">GitHub</label><input id="github-url" type="url" value={githubUrl} onChange={(e) => { setGithubUrl(e.target.value); if (error) setError(''); }} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setGithubUrl('https://' + val); }} placeholder="github.com/..." className={inputCls} /></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label htmlFor="twitter-url" className="block text-xs font-medium text-slate-600 mb-1">Twitter / X</label><input id="twitter-url" type="url" value={twitterUrl} onChange={(e) => { setTwitterUrl(e.target.value); if (error) setError(''); }} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setTwitterUrl('https://' + val); }} placeholder="x.com/..." className={inputCls} /></div>
-            <div><label htmlFor="website-url" className="block text-xs font-medium text-slate-600 mb-1">Personal Website</label><input id="website-url" type="url" value={websiteUrl} onChange={(e) => { setWebsiteUrl(e.target.value); if (error) setError(''); }} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setWebsiteUrl('https://' + val); }} placeholder="yoursite.com" className={inputCls} /></div>
-          </div>
-          {!showMoreSocials ? (
-            <button type="button" onClick={() => setShowMoreSocials(true)} className="w-full py-2.5 min-h-[44px] text-xs text-orange-600 hover:text-orange-700 active:text-orange-800 font-medium border border-dashed border-orange-200 rounded-lg hover:bg-orange-50 active:bg-orange-100 transition-colors">+ More social accounts (Instagram, YouTube, TikTok, Facebook)</button>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div><label htmlFor="instagram-url" className="block text-xs font-medium text-slate-600 mb-1">Instagram</label><input id="instagram-url" type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setInstagramUrl('https://' + val); }} placeholder="instagram.com/..." className={inputCls} /></div>
-              <div><label htmlFor="youtube-url" className="block text-xs font-medium text-slate-600 mb-1">YouTube</label><input id="youtube-url" type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setYoutubeUrl('https://' + val); }} placeholder="youtube.com/@..." className={inputCls} /></div>
-              <div><label htmlFor="tiktok-url" className="block text-xs font-medium text-slate-600 mb-1">TikTok</label><input id="tiktok-url" type="url" value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setTiktokUrl('https://' + val); }} placeholder="tiktok.com/@..." className={inputCls} /></div>
-              <div><label htmlFor="facebook-url" className="block text-xs font-medium text-slate-600 mb-1">Facebook</label><input id="facebook-url" type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setFacebookUrl('https://' + val); }} placeholder="facebook.com/..." className={inputCls} /></div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Platform Presence */}
       <div className="mb-6 pt-4 border-t border-slate-200">

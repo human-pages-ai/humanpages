@@ -372,17 +372,20 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
             {/* Category with Subcategories */}
             <div className="mb-3">
               <label htmlFor="service-category" className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-              <select
+              <input
                 id="service-category"
+                list="service-categories-list"
+                type="text"
                 value={newService.category}
                 onChange={(e) => { setNewService({ ...newService, category: e.target.value, subcategory: '' }); setCategoryError(false); setShowTitleSuggestions(false); }}
+                placeholder="Start typing to find..."
                 className={`w-full px-3 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${categoryError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`}
-              >
-                <option value="">Select a category...</option>
+              />
+              <datalist id="service-categories-list">
                 {POPULAR_SERVICE_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat} />
                 ))}
-              </select>
+              </datalist>
               {categoryError && <p className="text-xs text-red-500 mt-1">Please select a category</p>}
             </div>
 
@@ -484,11 +487,18 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                     <option value="PLN">PLN - Polish Zloty</option>
                     <option value="CZK">CZK - Czech Koruna</option>
                     <option value="HUF">HUF - Hungarian Forint</option>
+                    <option value="RON">RON - Romanian Leu</option>
+                    <option value="BGN">BGN - Bulgarian Lev</option>
                     <option value="RUB">RUB - Russian Ruble</option>
                     <option value="UAH">UAH - Ukrainian Hryvnia</option>
+                    <option value="GEL">GEL - Georgian Lari</option>
+                    <option value="AMD">AMD - Armenian Dram</option>
+                    <option value="AZN">AZN - Azerbaijani Manat</option>
+                    <option value="KZT">KZT - Kazakhstani Tenge</option>
+                    <option value="UZS">UZS - Uzbekistani Som</option>
                     <option value="ILS">ILS - Israeli Shekel</option>
-                    <option value="SAR">SAR - Saudi Riyal</option>
                     <option value="AED">AED - UAE Dirham</option>
+                    <option value="SAR">SAR - Saudi Riyal</option>
                     <option value="QAR">QAR - Qatari Riyal</option>
                     <option value="KWD">KWD - Kuwaiti Dinar</option>
                     <option value="BHD">BHD - Bahraini Dinar</option>
@@ -496,6 +506,17 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                     <option value="JOD">JOD - Jordanian Dinar</option>
                     <option value="MAD">MAD - Moroccan Dirham</option>
                     <option value="TND">TND - Tunisian Dinar</option>
+                    <option value="TWD">TWD - Taiwan Dollar</option>
+                    <option value="MYR">MYR - Malaysian Ringgit</option>
+                    <option value="LKR">LKR - Sri Lankan Rupee</option>
+                    <option value="NPR">NPR - Nepalese Rupee</option>
+                    <option value="MMK">MMK - Myanmar Kyat</option>
+                    <option value="UGX">UGX - Ugandan Shilling</option>
+                    <option value="TZS">TZS - Tanzanian Shilling</option>
+                    <option value="ETB">ETB - Ethiopian Birr</option>
+                    <option value="XOF">XOF - West African CFA Franc</option>
+                    <option value="JMD">JMD - Jamaican Dollar</option>
+                    <option value="TTD">TTD - Trinidad Dollar</option>
                   </datalist>
                 </div>
                 <div>

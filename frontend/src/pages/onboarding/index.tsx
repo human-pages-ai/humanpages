@@ -443,14 +443,6 @@ export default function Onboarding() {
         return (
           <StepFinish
             emailVerified={form.emailVerified}
-            linkedinUrl={form.linkedinUrl} setLinkedinUrl={form.setLinkedinUrl}
-            githubUrl={form.githubUrl} setGithubUrl={form.setGithubUrl}
-            twitterUrl={form.twitterUrl} setTwitterUrl={form.setTwitterUrl}
-            websiteUrl={form.websiteUrl} setWebsiteUrl={form.setWebsiteUrl}
-            instagramUrl={form.instagramUrl} setInstagramUrl={form.setInstagramUrl}
-            youtubeUrl={form.youtubeUrl} setYoutubeUrl={form.setYoutubeUrl}
-            facebookUrl={form.facebookUrl} setFacebookUrl={form.setFacebookUrl}
-            tiktokUrl={form.tiktokUrl} setTiktokUrl={form.setTiktokUrl}
             platformPresence={form.platformPresence} setPlatformPresence={form.setPlatformPresence}
             onLinkedInConnect={() => openExternalUrl(() => api.getLinkedInVerifyUrl(), 'LinkedIn')}
             onGitHubConnect={() => openExternalUrl(() => api.getGitHubVerifyUrl(), 'GitHub')}
