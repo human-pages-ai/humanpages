@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from './mocks';
-import Onboarding from '../pages/Onboarding';
+import Onboarding from '../pages/onboarding';
 import { api } from '../lib/api';
 
 // Mock API

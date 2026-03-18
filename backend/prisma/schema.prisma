@@ -181,6 +181,21 @@ model Human {
   preferredLanguage String @default("en") // UI/email language preference
   isAvailable   Boolean  @default(true) // Open for work
 
+  // ===== AVAILABILITY & CAPACITY (Agent-Facing Filters) =====
+  // These are HIGH-impact agent search filters that CV parsing cannot extract.
+  // Collected during the 5-10s CV processing window (Steps 2-3 of wizard).
+  timezone            String?   // IANA timezone (e.g., "Africa/Lagos", "Asia/Manila") — auto-detected via browser
+  weeklyCapacityHours Int?      // Self-reported: 5, 10, 20, 30, 40+ hours/week available
+  responseTimeCommitment String? // "within_1h" | "within_4h" | "within_24h" | "flexible"
+  workType            String?   // Primary: "digital" | "physical" | "both" — inferred from services, refinable
+  industries          String[] @default([]) // Domain experience: "healthcare", "finance", "ecommerce", etc.
+  schedulePattern     String?   // "morning" | "afternoon" | "evening" | "flexible" — local timezone window
+  preferredTaskDuration String? // "micro" (1-2h) | "half_day" (3-5h) | "full_project" (10+h) | "any"
+  earliestStartDate   DateTime? // When they can start new work (null = immediately)
+
+  // ===== PROFILE COMPLETENESS (System-Computed) =====
+  profileCompleteness Int       @default(0) // 0-100 computed score for search ranking
+
   // ===== ECONOMICS (Deal Terms) =====
   minRateUsdc      Decimal? @db.Decimal(18, 6) // Minimum rate filter
   rateCurrency     String   @default("USD") // Currency for rate fields (USD, EUR, TRY, etc.)
@@ -349,6 +364,15 @@ model Human {
   @@index([lastActiveAt])
   @@index([isAvailable, lastActiveAt])
   @@index([humanStatus])
+  @@index([timezone])
+  @@index([weeklyCapacityHours])
+  @@index([responseTimeCommitment])
+  @@index([workType])
+  @@index([industries], type: Gin)
+  @@index([schedulePattern])
+  @@index([preferredTaskDuration])
+  @@index([earliestStartDate])
+  @@index([profileCompleteness])
 }
 
 model FiatPaymentMethod {

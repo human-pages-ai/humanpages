@@ -1360,7 +1360,7 @@ export const api = {
     });
   },
 
-  addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; startYear?: number; endYear?: number }) =>
+  addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; year?: number }) =>
     request('/cv/education', { method: 'POST', body: JSON.stringify(data) }),
 
   deleteEducation: (id: string) =>

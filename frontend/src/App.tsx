@@ -17,7 +17,7 @@ const FundingPage = lazy(() => import('./pages/FundingPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Onboarding = lazy(() => import('./pages/onboarding'));
 const Welcome = lazy(() => import('./pages/Welcome'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const LinkedInVerifyCallback = lazy(() => import('./pages/LinkedInVerifyCallback'));

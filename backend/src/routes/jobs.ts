@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
@@ -67,13 +68,13 @@ const VALID_PAYMENT_PREFERENCES = ['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STRE
 
 // Schema for creating a job offer (called by agents)
 const createJobSchema = z.object({
-  humanId: z.string().min(1),
+  humanId: z.string().uuid('humanId must be a valid UUID'),
   agentId: z.string().min(1),
   agentName: z.string().max(200).optional(),
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   category: z.string().max(100).optional(),
-  priceUsdc: z.number().positive(),
+  priceUsdc: z.number().positive().max(999999999),
   // Payment mode & timing
   paymentMode: z.enum(['ONE_TIME', 'STREAM']).optional().default('ONE_TIME'),
   paymentTiming: z.enum(['upfront', 'upon_completion']).optional().default('upfront'),
@@ -501,6 +502,9 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         })),
       });
     }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({ error: 'A job with these details already exists', code: 'DUPLICATE' });
+    }
     logger.error({ err: error }, 'Create job error');
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -829,39 +833,48 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 // Human accepts a job offer
 router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
   try {
-    const job = await prisma.job.findUnique({
-      where: { id: req.params.id },
+    // Use transaction to prevent race condition where two users accept the same job
+    const result = await prisma.$transaction(async (tx) => {
+      const job = await tx.job.findUnique({
+        where: { id: req.params.id },
+      });
+
+      if (!job) {
+        return null;
+      }
+
+      if (job.humanId !== req.userId) {
+        return null;
+      }
+
+      if (job.status !== 'PENDING') {
+        return null;
+      }
+
+      // Compute response time (minutes from creation to first human action)
+      const responseTimeMinutes = (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60);
+
+      return tx.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'ACCEPTED',
+          acceptedAt: new Date(),
+          lastActionBy: 'HUMAN',
+          responseTimeMinutes: Math.round(responseTimeMinutes * 10) / 10,
+        },
+      });
     });
 
-    if (!job) {
-      return res.status(404).json({ error: 'Job not found' });
+    if (!result) {
+      return res.status(409).send({ error: 'Job already accepted or cancelled' });
     }
 
-    if (job.humanId !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
-
-    if (job.status !== 'PENDING') {
-      return res.status(400).json({ error: `Cannot accept job in ${job.status} status` });
-    }
-
-    // Compute response time (minutes from creation to first human action)
-    const responseTimeMinutes = (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60);
-
-    const updated = await prisma.job.update({
-      where: { id: job.id },
-      data: {
-        status: 'ACCEPTED',
-        acceptedAt: new Date(),
-        lastActionBy: 'HUMAN',
-        responseTimeMinutes: Math.round(responseTimeMinutes * 10) / 10,
-      },
-    });
+    const updated = result;
 
     // Fire webhook with contact info on acceptance
-    if (job.callbackUrl) {
+    if (updated.callbackUrl) {
       const human = await prisma.human.findUnique({
-        where: { id: job.humanId },
+        where: { id: updated.humanId },
         select: {
           name: true,
           contactEmail: true,
@@ -871,8 +884,9 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
           signal: true,
         },
       });
+      const { callbackSecret, ...safeJob } = updated;
       fireWebhook(
-        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        { ...safeJob, callbackUrl: updated.callbackUrl, callbackSecret: updated.callbackSecret },
         'job.accepted',
         {
           humanName: human?.name,
@@ -884,11 +898,12 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
           },
         },
       );
+
     }
 
     // Fire agent.funding_needed webhook (async, non-blocking) if USDC balance is insufficient
     // The agent can ignore this if they plan to use fiat direct payment
-    if (job.registeredAgentId) {
+    if (updated.registeredAgentId) {
       // Fire-and-forget: check balance and notify agent
       (async () => {
         try {
@@ -915,13 +930,13 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
             args: [firstWallet.address as `0x${string}`],
           });
           const balance = parseFloat(formatUnits(balanceRaw as bigint, TOKEN_CONFIGS.USDC.decimals));
-          const required = parseFloat(job.priceUsdc.toString());
+          const required = parseFloat(updated.priceUsdc.toString());
 
           if (balance < required) {
             deliverWebhook(agent.webhookUrl, {
               event: 'agent.funding_needed',
-              agentId: job.registeredAgentId,
-              jobId: job.id,
+              agentId: updated.registeredAgentId,
+              jobId: updated.id,
               requiredAmount: required.toFixed(2),
               currentBalance: balance.toFixed(2),
               currency: 'USDC',
@@ -930,7 +945,7 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
             }, agent.webhookSecret);
           }
         } catch (err) {
-          logger.error({ err, agentId: job.registeredAgentId, jobId: job.id, network: 'base' }, 'funding_needed webhook failed — agent may not know they need funding');
+          logger.error({ err, agentId: updated.registeredAgentId, jobId: updated.id, network: 'base' }, 'funding_needed webhook failed — agent may not know they need funding');
         }
       })();
     }
@@ -1152,6 +1167,7 @@ router.patch('/:id/paid', async (req, res) => {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     if (error instanceof PaymentVerificationError) {
+      logger.warn({ err: error, jobId: req.params.id }, 'Payment verification failed');
       return res.status(400).json(error.toResponse());
     }
     logger.error({ err: error }, 'Mark paid error');
@@ -1190,7 +1206,7 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
     } else if (isUponCompletion && job.status === 'ACCEPTED') {
       // Upon-completion flow: ACCEPTED → SUBMITTED (requires evidence)
       const body = z.object({
-        message: z.string().min(20, 'Please describe what you did in at least 20 characters').max(2000, 'Message must be 2000 characters or fewer'),
+        message: z.string().min(20, 'Please describe what you did in at least 20 characters').max(5000),
       }).parse(req.body);
 
       // Post evidence to chat before status update
@@ -1213,9 +1229,9 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
         },
       });
 
-      if (job.callbackUrl) {
+      if (updated.callbackUrl) {
         fireWebhook(
-          { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+          { ...updated, callbackUrl: updated.callbackUrl, callbackSecret: updated.callbackSecret },
           'job.submitted',
         );
       }
@@ -2173,7 +2189,7 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
       // Fire webhook
       if (job.callbackUrl) {
         fireWebhook(
-          { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+          { ...updated, callbackUrl: updated.callbackUrl, callbackSecret: updated.callbackSecret },
           'job.stream_started',
           { method: 'MICRO_TRANSFER', network: networkLower },
         );

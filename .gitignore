@@ -36,6 +36,14 @@ mcp-publisher
 # TypeScript incremental build cache
 *.tsbuildinfo
 
+# Temp utility scripts
+add-env.sh
+cleanup_vm.sh
+remove-listings.sh
+
+# Vitest temp files
+*.timestamp-*
+
 # Pre-push hook logs
 .pre-push-errors.log
 .pre-push-stage.log

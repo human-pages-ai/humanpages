@@ -62,7 +62,7 @@ function expandSkillSynonyms(input: string): string {
   const lower = expanded.toLowerCase();
   for (const [alt, canonical] of Object.entries(ENGLISH_SKILL_SYNONYMS)) {
     if (lower.includes(alt)) {
-      expanded = expanded.replace(new RegExp(alt, 'gi'), canonical);
+      expanded = expanded.replace(new RegExp(alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), canonical);
     }
   }
   return expanded;
@@ -87,6 +87,13 @@ const publicHumanSelect = {
   languages: true,
   yearsOfExperience: true,
   isAvailable: true,
+  timezone: true,
+  weeklyCapacityHours: true,
+  responseTimeCommitment: true,
+  workType: true,
+  schedulePattern: true,
+  preferredTaskDuration: true,
+  industries: true,
   minRateUsdc: true,
   rateCurrency: true,
   minRateUsdEstimate: true,
@@ -237,7 +244,17 @@ const updateProfileSchema = z.object({
 
   // Capabilities
   skills: z.array(z.string().max(100)).max(50).optional(),
-  equipment: z.array(z.string().max(100)).max(50).nullable().optional().transform(v => v ?? undefined),
+  equipment: z.array(z.string().trim().min(1, 'Equipment item cannot be empty').max(50, 'Equipment item is too long')).max(20, 'Maximum 20 equipment items allowed').nullable().optional().transform((v) => {
+    if (!v) return undefined;
+    // Deduplicate and normalize
+    const seen = new Set<string>();
+    return v.filter(item => {
+      const normalized = item.trim().toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  }),
   languages: z.array(z.string().max(100)).max(30).nullable().optional().transform(v => v ?? undefined),
   yearsOfExperience: z.number().int().min(0).max(70).optional().nullable(),
   preferredLanguage: z.enum(['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th']).optional(),
@@ -270,6 +287,18 @@ const updateProfileSchema = z.object({
 
   // Payment methods
   paymentMethods: z.string().optional().nullable(),
+
+  // Availability & capacity (agent-facing)
+  timezone: z.string().max(100).optional().nullable(),
+  weeklyCapacityHours: z.number().int().min(0).max(168).optional().nullable(),
+  responseTimeCommitment: z.enum(['within_1h', 'within_4h', 'within_24h', 'flexible']).optional().nullable(),
+  workType: z.enum(['digital', 'physical', 'both']).optional().nullable(),
+  schedulePattern: z.enum(['morning', 'afternoon', 'evening', 'flexible']).optional().nullable(),
+  preferredTaskDuration: z.enum(['micro', 'half_day', 'full_project', 'any']).optional().nullable(),
+  industries: z.array(z.string().max(100)).max(30).optional().nullable().transform(v => v ?? undefined),
+
+  // External profiles (Fiverr, Upwork, etc.)
+  externalProfiles: z.array(z.string().min(1).max(500)).max(10).optional(),
 
   // Privacy
   hideContact: z.boolean().optional(),
@@ -611,19 +640,26 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
     const dataToSave: any = { ...updates, lastActiveAt: new Date() };
     const rateChanged = updates.minRateUsdc !== undefined || updates.rateCurrency !== undefined;
     const urlLockNeeded = updates.linkedinUrl !== undefined || updates.githubUrl !== undefined;
+    const errors: string[] = [];
     if (rateChanged || urlLockNeeded) {
       // Need current human to get rate values and verification state
       const current = await prisma.human.findUnique({
         where: { id: req.userId },
-        select: { minRateUsdc: true, rateCurrency: true, linkedinVerified: true, githubVerified: true },
+        select: { minRateUsdc: true, rateCurrency: true, linkedinVerified: true, githubVerified: true, linkedinUrl: true, githubUrl: true },
       });
 
-      // Prevent changing verified URLs — silently strip the update
+      // Prevent changing verified URLs — report error to user
       if (current?.linkedinVerified && updates.linkedinUrl !== undefined) {
+        errors.push('LinkedIn URL is verified and cannot be changed. Contact support if you need to update it.');
         delete dataToSave.linkedinUrl;
       }
       if (current?.githubVerified && updates.githubUrl !== undefined) {
+        errors.push('GitHub URL is verified and cannot be changed. Contact support if you need to update it.');
         delete dataToSave.githubUrl;
+      }
+
+      if (errors.length > 0) {
+        return res.status(400).json({ error: errors.join(' ') });
       }
       const rate = updates.minRateUsdc !== undefined ? updates.minRateUsdc : current?.minRateUsdc?.toNumber() ?? null;
       const currency = updates.rateCurrency || current?.rateCurrency || 'USD';
@@ -960,6 +996,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       offset = '0',
     } = req.query;
 
+    if (skill && (skill as string).length > 500) {
+      return res.status(400).json({ error: 'Skill query too long (max 500 characters)' });
+    }
+    if (location && (location as string).length > 500) {
+      return res.status(400).json({ error: 'Location query too long (max 500 characters)' });
+    }
+
     const where: any = {
       // Identity verified OR has completed at least one job (proven real)
       OR: [
@@ -983,12 +1026,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Filter by equipment
     if (equipment) {
-      where.equipment = { has: equipment as string };
+      const equipStr = String(equipment).slice(0, 200);
+      where.equipment = { has: equipStr };
     }
 
     // Filter by language
     if (language) {
-      where.languages = { has: language as string };
+      const langStr = String(language).slice(0, 100);
+      where.languages = { has: langStr };
     }
 
     // Location: geocode text → coordinates if lat/lng not provided explicitly
@@ -1000,7 +1045,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     if (lat && lng) {
       centerLat = parseFloat(lat as string);
       centerLng = parseFloat(lng as string);
+      if (isNaN(centerLat) || centerLat < -90 || centerLat > 90 ||
+          isNaN(centerLng) || centerLng < -180 || centerLng > 180) {
+        return res.status(400).json({ error: 'Invalid coordinates (lat: -90 to 90, lng: -180 to 180)' });
+      }
       radiusKm = radius ? parseFloat(radius as string) : DEFAULT_SEARCH_RADIUS_KM;
+      if (radiusKm !== undefined && (isNaN(radiusKm) || radiusKm <= 0 || radiusKm > 40075)) {
+        return res.status(400).json({ error: 'Invalid radius' });
+      }
     } else if (location) {
       const geo = await geocodeLocation(location as string);
       if (geo) {
@@ -1040,6 +1092,79 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.AND = [...((where as any).AND || []), workModeFilter];
     }
 
+    // Filter by timezone (exact match — IANA timezone string)
+    const { timezone: tzFilter } = req.query;
+    if (tzFilter && typeof tzFilter === 'string' && tzFilter.length <= 100) {
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: tzFilter });
+        where.timezone = tzFilter;
+      } catch {
+        return res.status(400).json({ error: 'Invalid timezone (use IANA format, e.g. America/New_York)' });
+      }
+    }
+
+    // Filter by weekly capacity (minimum hours available)
+    const { minCapacity } = req.query;
+    if (minCapacity) {
+      const minCapVal = parseInt(minCapacity as string);
+      if (!isNaN(minCapVal) && isFinite(minCapVal) && minCapVal > 0) {
+        where.weeklyCapacityHours = { gte: minCapVal };
+      }
+    }
+
+    // Filter by response time commitment
+    const { responseTime } = req.query;
+    if (responseTime && typeof responseTime === 'string') {
+      const validResponseTimes = ['within_1h', 'within_4h', 'within_24h', 'flexible'];
+      if (validResponseTimes.includes(responseTime)) {
+        where.responseTimeCommitment = responseTime;
+      }
+    }
+
+    // Filter by work type (digital, physical, both)
+    const { workType: workTypeFilter } = req.query;
+    if (workTypeFilter && typeof workTypeFilter === 'string') {
+      const validWorkTypes = ['digital', 'physical', 'both'];
+      if (validWorkTypes.includes(workTypeFilter)) {
+        // Include humans who do "both" when searching for either specific type
+        if (workTypeFilter === 'digital' || workTypeFilter === 'physical') {
+          where.AND = [...((where as any).AND || []), {
+            OR: [{ workType: workTypeFilter }, { workType: 'both' }, { workType: null }],
+          }];
+        } else {
+          where.workType = workTypeFilter;
+        }
+      }
+    }
+
+    // Filter by industries (array overlap)
+    const { industry } = req.query;
+    if (industry && typeof industry === 'string') {
+      where.industries = { has: industry.slice(0, 200) };
+    }
+
+    // Filter by schedule pattern
+    const { schedulePattern: scheduleFilter } = req.query;
+    if (scheduleFilter && typeof scheduleFilter === 'string') {
+      const validPatterns = ['morning', 'afternoon', 'evening', 'flexible'];
+      if (validPatterns.includes(scheduleFilter)) {
+        where.AND = [...((where as any).AND || []), {
+          OR: [{ schedulePattern: scheduleFilter }, { schedulePattern: 'flexible' }, { schedulePattern: null }],
+        }];
+      }
+    }
+
+    // Filter by preferred task duration
+    const { taskDuration } = req.query;
+    if (taskDuration && typeof taskDuration === 'string') {
+      const validDurations = ['micro', 'half_day', 'full_project', 'any'];
+      if (validDurations.includes(taskDuration)) {
+        where.AND = [...((where as any).AND || []), {
+          OR: [{ preferredTaskDuration: taskDuration }, { preferredTaskDuration: 'any' }, { preferredTaskDuration: null }],
+        }];
+      }
+    }
+
     // Filter by minimum years of experience
     const { minExperience } = req.query;
     if (minExperience) {
@@ -1056,8 +1181,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Filter by fiat payment platform (e.g., WISE, PAYPAL)
     if (fiatPlatform) {
+      const platformStr = String(fiatPlatform).slice(0, 50);
       where.fiatPaymentMethods = {
-        some: { platform: (fiatPlatform as string).toUpperCase() },
+        some: { platform: platformStr.toUpperCase() },
       };
     }
 
@@ -1139,8 +1265,16 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       }
     }
 
-    const requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
-    const requestedOffset = parseInt(offset as string) || 0;
+    // Validate and normalize pagination parameters
+    let requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
+    let requestedOffset = parseInt(offset as string) || 0;
+
+    // Ensure limit is reasonable (minimum 1, maximum 100)
+    if (requestedLimit < 1) requestedLimit = 1;
+    if (requestedLimit > 100) requestedLimit = 100;
+
+    // Ensure offset is non-negative (page should default to 1, offset to 0)
+    if (requestedOffset < 0) requestedOffset = 0;
 
     const MAX_OFFSET = 200;
     if (requestedOffset > MAX_OFFSET) {
@@ -1343,10 +1477,22 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       ])
     );
 
+    // Batch-sign photo URLs to avoid N+1 lookups
+    const humansWithUrls = await Promise.all(humans.map(async (h) => {
+      if (h.profilePhotoKey && ['approved', 'pending'].includes(h.profilePhotoStatus)) {
+        try {
+          const signedUrl = await getProfilePhotoSignedUrl(h.profilePhotoKey);
+          return { ...h, profilePhotoUrl: signedUrl };
+        } catch {
+          return h;
+        }
+      }
+      return h;
+    }));
+
     // Attach stats to each human and strip coords (contact info already excluded from select)
-    const humansWithReputation = await Promise.all(humans.map(async (h) => {
-      const { locationLat, locationLng, fiatPaymentMethods, emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...rest } = h as any;
-      await attachPhotoUrl(rest);
+    const humansWithReputation = humansWithUrls.map((h) => {
+      const { locationLat, locationLng, profilePhotoKey, fiatPaymentMethods, emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...rest } = h as any;
 
       // Compute channel count for agent visibility (names not exposed for privacy)
       const channelCount = [emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications].filter(Boolean).length;
@@ -1361,7 +1507,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
         },
       };
-    }));
+    });
 
     // Track search in PostHog (pass req for country geolocation)
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';

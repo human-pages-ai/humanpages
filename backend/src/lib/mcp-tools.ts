@@ -65,6 +65,66 @@ export const MCP_TOOLS: Record<string, McpToolDefinition> = {
           type: 'boolean',
           description: 'If true, only return people currently marked as available',
         },
+        timezone: {
+          type: 'string',
+          description:
+            'IANA timezone filter (e.g. "America/New_York", "Asia/Tokyo"). ' +
+            'Use this to find people in a specific timezone for scheduling or overlap.',
+        },
+        min_capacity: {
+          type: 'number',
+          description:
+            'Minimum weekly hours available. Common values: 5 (side hustle), 10 (part-time light), ' +
+            '20 (part-time), 30 (near full-time), 40 (full-time). ' +
+            'Use this to filter out people who can\'t commit enough hours to your task.',
+        },
+        response_time: {
+          type: 'string',
+          enum: ['within_1h', 'within_4h', 'within_24h', 'flexible'],
+          description:
+            'Maximum acceptable response time. "within_1h" = urgent tasks, "within_4h" = same-day, ' +
+            '"within_24h" = next-day, "flexible" = no SLA. Agents should match this to task urgency.',
+        },
+        work_type: {
+          type: 'string',
+          enum: ['digital', 'physical', 'both'],
+          description:
+            'Type of work: "digital" for remote/online tasks, "physical" for on-site tasks, ' +
+            '"both" for people open to either. Physical tasks also need a location filter.',
+        },
+        min_experience: {
+          type: 'number',
+          description:
+            'Minimum years of professional experience. Use for tasks requiring seniority ' +
+            '(e.g. 5 for mid-level, 10 for senior). Omit for entry-level tasks.',
+        },
+        industry: {
+          type: 'string',
+          description:
+            'Industry/domain filter. Examples: "Healthcare", "Finance & Banking", "E-commerce & Retail", ' +
+            '"Education", "Legal", "SaaS & Technology", "Real Estate". ' +
+            'Use this when domain expertise matters (e.g. medical transcription, legal research).',
+        },
+        equipment: {
+          type: 'string',
+          description:
+            'Required equipment filter. Examples: "DSLR Camera", "Drone", "Car/Vehicle", "Microphone". ' +
+            'Use for physical tasks that need specific gear.',
+        },
+        schedule_pattern: {
+          type: 'string',
+          enum: ['morning', 'afternoon', 'evening', 'flexible'],
+          description:
+            'When the human is available: "morning" (6am-12pm local), "afternoon" (12pm-6pm local), ' +
+            '"evening" (6pm-12am local), "flexible" (any time). Includes humans marked as "flexible".',
+        },
+        task_duration: {
+          type: 'string',
+          enum: ['micro', 'half_day', 'full_project', 'any'],
+          description:
+            'Preferred task length: "micro" (1-2 hours), "half_day" (3-5 hours), ' +
+            '"full_project" (10+ hours), "any" (open to all). Includes humans marked as "any".',
+        },
       },
     },
     annotations: {
@@ -326,10 +386,49 @@ export async function executeMcpTool(
   try {
     switch (toolName) {
       case 'search_humans': {
+        // Validate string param lengths
+        const MAX_PARAM = 500;
+        for (const key of ['skill', 'location', 'equipment', 'industry'] as const) {
+          if (args[key] && String(args[key]).length > MAX_PARAM) {
+            return { error: `${key} parameter exceeds maximum length of ${MAX_PARAM}` };
+          }
+        }
+        if (args.timezone && String(args.timezone).length > 100) {
+          return { error: 'timezone parameter exceeds maximum length' };
+        }
+        // Validate numeric params
+        if (args.min_capacity !== undefined) {
+          const val = Number(args.min_capacity);
+          if (isNaN(val) || val < 0 || val > 168) return { error: 'min_capacity must be 0-168' };
+        }
+        if (args.min_experience !== undefined) {
+          const val = Number(args.min_experience);
+          if (isNaN(val) || val < 0 || val > 70) return { error: 'min_experience must be 0-70' };
+        }
+        // Validate skills array if provided (for future array-based searches)
+        if (args.skills && Array.isArray(args.skills)) {
+          if (args.skills.length > 10) return { error: 'skills array exceeds maximum length of 10' };
+          for (let i = 0; i < args.skills.length; i++) {
+            const skill = String(args.skills[i]);
+            if (skill.length > 100) {
+              return { error: `skills[${i}] exceeds maximum length of 100 characters` };
+            }
+          }
+        }
+
         const params = new URLSearchParams();
         if (args.skill) params.set('skill', String(args.skill));
         if (args.location) params.set('location', String(args.location));
-        if (args.available_only) params.set('available_only', String(args.available_only));
+        if (args.available_only) params.set('available', 'true');
+        if (args.timezone) params.set('timezone', String(args.timezone));
+        if (args.min_capacity) params.set('minCapacity', String(args.min_capacity));
+        if (args.response_time) params.set('responseTime', String(args.response_time));
+        if (args.work_type) params.set('workType', String(args.work_type));
+        if (args.min_experience) params.set('minExperience', String(args.min_experience));
+        if (args.industry) params.set('industry', String(args.industry));
+        if (args.equipment) params.set('equipment', String(args.equipment));
+        if (args.schedule_pattern) params.set('schedulePattern', String(args.schedule_pattern));
+        if (args.task_duration) params.set('taskDuration', String(args.task_duration));
         const res = await apiFetch(`${baseUrl}/api/humans/search?${params}`, {
           headers: { 'X-Agent-Key': agentApiKey },
         });
@@ -375,15 +474,24 @@ export async function executeMcpTool(
       }
 
       case 'create_job': {
+        const body: Record<string, unknown> = {
+          humanId: args.humanId,
+          title: args.title,
+          description: args.description,
+          priceUsdc: args.priceUsdc,
+        };
+        if (args.paymentMode !== undefined) body.paymentMode = args.paymentMode;
+        if (args.paymentTiming !== undefined) body.paymentTiming = args.paymentTiming;
+        if (args.streamMethod !== undefined) body.streamMethod = args.streamMethod;
+        if (args.streamInterval !== undefined) body.streamInterval = args.streamInterval;
+        if (args.streamRateUsdc !== undefined) body.streamRateUsdc = args.streamRateUsdc;
+        if (args.callbackUrl !== undefined) body.callbackUrl = args.callbackUrl;
+        if (args.callbackSecret !== undefined) body.callbackSecret = args.callbackSecret;
+        if (args.category !== undefined) body.category = args.category;
         const res = await apiFetch(`${baseUrl}/api/jobs`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Agent-Key': agentApiKey },
-          body: JSON.stringify({
-            title: args.title,
-            description: args.description,
-            required_skills: args.required_skills,
-            budget: args.budget,
-          }),
+          body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error(`Upstream error`);
         return minimizeResponse(await res.json());
@@ -423,7 +531,8 @@ export async function executeMcpTool(
         throw new Error(`Unknown tool: ${toolName}`);
     }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error({ error, tool: toolName }, 'MCP tool execution failed');
-    return { error: 'Tool execution failed' };
+    return { error: errorMessage || 'Tool execution failed' };
   }
 }

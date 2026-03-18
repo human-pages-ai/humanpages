@@ -155,6 +155,24 @@ echo "  Mode: $MODE"
 STAGE_START=$(date +%s)
 
 # ------------------------------------------------------------------
+# Prisma schema validation (fast, no DB needed)
+# Catches: indexes referencing non-existent fields, invalid relations, typos
+# ------------------------------------------------------------------
+echo "  Validating Prisma schema..."
+if (cd backend && npx prisma validate) >$STAGE_LOG 2>&1; then
+  stage_time "Prisma schema valid" ""
+else
+  DETAIL=$(grep -i "error\|unknown field\|P1012" $STAGE_LOG | head -10)
+  fail "prisma-validate" \
+    "Prisma schema validation failed:" \
+    "" \
+    "$DETAIL" \
+    "" \
+    "Fix: check backend/prisma/schema.prisma for invalid fields, indexes, or relations" \
+    "Run:  cd backend && npx prisma validate   (for details)"
+fi
+
+# ------------------------------------------------------------------
 # Regenerate Prisma client so type checks match the latest schema
 # ------------------------------------------------------------------
 echo "  Regenerating Prisma client..."
