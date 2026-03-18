@@ -30,6 +30,22 @@ import { StepAvailability } from './steps/StepAvailability';
 import { StepFinish } from './steps/StepFinish';
 import { StepErrorBoundary } from './components/StepErrorBoundary';
 
+// Step completion gamification messages
+const STEP_COMPLETION: Record<StepId, { emoji: string; message: string }> = {
+  'connect':      { emoji: '🔔', message: 'Connected! Agents can reach you now' },
+  'cv-upload':    { emoji: '📄', message: 'CV uploaded! We\'re analyzing it...' },
+  'skills':       { emoji: '⚡', message: 'Skills added! You\'re searchable now' },
+  'equipment':    { emoji: '🔧', message: 'Equipment listed! Physical tasks unlocked' },
+  'vouch':        { emoji: '🤝', message: 'Profile shared! Vouches build trust' },
+  'location':     { emoji: '📍', message: 'Location set! Local jobs unlocked' },
+  'education':    { emoji: '🎓', message: 'Experience added! Standing out' },
+  'payment':      { emoji: '💰', message: 'Payment set! Ready to earn' },
+  'services':     { emoji: '💼', message: 'Services defined! Agents can hire you' },
+  'profile':      { emoji: '👤', message: 'Profile looking great!' },
+  'availability': { emoji: '📅', message: 'Availability set! Almost done' },
+  'verification': { emoji: '✅', message: 'Verified! Maximum trust score' },
+};
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -154,6 +170,27 @@ export default function Onboarding() {
     const saveNow = (window as any).__draftSaveNow;
     if (saveNow) saveNow();
 
+    // Show step completion toast when advancing forward
+    if (clamped > position && position > 0) {
+      const completedStep = flow[position - 1];
+      const completion = STEP_COMPLETION[completedStep.id];
+      if (completion) {
+        toast(completion.message, { icon: completion.emoji, duration: 2000 });
+      }
+
+      // Check for level-up milestones
+      const prevPercent = Math.round((position / total) * 100);
+      const nextPercent = Math.round((clamped / total) * 100);
+
+      if (prevPercent < 25 && nextPercent >= 25) {
+        toast('🟦 Level: Starter', { duration: 2500 });
+      } else if (prevPercent < 50 && nextPercent >= 50) {
+        toast('🟧 Level: Rising', { duration: 2500 });
+      } else if (prevPercent < 75 && nextPercent >= 75) {
+        toast('🟨 Level: Almost Pro', { duration: 2500 });
+      }
+    }
+
     setTransitioning(true);
     prevPositionRef.current = position;
 
@@ -269,6 +306,12 @@ export default function Onboarding() {
       posthog.capture('onboarding_completed', { skillCount: cleanSkills.length });
       safeLocalStorage.removeItem('hp_onboarding_pending');
       clearDraft();
+
+      // Celebration toast
+      toast('🎉 Profile Complete! Welcome to HumanPages', {
+        duration: 3000,
+        style: { background: '#22c55e', color: 'white', fontWeight: 'bold' },
+      });
 
       // Handle pending intents
       const careerIntent = getApplyIntent();
@@ -491,9 +534,9 @@ export default function Onboarding() {
       {/* Progress bar */}
       <div className="bg-white px-4 py-4 border-b border-slate-200">
         <div className="max-w-2xl mx-auto space-y-3">
-          {/* Simple progress bar */}
+          {/* Progress bar with milestone dots */}
           <div>
-            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div className="relative h-1.5 bg-slate-200 rounded-full overflow-visible">
               <div
                 className="h-full bg-orange-500 transition-all duration-300 ease-out"
                 style={{ width: `${(position / total) * 100}%` }}
@@ -503,6 +546,20 @@ export default function Onboarding() {
                 aria-valuemax={total}
                 aria-label="Onboarding progress"
               />
+              {/* Milestone dots at 25%, 50%, 75% */}
+              {[25, 50, 75].map(m => {
+                const pct = Math.round((position / total) * 100);
+                return (
+                  <div
+                    key={m}
+                    className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white transition-colors duration-300 ${
+                      pct >= m ? 'bg-orange-500' : 'bg-slate-300'
+                    }`}
+                    style={{ left: `${m}%` }}
+                    aria-hidden="true"
+                  />
+                );
+              })}
             </div>
           </div>
 
