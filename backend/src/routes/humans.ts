@@ -12,7 +12,7 @@ import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib
 import { calculateDistance, boundingBox, DEFAULT_SEARCH_RADIUS_KM } from '../lib/geo.js';
 import { geocodeLocation } from '../lib/geocode.js';
 import { logger } from '../lib/logger.js';
-import { normalizeCountry } from '../lib/countries.js';
+import { normalizeCountry, countryFromLocation } from '../lib/countries.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 import { computeTrustScore } from '../lib/trustScore.js';
@@ -130,7 +130,9 @@ const fullHumanSelect = {
   name: true,
   contactEmail: true,
   telegram: true,
+  telegramChatId: true,
   whatsapp: true,
+  whatsappVerified: true,
   signal: true,
   paymentMethods: true,
   hideContact: true,
@@ -346,11 +348,12 @@ async function getReputationStats(humanId: string) {
 
 // Strip contact fields from public responses when user has hideContact enabled
 function filterHiddenContact(human: any) {
+  // Always strip internal fields that should never be exposed to agents
   if (!human.hideContact) {
-    const { hideContact, ...rest } = human;
+    const { hideContact, telegramChatId, whatsappVerified, ...rest } = human;
     return rest;
   }
-  const { contactEmail, telegram, whatsapp, signal, paymentMethods, fiatPaymentMethods, hideContact, ...rest } = human;
+  const { contactEmail, telegram, whatsapp, signal, paymentMethods, fiatPaymentMethods, hideContact, telegramChatId, whatsappVerified, ...rest } = human;
   return rest;
 }
 
@@ -872,8 +875,7 @@ router.get('/featured', async (_req, res) => {
       // Pick up to 8 profiles with geographic diversity (max 2 per country)
       const byCountry = new Map<string, typeof quality>();
       for (const h of quality.sort(() => Math.random() - 0.5)) {
-        const parts = h.location?.split(',').map(s => s.trim()) ?? [];
-        const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
+        const country = countryFromLocation(h.location ?? '');
         if (!byCountry.has(country)) byCountry.set(country, []);
         byCountry.get(country)!.push(h);
       }
@@ -887,8 +889,7 @@ router.get('/featured', async (_req, res) => {
           if (picked.length >= 8) break;
           if (round < group.length) {
             const h = group[round];
-            const parts = h.location?.split(',').map(s => s.trim()) ?? [];
-            const country = normalizeCountry(parts[parts.length - 1]) ?? 'Unknown';
+            const country = countryFromLocation(h.location ?? '');
             const count = perCountry.get(country) ?? 0;
             if (count < 2) {
               picked.push(h);
@@ -932,6 +933,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       fiatPlatform,
       sortBy,
       minCompletedJobs,
+      minChannels,
       limit = '20',
       offset = '0',
     } = req.query;
@@ -1159,6 +1161,12 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         const completedJobs = skillJobMap.get(h.id) || 0;
         if (completedJobs >= 3) score += Math.min(completedJobs, 10) * 3;
 
+        // Boost reachable humans — agents want fast responders
+        const chCount = [(h as any).emailNotifications, (h as any).telegramNotifications, (h as any).whatsappNotifications, (h as any).pushNotifications].filter(Boolean).length;
+        if (chCount >= 3) score += 8;
+        else if (chCount >= 2) score += 4;
+        else if (chCount >= 1) score += 1;
+
         return { human: h, score };
       });
 
@@ -1312,6 +1320,12 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     // minCompletedJobs is now handled at the DB level (pre-filter above)
     let filteredResults = humansWithReputation;
 
+    // Filter by minimum notification channels connected
+    const minCh = parseInt(minChannels as string, 10);
+    if (minCh > 0) {
+      filteredResults = filteredResults.filter(h => (h.channelCount || 0) >= minCh);
+    }
+
     // Sort by reputation: humans with completed jobs and reviews first
     // sortBy param controls primary sort key
     filteredResults.sort((a, b) => {
@@ -1323,22 +1337,27 @@ router.get('/search', searchRateLimiter, async (req, res) => {
         const aRating = a.reputation.avgRating;
         const bRating = b.reputation.avgRating;
         if (aRating !== bRating) return bRating - aRating;
-        return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
+        if (b.reputation.jobsCompleted !== a.reputation.jobsCompleted) return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
+        return (b.channelCount || 0) - (a.channelCount || 0);
       }
       if (sortBy === 'experience') {
         const aExp = a.yearsOfExperience || 0;
         const bExp = b.yearsOfExperience || 0;
         if (aExp !== bExp) return bExp - aExp;
-        return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
+        if (b.reputation.jobsCompleted !== a.reputation.jobsCompleted) return b.reputation.jobsCompleted - a.reputation.jobsCompleted;
+        return (b.channelCount || 0) - (a.channelCount || 0);
       }
-      // Default and sortBy=completed_jobs: jobs first, then rating, then experience
+      // Default and sortBy=completed_jobs: jobs first, then rating, then experience, then reachability
       const aJobs = a.reputation.jobsCompleted;
       const bJobs = b.reputation.jobsCompleted;
       if (aJobs !== bJobs) return bJobs - aJobs;
       const aRating = a.reputation.avgRating;
       const bRating = b.reputation.avgRating;
       if (aRating !== bRating) return bRating - aRating;
-      return (b.yearsOfExperience || 0) - (a.yearsOfExperience || 0);
+      const aExp = a.yearsOfExperience || 0;
+      const bExp = b.yearsOfExperience || 0;
+      if (aExp !== bExp) return bExp - aExp;
+      return (b.channelCount || 0) - (a.channelCount || 0);
     });
 
     // Apply pagination for reputation-sorted results (fetched in larger pool)
@@ -1446,10 +1465,15 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
     const reputation = await getReputationStats(human.id);
     const profileWithPhoto = await attachPhotoUrl({ ...human });
 
-    // Compute channel count for agent visibility (names not exposed for privacy)
-    const channelCount = [(human as any).emailNotifications, (human as any).telegramNotifications, (human as any).whatsappNotifications, (human as any).pushNotifications].filter(Boolean).length;
+    // Compute reachability for agent visibility
+    const activeChannels: string[] = [];
+    if ((human as any).emailNotifications) activeChannels.push('email');
+    if ((human as any).telegramNotifications && (human as any).telegramChatId) activeChannels.push('telegram');
+    if ((human as any).whatsappNotifications && (human as any).whatsappVerified) activeChannels.push('whatsapp');
+    if ((human as any).pushNotifications) activeChannels.push('push');
+    const channelCount = activeChannels.length;
 
-    res.json(filterHiddenContact({ ...profileWithPhoto, reputation, channelCount }));
+    res.json(filterHiddenContact({ ...profileWithPhoto, reputation, channelCount, activeChannels }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });

@@ -206,6 +206,81 @@ for (const c of COUNTRIES) {
   COUNTRY_MAP.set(c.toLowerCase(), c);
 }
 
+// Map well-known cities, states, and regions to their country.
+// Used as a fallback when the location string has no comma-separated country part.
+const LOCATION_TO_COUNTRY = new Map<string, string>(Object.entries({
+  // Nigeria
+  'lagos': 'Nigeria', 'abuja': 'Nigeria', 'ibadan': 'Nigeria', 'kano': 'Nigeria',
+  'port harcourt': 'Nigeria', 'benin city': 'Nigeria', 'kaduna': 'Nigeria',
+  'enugu': 'Nigeria', 'warri': 'Nigeria', 'owerri': 'Nigeria', 'uyo': 'Nigeria',
+  'calabar': 'Nigeria', 'abeokuta': 'Nigeria', 'ogun': 'Nigeria', 'oshogbo': 'Nigeria',
+  'lekki': 'Nigeria', 'ikeja': 'Nigeria', 'yaba': 'Nigeria', 'surulere': 'Nigeria',
+  'victoria island': 'Nigeria', 'ikoyi': 'Nigeria', 'ajah': 'Nigeria',
+  'osun state': 'Nigeria', 'oyo state': 'Nigeria', 'lagos state': 'Nigeria',
+  'rivers state': 'Nigeria', 'delta state': 'Nigeria', 'edo state': 'Nigeria',
+  'kwara state': 'Nigeria', 'ondo state': 'Nigeria', 'ekiti state': 'Nigeria',
+  'anambra state': 'Nigeria', 'imo state': 'Nigeria', 'abia state': 'Nigeria',
+  'lekki lagos': 'Nigeria',
+  // Ethiopia
+  'addis ababa': 'Ethiopia', 'dire dawa': 'Ethiopia',
+  // South Africa
+  'johannesburg': 'South Africa', 'cape town': 'South Africa', 'durban': 'South Africa',
+  'pretoria': 'South Africa', 'soweto': 'South Africa',
+  'kwazulu-natal': 'South Africa', 'gauteng': 'South Africa',
+  'western cape': 'South Africa', 'eastern cape': 'South Africa',
+  // Kenya
+  'nairobi': 'Kenya', 'mombasa': 'Kenya', 'kisumu': 'Kenya',
+  // Ghana
+  'accra': 'Ghana', 'kumasi': 'Ghana', 'tamale': 'Ghana',
+  // Egypt
+  'cairo': 'Egypt', 'alexandria': 'Egypt', 'giza': 'Egypt',
+  // Philippines
+  'manila': 'Philippines', 'cebu': 'Philippines', 'davao': 'Philippines',
+  'quezon city': 'Philippines', 'makati': 'Philippines', 'taguig': 'Philippines',
+  // India
+  'mumbai': 'India', 'delhi': 'India', 'new delhi': 'India', 'bangalore': 'India',
+  'bengaluru': 'India', 'hyderabad': 'India', 'chennai': 'India', 'kolkata': 'India',
+  'pune': 'India',
+  // Pakistan
+  'karachi': 'Pakistan', 'lahore': 'Pakistan', 'islamabad': 'Pakistan',
+  // Bangladesh
+  'dhaka': 'Bangladesh', 'chittagong': 'Bangladesh',
+  // United Kingdom
+  'london': 'United Kingdom', 'manchester': 'United Kingdom', 'birmingham': 'United Kingdom',
+  'edinburgh': 'United Kingdom', 'glasgow': 'United Kingdom', 'liverpool': 'United Kingdom',
+  // United States
+  'new york': 'United States', 'los angeles': 'United States', 'chicago': 'United States',
+  'san francisco': 'United States', 'houston': 'United States', 'miami': 'United States',
+  'seattle': 'United States', 'austin': 'United States', 'denver': 'United States',
+  // Brazil
+  'são paulo': 'Brazil', 'sao paulo': 'Brazil', 'rio de janeiro': 'Brazil',
+  // Poland
+  'warsaw': 'Poland', 'krakow': 'Poland', 'gdansk': 'Poland', 'gdynia': 'Poland',
+  'wroclaw': 'Poland', 'poznan': 'Poland',
+  // Germany
+  'berlin': 'Germany', 'munich': 'Germany', 'hamburg': 'Germany', 'frankfurt': 'Germany',
+  // France
+  'paris': 'France', 'lyon': 'France', 'marseille': 'France',
+  // Indonesia
+  'jakarta': 'Indonesia', 'surabaya': 'Indonesia', 'bandung': 'Indonesia',
+  // Turkey
+  'istanbul': 'Turkey', 'ankara': 'Turkey', 'izmir': 'Turkey',
+  // Cameroon
+  'douala': 'Cameroon', 'yaoundé': 'Cameroon', 'yaounde': 'Cameroon',
+  // Uganda
+  'kampala': 'Uganda',
+  // Tanzania
+  'dar es salaam': 'Tanzania',
+  // Rwanda
+  'kigali': 'Rwanda',
+  // Senegal
+  'dakar': 'Senegal',
+  // Morocco
+  'casablanca': 'Morocco', 'rabat': 'Morocco', 'marrakech': 'Morocco',
+  // Israel
+  'tel aviv': 'Israel', 'jerusalem': 'Israel', 'haifa': 'Israel',
+}))
+
 /**
  * Normalize a raw country string extracted from a location field.
  */
@@ -218,5 +293,42 @@ export function normalizeCountry(raw: string): string | null {
   // Strip trailing punctuation
   s = s.replace(/[.,;]+$/, '').trim();
   if (!s) return null;
-  return COUNTRY_MAP.get(s.toLowerCase()) ?? s;
+  const lower = s.toLowerCase();
+  // Direct country match
+  if (COUNTRY_MAP.has(lower)) return COUNTRY_MAP.get(lower)!;
+  // City/state/region fallback
+  if (LOCATION_TO_COUNTRY.has(lower)) return LOCATION_TO_COUNTRY.get(lower)!;
+  return s;
+}
+
+/**
+ * Try to resolve a full location string (e.g. "Lekki Lagos" or "Abuja")
+ * to a country. Checks the whole string first, then each comma-separated
+ * part (last to first), then individual words.
+ */
+export function countryFromLocation(location: string): string {
+  if (!location) return 'Unknown';
+  // Try the full string
+  const full = normalizeCountry(location);
+  if (full && COUNTRY_MAP.has(full.toLowerCase())) return full;
+  // Try each comma-separated part, last first (most likely to be country)
+  const parts = location.split(',').map(s => s.trim());
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const norm = normalizeCountry(parts[i]);
+    if (norm && COUNTRY_MAP.has(norm.toLowerCase())) return norm;
+  }
+  // Try city/region lookup on each part
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const lower = parts[i].trim().toLowerCase().replace(/\s*\(.*\)\s*$/, '').replace(/[.,;]+$/, '').trim();
+    if (LOCATION_TO_COUNTRY.has(lower)) return LOCATION_TO_COUNTRY.get(lower)!;
+  }
+  // Try individual words for multi-word locations without commas (e.g. "Lekki Lagos")
+  if (parts.length === 1) {
+    const words = location.trim().split(/\s+/);
+    for (const word of words) {
+      const lower = word.toLowerCase().replace(/[.,;]+$/, '');
+      if (LOCATION_TO_COUNTRY.has(lower)) return LOCATION_TO_COUNTRY.get(lower)!;
+    }
+  }
+  return 'Unknown';
 }
