@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
-import { posthog } from '../lib/posthog';
 import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
@@ -13,8 +12,6 @@ import { VouchCard } from '../components/shared/VouchCard';
 import { Profile, Job, ReviewStats } from '../components/dashboard/types';
 // StatusHeader removed — wizard module tiles replace the profile completion banner
 import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
-import TelegramSection from '../components/dashboard/TelegramSection';
-import WhatsAppSection from '../components/dashboard/WhatsAppSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
 // import CvUpload from '../components/dashboard/CvUpload'; // Hidden: CV upload disabled
@@ -127,18 +124,7 @@ export default function Dashboard() {
     botAvailable: boolean;
     botUsername?: string;
   } | null>(null);
-  const [telegramLinkUrl, setTelegramLinkUrl] = useState<string | null>(null);
-  const [telegramLoading, setTelegramLoading] = useState(false);
 
-  const [whatsappStatus, setWhatsappStatus] = useState<{
-    connected: boolean;
-    botAvailable: boolean;
-    whatsappNumber?: string;
-    botNumber?: string;
-  } | null>(null);
-  const [whatsappLinkCode, setWhatsappLinkCode] = useState<string | null>(null);
-  const [whatsappWaLink, setWhatsappWaLink] = useState<string | null>(null);
-  const [whatsappLoading, setWhatsappLoading] = useState(false);
 
   const [editingFilters, setEditingFilters] = useState(false);
   const [filtersForm, setFiltersForm] = useState({
@@ -159,7 +145,6 @@ export default function Dashboard() {
     loadProfile();
     loadJobs();
     loadTelegramStatus();
-    loadWhatsAppStatus();
 
     // Handle query param toasts
     if (searchParams.get('unsubscribed') === 'true') {
@@ -280,98 +265,6 @@ export default function Dashboard() {
     }
   };
 
-  const connectTelegram = async () => {
-    setTelegramLoading(true);
-    try {
-      const { linkUrl } = await api.linkTelegram();
-      setTelegramLinkUrl(linkUrl);
-      window.open(linkUrl, '_blank');
-      const pollInterval = setInterval(async () => {
-        const status = await api.getTelegramStatus();
-        if (status.connected) {
-          clearInterval(pollInterval);
-          setTelegramStatus(status);
-          setTelegramLinkUrl(null);
-          posthog.capture('telegram_connected');
-        }
-      }, 3000);
-      setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
-    } catch (error: any) {
-      toast.error(error.message || t('toast.genericError'));
-    } finally {
-      setTelegramLoading(false);
-    }
-  };
-
-  const disconnectTelegram = async () => {
-    setConfirmDialog({
-      open: true,
-      title: t('dashboard.telegram.disconnect'),
-      message: t('dashboard.telegram.disconnect'),
-      onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, open: false }));
-        try {
-          await api.unlinkTelegram();
-          setTelegramStatus({ connected: false, botAvailable: telegramStatus?.botAvailable || false });
-          toast.success(t('toast.telegramDisconnected'));
-        } catch (error: any) {
-          toast.error(error.message || t('toast.genericError'));
-        }
-      },
-    });
-  };
-
-  const loadWhatsAppStatus = async () => {
-    try {
-      const status = await api.getWhatsAppStatus();
-      setWhatsappStatus(status);
-    } catch (error) {
-      console.error('Failed to load WhatsApp status:', error);
-    }
-  };
-
-  const connectWhatsApp = async () => {
-    setWhatsappLoading(true);
-    try {
-      const { code, waLink } = await api.linkWhatsApp();
-      setWhatsappLinkCode(code);
-      setWhatsappWaLink(waLink ?? null);
-      // Poll for connection
-      const pollInterval = setInterval(async () => {
-        const status = await api.getWhatsAppStatus();
-        if (status.connected) {
-          clearInterval(pollInterval);
-          setWhatsappStatus(status);
-          setWhatsappLinkCode(null);
-          setWhatsappWaLink(null);
-          toast.success('WhatsApp connected!');
-        }
-      }, 3000);
-      setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
-    } catch (error: any) {
-      toast.error(error.message || t('toast.genericError'));
-    } finally {
-      setWhatsappLoading(false);
-    }
-  };
-
-  const disconnectWhatsApp = async () => {
-    setConfirmDialog({
-      open: true,
-      title: 'Disconnect WhatsApp',
-      message: 'You will no longer receive notifications via WhatsApp. Continue?',
-      onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, open: false }));
-        try {
-          await api.unlinkWhatsApp();
-          setWhatsappStatus({ connected: false, botAvailable: whatsappStatus?.botAvailable || false });
-          toast.success('WhatsApp disconnected');
-        } catch (error: any) {
-          toast.error(error.message || t('toast.genericError'));
-        }
-      },
-    });
-  };
 
   // toggleAvailability removed — availability is managed via wizard tiles
 
@@ -707,15 +600,19 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">Telegram:</span>{' '}
-                      <span className={`text-sm font-medium ${telegramStatus?.connected ? 'text-green-600' : 'text-gray-400'}`}>
-                        {telegramStatus?.connected ? 'Connected' : 'Not connected'}
-                      </span>
+                      {telegramStatus?.connected ? (
+                        <span className="text-sm text-green-600 font-medium">✓ Connected</span>
+                      ) : (
+                        <Link to="/dashboard?tab=settings" className="text-orange-500 text-xs font-medium hover:text-orange-600">+ Connect</Link>
+                      )}
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">WhatsApp:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.whatsapp ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.whatsapp || '—'}
-                      </span>
+                      {profile.whatsapp ? (
+                        <span className="text-sm text-green-600 font-medium">✓ Connected</span>
+                      ) : (
+                        <Link to="/dashboard?tab=settings" className="text-orange-500 text-xs font-medium hover:text-orange-600">+ Connect</Link>
+                      )}
                     </div>
                   </div>
                 </WizardModuleTile>
@@ -754,7 +651,7 @@ export default function Dashboard() {
                   stepId="location"
                   icon="📍"
                   color="green"
-                  isEmpty={!profile.location}
+                  isEmpty={!profile.location && !profile.timezone}
                   emptyHint="Set location so agents find you for nearby tasks"
                 >
                   <div className="space-y-2">
@@ -771,8 +668,11 @@ export default function Dashboard() {
                     <div>
                       <span className="text-gray-500 text-xs">Timezone:</span>{' '}
                       <span className={`text-sm font-medium ${profile.timezone ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.timezone || '—'}
+                        {profile.timezone ? `${profile.timezone}${profile.locationLat === undefined ? ' (auto-detected)' : ''}` : '—'}
                       </span>
+                      {profile.timezone && profile.locationLat === undefined && (
+                        <span className="text-xs text-orange-600 ml-1">Please verify this is accurate</span>
+                      )}
                     </div>
                   </div>
                 </WizardModuleTile>
@@ -877,7 +777,7 @@ export default function Dashboard() {
                   stepId="availability"
                   icon="📅"
                   color="orange"
-                  isEmpty={!profile.workType && !profile.weeklyCapacityHours}
+                  isEmpty={!profile.workType && profile.weeklyCapacityHours == null}
                   emptyHint="Set availability so agents know when to hire you"
                 >
                   <div className="space-y-2">
@@ -889,37 +789,13 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">Weekly Hours:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.weeklyCapacityHours ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.weeklyCapacityHours ? `${profile.weeklyCapacityHours} hours/week` : '—'}
+                      <span className={`text-sm font-medium ${profile.weeklyCapacityHours !== null ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.weeklyCapacityHours !== null ? (profile.weeklyCapacityHours === 0 ? 'Flexible' : `${profile.weeklyCapacityHours} hours/week`) : '—'}
                       </span>
                     </div>
                   </div>
                 </WizardModuleTile>
 
-                {/* 9. Verification */}
-                <WizardModuleTile
-                  title="Verification"
-                  stepId="verification"
-                  icon="✅"
-                  color="green"
-                  isEmpty={!profile.linkedinVerified && !profile.githubVerified}
-                  emptyHint="Verify accounts to boost trust score"
-                >
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-gray-500 text-xs">LinkedIn:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.linkedinVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.linkedinVerified ? 'Verified' : 'Not verified'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 text-xs">GitHub:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.githubVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.githubVerified ? 'Verified' : 'Not verified'}
-                      </span>
-                    </div>
-                  </div>
-                </WizardModuleTile>
               </div>
 
               {/* Share Profile Link — using VouchCard for consistency */}
@@ -972,6 +848,33 @@ export default function Dashboard() {
           {/* ───── BOOST YOUR PROFILE TAB ───── */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
+              {/* Verification tile */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <WizardModuleTile
+                  title="Verification"
+                  stepId="verification"
+                  icon="✅"
+                  color="green"
+                  isEmpty={!profile.linkedinVerified && !profile.githubVerified}
+                  emptyHint="Verify accounts to boost trust score"
+                >
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-gray-500 text-xs">LinkedIn:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.linkedinVerified ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.linkedinVerified ? 'Verified' : 'Not verified'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">GitHub:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.githubVerified ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.githubVerified ? 'Verified' : 'Not verified'}
+                      </span>
+                    </div>
+                  </div>
+                </WizardModuleTile>
+              </div>
+
               {/* Vouching — share profile and get vouched */}
               <VouchSection />
 
@@ -980,24 +883,6 @@ export default function Dashboard() {
                 <VerificationSection profile={profile} onProfileUpdate={loadProfile} />
                 <HumanitySection profile={profile} onVerified={loadProfile} />
               </div>
-
-              {/* Integrations */}
-              <TelegramSection
-                telegramStatus={telegramStatus}
-                telegramLinkUrl={telegramLinkUrl}
-                telegramLoading={telegramLoading}
-                onConnect={connectTelegram}
-                onDisconnect={disconnectTelegram}
-              />
-
-              <WhatsAppSection
-                whatsappStatus={whatsappStatus}
-                linkCode={whatsappLinkCode}
-                waLink={whatsappWaLink}
-                loading={whatsappLoading}
-                onConnect={connectWhatsApp}
-                onDisconnect={disconnectWhatsApp}
-              />
             </div>
           )}
 
