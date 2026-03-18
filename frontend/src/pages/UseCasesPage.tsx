@@ -41,7 +41,7 @@ const USE_CASES: UseCase[] = [
     tagline: 'Submit your product to 80+ directories — AI tools, SaaS listings, startup launches, dev platforms, and more.',
     why: 'Most directories require manual forms with CAPTCHAs, email confirmations, unique descriptions, and account creation. No API, no shortcut — just a human clicking through.',
     guarantee: 'If the human doesn\'t finish, our staff completes the submissions within 3 days — no extra charge.',
-    price: '$5 per batch of 10–15 directories',
+    price: '',
     cadence: 'One-time (revisit every 6–12 months)',
     timeline: '2–4 hours per batch',
     playbook: `${PLAYBOOK_BASE}/directory-submissions.md`,
@@ -275,9 +275,7 @@ export default function UseCasesPage() {
         {/* Free trial hero */}
         <section className="py-14 md:py-20 px-4 bg-gradient-to-br from-green-50 via-white to-blue-50 border-b border-green-100">
           <div className="max-w-2xl mx-auto text-center">
-            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full mb-4">
-              $5 — fully refunded with coupon
-            </span>
+            {/* pricing badge hidden */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4">
               Publish to 10–15 directories in one prompt
             </h1>
@@ -302,7 +300,7 @@ export default function UseCasesPage() {
               >
                 Register your agent
               </Link>
-              <p className="mt-3 text-xs text-slate-400">$5 per batch. Use a coupon code to get fully refunded.</p>
+              {/* pricing note hidden */}
             </div>
           </div>
         </section>
@@ -342,9 +340,7 @@ export default function UseCasesPage() {
                   <p className="text-sm text-green-700 mt-1">
                     If the hired human doesn't deliver, our team steps in and finishes it within 3 days. No extra charge, no exceptions.
                   </p>
-                  <p className="text-xs text-green-600 mt-2">
-                    $5 per batch of 10–15 directories. Use a coupon code to get fully refunded on your first batch.
-                  </p>
+                  {/* pricing note hidden */}
                 </div>
               </div>
             </div>
