@@ -486,13 +486,13 @@ export default function DevelopersPage() {
             <div className="p-6 bg-white rounded-xl border-2 border-blue-500 relative">
               {promo?.enabled && promo.remaining > 0 && (
                 <span className="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {t('dev.pricing.promoPromoPrice')}
+                  {t('dev.pricing.proPromoPrice')}
                 </span>
               )}
               <h3 className="text-lg font-bold text-slate-900 mb-1">{t('dev.pricing.proTitle')}</h3>
               <p className="text-2xl font-bold text-slate-900 mb-4">
                 {promo?.enabled && promo.remaining > 0 ? (
-                  <><span className="line-through text-slate-400 text-lg mr-2">{t('dev.pricing.proPrice')}</span> {t('dev.pricing.promoPromoPrice')}</>
+                  <><span className="line-through text-slate-400 text-lg mr-2">{t('dev.pricing.proPrice')}</span> {t('dev.pricing.proPromoPrice')}</>
                 ) : (
                   t('dev.pricing.proPrice')
                 )}
