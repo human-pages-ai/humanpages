@@ -10,6 +10,26 @@ const statusColors: Record<string, string> = {
   BANNED: 'bg-red-100 text-red-800',
 };
 
+type SortKey = 'name' | 'status' | 'tier' | 'jobs' | 'reports' | 'abuse' | 'lastActive' | 'registered';
+type SortDir = 'asc' | 'desc';
+
+function sortAgents(agents: AdminAgent[], key: SortKey, dir: SortDir): AdminAgent[] {
+  const mul = dir === 'asc' ? 1 : -1;
+  return [...agents].sort((a, b) => {
+    switch (key) {
+      case 'name': return mul * a.name.localeCompare(b.name);
+      case 'status': return mul * a.status.localeCompare(b.status);
+      case 'tier': return mul * a.activationTier.localeCompare(b.activationTier);
+      case 'jobs': return mul * (a._count.jobs - b._count.jobs);
+      case 'reports': return mul * (a._count.reports - b._count.reports);
+      case 'abuse': return mul * (a.abuseScore - b.abuseScore || a.abuseStrikes - b.abuseStrikes);
+      case 'lastActive': return mul * (new Date(a.lastActiveAt).getTime() - new Date(b.lastActiveAt).getTime());
+      case 'registered': return mul * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      default: return 0;
+    }
+  });
+}
+
 export default function AdminAgents() {
   const navigate = useNavigate();
   const [agents, setAgents] = useState<AdminAgent[]>([]);
@@ -18,6 +38,15 @@ export default function AdminAgents() {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('registered');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('desc'); }
+  };
+
+  const sortedAgents = sortAgents(agents, sortKey, sortDir);
 
   const load = useCallback(async (page: number) => {
     setLoading(true);
@@ -67,14 +96,15 @@ export default function AdminAgents() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jobs</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reports</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Abuse</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered</th>
+              {([['name', 'Name'], ['status', 'Status'], ['tier', 'Tier'], ['jobs', 'Jobs'], ['reports', 'Reports'], ['abuse', 'Abuse'], ['lastActive', 'Last Active'], ['registered', 'Registered']] as [SortKey, string][]).map(([key, label]) => (
+                <th
+                  key={key}
+                  onClick={() => toggleSort(key)}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-800 select-none"
+                >
+                  {label} {sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -83,7 +113,7 @@ export default function AdminAgents() {
             ) : agents.length === 0 ? (
               <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No agents found</td></tr>
             ) : (
-              agents.map((a) => (
+              sortedAgents.map((a) => (
                 <tr key={a.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/admin/agents/${a.id}`)}>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <Link to={`/admin/agents/${a.id}`} className="text-blue-600 hover:text-blue-800 hover:underline" onClick={(e) => e.stopPropagation()}>
