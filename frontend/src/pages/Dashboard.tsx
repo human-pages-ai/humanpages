@@ -458,7 +458,7 @@ export default function Dashboard() {
           <h1 className="whitespace-nowrap"><Link to="/"><Logo /></Link></h1>
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <LanguageSwitcher />
-            <span className="text-gray-600 truncate max-w-[120px] sm:max-w-[200px]">{user?.name ? user.name.split(' ')[0] : ''}</span>
+            <span className="text-gray-600 truncate max-w-[120px] sm:max-w-[200px]">{user?.name ? (() => { const parts = user.name.trim().split(/\s+/); return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0]; })() : ''}</span>
             <button onClick={handleLogout} className="text-gray-500 hover:text-gray-700 whitespace-nowrap flex-shrink-0">
               {t('nav.logout')}
             </button>

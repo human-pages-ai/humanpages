@@ -468,7 +468,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                               setServices(updated);
                             }
                           }}
-                          placeholder="50"
+                          placeholder="Price"
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                       </div>
@@ -651,7 +651,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                     inputMode="decimal"
                     value={newService.price}
                     onChange={(e) => { const val = e.target.value; if (val === '' || /^\d*\.?\d*$/.test(val)) { setNewService({ ...newService, price: val }); setPriceError(''); } }}
-                    placeholder="50"
+                    placeholder="Price"
                     className={`w-full px-3 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${priceError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`}
                   />
                   {priceError && <p className="text-xs text-red-500 mt-1">{priceError}</p>}
