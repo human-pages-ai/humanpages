@@ -504,10 +504,6 @@ model Agent {
   webhookUrl    String?   // Persistent webhook URL for platform events (new matches, status changes, announcements)
   webhookSecret String?   // Secret for HMAC-SHA256 signature verification
 
-  // ===== WALLET =====
-  walletAddress    String?
-  walletNetwork    String?   @default("base")
-
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)
@@ -517,9 +513,26 @@ model Agent {
   reports AgentReport[]
   x402Payments X402Payment[]
   listings Listing[]
+  wallets AgentWallet[]
 
   @@index([lastActiveAt])
   @@index([status])
+}
+
+model AgentWallet {
+  id             String    @id @default(cuid())
+  agentId        String
+  address        String    // EVM address (lowercase, checksummed not required)
+  network        String    @default("base")
+  verified       Boolean   @default(false)
+  nonce          String?
+  nonceExpiresAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  agent          Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, address])
+  @@index([agentId])
 }
 
 model X402Payment {
@@ -704,6 +717,10 @@ model Job {
   // NOTE: Normalize for timezone/active-hours before using in ranking or badges
   responseTimeMinutes  Float?
 
+  // ===== PAYMENT ATTRIBUTION =====
+  paymentFromAddress  String?    // On-chain sender address
+  senderMatch         Boolean?   // null=unchecked, true=matches verified wallet, false=mismatch
+
   // Timestamps
   createdAt       DateTime  @default(now())
   acceptedAt      DateTime?
@@ -778,6 +795,13 @@ model Review {
   erc8004Tag1          String   @default("starred")
   erc8004Tag2          String   @default("")        // from Job.category
   erc8004FeedbackHash  String?                      // SHA-256 of canonical feedback JSON
+
+  // Wallet verification snapshot at review time
+  walletVerifiedAtReview Boolean?  // true=agent had verified wallet when reviewing
+
+  // Human response (Google Maps style — single reply)
+  responseText  String?   @db.VarChar(2000)
+  respondedAt   DateTime?
 
   createdAt   DateTime @default(now())
 

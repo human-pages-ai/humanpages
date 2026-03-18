@@ -644,7 +644,7 @@ describe('Review gating: milestone-based', () => {
       .send({ rating: 3 });
 
     expect(reviewRes.status).toBe(400);
-    expect(reviewRes.body.reason).toContain('work completion');
+    expect(reviewRes.body.reason).toContain('verified payment');
   });
 
   it('should allow review after upon-completion off-chain flow', async () => {

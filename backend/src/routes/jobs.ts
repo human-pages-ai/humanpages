@@ -894,15 +894,16 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
         try {
           const agent = await prisma.agent.findUnique({
             where: { id: job.registeredAgentId! },
-            select: { walletAddress: true, walletNetwork: true, webhookUrl: true, webhookSecret: true },
+            select: { webhookUrl: true, webhookSecret: true, wallets: { orderBy: { createdAt: 'asc' as const }, take: 1, select: { address: true, network: true } } },
           });
-          if (!agent?.webhookUrl || !agent.walletAddress) return;
+          const firstWallet = agent?.wallets?.[0];
+          if (!agent?.webhookUrl || !firstWallet) return;
 
           // Lazy-import to avoid circular deps
           const { getPublicClient, getTokenAddress, TOKEN_CONFIGS } = await import('../lib/blockchain/chains.js');
           const { formatUnits } = await import('viem');
 
-          const network = agent.walletNetwork || 'base';
+          const network = firstWallet.network || 'base';
           const client = getPublicClient(network);
           const usdcAddr = getTokenAddress('USDC', network);
           if (!client || !usdcAddr) return;
@@ -911,7 +912,7 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
             address: usdcAddr,
             abi: [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }],
             functionName: 'balanceOf',
-            args: [agent.walletAddress as `0x${string}`],
+            args: [firstWallet.address as `0x${string}`],
           });
           const balance = parseFloat(formatUnits(balanceRaw as bigint, TOKEN_CONFIGS.USDC.decimals));
           const required = parseFloat(job.priceUsdc.toString());
@@ -1001,7 +1002,7 @@ router.patch('/:id/paid', async (req, res) => {
   try {
     const data = markPaidSchema.parse(req.body);
 
-    // Fetch job with human's VERIFIED wallets included for payment verification
+    // Fetch job with human's VERIFIED wallets + agent wallet info for payment verification
     const job = await prisma.job.findUnique({
       where: { id: req.params.id },
       include: {
@@ -1013,6 +1014,14 @@ router.patch('/:id/paid', async (req, res) => {
                 address: true,
                 network: true,
               },
+            },
+          },
+        },
+        registeredAgent: {
+          select: {
+            wallets: {
+              where: { verified: true },
+              select: { address: true },
             },
           },
         },
@@ -1075,7 +1084,15 @@ router.patch('/:id/paid', async (req, res) => {
       token,
     });
 
-    // Payment verified! Update job status
+    // Payment verified! Compute sender match (soft signal, never blocks payment)
+    // Check if the on-chain sender matches ANY of the agent's verified wallets
+    let senderMatch: boolean | null = null;
+    if (job.registeredAgent?.wallets && job.registeredAgent.wallets.length > 0) {
+      const fromLower = verification.from.toLowerCase();
+      senderMatch = job.registeredAgent.wallets.some(w => w.address.toLowerCase() === fromLower);
+    }
+
+    // Update job status
     // For upon-completion flow: status goes to PAID (terminal — both milestones met)
     // For upfront flow: status goes to PAID (intermediate — work not yet done)
     const newStatus = 'PAID';
@@ -1086,6 +1103,8 @@ router.patch('/:id/paid', async (req, res) => {
         paymentTxHash: data.paymentTxHash,
         paymentNetwork: networkLower,
         paymentAmount: new Decimal(verification.amount),
+        paymentFromAddress: verification.from.toLowerCase(),
+        senderMatch,
         paidAt: new Date(),
         lastActionBy: 'AGENT',
       },
@@ -1680,7 +1699,13 @@ router.post('/:id/review', authenticateAgent, requireActiveAgent, async (req: Ag
       where: { id: req.params.id },
       include: {
         review: true,
-        registeredAgent: { select: { id: true, erc8004AgentId: true } },
+        registeredAgent: {
+          select: {
+            id: true,
+            erc8004AgentId: true,
+            wallets: { where: { verified: true }, select: { address: true } },
+          },
+        },
       },
     });
 
@@ -1693,19 +1718,20 @@ router.post('/:id/review', authenticateAgent, requireActiveAgent, async (req: Ag
       return res.status(403).json({ error: 'Only the assigned agent can review this job' });
     }
 
-    // CRITICAL: Reviews require both milestones — work done AND payment settled.
-    // This decouples review eligibility from status, supporting both upfront (COMPLETED terminal)
-    // and upon-completion (PAID terminal) flows correctly.
-    // Stream jobs use streamTotalPaid instead of paidAt, so check both.
+    // Reviews require at least one of two paths:
+    // Path A: Agent proved they paid (verified wallet + senderMatch) — can review without human confirmation
+    // Path B: Human marked job completed (traditional flow)
+    // This gives verified agents a concrete benefit: they can review (including negative reviews
+    // for humans who ghost) without waiting for the human to confirm completion.
     const paymentSettled = job.paidAt || (job.paymentMode === 'STREAM' && job.streamTotalPaid && job.streamTotalPaid.toNumber() > 0);
-    if (!job.completedAt || !paymentSettled) {
-      const missing = [];
-      if (!job.completedAt) missing.push('work completion');
-      if (!paymentSettled) missing.push('payment');
+    const verifiedPayment = job.senderMatch === true && paymentSettled;
+    const humanCompleted = !!job.completedAt;
+
+    if (!verifiedPayment && !humanCompleted) {
       return res.status(400).json({
         error: 'Review rejected',
-        reason: `Missing milestones: ${missing.join(' and ')}`,
-        hint: 'Reviews are only allowed after both work is completed and payment is confirmed.',
+        reason: 'Reviews require either: (1) a verified payment from your registered wallet, or (2) the human marking the job as completed.',
+        hint: 'Verify your wallet via set_wallet and pay from it, or wait for the human to mark the job complete.',
       });
     }
 
@@ -1725,12 +1751,16 @@ router.post('/:id/review', authenticateAgent, requireActiveAgent, async (req: Ag
     const erc8004AgentId = job.registeredAgent?.erc8004AgentId ?? null;
     let erc8004FeedbackHash: string | null = null;
 
+    // Snapshot wallet verification status at review time
+    const walletVerifiedAtReview = (job.registeredAgent?.wallets?.length ?? 0) > 0;
+
     const review = await prisma.review.create({
       data: {
         jobId: job.id,
         humanId: job.humanId,
         rating: data.rating,
         comment: data.comment,
+        walletVerifiedAtReview,
         erc8004Value,
         erc8004ValueDecimals,
         erc8004Tag2,
@@ -2710,6 +2740,63 @@ router.get('/human/:humanId/reviews', async (req, res) => {
     res.json({ stats, reviews });
   } catch (error) {
     logger.error({ err: error }, 'Get reviews error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/jobs/:id/review/response — human responds to a review (Google Maps style)
+const reviewResponseSchema = z.object({
+  responseText: z.string().min(1).max(2000),
+});
+
+router.post('/:id/review/response', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+  try {
+    const data = reviewResponseSchema.parse(req.body);
+
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.id },
+      include: { review: true },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (job.humanId !== req.userId) {
+      return res.status(403).json({ error: 'Only the reviewed human can respond' });
+    }
+
+    if (!job.review) {
+      return res.status(400).json({ error: 'No review to respond to' });
+    }
+
+    if (job.review.respondedAt) {
+      return res.status(400).json({ error: 'You have already responded to this review' });
+    }
+
+    const updated = await prisma.review.update({
+      where: { id: job.review.id },
+      data: {
+        responseText: data.responseText,
+        respondedAt: new Date(),
+      },
+    });
+
+    res.json({
+      message: 'Response posted successfully',
+      review: {
+        id: updated.id,
+        rating: updated.rating,
+        comment: updated.comment,
+        responseText: updated.responseText,
+        respondedAt: updated.respondedAt,
+      },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Review response error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

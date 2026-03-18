@@ -13,9 +13,28 @@ import { logger } from '../lib/logger.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { isAllowedUrl } from '../lib/webhook.js';
 import { getPublicClient, getTokenAddress, TOKEN_CONFIGS, SUPPORTED_NETWORKS } from '../lib/blockchain/chains.js';
-import { formatUnits } from 'viem';
+import { formatUnits, verifyMessage } from 'viem';
 
 const router = Router();
+
+// EIP-191 wallet verification: challenge message builder
+function buildAgentChallengeMessage(address: string, nonce: string): string {
+  return `Sign this message to verify you own this wallet on Human Pages.\n\nAgent Wallet: ${address.toLowerCase()}\nNonce: ${nonce}`;
+}
+
+// Rate limit nonce requests: 10 per hour per IP
+const walletNonceLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: {
+    error: 'Too many nonce requests',
+    message: 'Rate limit: 10 nonce requests per hour. Try again later.',
+    retryAfter: '1 hour',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
 
 // Rate limit registration: 5 per hour per IP
 const registerLimiter = rateLimit({
@@ -102,8 +121,14 @@ router.post('/register', registerLimiter, async (req, res) => {
         erc8004AgentId,
         webhookUrl: data.webhookUrl,
         webhookSecret,
-        ...(data.walletAddress && { walletAddress: data.walletAddress }),
-        ...(data.walletNetwork && { walletNetwork: data.walletNetwork }),
+        ...(data.walletAddress && {
+          wallets: {
+            create: {
+              address: data.walletAddress.toLowerCase(),
+              network: data.walletNetwork || 'base',
+            },
+          },
+        }),
         discoverySource: data.source,
         discoveryDetail: data.sourceDetail,
         // Auto-activate as PRO with no expiry (free launch offer)
@@ -170,6 +195,14 @@ router.get('/:id', async (req, res) => {
         verifiedAt: true,
         lastActiveAt: true,
         createdAt: true,
+        wallets: {
+          select: {
+            address: true,
+            network: true,
+            verified: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
@@ -358,10 +391,53 @@ router.post('/:id/verify-domain', authenticateAgent, async (req: AgentAuthReques
   }
 });
 
-// PATCH /api/agents/:id/wallet — set agent wallet address
+// POST /api/agents/:id/wallet/nonce — request a signing challenge for wallet verification
+const nonceRequestSchema = z.object({
+  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid EVM address (must be 0x + 40 hex chars)'),
+});
+
+router.post('/:id/wallet/nonce', walletNonceLimiter, authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    if (req.agent!.id !== req.params.id) {
+      return res.status(403).json({ error: 'Not authorized for this agent' });
+    }
+
+    const { address } = nonceRequestSchema.parse(req.body);
+    const addressLower = address.toLowerCase();
+    const nonce = crypto.randomBytes(32).toString('hex');
+    const message = buildAgentChallengeMessage(addressLower, nonce);
+
+    // Upsert the wallet record with the nonce
+    await prisma.agentWallet.upsert({
+      where: { agentId_address: { agentId: req.params.id, address: addressLower } },
+      create: {
+        agentId: req.params.id,
+        address: addressLower,
+        nonce,
+        nonceExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
+      update: {
+        nonce,
+        nonceExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
+    });
+
+    res.json({ nonce, message });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Wallet nonce request error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/agents/:id/wallet — add/verify a wallet (multi-wallet, optionally with EIP-191 signature)
 const walletSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid EVM address (must be 0x + 40 hex chars)'),
   walletNetwork: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]).optional().default('base'),
+  signature: z.string().optional(),
+  nonce: z.string().optional(),
 });
 
 router.patch('/:id/wallet', authenticateAgent, async (req: AgentAuthRequest, res) => {
@@ -371,22 +447,75 @@ router.patch('/:id/wallet', authenticateAgent, async (req: AgentAuthRequest, res
     }
 
     const data = walletSchema.parse(req.body);
+    const addressLower = data.walletAddress.toLowerCase();
 
-    const updated = await prisma.agent.update({
-      where: { id: req.params.id },
-      data: {
-        walletAddress: data.walletAddress,
-        walletNetwork: data.walletNetwork,
+    let verified = false;
+
+    // If signature + nonce provided, verify wallet ownership via EIP-191
+    if (data.signature && data.nonce) {
+      const wallet = await prisma.agentWallet.findUnique({
+        where: { agentId_address: { agentId: req.params.id, address: addressLower } },
+        select: { nonce: true, nonceExpiresAt: true },
+      });
+
+      if (!wallet || wallet.nonce !== data.nonce) {
+        return res.status(400).json({ error: 'Invalid or expired nonce. Request a new one via POST /:id/wallet/nonce.' });
+      }
+
+      if (!wallet.nonceExpiresAt || wallet.nonceExpiresAt < new Date()) {
+        return res.status(400).json({ error: 'Nonce has expired. Request a new one via POST /:id/wallet/nonce.' });
+      }
+
+      const message = buildAgentChallengeMessage(addressLower, data.nonce);
+      const isValid = await verifyMessage({
+        address: data.walletAddress as `0x${string}`,
+        message,
+        signature: data.signature as `0x${string}`,
+      });
+
+      if (!isValid) {
+        return res.status(400).json({ error: 'Invalid signature. The signature does not match the address and nonce.' });
+      }
+
+      verified = true;
+    }
+
+    // Upsert wallet: adds new or updates existing
+    const wallet = await prisma.agentWallet.upsert({
+      where: { agentId_address: { agentId: req.params.id, address: addressLower } },
+      create: {
+        agentId: req.params.id,
+        address: addressLower,
+        network: data.walletNetwork,
+        verified,
+      },
+      update: {
+        network: data.walletNetwork,
+        verified,
+        // Clear nonce after use
+        nonce: null,
+        nonceExpiresAt: null,
       },
       select: {
-        id: true,
-        name: true,
-        walletAddress: true,
-        walletNetwork: true,
+        address: true,
+        network: true,
+        verified: true,
       },
     });
 
-    res.json(updated);
+    // Get agent name for response
+    const agent = await prisma.agent.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, name: true },
+    });
+
+    res.json({
+      id: agent!.id,
+      name: agent!.name,
+      walletAddress: wallet.address,
+      walletNetwork: wallet.network,
+      walletVerified: wallet.verified,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
@@ -396,29 +525,63 @@ router.patch('/:id/wallet', authenticateAgent, async (req: AgentAuthRequest, res
   }
 });
 
-// GET /api/agents/:id/balance — check agent wallet USDC balance on-chain
-router.get('/:id/balance', async (req, res) => {
+// GET /api/agents/:id/wallets — list all wallets for an agent
+router.get('/:id/wallets', authenticateAgent, async (req: AgentAuthRequest, res) => {
   try {
-    const agent = await prisma.agent.findUnique({
-      where: { id: req.params.id },
-      select: { walletAddress: true, walletNetwork: true },
-    });
-
-    if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
+    if (req.agent!.id !== req.params.id) {
+      return res.status(403).json({ error: 'Not authorized for this agent' });
     }
 
-    if (!agent.walletAddress) {
+    const wallets = await prisma.agentWallet.findMany({
+      where: { agentId: req.params.id },
+      select: {
+        address: true,
+        network: true,
+        verified: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ wallets });
+  } catch (error) {
+    logger.error({ err: error }, 'List agent wallets error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/agents/:id/balance — check agent wallet USDC balance on-chain
+// Accepts optional ?address= query param; defaults to first wallet
+router.get('/:id/balance', async (req, res) => {
+  try {
+    const addressFilter = req.query.address as string | undefined;
+
+    // Find the target wallet
+    const wallet = addressFilter
+      ? await prisma.agentWallet.findUnique({
+          where: { agentId_address: { agentId: req.params.id, address: addressFilter.toLowerCase() } },
+        })
+      : await prisma.agentWallet.findFirst({
+          where: { agentId: req.params.id },
+          orderBy: { createdAt: 'asc' },
+        });
+
+    if (!wallet) {
+      // Check if agent exists at all
+      const agentExists = await prisma.agent.findUnique({ where: { id: req.params.id }, select: { id: true } });
+      if (!agentExists) {
+        return res.status(404).json({ error: 'Agent not found' });
+      }
       return res.json({
         balance: null,
         currency: 'USDC',
-        network: agent.walletNetwork || 'base',
+        network: 'base',
         walletAddress: null,
         message: 'No wallet registered. Use PATCH /api/agents/:id/wallet to set one.',
       });
     }
 
-    const network = agent.walletNetwork || 'base';
+    const network = wallet.network || 'base';
     const client = getPublicClient(network);
     if (!client) {
       return res.status(400).json({ error: `Unsupported network: ${network}` });
@@ -433,7 +596,7 @@ router.get('/:id/balance', async (req, res) => {
       address: usdcAddress,
       abi: [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }],
       functionName: 'balanceOf',
-      args: [agent.walletAddress as `0x${string}`],
+      args: [wallet.address as `0x${string}`],
     });
 
     const balance = formatUnits(balanceRaw as bigint, TOKEN_CONFIGS.USDC.decimals);
@@ -442,7 +605,7 @@ router.get('/:id/balance', async (req, res) => {
       balance,
       currency: 'USDC',
       network,
-      walletAddress: agent.walletAddress,
+      walletAddress: wallet.address,
     });
   } catch (error) {
     logger.error({ err: error }, 'Get agent balance error');
