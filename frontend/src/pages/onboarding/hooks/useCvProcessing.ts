@@ -13,15 +13,15 @@ interface CvAutoFillTargets {
   setLanguageEntries: React.Dispatch<React.SetStateAction<LanguageEntry[]>>;
   setEducationEntries: React.Dispatch<React.SetStateAction<EducationEntry[]>>;
   setYearsOfExperience: (v: number | null) => void;
-  /** These setters need to support "only set if empty" — we pass refs to current values */
   setLinkedinUrl: (v: string) => void;
   setGithubUrl: (v: string) => void;
   setTwitterUrl: (v: string) => void;
   setWebsiteUrl: (v: string) => void;
-  /** Current values for "only set if empty" logic */
   getCurrentSocialUrls: () => { linkedinUrl: string; githubUrl: string; twitterUrl: string; websiteUrl: string };
   setExternalProfiles: React.Dispatch<React.SetStateAction<string[]>>;
   mountedRef: React.MutableRefObject<boolean>;
+  /** Called when CV upload succeeds and data is applied — used for auto-advance */
+  onUploadComplete?: () => void;
 }
 
 export interface UseCvProcessingReturn {
@@ -221,6 +221,11 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     cvUploadingRef.current = false;
     if (!targets.mountedRef.current) return;
     setCvProcessing(false);
+
+    // Notify parent that upload completed successfully — triggers auto-advance
+    if (uploaded && targets.onUploadComplete) {
+      targets.onUploadComplete();
+    }
 
     if (!uploaded) {
       toast.error('CV upload failed after multiple attempts. Please try again.');

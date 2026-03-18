@@ -73,6 +73,11 @@ export default function Onboarding() {
     }),
     setExternalProfiles: form.setExternalProfiles,
     mountedRef: form.mountedRef,
+    onUploadComplete: () => {
+      // CV uploaded successfully — switch to CV flow and advance to equipment
+      setSearchParams({ step: 'equipment' }, { replace: true });
+      window.scrollTo({ top: 0 });
+    },
   });
 
   // Restore CV state from draft
@@ -144,21 +149,8 @@ export default function Onboarding() {
     cvData: cv.cvData,
   });
 
-  // When CV upload completes, switch to CV flow and navigate to equipment.
-  // We track the previous value to detect the false→true transition.
-  // Using a ref + effect ensures we only navigate once per upload.
-  const cvUploadedPrev = useRef(false);
-  useEffect(() => {
-    // Only navigate on false→true transition (fresh upload, not draft restore or page reload)
-    if (cv.cvUploaded && !cvUploadedPrev.current && currentStepId === 'cv-upload') {
-      // Small delay to let React finish batching state updates from applyParsedCvData
-      setTimeout(() => {
-        setSearchParams({ step: 'equipment' }, { replace: true });
-        window.scrollTo({ top: 0 });
-      }, 100);
-    }
-    cvUploadedPrev.current = cv.cvUploaded;
-  }, [cv.cvUploaded, currentStepId, setSearchParams]);
+  // CV auto-advance is handled by the onUploadComplete callback in useCvProcessing.
+  // No effect needed — the callback fires directly after successful upload.
 
   // ─── Navigation ───
   const submittingRef = useRef(false);
