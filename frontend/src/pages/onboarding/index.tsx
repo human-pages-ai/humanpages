@@ -499,9 +499,21 @@ export default function Onboarding() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-4 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <p className="text-sm font-medium text-slate-600">
-            Complete Your Profile &bull; {labels[position - 1]}
-          </p>
+          <div className="flex items-center gap-3">
+            {urlStepId && form.profileCompleted && (
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                Dashboard
+              </button>
+            )}
+            <p className="text-sm font-medium text-slate-600">
+              {labels[position - 1]}
+            </p>
+          </div>
           <div aria-live="polite" aria-atomic="true" className="flex items-center gap-1.5">
             {saveStatus === 'saving' && (
               <span className="text-[10px] text-slate-400 flex items-center gap-1">
