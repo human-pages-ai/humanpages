@@ -4,25 +4,25 @@ import { SuggestionInput } from '../components/SuggestionInput';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
 import type { Service } from '../types';
 
-// Flat list of common equipment with categories for autocomplete
-const EQUIPMENT_SUGGESTIONS = [
-  // Phones
-  'iPhone', 'Samsung Galaxy', 'Pixel', 'Xiaomi', 'OnePlus', 'Huawei',
-  // Cameras
-  'DSLR Camera', 'Mirrorless Camera', 'GoPro', 'Action Camera', 'Film Camera',
-  // Vehicles
-  'Car', 'Motorcycle', 'Bicycle', 'Van', 'Truck', 'Scooter',
-  // Computers
-  'Laptop', 'Desktop', 'Tablet', 'MacBook', 'iPad',
-  // Audio
-  'Microphone', 'Headphones', 'Speaker', 'Mixer', 'Audio Interface',
-  // Drones
-  'DJI Mavic', 'DJI Mini', 'FPV Drone', 'Drone',
-  // Tools
-  'Power Drill', 'Measuring Tools', 'Soldering Iron', '3D Printer', 'Toolset',
-  // Kitchen
-  'Oven', 'Blender', 'Food Processor', 'Commercial Kitchen',
+// Equipment categories
+const EQUIPMENT_CATEGORIES = [
+  'Phone', 'Camera', 'Vehicle', 'Computer', 'Audio', 'Drone', 'Tools', 'Kitchen', 'Cleaning', 'Office', 'Other',
 ];
+
+// Equipment types/models by category
+const EQUIPMENT_TYPES_BY_CATEGORY: Record<string, string[]> = {
+  'Phone': ['iPhone', 'Samsung Galaxy', 'Pixel', 'Xiaomi', 'OnePlus', 'Huawei'],
+  'Camera': ['DSLR Camera', 'Mirrorless Camera', 'GoPro', 'Action Camera', 'Film Camera'],
+  'Vehicle': ['Car', 'Motorcycle', 'Bicycle', 'Van', 'Truck', 'Scooter'],
+  'Computer': ['Laptop', 'Desktop', 'Tablet', 'MacBook', 'iPad'],
+  'Audio': ['Microphone', 'Headphones', 'Speaker', 'Mixer', 'Audio Interface'],
+  'Drone': ['DJI Mavic', 'DJI Mini', 'FPV Drone', 'Drone'],
+  'Tools': ['Power Drill', 'Measuring Tools', 'Soldering Iron', '3D Printer', 'Toolset'],
+  'Kitchen': ['Oven', 'Blender', 'Food Processor', 'Commercial Kitchen'],
+  'Cleaning': ['Vacuum', 'Pressure Washer', 'Cleaning Equipment'],
+  'Office': ['Desk', 'Chair', 'Printer', 'Scanner'],
+  'Other': [],
+};
 
 const formatUnitLabel = (unit: string): string => {
   const labels: Record<string, string> = {
@@ -212,7 +212,8 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
   const [priceError, setPriceError] = useState('');
-  const [newEquipment, setNewEquipment] = useState('');
+  const [newEquipmentCategory, setNewEquipmentCategory] = useState('');
+  const [newEquipmentType, setNewEquipmentType] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
 
   // Generate service suggestions from CV
@@ -319,13 +320,19 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   // Equipment-only mode: render just the equipment section as a standalone step
   if (equipmentOnly) {
     const handleAddEquipment = () => {
-      const trimmed = newEquipment.trim();
-      if (!trimmed) return;
-      if (!equipment.some(eq => eq.toLowerCase() === trimmed.toLowerCase())) {
-        setEquipment(prev => [...prev, trimmed]);
-        setNewEquipment('');
+      const categoryTrimmed = newEquipmentCategory.trim();
+      const typeTrimmed = newEquipmentType.trim();
+      if (!categoryTrimmed || !typeTrimmed) return;
+
+      const equipmentName = `${categoryTrimmed} - ${typeTrimmed}`;
+      if (!equipment.some(eq => eq.toLowerCase() === equipmentName.toLowerCase())) {
+        setEquipment(prev => [...prev, equipmentName]);
+        setNewEquipmentCategory('');
+        setNewEquipmentType('');
       }
     };
+
+    const typeOptions = newEquipmentCategory ? EQUIPMENT_TYPES_BY_CATEGORY[newEquipmentCategory] || [] : [];
 
     return (
       <>
@@ -345,43 +352,69 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
           <div className="mb-6 p-4 border border-slate-200 rounded-lg bg-white">
             <div className="space-y-3">
               <div>
-                <label htmlFor="eq-input" className="block text-sm font-medium text-slate-700 mb-1">Equipment Name</label>
+                <label htmlFor="eq-category" className="block text-sm font-medium text-slate-700 mb-1">Category</label>
                 <input
-                  id="eq-input"
-                  list="equipment-list"
+                  id="eq-category"
+                  list="equipment-categories"
                   type="text"
-                  value={newEquipment}
-                  onChange={(e) => setNewEquipment(e.target.value.slice(0, 100))}
+                  value={newEquipmentCategory}
+                  onChange={(e) => { setNewEquipmentCategory(e.target.value); setNewEquipmentType(''); }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       handleAddEquipment();
                     }
                   }}
-                  maxLength={100}
-                  placeholder="e.g., iPhone, DSLR Camera, Laptop..."
+                  placeholder="e.g., Phone, Camera, Vehicle..."
                   className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
-                <datalist id="equipment-list">
-                  {EQUIPMENT_SUGGESTIONS.map((item) => (
-                    <option key={item} value={item} />
+                <datalist id="equipment-categories">
+                  {EQUIPMENT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat} />
                   ))}
                 </datalist>
+              </div>
+
+              <div>
+                <label htmlFor="eq-type" className="block text-sm font-medium text-slate-700 mb-1">Type / Model</label>
+                <input
+                  id="eq-type"
+                  list={newEquipmentCategory ? `equipment-types-${newEquipmentCategory}` : ''}
+                  type="text"
+                  value={newEquipmentType}
+                  onChange={(e) => setNewEquipmentType(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddEquipment();
+                    }
+                  }}
+                  placeholder={newEquipmentCategory ? `e.g., ${typeOptions[0] || 'custom model'}` : 'Select category first'}
+                  disabled={!newEquipmentCategory}
+                  className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-slate-50 disabled:text-slate-400"
+                />
+                {newEquipmentCategory && (
+                  <datalist id={`equipment-types-${newEquipmentCategory}`}>
+                    {typeOptions.map((type) => (
+                      <option key={type} value={type} />
+                    ))}
+                  </datalist>
+                )}
               </div>
 
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleAddEquipment}
-                  disabled={!newEquipment.trim()}
+                  disabled={!newEquipmentCategory.trim() || !newEquipmentType.trim()}
                   className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]"
                 >
                   Add Equipment
                 </button>
-                {newEquipment && (
+                {(newEquipmentCategory || newEquipmentType) && (
                   <button
                     type="button"
-                    onClick={() => setNewEquipment('')}
+                    onClick={() => { setNewEquipmentCategory(''); setNewEquipmentType(''); }}
                     className="px-4 py-2.5 sm:py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]"
                   >
                     Clear

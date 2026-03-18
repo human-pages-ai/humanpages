@@ -59,7 +59,10 @@ export function StepConnect({
       }
     }
 
-    // Check if beforeinstallprompt event was already captured at module level
+    // Check if beforeinstallprompt event was already captured at module level.
+    // Note: Chrome suppresses the beforeinstallprompt event when its own banner is shown.
+    // If deferredInstallPrompt is null, the install text instructions below will still guide
+    // users through the manual installation process (Menu → Install app).
     if (deferredInstallPrompt) {
       installPromptRef.current = deferredInstallPrompt;
       setShowInstallButton(true);
