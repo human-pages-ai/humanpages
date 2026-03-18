@@ -107,7 +107,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
             )}
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-slate-500 whitespace-nowrap">
-                {getProfileDisplayUrl({ id: userId }).replace(/\/[^/]+$/, '/')}
+                {typeof window !== 'undefined' ? `${window.location.host}/u/` : 'humanpages.ai/u/'}
               </span>
               <input
                 id="vouch-username"

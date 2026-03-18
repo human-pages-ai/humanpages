@@ -64,6 +64,8 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
       let bio = result.bio;
       // Strip personal info that the CV parser might include in the bio
       if (result.name) bio = bio.replace(new RegExp(result.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '').trim();
+      // Strip common name patterns at the start (e.g., "John Smith is a..." or "Jane Doe has...")
+      bio = bio.replace(/^[A-Z][a-z]+ [A-Z][a-z]+ (is |was |has |have |been )/i, '').trim();
       // Strip email patterns
       bio = bio.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim();
       // Strip phone patterns

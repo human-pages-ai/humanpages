@@ -1699,7 +1699,19 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 router.get('/:id', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }], humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: {
+        id: req.params.id,
+        humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
+        // Allow public profile viewing for unverified users if they have any content (name, skills, bio)
+        // OR they're verified OR they have completed jobs
+        OR: [
+          ...identityVerifiedWhere.OR,
+          { jobs: { some: { status: 'COMPLETED' } } },
+          { name: { not: '' } },
+          { skills: { isEmpty: false } },
+          { bio: { not: '' } },
+        ]
+      },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1736,7 +1748,19 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 router.get('/u/:username', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { username: req.params.username, OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }], humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: {
+        username: req.params.username,
+        humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
+        // Allow public profile viewing for unverified users if they have any content (name, skills, bio)
+        // OR they're verified OR they have completed jobs
+        OR: [
+          ...identityVerifiedWhere.OR,
+          { jobs: { some: { status: 'COMPLETED' } } },
+          { name: { not: '' } },
+          { skills: { isEmpty: false } },
+          { bio: { not: '' } },
+        ]
+      },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
