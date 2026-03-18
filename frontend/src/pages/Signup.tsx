@@ -523,13 +523,6 @@ export default function Signup() {
           </button>
 
           <InAppBrowserBanner />
-
-          <p className="text-center text-sm text-gray-600">
-            {t('auth.haveAccount')}{' '}
-            <Link to="/login" className="text-blue-600 hover:text-blue-500">
-              {t('auth.signIn')}
-            </Link>
-          </p>
         </form>
         )}
 
