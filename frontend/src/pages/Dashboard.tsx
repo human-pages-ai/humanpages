@@ -526,14 +526,12 @@ export default function Dashboard() {
             // Profile completion scoring
             const checks = [
               { label: 'CV', done: !!profile.cvParsedAt, stepId: 'cv-upload' },
-              { label: 'Name', done: !!profile.name?.trim(), stepId: 'profile' },
               { label: 'Photo', done: !!profile.profilePhotoUrl, stepId: 'profile' },
               { label: 'Skills', done: (profile.skills?.length || 0) > 0, stepId: 'skills' },
               { label: 'Location', done: !!profile.location?.trim(), stepId: 'location' },
               { label: 'Services', done: profile.services?.some(s => s.isActive) ?? false, stepId: 'services' },
               { label: 'Equipment', done: (profile.equipment?.length || 0) > 0, stepId: 'equipment' },
               { label: 'Payment', done: profile.wallets.length > 0, stepId: 'payment' },
-              { label: 'Bio', done: !!profile.bio?.trim(), stepId: 'profile' },
             ];
             // Sort: done first, then not done
             const sortedChecks = [...checks].sort((a, b) => (b.done ? 1 : 0) - (a.done ? 1 : 0));
@@ -569,7 +567,8 @@ export default function Dashboard() {
                   {/* Name + level + progress */}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-lg font-bold text-slate-900 truncate">{profile.name || 'Complete your profile'}</h2>
-                    {profile.username && <p className="text-sm text-slate-500">@{profile.username}</p>}
+                    {profile.bio && <p className="text-sm text-slate-500 line-clamp-2 mt-0.5">{profile.bio}</p>}
+                    {profile.username && <p className="text-xs text-slate-400">@{profile.username}</p>}
                     <p className="mt-2 text-xs text-slate-500">{pct}% complete</p>
                     {/* Checklist pills */}
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -774,40 +773,7 @@ export default function Dashboard() {
                   ) : null}
                 </WizardModuleTile>
 
-                {/* 7. Profile (Name, Bio, Photo) */}
-                <WizardModuleTile
-                  title="Profile"
-                  stepId="profile"
-                  icon="👤"
-                  color="rose"
-                  isEmpty={!profile.name}
-                  emptyHint="Add a name and photo to build trust"
-                >
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-gray-500 text-xs">Name:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.name ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.name || '—'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 text-xs">Bio:</span>{' '}
-                      {profile.bio ? (
-                        <p className="text-sm text-gray-900 mt-1 line-clamp-2">{profile.bio}</p>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-gray-500 text-xs">Photo:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.profilePhotoUrl ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.profilePhotoUrl ? 'Added' : '—'}
-                      </span>
-                    </div>
-                  </div>
-                </WizardModuleTile>
-
-                {/* 8. Availability */}
+                {/* 7. Availability */}
                 <WizardModuleTile
                   title="Availability"
                   stepId="availability"

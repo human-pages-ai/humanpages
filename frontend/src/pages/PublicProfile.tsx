@@ -105,6 +105,13 @@ function getDisplayLocation(profile: PublicHuman): string | undefined {
   return profile.location;
 }
 
+function formatPublicName(name: string | undefined): string {
+  if (!name) return 'Anonymous';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 export default function PublicProfile() {
   const { t, i18n } = useTranslation();
   const { id, username } = useParams<{ id?: string; username?: string }>();
@@ -139,7 +146,7 @@ export default function PublicProfile() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: profile?.name ? `${profile.name} on Human Pages` : 'Human Pages Profile',
+          title: profile?.name ? `${formatPublicName(profile.name)} on Human Pages` : 'Human Pages Profile',
           url,
         });
       } catch {
@@ -186,14 +193,14 @@ export default function PublicProfile() {
     <div className="min-h-screen bg-gray-50">
       <SEO
         title={profile.name || profile.username || 'Profile'}
-        description={profile.bio || `${profile.name || profile.username || 'Profile'} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
+        description={profile.bio || `${formatPublicName(profile.name)} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
         ogImage={`https://humanpages.ai/api/og/${profile.id}?v=2`}
         ogType="profile"
         path={`/humans/${profile.id}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",
-          "name": profile.name,
+          "name": formatPublicName(profile.name),
           "description": profile.bio,
           "url": `https://humanpages.ai/humans/${profile.id}`,
           ...(profile.location && { "address": {
@@ -246,7 +253,7 @@ export default function PublicProfile() {
                   )}
                 </div>
                 <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-white break-words">{profile.name || profile.username || t('publicProfile.anonymous')}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-white break-words">{formatPublicName(profile.name)}</h1>
                 {profile.username && (
                   <p className="text-blue-200 text-sm mt-0.5">@{profile.username}</p>
                 )}
@@ -731,7 +738,7 @@ export default function PublicProfile() {
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
           targetUserId={profile.id}
-          targetUserName={profile.name || profile.username || ''}
+          targetUserName={formatPublicName(profile.name)}
         />
       )}
 

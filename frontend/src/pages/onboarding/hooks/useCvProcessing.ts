@@ -60,7 +60,18 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
 
     // Identity — CV always overwrites
     if (result.name) targets.setName(result.name);
-    if (result.bio) targets.setBio(result.bio.slice(0, 500));
+    if (result.bio) {
+      let bio = result.bio;
+      // Strip personal info that the CV parser might include in the bio
+      if (result.name) bio = bio.replace(new RegExp(result.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '').trim();
+      // Strip email patterns
+      bio = bio.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim();
+      // Strip phone patterns
+      bio = bio.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '').trim();
+      // Clean up double spaces and leading punctuation
+      bio = bio.replace(/\s{2,}/g, ' ').replace(/^[,;.\s]+/, '').trim();
+      targets.setBio(bio.slice(0, 500));
+    }
     if (result.location) targets.setLocation(result.location);
 
     // Skills (merge, case-insensitive dedup)
