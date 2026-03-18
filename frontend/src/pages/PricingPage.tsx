@@ -77,7 +77,10 @@ export default function PricingPage() {
                 {t('pricing.proLaunchBadge')}
               </span>
               <h2 className="text-lg font-bold text-slate-900">{t('pricing.proTitle')}</h2>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{t('pricing.proPrice')}</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">
+                <span className="line-through text-slate-400 text-xl mr-2">{t('pricing.proPrice')}</span>
+                <span className="text-green-600">FREE</span>
+              </p>
               <p className="text-sm text-slate-500 mt-1">{t('pricing.proActivation')}</p>
 
               <ul className="mt-6 space-y-3 flex-1">
