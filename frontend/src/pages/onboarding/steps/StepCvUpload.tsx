@@ -81,10 +81,9 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
 
       <div className="space-y-3">
         <button type="button" onClick={onNext} disabled={!cvUploaded && !cvProcessing} className={`w-full py-3 font-semibold rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500 ${cvUploaded || cvProcessing ? 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-          {cvProcessing ? 'Analyzing...' : 'Continue'}
+          {cvProcessing ? 'Analyzing...' : 'Next →'}
         </button>
-        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip CV Upload</button>
-        <p className="text-xs text-slate-500 text-center">Step 1 of 7</p>
+        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip →</button>
       </div>
     </>
   );

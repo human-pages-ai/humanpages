@@ -36,7 +36,7 @@ export const SKILL_CATEGORIES: Record<string, string[]> = {
   'Local & In-Person': ['Local Photography', 'In-Person Verification', 'Mystery Shopping', 'Survey & Feedback', 'In-Home Tech Support', 'Fitness Training', 'Tailoring & Alterations', 'Auto Repair'],
 };
 
-export const POPULAR_SKILLS = ['Virtual Assistant', 'Content Writing', 'Graphic Design', 'Social Media Management', 'English Teaching', 'Translation', 'Video Editing', 'Web Development', 'Data Entry', 'Customer Support', 'Tour Guide', 'Personal Driver'];
+export const POPULAR_SKILLS = ['Virtual Assistant', 'Content Writing', 'Graphic Design', 'Social Media Management', 'English Teaching', 'Translation', 'Video Editing', 'Web Development', 'Data Entry', 'Customer Support', 'Tour Guide', 'Personal Driver', 'SEO', 'Testing', 'Localization'];
 export const SKILL_SUGGESTIONS = Object.values(SKILL_CATEGORIES).flat();
 // Hierarchical service categories with subcategories and title suggestions
 export const SERVICE_CATEGORY_HIERARCHY: Record<string, { subcategories: string[]; suggestions: string[] }> = {
@@ -144,6 +144,48 @@ export const COUNTRY_CODES = [
   { code: '+51', country: 'PE', flag: '🇵🇪', label: 'Peru (+51)' },
   { code: '+54', country: 'AR', flag: '🇦🇷', label: 'Argentina (+54)' },
   { code: '+63', country: 'PH', flag: '🇵🇭', label: 'Philippines (+63)' },
+  // African nations
+  { code: '+233', country: 'GH', flag: '🇬🇭', label: 'Ghana (+233)' },
+  { code: '+255', country: 'TZ', flag: '🇹🇿', label: 'Tanzania (+255)' },
+  { code: '+256', country: 'UG', flag: '🇺🇬', label: 'Uganda (+256)' },
+  { code: '+250', country: 'RW', flag: '🇷🇼', label: 'Rwanda (+250)' },
+  { code: '+221', country: 'SN', flag: '🇸🇳', label: 'Senegal (+221)' },
+  { code: '+216', country: 'TN', flag: '🇹🇳', label: 'Tunisia (+216)' },
+  { code: '+231', country: 'LR', flag: '🇱🇷', label: 'Liberia (+231)' },
+  { code: '+232', country: 'SL', flag: '🇸🇱', label: 'Sierra Leone (+232)' },
+  { code: '+212', country: 'MA', flag: '🇲🇦', label: 'Morocco (+212)' },
+  { code: '+251', country: 'ET', flag: '🇪🇹', label: 'Ethiopia (+251)' },
+  { code: '+260', country: 'ZM', flag: '🇿🇲', label: 'Zambia (+260)' },
+  { code: '+263', country: 'ZW', flag: '🇿🇼', label: 'Zimbabwe (+263)' },
+  { code: '+267', country: 'BW', flag: '🇧🇼', label: 'Botswana (+267)' },
+  { code: '+291', country: 'ER', flag: '🇪🇷', label: 'Eritrea (+291)' },
+  { code: '+224', country: 'GN', flag: '🇬🇳', label: 'Guinea (+224)' },
+  { code: '+226', country: 'BF', flag: '🇧🇫', label: 'Burkina Faso (+226)' },
+  { code: '+229', country: 'BJ', flag: '🇧🇯', label: 'Benin (+229)' },
+  { code: '+266', country: 'LS', flag: '🇱🇸', label: 'Lesotho (+266)' },
+  // Southeast Asian nations
+  { code: '+855', country: 'KH', flag: '🇰🇭', label: 'Cambodia (+855)' },
+  { code: '+95', country: 'MM', flag: '🇲🇲', label: 'Myanmar (+95)' },
+  { code: '+856', country: 'LA', flag: '🇱🇦', label: 'Laos (+856)' },
+  { code: '+65', country: 'SG', flag: '🇸🇬', label: 'Singapore (+65)' },
+  { code: '+886', country: 'TW', flag: '🇹🇼', label: 'Taiwan (+886)' },
+  { code: '+93', country: 'AF', flag: '🇦🇫', label: 'Afghanistan (+93)' },
+  { code: '+880', country: 'BD', flag: '🇧🇩', label: 'Bangladesh (+880)' },
+  { code: '+977', country: 'NP', flag: '🇳🇵', label: 'Nepal (+977)' },
+  { code: '+94', country: 'LK', flag: '🇱🇰', label: 'Sri Lanka (+94)' },
+  { code: '+880', country: 'BD', flag: '🇧🇩', label: 'Bangladesh (+880)' },
+  { code: '+92', country: 'PK', flag: '🇵🇰', label: 'Pakistan (+92)' },
+  { code: '+880', country: 'BD', flag: '🇧🇩', label: 'Bangladesh (+880)' },
+  { code: '+98', country: 'IR', flag: '🇮🇷', label: 'Iran (+98)' },
+  { code: '+964', country: 'IQ', flag: '🇮🇶', label: 'Iraq (+964)' },
+  { code: '+962', country: 'JO', flag: '🇯🇴', label: 'Jordan (+962)' },
+  { code: '+961', country: 'LB', flag: '🇱🇧', label: 'Lebanon (+961)' },
+  { code: '+963', country: 'SY', flag: '🇸🇾', label: 'Syria (+963)' },
+  { code: '+591', country: 'BO', flag: '🇧🇴', label: 'Bolivia (+591)' },
+  { code: '+593', country: 'EC', flag: '🇪🇨', label: 'Ecuador (+593)' },
+  { code: '+595', country: 'PY', flag: '🇵🇾', label: 'Paraguay (+595)' },
+  { code: '+598', country: 'UY', flag: '🇺🇾', label: 'Uruguay (+598)' },
+  { code: '+56', country: 'CL', flag: '🇨🇱', label: 'Chile (+56)' },
 ] as const;
 
 // ─── Availability step options ───

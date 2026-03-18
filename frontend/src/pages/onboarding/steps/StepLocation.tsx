@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
-import SearchableCombobox from '../../../components/common/SearchableCombobox';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
-import { PROFICIENCY_LEVELS, COMMON_LANGUAGES } from '../constants';
-import type { LanguageEntry } from '../types';
+
+const TIMEZONE_CITY_MAP: Record<string, string> = {
+  'Asia/Saigon': 'Ho Chi Minh City, Vietnam',
+  'Asia/Ho_Chi_Minh': 'Ho Chi Minh City, Vietnam',
+  'Asia/Calcutta': 'Kolkata, India',
+  'Asia/Kolkata': 'Kolkata, India',
+  'Asia/Bombay': 'Mumbai, India',
+  'Europe/Kiev': 'Kyiv, Ukraine',
+  'Asia/Rangoon': 'Yangon, Myanmar',
+  'Asia/Katmandu': 'Kathmandu, Nepal',
+  'Pacific/Ponape': 'Pohnpei, Micronesia',
+  'Asia/Ujung_Pandang': 'Makassar, Indonesia',
+  'America/Buenos_Aires': 'Buenos Aires, Argentina',
+};
 
 interface StepLocationProps {
   location: string;
@@ -12,10 +23,6 @@ interface StepLocationProps {
   setNeighborhood: (v: string) => void;
   timezone: string;
   setTimezone: (v: string) => void;
-  languageEntries: LanguageEntry[];
-  addLanguageEntry: (entry: LanguageEntry) => void;
-  removeLanguageEntry: (index: number) => void;
-  updateLanguageEntry: (index: number, entry: LanguageEntry) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
@@ -29,19 +36,28 @@ export function StepLocation({
   setNeighborhood,
   timezone,
   setTimezone,
-  languageEntries,
-  addLanguageEntry,
-  removeLanguageEntry,
-  updateLanguageEntry,
   onNext,
   onSkip,
   error,
 }: StepLocationProps) {
   const [isRemote, setIsRemote] = useState(location === 'Remote');
   const [defaultLocationDetected, setDefaultLocationDetected] = useState(false);
-  const [newLang, setNewLang] = useState('');
-  const [newProficiency, setNewProficiency] = useState('');
-  const [addingLanguage, setAddingLanguage] = useState(false);
+
+  function getCityFromTimezone(tz: string): string {
+    // Check if we have a specific mapping
+    if (TIMEZONE_CITY_MAP[tz]) {
+      return TIMEZONE_CITY_MAP[tz];
+    }
+
+    // Extract city from timezone and append continent as hint
+    const parts = tz.split('/');
+    if (parts.length > 1) {
+      const continent = parts[0];
+      const cityName = parts[parts.length - 1].replace(/_/g, ' ');
+      return `${cityName}, ${continent}`;
+    }
+    return '';
+  }
 
   // Auto-detect location and timezone on mount
   useEffect(() => {
@@ -50,9 +66,8 @@ export function StepLocation({
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         setTimezone(tz);
         if (tz) {
-          const parts = tz.split('/');
-          if (parts.length > 1) {
-            const cityName = parts[parts.length - 1].replace(/_/g, ' ');
+          const cityName = getCityFromTimezone(tz);
+          if (cityName) {
             setLocation(cityName);
             setDefaultLocationDetected(true);
           }
@@ -75,23 +90,6 @@ export function StepLocation({
       setLocation('Remote');
     }
   }, [isRemote, setLocation]);
-
-  const handleAddLanguage = () => {
-    const trimmed = newLang.trim();
-    if (!trimmed) return;
-    if (!newProficiency.trim()) {
-      alert('Please select a proficiency level');
-      return;
-    }
-    if (languageEntries.some(entry => entry.language.toLowerCase() === trimmed.toLowerCase())) {
-      alert('This language is already added');
-      return;
-    }
-    addLanguageEntry({ language: trimmed, proficiency: newProficiency });
-    setNewLang('');
-    setNewProficiency('');
-    setAddingLanguage(false);
-  };
 
   const handleRefreshTimezone = () => {
     try {
@@ -162,54 +160,9 @@ export function StepLocation({
         <p className="text-xs text-slate-500 mt-2">Auto-detected from your device</p>
       </div>
 
-      {/* Languages Section */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Languages (Optional){languageEntries.length > 0 && <span className="ml-2 text-xs font-normal text-orange-600">{languageEntries.length} added</span>}
-        </label>
-        {languageEntries.length > 0 && (
-          <div className="space-y-3 mb-4">
-            {languageEntries.map((entry, idx) => (
-              <div key={idx} className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg bg-slate-50">
-                <div className="flex-1 min-w-0">
-                  <span className="font-medium text-slate-900 text-sm">{entry.language}</span>
-                  {entry.proficiency && <span className="text-xs text-slate-500 ml-2">({entry.proficiency})</span>}
-                </div>
-                <select value={entry.proficiency} onChange={(e) => updateLanguageEntry(idx, { ...entry, proficiency: e.target.value })} className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500" aria-label={`Proficiency for ${entry.language}`}>
-                  <option value="">No level set</option>
-                  {PROFICIENCY_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
-                </select>
-                <button type="button" onClick={() => removeLanguageEntry(idx)} className="text-slate-400 hover:text-red-500 font-bold flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`Remove language: ${entry.language}`}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
-        {languageEntries.length < 10 && !addingLanguage && (
-          <button type="button" onClick={() => setAddingLanguage(true)} className="w-full py-3 min-h-[44px] border-2 border-dashed border-orange-300 rounded-lg text-sm text-orange-600 hover:text-orange-700 hover:border-orange-400 hover:bg-orange-50 active:bg-orange-100 font-medium mb-4 transition-colors">+ Add Language</button>
-        )}
-        {addingLanguage && (
-          <div className="border border-slate-300 rounded-lg p-4 mb-4 bg-white">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <SearchableCombobox id="loc-lang-name" label="Language" value={newLang} onChange={(v) => setNewLang(v)} options={COMMON_LANGUAGES.filter(lang => !languageEntries.some(entry => entry.language.toLowerCase() === lang.toLowerCase()))} placeholder="e.g., English" required allowFreeText />
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Proficiency</label>
-                <select value={newProficiency} onChange={(e) => setNewProficiency(e.target.value)} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white" aria-label="Proficiency level" aria-required="true">
-                  <option value="">Select proficiency...</option>
-                  {PROFICIENCY_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={handleAddLanguage} disabled={!newLang.trim()} className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg font-medium text-sm hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]">Add Language</button>
-              <button type="button" onClick={() => { setAddingLanguage(false); setNewLang(''); setNewProficiency(''); }} className="px-4 py-2.5 sm:py-2 text-slate-600 bg-slate-100 rounded-lg font-medium text-sm hover:bg-slate-200 active:bg-slate-300 transition-colors min-h-[44px]">Cancel</button>
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="space-y-3">
-        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Continue</button>
-        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip for now</button>
+        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Next →</button>
+        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip →</button>
       </div>
     </>
   );

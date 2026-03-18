@@ -33,6 +33,7 @@ export default function Signup() {
   const [captchaFailed, setCaptchaFailed] = useState(false);
   const captchaResolved = useRef(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const { signup, loginWithWhatsApp, loginWithGoogle, loginWithLinkedIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -400,11 +401,18 @@ export default function Signup() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-50 text-gray-500">or sign up with email</span>
+            <button
+              type="button"
+              onClick={() => setShowEmailForm(!showEmailForm)}
+              className="px-2 bg-gray-50 text-gray-500 hover:text-gray-700 font-medium transition-colors"
+            >
+              or sign up with email
+            </button>
           </div>
         </div>
 
         {/* Email/password form */}
+        {showEmailForm && (
         <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" role="alert">
@@ -523,6 +531,7 @@ export default function Signup() {
             </Link>
           </p>
         </form>
+        )}
       </div>
     </main>
   );

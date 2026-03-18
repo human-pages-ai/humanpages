@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
 import { posthog } from '../../lib/posthog';
@@ -32,6 +32,7 @@ import { StepErrorBoundary } from './components/StepErrorBoundary';
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const draft = useMemo(() => loadDraft(), []);
 
   // ─── Hooks ───
@@ -71,11 +72,16 @@ export default function Onboarding() {
   const labels = useMemo(() => getStepLabels(flow), [flow]);
   const total = totalSteps(flow);
 
-  // Step position (1-based index into the flow)
-  const [position, setPosition] = useState(() => {
-    const saved = draft?.step || 1;
-    return Math.max(1, Math.min(saved, total));
-  });
+  // Derive position from URL param, falling back to draft
+  const urlStepId = searchParams.get('step') as StepId | null;
+  const position = useMemo(() => {
+    if (urlStepId) {
+      const idx = flow.findIndex(s => s.id === urlStepId);
+      if (idx !== -1) return idx + 1;
+    }
+    return Math.max(1, Math.min(draft?.step || 1, total));
+  }, [urlStepId, flow, draft, total]);
+
   const [loading, setLoading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const prevPositionRef = useRef(position);
@@ -115,12 +121,14 @@ export default function Onboarding() {
     cvData: cv.cvData,
   });
 
-  // Auto-advance from CV upload when processing begins
+  // Auto-advance from CV upload when processing begins (only when transitioning from false to true)
+  const prevCvProcessingRef = useRef(false);
   useEffect(() => {
-    if (cv.cvProcessing && currentStepId === 'cv-upload' && !loading) {
+    if (cv.cvProcessing && !prevCvProcessingRef.current && currentStepId === 'cv-upload' && !loading) {
       goToPosition(position + 1);
     }
-  }, [cv.cvProcessing, currentStepId, loading]); // eslint-disable-line react-hooks/exhaustive-deps — goToPosition changes each render
+    prevCvProcessingRef.current = cv.cvProcessing;
+  }, [cv.cvProcessing, currentStepId, loading, position]); // eslint-disable-line react-hooks/exhaustive-deps — goToPosition changes each render
 
   // ─── Navigation ───
   const submittingRef = useRef(false);
@@ -133,7 +141,7 @@ export default function Onboarding() {
     prevPositionRef.current = position;
 
     requestAnimationFrame(() => {
-      setPosition(clamped);
+      setSearchParams({ step: flow[clamped - 1].id }, { replace: true });
       form.setError('');
       window.scrollTo({ top: 0, behavior: window.innerWidth < 640 ? 'auto' : 'smooth' });
       requestAnimationFrame(() => {
@@ -142,7 +150,7 @@ export default function Onboarding() {
         heading?.focus();
       });
     });
-  }, [position, total, form]);
+  }, [position, total, flow, setSearchParams, form]);
 
   // Universal next/skip/back — every step uses these
   const handleNext = useCallback(() => {
@@ -340,7 +348,6 @@ export default function Onboarding() {
             addLanguageEntry={form.addLanguageEntry}
             removeLanguageEntry={form.removeLanguageEntry}
             updateLanguageEntry={form.updateLanguageEntry}
-            yearsOfExperience={form.yearsOfExperience} setYearsOfExperience={form.setYearsOfExperience}
             onNext={handleNext} {...stepProps}
           />
         );
@@ -371,10 +378,6 @@ export default function Onboarding() {
             setLocationLat={form.setLocationLat} setLocationLng={form.setLocationLng}
             setNeighborhood={form.setNeighborhood}
             timezone={form.timezone} setTimezone={form.setTimezone}
-            languageEntries={form.languageEntries}
-            addLanguageEntry={form.addLanguageEntry}
-            removeLanguageEntry={form.removeLanguageEntry}
-            updateLanguageEntry={form.updateLanguageEntry}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );
@@ -488,56 +491,35 @@ export default function Onboarding() {
 
       {/* Progress bar */}
       <div className="bg-white px-4 py-4 border-b border-slate-200">
-        <div className="max-w-2xl mx-auto">
-          <nav aria-label="Onboarding progress" className="flex items-start justify-between">
-            {flow.map((stepDef, i) => {
-              const stepNum = i + 1;
-              return (
-                <div key={stepDef.id} className="flex flex-col items-center flex-1">
-                  <div className="flex items-center w-full justify-center relative">
-                    <button
-                      type="button"
-                      onClick={() => stepNum < position && !loading && goToPosition(stepNum)}
-                      disabled={stepNum >= position || loading}
-                      aria-label={`Step ${stepNum}: ${stepDef.label}`}
-                      aria-current={stepNum === position ? 'step' : undefined}
-                      tabIndex={stepNum < position && !loading ? 0 : -1}
-                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-semibold text-[10px] sm:text-xs transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500 ${
-                        stepNum < position && !loading ? 'bg-green-500 text-white cursor-pointer hover:bg-green-600 active:bg-green-700'
-                          : stepNum === position ? 'bg-orange-500 text-white ring-2 ring-orange-300 cursor-default'
-                          : 'bg-slate-200 text-slate-600 cursor-default'
-                      }`}
-                    >
-                      {stepNum < position ? '✓' : stepNum}
-                    </button>
-                    {stepNum < total && (
-                      <div
-                        className={`absolute top-1/2 -translate-y-1/2 h-0.5 transition-all ${stepNum < position ? 'bg-green-500' : 'bg-slate-200'}`}
-                        style={{ left: 'calc(50% + 16px)', right: '-50%' }}
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
-                  <span className={`mt-1.5 text-[9px] sm:text-[11px] text-center leading-tight w-full px-0.5 ${
-                    stepNum === position ? 'text-orange-600 font-semibold' : stepNum < position ? 'text-green-600' : 'text-slate-400'
-                  }`}>
-                    {stepDef.label}
-                  </span>
-                </div>
-              );
-            })}
-          </nav>
+        <div className="max-w-2xl mx-auto space-y-3">
+          {/* Simple progress bar */}
+          <div>
+            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-orange-500 transition-all duration-300 ease-out"
+                style={{ width: `${(position / total) * 100}%` }}
+                role="progressbar"
+                aria-valuenow={position}
+                aria-valuemin={1}
+                aria-valuemax={total}
+                aria-label="Onboarding progress"
+              />
+            </div>
+            <p className="mt-2 text-sm text-slate-600 text-center font-medium">
+              Step {position} of {total}
+            </p>
+          </div>
 
           {/* CV processing indicator */}
           <div aria-live="polite" aria-atomic="true">
             {cv.cvProcessing && (
-              <div className="mx-4 mt-2 mb-0 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-2 text-xs text-orange-700">
+              <div className="px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-2 text-xs text-orange-700">
                 <div className="w-3 h-3 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin flex-shrink-0" />
                 <span>Analyzing your CV...</span>
               </div>
             )}
             {cv.cvUploaded && !cv.cvProcessing && (
-              <div className="mx-4 mt-2 mb-0 px-3 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between text-xs text-green-700">
+              <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between text-xs text-green-700">
                 <span className="flex items-center gap-1.5"><span>✓</span> CV analyzed — fields pre-filled</span>
                 <button type="button" onClick={() => cv.cvInputRef.current?.click()} className="text-orange-600 hover:text-orange-700 font-medium">Re-upload</button>
               </div>

@@ -143,7 +143,6 @@ export function StepFinish({
       <div className="space-y-3">
         <button type="button" onClick={onNext} disabled={isLoading} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">{isLoading ? 'Saving your profile...' : 'Go to Dashboard'}</button>
         <button type="button" onClick={onSkip} disabled={isLoading} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50">{isLoading ? 'Saving...' : 'Finish without verifying'}</button>
-        <p className="text-xs text-slate-500 text-center">Step 8 of 8</p>
       </div>
     </>
   );

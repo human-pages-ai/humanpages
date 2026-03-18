@@ -76,8 +76,7 @@ export function StepAboutYou({
       </div>
 
       <div className="space-y-3">
-        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Continue to Skills</button>
-        <p className="text-xs text-slate-500 text-center">Step 5 of 7</p>
+        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Next →</button>
       </div>
     </>
   );

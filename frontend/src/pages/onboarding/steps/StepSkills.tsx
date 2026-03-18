@@ -26,8 +26,6 @@ interface StepSkillsProps {
   addLanguageEntry: (entry: LanguageEntry) => void;
   removeLanguageEntry: (index: number) => void;
   updateLanguageEntry: (index: number, updates: Partial<LanguageEntry>) => void;
-  yearsOfExperience: number | null;
-  setYearsOfExperience: (v: number | null) => void;
   onNext: () => void;
   error: string;
 }
@@ -37,7 +35,6 @@ export function StepSkills({
   skillSearch, setSkillSearch, expandedCategories, toggleCategory,
   educationEntries, setEducationEntries,
   languageEntries, addLanguageEntry, removeLanguageEntry, updateLanguageEntry,
-  yearsOfExperience, setYearsOfExperience,
   onNext, error,
 }: StepSkillsProps) {
   const [addingEducation, setAddingEducation] = useState(false);
@@ -216,40 +213,6 @@ export function StepSkills({
         )}
       </div>
 
-      {/* ─── Years of Experience ─── */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Years of Professional Experience
-          {skills.length > 0 && (
-            <span className="block text-xs font-normal text-slate-500 mt-0.5">
-              in {Object.entries(SKILL_CATEGORIES).find(([_, categorySkills]) =>
-                skills.some(s => categorySkills.includes(s))
-              )?.[0] || 'your primary field'}
-            </span>
-          )}
-        </label>
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            inputMode="numeric"
-            value={yearsOfExperience ?? ''}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '') { setYearsOfExperience(null); return; }
-              const num = parseInt(val);
-              if (!isNaN(num) && num >= 0 && num <= 70) setYearsOfExperience(num);
-            }}
-            min={0}
-            max={70}
-            placeholder="e.g., 5"
-            className="w-24 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm text-center focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            aria-label="Years of professional experience"
-          />
-          <span className="text-sm text-slate-500">years</span>
-        </div>
-        <p className="text-xs text-slate-400 mt-1">Helps agents find experienced professionals for complex tasks</p>
-      </div>
-
       {/* ─── Education Section ─── */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 mb-2">Education (Optional)</label>
@@ -309,8 +272,7 @@ export function StepSkills({
       </div>
 
       <div className="space-y-3">
-        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Continue to Finish</button>
-        <p className="text-xs text-slate-500 text-center">Step 6 of 7</p>
+        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Next →</button>
       </div>
     </>
   );

@@ -3,6 +3,49 @@ import { CompactCvProcessingBar } from '../components/CvProcessingBar';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
 import type { Service } from '../types';
 
+const EQUIPMENT_SUGGESTIONS = [
+  // Camera
+  'DSLR Camera',
+  'Mirrorless Camera',
+  'GoPro',
+  'Phone Camera',
+  // Vehicle
+  'Car',
+  'Motorcycle',
+  'Bicycle',
+  'Van',
+  'Truck',
+  // Computer
+  'Laptop',
+  'Desktop',
+  'Tablet',
+  'Phone',
+  // Audio
+  'Microphone',
+  'Headphones',
+  'Speaker',
+  'Mixer',
+  // Drone
+  'DJI Drone',
+  'FPV Drone',
+  // Tools
+  'Power Drill',
+  'Measuring Tools',
+  'Soldering Iron',
+  // Kitchen
+  'Oven',
+  'Blender',
+  'Food Processor',
+  // Cleaning
+  'Pressure Washer',
+  'Vacuum',
+  'Steam Cleaner',
+  // Office
+  'Printer',
+  'Scanner',
+  'Projector',
+];
+
 interface StepServicesProps {
   cvProcessing: boolean;
   cvData: any;
@@ -27,6 +70,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
 
   const categoryTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const equipmentInputRef = useRef<HTMLInputElement>(null);
 
   // Clear all pending error timeouts on unmount
   useEffect(() => {
@@ -141,7 +185,23 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
         )}
         {equipment.length < 20 && (
           <div className="flex gap-2 mb-6">
-            <input type="text" value={newEquipment} onChange={(e) => setNewEquipment(e.target.value.slice(0, 50))} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } } }} maxLength={50} placeholder="e.g., DSLR Camera, Drone, Car..." aria-label="Add equipment" className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+            <input
+              ref={equipmentInputRef}
+              list="equipment-suggestions"
+              type="text"
+              value={newEquipment}
+              onChange={(e) => setNewEquipment(e.target.value.slice(0, 50))}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } } }}
+              maxLength={50}
+              placeholder="e.g., DSLR Camera, Drone, Car..."
+              aria-label="Add equipment"
+              className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+            <datalist id="equipment-suggestions">
+              {EQUIPMENT_SUGGESTIONS.map((eq) => (
+                <option key={eq} value={eq} />
+              ))}
+            </datalist>
             <button type="button" onClick={() => { const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } }} disabled={!newEquipment.trim()} className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]">Add</button>
           </div>
         )}
@@ -373,68 +433,9 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
         )}
       </div>
 
-      {/* ─── Equipment & Tools ─── */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-1">Equipment & Tools (Optional)</label>
-        <p className="text-xs text-slate-400 mb-3">What do you have access to? Agents match this to physical tasks.</p>
-        {equipment.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {equipment.map((item, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setEquipment(prev => prev.filter((_, i) => i !== idx))}
-                aria-label={`Remove equipment: ${item}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 min-h-[44px]"
-              >
-                {item}<span aria-hidden="true" className="text-orange-200 ml-0.5 text-base leading-none">&times;</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {equipment.length < 20 && (
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newEquipment}
-              onChange={(e) => setNewEquipment(e.target.value.slice(0, 50))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const trimmed = newEquipment.trim();
-                  if (trimmed && !equipment.some(eq => eq.toLowerCase() === trimmed.toLowerCase())) {
-                    setEquipment(prev => [...prev, trimmed]);
-                    setNewEquipment('');
-                  }
-                }
-              }}
-              maxLength={50}
-              placeholder="e.g., DSLR Camera, Drone, Car..."
-              aria-label="Add equipment or tool"
-              className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const trimmed = newEquipment.trim();
-                if (trimmed && !equipment.some(eq => eq.toLowerCase() === trimmed.toLowerCase())) {
-                  setEquipment(prev => [...prev, trimmed]);
-                  setNewEquipment('');
-                }
-              }}
-              disabled={!newEquipment.trim()}
-              className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
-            >
-              Add
-            </button>
-          </div>
-        )}
-      </div>
-
       <div className="space-y-3">
-        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Continue</button>
-        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip for now</button>
-        <p className="text-xs text-slate-500 text-center">Step 4 of 7</p>
+        <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Next →</button>
+        <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip →</button>
       </div>
     </>
   );
