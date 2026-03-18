@@ -112,7 +112,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
             <button
               type="button"
               onClick={() => { setCodeDropdownOpen(!codeDropdownOpen); setCodeSearch(''); }}
-              className="flex items-center gap-1 px-3 py-2.5 min-h-[44px] border border-slate-300 rounded-lg text-sm bg-white hover:bg-slate-50 active:bg-slate-100 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 whitespace-nowrap"
+              className="flex items-center gap-1 px-3 py-2.5 min-h-[44px] border border-slate-300 rounded-lg text-base sm:text-sm bg-white hover:bg-slate-50 active:bg-slate-100 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 whitespace-nowrap"
               aria-haspopup="listbox"
               aria-expanded={codeDropdownOpen}
             >
@@ -128,7 +128,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
                     value={codeSearch}
                     onChange={(e) => setCodeSearch(e.target.value)}
                     placeholder="Search country..."
-                    className="w-full px-3 py-2 min-h-[44px] border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-3 py-2 min-h-[44px] border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     autoFocus
                     autoComplete="off"
                   />
@@ -171,7 +171,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
             }}
             placeholder="555 123 4567"
             autoComplete="tel-national"
-            className={`flex-1 min-w-0 px-3 py-2.5 min-h-[44px] border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${whatsappPhoneWarning ? 'border-orange-300 bg-orange-50' : 'border-slate-300'}`}
+            className={`flex-1 min-w-0 px-3 py-2.5 min-h-[44px] border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${whatsappPhoneWarning ? 'border-orange-300 bg-orange-50' : 'border-slate-300'}`}
           />
         </div>
         {whatsappPhoneWarning && <p className="text-xs text-orange-600 mt-1">{whatsappPhoneWarning}</p>}
@@ -205,7 +205,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
               <button
                 type="button"
                 onClick={() => { setSmsCpdeDropdownOpen(!smsCpdeDropdownOpen); setSmsCpdeSearch(''); }}
-                className="flex items-center gap-1 px-3 py-2.5 min-h-[44px] border border-slate-300 rounded-lg text-sm bg-white hover:bg-slate-50 active:bg-slate-100 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 whitespace-nowrap"
+                className="flex items-center gap-1 px-3 py-2.5 min-h-[44px] border border-slate-300 rounded-lg text-base sm:text-sm bg-white hover:bg-slate-50 active:bg-slate-100 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 whitespace-nowrap"
                 aria-haspopup="listbox"
                 aria-expanded={smsCpdeDropdownOpen}
               >
@@ -221,7 +221,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
                       value={smsCpdeSearch}
                       onChange={(e) => setSmsCpdeSearch(e.target.value)}
                       placeholder="Search country..."
-                      className="w-full px-3 py-2 min-h-[44px] border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 min-h-[44px] border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       autoFocus
                       autoComplete="off"
                     />

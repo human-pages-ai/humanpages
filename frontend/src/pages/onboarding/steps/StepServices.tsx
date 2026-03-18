@@ -460,7 +460,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                             }
                           }}
                           placeholder="50"
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                       </div>
                       <div>
@@ -493,7 +493,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                           const updated = [...services];
                           updated[idx] = { ...svc, unit: e.target.value };
                           setServices(updated);
-                        }} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        }} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                           <option value="per hour">Hourly</option>
                           <option value="per task">Fixed Price</option>
                           <option value="per word">Per Word</option>

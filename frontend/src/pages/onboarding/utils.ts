@@ -15,7 +15,7 @@ export function serializeLanguageEntry(entry: LanguageEntry): string {
 /** Detect in-app browsers (FB, IG, TikTok, etc.) that block window.open */
 export function isInAppBrowser(): boolean {
   const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|Instagram|TikTok|Line\/|Snapchat|Twitter|MicroMessenger/i.test(ua);
+  return /FBAN|FBAV|Instagram|Line\/|Twitter|Snapchat|BytedanceWebview|TikTok|LinkedIn|MicroMessenger|WeChat|Puffin|UCBrowser|SamsungBrowser.*CrossApp|; wv\)/i.test(ua);
 }
 
 /** Scroll an error alert into view and focus it for screen readers */

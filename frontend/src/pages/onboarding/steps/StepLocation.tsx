@@ -192,7 +192,7 @@ export function StepLocation({
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
           placeholder="e.g., America/New_York"
-          className="w-full px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+          className="w-full px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
         />
         <p className="text-xs text-slate-500 mt-2">Auto-detected from your device (editable)</p>
       </div>

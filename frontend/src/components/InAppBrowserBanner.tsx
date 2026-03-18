@@ -1,15 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-/**
- * Detects common in-app browsers (Instagram, Facebook, TikTok, Twitter/X,
- * LinkedIn, Snapchat, etc.) where Google blocks OAuth sign-in.
- */
-export function isInAppBrowser(): boolean {
-  const ua = navigator.userAgent || '';
-  // Common in-app browser identifiers
-  return /FBAN|FBAV|Instagram|Line\/|Twitter|Snapchat|BytedanceWebview|TikTok|LinkedIn|MicroMessenger|WeChat|Puffin|UCBrowser|SamsungBrowser.*CrossApp|; wv\)/i.test(ua);
-}
+import { isInAppBrowser } from '../pages/onboarding/utils';
 
 export default function InAppBrowserBanner() {
   const { t } = useTranslation();

@@ -4,6 +4,7 @@
  */
 import toast from 'react-hot-toast';
 import { getProfileUrl, getProfileDisplayUrl } from '../../lib/profileUrl';
+import { copyToClipboard } from '../../lib/clipboard';
 
 interface VouchCardProps {
   username?: string;
@@ -33,10 +34,10 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
       }
     }
     // Fallback: copy to clipboard
-    try {
-      await navigator.clipboard.writeText(`${SHARE_TEXT} ${shareUrl}`);
+    const success = await copyToClipboard(`${SHARE_TEXT} ${shareUrl}`);
+    if (success) {
       toast.success('Link copied!');
-    } catch {
+    } else {
       toast.error('Could not copy link');
     }
   };
@@ -65,7 +66,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
           <span className="text-sm text-slate-700 flex-1 truncate font-mono">{displayUrl}</span>
           <button
             type="button"
-            onClick={() => { navigator.clipboard.writeText(shareUrl).then(() => toast.success('Copied!')).catch(() => {}); }}
+            onClick={async () => { const success = await copyToClipboard(shareUrl); if (success) toast.success('Copied!'); }}
             className="text-xs text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
           >
             Copy
