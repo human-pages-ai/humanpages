@@ -4,48 +4,6 @@ import { SuggestionInput } from '../components/SuggestionInput';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
 import type { Service } from '../types';
 
-// Categorized equipment suggestions for smart suggestions
-const EQUIPMENT_SUGGESTIONS = [
-  'DSLR Camera',
-  'Mirrorless Camera',
-  'GoPro',
-  'iPhone',
-  'Samsung Galaxy',
-  'Google Pixel',
-  'Laptop',
-  'Desktop Computer',
-  'iPad / Tablet',
-  'Car',
-  'Motorcycle',
-  'Bicycle',
-  'Van / Truck',
-  'Microphone',
-  'Audio Interface',
-  'Studio Headphones',
-  'DJI Drone',
-  'FPV Drone',
-  'Power Drill',
-  '3D Printer',
-  'Soldering Station',
-  'Pressure Washer',
-  'Steam Cleaner',
-  'Projector',
-  'Printer / Scanner',
-  'Adobe Creative Suite',
-  'Final Cut Pro',
-  'AutoCAD',
-  'Smartwatch',
-  'VR Headset',
-  'Ring Light',
-  'Stabilizer / Gimbal',
-  'Green Screen',
-  'Portable Generator',
-  'Sewing Machine',
-  'Food Processor',
-  'Professional Oven',
-  'Blender',
-];
-
 const formatUnitLabel = (unit: string): string => {
   const labels: Record<string, string> = {
     'per hour': 'Hourly',
@@ -341,6 +299,59 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
 
   // Equipment-only mode: render just the equipment section as a standalone step
   if (equipmentOnly) {
+    // Categorized suggestions with subcategories
+    const equipmentSuggestions: { value: string; label: string }[] = [
+      // Phones
+      { value: 'iPhone', label: '📱 iPhone' },
+      { value: 'Samsung Galaxy', label: '📱 Samsung Galaxy' },
+      { value: 'Google Pixel', label: '📱 Google Pixel' },
+      { value: 'Xiaomi', label: '📱 Xiaomi' },
+      { value: 'OnePlus', label: '📱 OnePlus' },
+      // Cameras
+      { value: 'DSLR Camera', label: '📷 DSLR Camera' },
+      { value: 'Mirrorless Camera', label: '📷 Mirrorless Camera' },
+      { value: 'GoPro / Action Camera', label: '📷 GoPro / Action Camera' },
+      { value: 'Webcam', label: '📷 Webcam' },
+      { value: 'Ring Light', label: '📷 Ring Light' },
+      { value: 'Stabilizer / Gimbal', label: '📷 Stabilizer / Gimbal' },
+      { value: 'Green Screen', label: '📷 Green Screen' },
+      // Vehicles
+      { value: 'Car', label: '🚗 Car' },
+      { value: 'Motorcycle', label: '🚗 Motorcycle' },
+      { value: 'Bicycle', label: '🚗 Bicycle' },
+      { value: 'Van / Truck', label: '🚗 Van / Truck' },
+      { value: 'Scooter', label: '🚗 Scooter' },
+      // Computers
+      { value: 'Laptop', label: '💻 Laptop' },
+      { value: 'Desktop Computer', label: '💻 Desktop Computer' },
+      { value: 'iPad / Tablet', label: '💻 iPad / Tablet' },
+      { value: 'External Monitor', label: '💻 External Monitor' },
+      // Audio
+      { value: 'Microphone', label: '🎤 Microphone' },
+      { value: 'Studio Headphones', label: '🎤 Studio Headphones' },
+      { value: 'Audio Interface', label: '🎤 Audio Interface' },
+      { value: 'Speaker', label: '🎤 Speaker' },
+      // Drones
+      { value: 'DJI Drone', label: '🚁 DJI Drone' },
+      { value: 'FPV Drone', label: '🚁 FPV Drone' },
+      // Tools
+      { value: 'Power Drill', label: '🔨 Power Drill' },
+      { value: '3D Printer', label: '🔨 3D Printer' },
+      { value: 'Soldering Station', label: '🔨 Soldering Station' },
+      { value: 'Measuring Tools', label: '🔨 Measuring Tools' },
+      // Software
+      { value: 'Adobe Creative Suite', label: '🖥️ Adobe Creative Suite' },
+      { value: 'Final Cut Pro', label: '🖥️ Final Cut Pro' },
+      { value: 'AutoCAD', label: '🖥️ AutoCAD' },
+      { value: 'Figma', label: '🖥️ Figma' },
+      // Other
+      { value: 'Sewing Machine', label: '🧵 Sewing Machine' },
+      { value: 'Pressure Washer', label: '🧹 Pressure Washer' },
+      { value: 'Portable Generator', label: '⚡ Portable Generator' },
+      { value: 'Projector', label: '📽️ Projector' },
+      { value: 'Printer / Scanner', label: '🖨️ Printer / Scanner' },
+    ].filter(s => !equipment.some(eq => eq.toLowerCase() === s.value.toLowerCase()));
+
     const handleAddEquipment = () => {
       const trimmed = newEquipmentCategory.trim();
       if (!trimmed) return;
@@ -353,7 +364,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
     return (
       <>
         <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Equipment & Tools</h2>
-        <p className="text-slate-600 mb-6">What tools and equipment do you have? Start typing to see suggestions — or add anything you want.</p>
+        <p className="text-slate-600 mb-6">Agents match equipment to tasks — list anything you use for your services. Phones, cameras, vehicles, software, tools — anything that helps you deliver.</p>
         {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
         {equipment.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -365,35 +376,33 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
           </div>
         )}
         {equipment.length < 20 && (
-          <div className="flex gap-2 mb-6">
-            <input
-              type="text"
-              list="equipment-suggestions"
-              value={newEquipmentCategory}
-              onChange={(e) => setNewEquipmentCategory(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddEquipment();
-                }
-              }}
-              placeholder="What equipment do you have? Start typing..."
-              className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-            <datalist id="equipment-suggestions">
-              {EQUIPMENT_SUGGESTIONS.filter(s => !equipment.some(eq => eq.toLowerCase() === s.toLowerCase())).map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
-            <button
-              type="button"
-              onClick={handleAddEquipment}
-              disabled={!newEquipmentCategory.trim()}
-              className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px] flex-shrink-0"
-            >
-              Add
-            </button>
-          </div>
+          <>
+            <div className="flex gap-2 mb-2">
+              <div className="flex-1">
+                <SuggestionInput
+                  value={newEquipmentCategory}
+                  onChange={setNewEquipmentCategory}
+                  suggestions={equipmentSuggestions}
+                  placeholder="Search or type your own..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddEquipment();
+                    }
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAddEquipment}
+                disabled={!newEquipmentCategory.trim()}
+                className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px] flex-shrink-0"
+              >
+                Add
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">Pick from suggestions or type anything — brand, model, software, you name it</p>
+          </>
         )}
         <div className="flex justify-end mt-6">
           <button type="button" onClick={onNext} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">
