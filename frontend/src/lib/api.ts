@@ -1371,6 +1371,22 @@ export const api = {
 
   deleteCertificate: (id: string) =>
     request(`/cv/certificate/${id}`, { method: 'DELETE' }),
+
+  // Push Notifications
+  getVapidPublicKey: () =>
+    request<{ vapidPublicKey: string }>('/push/vapid-key'),
+
+  subscribeToPushNotifications: (data: { endpoint: string; keys: { p256dh: string; auth: string }; userAgent?: string }) =>
+    request<{ success: boolean }>('/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  unsubscribeFromPushNotifications: (endpoint: string) =>
+    request<{ success: boolean }>('/push/unsubscribe', {
+      method: 'DELETE',
+      body: JSON.stringify({ endpoint }),
+    }),
 };
 
 // Referral Program types (included in profile response)

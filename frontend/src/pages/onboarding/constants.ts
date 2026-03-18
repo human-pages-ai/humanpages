@@ -2,7 +2,7 @@
 
 export const STORAGE_KEY = 'hp_onboarding_draft';
 
-export const STEP_LABELS = ['CV Upload', 'Connect', 'Availability', 'Services', 'About You', 'Skills', 'Finish'] as const;
+export const STEP_LABELS = ['Notifications', 'Connect', 'CV Upload', 'Skills', 'About You', 'Availability', 'Services', 'Verification'] as const;
 
 export const PROFICIENCY_LEVELS = [
   'Native',
