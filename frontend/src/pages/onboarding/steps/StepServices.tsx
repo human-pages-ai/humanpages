@@ -4,25 +4,47 @@ import { SuggestionInput } from '../components/SuggestionInput';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
 import type { Service } from '../types';
 
-// Equipment categories
-const EQUIPMENT_CATEGORIES = [
-  'Phone', 'Camera', 'Vehicle', 'Computer', 'Audio', 'Drone', 'Tools', 'Kitchen', 'Cleaning', 'Office', 'Other',
+// Categorized equipment suggestions for smart suggestions
+const EQUIPMENT_SUGGESTIONS = [
+  'DSLR Camera',
+  'Mirrorless Camera',
+  'GoPro',
+  'iPhone',
+  'Samsung Galaxy',
+  'Google Pixel',
+  'Laptop',
+  'Desktop Computer',
+  'iPad / Tablet',
+  'Car',
+  'Motorcycle',
+  'Bicycle',
+  'Van / Truck',
+  'Microphone',
+  'Audio Interface',
+  'Studio Headphones',
+  'DJI Drone',
+  'FPV Drone',
+  'Power Drill',
+  '3D Printer',
+  'Soldering Station',
+  'Pressure Washer',
+  'Steam Cleaner',
+  'Projector',
+  'Printer / Scanner',
+  'Adobe Creative Suite',
+  'Final Cut Pro',
+  'AutoCAD',
+  'Smartwatch',
+  'VR Headset',
+  'Ring Light',
+  'Stabilizer / Gimbal',
+  'Green Screen',
+  'Portable Generator',
+  'Sewing Machine',
+  'Food Processor',
+  'Professional Oven',
+  'Blender',
 ];
-
-// Equipment types/models by category
-const EQUIPMENT_TYPES_BY_CATEGORY: Record<string, string[]> = {
-  'Phone': ['iPhone', 'Samsung Galaxy', 'Pixel', 'Xiaomi', 'OnePlus', 'Huawei'],
-  'Camera': ['DSLR Camera', 'Mirrorless Camera', 'GoPro', 'Action Camera', 'Film Camera'],
-  'Vehicle': ['Car', 'Motorcycle', 'Bicycle', 'Van', 'Truck', 'Scooter'],
-  'Computer': ['Laptop', 'Desktop', 'Tablet', 'MacBook', 'iPad'],
-  'Audio': ['Microphone', 'Headphones', 'Speaker', 'Mixer', 'Audio Interface'],
-  'Drone': ['DJI Mavic', 'DJI Mini', 'FPV Drone', 'Drone'],
-  'Tools': ['Power Drill', 'Measuring Tools', 'Soldering Iron', '3D Printer', 'Toolset'],
-  'Kitchen': ['Oven', 'Blender', 'Food Processor', 'Commercial Kitchen'],
-  'Cleaning': ['Vacuum', 'Pressure Washer', 'Cleaning Equipment'],
-  'Office': ['Desk', 'Chair', 'Printer', 'Scanner'],
-  'Other': [],
-};
 
 const formatUnitLabel = (unit: string): string => {
   const labels: Record<string, string> = {
@@ -319,16 +341,6 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
 
   // Equipment-only mode: render just the equipment section as a standalone step
   if (equipmentOnly) {
-    // Build a flat suggestion list from all categories and types
-    const allSuggestions: string[] = [];
-    for (const cat of EQUIPMENT_CATEGORIES) {
-      allSuggestions.push(cat);
-      const types = EQUIPMENT_TYPES_BY_CATEGORY[cat] || [];
-      for (const t of types) {
-        allSuggestions.push(`${cat} - ${t}`);
-      }
-    }
-
     const handleAddEquipment = () => {
       const trimmed = newEquipmentCategory.trim();
       if (!trimmed) return;
@@ -341,7 +353,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
     return (
       <>
         <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Equipment & Tools</h2>
-        <p className="text-slate-600 mb-6">What tools and equipment do you have? Type anything — a phone, camera, vehicle, software, or tool.</p>
+        <p className="text-slate-600 mb-6">What tools and equipment do you have? Start typing to see suggestions — or add anything you want.</p>
         {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
         {equipment.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -365,11 +377,11 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                   handleAddEquipment();
                 }
               }}
-              placeholder="e.g., iPhone 16, DSLR Camera, Laptop, Car..."
+              placeholder="What equipment do you have? Start typing..."
               className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             />
             <datalist id="equipment-suggestions">
-              {allSuggestions.filter(s => !equipment.some(eq => eq.toLowerCase() === s.toLowerCase())).map((s) => (
+              {EQUIPMENT_SUGGESTIONS.filter(s => !equipment.some(eq => eq.toLowerCase() === s.toLowerCase())).map((s) => (
                 <option key={s} value={s} />
               ))}
             </datalist>
