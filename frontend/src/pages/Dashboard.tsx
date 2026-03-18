@@ -61,6 +61,17 @@ function ChipList({ items, color = 'blue', showCategory = false }: { items: stri
   );
 }
 
+const formatTimezone = (tz: string): string => {
+  const cityMap: Record<string, string> = {
+    'Asia/Saigon': 'Ho Chi Minh City',
+    'Asia/Ho_Chi_Minh': 'Ho Chi Minh City',
+    'Asia/Calcutta': 'Kolkata',
+    'Asia/Kolkata': 'Kolkata',
+    'Europe/Kiev': 'Kyiv',
+  };
+  return cityMap[tz] || tz.split('/').pop()?.replace(/_/g, ' ') || tz;
+};
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, logout, updateUser } = useAuth();
@@ -447,7 +458,7 @@ export default function Dashboard() {
           <h1 className="whitespace-nowrap"><Link to="/"><Logo /></Link></h1>
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <LanguageSwitcher />
-            <span className="text-gray-600 truncate max-w-[120px] sm:max-w-[200px]">{user?.name}</span>
+            <span className="text-gray-600 truncate max-w-[120px] sm:max-w-[200px]">{user?.name ? user.name.split(' ')[0] : ''}</span>
             <button onClick={handleLogout} className="text-gray-500 hover:text-gray-700 whitespace-nowrap flex-shrink-0">
               {t('nav.logout')}
             </button>
@@ -711,7 +722,7 @@ export default function Dashboard() {
                     <div>
                       <span className="text-gray-500 text-xs">Timezone:</span>{' '}
                       <span className={`text-sm font-medium ${profile.timezone ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.timezone ? `${profile.timezone}${profile.locationLat === undefined ? ' (auto-detected)' : ''}` : '—'}
+                        {profile.timezone ? `${formatTimezone(profile.timezone)}${profile.locationLat === undefined ? ' (auto-detected)' : ''}` : '—'}
                       </span>
                       {profile.timezone && profile.locationLat === undefined && (
                         <span className="text-xs text-orange-600 ml-1">Please verify this is accurate</span>
