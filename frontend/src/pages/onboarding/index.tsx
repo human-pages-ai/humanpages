@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import SEO from '../../components/SEO';
 import { getApplyIntent, clearApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../../lib/applyIntent';
 import { isInAppBrowser, scrollToError, serializeLanguageEntry } from './utils';
-import { POPULAR_SERVICE_CATEGORIES } from './constants';
+// POPULAR_SERVICE_CATEGORIES removed — services are saved regardless of category
 import { useProfileForm } from './hooks/useProfileForm';
 import { useCvProcessing } from './hooks/useCvProcessing';
 import { useDraftPersistence, loadDraft, clearDraft } from './hooks/useDraftPersistence';
@@ -269,7 +269,7 @@ export default function Onboarding() {
       }
 
       for (const svc of form.services) {
-        if (svc.title.trim() && svc.category.trim() && POPULAR_SERVICE_CATEGORIES.includes(svc.category.trim())) {
+        if (svc.title.trim()) {
           const price = svc.price?.trim() ? parseFloat(svc.price.trim()) : null;
           const validPrice = price !== null && !isNaN(price) && price > 0 ? price : null;
           nonBlocking.push(
