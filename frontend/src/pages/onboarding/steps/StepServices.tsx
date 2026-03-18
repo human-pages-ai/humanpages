@@ -215,6 +215,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [newEquipmentCategory, setNewEquipmentCategory] = useState('');
   const [newEquipmentType, setNewEquipmentType] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
+  const [editingServiceIndex, setEditingServiceIndex] = useState<number | null>(null);
 
   // Generate service suggestions from CV
   const cvSuggestedServices = cvData ? generateServiceSuggestions(cvData) : [];
@@ -462,18 +463,108 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
         {services.length > 0 && (
           <div className="space-y-3 mb-4">
             {services.map((svc, idx) => (
-              <div key={idx} className="p-3 border border-slate-200 rounded-lg bg-white hover:border-orange-300 transition-colors">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 text-sm">{svc.title}</p>
-                    <p className="text-xs text-slate-500">{svc.category}{svc.subcategory ? ` • ${svc.subcategory}` : ''}</p>
+              <div key={idx}>
+                {editingServiceIndex === idx ? (
+                  // Edit mode for pricing
+                  <div className="p-3 border border-orange-300 rounded-lg bg-orange-50">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 text-sm">{svc.title}</p>
+                        <p className="text-xs text-slate-500">{svc.category}{svc.subcategory ? ` • ${svc.subcategory}` : ''}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium text-slate-700 mb-2">Set price and currency:</p>
+                    <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Price</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={svc.price}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                              const updated = [...services];
+                              updated[idx] = { ...svc, price: val };
+                              setServices(updated);
+                            }
+                          }}
+                          placeholder="50"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Currency</label>
+                        <SuggestionInput
+                          value={svc.currency}
+                          onChange={(v) => {
+                            const updated = [...services];
+                            updated[idx] = { ...svc, currency: v.toUpperCase().slice(0, 3) };
+                            setServices(updated);
+                          }}
+                          suggestions={(() => {
+                            const suggestedCurrency = detectUserCurrency();
+                            const suggested = [
+                              ALL_CURRENCIES.find(c => c.code === 'USD'),
+                              suggestedCurrency !== 'USD' ? ALL_CURRENCIES.find(c => c.code === suggestedCurrency) : null,
+                            ].filter(Boolean) as typeof ALL_CURRENCIES;
+                            const rest = ALL_CURRENCIES.filter(c => !suggested.some(s => s?.code === c.code));
+                            return [
+                              ...suggested.map(c => ({ value: c.code, label: `${c.flag} ${c.code} - ${c.name}` })),
+                              ...rest.map(c => ({ value: c.code, label: `${c.flag} ${c.code} - ${c.name}` })),
+                            ];
+                          })()}
+                          placeholder="USD"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Rate Type</label>
+                        <select value={svc.unit} onChange={(e) => {
+                          const updated = [...services];
+                          updated[idx] = { ...svc, unit: e.target.value };
+                          setServices(updated);
+                        }} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                          <option value="per hour">Hourly</option>
+                          <option value="per task">Fixed Price</option>
+                          <option value="per word">Per Word</option>
+                          <option value="per page">Per Page</option>
+                          <option value="negotiable">Let's Discuss</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingServiceIndex(null)}
+                        className="px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors min-h-[44px]"
+                      >
+                        Done
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setEditingServiceIndex(null); handleRemoveService(idx); }}
+                        className="px-3 py-2 text-sm font-medium border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <button type="button" onClick={() => handleRemoveService(idx)} className="text-slate-400 hover:text-red-500 font-bold flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`Remove service: ${svc.title}`}>×</button>
-                </div>
-                {svc.description && <p className="text-xs text-slate-600 mb-2 line-clamp-2">{svc.description}</p>}
-                <div className="flex items-center justify-between">
-                  {svc.price ? <p className="text-xs text-slate-700 font-medium">{svc.currency} {svc.price}/{formatUnitLabel(svc.unit)}</p> : <p className="text-xs text-slate-400">No price set</p>}
-                </div>
+                ) : (
+                  // View mode
+                  <div className="p-3 border border-slate-200 rounded-lg bg-white hover:border-orange-300 transition-colors cursor-pointer" onClick={() => setEditingServiceIndex(idx)}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 text-sm">{svc.title}</p>
+                        <p className="text-xs text-slate-500">{svc.category}{svc.subcategory ? ` • ${svc.subcategory}` : ''}</p>
+                      </div>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveService(idx); }} className="text-slate-400 hover:text-red-500 font-bold flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={`Remove service: ${svc.title}`}>×</button>
+                    </div>
+                    {svc.description && <p className="text-xs text-slate-600 mb-2 line-clamp-2">{svc.description}</p>}
+                    <div className="flex items-center justify-between">
+                      {svc.price ? <p className="text-xs text-slate-700 font-medium">{svc.currency} {svc.price}/{formatUnitLabel(svc.unit)}</p> : <p className="text-xs text-slate-400">No price set — click to add</p>}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -90,18 +90,18 @@ export default function VouchSection() {
         await navigator.share(shareData);
       } catch (err: any) {
         if (err.name !== 'AbortError') {
-          await fallbackCopy(profileUrl);
+          await fallbackCopy(shareText, profileUrl);
         }
       }
     } else {
       // Fallback to clipboard copy
-      await fallbackCopy(profileUrl);
+      await fallbackCopy(shareText, profileUrl);
     }
   };
 
-  const fallbackCopy = async (url: string) => {
+  const fallbackCopy = async (text: string, url: string) => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(`${text} ${url}`);
       toast.success(t('common.copied', 'Copied to clipboard!'));
     } catch {
       toast.error('Failed to copy link');

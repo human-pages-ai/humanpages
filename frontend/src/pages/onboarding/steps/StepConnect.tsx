@@ -206,6 +206,17 @@ export function StepConnect({
 
       {(error || registrationError) && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error || registrationError}</div>}
 
+      {/* Visual Install Instruction — always visible */}
+      <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">📲</span>
+          <div>
+            <p className="font-semibold text-purple-900 text-sm">Install HumanPages for instant notifications</p>
+            <p className="text-xs text-purple-700 mt-1">Look for the install icon <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 rounded text-purple-800 font-mono text-[10px]">⬇</span> in your browser's address bar (top right), or go to Menu → "Install HumanPages"</p>
+          </div>
+        </div>
+      </div>
+
       {/* Urgency banner */}
       <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
         <div className="flex gap-3">
@@ -273,10 +284,6 @@ export function StepConnect({
                 Install App
               </button>
             )}
-            <div className="text-sm bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="font-medium text-blue-900 mb-1">For the best experience, install HumanPages as an app</p>
-              <p className="text-xs text-blue-700">{showInstallButton ? 'Click "Install App" above, or: ' : ''}In Chrome: Menu → Install app. In Safari: Share → Add to Home Screen.</p>
-            </div>
           </div>
         )}
       </div>
