@@ -239,6 +239,12 @@ export function StepConnect({
         )}
       </div>
 
+      {/* Install hint — always visible since Chrome shows install icon */}
+      <p className="mb-4 text-xs text-slate-400 flex items-center gap-1.5">
+        <span>📲</span>
+        <span>See a <span className="font-medium text-slate-500">⬇ download icon</span> in your address bar? Tap it to install HumanPages as an app.</span>
+      </p>
+
       {/* Telegram Section */}
       <div className="mb-6 p-4 border border-slate-200 rounded-lg">
         <div className="flex items-center gap-3 mb-3">

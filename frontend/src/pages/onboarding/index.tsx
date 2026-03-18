@@ -134,7 +134,10 @@ export default function Onboarding() {
   const prevCvUploadedRef = useRef(cv.cvUploaded);
   useEffect(() => {
     if (cv.cvUploaded && !prevCvUploadedRef.current) {
+      // CV upload just completed — auto-advance to equipment step
       setSearchParams({ step: 'equipment' }, { replace: true });
+      window.scrollTo({ top: 0 });
+      toast.success('CV analyzed! Moving to next step...');
     }
     prevCvUploadedRef.current = cv.cvUploaded;
   }, [cv.cvUploaded, setSearchParams]);
