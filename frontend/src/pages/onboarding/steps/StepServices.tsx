@@ -3,48 +3,40 @@ import { CompactCvProcessingBar } from '../components/CvProcessingBar';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
 import type { Service } from '../types';
 
-const EQUIPMENT_SUGGESTIONS = [
-  // Camera
-  'DSLR Camera',
-  'Mirrorless Camera',
-  'GoPro',
-  'Phone Camera',
-  // Vehicle
-  'Car',
-  'Motorcycle',
-  'Bicycle',
-  'Van',
-  'Truck',
-  // Computer
-  'Laptop',
-  'Desktop',
-  'Tablet',
+const EQUIPMENT_CATEGORIES = [
   'Phone',
-  // Audio
-  'Microphone',
-  'Headphones',
-  'Speaker',
-  'Mixer',
-  // Drone
-  'DJI Drone',
-  'FPV Drone',
-  // Tools
-  'Power Drill',
-  'Measuring Tools',
-  'Soldering Iron',
-  // Kitchen
-  'Oven',
-  'Blender',
-  'Food Processor',
-  // Cleaning
-  'Pressure Washer',
-  'Vacuum',
-  'Steam Cleaner',
-  // Office
-  'Printer',
-  'Scanner',
-  'Projector',
+  'Camera',
+  'Vehicle',
+  'Computer',
+  'Audio',
+  'Drone',
+  'Tools',
+  'Kitchen',
+  'Other',
 ];
+
+const EQUIPMENT_TYPES: Record<string, string[]> = {
+  'Phone': ['iPhone', 'Samsung Galaxy', 'Pixel', 'Xiaomi', 'OnePlus', 'Huawei'],
+  'Camera': ['DSLR', 'Mirrorless', 'GoPro', 'Action Camera', 'Film Camera'],
+  'Vehicle': ['Car', 'Motorcycle', 'Bicycle', 'Van', 'Truck', 'Scooter'],
+  'Computer': ['Laptop', 'Desktop', 'Tablet'],
+  'Audio': ['Microphone', 'Headphones', 'Speaker', 'Mixer', 'Audio Interface'],
+  'Drone': ['DJI Mavic', 'DJI Mini', 'FPV Drone'],
+  'Tools': ['Power Drill', 'Measuring Tools', 'Soldering Iron', '3D Printer'],
+  'Kitchen': ['Oven', 'Blender', 'Food Processor'],
+  'Other': [],
+};
+
+const formatUnitLabel = (unit: string): string => {
+  const labels: Record<string, string> = {
+    'per hour': 'Hourly',
+    'per task': 'Fixed Price',
+    'per word': 'Per Word',
+    'per page': 'Per Page',
+    'negotiable': 'Let\'s Discuss',
+  };
+  return labels[unit] || unit;
+};
 
 interface StepServicesProps {
   cvProcessing: boolean;
@@ -65,12 +57,13 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
   const [priceError, setPriceError] = useState('');
-  const [newEquipment, setNewEquipment] = useState('');
+  const [newEquipmentCategory, setNewEquipmentCategory] = useState('');
+  const [newEquipmentType, setNewEquipmentType] = useState('');
+  const [newEquipmentDetails, setNewEquipmentDetails] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
 
   const categoryTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const priceTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const equipmentInputRef = useRef<HTMLInputElement>(null);
 
   // Clear all pending error timeouts on unmount
   useEffect(() => {
@@ -169,13 +162,26 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
 
   // Equipment-only mode: render just the equipment section as a standalone step
   if (equipmentOnly) {
+    const handleAddEquipment = () => {
+      if (!newEquipmentCategory.trim() || !newEquipmentType.trim()) return;
+      const equipmentString = `${newEquipmentCategory} - ${newEquipmentType}${newEquipmentDetails.trim() ? ' - ' + newEquipmentDetails.trim() : ''}`;
+      if (!equipment.some(eq => eq.toLowerCase() === equipmentString.toLowerCase())) {
+        setEquipment(prev => [...prev, equipmentString]);
+        setNewEquipmentCategory('');
+        setNewEquipmentType('');
+        setNewEquipmentDetails('');
+      }
+    };
+
+    const availableTypes = newEquipmentCategory ? EQUIPMENT_TYPES[newEquipmentCategory] || [] : [];
+
     return (
       <>
         <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Equipment & Tools</h2>
         <p className="text-slate-600 mb-6">What tools and equipment do you have access to? This helps agents match you to physical tasks.</p>
         {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
         {equipment.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-2">
             {equipment.map((item, idx) => (
               <button key={idx} type="button" onClick={() => setEquipment(prev => prev.filter((_, i) => i !== idx))} aria-label={`Remove: ${item}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 min-h-[44px]">
                 {item}<span aria-hidden="true" className="text-orange-200 ml-0.5 text-base leading-none">&times;</span>
@@ -184,25 +190,91 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
           </div>
         )}
         {equipment.length < 20 && (
-          <div className="flex gap-2 mb-6">
-            <input
-              ref={equipmentInputRef}
-              list="equipment-suggestions"
-              type="text"
-              value={newEquipment}
-              onChange={(e) => setNewEquipment(e.target.value.slice(0, 50))}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } } }}
-              maxLength={50}
-              placeholder="e.g., DSLR Camera, Drone, Car..."
-              aria-label="Add equipment"
-              className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-            <datalist id="equipment-suggestions">
-              {EQUIPMENT_SUGGESTIONS.map((eq) => (
-                <option key={eq} value={eq} />
-              ))}
-            </datalist>
-            <button type="button" onClick={() => { const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } }} disabled={!newEquipment.trim()} className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]">Add</button>
+          <div className="mb-6 p-4 border border-slate-200 rounded-lg bg-white">
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="eq-category" className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                <select
+                  id="eq-category"
+                  value={newEquipmentCategory}
+                  onChange={(e) => { setNewEquipmentCategory(e.target.value); setNewEquipmentType(''); }}
+                  className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Select category...</option>
+                  {EQUIPMENT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {newEquipmentCategory && (
+                <div>
+                  <label htmlFor="eq-type" className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                  {availableTypes.length > 0 ? (
+                    <input
+                      id="eq-type"
+                      list="equipment-type-list"
+                      type="text"
+                      value={newEquipmentType}
+                      onChange={(e) => setNewEquipmentType(e.target.value.slice(0, 50))}
+                      maxLength={50}
+                      placeholder="Select or type..."
+                      className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  ) : (
+                    <input
+                      id="eq-type"
+                      type="text"
+                      value={newEquipmentType}
+                      onChange={(e) => setNewEquipmentType(e.target.value.slice(0, 50))}
+                      maxLength={50}
+                      placeholder="Enter type..."
+                      className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  )}
+                  <datalist id="equipment-type-list">
+                    {availableTypes.map((type) => (
+                      <option key={type} value={type} />
+                    ))}
+                  </datalist>
+                </div>
+              )}
+
+              {newEquipmentType && (
+                <div>
+                  <label htmlFor="eq-details" className="block text-sm font-medium text-slate-700 mb-1">Model / Details (Optional)</label>
+                  <input
+                    id="eq-details"
+                    type="text"
+                    value={newEquipmentDetails}
+                    onChange={(e) => setNewEquipmentDetails(e.target.value.slice(0, 50))}
+                    maxLength={50}
+                    placeholder="e.g., 16 Pro Max, Nikon D850..."
+                    className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddEquipment}
+                  disabled={!newEquipmentCategory.trim() || !newEquipmentType.trim()}
+                  className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]"
+                >
+                  Add Equipment
+                </button>
+                {(newEquipmentCategory || newEquipmentType || newEquipmentDetails) && (
+                  <button
+                    type="button"
+                    onClick={() => { setNewEquipmentCategory(''); setNewEquipmentType(''); setNewEquipmentDetails(''); }}
+                    className="px-4 py-2.5 sm:py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
         <div className="flex justify-end mt-6">
@@ -253,7 +325,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                 </div>
                 {svc.description && <p className="text-xs text-slate-600 mb-2 line-clamp-2">{svc.description}</p>}
                 <div className="flex items-center justify-between">
-                  {svc.price ? <p className="text-xs text-slate-700 font-medium">{svc.currency} {svc.price}/{svc.unit}</p> : <p className="text-xs text-slate-400">No price set</p>}
+                  {svc.price ? <p className="text-xs text-slate-700 font-medium">{svc.currency} {svc.price}/{formatUnitLabel(svc.unit)}</p> : <p className="text-xs text-slate-400">No price set</p>}
                 </div>
               </div>
             ))}
@@ -366,47 +438,74 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
-                  <select value={newService.currency} onChange={(e) => setNewService({ ...newService, currency: e.target.value })} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                    <option value="USD">🇺🇸 USD</option>
-                    <option value="EUR">🇪🇺 EUR</option>
-                    <option value="GBP">🇬🇧 GBP</option>
-                    <option value="JPY">🇯🇵 JPY</option>
-                    <option value="CAD">🇨🇦 CAD</option>
-                    <option value="AUD">🇦🇺 AUD</option>
-                    <option value="CHF">🇨🇭 CHF</option>
-                    <option value="CNY">🇨🇳 CNY</option>
-                    <option value="INR">🇮🇳 INR</option>
-                    <option value="BRL">🇧🇷 BRL</option>
-                    <option value="MXN">🇲🇽 MXN</option>
-                    <option value="KRW">🇰🇷 KRW</option>
-                    <option value="SGD">🇸🇬 SGD</option>
-                    <option value="HKD">🇭🇰 HKD</option>
-                    <option value="TRY">🇹🇷 TRY</option>
-                    <option value="ZAR">🇿🇦 ZAR</option>
-                    <option value="NGN">🇳🇬 NGN</option>
-                    <option value="KES">🇰🇪 KES</option>
-                    <option value="GHS">🇬🇭 GHS</option>
-                    <option value="PHP">🇵🇭 PHP</option>
-                    <option value="IDR">🇮🇩 IDR</option>
-                    <option value="THB">🇹🇭 THB</option>
-                    <option value="VND">🇻🇳 VND</option>
-                    <option value="PKR">🇵🇰 PKR</option>
-                    <option value="BDT">🇧🇩 BDT</option>
-                    <option value="EGP">🇪🇬 EGP</option>
-                    <option value="COP">🇨🇴 COP</option>
-                    <option value="PEN">🇵🇪 PEN</option>
-                    <option value="ARS">🇦🇷 ARS</option>
-                    <option value="CLP">🇨🇱 CLP</option>
-                  </select>
+                  <input
+                    list="currency-list"
+                    type="text"
+                    value={newService.currency}
+                    onChange={(e) => setNewService({ ...newService, currency: e.target.value.toUpperCase().slice(0, 3) })}
+                    placeholder="USD"
+                    className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                  <datalist id="currency-list">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="CHF">CHF - Swiss Franc</option>
+                    <option value="CNY">CNY - Chinese Yuan</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="BRL">BRL - Brazilian Real</option>
+                    <option value="MXN">MXN - Mexican Peso</option>
+                    <option value="KRW">KRW - South Korean Won</option>
+                    <option value="SGD">SGD - Singapore Dollar</option>
+                    <option value="HKD">HKD - Hong Kong Dollar</option>
+                    <option value="TRY">TRY - Turkish Lira</option>
+                    <option value="ZAR">ZAR - South African Rand</option>
+                    <option value="NGN">NGN - Nigerian Naira</option>
+                    <option value="KES">KES - Kenyan Shilling</option>
+                    <option value="GHS">GHS - Ghanaian Cedi</option>
+                    <option value="PHP">PHP - Philippine Peso</option>
+                    <option value="IDR">IDR - Indonesian Rupiah</option>
+                    <option value="THB">THB - Thai Baht</option>
+                    <option value="VND">VND - Vietnamese Dong</option>
+                    <option value="PKR">PKR - Pakistani Rupee</option>
+                    <option value="BDT">BDT - Bangladeshi Taka</option>
+                    <option value="EGP">EGP - Egyptian Pound</option>
+                    <option value="COP">COP - Colombian Peso</option>
+                    <option value="PEN">PEN - Peruvian Sol</option>
+                    <option value="ARS">ARS - Argentine Peso</option>
+                    <option value="CLP">CLP - Chilean Peso</option>
+                    <option value="NZD">NZD - New Zealand Dollar</option>
+                    <option value="SEK">SEK - Swedish Krona</option>
+                    <option value="NOK">NOK - Norwegian Krone</option>
+                    <option value="DKK">DKK - Danish Krone</option>
+                    <option value="PLN">PLN - Polish Zloty</option>
+                    <option value="CZK">CZK - Czech Koruna</option>
+                    <option value="HUF">HUF - Hungarian Forint</option>
+                    <option value="RUB">RUB - Russian Ruble</option>
+                    <option value="UAH">UAH - Ukrainian Hryvnia</option>
+                    <option value="ILS">ILS - Israeli Shekel</option>
+                    <option value="SAR">SAR - Saudi Riyal</option>
+                    <option value="AED">AED - UAE Dirham</option>
+                    <option value="QAR">QAR - Qatari Riyal</option>
+                    <option value="KWD">KWD - Kuwaiti Dinar</option>
+                    <option value="BHD">BHD - Bahraini Dinar</option>
+                    <option value="OMR">OMR - Omani Rial</option>
+                    <option value="JOD">JOD - Jordanian Dinar</option>
+                    <option value="MAD">MAD - Moroccan Dirham</option>
+                    <option value="TND">TND - Tunisian Dinar</option>
+                  </datalist>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Rate Type</label>
                   <select value={newService.unit} onChange={(e) => setNewService({ ...newService, unit: e.target.value })} className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                    <option value="per hour">Per Hour</option>
-                    <option value="per task">Per Task</option>
+                    <option value="per hour">Hourly</option>
+                    <option value="per task">Fixed Price</option>
                     <option value="per word">Per Word</option>
                     <option value="per page">Per Page</option>
-                    <option value="negotiable">Negotiable</option>
+                    <option value="negotiable">Let's Discuss</option>
                   </select>
                 </div>
               </div>
@@ -421,7 +520,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                   <p className="text-xs text-slate-500 mb-1">{newService.category}{newService.subcategory ? ` • ${newService.subcategory}` : ''}</p>
                   {newService.description && <p className="text-xs text-slate-600 mb-2 line-clamp-2">{newService.description}</p>}
                   <p className="text-xs text-slate-700 font-medium">
-                    {newService.price ? `${newService.currency} ${newService.price}/${newService.unit}` : '(price not set)'}
+                    {newService.price ? `${newService.currency} ${newService.price}/${formatUnitLabel(newService.unit)}` : '(price not set)'}
                   </p>
                 </div>
               </div>

@@ -116,9 +116,10 @@ export default function Onboarding() {
     timezone: form.timezone, weeklyCapacityHours: form.weeklyCapacityHours,
     workType: form.workType,
     yearsOfExperience: form.yearsOfExperience,
-    freelancerJobsRange: form.freelancerJobsRange, freelancePlatforms: form.freelancePlatforms,
+    freelancerJobsRange: form.freelancerJobsRange,
     industries: form.industries,
     equipment: form.equipment,
+    platformPresence: form.platformPresence,
     cvUploaded: cv.cvUploaded && cv.cvData != null,
     cvData: cv.cvData,
   });
@@ -393,7 +394,6 @@ export default function Onboarding() {
             educationEntries={form.educationEntries} setEducationEntries={form.setEducationEntries}
             yearsOfExperience={form.yearsOfExperience} setYearsOfExperience={form.setYearsOfExperience}
             freelancerJobsRange={form.freelancerJobsRange} setFreelancerJobsRange={form.setFreelancerJobsRange}
-            freelancePlatforms={form.freelancePlatforms} setFreelancePlatforms={form.setFreelancePlatforms}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );
@@ -451,6 +451,7 @@ export default function Onboarding() {
             youtubeUrl={form.youtubeUrl} setYoutubeUrl={form.setYoutubeUrl}
             facebookUrl={form.facebookUrl} setFacebookUrl={form.setFacebookUrl}
             tiktokUrl={form.tiktokUrl} setTiktokUrl={form.setTiktokUrl}
+            platformPresence={form.platformPresence} setPlatformPresence={form.setPlatformPresence}
             onLinkedInConnect={() => openExternalUrl(() => api.getLinkedInVerifyUrl(), 'LinkedIn')}
             onGitHubConnect={() => openExternalUrl(() => api.getGitHubVerifyUrl(), 'GitHub')}
             onNext={handleFinalSubmit} onSkip={handleFinalSubmit}

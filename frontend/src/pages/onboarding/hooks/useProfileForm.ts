@@ -101,12 +101,12 @@ export interface UseProfileFormReturn {
   setYearsOfExperience: (v: number | null) => void;
   freelancerJobsRange: string;
   setFreelancerJobsRange: (v: string) => void;
-  freelancePlatforms: string;
-  setFreelancePlatforms: (v: string) => void;
   industries: string[];
   setIndustries: React.Dispatch<React.SetStateAction<string[]>>;
   equipment: string[];
   setEquipment: React.Dispatch<React.SetStateAction<string[]>>;
+  platformPresence: string[];
+  setPlatformPresence: React.Dispatch<React.SetStateAction<string[]>>;
 
   // Profile state
   emailVerified: boolean;
@@ -174,9 +174,9 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   // Agent-facing structured fields
   const [yearsOfExperience, setYearsOfExperience] = useState<number | null>(draft?.yearsOfExperience ?? null);
   const [freelancerJobsRange, setFreelancerJobsRange] = useState(draft?.freelancerJobsRange || '');
-  const [freelancePlatforms, setFreelancePlatforms] = useState(draft?.freelancePlatforms || '');
   const [industries, setIndustries] = useState<string[]>(draft?.industries || []);
   const [equipment, setEquipment] = useState<string[]>(draft?.equipment || []);
+  const [platformPresence, setPlatformPresence] = useState<string[]>(draft?.platformPresence || []);
 
   // ─── Profile state ───
   const [emailVerified, setEmailVerified] = useState(false);
@@ -371,9 +371,10 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
     timezone, setTimezone, weeklyCapacityHours, setWeeklyCapacityHours,
     workType, setWorkType,
     yearsOfExperience, setYearsOfExperience,
-    freelancerJobsRange, setFreelancerJobsRange, freelancePlatforms, setFreelancePlatforms,
+    freelancerJobsRange, setFreelancerJobsRange,
     industries, setIndustries,
     equipment, setEquipment,
+    platformPresence, setPlatformPresence,
     emailVerified, profileLoading, profileCompleted, error, setError,
     mountedRef, draft,
   };

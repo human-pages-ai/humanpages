@@ -18,6 +18,8 @@ interface StepFinishProps {
   setFacebookUrl: (v: string) => void;
   tiktokUrl: string;
   setTiktokUrl: (v: string) => void;
+  platformPresence: string[];
+  setPlatformPresence: (v: string[]) => void;
   onLinkedInConnect: () => Promise<void>;
   onGitHubConnect: () => Promise<void>;
   onNext: () => void;
@@ -44,6 +46,7 @@ export function StepFinish({
   twitterUrl, setTwitterUrl, websiteUrl, setWebsiteUrl,
   instagramUrl, setInstagramUrl, youtubeUrl, setYoutubeUrl,
   facebookUrl, setFacebookUrl, tiktokUrl, setTiktokUrl,
+  platformPresence, setPlatformPresence,
   onLinkedInConnect, onGitHubConnect,
   onNext, onSkip: _onSkip, isLoading, error, setError,
   profileData,
@@ -51,6 +54,7 @@ export function StepFinish({
   const [connectingLI, setConnectingLI] = useState(false);
   const [connectingGH, setConnectingGH] = useState(false);
   const [showMoreSocials, setShowMoreSocials] = useState(true);
+  const [newPlatformPresence, setNewPlatformPresence] = useState('');
 
   const handleLI = async () => { setConnectingLI(true); try { await onLinkedInConnect(); } finally { setConnectingLI(false); } };
   const handleGH = async () => { setConnectingGH(true); try { await onGitHubConnect(); } finally { setConnectingGH(false); } };
@@ -131,6 +135,39 @@ export function StepFinish({
               <div><label htmlFor="facebook-url" className="block text-xs font-medium text-slate-600 mb-1">Facebook</label><input id="facebook-url" type="url" value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} onBlur={(e) => { const val = e.target.value; if (val && !val.startsWith('http')) setFacebookUrl('https://' + val); }} placeholder="facebook.com/..." className={inputCls} /></div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Platform Presence */}
+      <div className="mb-6 pt-4 border-t border-slate-200">
+        <h3 className="text-sm font-semibold text-slate-900 mb-1">Platform Presence (Optional)</h3>
+        <p className="text-xs text-slate-500 mb-3">Add your reputation badges and platform achievements</p>
+        {platformPresence.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {platformPresence.map((item, idx) => (
+              <button key={idx} type="button" onClick={() => setPlatformPresence(platformPresence.filter((_, i) => i !== idx))} aria-label={`Remove: ${item}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 min-h-[44px]">
+                {item}<span aria-hidden="true" className="text-orange-200 ml-0.5 text-base leading-none">&times;</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newPlatformPresence}
+            onChange={(e) => setNewPlatformPresence(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const val = newPlatformPresence.trim(); if (val && !platformPresence.some(p => p.toLowerCase() === val.toLowerCase())) { setPlatformPresence([...platformPresence, val]); setNewPlatformPresence(''); } } }}
+            placeholder="e.g., Top Rated seller, 50k followers, 5-star rating on marketplace..."
+            className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+          />
+          <button
+            type="button"
+            onClick={() => { const val = newPlatformPresence.trim(); if (val && !platformPresence.some(p => p.toLowerCase() === val.toLowerCase())) { setPlatformPresence([...platformPresence, val]); setNewPlatformPresence(''); } }}
+            disabled={!newPlatformPresence.trim()}
+            className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
+          >
+            Add
+          </button>
         </div>
       </div>
 

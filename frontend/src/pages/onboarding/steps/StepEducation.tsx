@@ -15,8 +15,6 @@ interface StepEducationProps {
   setYearsOfExperience: (v: number | null) => void;
   freelancerJobsRange: string;
   setFreelancerJobsRange: (v: string) => void;
-  freelancePlatforms: string;
-  setFreelancePlatforms: (v: string) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
@@ -29,8 +27,6 @@ export function StepEducation({
   setYearsOfExperience,
   freelancerJobsRange,
   setFreelancerJobsRange,
-  freelancePlatforms,
-  setFreelancePlatforms,
   onNext,
   onSkip: _onSkip,
   error,
@@ -107,20 +103,6 @@ export function StepEducation({
           <option value="500+">500+ jobs</option>
         </select>
         <p className="text-xs text-slate-400 mt-1">Your experience level on platforms like Upwork, Fiverr, etc.</p>
-      </div>
-
-      {/* Freelance Platforms */}
-      <div className="mb-6">
-        <label htmlFor="freelance-platforms" className="block text-sm font-medium text-slate-700 mb-2">Freelance platforms (Optional)</label>
-        <input
-          id="freelance-platforms"
-          type="text"
-          value={freelancePlatforms}
-          onChange={(e) => setFreelancePlatforms(e.target.value)}
-          placeholder="e.g., Level 2 Seller on Fiverr, Top Rated on Upwork..."
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-        />
-        <p className="text-xs text-slate-400 mt-1">Share your reputation or badges (e.g., seller level, badges, ratings) without sharing profile links</p>
       </div>
 
       {/* Education Section */}

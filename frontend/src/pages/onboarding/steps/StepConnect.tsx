@@ -195,7 +195,13 @@ export function StepConnect({
         </div>
 
         {notificationStatus === 'granted' ? (
-          <p className="text-sm text-green-700 bg-green-50 rounded-lg p-3">Push notifications are enabled! You'll receive instant alerts when agents want to hire you.</p>
+          <div className="space-y-3">
+            <p className="text-sm text-green-700 bg-green-50 rounded-lg p-3">Push notifications are enabled! You'll receive instant alerts when agents want to hire you.</p>
+            <div className="text-sm bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="font-medium text-blue-900 mb-1">For the best experience, install HumanPages as an app</p>
+              <p className="text-xs text-blue-700">In Chrome: Menu → Install app. In Safari: Share → Add to Home Screen.</p>
+            </div>
+          </div>
         ) : notificationStatus === 'denied' ? (
           <div className="space-y-2">
             <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3">You've declined push notifications. You can enable them anytime in your browser settings.</p>
@@ -208,14 +214,20 @@ export function StepConnect({
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={handleEnablePushNotifications}
-            disabled={isRegistering}
-            className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
-          >
-            {isRegistering ? 'Enabling...' : 'Enable Push Notifications'}
-          </button>
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleEnablePushNotifications}
+              disabled={isRegistering}
+              className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
+            >
+              {isRegistering ? 'Enabling...' : 'Enable Push Notifications'}
+            </button>
+            <div className="text-sm bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="font-medium text-blue-900 mb-1">For the best experience, install HumanPages as an app</p>
+              <p className="text-xs text-blue-700">In Chrome: Menu → Install app. In Safari: Share → Add to Home Screen.</p>
+            </div>
+          </div>
         )}
       </div>
 

@@ -55,9 +55,9 @@ export interface OnboardingDraft {
   // Agent-facing structured fields
   yearsOfExperience: number | null;
   freelancerJobsRange: string;
-  freelancePlatforms: string;
   industries: string[];
   equipment: string[];
+  platformPresence: string[];
   username: string;
 }
 

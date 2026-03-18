@@ -1,9 +1,12 @@
+import { useState } from 'react';
+
 interface StepPaymentProps {
   walletAddress: string;
   setWalletAddress: (v: string) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
+  setError?: (v: string) => void;
 }
 
 export function StepPayment({
@@ -12,7 +15,29 @@ export function StepPayment({
   onNext,
   onSkip: _onSkip,
   error,
+  setError,
 }: StepPaymentProps) {
+  const [connectingPrivy, setConnectingPrivy] = useState(false);
+
+  // Lazy load Privy to avoid impact on 2G networks
+  const handleConnectWallet = async () => {
+    setConnectingPrivy(true);
+    if (setError) setError('');
+    try {
+      const { usePrivy } = await import('@privy-io/react-auth');
+      const usePrivyHook = usePrivy();
+      if (usePrivyHook && usePrivyHook.login) {
+        usePrivyHook.login();
+      } else {
+        if (setError) setError('Wallet connection not available. You can paste your address manually below.');
+      }
+    } catch (err) {
+      if (setError) setError('Failed to load wallet connector. Please paste your address manually.');
+    } finally {
+      setConnectingPrivy(false);
+    }
+  };
+
   return (
     <>
       <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Get Paid</h2>
@@ -49,21 +74,41 @@ export function StepPayment({
           </div>
         </div>
 
+        {/* Connect Wallet Button */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleConnectWallet}
+            disabled={connectingPrivy}
+            className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm min-h-[44px]"
+          >
+            {connectingPrivy ? 'Connecting...' : 'Connect Wallet with Privy'}
+          </button>
+          <p className="text-xs text-slate-500 mt-2">Click to connect with MetaMask, WalletConnect, email, or create an embedded wallet.</p>
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-white text-slate-500">or paste manually</span>
+          </div>
+        </div>
+
         {/* Wallet Address Input */}
-        <div className="mb-3">
+        <div>
           <label htmlFor="wallet-address" className="block text-sm font-medium text-slate-700 mb-2">Ethereum / Base wallet address</label>
-          <p className="text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-            You can set your wallet address now or connect it later from your dashboard using Privy for a verified connection.
-          </p>
           <input
             id="wallet-address"
             type="text"
             value={walletAddress}
-            onChange={(e) => setWalletAddress(e.target.value.trim())}
+            onChange={(e) => { setWalletAddress(e.target.value.trim()); if (setError) setError(''); }}
             placeholder="0x..."
             className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono"
           />
-          <p className="text-xs text-slate-500 mt-2">Or paste your wallet address manually. You'll be able to connect via Privy from your dashboard.</p>
+          <p className="text-xs text-slate-500 mt-2">Paste your wallet address to skip connecting with Privy.</p>
         </div>
       </div>
 
