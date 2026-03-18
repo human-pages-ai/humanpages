@@ -39,8 +39,8 @@ FROM "Agent"
 WHERE "walletAddress" IS NOT NULL;
 
 -- Drop old single-wallet columns from Agent
-ALTER TABLE "Agent" DROP COLUMN "walletAddress",
-DROP COLUMN "walletNetwork",
-DROP COLUMN "walletNonce",
-DROP COLUMN "walletNonceExpiresAt",
-DROP COLUMN "walletVerified";
+ALTER TABLE "Agent" DROP COLUMN IF EXISTS "walletAddress",
+DROP COLUMN IF EXISTS "walletNetwork",
+DROP COLUMN IF EXISTS "walletNonce",
+DROP COLUMN IF EXISTS "walletNonceExpiresAt",
+DROP COLUMN IF EXISTS "walletVerified";
