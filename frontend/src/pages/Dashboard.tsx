@@ -10,7 +10,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Profile, Job, ReviewStats } from '../components/dashboard/types';
-import StatusHeader from '../components/dashboard/StatusHeader';
+// StatusHeader removed — wizard module tiles replace the profile completion banner
 import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
@@ -375,22 +375,7 @@ export default function Dashboard() {
     });
   };
 
-  const toggleAvailability = async () => {
-    if (!profile) return;
-    if (profile.isAvailable && !window.confirm(t('dashboard.workStatus.confirmSuspend'))) {
-      return;
-    }
-    setSaving(true);
-    try {
-      const updated = await api.updateProfile({ isAvailable: !profile.isAvailable });
-      posthog.capture('availability_toggled', { isAvailable: updated.isAvailable });
-      setProfile(updated);
-    } catch (error) {
-      console.error('Failed to update availability:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
+  // toggleAvailability removed — availability is managed via wizard tiles
 
   const togglePaymentPreference = async (pref: 'UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM') => {
     if (!profile) return;
@@ -605,22 +590,6 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
-        {/* Status header — always visible */}
-        <StatusHeader
-          profile={profile}
-          jobs={jobs}
-          reviewStats={reviewStats}
-          saving={saving}
-          onToggleAvailability={toggleAvailability}
-          onCompleteProfile={() => {
-            navigate('/onboarding');
-          }}
-          onAddService={() => {
-            navigate('/onboarding?step=services');
-          }}
-          onScrollToWallets={() => setActiveTab('payments')}
-        />
 
         {/* Tab navigation */}
         <DashboardTabs
