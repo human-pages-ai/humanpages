@@ -7,6 +7,7 @@ interface WizardModuleTileProps {
   color: 'blue' | 'green' | 'orange' | 'purple' | 'amber' | 'rose' | 'teal' | 'indigo' | 'slate';
   children: React.ReactNode;
   isEmpty?: boolean;
+  emptyHint?: string;
 }
 
 const colorMap = {
@@ -28,6 +29,7 @@ export default function WizardModuleTile({
   color,
   children,
   isEmpty = false,
+  emptyHint = 'Add this to boost discovery',
 }: WizardModuleTileProps) {
   const c = colorMap[color];
 
@@ -48,8 +50,17 @@ export default function WizardModuleTile({
         </Link>
       </div>
 
-      <div className={`text-sm ${isEmpty ? 'text-slate-400 italic' : 'text-slate-700'}`}>
-        {isEmpty ? 'Not set yet' : children}
+      <div>
+        {isEmpty ? (
+          <div className="flex items-center gap-3 p-3 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50">
+            <span className="text-xl text-slate-300">+</span>
+            <div>
+              <p className="text-sm text-slate-500">{emptyHint}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-slate-700">{children}</div>
+        )}
       </div>
     </div>
   );

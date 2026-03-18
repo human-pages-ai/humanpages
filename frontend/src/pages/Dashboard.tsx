@@ -701,6 +701,7 @@ export default function Dashboard() {
                   icon="🔔"
                   color="blue"
                   isEmpty={!profile.pushNotifications && !telegramStatus?.connected && !profile.whatsapp}
+                  emptyHint="Enable notifications to never miss a job offer"
                 >
                   <div className="space-y-2">
                     <div>
@@ -717,11 +718,9 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">WhatsApp:</span>{' '}
-                      {profile.whatsapp ? (
-                        <span className="text-sm font-medium text-green-600">{profile.whatsapp}</span>
-                      ) : (
-                        <span className="text-sm text-gray-400">Not set</span>
-                      )}
+                      <span className={`text-sm font-medium ${profile.whatsapp ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.whatsapp || '—'}
+                      </span>
                     </div>
                   </div>
                 </WizardModuleTile>
@@ -733,12 +732,11 @@ export default function Dashboard() {
                   icon="⚡"
                   color="purple"
                   isEmpty={!profile.skills || profile.skills.length === 0}
+                  emptyHint="Add skills so agents can find you"
                 >
                   {profile.skills && profile.skills.length > 0 ? (
                     <ChipList items={profile.skills} color="blue" />
-                  ) : (
-                    <span className="text-gray-400">Not set</span>
-                  )}
+                  ) : null}
                 </WizardModuleTile>
 
                 {/* 3. Equipment */}
@@ -748,12 +746,11 @@ export default function Dashboard() {
                   icon="🔧"
                   color="amber"
                   isEmpty={!profile.equipment || profile.equipment.length === 0}
+                  emptyHint="List your tools to match physical tasks"
                 >
                   {profile.equipment && profile.equipment.length > 0 ? (
                     <ChipList items={profile.equipment} color="amber" />
-                  ) : (
-                    <span className="text-gray-400">Not set</span>
-                  )}
+                  ) : null}
                 </WizardModuleTile>
 
                 {/* 4. Location */}
@@ -763,42 +760,50 @@ export default function Dashboard() {
                   icon="📍"
                   color="green"
                   isEmpty={!profile.location}
+                  emptyHint="Set location so agents find you for nearby tasks"
                 >
                   <div className="space-y-2">
                     <div>
                       <span className="text-gray-500 text-xs">Location:</span>{' '}
-                      {profile.location ? (
-                        <span className="text-sm font-medium text-gray-900">
-                          {profile.locationGranularity === 'neighborhood' && profile.neighborhood
+                      <span className={`text-sm font-medium ${profile.location ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.location ? (
+                          profile.locationGranularity === 'neighborhood' && profile.neighborhood
                             ? `${profile.neighborhood}, ${profile.location}`
-                            : profile.location}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-400">Not set</span>
-                      )}
+                            : profile.location
+                        ) : '—'}
+                      </span>
                     </div>
-                    {profile.timezone && (
-                      <div>
-                        <span className="text-gray-500 text-xs">Timezone:</span>{' '}
-                        <span className="text-sm font-medium text-gray-900">{profile.timezone}</span>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-gray-500 text-xs">Timezone:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.timezone ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.timezone || '—'}
+                      </span>
+                    </div>
                   </div>
                 </WizardModuleTile>
 
-                {/* 5. Education */}
+                {/* 5. Education & Experience */}
                 <WizardModuleTile
-                  title="Education"
+                  title="Education & Experience"
                   stepId="education"
                   icon="🎓"
                   color="indigo"
                   isEmpty={(!profile.education || profile.education.length === 0) && !profile.yearsOfExperience}
+                  emptyHint="Add experience to stand out"
                 >
                   <div className="space-y-2">
-                    {profile.education && profile.education.length > 0 && (
-                      <div>
-                        <span className="text-gray-500 text-xs block mb-1">Education:</span>
-                        <div className="space-y-1">
+                    <div>
+                      <span className="text-gray-500 text-xs">Years of Experience:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.yearsOfExperience ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.yearsOfExperience != null && profile.yearsOfExperience > 0
+                          ? `${profile.yearsOfExperience} ${profile.yearsOfExperience === 1 ? 'year' : 'years'}`
+                          : '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">Education:</span>
+                      {profile.education && profile.education.length > 0 ? (
+                        <div className="space-y-1 mt-1">
                           {profile.education.map((edu) => (
                             <div key={edu.id} className="text-xs">
                               <span className="font-medium text-gray-900">{edu.institution}</span>
@@ -806,16 +811,10 @@ export default function Dashboard() {
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
-                    {profile.yearsOfExperience != null && profile.yearsOfExperience > 0 && (
-                      <div>
-                        <span className="text-gray-500 text-xs">Experience:</span>{' '}
-                        <span className="text-sm font-medium text-gray-900">
-                          {profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? 'year' : 'years'}
-                        </span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="text-gray-400">None added</span>
+                      )}
+                    </div>
                   </div>
                 </WizardModuleTile>
 
@@ -826,6 +825,7 @@ export default function Dashboard() {
                   icon="💼"
                   color="teal"
                   isEmpty={!profile.services || profile.services.length === 0}
+                  emptyHint="Define services to get hired"
                 >
                   {profile.services && profile.services.length > 0 ? (
                     <div className="space-y-2">
@@ -840,9 +840,7 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <span className="text-gray-400">Not set</span>
-                  )}
+                  ) : null}
                 </WizardModuleTile>
 
                 {/* 7. Profile (Name, Bio, Photo) */}
@@ -852,22 +850,29 @@ export default function Dashboard() {
                   icon="👤"
                   color="rose"
                   isEmpty={!profile.name}
+                  emptyHint="Add a name and photo to build trust"
                 >
                   <div className="space-y-2">
                     <div>
                       <span className="text-gray-500 text-xs">Name:</span>{' '}
-                      {profile.name ? (
-                        <span className="text-sm font-medium text-gray-900">{profile.name}</span>
+                      <span className={`text-sm font-medium ${profile.name ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.name || '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">Bio:</span>{' '}
+                      {profile.bio ? (
+                        <p className="text-sm text-gray-900 mt-1 line-clamp-2">{profile.bio}</p>
                       ) : (
-                        <span className="text-sm text-gray-400">Not set</span>
+                        <span className="text-gray-400">—</span>
                       )}
                     </div>
-                    {profile.bio && (
-                      <div>
-                        <span className="text-gray-500 text-xs">Bio:</span>
-                        <p className="text-sm text-gray-900 mt-1 line-clamp-2">{profile.bio}</p>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-gray-500 text-xs">Photo:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.profilePhotoUrl ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.profilePhotoUrl ? 'Added' : '—'}
+                      </span>
+                    </div>
                   </div>
                 </WizardModuleTile>
 
@@ -878,22 +883,21 @@ export default function Dashboard() {
                   icon="📅"
                   color="orange"
                   isEmpty={!profile.workType && !profile.weeklyCapacityHours}
+                  emptyHint="Set availability so agents know when to hire you"
                 >
                   <div className="space-y-2">
-                    {profile.workType && (
-                      <div>
-                        <span className="text-gray-500 text-xs">Work Type:</span>{' '}
-                        <span className="text-sm font-medium text-gray-900">{profile.workType}</span>
-                      </div>
-                    )}
-                    {profile.weeklyCapacityHours != null && profile.weeklyCapacityHours > 0 && (
-                      <div>
-                        <span className="text-gray-500 text-xs">Weekly Capacity:</span>{' '}
-                        <span className="text-sm font-medium text-gray-900">
-                          {profile.weeklyCapacityHours} hours/week
-                        </span>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-gray-500 text-xs">Work Type:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.workType ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.workType || '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">Weekly Hours:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.weeklyCapacityHours ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {profile.weeklyCapacityHours ? `${profile.weeklyCapacityHours} hours/week` : '—'}
+                      </span>
+                    </div>
                   </div>
                 </WizardModuleTile>
 
@@ -904,6 +908,7 @@ export default function Dashboard() {
                   icon="✅"
                   color="green"
                   isEmpty={!profile.linkedinVerified && !profile.githubVerified}
+                  emptyHint="Verify accounts to boost trust score"
                 >
                   <div className="space-y-2">
                     <div>
