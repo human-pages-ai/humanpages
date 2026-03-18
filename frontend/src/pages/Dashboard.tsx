@@ -9,10 +9,10 @@ import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { VouchCard } from '../components/shared/VouchCard';
 import { Profile, Job, ReviewStats } from '../components/dashboard/types';
 // StatusHeader removed — wizard module tiles replace the profile completion banner
 import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
-import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
 import WhatsAppSection from '../components/dashboard/WhatsAppSection';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
@@ -121,8 +121,6 @@ export default function Dashboard() {
   const [jobsLoading, setJobsLoading] = useState(true);
   const [jobFilter, setJobFilter] = useState<'all' | 'pending' | 'active' | 'completed'>('all');
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
-
-  const [copiedProfile, setCopiedProfile] = useState(false);
 
   const [telegramStatus, setTelegramStatus] = useState<{
     connected: boolean;
@@ -924,12 +922,16 @@ export default function Dashboard() {
                 </WizardModuleTile>
               </div>
 
-              {/* Sharing & Referral — full width below the grid */}
-              <ShareReferralSection
-                profile={profile}
-                copiedProfile={copiedProfile}
-                setCopiedProfile={setCopiedProfile}
-              />
+              {/* Share Profile Link — using VouchCard for consistency */}
+              <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Share Your Profile</h2>
+                <VouchCard
+                  username={profile.username}
+                  userId={profile.id}
+                  vouchCount={0}
+                  vouchTarget={10}
+                />
+              </div>
             </div>
             );
           })()}

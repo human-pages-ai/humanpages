@@ -19,7 +19,7 @@ interface VouchCardProps {
 const SHARE_TEXT = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
 
 export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, vouchTarget = 10 }: VouchCardProps) {
-  const profileUrl = getProfileDisplayUrl({ username, id: userId });
+  const displayUrl = getProfileDisplayUrl({ username, id: userId });
   const shareUrl = getProfileUrl({ username, id: userId });
   const pct = Math.min(100, Math.round((vouchCount / vouchTarget) * 100));
 
@@ -58,32 +58,41 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
 
       {/* Profile URL */}
       <div>
-        {onUsernameChange ? (
+        <label htmlFor="vouch-profile-url" className="block text-xs font-medium text-slate-600 mb-1">Your profile link</label>
+
+        {/* Always show the full computed URL as read-only */}
+        <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg mb-3">
+          <span className="text-sm text-slate-700 flex-1 truncate font-mono">{displayUrl}</span>
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(shareUrl).then(() => toast.success('Copied!')).catch(() => {}); }}
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+          >
+            Copy
+          </button>
+        </div>
+
+        {/* Username edit field — only shown in wizard mode (onUsernameChange provided) */}
+        {onUsernameChange && (
           <>
-            <label htmlFor="vouch-username" className="block text-xs font-medium text-slate-600 mb-1">Your profile link</label>
+            <label htmlFor="vouch-username" className="block text-xs font-medium text-slate-600 mb-1">Username (optional)</label>
+            {!username && (
+              <p className="text-xs text-slate-500 mb-1.5">Set a username to get a shorter link</p>
+            )}
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-slate-500 whitespace-nowrap">humanpages.ai/u/</span>
+              <span className="text-xs text-slate-500 whitespace-nowrap">
+                {username ? getProfileDisplayUrl({ username, id: userId }).replace(username, '') : 'humanpages.ai/u/'}
+              </span>
               <input
                 id="vouch-username"
                 type="text"
-                value={username}
+                value={username || ''}
                 onChange={(e) => onUsernameChange(e.target.value.slice(0, 50).replace(/\s+/g, '-').toLowerCase())}
                 placeholder="your-username"
                 className="flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
             </div>
           </>
-        ) : (
-          <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-            <span className="text-sm text-slate-700 flex-1 truncate">{profileUrl}</span>
-            <button
-              type="button"
-              onClick={() => { navigator.clipboard.writeText(shareUrl).then(() => toast.success('Copied!')).catch(() => {}); }}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
-            >
-              Copy
-            </button>
-          </div>
         )}
       </div>
 
