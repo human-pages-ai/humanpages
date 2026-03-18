@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -9,25 +9,20 @@ import { analytics } from '../lib/analytics';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { Profile, Job, ReviewStats, Service } from '../components/dashboard/types';
+import { Profile, Job, ReviewStats } from '../components/dashboard/types';
 import StatusHeader from '../components/dashboard/StatusHeader';
 import DashboardTabs, { DashboardTab } from '../components/dashboard/DashboardTabs';
 import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import TelegramSection from '../components/dashboard/TelegramSection';
 import WhatsAppSection from '../components/dashboard/WhatsAppSection';
-import WorkStatusSection from '../components/dashboard/WorkStatusSection';
-import InstallAppBanner from '../components/dashboard/InstallAppBanner';
 import OfferFiltersSection from '../components/dashboard/OfferFiltersSection';
 import JobsSection from '../components/dashboard/JobsSection';
-import ProfileSection from '../components/dashboard/ProfileSection';
 // import CvUpload from '../components/dashboard/CvUpload'; // Hidden: CV upload disabled
-import EducationSection from '../components/dashboard/EducationSection';
 import WizardModuleTile from '../components/dashboard/WizardModuleTile';
 
 // Lazy-load wallet stack (Privy) — only fetched when payments tab opens
 const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
 const WalletsSection = lazy(() => import('../components/dashboard/WalletsSection'));
-import ServicesSection from '../components/dashboard/ServicesSection';
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
@@ -67,10 +62,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [autoSaving, setAutoSaving] = useState(false);
-  const [showSavedFeedback, setShowSavedFeedback] = useState(false);
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savedFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [editingProfile] = useState(false);
 
   // Tab state — driven by URL search param
   const tabParam = searchParams.get('tab') as DashboardTab | null;
@@ -86,7 +78,6 @@ export default function Dashboard() {
     setSearchParams(newParams, { replace: true });
   };
 
-  const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: '',
     bio: '',
@@ -125,10 +116,6 @@ export default function Dashboard() {
 
   const profileFormRef = useRef(profileForm);
   profileFormRef.current = profileForm;
-  const initialProfileFormRef = useRef(profileForm);
-
-  const [showServiceForm, setShowServiceForm] = useState(false);
-  const [serviceForm, setServiceForm] = useState({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: 'USD' });
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
@@ -259,7 +246,6 @@ export default function Dashboard() {
         minRateUsdc: data.minRateUsdc?.toString() || '',
         rateCurrency: data.rateCurrency || 'USD',
       });
-      setServiceForm((prev) => ({ ...prev, priceCurrency: data.rateCurrency || 'USD' }));
       updateUser({ hasWallet: (data.wallets?.length ?? 0) > 0 });
       if (data.id) {
         try {
@@ -424,116 +410,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleUploadPhoto = async (file: File) => {
-    await api.uploadProfilePhoto(file);
-    await loadProfile();
-  };
-
-  const handleDeletePhoto = async () => {
-    await api.deleteProfilePhoto();
-    await loadProfile();
-  };
-
-  const buildProfilePayload = (form: typeof profileForm) => ({
-    name: form.name,
-    bio: form.bio || null,
-    location: form.location || null,
-    neighborhood: form.neighborhood || null,
-    locationGranularity: form.locationGranularity,
-    locationLat: form.locationLat ?? null,
-    locationLng: form.locationLng ?? null,
-    skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
-    equipment: form.equipment.length > 0 ? form.equipment : null,
-    languages: form.languages.length > 0 ? form.languages : null,
-    contactEmail: form.contactEmail || null,
-    telegram: form.telegram || null,
-    whatsapp: form.whatsapp || null,
-    paymentMethods: form.paymentMethods || null,
-    hideContact: form.hideContact,
-    featuredConsent: form.featuredConsent,
-    username: form.username || null,
-    linkedinUrl: form.linkedinUrl || null,
-    twitterUrl: form.twitterUrl || null,
-    githubUrl: form.githubUrl || null,
-    facebookUrl: form.facebookUrl || null,
-    instagramUrl: form.instagramUrl || null,
-    youtubeUrl: form.youtubeUrl || null,
-    websiteUrl: form.websiteUrl || null,
-    workMode: form.workMode || null,
-  });
-
-  const saveProfile = async () => {
-    setSaving(true);
-    try {
-      const updated = await api.updateProfile(buildProfilePayload(profileForm));
-      posthog.capture('profile_updated');
-      setProfile(updated);
-      setEditingProfile(false);
-      initialProfileFormRef.current = profileForm;
-      toast.success(t('toast.profileSaved'));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('toast.genericError'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Auto-save profile on form changes (debounced 1.5s)
-  const autoSaveProfile = useCallback(async () => {
-    const form = profileFormRef.current;
-    setAutoSaving(true);
-    try {
-      const updated = await api.updateProfile(buildProfilePayload(form));
-      posthog.capture('profile_updated');
-      setProfile(updated);
-      initialProfileFormRef.current = form;
-      // Show "Saved" feedback
-      setShowSavedFeedback(true);
-      if (savedFeedbackTimer.current) clearTimeout(savedFeedbackTimer.current);
-      savedFeedbackTimer.current = setTimeout(() => {
-        setShowSavedFeedback(false);
-      }, 2000);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('toast.genericError'));
-    } finally {
-      setAutoSaving(false);
-    }
-  }, []);
-
-  const scheduleAutoSave = useCallback(() => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      autoSaveProfile();
-    }, 1500);
-  }, [autoSaveProfile]);
-
-  // Trigger auto-save when profileForm changes while editing
-  useEffect(() => {
-    if (!editingProfile) return;
-    // Skip the initial render when editing starts (form just loaded from profile)
-    if (JSON.stringify(profileFormRef.current) === JSON.stringify(initialProfileFormRef.current)) return;
-    scheduleAutoSave();
-    return () => {
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    };
-  }, [profileForm, editingProfile, scheduleAutoSave]);
-
-  // When entering edit mode, snapshot the form state
-  useEffect(() => {
-    if (editingProfile) {
-      initialProfileFormRef.current = profileForm;
-    }
-  }, [editingProfile]);
-
-  const checkUsernameAvailability = useCallback(async (username: string): Promise<boolean> => {
-    try {
-      const { available } = await api.checkUsername(username);
-      return available;
-    } catch {
-      return true; // Don't block on network errors
-    }
-  }, []);
-
   const saveFilters = async () => {
     setSaving(true);
     try {
@@ -616,142 +492,7 @@ export default function Dashboard() {
     });
   };
 
-  const addService = async () => {
-    setSaving(true);
-    try {
-      await api.createService({
-        title: serviceForm.title,
-        description: serviceForm.description,
-        category: serviceForm.category,
-        priceMin: serviceForm.priceMin ? parseFloat(serviceForm.priceMin) : null,
-        priceCurrency: serviceForm.priceCurrency,
-        priceUnit: serviceForm.priceUnit || null,
-      });
-      posthog.capture('service_added');
-      const prevWalletCount = profile?.wallets?.length ?? 0;
-      await loadProfile();
-      setServiceForm({ title: '', description: '', category: '', priceMin: '', priceUnit: '', priceCurrency: profile?.rateCurrency || 'USD' });
-      setShowServiceForm(false);
-      toast.success(t('toast.serviceAdded'));
-      if (prevWalletCount === 0) {
-        setTimeout(() => {
-          toast(
-            (toastObj) => (
-              <div>
-                <p className="font-medium text-sm">{t('toast.walletNudgeTitle')}</p>
-                <p className="text-xs text-gray-500 mt-1">{t('toast.walletNudgeDescription')}</p>
-                <button
-                  className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-500"
-                  onClick={() => {
-                    toast.dismiss(toastObj.id);
-                    setActiveTab('payments');
-                  }}
-                >
-                  {t('toast.walletNudgeAction')}
-                </button>
-              </div>
-            ),
-            { duration: 8000 }
-          );
-        }, 500);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const toggleServiceActive = async (service: Service) => {
-    try {
-      await api.updateService(service.id, { isActive: !service.isActive });
-      await loadProfile();
-    } catch (error: any) {
-      toast.error(error.message || t('toast.genericError'));
-    }
-  };
-
-  const deleteService = async (id: string) => {
-    setConfirmDialog({
-      open: true,
-      title: t('dashboard.services.confirmDelete'),
-      message: t('dashboard.services.confirmDelete'),
-      onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, open: false }));
-        try {
-          await api.deleteService(id);
-          toast.success(t('toast.serviceDeleted'));
-          await loadProfile();
-        } catch (error: any) {
-          toast.error(error.message || t('toast.genericError'));
-        }
-      },
-    });
-  };
-
-  const changeEmailDigestMode = async (mode: 'REALTIME' | 'HOURLY' | 'DAILY') => {
-    if (!profile) return;
-    setSaving(true);
-    try {
-      const updated = await api.updateProfile({ emailDigestMode: mode });
-      setProfile(updated);
-    } catch (error) {
-      console.error('Failed to update email digest mode:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const toggleNotification = async (channel: 'email' | 'telegram' | 'whatsapp' | 'push') => {
-    if (!profile) return;
-    setSaving(true);
-    try {
-      if (channel === 'push') {
-        const { subscribeToPush, unsubscribeFromPush } = await import('../lib/pushNotifications');
-        if (profile.pushNotifications) {
-          // Disable push
-          await unsubscribeFromPush();
-          const updated = await api.updateProfile({ pushNotifications: false });
-          setProfile(updated);
-        } else {
-          // Pre-permission explainer before triggering the browser prompt
-          setConfirmDialog({
-            open: true,
-            title: t('dashboard.push.explainerTitle', 'Enable push notifications'),
-            message: t('dashboard.push.explainer', "We'll only notify you about job offers and messages. You can turn this off anytime.\n\nAfter clicking Confirm, tap 'Allow' on the browser popup."),
-            onConfirm: async () => {
-              setConfirmDialog(d => ({ ...d, open: false }));
-              try {
-                const ok = await subscribeToPush();
-                if (!ok) {
-                  toast.error(t('dashboard.push.denied', 'Push notifications were blocked. To enable, allow notifications in your browser settings.'));
-                  return;
-                }
-                const updated = await api.updateProfile({ pushNotifications: true });
-                setProfile(updated);
-                toast.success(t('toast.preferencesSaved'));
-              } catch {
-                toast.error(t('dashboard.push.denied', 'Push notifications were blocked. To enable, allow notifications in your browser settings.'));
-              }
-            },
-          });
-          return;
-        }
-        toast.success(t('toast.preferencesSaved'));
-        return;
-      }
-      const key = channel === 'email' ? 'emailNotifications'
-        : channel === 'telegram' ? 'telegramNotifications'
-        : 'whatsappNotifications';
-      const updated = await api.updateProfile({ [key]: !(profile as any)[key] });
-      setProfile(updated);
-      toast.success(t('toast.preferencesSaved'));
-    } catch (error: any) {
-      toast.error(error.message || t('toast.genericError'));
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const deleteAccount = async (password?: string) => {
     setSaving(true);
@@ -872,22 +613,11 @@ export default function Dashboard() {
           reviewStats={reviewStats}
           saving={saving}
           onToggleAvailability={toggleAvailability}
-          onCompleteProfile={(fieldId) => {
-            setActiveTab('profile');
-            setEditingProfile(true);
-            if (fieldId) {
-              setTimeout(() => {
-                document.getElementById(fieldId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                document.getElementById(fieldId)?.focus();
-              }, 100);
-            }
+          onCompleteProfile={() => {
+            navigate('/onboarding');
           }}
           onAddService={() => {
-            setActiveTab('profile');
-            setShowServiceForm(true);
-            setTimeout(() => {
-              document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            navigate('/onboarding?step=services');
           }}
           onScrollToWallets={() => setActiveTab('payments')}
         />
@@ -1136,69 +866,8 @@ export default function Dashboard() {
                 </WizardModuleTile>
               </div>
 
-              {/* Two-column layout on desktop */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left: Profile info */}
-                <div className="space-y-6">
-                  {/* Auto-save feedback */}
-                  {showSavedFeedback && (
-                    <div className="animate-fade-out flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
-                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-sm font-medium text-green-700">Saved</span>
-                    </div>
-                  )}
-                  <ProfileSection
-                    profile={profile}
-                    editingProfile={editingProfile}
-                    setEditingProfile={setEditingProfile}
-                    hasWallet={profile.wallets.length > 0}
-                    onScrollToWallets={() => setActiveTab('payments')}
-                    profileForm={profileForm}
-                    setProfileForm={setProfileForm}
-                    saving={saving}
-                    autoSaving={autoSaving}
-                    onSaveProfile={saveProfile}
-                    onCheckUsername={checkUsernameAvailability}
-                    onUploadPhoto={handleUploadPhoto}
-                    onDeletePhoto={handleDeletePhoto}
-                  />
-                  {/* <CvUpload profile={profile} onUpload={loadProfile} /> */}
-                  {/* Hidden: CV upload disabled */}
-                  <EducationSection profile={profile} onUpdate={loadProfile} />
-                </div>
-
-                {/* Right: Services + Work status */}
-                <div className="space-y-6" id="services-section">
-                  <ServicesSection
-                    services={profile.services}
-                    showServiceForm={showServiceForm}
-                    setShowServiceForm={setShowServiceForm}
-                    serviceForm={serviceForm}
-                    setServiceForm={setServiceForm}
-                    saving={saving}
-                    onAddService={addService}
-                    onToggleServiceActive={toggleServiceActive}
-                    onDeleteService={deleteService}
-                  />
-                  <WorkStatusSection
-                    isAvailable={profile.isAvailable}
-                    emailNotifications={profile.emailNotifications !== false}
-                    telegramNotifications={profile.telegramNotifications !== false}
-                    whatsappNotifications={profile.whatsappNotifications !== false}
-                    pushNotifications={profile.pushNotifications === true}
-                    whatsappConnected={whatsappStatus?.connected ?? false}
-                    whatsappAvailable={whatsappStatus?.botAvailable ?? false}
-                    emailDigestMode={profile.emailDigestMode || 'REALTIME'}
-                    saving={saving}
-                    onToggleAvailability={toggleAvailability}
-                    onToggleNotification={toggleNotification}
-                    onEmailDigestModeChange={changeEmailDigestMode}
-                  />
-                  <InstallAppBanner hasReceivedOffer={jobs.length > 0} />
-                </div>
-              </div>
+              {/* Vouch Section */}
+              <VouchSection />
 
               {/* Sharing & Referral — full width below the grid */}
               <ShareReferralSection
@@ -1268,8 +937,6 @@ export default function Dashboard() {
                 onConnect={connectWhatsApp}
                 onDisconnect={disconnectWhatsApp}
               />
-
-              <VouchSection />
             </div>
           )}
 

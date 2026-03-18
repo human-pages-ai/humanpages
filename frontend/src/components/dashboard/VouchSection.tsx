@@ -76,7 +76,7 @@ export default function VouchSection() {
   const handleShare = async () => {
     if (!profile?.username) return;
 
-    const profileUrl = `https://humanpages.ai/user/${profile.username}`;
+    const profileUrl = `https://humanpages.ai/u/${profile.username}`;
     const shareText = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
     const shareData = {
       title: 'HumanPages',
@@ -123,12 +123,12 @@ export default function VouchSection() {
               <input
                 type="text"
                 readOnly
-                value={`humanpages.ai/user/${profile.username}`}
+                value={`humanpages.ai/u/${profile.username}`}
                 className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50"
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://humanpages.ai/user/${profile.username}`);
+                  navigator.clipboard.writeText(`https://humanpages.ai/u/${profile.username}`);
                   toast.success('Copied to clipboard!');
                 }}
                 className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"

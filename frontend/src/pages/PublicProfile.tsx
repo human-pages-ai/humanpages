@@ -55,6 +55,8 @@ interface PublicHuman {
   neighborhood?: string;
   locationGranularity?: 'city' | 'neighborhood';
   skills: string[];
+  equipment?: string[];
+  languages?: { language: string; proficiency: string }[];
   contactEmail?: string;
   telegram?: string;
   whatsapp?: string;
@@ -367,6 +369,38 @@ export default function PublicProfile() {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.profile.skills')}</h2>
                 <p className="text-gray-500 text-sm">{t('publicProfile.noSkills')}</p>
+              </div>
+            )}
+
+            {/* Equipment */}
+            {profile.equipment && profile.equipment.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.profile.equipment', 'Equipment')}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {profile.equipment.map((item, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Languages */}
+            {profile.languages && profile.languages.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.profile.languages', 'Languages')}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {profile.languages.map((lang, index) => (
+                    <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
+                      {lang.language}
+                      {lang.proficiency && <span className="text-xs opacity-75">({lang.proficiency})</span>}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 

@@ -45,7 +45,7 @@ export function StepVouch({
     }
   }, []);
 
-  const profileUrl = `humanpages.ai/user/${username}`;
+  const profileUrl = `humanpages.ai/u/${username}`;
   const shareText = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
 
   const handleShare = async () => {
@@ -103,7 +103,7 @@ export function StepVouch({
       <div className="mb-6">
         <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">Your profile link</label>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">humanpages.ai/user/</span>
+          <span className="text-sm text-slate-600">humanpages.ai/u/</span>
           <input
             id="username"
             type="text"
