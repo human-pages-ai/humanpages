@@ -34,7 +34,7 @@ import { safeLocalStorage } from '../lib/safeStorage';
 const VALID_TABS: DashboardTab[] = ['jobs', 'listings', 'profile', 'payments', 'settings', 'privacy'];
 
 // Helper component for rendering chips in a consistent style
-function ChipList({ items, color = 'blue' }: { items: string[]; color?: 'blue' | 'amber' | 'green' }) {
+function ChipList({ items, color = 'blue', showCategory = false }: { items: string[]; color?: 'blue' | 'amber' | 'green'; showCategory?: boolean }) {
   const colors = {
     blue: 'bg-blue-100 text-blue-700',
     amber: 'bg-amber-100 text-amber-700',
@@ -42,11 +42,21 @@ function ChipList({ items, color = 'blue' }: { items: string[]; color?: 'blue' |
   };
   return (
     <div className="flex flex-wrap gap-1.5">
-      {items.map((item, i) => (
-        <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium ${colors[color]}`}>
-          {item}
-        </span>
-      ))}
+      {items.map((item, i) => {
+        // Extract category prefix if present (format: "Category - Item" or just "Item")
+        let displayText = item;
+        let category = '';
+        if (showCategory && item.includes(' - ')) {
+          const parts = item.split(' - ', 1);
+          category = parts[0];
+          displayText = item.slice(category.length + 3); // +3 for " - "
+        }
+        return (
+          <span key={i} className={`px-2.5 py-1 rounded-full text-xs font-medium ${colors[color]}`}>
+            {category && <span className="font-semibold">{category}:</span>} {displayText}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -515,6 +525,7 @@ export default function Dashboard() {
           {activeTab === 'profile' && (() => {
             // Profile completion scoring
             const checks = [
+              { label: 'CV', done: !!profile.cvParsedAt, stepId: 'cv-upload' },
               { label: 'Name', done: !!profile.name?.trim(), stepId: 'profile' },
               { label: 'Photo', done: !!profile.profilePhotoUrl, stepId: 'profile' },
               { label: 'Skills', done: (profile.skills?.length || 0) > 0, stepId: 'skills' },
@@ -524,6 +535,8 @@ export default function Dashboard() {
               { label: 'Payment', done: profile.wallets.length > 0, stepId: 'payment' },
               { label: 'Bio', done: !!profile.bio?.trim(), stepId: 'profile' },
             ];
+            // Sort: done first, then not done
+            const sortedChecks = [...checks].sort((a, b) => (b.done ? 1 : 0) - (a.done ? 1 : 0));
             const doneCount = checks.filter(c => c.done).length;
             const pct = Math.round((doneCount / checks.length) * 100);
             const firstIncomplete = checks.find(c => !c.done);
@@ -560,10 +573,16 @@ export default function Dashboard() {
                     <p className="mt-2 text-xs text-slate-500">{pct}% complete</p>
                     {/* Checklist pills */}
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {checks.map(c => (
-                        <span key={c.label} className={`text-[10px] px-2 py-0.5 rounded-full ${c.done ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                          {c.done ? '✓' : '○'} {c.label}
-                        </span>
+                      {sortedChecks.map(c => (
+                        <Link
+                          key={c.label}
+                          to={`/onboarding?step=${c.stepId}`}
+                          className={`text-[10px] px-2 py-0.5 rounded-full hover:opacity-80 transition-opacity ${
+                            c.done ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600'
+                          }`}
+                        >
+                          {c.done ? '✓' : '+'} {c.label}
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -658,7 +677,7 @@ export default function Dashboard() {
                   emptyHint="List your tools to match physical tasks"
                 >
                   {profile.equipment && profile.equipment.length > 0 ? (
-                    <ChipList items={profile.equipment} color="amber" />
+                    <ChipList items={profile.equipment} color="amber" showCategory={true} />
                   ) : null}
                 </WizardModuleTile>
 

@@ -20,6 +20,31 @@ interface VouchCardProps {
 const SHARE_TEXT = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
 
 export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, vouchTarget = 10 }: VouchCardProps) {
+  // If userId is not yet loaded from the API, show a loading state
+  if (!userId) {
+    return (
+      <div className="space-y-4 opacity-50 pointer-events-none">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-medium text-slate-600">Vouches</span>
+              <span className="text-sm font-bold text-orange-600">0/10</span>
+            </div>
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: '0%' }} />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Your profile link</label>
+          <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg mb-3">
+            <span className="text-sm text-slate-400 flex-1 truncate font-mono">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const displayUrl = getProfileDisplayUrl({ id: userId });
   const shareUrl = getProfileUrl({ id: userId });
   const pct = Math.min(100, Math.round((vouchCount / vouchTarget) * 100));
