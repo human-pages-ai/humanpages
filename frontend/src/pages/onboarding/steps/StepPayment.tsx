@@ -3,21 +3,50 @@ import { useState } from 'react';
 interface StepPaymentProps {
   walletAddress: string;
   setWalletAddress: (v: string) => void;
+  fiatPayment?: string;
+  setFiatPayment?: (v: string) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
   setError?: (v: string) => void;
 }
 
+const FIAT_PAYMENT_METHODS = [
+  'PayPal',
+  'Wise',
+  'Bank Transfer',
+  'Venmo',
+  'Cash App',
+  'M-Pesa',
+  'GCash',
+  'Other',
+];
+
 export function StepPayment({
   walletAddress,
   setWalletAddress,
+  fiatPayment,
+  setFiatPayment,
   onNext,
   onSkip: _onSkip,
   error,
   setError,
 }: StepPaymentProps) {
   const [connectingPrivy, setConnectingPrivy] = useState(false);
+  const [fiatMethod, setFiatMethod] = useState(() => {
+    if (fiatPayment) {
+      const parts = fiatPayment.split(': ');
+      return parts[0] || '';
+    }
+    return '';
+  });
+  const [fiatHandle, setFiatHandle] = useState(() => {
+    if (fiatPayment) {
+      const parts = fiatPayment.split(': ');
+      return parts[1] || '';
+    }
+    return '';
+  });
 
   // Lazy load Privy to avoid impact on 2G networks
   const handleConnectWallet = async () => {
@@ -52,13 +81,52 @@ export function StepPayment({
             <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-slate-900">Fiat Payment</h3>
-            <p className="text-xs text-slate-500">International bank transfers</p>
+            <h3 className="font-semibold text-slate-900">Payment Methods</h3>
+            <p className="text-xs text-slate-500">Set up your preferred payment method</p>
           </div>
         </div>
-        <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3">
-          <p className="font-medium text-slate-700 mb-1">Coming soon</p>
-          <p className="text-xs text-slate-600">We're integrating Wise, PayPal, and direct bank transfers. You'll be able to set these up from your dashboard.</p>
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="fiat-method" className="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
+            <select
+              id="fiat-method"
+              value={fiatMethod}
+              onChange={(e) => {
+                setFiatMethod(e.target.value);
+                if (setFiatPayment && fiatHandle) {
+                  setFiatPayment(`${e.target.value}: ${fiatHandle}`);
+                }
+              }}
+              className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              <option value="">Select a payment method...</option>
+              {FIAT_PAYMENT_METHODS.map((method) => (
+                <option key={method} value={method}>{method}</option>
+              ))}
+            </select>
+          </div>
+
+          {fiatMethod && (
+            <div>
+              <label htmlFor="fiat-handle" className="block text-sm font-medium text-slate-700 mb-1">
+                {fiatMethod === 'Bank Transfer' ? 'Account Details' : 'Handle / Username / Email'}
+              </label>
+              <input
+                id="fiat-handle"
+                type="text"
+                value={fiatHandle}
+                onChange={(e) => {
+                  setFiatHandle(e.target.value);
+                  if (setFiatPayment && fiatMethod) {
+                    setFiatPayment(`${fiatMethod}: ${e.target.value}`);
+                  }
+                }}
+                placeholder={fiatMethod === 'Bank Transfer' ? 'IBAN, account number, or details' : `e.g., user@email.com or @username`}
+                className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">You can update this later from your dashboard</p>
+            </div>
+          )}
         </div>
       </div>
 

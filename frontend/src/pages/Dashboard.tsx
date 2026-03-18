@@ -22,6 +22,7 @@ import JobsSection from '../components/dashboard/JobsSection';
 import ProfileSection from '../components/dashboard/ProfileSection';
 // import CvUpload from '../components/dashboard/CvUpload'; // Hidden: CV upload disabled
 import EducationSection from '../components/dashboard/EducationSection';
+import WizardModuleTile from '../components/dashboard/WizardModuleTile';
 
 // Lazy-load wallet stack (Privy) — only fetched when payments tab opens
 const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
@@ -905,6 +906,224 @@ export default function Dashboard() {
           {/* ───── PROFILE TAB ───── */}
           {activeTab === 'profile' && (
             <div className="space-y-6">
+              {/* Wizard Module Tiles Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. Notifications & Connect */}
+                <WizardModuleTile
+                  title="Notifications & Connect"
+                  stepId="connect"
+                  isEmpty={!profile.pushNotifications && !telegramStatus?.connected && !profile.whatsapp}
+                >
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-gray-500 text-xs">Push Notifications:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.pushNotifications ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.pushNotifications ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">Telegram:</span>{' '}
+                      <span className={`text-sm font-medium ${telegramStatus?.connected ? 'text-green-600' : 'text-gray-400'}`}>
+                        {telegramStatus?.connected ? 'Connected' : 'Not connected'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">WhatsApp:</span>{' '}
+                      {profile.whatsapp ? (
+                        <span className="text-sm font-medium text-green-600">{profile.whatsapp}</span>
+                      ) : (
+                        <span className="text-sm text-gray-400">Not set</span>
+                      )}
+                    </div>
+                  </div>
+                </WizardModuleTile>
+
+                {/* 2. Skills */}
+                <WizardModuleTile
+                  title="Skills"
+                  stepId="skills"
+                  isEmpty={!profile.skills || profile.skills.length === 0}
+                >
+                  {profile.skills && profile.skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {profile.skills.map((skill) => (
+                        <span key={skill} className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Not set</span>
+                  )}
+                </WizardModuleTile>
+
+                {/* 3. Equipment */}
+                <WizardModuleTile
+                  title="Equipment"
+                  stepId="equipment"
+                  isEmpty={!profile.equipment || profile.equipment.length === 0}
+                >
+                  {profile.equipment && profile.equipment.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {profile.equipment.map((item) => (
+                        <span key={item} className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Not set</span>
+                  )}
+                </WizardModuleTile>
+
+                {/* 4. Location */}
+                <WizardModuleTile
+                  title="Location"
+                  stepId="location"
+                  isEmpty={!profile.location}
+                >
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-gray-500 text-xs">Location:</span>{' '}
+                      {profile.location ? (
+                        <span className="text-sm font-medium text-gray-900">
+                          {profile.locationGranularity === 'neighborhood' && profile.neighborhood
+                            ? `${profile.neighborhood}, ${profile.location}`
+                            : profile.location}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">Not set</span>
+                      )}
+                    </div>
+                  </div>
+                </WizardModuleTile>
+
+                {/* 5. Education */}
+                <WizardModuleTile
+                  title="Education"
+                  stepId="education"
+                  isEmpty={(!profile.education || profile.education.length === 0) && !profile.yearsOfExperience}
+                >
+                  <div className="space-y-2">
+                    {profile.education && profile.education.length > 0 && (
+                      <div>
+                        <span className="text-gray-500 text-xs block mb-1">Education:</span>
+                        <div className="space-y-1">
+                          {profile.education.map((edu) => (
+                            <div key={edu.id} className="text-xs">
+                              <span className="font-medium text-gray-900">{edu.institution}</span>
+                              {edu.degree && <span className="text-gray-600"> — {edu.degree}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {profile.yearsOfExperience != null && profile.yearsOfExperience > 0 && (
+                      <div>
+                        <span className="text-gray-500 text-xs">Experience:</span>{' '}
+                        <span className="text-sm font-medium text-gray-900">
+                          {profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? 'year' : 'years'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </WizardModuleTile>
+
+                {/* 6. Services */}
+                <WizardModuleTile
+                  title="Services"
+                  stepId="services"
+                  isEmpty={!profile.services || profile.services.length === 0}
+                >
+                  {profile.services && profile.services.length > 0 ? (
+                    <div className="space-y-2">
+                      {profile.services.map((service) => (
+                        <div key={service.id} className="text-xs">
+                          <span className="font-medium text-gray-900">{service.title}</span>
+                          {service.priceMin && (
+                            <span className="text-gray-600 ml-2">
+                              ${service.priceMin} {service.priceUnit || 'flat'}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Not set</span>
+                  )}
+                </WizardModuleTile>
+
+                {/* 7. Profile (Name, Bio, Photo) */}
+                <WizardModuleTile
+                  title="Profile"
+                  stepId="profile"
+                  isEmpty={!profile.name}
+                >
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-gray-500 text-xs">Name:</span>{' '}
+                      {profile.name ? (
+                        <span className="text-sm font-medium text-gray-900">{profile.name}</span>
+                      ) : (
+                        <span className="text-sm text-gray-400">Not set</span>
+                      )}
+                    </div>
+                    {profile.bio && (
+                      <div>
+                        <span className="text-gray-500 text-xs">Bio:</span>
+                        <p className="text-sm text-gray-900 mt-1 line-clamp-2">{profile.bio}</p>
+                      </div>
+                    )}
+                  </div>
+                </WizardModuleTile>
+
+                {/* 8. Availability */}
+                <WizardModuleTile
+                  title="Availability"
+                  stepId="availability"
+                  isEmpty={!profile.workMode && !profile.minRateUsdEstimate}
+                >
+                  <div className="space-y-2">
+                    {profile.workMode && (
+                      <div>
+                        <span className="text-gray-500 text-xs">Work Mode:</span>{' '}
+                        <span className="text-sm font-medium text-gray-900">{profile.workMode}</span>
+                      </div>
+                    )}
+                    {profile.minRateUsdEstimate && (
+                      <div>
+                        <span className="text-gray-500 text-xs">Minimum Rate:</span>{' '}
+                        <span className="text-sm font-medium text-gray-900">
+                          ${profile.minRateUsdEstimate}/hour
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </WizardModuleTile>
+
+                {/* 9. Verification */}
+                <WizardModuleTile
+                  title="Verification"
+                  stepId="verification"
+                  isEmpty={!profile.linkedinVerified && !profile.githubVerified}
+                >
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-gray-500 text-xs">LinkedIn:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.linkedinVerified ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.linkedinVerified ? 'Verified' : 'Not verified'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs">GitHub:</span>{' '}
+                      <span className={`text-sm font-medium ${profile.githubVerified ? 'text-green-600' : 'text-gray-400'}`}>
+                        {profile.githubVerified ? 'Verified' : 'Not verified'}
+                      </span>
+                    </div>
+                  </div>
+                </WizardModuleTile>
+              </div>
+
               {/* Two-column layout on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Profile info */}

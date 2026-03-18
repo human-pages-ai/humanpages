@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
-import { Vouch } from './types';
+import { Vouch, Profile } from './types';
 
 export default function VouchSection() {
   const { t, i18n } = useTranslation();
   const [given, setGiven] = useState<Vouch[]>([]);
   const [received, setReceived] = useState<Vouch[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [comment, setComment] = useState('');
@@ -16,7 +17,17 @@ export default function VouchSection() {
 
   useEffect(() => {
     loadVouches();
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    try {
+      const data = await api.getProfile();
+      setProfile(data);
+    } catch {
+      // silently fail
+    }
+  };
 
   const loadVouches = async () => {
     try {
@@ -62,10 +73,98 @@ export default function VouchSection() {
     }
   };
 
+  const handleShare = async () => {
+    if (!profile?.username) return;
+
+    const profileUrl = `https://humanpages.ai/user/${profile.username}`;
+    const shareText = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
+    const shareData = {
+      title: 'HumanPages',
+      text: shareText,
+      url: profileUrl,
+    };
+
+    // Use Web Share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          await fallbackCopy(profileUrl);
+        }
+      }
+    } else {
+      // Fallback to clipboard copy
+      await fallbackCopy(profileUrl);
+    }
+  };
+
+  const fallbackCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t('common.copied', 'Copied to clipboard!'));
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
   if (loading) return null;
 
   return (
     <div className="space-y-4">
+      {/* Profile URL & Share Section */}
+      {profile?.username && (
+        <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('dashboard.vouches.yourProfile', 'Your Profile')}</h2>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Profile URL</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`humanpages.ai/user/${profile.username}`}
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50"
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://humanpages.ai/user/${profile.username}`);
+                  toast.success('Copied to clipboard!');
+                }}
+                className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+          {/* Vouch Progress */}
+          <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-700">Vouches Received</p>
+              <span className="text-2xl font-bold text-orange-500">{received.length}/10</span>
+            </div>
+            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-orange-500 transition-all"
+                style={{ width: `${Math.min((received.length / 10) * 100, 100)}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Share your profile and ask colleagues to vouch for you</p>
+          </div>
+
+          <button
+            onClick={handleShare}
+            className="w-full py-2.5 bg-blue-50 text-blue-700 font-medium rounded-lg hover:bg-blue-100 active:bg-blue-200 border border-blue-200 transition-colors text-sm flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Share Profile
+          </button>
+        </div>
+      )}
+
       {/* Vouches Received */}
       <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">

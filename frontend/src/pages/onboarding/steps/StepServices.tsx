@@ -1,31 +1,28 @@
 import { useState, useRef, useEffect } from 'react';
 import { CompactCvProcessingBar } from '../components/CvProcessingBar';
+import { SuggestionInput } from '../components/SuggestionInput';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
 import type { Service } from '../types';
 
-const EQUIPMENT_CATEGORIES = [
-  'Phone',
-  'Camera',
-  'Vehicle',
-  'Computer',
-  'Audio',
-  'Drone',
-  'Tools',
-  'Kitchen',
-  'Other',
+// Flat list of common equipment with categories for autocomplete
+const EQUIPMENT_SUGGESTIONS = [
+  // Phones
+  'iPhone', 'Samsung Galaxy', 'Pixel', 'Xiaomi', 'OnePlus', 'Huawei',
+  // Cameras
+  'DSLR Camera', 'Mirrorless Camera', 'GoPro', 'Action Camera', 'Film Camera',
+  // Vehicles
+  'Car', 'Motorcycle', 'Bicycle', 'Van', 'Truck', 'Scooter',
+  // Computers
+  'Laptop', 'Desktop', 'Tablet', 'MacBook', 'iPad',
+  // Audio
+  'Microphone', 'Headphones', 'Speaker', 'Mixer', 'Audio Interface',
+  // Drones
+  'DJI Mavic', 'DJI Mini', 'FPV Drone', 'Drone',
+  // Tools
+  'Power Drill', 'Measuring Tools', 'Soldering Iron', '3D Printer', 'Toolset',
+  // Kitchen
+  'Oven', 'Blender', 'Food Processor', 'Commercial Kitchen',
 ];
-
-const EQUIPMENT_TYPES: Record<string, string[]> = {
-  'Phone': ['iPhone', 'Samsung Galaxy', 'Pixel', 'Xiaomi', 'OnePlus', 'Huawei'],
-  'Camera': ['DSLR', 'Mirrorless', 'GoPro', 'Action Camera', 'Film Camera'],
-  'Vehicle': ['Car', 'Motorcycle', 'Bicycle', 'Van', 'Truck', 'Scooter'],
-  'Computer': ['Laptop', 'Desktop', 'Tablet'],
-  'Audio': ['Microphone', 'Headphones', 'Speaker', 'Mixer', 'Audio Interface'],
-  'Drone': ['DJI Mavic', 'DJI Mini', 'FPV Drone'],
-  'Tools': ['Power Drill', 'Measuring Tools', 'Soldering Iron', '3D Printer'],
-  'Kitchen': ['Oven', 'Blender', 'Food Processor'],
-  'Other': [],
-};
 
 const formatUnitLabel = (unit: string): string => {
   const labels: Record<string, string> = {
@@ -215,9 +212,7 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
   const [priceError, setPriceError] = useState('');
-  const [newEquipmentCategory, setNewEquipmentCategory] = useState('');
-  const [newEquipmentType, setNewEquipmentType] = useState('');
-  const [newEquipmentDetails, setNewEquipmentDetails] = useState('');
+  const [newEquipment, setNewEquipment] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
 
   // Generate service suggestions from CV
@@ -324,17 +319,13 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   // Equipment-only mode: render just the equipment section as a standalone step
   if (equipmentOnly) {
     const handleAddEquipment = () => {
-      if (!newEquipmentCategory.trim() || !newEquipmentType.trim()) return;
-      const equipmentString = `${newEquipmentCategory} - ${newEquipmentType}${newEquipmentDetails.trim() ? ' - ' + newEquipmentDetails.trim() : ''}`;
-      if (!equipment.some(eq => eq.toLowerCase() === equipmentString.toLowerCase())) {
-        setEquipment(prev => [...prev, equipmentString]);
-        setNewEquipmentCategory('');
-        setNewEquipmentType('');
-        setNewEquipmentDetails('');
+      const trimmed = newEquipment.trim();
+      if (!trimmed) return;
+      if (!equipment.some(eq => eq.toLowerCase() === trimmed.toLowerCase())) {
+        setEquipment(prev => [...prev, trimmed]);
+        setNewEquipment('');
       }
     };
-
-    const availableTypes = newEquipmentCategory ? EQUIPMENT_TYPES[newEquipmentCategory] || [] : [];
 
     return (
       <>
@@ -354,81 +345,43 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
           <div className="mb-6 p-4 border border-slate-200 rounded-lg bg-white">
             <div className="space-y-3">
               <div>
-                <label htmlFor="eq-category" className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                <select
-                  id="eq-category"
-                  value={newEquipmentCategory}
-                  onChange={(e) => { setNewEquipmentCategory(e.target.value); setNewEquipmentType(''); }}
+                <label htmlFor="eq-input" className="block text-sm font-medium text-slate-700 mb-1">Equipment Name</label>
+                <input
+                  id="eq-input"
+                  list="equipment-list"
+                  type="text"
+                  value={newEquipment}
+                  onChange={(e) => setNewEquipment(e.target.value.slice(0, 100))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddEquipment();
+                    }
+                  }}
+                  maxLength={100}
+                  placeholder="e.g., iPhone, DSLR Camera, Laptop..."
                   className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                >
-                  <option value="">Select category...</option>
-                  {EQUIPMENT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                />
+                <datalist id="equipment-list">
+                  {EQUIPMENT_SUGGESTIONS.map((item) => (
+                    <option key={item} value={item} />
                   ))}
-                </select>
+                </datalist>
               </div>
-
-              {newEquipmentCategory && (
-                <div>
-                  <label htmlFor="eq-type" className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-                  {availableTypes.length > 0 ? (
-                    <input
-                      id="eq-type"
-                      list="equipment-type-list"
-                      type="text"
-                      value={newEquipmentType}
-                      onChange={(e) => setNewEquipmentType(e.target.value.slice(0, 50))}
-                      maxLength={50}
-                      placeholder="Select or type..."
-                      className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  ) : (
-                    <input
-                      id="eq-type"
-                      type="text"
-                      value={newEquipmentType}
-                      onChange={(e) => setNewEquipmentType(e.target.value.slice(0, 50))}
-                      maxLength={50}
-                      placeholder="Enter type..."
-                      className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  )}
-                  <datalist id="equipment-type-list">
-                    {availableTypes.map((type) => (
-                      <option key={type} value={type} />
-                    ))}
-                  </datalist>
-                </div>
-              )}
-
-              {newEquipmentType && (
-                <div>
-                  <label htmlFor="eq-details" className="block text-sm font-medium text-slate-700 mb-1">Model / Details (Optional)</label>
-                  <input
-                    id="eq-details"
-                    type="text"
-                    value={newEquipmentDetails}
-                    onChange={(e) => setNewEquipmentDetails(e.target.value.slice(0, 50))}
-                    maxLength={50}
-                    placeholder="e.g., 16 Pro Max, Nikon D850..."
-                    className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                </div>
-              )}
 
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleAddEquipment}
-                  disabled={!newEquipmentCategory.trim() || !newEquipmentType.trim()}
+                  disabled={!newEquipment.trim()}
                   className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]"
                 >
                   Add Equipment
                 </button>
-                {(newEquipmentCategory || newEquipmentType || newEquipmentDetails) && (
+                {newEquipment && (
                   <button
                     type="button"
-                    onClick={() => { setNewEquipmentCategory(''); setNewEquipmentType(''); setNewEquipmentDetails(''); }}
+                    onClick={() => setNewEquipment('')}
                     className="px-4 py-2.5 sm:py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]"
                   >
                     Clear
@@ -602,36 +555,24 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
-                  <input
-                    list="currency-list"
-                    type="text"
+                  <SuggestionInput
                     value={newService.currency}
-                    onChange={(e) => setNewService({ ...newService, currency: e.target.value.toUpperCase().slice(0, 3) })}
-                    placeholder="USD"
-                    className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                  <datalist id="currency-list">
-                    {(() => {
+                    onChange={(v) => setNewService({ ...newService, currency: v.toUpperCase().slice(0, 3) })}
+                    suggestions={(() => {
                       const suggestedCurrency = detectUserCurrency();
                       const suggested = [
                         ALL_CURRENCIES.find(c => c.code === 'USD'),
                         suggestedCurrency !== 'USD' ? ALL_CURRENCIES.find(c => c.code === suggestedCurrency) : null,
-                      ].filter(Boolean);
+                      ].filter(Boolean) as typeof ALL_CURRENCIES;
                       const rest = ALL_CURRENCIES.filter(c => !suggested.some(s => s?.code === c.code));
 
-                      return (
-                        <>
-                          {suggested.map(curr => (
-                            <option key={curr!.code} value={curr!.code}>{curr!.flag} {curr!.code} - {curr!.name}</option>
-                          ))}
-                          <option disabled>────────</option>
-                          {rest.map(curr => (
-                            <option key={curr.code} value={curr.code}>{curr.flag} {curr.code} - {curr.name}</option>
-                          ))}
-                        </>
-                      );
+                      return [
+                        ...suggested.map(c => ({ value: c.code, label: `${c.flag} ${c.code} - ${c.name}` })),
+                        ...rest.map(c => ({ value: c.code, label: `${c.flag} ${c.code} - ${c.name}` })),
+                      ];
                     })()}
-                  </datalist>
+                    placeholder="USD"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Rate Type</label>

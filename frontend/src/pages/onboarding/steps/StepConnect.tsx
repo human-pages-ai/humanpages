@@ -9,6 +9,15 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+// Module-level capture — fires before any component mounts
+let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
 interface StepConnectProps {
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
@@ -40,7 +49,7 @@ export function StepConnect({
   const [registrationError, setRegistrationError] = useState('');
   const [showInstallButton, setShowInstallButton] = useState(false);
 
-  // Check if notifications are already enabled and capture beforeinstallprompt event
+  // Check if notifications are already enabled and set install button from module-level capture
   useEffect(() => {
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
@@ -50,21 +59,17 @@ export function StepConnect({
       }
     }
 
-    // Capture beforeinstallprompt event for PWA installation
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      installPromptRef.current = e as BeforeInstallPromptEvent;
+    // Check if beforeinstallprompt event was already captured at module level
+    if (deferredInstallPrompt) {
+      installPromptRef.current = deferredInstallPrompt;
       setShowInstallButton(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }
 
     api.getTelegramStatus().then(status => setTelegramStatus(status)).catch(() => {
       // Initial status check failed — user may not have bot available
     });
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       if (pollRef.current) {
         clearInterval(pollRef.current);
         pollRef.current = null;

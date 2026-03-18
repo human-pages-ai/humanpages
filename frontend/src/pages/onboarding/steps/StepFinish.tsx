@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SuggestionInput } from '../components/SuggestionInput';
 import type { PlatformEntry } from '../types';
 
 const PLATFORM_SUGGESTIONS = [
@@ -127,20 +128,12 @@ export function StepFinish({
           <div className="p-4 border border-slate-200 rounded-lg bg-white space-y-3">
             <div>
               <label htmlFor="platform-name" className="block text-sm font-medium text-slate-700 mb-1">Platform Name</label>
-              <input
-                id="platform-name"
-                list="platform-list"
-                type="text"
+              <SuggestionInput
                 value={newPlatform}
-                onChange={(e) => setNewPlatform(e.target.value)}
+                onChange={(v) => setNewPlatform(v)}
+                suggestions={PLATFORM_SUGGESTIONS.map(p => ({ value: p, label: p }))}
                 placeholder="e.g., YouTube, Instagram, LinkedIn..."
-                className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
-              <datalist id="platform-list">
-                {PLATFORM_SUGGESTIONS.map((p) => (
-                  <option key={p} value={p} />
-                ))}
-              </datalist>
             </div>
             <div>
               <label htmlFor="platform-url" className="block text-sm font-medium text-slate-700 mb-1">URL (Optional)</label>
