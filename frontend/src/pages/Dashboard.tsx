@@ -622,37 +622,77 @@ export default function Dashboard() {
 
           {/* ───── PROFILE TAB ───── */}
           {activeTab === 'profile' && (() => {
-            // Count incomplete sections to show nudge
-            const incomplete: { label: string; stepId: string }[] = [];
-            if (!profile.skills?.length) incomplete.push({ label: 'Skills', stepId: 'skills' });
-            if (!profile.location?.trim()) incomplete.push({ label: 'Location', stepId: 'location' });
-            if (!profile.services?.some(s => s.isActive)) incomplete.push({ label: 'Services', stepId: 'services' });
-            if (!profile.name?.trim()) incomplete.push({ label: 'Name & Photo', stepId: 'profile' });
-            if (!profile.equipment?.length) incomplete.push({ label: 'Equipment', stepId: 'equipment' });
-            if (profile.wallets.length === 0) incomplete.push({ label: 'Payment', stepId: 'payment' });
+            // Profile completion scoring
+            const checks = [
+              { label: 'Name', done: !!profile.name?.trim(), stepId: 'profile' },
+              { label: 'Photo', done: !!profile.profilePhotoUrl, stepId: 'profile' },
+              { label: 'Skills', done: (profile.skills?.length || 0) > 0, stepId: 'skills' },
+              { label: 'Location', done: !!profile.location?.trim(), stepId: 'location' },
+              { label: 'Services', done: profile.services?.some(s => s.isActive) ?? false, stepId: 'services' },
+              { label: 'Equipment', done: (profile.equipment?.length || 0) > 0, stepId: 'equipment' },
+              { label: 'Payment', done: profile.wallets.length > 0, stepId: 'payment' },
+              { label: 'Bio', done: !!profile.bio?.trim(), stepId: 'profile' },
+            ];
+            const doneCount = checks.filter(c => c.done).length;
+            const pct = Math.round((doneCount / checks.length) * 100);
+            const firstIncomplete = checks.find(c => !c.done);
+            const level = pct >= 100 ? 'Pro' : pct >= 75 ? 'Rising' : pct >= 50 ? 'Starter' : 'New';
+            const levelColor = pct >= 100 ? 'text-green-600' : pct >= 75 ? 'text-blue-600' : pct >= 50 ? 'text-orange-600' : 'text-slate-500';
+            const ringColor = pct >= 100 ? '#22c55e' : pct >= 75 ? '#3b82f6' : pct >= 50 ? '#f97316' : '#94a3b8';
+            const circumference = 2 * Math.PI * 40;
+            const dashOffset = circumference - (pct / 100) * circumference;
 
             return (
             <div className="space-y-6">
-              {/* Completion nudge — only show if there are incomplete items */}
-              {incomplete.length > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-orange-900">
-                      {incomplete.length === 1 ? '1 section' : `${incomplete.length} sections`} left to complete
-                    </p>
-                    <p className="text-xs text-orange-700 mt-0.5">
-                      Complete your profile to get discovered by agents faster.
-                      Missing: {incomplete.map(i => i.label).join(', ')}
-                    </p>
+              {/* Profile card with photo, name, progress ring, level */}
+              <div className="bg-white rounded-xl shadow border border-slate-200 p-6">
+                <div className="flex items-center gap-5">
+                  {/* Progress ring with photo inside */}
+                  <div className="relative w-24 h-24 shrink-0">
+                    <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                      <circle cx="48" cy="48" r="40" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                      <circle cx="48" cy="48" r="40" fill="none" stroke={ringColor} strokeWidth="4" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} className="transition-all duration-700" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {profile.profilePhotoUrl ? (
+                        <img src={profile.profilePhotoUrl || ''} alt="" className="w-16 h-16 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-400">
+                          {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <Link
-                    to={`/onboarding?step=${incomplete[0].stepId}`}
-                    className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 whitespace-nowrap"
-                  >
-                    Continue
-                  </Link>
+
+                  {/* Name + level + progress */}
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-bold text-slate-900 truncate">{profile.name || 'Complete your profile'}</h2>
+                    {profile.username && <p className="text-sm text-slate-500">@{profile.username}</p>}
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className={`text-xs font-bold uppercase tracking-wide ${levelColor}`}>{level}</span>
+                      <span className="text-xs text-slate-400">{pct}% complete</span>
+                    </div>
+                    {/* Checklist pills */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {checks.map(c => (
+                        <span key={c.label} className={`text-[10px] px-2 py-0.5 rounded-full ${c.done ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                          {c.done ? '✓' : '○'} {c.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  {firstIncomplete && (
+                    <Link
+                      to={`/onboarding?step=${firstIncomplete.stepId}`}
+                      className="px-4 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 shadow whitespace-nowrap"
+                    >
+                      + {firstIncomplete.label}
+                    </Link>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Wizard Module Tiles Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
