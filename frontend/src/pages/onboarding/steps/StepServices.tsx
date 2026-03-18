@@ -213,7 +213,6 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const [categoryError, setCategoryError] = useState(false);
   const [priceError, setPriceError] = useState('');
   const [newEquipmentCategory, setNewEquipmentCategory] = useState('');
-  const [newEquipmentType, setNewEquipmentType] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
   const [editingServiceIndex, setEditingServiceIndex] = useState<number | null>(null);
 
@@ -320,25 +319,29 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
 
   // Equipment-only mode: render just the equipment section as a standalone step
   if (equipmentOnly) {
-    const handleAddEquipment = () => {
-      const categoryTrimmed = newEquipmentCategory.trim();
-      const typeTrimmed = newEquipmentType.trim();
-      if (!categoryTrimmed || !typeTrimmed) return;
-
-      const equipmentName = `${categoryTrimmed} - ${typeTrimmed}`;
-      if (!equipment.some(eq => eq.toLowerCase() === equipmentName.toLowerCase())) {
-        setEquipment(prev => [...prev, equipmentName]);
-        setNewEquipmentCategory('');
-        setNewEquipmentType('');
+    // Build a flat suggestion list from all categories and types
+    const allSuggestions: string[] = [];
+    for (const cat of EQUIPMENT_CATEGORIES) {
+      allSuggestions.push(cat);
+      const types = EQUIPMENT_TYPES_BY_CATEGORY[cat] || [];
+      for (const t of types) {
+        allSuggestions.push(`${cat} - ${t}`);
       }
-    };
+    }
 
-    const typeOptions = newEquipmentCategory ? EQUIPMENT_TYPES_BY_CATEGORY[newEquipmentCategory] || [] : [];
+    const handleAddEquipment = () => {
+      const trimmed = newEquipmentCategory.trim();
+      if (!trimmed) return;
+      if (!equipment.some(eq => eq.toLowerCase() === trimmed.toLowerCase())) {
+        setEquipment(prev => [...prev, trimmed]);
+      }
+      setNewEquipmentCategory('');
+    };
 
     return (
       <>
         <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Equipment & Tools</h2>
-        <p className="text-slate-600 mb-6">What tools and equipment do you have access to? This helps agents match you to physical tasks.</p>
+        <p className="text-slate-600 mb-6">What tools and equipment do you have? Type anything — a phone, camera, vehicle, software, or tool.</p>
         {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
         {equipment.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -350,79 +353,34 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
           </div>
         )}
         {equipment.length < 20 && (
-          <div className="mb-6 p-4 border border-slate-200 rounded-lg bg-white">
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="eq-category" className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                <input
-                  id="eq-category"
-                  list="equipment-categories"
-                  type="text"
-                  value={newEquipmentCategory}
-                  onChange={(e) => { setNewEquipmentCategory(e.target.value); setNewEquipmentType(''); }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddEquipment();
-                    }
-                  }}
-                  placeholder="e.g., Phone, Camera, Vehicle..."
-                  className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                />
-                <datalist id="equipment-categories">
-                  {EQUIPMENT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div>
-                <label htmlFor="eq-type" className="block text-sm font-medium text-slate-700 mb-1">Type / Model</label>
-                <input
-                  id="eq-type"
-                  list={newEquipmentCategory ? `equipment-types-${newEquipmentCategory}` : ''}
-                  type="text"
-                  value={newEquipmentType}
-                  onChange={(e) => setNewEquipmentType(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddEquipment();
-                    }
-                  }}
-                  placeholder={newEquipmentCategory ? `e.g., ${typeOptions[0] || 'custom model'}` : 'Select category first'}
-                  disabled={!newEquipmentCategory}
-                  className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-slate-50 disabled:text-slate-400"
-                />
-                {newEquipmentCategory && (
-                  <datalist id={`equipment-types-${newEquipmentCategory}`}>
-                    {typeOptions.map((type) => (
-                      <option key={type} value={type} />
-                    ))}
-                  </datalist>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleAddEquipment}
-                  disabled={!newEquipmentCategory.trim() || !newEquipmentType.trim()}
-                  className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]"
-                >
-                  Add Equipment
-                </button>
-                {(newEquipmentCategory || newEquipmentType) && (
-                  <button
-                    type="button"
-                    onClick={() => { setNewEquipmentCategory(''); setNewEquipmentType(''); }}
-                    className="px-4 py-2.5 sm:py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors min-h-[44px]"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
+          <div className="flex gap-2 mb-6">
+            <input
+              type="text"
+              list="equipment-suggestions"
+              value={newEquipmentCategory}
+              onChange={(e) => setNewEquipmentCategory(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddEquipment();
+                }
+              }}
+              placeholder="e.g., iPhone 16, DSLR Camera, Laptop, Car..."
+              className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+            <datalist id="equipment-suggestions">
+              {allSuggestions.filter(s => !equipment.some(eq => eq.toLowerCase() === s.toLowerCase())).map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+            <button
+              type="button"
+              onClick={handleAddEquipment}
+              disabled={!newEquipmentCategory.trim()}
+              className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
+            >
+              Add
+            </button>
           </div>
         )}
         <div className="flex justify-end mt-6">
