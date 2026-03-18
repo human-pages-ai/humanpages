@@ -91,8 +91,10 @@ export default function Onboarding() {
   const currentStepId = stepAt(flow, position);
 
   // ─── Completed onboarding guard ───
+  // Only redirect if user landed on /onboarding without a ?step= param.
+  // If ?step= is present, the user explicitly wants to edit that step (e.g., from dashboard "Edit" button).
   useEffect(() => {
-    if (!form.profileLoading && form.profileCompleted) {
+    if (!form.profileLoading && form.profileCompleted && !urlStepId) {
       navigate('/dashboard', { replace: true });
     }
   }, [form.profileLoading, form.profileCompleted, navigate]);
