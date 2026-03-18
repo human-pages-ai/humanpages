@@ -7,6 +7,8 @@ import type { TelegramState } from '../types';
 interface StepConnectProps {
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
+  smsNumber?: string;
+  setSmsNumber?: (v: string) => void;
   telegramStatus: TelegramState['telegramStatus'];
   setTelegramStatus: (v: TelegramState['telegramStatus']) => void;
   telegramLinkUrl: string | null;
@@ -20,6 +22,7 @@ interface StepConnectProps {
 
 export function StepConnect({
   whatsappNumber, setWhatsappNumber,
+  smsNumber, setSmsNumber,
   telegramStatus, setTelegramStatus,
   telegramLinkUrl, setTelegramLinkUrl,
   telegramLoading, setTelegramLoading,
@@ -150,7 +153,7 @@ export function StepConnect({
         )}
       </div>
 
-      <WhatsAppSection whatsappNumber={whatsappNumber} setWhatsappNumber={setWhatsappNumber} />
+      <WhatsAppSection whatsappNumber={whatsappNumber} setWhatsappNumber={setWhatsappNumber} smsNumber={smsNumber} setSmsNumber={setSmsNumber} />
 
       <div className="space-y-3">
         <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Continue</button>

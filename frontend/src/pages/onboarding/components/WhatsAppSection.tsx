@@ -4,9 +4,11 @@ import { COUNTRY_CODES } from '../constants';
 interface WhatsAppSectionProps {
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
+  smsNumber?: string;
+  setSmsNumber?: (v: string) => void;
 }
 
-export function WhatsAppSection({ whatsappNumber, setWhatsappNumber }: WhatsAppSectionProps) {
+export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber = '', setSmsNumber }: WhatsAppSectionProps) {
   const [countryCode, setCountryCode] = useState(() => {
     if (whatsappNumber) {
       const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find(c => whatsappNumber.startsWith(c.code));
@@ -24,11 +26,41 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber }: WhatsAppS
   const [codeSearch, setCodeSearch] = useState('');
   const [codeDropdownOpen, setCodeDropdownOpen] = useState(false);
   const codeDropdownRef = useRef<HTMLDivElement>(null);
+  const [isDifferentSmsNumber, setIsDifferentSmsNumber] = useState(!!smsNumber);
+  const [smsCountryCode, setSmsCountryCode] = useState(() => {
+    if (smsNumber) {
+      const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find(c => smsNumber.startsWith(c.code));
+      if (match) return match.code;
+    }
+    return '+1';
+  });
+  const [smsLocalPhone, setSmsLocalPhone] = useState(() => {
+    if (smsNumber) {
+      const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find(c => smsNumber.startsWith(c.code));
+      if (match) return smsNumber.slice(match.code.length).trim();
+    }
+    return '';
+  });
+  const [smsCpdeSearch, setSmsCpdeSearch] = useState('');
+  const [smsCpdeDropdownOpen, setSmsCpdeDropdownOpen] = useState(false);
+  const smsCodeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const full = localPhone ? `${countryCode}${localPhone.replace(/\D/g, '')}` : '';
     setWhatsappNumber(full);
   }, [countryCode, localPhone, setWhatsappNumber]);
+
+  useEffect(() => {
+    const full = localPhone ? `${countryCode}${localPhone.replace(/\D/g, '')}` : '';
+    setWhatsappNumber(full);
+  }, [countryCode, localPhone, setWhatsappNumber]);
+
+  useEffect(() => {
+    if (setSmsNumber) {
+      const full = isDifferentSmsNumber && smsLocalPhone ? `${smsCountryCode}${smsLocalPhone.replace(/\D/g, '')}` : '';
+      setSmsNumber(full);
+    }
+  }, [isDifferentSmsNumber, smsCountryCode, smsLocalPhone, setSmsNumber]);
 
   useEffect(() => {
     if (!codeDropdownOpen) return;
@@ -44,6 +76,21 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber }: WhatsAppS
       document.removeEventListener('touchstart', handleOutside);
     };
   }, [codeDropdownOpen]);
+
+  useEffect(() => {
+    if (!smsCpdeDropdownOpen) return;
+    const handleOutside = (e: Event) => {
+      if (smsCodeDropdownRef.current && !smsCodeDropdownRef.current.contains(e.target as Node)) {
+        setSmsCpdeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+    };
+  }, [smsCpdeDropdownOpen]);
 
   return (
     <div className="mb-6 p-4 border border-slate-200 rounded-lg">
@@ -117,6 +164,89 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber }: WhatsAppS
         </div>
         <p className="text-xs text-slate-500 mt-1">We'll only contact you about job opportunities.</p>
       </div>
+
+      {/* SMS Number Checkbox & Input */}
+      <div className="mt-4">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isDifferentSmsNumber}
+            onChange={(e) => {
+              setIsDifferentSmsNumber(e.target.checked);
+              if (!e.target.checked && setSmsNumber) {
+                setSmsNumber('');
+                setSmsLocalPhone('');
+              }
+            }}
+            className="w-4 h-4 border-slate-300 rounded text-orange-500 focus:ring-2 focus:ring-orange-500 cursor-pointer"
+          />
+          <span className="text-sm font-medium text-slate-700">My SMS number is different from WhatsApp</span>
+        </label>
+      </div>
+
+      {isDifferentSmsNumber && (
+        <div className="mt-4">
+          <label htmlFor="sms-local" className="block text-sm font-medium text-slate-700 mb-1">Your SMS number</label>
+          <div className="flex gap-2">
+            <div className="relative" ref={smsCodeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => { setSmsCpdeDropdownOpen(!smsCpdeDropdownOpen); setSmsCpdeSearch(''); }}
+                className="flex items-center gap-1 px-3 py-2.5 min-h-[44px] border border-slate-300 rounded-lg text-sm bg-white hover:bg-slate-50 active:bg-slate-100 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 whitespace-nowrap"
+                aria-haspopup="listbox"
+                aria-expanded={smsCpdeDropdownOpen}
+              >
+                <span className="text-base">{COUNTRY_CODES.find(c => c.code === smsCountryCode)?.flag || '🌍'}</span>
+                <span className="font-medium">{smsCountryCode}</span>
+                <svg className={`w-3 h-3 text-slate-400 transition-transform ${smsCpdeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {smsCpdeDropdownOpen && (
+                <div className="absolute z-[70] mt-1 w-64 max-h-60 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden" role="listbox">
+                  <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
+                    <input
+                      type="text"
+                      value={smsCpdeSearch}
+                      onChange={(e) => setSmsCpdeSearch(e.target.value)}
+                      placeholder="Search country..."
+                      className="w-full px-3 py-2 min-h-[44px] border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      autoFocus
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="overflow-y-auto max-h-48">
+                    {COUNTRY_CODES.filter(c =>
+                      !smsCpdeSearch || c.label.toLowerCase().includes(smsCpdeSearch.toLowerCase()) || c.code.includes(smsCpdeSearch)
+                    ).map(c => (
+                      <button
+                        key={c.country}
+                        type="button"
+                        role="option"
+                        aria-selected={c.code === smsCountryCode}
+                        onClick={() => { setSmsCountryCode(c.code); setSmsCpdeDropdownOpen(false); }}
+                        className={`w-full text-left px-3 py-2.5 min-h-[44px] text-sm flex items-center gap-2 active:bg-orange-50 ${c.code === smsCountryCode ? 'bg-orange-50 font-medium text-orange-700' : 'hover:bg-slate-50 text-slate-700'}`}
+                      >
+                        <span className="text-base">{c.flag}</span>
+                        <span className="flex-1">{c.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <input
+              id="sms-local"
+              type="tel"
+              inputMode="tel"
+              value={smsLocalPhone}
+              onChange={(e) => setSmsLocalPhone(e.target.value)}
+              placeholder="555 123 4567"
+              autoComplete="tel-national"
+              className="flex-1 min-w-0 px-3 py-2.5 min-h-[44px] border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+          <p className="text-xs text-slate-500 mt-1">We'll only contact you about job opportunities.</p>
+        </div>
+      )}
     </div>
   );
 }

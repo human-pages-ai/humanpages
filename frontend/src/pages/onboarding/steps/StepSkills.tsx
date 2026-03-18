@@ -218,7 +218,16 @@ export function StepSkills({
 
       {/* ─── Years of Experience ─── */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Years of Professional Experience</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Years of Professional Experience
+          {skills.length > 0 && (
+            <span className="block text-xs font-normal text-slate-500 mt-0.5">
+              in {Object.entries(SKILL_CATEGORIES).find(([_, categorySkills]) =>
+                skills.some(s => categorySkills.includes(s))
+              )?.[0] || 'your primary field'}
+            </span>
+          )}
+        </label>
         <div className="flex items-center gap-3">
           <input
             type="number"
@@ -277,8 +286,8 @@ export function StepSkills({
                 <p className="text-xs text-slate-400 mt-1">Changing country resets the institution field</p>
               </div>
               <div>
-                <SearchableCombobox id="onb-edu-inst" label="Institution" value={newEducation.institution} onChange={(v) => setNewEducation({ ...newEducation, institution: v })} options={newEducation.country ? getUniversitiesForCountry(newEducation.country) : []} placeholder="Select or type your institution" required allowFreeText />
-                <p className="text-xs text-slate-400 mt-1">Can't find your institution? Just type the name.</p>
+                <SearchableCombobox id="onb-edu-inst" label="Institution" value={newEducation.institution} onChange={(v) => setNewEducation({ ...newEducation, institution: v })} options={newEducation.country ? getUniversitiesForCountry(newEducation.country) : []} placeholder="Type your institution name..." required allowFreeText />
+                <p className="text-xs text-slate-500 font-medium mt-1">💡 Tip: Type any institution name, even if it's not in the list</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
