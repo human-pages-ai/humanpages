@@ -38,7 +38,51 @@ export const SKILL_CATEGORIES: Record<string, string[]> = {
 
 export const POPULAR_SKILLS = ['Virtual Assistant', 'Content Writing', 'Graphic Design', 'Social Media Management', 'English Teaching', 'Translation', 'Video Editing', 'Web Development', 'Data Entry', 'Customer Support', 'Tour Guide', 'Personal Driver'];
 export const SKILL_SUGGESTIONS = Object.values(SKILL_CATEGORIES).flat();
-export const POPULAR_SERVICE_CATEGORIES = ['Photography', 'Delivery', 'Translation', 'Writing', 'Web Development', 'Data Entry', 'Graphic Design', 'Virtual Assistant', 'Tutoring', 'Other'];
+// Hierarchical service categories with subcategories and title suggestions
+export const SERVICE_CATEGORY_HIERARCHY: Record<string, { subcategories: string[]; suggestions: string[] }> = {
+  'Photography': {
+    subcategories: ['Portrait', 'Product', 'Event', 'Real Estate', 'Other'],
+    suggestions: ['Wedding Photography', 'Product Photography', 'Portrait Photography', 'Real Estate Photography', 'Event Photography'],
+  },
+  'Delivery': {
+    subcategories: ['Same-Day', 'Food', 'Package', 'Document', 'Other'],
+    suggestions: ['Same-Day Delivery', 'Food Delivery', 'Package Delivery', 'Document Courier', 'Parcel Delivery'],
+  },
+  'Translation': {
+    subcategories: ['Document', 'Website', 'Audio', 'Written', 'Other'],
+    suggestions: ['Document Translation', 'Website Translation', 'Subtitle Translation', 'Business Document Translation', 'Technical Translation'],
+  },
+  'Writing': {
+    subcategories: ['Content', 'Copy', 'Technical', 'Editing', 'Other'],
+    suggestions: ['Blog Post Writing', 'Copywriting', 'Technical Writing', 'Content Writing', 'Proofreading & Editing'],
+  },
+  'Web Development': {
+    subcategories: ['Frontend', 'Backend', 'Full Stack', 'WordPress', 'Other'],
+    suggestions: ['Website Development', 'Custom Web Design', 'WordPress Development', 'E-commerce Development', 'Web App Development'],
+  },
+  'Data Entry': {
+    subcategories: ['Spreadsheet', 'Database', 'Form Processing', 'Research', 'Other'],
+    suggestions: ['Data Entry', 'Spreadsheet Management', 'Database Entry', 'Form Processing', 'Data Research'],
+  },
+  'Graphic Design': {
+    subcategories: ['Logo', 'Branding', 'UI/UX', 'Social Media', 'Other'],
+    suggestions: ['Logo Design', 'Graphic Design', 'Branding Design', 'Social Media Graphics', 'UI/UX Design'],
+  },
+  'Virtual Assistant': {
+    subcategories: ['Administrative', 'Email', 'Scheduling', 'Research', 'Other'],
+    suggestions: ['Virtual Assistant', 'Email Management', 'Schedule Management', 'Data Research Assistant', 'Administrative Support'],
+  },
+  'Tutoring': {
+    subcategories: ['Language', 'Academic', 'Test Prep', 'Music', 'Other'],
+    suggestions: ['English Tutoring', 'Math Tutoring', 'Language Tutoring', 'Test Prep Tutoring', 'Music Lessons'],
+  },
+  'Other': {
+    subcategories: [],
+    suggestions: [],
+  },
+};
+
+export const POPULAR_SERVICE_CATEGORIES = Object.keys(SERVICE_CATEGORY_HIERARCHY);
 
 export const COUNTRY_CODES = [
   { code: '+43', country: 'AT', flag: '🇦🇹', label: 'Austria (+43)' },

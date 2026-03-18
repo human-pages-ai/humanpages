@@ -3,6 +3,7 @@
 export interface Service {
   title: string;
   category: string;
+  subcategory?: string;
   description: string;
   price: string;
   currency: string;
