@@ -1157,15 +1157,18 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           if (servicesText.includes(token)) score += 3;
         }
 
-        // Boost workers with proven track record (min 3 jobs, capped at 10)
-        const completedJobs = skillJobMap.get(h.id) || 0;
-        if (completedJobs >= 3) score += Math.min(completedJobs, 10) * 3;
+        // Only apply secondary boosts when there's actual skill relevance
+        if (score > 0) {
+          // Boost workers with proven track record (min 3 jobs, capped at 10)
+          const completedJobs = skillJobMap.get(h.id) || 0;
+          if (completedJobs >= 3) score += Math.min(completedJobs, 10) * 3;
 
-        // Boost reachable humans — agents want fast responders
-        const chCount = [(h as any).emailNotifications, (h as any).telegramNotifications, (h as any).whatsappNotifications, (h as any).pushNotifications].filter(Boolean).length;
-        if (chCount >= 3) score += 8;
-        else if (chCount >= 2) score += 4;
-        else if (chCount >= 1) score += 1;
+          // Boost reachable humans — agents want fast responders
+          const chCount = [(h as any).emailNotifications, (h as any).telegramNotifications, (h as any).whatsappNotifications, (h as any).pushNotifications].filter(Boolean).length;
+          if (chCount >= 3) score += 8;
+          else if (chCount >= 2) score += 4;
+          else if (chCount >= 1) score += 1;
+        }
 
         return { human: h, score };
       });
