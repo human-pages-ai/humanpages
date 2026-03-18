@@ -532,6 +532,13 @@ export default function Signup() {
           </p>
         </form>
         )}
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+            Sign in
+          </Link>
+        </p>
       </div>
     </main>
   );
