@@ -89,6 +89,58 @@ router.delete('/link', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// Dev-only endpoint to simulate Telegram webhook locally
+// POST /api/telegram/dev-simulate?code=XXXX
+router.post('/dev-simulate', authenticateToken, async (req: AuthRequest, res) => {
+  // Only available in dev
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Not available in production' });
+  }
+
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'Code required in request body' });
+    }
+
+    const pending = pendingCodes.get(code);
+
+    if (!pending) {
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+
+    if (pending.expiresAt < Date.now()) {
+      pendingCodes.delete(code);
+      return res.status(400).json({ error: 'Code has expired' });
+    }
+
+    // Link the account (same logic as webhook)
+    const chatId = `sim_${crypto.randomBytes(8).toString('hex')}`;
+    const username = undefined;
+
+    await prisma.human.update({
+      where: { id: pending.userId },
+      data: {
+        telegramChatId: chatId,
+        telegram: username ? `@${username}` : undefined,
+      },
+    });
+
+    pendingCodes.delete(code);
+
+    logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user via dev-simulate');
+
+    res.json({
+      success: true,
+      message: 'Telegram linked successfully',
+      chatId,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Telegram dev-simulate error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Webhook endpoint for Telegram bot updates
 // Set this as webhook URL: https://yourapi.com/api/telegram/webhook
 router.post('/webhook', async (req, res) => {

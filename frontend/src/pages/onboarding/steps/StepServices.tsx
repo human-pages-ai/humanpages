@@ -155,11 +155,19 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
               <input type="text" value={newService.title} onChange={(e) => setNewService({ ...newService, title: e.target.value.slice(0, 100) })} maxLength={100} placeholder="e.g., Social Media Management" className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <div className="mb-3">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-              <select value={newService.category} onChange={(e) => { setNewService({ ...newService, category: e.target.value }); setCategoryError(false); }} className={`w-full px-3 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${categoryError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`}>
-                <option value="">Select a category...</option>
-                {POPULAR_SERVICE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
+              <label htmlFor="service-category" className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <input
+                id="service-category"
+                type="text"
+                list="service-categories-list"
+                value={newService.category}
+                onChange={(e) => { setNewService({ ...newService, category: e.target.value }); setCategoryError(false); }}
+                placeholder="Select or type a category..."
+                className={`w-full px-3 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${categoryError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`}
+              />
+              <datalist id="service-categories-list">
+                {POPULAR_SERVICE_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
+              </datalist>
             </div>
             <div className="mb-3">
               <label className="block text-sm font-medium text-slate-700 mb-1">Description (Optional)</label>

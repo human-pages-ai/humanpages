@@ -375,6 +375,12 @@ export const api = {
   unlinkTelegram: () =>
     request<{ message: string }>('/telegram/link', { method: 'DELETE' }),
 
+  devSimulateTelegramConnection: (code: string) =>
+    request<{ success: boolean; message: string; chatId: string }>('/telegram/dev-simulate', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+
   // WhatsApp
   getWhatsAppStatus: () =>
     request<{ connected: boolean; whatsappNumber?: string; botAvailable: boolean; botNumber?: string }>('/whatsapp/status'),

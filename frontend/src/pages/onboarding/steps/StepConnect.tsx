@@ -118,6 +118,32 @@ export function StepConnect({
               <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
                 <p>Didn't open? <a href={telegramLinkUrl} target="_blank" rel="noopener noreferrer" className="underline font-medium" onClick={(e) => { if (isInAppBrowser()) { e.preventDefault(); window.location.href = telegramLinkUrl!; } }}>Click here to connect on Telegram</a>.</p>
                 <p className="mt-1">After clicking <strong>Start</strong> in Telegram, we'll detect the connection automatically. {window.location.hostname === 'localhost' && <span className="text-blue-500">(Note: auto-detection requires a public URL — in local dev, deploy or use a tunnel like ngrok.)</span>}</p>
+                {window.location.hostname === 'localhost' && telegramLinkUrl && (
+                  <p className="mt-2 pt-2 border-t border-blue-200">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const codeMatch = telegramLinkUrl.match(/start=([A-F0-9]+)/i);
+                          if (!codeMatch) {
+                            alert('Could not extract code from URL');
+                            return;
+                          }
+                          const code = codeMatch[1];
+                          const response = await api.devSimulateTelegramConnection(code);
+                          if (response.success) {
+                            setTelegramStatus({ connected: true, botAvailable: true });
+                          }
+                        } catch (err) {
+                          alert('Simulation failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+                        }
+                      }}
+                      className="underline font-medium hover:text-blue-900"
+                    >
+                      Simulate Connection (dev mode)
+                    </button>
+                  </p>
+                )}
               </div>
             )}
           </>
