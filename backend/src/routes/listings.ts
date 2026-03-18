@@ -278,6 +278,7 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
         expiresAt: new Date(data.expiresAt),
         maxApplicants: data.maxApplicants,
         isPro,
+        isVerified: agent.isVerified,
         callbackUrl: data.callbackUrl,
         callbackSecret: data.callbackSecret,
         status: 'OPEN',
@@ -431,7 +432,8 @@ router.get('/', browseRateLimiter, async (req, res) => {
       prisma.listing.findMany({
         where,
         orderBy: [
-          { isPro: 'desc' }, // PRO listings first
+          { isVerified: 'desc' }, // Verified agent listings first
+          { isPro: 'desc' }, // PRO listings second
           { createdAt: 'desc' },
         ],
         take: limit,
@@ -444,6 +446,7 @@ router.get('/', browseRateLimiter, async (req, res) => {
               description: true,
               websiteUrl: true,
               domainVerified: true,
+              isVerified: true,
             },
           },
           _count: {
@@ -631,6 +634,7 @@ router.get('/:id', async (req, res) => {
             description: true,
             websiteUrl: true,
             domainVerified: true,
+            isVerified: true,
             activationTier: true,
           },
         },

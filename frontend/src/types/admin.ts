@@ -113,6 +113,7 @@ export interface AdminAgent {
   activationMethod: string | null;
   activationTier: string;
   domainVerified: boolean;
+  isVerified: boolean;
   abuseScore: number;
   abuseStrikes: number;
   lastActiveAt: string;

@@ -10,6 +10,7 @@ export interface AgentAuthRequest extends Request {
     status: string;
     activationExpiresAt: Date | null;
     activationTier: string;
+    isVerified: boolean;
   };
 }
 
@@ -29,7 +30,7 @@ export async function authenticateAgent(req: AgentAuthRequest, res: Response, ne
   try {
     const agent = await prisma.agent.findUnique({
       where: { apiKeyPrefix: prefix },
-      select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true, activationTier: true },
+      select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true, activationTier: true, isVerified: true },
     });
 
     if (!agent) {
@@ -53,6 +54,7 @@ export async function authenticateAgent(req: AgentAuthRequest, res: Response, ne
       status: agent.status,
       activationExpiresAt: agent.activationExpiresAt,
       activationTier: agent.activationTier,
+      isVerified: agent.isVerified,
     };
     next();
   } catch {
@@ -76,7 +78,7 @@ export async function optionalAgentAuth(req: AgentAuthRequest, _res: Response, n
   try {
     const agent = await prisma.agent.findUnique({
       where: { apiKeyPrefix: prefix },
-      select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true, activationTier: true },
+      select: { id: true, name: true, apiKeyHash: true, status: true, activationExpiresAt: true, activationTier: true, isVerified: true },
     });
 
     if (!agent) {
@@ -100,6 +102,7 @@ export async function optionalAgentAuth(req: AgentAuthRequest, _res: Response, n
       status: agent.status,
       activationExpiresAt: agent.activationExpiresAt,
       activationTier: agent.activationTier,
+      isVerified: agent.isVerified,
     };
   } catch {
     // Silent failure

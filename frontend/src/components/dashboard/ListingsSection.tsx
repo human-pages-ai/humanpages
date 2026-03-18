@@ -123,11 +123,21 @@ export default function ListingsSection({ skills }: Props) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-medium text-gray-900 text-sm line-clamp-1">{listing.title}</h3>
-                  {listing.isPro && (
-                    <span className="shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                      PRO
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {listing.isVerified && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 inline-flex items-center gap-0.5">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Verified
+                      </span>
+                    )}
+                    {listing.isPro && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                        PRO
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-lg font-bold text-green-600 mt-1">${listing.budgetUsdc}{listing.budgetFlexible && '+'}</p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">

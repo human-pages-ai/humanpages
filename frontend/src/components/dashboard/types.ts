@@ -277,6 +277,7 @@ export interface Listing {
   expiresAt: string;
   maxApplicants?: number;
   isPro: boolean;
+  isVerified: boolean;
   imageUrl?: string;
   createdAt: string;
   agent?: {
@@ -284,6 +285,7 @@ export interface Listing {
     name: string;
     description?: string;
     domainVerified: boolean;
+    isVerified: boolean;
     activationTier: string;
   };
   agentReputation?: {

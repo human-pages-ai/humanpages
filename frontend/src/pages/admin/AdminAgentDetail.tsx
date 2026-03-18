@@ -56,6 +56,7 @@ export default function AdminAgentDetail() {
   // Admin override controls
   const [editStatus, setEditStatus] = useState('');
   const [editTier, setEditTier] = useState('');
+  const [editVerified, setEditVerified] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -66,6 +67,7 @@ export default function AdminAgentDetail() {
         setAgent(a);
         setEditStatus(a.status);
         setEditTier(a.activationTier);
+        setEditVerified(a.isVerified ?? false);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -76,9 +78,10 @@ export default function AdminAgentDetail() {
     setSaving(true);
     setSaveMsg(null);
     try {
-      const data: { status?: string; activationTier?: string } = {};
+      const data: { status?: string; activationTier?: string; isVerified?: boolean } = {};
       if (editStatus !== agent.status) data.status = editStatus;
       if (editTier !== agent.activationTier) data.activationTier = editTier;
+      if (editVerified !== (agent.isVerified ?? false)) data.isVerified = editVerified;
       if (Object.keys(data).length === 0) {
         setSaveMsg({ type: 'error', text: 'No changes to save' });
         setSaving(false);
@@ -88,6 +91,7 @@ export default function AdminAgentDetail() {
       setAgent(updated);
       setEditStatus(updated.status);
       setEditTier(updated.activationTier);
+      setEditVerified(updated.isVerified ?? false);
       setSaveMsg({ type: 'success', text: 'Agent updated successfully' });
     } catch (err: any) {
       setSaveMsg({ type: 'error', text: err.message || 'Failed to update agent' });
@@ -115,6 +119,14 @@ export default function AdminAgentDetail() {
                 {agent.status}
               </span>
               <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-50 rounded">{agent.activationTier}</span>
+              {agent.isVerified && (
+                <span className="inline-flex items-center gap-0.5 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Verified
+                </span>
+              )}
             </div>
             {agent.description && <p className="text-sm text-gray-600 mt-1">{agent.description}</p>}
             {agent.websiteUrl && (
@@ -154,6 +166,16 @@ export default function AdminAgentDetail() {
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="verified-toggle"
+              checked={editVerified}
+              onChange={(e) => setEditVerified(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="verified-toggle" className="text-sm text-gray-700">Verified Agent</label>
           </div>
           <button
             onClick={handleSave}

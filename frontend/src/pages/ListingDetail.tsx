@@ -463,12 +463,22 @@ export default function ListingDetail() {
               )}
 
               <div className="p-6">
-              {/* PRO badge */}
-              {listing.isPro && (
-                <div className="mb-3">
-                  <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded">
-                    {t('listings.card.proAgent')}
-                  </span>
+              {/* Badges */}
+              {(listing.isVerified || listing.isPro) && (
+                <div className="mb-3 flex items-center gap-2">
+                  {listing.isVerified && (
+                    <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Verified Agent
+                    </span>
+                  )}
+                  {listing.isPro && (
+                    <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded">
+                      {t('listings.card.proAgent')}
+                    </span>
+                  )}
                 </div>
               )}
 

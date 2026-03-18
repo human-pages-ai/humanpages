@@ -862,6 +862,7 @@ router.get('/agents', async (req: AuthRequest, res) => {
           activationMethod: true,
           activationTier: true,
           domainVerified: true,
+          isVerified: true,
           abuseScore: true,
           abuseStrikes: true,
           lastActiveAt: true,
@@ -1246,7 +1247,7 @@ router.get('/agents/:id', async (req: AuthRequest, res) => {
 // PATCH /api/admin/agents/:id — Update agent status/tier (admin override)
 router.patch('/agents/:id', async (req: AuthRequest, res) => {
   try {
-    const { status, activationTier, activationExpiresAt } = req.body;
+    const { status, activationTier, activationExpiresAt, isVerified } = req.body;
 
     const agent = await prisma.agent.findUnique({ where: { id: req.params.id } });
     if (!agent) {
@@ -1262,6 +1263,9 @@ router.patch('/agents/:id', async (req: AuthRequest, res) => {
     }
     if (activationTier !== undefined && !VALID_TIERS.includes(activationTier)) {
       return res.status(400).json({ error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}` });
+    }
+    if (isVerified !== undefined && typeof isVerified !== 'boolean') {
+      return res.status(400).json({ error: 'isVerified must be a boolean' });
     }
 
     const data: any = {};
@@ -1291,6 +1295,17 @@ router.patch('/agents/:id', async (req: AuthRequest, res) => {
       data.activationExpiresAt = activationExpiresAt === null ? null : new Date(activationExpiresAt);
     }
 
+    // Handle verified status toggle
+    if (isVerified !== undefined) {
+      data.isVerified = isVerified;
+      data.verifiedByAdminAt = isVerified ? new Date() : null;
+      // Update all OPEN listings for this agent to reflect new verified status
+      await prisma.listing.updateMany({
+        where: { agentId: req.params.id, status: 'OPEN' },
+        data: { isVerified },
+      });
+    }
+
     const updated = await prisma.agent.update({
       where: { id: req.params.id },
       data,
@@ -1316,7 +1331,7 @@ router.patch('/agents/:id', async (req: AuthRequest, res) => {
       },
     });
 
-    logger.info({ agentId: req.params.id, changes: { status, activationTier, activationExpiresAt } }, 'Admin updated agent');
+    logger.info({ agentId: req.params.id, changes: { status, activationTier, activationExpiresAt, isVerified } }, 'Admin updated agent');
     res.json(updated);
   } catch (error) {
     logger.error({ err: error }, 'Admin agent update error');
