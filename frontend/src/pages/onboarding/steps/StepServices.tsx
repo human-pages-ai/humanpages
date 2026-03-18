@@ -10,12 +10,14 @@ interface StepServicesProps {
   setServices: React.Dispatch<React.SetStateAction<Service[]>>;
   equipment: string[];
   setEquipment: React.Dispatch<React.SetStateAction<string[]>>;
+  /** When true, only render the equipment section (used as standalone Equipment step) */
+  equipmentOnly?: boolean;
   onNext: () => void;
   onSkip: () => void;
   error: string;
 }
 
-export function StepServices({ cvProcessing, cvData, services, setServices, equipment, setEquipment, onNext, onSkip, error }: StepServicesProps) {
+export function StepServices({ cvProcessing, cvData, services, setServices, equipment, setEquipment, equipmentOnly, onNext, onSkip, error }: StepServicesProps) {
   const [addingService, setAddingService] = useState(false);
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
@@ -120,6 +122,36 @@ export function StepServices({ cvProcessing, cvData, services, setServices, equi
   const handleRemoveService = (index: number) => {
     setServices(prev => prev.filter((_, i) => i !== index));
   };
+
+  // Equipment-only mode: render just the equipment section as a standalone step
+  if (equipmentOnly) {
+    return (
+      <>
+        <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Equipment & Tools</h2>
+        <p className="text-slate-600 mb-6">What tools and equipment do you have access to? This helps agents match you to physical tasks.</p>
+        {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
+        {equipment.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {equipment.map((item, idx) => (
+              <button key={idx} type="button" onClick={() => setEquipment(prev => prev.filter((_, i) => i !== idx))} aria-label={`Remove: ${item}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 min-h-[44px]">
+                {item}<span aria-hidden="true" className="text-orange-200 ml-0.5 text-base leading-none">&times;</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {equipment.length < 20 && (
+          <div className="flex gap-2 mb-6">
+            <input type="text" value={newEquipment} onChange={(e) => setNewEquipment(e.target.value.slice(0, 50))} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } } }} maxLength={50} placeholder="e.g., DSLR Camera, Drone, Car..." aria-label="Add equipment" className="flex-1 px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+            <button type="button" onClick={() => { const t = newEquipment.trim(); if (t && !equipment.some(eq => eq.toLowerCase() === t.toLowerCase())) { setEquipment(prev => [...prev, t]); setNewEquipment(''); } }} disabled={!newEquipment.trim()} className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]">Add</button>
+          </div>
+        )}
+        <div className="space-y-3">
+          <button type="button" onClick={onNext} className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500">Continue</button>
+          <button type="button" onClick={onSkip} className="w-full py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 active:bg-slate-300">Skip for now</button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

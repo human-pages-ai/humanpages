@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
@@ -8,13 +8,15 @@ import toast from 'react-hot-toast';
 import SEO from '../../components/SEO';
 import { getApplyIntent, clearApplyIntent, getListingApplyIntent, clearListingApplyIntent } from '../../lib/applyIntent';
 import { isInAppBrowser, scrollToError, serializeLanguageEntry } from './utils';
-import { STEP_LABELS, POPULAR_SERVICE_CATEGORIES } from './constants';
+import { POPULAR_SERVICE_CATEGORIES } from './constants';
 import { useProfileForm } from './hooks/useProfileForm';
 import { useCvProcessing } from './hooks/useCvProcessing';
 import { useDraftPersistence, loadDraft, clearDraft } from './hooks/useDraftPersistence';
+import { getFlow, getStepLabels, stepAt, totalSteps } from './useStepFlow';
+import type { StepId } from './useStepFlow';
 import type { LanguageEntry } from './types';
 
-// Step components
+// Step components — each is a self-contained module
 import { StepNotifications } from './steps/StepNotifications';
 import { StepCvUpload } from './steps/StepCvUpload';
 import { StepConnect } from './steps/StepConnect';
@@ -28,20 +30,6 @@ import { StepErrorBoundary } from './components/StepErrorBoundary';
 export default function Onboarding() {
   const navigate = useNavigate();
   const draft = useMemo(() => loadDraft(), []);
-
-  // ─── Step navigation ───
-  const [step, setStep] = useState(() => {
-    const s = draft?.step || 1;
-    if (s < 1 || s > 8) return 1;
-    if (draft) {
-      if (s >= 5 && !draft.name?.trim()) return 5;
-      if (s >= 4 && (!draft.skills || draft.skills.length === 0)) return 4;
-    }
-    return s;
-  });
-  const [loading, setLoading] = useState(false);
-  const [transitioning, setTransitioning] = useState(false);
-  const prevStepRef = useRef(step);
 
   // ─── Hooks ───
   const form = useProfileForm(draft);
@@ -72,26 +60,41 @@ export default function Onboarding() {
       cv.setCvUploaded(true);
       cv.setCvData(draft.cvData);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — runs only on mount, draft is memoized
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — only on mount, draft is memoized
+
+  // ─── Flow engine ───
+  // The flow reorders based on whether CV was uploaded
+  const flow = useMemo(() => getFlow(cv.cvUploaded), [cv.cvUploaded]);
+  const labels = useMemo(() => getStepLabels(flow), [flow]);
+  const total = totalSteps(flow);
+
+  // Step position (1-based index into the flow)
+  const [position, setPosition] = useState(() => {
+    const saved = draft?.step || 1;
+    return Math.max(1, Math.min(saved, total));
+  });
+  const [loading, setLoading] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const prevPositionRef = useRef(position);
+
+  // Current step ID derived from position
+  const currentStepId = stepAt(flow, position);
 
   // ─── Completed onboarding guard ───
-  // If the user has already completed onboarding, redirect to dashboard
   useEffect(() => {
     if (!form.profileLoading && form.profileCompleted) {
       navigate('/dashboard', { replace: true });
     }
   }, [form.profileLoading, form.profileCompleted, navigate]);
 
-  // Telegram state (lifted here so it persists across step navigation)
-  // TODO: Consolidate these three useState calls into a single state object
-  // This would require updating StepConnect's interface props
+  // Telegram state (persists across step navigation)
   const [telegramStatus, setTelegramStatus] = useState<{ connected: boolean; botAvailable: boolean; botUsername?: string } | null>(null);
   const [telegramLinkUrl, setTelegramLinkUrl] = useState<string | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(false);
 
   // ─── Draft persistence ───
   const saveStatus = useDraftPersistence({
-    step,
+    step: position,
     name: form.name, bio: form.bio, location: form.location,
     neighborhood: form.neighborhood, locationLat: form.locationLat, locationLng: form.locationLng,
     skills: form.skills, educationEntries: form.educationEntries, languageEntries: form.languageEntries,
@@ -109,26 +112,25 @@ export default function Onboarding() {
     cvData: cv.cvData,
   });
 
-  // Auto-advance from CV upload step when processing begins
+  // Auto-advance from CV upload when processing begins
   useEffect(() => {
-    if (cv.cvProcessing && step === 3 && !loading) {
-      goToStep(4);
+    if (cv.cvProcessing && currentStepId === 'cv-upload' && !loading) {
+      goToPosition(position + 1);
     }
-  }, [cv.cvProcessing, step, loading]); // eslint-disable-line react-hooks/exhaustive-deps — goToStep recreated each render
+  }, [cv.cvProcessing, currentStepId, loading]); // eslint-disable-line react-hooks/exhaustive-deps — goToPosition changes each render
 
   // ─── Navigation ───
   const submittingRef = useRef(false);
 
-  const goToStep = (nextStep: number) => {
-    if (submittingRef.current || nextStep === step) return;
+  const goToPosition = useCallback((nextPos: number) => {
+    const clamped = Math.max(1, Math.min(nextPos, total));
+    if (submittingRef.current || clamped === position) return;
 
-    // Step transition animation
     setTransitioning(true);
-    prevStepRef.current = step;
+    prevPositionRef.current = position;
 
-    // Short delay for exit animation, then switch
     requestAnimationFrame(() => {
-      setStep(nextStep);
+      setPosition(clamped);
       form.setError('');
       window.scrollTo({ top: 0, behavior: window.innerWidth < 640 ? 'auto' : 'smooth' });
       requestAnimationFrame(() => {
@@ -137,22 +139,26 @@ export default function Onboarding() {
         heading?.focus();
       });
     });
-  };
+  }, [position, total, form]);
 
-  // Step handlers
-  const handleStep1Next = () => goToStep(2);
-  const handleStep2Next = () => goToStep(3);
-  const handleStep3Next = () => goToStep(4);
-  const handleStep4Next = () => goToStep(5);
+  // Universal next/skip/back — every step uses these
+  const handleNext = useCallback(() => {
+    // Per-step validation before advancing
+    if (currentStepId === 'about' && !form.name.trim()) {
+      form.setError('Name is required');
+      scrollToError();
+      return;
+    }
+    goToPosition(position + 1);
+  }, [currentStepId, form, goToPosition, position]);
 
-  const handleStep5Next = () => {
-    if (!form.name.trim()) { form.setError('Name is required'); scrollToError(); return; }
-    goToStep(6);
-  };
+  const handleSkip = useCallback(() => {
+    goToPosition(position + 1);
+  }, [goToPosition, position]);
 
-  const handleStep6Next = () => goToStep(7);
-
-  const handleStep7Next = () => goToStep(8);
+  const handleBack = useCallback(() => {
+    goToPosition(position - 1);
+  }, [goToPosition, position]);
 
   // ─── Final submit ───
   const handleFinalSubmit = async () => {
@@ -161,13 +167,7 @@ export default function Onboarding() {
 
     if (!form.name.trim()) {
       submittingRef.current = false;
-      form.setError('Name is required. Go back to Step 5 (Profile).');
-      scrollToError();
-      return;
-    }
-    if (form.skills.length === 0) {
-      submittingRef.current = false;
-      form.setError('At least one skill is required. Go back to Step 6 (Skills).');
+      form.setError('Name is required. Go back to the About You step.');
       scrollToError();
       return;
     }
@@ -183,8 +183,7 @@ export default function Onboarding() {
     form.setError('');
 
     try {
-      // Safety net dedup: while skills are already deduped by useCvProcessing and toggleSkill,
-      // this final pass ensures no duplicates slip through before sending to backend.
+      // Dedup skills
       const seen = new Set<string>();
       const cleanSkills = (form.skills || []).reduce<string[]>((acc, s) => {
         const key = s.trim().toLowerCase();
@@ -232,16 +231,16 @@ export default function Onboarding() {
       const nonBlocking: Promise<void>[] = [];
 
       if (form.photoFile) {
-        nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => console.error('Photo upload failed (non-blocking):', err)));
+        nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => console.error('Photo upload failed:', err)));
       } else if (form.oauthPhotoUrl) {
-        nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => console.error('OAuth photo import failed (non-blocking):', err)));
+        nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => console.error('OAuth photo import failed:', err)));
       }
 
       for (const edu of form.educationEntries) {
         if (edu.institution.trim() || edu.degree.trim() || edu.field.trim()) {
           nonBlocking.push(
             api.addEducation({ institution: edu.institution.trim(), degree: edu.degree.trim() || undefined, field: edu.field.trim() || undefined, country: edu.country.trim() || undefined, year: edu.endYear || edu.startYear || undefined })
-              .then(() => {}).catch(err => console.error('Education creation failed (non-blocking):', err))
+              .then(() => {}).catch(err => console.error('Education save failed:', err))
           );
         }
       }
@@ -253,7 +252,7 @@ export default function Onboarding() {
           nonBlocking.push(
             api.createService({ title: svc.title.trim(), description: svc.description.trim(), category: svc.category.trim(), priceMin: validPrice, priceCurrency: svc.currency, priceUnit: svc.unit || null })
               .then(() => { posthog.capture('service_added'); })
-              .catch(err => console.error('Service creation failed (non-blocking):', err))
+              .catch(err => console.error('Service save failed:', err))
           );
         }
       }
@@ -274,12 +273,12 @@ export default function Onboarding() {
           clearApplyIntent();
         } catch { clearApplyIntent(); }
       }
-      const onboardingListingIntent = getListingApplyIntent();
-      if (onboardingListingIntent?.listingId && /^[a-zA-Z0-9_-]+$/.test(onboardingListingIntent.listingId)) {
+      const listingIntent = getListingApplyIntent();
+      if (listingIntent?.listingId && /^[a-zA-Z0-9_-]+$/.test(listingIntent.listingId)) {
         clearListingApplyIntent();
-        navigate(`/listings/${onboardingListingIntent.listingId}`);
+        navigate(`/listings/${listingIntent.listingId}`);
         return;
-      } else if (onboardingListingIntent) {
+      } else if (listingIntent) {
         clearListingApplyIntent();
       }
       navigate('/dashboard');
@@ -311,145 +310,131 @@ export default function Onboarding() {
     }
   };
 
-  const getLinkedInVerifyUrl = () => openExternalUrl(() => api.getLinkedInVerifyUrl(), 'LinkedIn');
-  const getGitHubVerifyUrl = () => openExternalUrl(() => api.getGitHubVerifyUrl(), 'GitHub');
+  // ─── Step renderer ───
+  // Maps step IDs to their component. Each step is a self-contained module.
+  const stepProps = { error: form.error };
+
+  function renderStep(id: StepId) {
+    switch (id) {
+      case 'notifications':
+        return <StepNotifications onNext={handleNext} onSkip={handleSkip} {...stepProps} />;
+
+      case 'connect':
+        return (
+          <StepConnect
+            whatsappNumber={form.whatsappNumber} setWhatsappNumber={form.setWhatsappNumber}
+            telegramStatus={telegramStatus} setTelegramStatus={setTelegramStatus}
+            telegramLinkUrl={telegramLinkUrl} setTelegramLinkUrl={setTelegramLinkUrl}
+            telegramLoading={telegramLoading} setTelegramLoading={setTelegramLoading}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'cv-upload':
+        return (
+          <StepCvUpload
+            cvInputRef={cv.cvInputRef} onCVChange={cv.handleCVChange} onProcessFile={cv.processFile}
+            cvProcessing={cv.cvProcessing} cvUploaded={cv.cvUploaded} cvData={cv.cvData}
+            onReupload={() => cv.cvInputRef.current?.click()}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'skills':
+        return (
+          <StepSkills
+            skills={form.skills} toggleSkill={form.toggleSkill}
+            customSkill={form.customSkill} setCustomSkill={form.setCustomSkill}
+            addCustomSkill={form.addCustomSkill}
+            skillSearch={form.skillSearch} setSkillSearch={form.setSkillSearch}
+            expandedCategories={form.expandedCategories} toggleCategory={form.toggleCategory}
+            educationEntries={form.educationEntries} setEducationEntries={form.setEducationEntries}
+            languageEntries={form.languageEntries}
+            addLanguageEntry={form.addLanguageEntry}
+            removeLanguageEntry={form.removeLanguageEntry}
+            updateLanguageEntry={form.updateLanguageEntry}
+            yearsOfExperience={form.yearsOfExperience} setYearsOfExperience={form.setYearsOfExperience}
+            onNext={handleNext} {...stepProps}
+          />
+        );
+
+      case 'equipment':
+        return (
+          <StepServices
+            cvProcessing={cv.cvProcessing} cvData={cv.cvData}
+            services={[]} setServices={() => {}}
+            equipment={form.equipment} setEquipment={form.setEquipment}
+            equipmentOnly
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'about':
+        return (
+          <StepAboutYou
+            name={form.name} setName={form.setName}
+            bio={form.bio} setBio={form.setBio}
+            location={form.location} setLocation={form.setLocation}
+            setLocationLat={form.setLocationLat} setLocationLng={form.setLocationLng}
+            setNeighborhood={form.setNeighborhood}
+            photoPreview={form.photoPreview} photoInputRef={form.photoInputRef}
+            onPhotoChange={form.handlePhotoChange} onPhotoRemove={form.handlePhotoRemove}
+            oauthPhotoUrl={form.oauthPhotoUrl}
+            cvUploaded={cv.cvUploaded} cvData={cv.cvData}
+            onNext={handleNext} {...stepProps} setError={form.setError}
+          />
+        );
+
+      case 'availability':
+        return (
+          <StepAvailability
+            timezone={form.timezone} setTimezone={form.setTimezone}
+            weeklyCapacityHours={form.weeklyCapacityHours} setWeeklyCapacityHours={form.setWeeklyCapacityHours}
+            responseTimeCommitment={form.responseTimeCommitment} setResponseTimeCommitment={form.setResponseTimeCommitment}
+            workType={form.workType} setWorkType={form.setWorkType}
+            cvProcessing={cv.cvProcessing}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'services':
+        return (
+          <StepServices
+            cvProcessing={cv.cvProcessing} cvData={cv.cvData}
+            services={form.services} setServices={form.setServices}
+            equipment={form.equipment} setEquipment={form.setEquipment}
+            onNext={handleNext} onSkip={handleSkip} {...stepProps}
+          />
+        );
+
+      case 'verification':
+        return (
+          <StepFinish
+            emailVerified={form.emailVerified}
+            linkedinUrl={form.linkedinUrl} setLinkedinUrl={form.setLinkedinUrl}
+            githubUrl={form.githubUrl} setGithubUrl={form.setGithubUrl}
+            twitterUrl={form.twitterUrl} setTwitterUrl={form.setTwitterUrl}
+            websiteUrl={form.websiteUrl} setWebsiteUrl={form.setWebsiteUrl}
+            instagramUrl={form.instagramUrl} setInstagramUrl={form.setInstagramUrl}
+            youtubeUrl={form.youtubeUrl} setYoutubeUrl={form.setYoutubeUrl}
+            facebookUrl={form.facebookUrl} setFacebookUrl={form.setFacebookUrl}
+            tiktokUrl={form.tiktokUrl} setTiktokUrl={form.setTiktokUrl}
+            onLinkedInConnect={() => openExternalUrl(() => api.getLinkedInVerifyUrl(), 'LinkedIn')}
+            onGitHubConnect={() => openExternalUrl(() => api.getGitHubVerifyUrl(), 'GitHub')}
+            onNext={handleFinalSubmit} onSkip={handleFinalSubmit}
+            isLoading={loading} {...stepProps} setError={form.setError}
+            profileData={{
+              name: form.name, bio: form.bio, location: form.location,
+              skills: form.skills, languageEntries: form.languageEntries,
+              photoPreview: form.photoPreview, oauthPhotoUrl: form.oauthPhotoUrl,
+              services: form.services, educationEntries: form.educationEntries,
+            }}
+          />
+        );
+    }
+  }
 
   // ─── Render ───
-  const stepContent = (
-    <>
-      {step === 1 && (
-        <StepNotifications
-          onNext={handleStep1Next}
-          onSkip={handleStep1Next}
-          error={form.error}
-        />
-      )}
-
-      {step === 2 && (
-        <StepConnect
-          whatsappNumber={form.whatsappNumber}
-          setWhatsappNumber={form.setWhatsappNumber}
-          telegramStatus={telegramStatus}
-          setTelegramStatus={setTelegramStatus}
-          telegramLinkUrl={telegramLinkUrl}
-          setTelegramLinkUrl={setTelegramLinkUrl}
-          telegramLoading={telegramLoading}
-          setTelegramLoading={setTelegramLoading}
-          onNext={handleStep2Next}
-          onSkip={handleStep2Next}
-          error={form.error}
-        />
-      )}
-
-      {(!form.profileLoading || draft || step > 2) && step === 3 && (
-        <StepCvUpload
-          cvInputRef={cv.cvInputRef}
-          onCVChange={cv.handleCVChange}
-          onProcessFile={cv.processFile}
-          cvProcessing={cv.cvProcessing}
-          cvUploaded={cv.cvUploaded}
-          cvData={cv.cvData}
-          onReupload={() => cv.cvInputRef.current?.click()}
-          onNext={handleStep3Next}
-          onSkip={handleStep3Next}
-          error={form.error}
-        />
-      )}
-
-      {step === 4 && (
-        <StepSkills
-          skills={form.skills} toggleSkill={form.toggleSkill}
-          customSkill={form.customSkill} setCustomSkill={form.setCustomSkill}
-          addCustomSkill={form.addCustomSkill}
-          skillSearch={form.skillSearch} setSkillSearch={form.setSkillSearch}
-          expandedCategories={form.expandedCategories} toggleCategory={form.toggleCategory}
-          educationEntries={form.educationEntries} setEducationEntries={form.setEducationEntries}
-          languageEntries={form.languageEntries}
-          addLanguageEntry={form.addLanguageEntry}
-          removeLanguageEntry={form.removeLanguageEntry}
-          updateLanguageEntry={form.updateLanguageEntry}
-          yearsOfExperience={form.yearsOfExperience}
-          setYearsOfExperience={form.setYearsOfExperience}
-          onNext={handleStep4Next}
-          error={form.error}
-        />
-      )}
-
-      {step === 5 && (
-        <StepAboutYou
-          name={form.name} setName={form.setName}
-          bio={form.bio} setBio={form.setBio}
-          location={form.location} setLocation={form.setLocation}
-          setLocationLat={form.setLocationLat} setLocationLng={form.setLocationLng}
-          setNeighborhood={form.setNeighborhood}
-          photoPreview={form.photoPreview} photoInputRef={form.photoInputRef}
-          onPhotoChange={form.handlePhotoChange} onPhotoRemove={form.handlePhotoRemove}
-          oauthPhotoUrl={form.oauthPhotoUrl}
-          cvUploaded={cv.cvUploaded} cvData={cv.cvData}
-          onNext={handleStep5Next}
-          error={form.error} setError={form.setError}
-        />
-      )}
-
-      {step === 6 && (
-        <StepAvailability
-          timezone={form.timezone}
-          setTimezone={form.setTimezone}
-          weeklyCapacityHours={form.weeklyCapacityHours}
-          setWeeklyCapacityHours={form.setWeeklyCapacityHours}
-          responseTimeCommitment={form.responseTimeCommitment}
-          setResponseTimeCommitment={form.setResponseTimeCommitment}
-          workType={form.workType}
-          setWorkType={form.setWorkType}
-          cvProcessing={cv.cvProcessing}
-          onNext={handleStep6Next}
-          onSkip={handleStep6Next}
-          error={form.error}
-        />
-      )}
-
-      {step === 7 && (
-        <StepServices
-          cvProcessing={cv.cvProcessing}
-          cvData={cv.cvData}
-          services={form.services}
-          setServices={form.setServices}
-          equipment={form.equipment}
-          setEquipment={form.setEquipment}
-          onNext={handleStep7Next}
-          onSkip={handleStep7Next}
-          error={form.error}
-        />
-      )}
-
-      {step === 8 && (
-        <StepFinish
-          emailVerified={form.emailVerified}
-          linkedinUrl={form.linkedinUrl} setLinkedinUrl={form.setLinkedinUrl}
-          githubUrl={form.githubUrl} setGithubUrl={form.setGithubUrl}
-          twitterUrl={form.twitterUrl} setTwitterUrl={form.setTwitterUrl}
-          websiteUrl={form.websiteUrl} setWebsiteUrl={form.setWebsiteUrl}
-          instagramUrl={form.instagramUrl} setInstagramUrl={form.setInstagramUrl}
-          youtubeUrl={form.youtubeUrl} setYoutubeUrl={form.setYoutubeUrl}
-          facebookUrl={form.facebookUrl} setFacebookUrl={form.setFacebookUrl}
-          tiktokUrl={form.tiktokUrl} setTiktokUrl={form.setTiktokUrl}
-          onLinkedInConnect={getLinkedInVerifyUrl}
-          onGitHubConnect={getGitHubVerifyUrl}
-          onNext={handleFinalSubmit}
-          onSkip={handleFinalSubmit}
-          isLoading={loading}
-          error={form.error} setError={form.setError}
-          profileData={{
-            name: form.name, bio: form.bio, location: form.location,
-            skills: form.skills, languageEntries: form.languageEntries,
-            photoPreview: form.photoPreview, oauthPhotoUrl: form.oauthPhotoUrl,
-            services: form.services, educationEntries: form.educationEntries,
-          }}
-        />
-      )}
-    </>
-  );
-
   return (
     <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       <SEO title="Complete Your Profile" noindex />
@@ -457,8 +442,9 @@ export default function Onboarding() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-4 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <p className="text-sm font-medium text-slate-600">Complete Your Profile &bull; Step {step} of 8</p>
-          {/* Auto-save indicator */}
+          <p className="text-sm font-medium text-slate-600">
+            Complete Your Profile &bull; Step {position} of {total}
+          </p>
           <div aria-live="polite" aria-atomic="true" className="flex items-center gap-1.5">
             {saveStatus === 'saving' && (
               <span className="text-[10px] text-slate-400 flex items-center gap-1">
@@ -480,35 +466,45 @@ export default function Onboarding() {
       <div className="bg-white px-4 py-4 border-b border-slate-200">
         <div className="max-w-2xl mx-auto">
           <nav aria-label="Onboarding progress" className="flex items-start justify-between">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => {
-              const label = STEP_LABELS[s - 1];
+            {flow.map((stepDef, i) => {
+              const stepNum = i + 1;
               return (
-                <div key={s} className="flex flex-col items-center flex-1">
+                <div key={stepDef.id} className="flex flex-col items-center flex-1">
                   <div className="flex items-center w-full justify-center relative">
                     <button
                       type="button"
-                      onClick={() => s < step && !loading && goToStep(s)}
-                      disabled={s >= step || loading}
-                      aria-label={`Step ${s}: ${label}`}
-                      aria-current={s === step ? 'step' : undefined}
-                      tabIndex={s < step && !loading ? 0 : -1}
+                      onClick={() => stepNum < position && !loading && goToPosition(stepNum)}
+                      disabled={stepNum >= position || loading}
+                      aria-label={`Step ${stepNum}: ${stepDef.label}`}
+                      aria-current={stepNum === position ? 'step' : undefined}
+                      tabIndex={stepNum < position && !loading ? 0 : -1}
                       className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-semibold text-[10px] sm:text-xs transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500 ${
-                        s < step && !loading ? 'bg-green-500 text-white cursor-pointer hover:bg-green-600 active:bg-green-700'
-                          : s === step ? 'bg-orange-500 text-white ring-2 ring-orange-300 cursor-default'
+                        stepNum < position && !loading ? 'bg-green-500 text-white cursor-pointer hover:bg-green-600 active:bg-green-700'
+                          : stepNum === position ? 'bg-orange-500 text-white ring-2 ring-orange-300 cursor-default'
                           : 'bg-slate-200 text-slate-600 cursor-default'
                       }`}
                     >
-                      {s < step ? '✓' : s}
+                      {stepNum < position ? '✓' : stepNum}
                     </button>
-                    {s < 8 && <div className={`absolute top-1/2 -translate-y-1/2 h-0.5 transition-all ${s < step ? 'bg-green-500' : 'bg-slate-200'}`} style={{ left: 'calc(50% + 16px)', right: '-50%' }} aria-hidden="true" />}
+                    {stepNum < total && (
+                      <div
+                        className={`absolute top-1/2 -translate-y-1/2 h-0.5 transition-all ${stepNum < position ? 'bg-green-500' : 'bg-slate-200'}`}
+                        style={{ left: 'calc(50% + 16px)', right: '-50%' }}
+                        aria-hidden="true"
+                      />
+                    )}
                   </div>
-                  <span className={`mt-1.5 text-[9px] sm:text-[11px] text-center leading-tight w-full px-0.5 ${s === step ? 'text-orange-600 font-semibold' : s < step ? 'text-green-600' : 'text-slate-400'}`}>{label}</span>
+                  <span className={`mt-1.5 text-[9px] sm:text-[11px] text-center leading-tight w-full px-0.5 ${
+                    stepNum === position ? 'text-orange-600 font-semibold' : stepNum < position ? 'text-green-600' : 'text-slate-400'
+                  }`}>
+                    {stepDef.label}
+                  </span>
                 </div>
               );
             })}
           </nav>
 
-          {/* CV processing indicator — aria-live for screen readers */}
+          {/* CV processing indicator */}
           <div aria-live="polite" aria-atomic="true">
             {cv.cvProcessing && (
               <div className="mx-4 mt-2 mb-0 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-2 text-xs text-orange-700">
@@ -518,7 +514,7 @@ export default function Onboarding() {
             )}
             {cv.cvUploaded && !cv.cvProcessing && (
               <div className="mx-4 mt-2 mb-0 px-3 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between text-xs text-green-700">
-                <span className="flex items-center gap-1.5"><span>✓</span> CV analyzed successfully</span>
+                <span className="flex items-center gap-1.5"><span>✓</span> CV analyzed — fields pre-filled</span>
                 <button type="button" onClick={() => cv.cvInputRef.current?.click()} className="text-orange-600 hover:text-orange-700 font-medium">Re-upload</button>
               </div>
             )}
@@ -535,31 +531,28 @@ export default function Onboarding() {
             }`}
             style={{ transition: 'opacity 150ms ease-in-out, transform 150ms ease-in-out' }}
           >
-            {/* Loading state for first step */}
-            {form.profileLoading && step === 1 && !draft ? (
+            {form.profileLoading && position === 1 && !draft ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3" aria-live="polite">
                 <div className="w-8 h-8 border-3 border-slate-200 border-t-orange-500 rounded-full animate-spin" />
                 <p className="text-sm text-slate-500">Loading your profile...</p>
               </div>
-            ) : null}
-
-            {(!form.profileLoading || draft || step > 1) && (
+            ) : (
               <StepErrorBoundary
-                key={step}
-                stepName={STEP_LABELS[step - 1]}
-                onReset={() => step > 1 && goToStep(step - 1)}
+                key={currentStepId}
+                stepName={labels[position - 1]}
+                onReset={() => position > 1 && goToPosition(position - 1)}
               >
-                {stepContent}
+                {renderStep(currentStepId)}
               </StepErrorBoundary>
             )}
           </div>
 
-          {step > 1 && (
+          {position > 1 && (
             <button
               type="button"
-              onClick={() => goToStep(step - 1)}
+              onClick={handleBack}
               disabled={loading}
-              aria-label={`Go back to step ${step - 1}`}
+              aria-label={`Go back to step ${position - 1}`}
               className="w-full mt-4 mb-4 pb-[env(safe-area-inset-bottom)] sm:mb-0 sm:pb-0 py-2.5 sm:py-2 text-sm text-slate-600 hover:text-slate-900 font-medium border border-slate-200 rounded-lg hover:bg-slate-50 active:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500"
             >
               &larr; Back to previous step
