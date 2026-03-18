@@ -127,22 +127,13 @@ export default function Onboarding() {
     cvData: cv.cvData,
   });
 
-  // Auto-advance from CV upload when processing begins
-  const prevCvProcessingRef = useRef(false);
-  useEffect(() => {
-    if (cv.cvProcessing && !prevCvProcessingRef.current && currentStepId === 'cv-upload' && !loading) {
-      // CV is processing — advance to next step (still in NO_CV flow at this point)
-      goToPosition(position + 1);
-    }
-    prevCvProcessingRef.current = cv.cvProcessing;
-  }, [cv.cvProcessing, currentStepId, loading, position]); // eslint-disable-line react-hooks/exhaustive-deps — goToPosition changes each render
-
-  // When CV upload completes, switch to CV flow and navigate to the first post-CV step (equipment)
+  // When CV upload completes, switch to CV flow and navigate to equipment
+  // (the first step after cv-upload in the CV flow).
+  // We do NOT auto-advance when processing starts — the progress indicator
+  // in the header shows the upload is in progress. Only navigate when done.
   const prevCvUploadedRef = useRef(cv.cvUploaded);
   useEffect(() => {
     if (cv.cvUploaded && !prevCvUploadedRef.current) {
-      // CV just finished uploading — navigate to 'equipment' which is the first
-      // step after cv-upload in the CV flow
       setSearchParams({ step: 'equipment' }, { replace: true });
     }
     prevCvUploadedRef.current = cv.cvUploaded;
