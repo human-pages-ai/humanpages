@@ -3,6 +3,7 @@ import multer from 'multer';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { convertToHtml } from 'mammoth';
+import { v4 as uuidv4 } from 'uuid';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { prisma } from '../lib/prisma.js';
 import { parseCvWithOpenAI } from '../lib/cvParser.js';
@@ -36,6 +37,18 @@ async function getPdfExtractor() {
 }
 
 const router = Router();
+
+// ─── In-memory store for CV parse jobs ───
+interface CvParseJob {
+  status: 'pending' | 'complete' | 'failed';
+  data?: any;
+  error?: string;
+  userId: string;
+  fileBuffer?: Buffer;
+  fileMimeType?: string;
+}
+
+const cvParseJobs = new Map<string, CvParseJob>();
 
 // Multer: memory storage, 5MB limit for PDFs and DOCX
 const upload = multer({
@@ -99,6 +112,157 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   } catch (error) {
     logger.error({ err: error }, 'DOCX extraction error');
     throw new Error('Failed to extract text from DOCX');
+  }
+}
+
+/**
+ * Background CV parsing function (fire-and-forget)
+ * Extracts text, parses with OpenAI, and saves to database
+ */
+async function parseAndSaveCv(fileId: string, job: CvParseJob): Promise<void> {
+  try {
+    if (!job.fileBuffer || !job.fileMimeType) {
+      throw new Error('Missing file buffer or MIME type');
+    }
+
+    // Get current user's data
+    const user = await prisma.human.findUnique({
+      where: { id: job.userId },
+      select: { skills: true, languages: true, bio: true },
+    });
+
+    if (!user) {
+      job.status = 'failed';
+      job.error = 'User not found';
+      return;
+    }
+
+    // Extract text based on file type
+    let cvText: string;
+    if (job.fileMimeType === 'application/pdf') {
+      cvText = await extractTextFromPdf(job.fileBuffer);
+    } else {
+      // DOCX or DOC
+      cvText = await extractTextFromDocx(job.fileBuffer);
+    }
+
+    if (!cvText || cvText.trim().length < 100) {
+      job.status = 'failed';
+      job.error = 'CV file appears to be empty or too short';
+      return;
+    }
+
+    // Parse CV with OpenAI
+    const parseResult = await parseCvWithOpenAI(cvText, user.skills);
+
+    // Merge new skills with existing
+    const mergedSkills = Array.from(
+      new Set([...user.skills, ...parseResult.skills, ...parseResult.inferredSkills])
+    );
+
+    // Build skillSources map
+    const skillSources: Record<string, string> = {};
+    for (const skill of parseResult.skills) {
+      skillSources[skill] = 'cv';
+    }
+    for (const skill of parseResult.inferredSkills) {
+      skillSources[skill] = 'cv_inferred';
+    }
+
+    // Create education entries
+    const educationEntries = parseResult.education.map(edu => ({
+      humanId: job.userId,
+      institution: edu.institution,
+      country: edu.country || null,
+      degree: edu.degree || null,
+      field: edu.field || null,
+      year: edu.year || null,
+      source: 'cv' as const,
+    }));
+
+    // Create certificate entries
+    const certificateEntries = parseResult.certificates.map(cert => ({
+      humanId: job.userId,
+      name: cert.name,
+      issuer: cert.issuer || null,
+      year: cert.year || null,
+      source: 'cv' as const,
+    }));
+
+    // Update human profile in a transaction
+    const updated = await prisma.$transaction(async tx => {
+      // Delete existing CV-sourced education and certificates to avoid duplicates
+      await (tx as any).education.deleteMany({
+        where: { humanId: job.userId, source: 'cv' },
+      });
+      await (tx as any).certificate.deleteMany({
+        where: { humanId: job.userId, source: 'cv' },
+      });
+
+      // Create new education entries
+      if (educationEntries.length > 0) {
+        await (tx as any).education.createMany({
+          data: educationEntries,
+        });
+      }
+
+      // Create new certificate entries
+      if (certificateEntries.length > 0) {
+        await (tx as any).certificate.createMany({
+          data: certificateEntries,
+        });
+      }
+
+      // Update human with parsed data
+      return tx.human.update({
+        where: { id: job.userId },
+        data: {
+          skills: mergedSkills,
+          languages: Array.from(new Set([...user.languages || [], ...parseResult.languages])),
+          bio: parseResult.bio || user.bio || null,
+          experienceHighlights: parseResult.experienceHighlights,
+          yearsOfExperience: parseResult.yearsOfExperience,
+          cvParsedAt: new Date(),
+          cvConsent: true,
+          skillSources: skillSources,
+        } as any,
+        include: {
+          educations: { where: { source: 'cv' } },
+          certificates: { where: { source: 'cv' } },
+        } as any,
+      });
+    });
+
+    // Store result in job
+    job.status = 'complete';
+    job.data = {
+      message: 'CV parsed successfully',
+      name: parseResult.name,
+      skills: {
+        explicit: parseResult.skills,
+        inferred: parseResult.inferredSkills,
+      },
+      education: (updated as any).educations,
+      certificates: (updated as any).certificates,
+      bio: (updated as any).bio,
+      languages: (updated as any).languages,
+      yearsOfExperience: (updated as any).yearsOfExperience,
+      experienceHighlights: (updated as any).experienceHighlights,
+      cvParsedAt: (updated as any).cvParsedAt,
+    };
+
+    // Clean up file buffer to save memory
+    job.fileBuffer = undefined;
+  } catch (error) {
+    logger.error({ err: error, fileId }, 'Background CV parse error');
+    job.status = 'failed';
+    if (error instanceof Error) {
+      job.error = error.message;
+    } else {
+      job.error = 'Failed to process CV';
+    }
+    // Clean up file buffer
+    job.fileBuffer = undefined;
   }
 }
 
@@ -258,6 +422,89 @@ router.post(
     }
   }
 );
+
+/**
+ * POST /upload-file — Async CV upload stage 1
+ * Accepts file upload and starts background parsing
+ */
+router.post(
+  '/upload-file',
+  authenticateToken,
+  uploadLimiter,
+  upload.single('cv'),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No CV file provided' });
+      }
+
+      // Generate a unique fileId
+      const fileId = uuidv4();
+
+      // Create job entry with pending status
+      const job: CvParseJob = {
+        status: 'pending',
+        userId: req.userId!,
+        fileBuffer: req.file.buffer,
+        fileMimeType: req.file.mimetype,
+      };
+
+      cvParseJobs.set(fileId, job);
+
+      // Fire-and-forget background parse (don't await)
+      parseAndSaveCv(fileId, job).catch(err => {
+        logger.error({ err, fileId }, 'Unhandled error in background CV parse');
+      });
+
+      // Return immediately with fileId
+      res.json({ fileId });
+    } catch (error) {
+      logger.error({ err: error }, 'CV upload-file error');
+      res.status(500).json({ error: 'Failed to upload CV file' });
+    }
+  }
+);
+
+/**
+ * GET /parse-status/:fileId — Async CV upload stage 2
+ * Returns the current parse status and data when ready
+ */
+router.get('/parse-status/:fileId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { fileId } = req.params;
+    const job = cvParseJobs.get(fileId);
+
+    if (!job) {
+      return res.status(404).json({ error: 'Parse job not found' });
+    }
+
+    // Verify ownership (user who uploaded the file)
+    if (job.userId !== req.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Return current status
+    if (job.status === 'complete') {
+      return res.json({
+        status: 'complete',
+        data: job.data,
+      });
+    }
+
+    if (job.status === 'failed') {
+      return res.json({
+        status: 'failed',
+        error: job.error || 'Failed to parse CV',
+      });
+    }
+
+    // Still pending
+    res.json({ status: 'pending' });
+  } catch (error) {
+    logger.error({ err: error }, 'CV parse-status error');
+    res.status(500).json({ error: 'Failed to check parse status' });
+  }
+});
 
 /**
  * POST /education — Add manual education entry
