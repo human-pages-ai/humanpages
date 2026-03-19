@@ -1281,5 +1281,267 @@
     "Fitness Training": "Fitness Training",
     "Tailoring & Alterations": "Tailoring & Alterations",
     "Auto Repair": "Auto Repair"
+  },
+  "onboarding": {
+    "steps": {
+      "connect": "Connect",
+      "cvUpload": "CV",
+      "skills": "Skills",
+      "equipment": "Equipment",
+      "vouch": "Vouch",
+      "location": "Location",
+      "education": "Education",
+      "payment": "Payment",
+      "services": "Services",
+      "profile": "Profile",
+      "availability": "Availability",
+      "verification": "Verify"
+    },
+    "completion": {
+      "connect": "Connected! Agents can reach you now",
+      "cvUpload": "CV uploaded! We're analyzing it...",
+      "skills": "Skills added! You're searchable now",
+      "equipment": "Equipment listed! Physical tasks unlocked",
+      "vouch": "Profile shared! Vouches build trust",
+      "location": "Location set! Local jobs unlocked",
+      "education": "Experience added! Standing out",
+      "payment": "Payment set! Ready to earn",
+      "services": "Services defined! Agents can hire you",
+      "profile": "Profile looking great!",
+      "availability": "Availability set! Almost done",
+      "verification": "Verified! Maximum trust score"
+    },
+    "success": {
+      "title": "🎉 Profile Complete! Welcome to HumanPages"
+    },
+    "error": {
+      "offline": "You appear to be offline. Please check your connection and try again.",
+      "sessionExpired": "Your session has expired. Please log in again — your progress has been saved.",
+      "submitFailed": "Failed to complete onboarding. Please try again."
+    },
+    "cv": {
+      "analyzing": "Analyzing your CV...",
+      "analyzed": "CV analyzed — fields pre-filled",
+      "reupload": "Re-upload"
+    },
+    "loading": "Loading your profile...",
+    "connect": {
+      "heading": "Stay Connected",
+      "subtitle": "Get notified instantly when agents want to hire you",
+      "pushNotSupported": "Push notifications are not supported on this browser",
+      "pushNotConfigured": "Push notifications are not configured on the server",
+      "pushEnabled": "Push notifications enabled",
+      "notificationsDenied": "Notifications declined",
+      "pushDescription": "Get notified when agents want to hire you",
+      "installApp": "Install App",
+      "installHint": "See a ⬇ download icon in your address bar? Tap it to install HumanPages as an app.",
+      "telegram": {
+        "title": "Telegram",
+        "description": "Receive job offers via our HumanPages bot",
+        "connectedMsg": "You're connected to Telegram! You'll receive instant notifications for new job offers.",
+        "button": "Connect Telegram",
+        "didntOpen": "Didn't open?",
+        "clickHere": "Click here to connect on Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "Let's get started",
+      "subtitle": "Upload your CV to quickly auto-fill your profile",
+      "uploadButton": "Upload your CV",
+      "format": "PDF or Word document",
+      "source": "From your device, Google Drive, or Dropbox"
+    },
+    "skills": {
+      "heading": "What can you do?",
+      "subtitle": "Select your skills and share your background",
+      "searchPlaceholder": "Search skills...",
+      "customPlaceholder": "Add custom skill...",
+      "popular": "Popular",
+      "browse": "Browse"
+    },
+    "equipment": {
+      "heading": "Equipment & Tools",
+      "subtitle": "Agents match equipment to tasks — list anything you use for your services.",
+      "hint": "Pick from suggestions or type anything — brand, model, software, you name it",
+      "searchPlaceholder": "Search or type your own..."
+    },
+    "vouch": {
+      "heading": "Build Trust",
+      "subtitle": "People who know your work can vouch for you. This builds trust with agents.",
+      "shareText": "Vouch for me on HumanPages — the AI hiring platform with 0% commission",
+      "profileLinkLabel": "Your profile link",
+      "usernameLabel": "Username (optional)",
+      "usernameHint": "Set a username to get a shorter link",
+      "shareButton": "Share & Get Vouched",
+      "vouchHint": "Ask colleagues who know your work to vouch for you"
+    },
+    "location": {
+      "heading": "Where Are You?",
+      "subtitle": "Tell us your location and timezone",
+      "label": "Location",
+      "remote": "Remote",
+      "placeholder": "City or address",
+      "hint": "Location helps agents find you for local tasks",
+      "timezoneLabel": "Timezone",
+      "timezoneHint": "Auto-detected from your device (editable)",
+      "languagesLabel": "Languages (Optional)",
+      "addLanguageButton": "+ Add Language",
+      "languageLabel": "Language",
+      "proficiencyLabel": "Proficiency"
+    },
+    "education": {
+      "heading": "Experience & Education",
+      "subtitle": "Share your background and credentials",
+      "yearsLabel": "Years of Professional Experience",
+      "yearsHint": "Helps agents find experienced professionals",
+      "jobsLabel": "Jobs completed as freelancer",
+      "jobsNew": "New to freelancing",
+      "label": "Education (Optional)",
+      "addButton": "+ Add Education",
+      "institutionLabel": "Institution",
+      "institutionPlaceholder": "Type your institution name...",
+      "institutionNote": "Type any name — school, bootcamp, online course, or self-taught",
+      "degreeLabel": "Degree",
+      "fieldLabel": "Field of Study",
+      "countryLabel": "Country",
+      "startYearLabel": "Start Year (Optional)",
+      "endYearLabel": "End Year (Optional)"
+    },
+    "payment": {
+      "heading": "Get Paid",
+      "subtitle": "Set up your payment methods to receive earnings",
+      "methodsTitle": "Payment Methods",
+      "methodLabel": "Payment Method",
+      "handleLabel": "Account Details",
+      "hint": "You can update this later from your dashboard",
+      "crypto": {
+        "title": "Crypto Wallet",
+        "subtitle": "Receive USDC and ETH",
+        "connectButton": "Connect Wallet with Privy",
+        "connectHint": "Click to connect with MetaMask, WalletConnect, email, or create an embedded wallet.",
+        "addressLabel": "Ethereum / Base wallet address",
+        "divider": "or paste manually"
+      }
+    },
+    "services": {
+      "heading": "Your Services",
+      "subtitle": "Add the services you offer",
+      "cvSuggestion": "Based on your CV, you might offer these services:",
+      "addButton": "+ Add a Service",
+      "titleLabel": "Service Title",
+      "categoryLabel": "Category",
+      "subcategoryLabel": "Subcategory (Optional)",
+      "descriptionLabel": "Description (Optional)",
+      "pricingLabel": "Pricing (Optional — you can update this later)",
+      "priceLabel": "Price",
+      "currencyLabel": "Currency",
+      "rateTypeLabel": "Rate Type",
+      "noPriceSet": "No price set — click to add",
+      "preview": "How your service will appear:",
+      "rateType": {
+        "hourly": "Hourly",
+        "fixedPrice": "Fixed Price",
+        "perWord": "Per Word",
+        "perPage": "Per Page",
+        "negotiate": "Let's Discuss"
+      }
+    },
+    "profile": {
+      "heading": "Your Profile",
+      "subtitle": "Complete your profile information",
+      "photoLabel": "Profile Photo",
+      "changePhoto": "Change photo",
+      "uploadPhoto": "Click to upload photo",
+      "nameLabel": "Full Name",
+      "bioLabel": "Short Bio",
+      "bioPlaceholder": "Tell us a bit about yourself...",
+      "workType": {
+        "both": "Both",
+        "digital": "Digital",
+        "physical": "In-Person"
+      },
+      "weeklyHours": {
+        "flexible": "Flexible",
+        "format": "{{hours}} hours/week"
+      }
+    },
+    "availability": {
+      "heading": "Availability & Capacity",
+      "subtitle": "Help AI agents find you for the right jobs",
+      "hoursLabel": "How many hours can you work per week?",
+      "typeLabel": "What type of work do you do?"
+    },
+    "finish": {
+      "heading": "Verify Your Identity",
+      "subtitle": "Connect your professional accounts to build trust",
+      "verificationTitle": "Verification",
+      "emailTitle": "Email Verification",
+      "emailPending": "Check your email (including spam)",
+      "emailVerified": "Verified",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "Verify your professional identity",
+      "githubTitle": "GitHub",
+      "githubDesc": "Showcase your code contributions",
+      "platformsTitle": "Platform Presence (Optional)",
+      "platformsHint": "Share your online presence — followers, ratings, achievements",
+      "addPlatformButton": "Add Platform"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "Notifications & Connect",
+        "emptyHint": "Enable notifications to never miss a job offer",
+        "push": "Push Notifications",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "Skills",
+        "emptyHint": "Add skills so agents can find you"
+      },
+      "equipment": {
+        "title": "Equipment",
+        "emptyHint": "List your tools to match physical tasks"
+      },
+      "location": {
+        "title": "Location",
+        "emptyHint": "Set location so agents find you for nearby tasks",
+        "autoDetected": "(auto-detected)",
+        "verifyAccuracy": "Please verify this is accurate"
+      },
+      "education": {
+        "title": "Education & Experience",
+        "emptyHint": "Add experience to stand out",
+        "yearsLabel": "Years of Experience",
+        "educationLabel": "Education",
+        "addExperience": "Add your experience to stand out",
+        "addEducation": "Add education, bootcamps, or certifications"
+      },
+      "services": {
+        "title": "Services",
+        "emptyHint": "Define services to get hired"
+      },
+      "availability": {
+        "title": "Availability",
+        "emptyHint": "Set availability so agents know when to hire you",
+        "workTypeLabel": "Work Type (Digital / In-Person)",
+        "weeklyHoursLabel": "Weekly Hours"
+      },
+      "verification": {
+        "title": "Verification",
+        "emptyHint": "Verify accounts to boost trust score",
+        "verified": "Verified",
+        "notVerified": "Not verified"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "Add this to boost discovery",
+      "addButton": "+ Add",
+      "editButton": "Edit"
+    },
+    "share": {
+      "title": "Share Your Profile"
+    }
   }
 }
