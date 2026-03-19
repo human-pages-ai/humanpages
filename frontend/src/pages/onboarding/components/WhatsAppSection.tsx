@@ -1,6 +1,45 @@
 import { useState, useEffect, useRef } from 'react';
 import { COUNTRY_CODES } from '../constants';
 
+/** Detect default country code from browser timezone */
+function detectCountryCode(): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzToCode: Record<string, string> = {
+      'Asia/Saigon': '+84', 'Asia/Ho_Chi_Minh': '+84',
+      'Asia/Bangkok': '+66', 'Asia/Jakarta': '+62',
+      'Asia/Manila': '+63', 'Asia/Kolkata': '+91', 'Asia/Calcutta': '+91',
+      'Asia/Tokyo': '+81', 'Asia/Seoul': '+82', 'Asia/Shanghai': '+86',
+      'Asia/Singapore': '+65', 'Asia/Kuala_Lumpur': '+60',
+      'Asia/Dhaka': '+880', 'Asia/Karachi': '+92',
+      'Asia/Colombo': '+94', 'Asia/Kathmandu': '+977',
+      'Asia/Yangon': '+95', 'Asia/Phnom_Penh': '+855',
+      'Africa/Lagos': '+234', 'Africa/Nairobi': '+254',
+      'Africa/Accra': '+233', 'Africa/Johannesburg': '+27',
+      'Africa/Cairo': '+20', 'Africa/Addis_Ababa': '+251',
+      'Africa/Dar_es_Salaam': '+255', 'Africa/Kampala': '+256',
+      'America/Sao_Paulo': '+55', 'America/Argentina/Buenos_Aires': '+54',
+      'America/Bogota': '+57', 'America/Lima': '+51',
+      'America/Mexico_City': '+52', 'America/Santiago': '+56',
+      'Europe/London': '+44', 'Europe/Paris': '+33',
+      'Europe/Berlin': '+49', 'Europe/Madrid': '+34',
+      'Europe/Rome': '+39', 'Europe/Istanbul': '+90',
+      'Europe/Moscow': '+7', 'Europe/Kiev': '+380',
+      'Europe/Warsaw': '+48', 'Europe/Bucharest': '+40',
+      'Pacific/Auckland': '+64', 'Australia/Sydney': '+61',
+      'America/New_York': '+1', 'America/Chicago': '+1',
+      'America/Los_Angeles': '+1', 'America/Toronto': '+1',
+    };
+    if (tzToCode[tz]) return tzToCode[tz];
+    // Fallback: try continent
+    if (tz.startsWith('Asia/')) return '+91'; // India as default for Asia
+    if (tz.startsWith('Africa/')) return '+234'; // Nigeria as default for Africa
+    if (tz.startsWith('America/')) return '+1';
+    if (tz.startsWith('Europe/')) return '+44';
+  } catch { /* ignore */ }
+  return '+1';
+}
+
 interface WhatsAppSectionProps {
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
@@ -14,7 +53,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
       const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find(c => whatsappNumber.startsWith(c.code));
       if (match) return match.code;
     }
-    return '+1';
+    return detectCountryCode();
   });
   const [localPhone, setLocalPhone] = useState(() => {
     if (whatsappNumber) {
@@ -32,7 +71,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
       const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find(c => smsNumber.startsWith(c.code));
       if (match) return match.code;
     }
-    return '+1';
+    return detectCountryCode();
   });
   const [smsLocalPhone, setSmsLocalPhone] = useState(() => {
     if (smsNumber) {
