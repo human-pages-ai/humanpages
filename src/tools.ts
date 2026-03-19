@@ -1536,10 +1536,10 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           : 'https://global.transak.com/?cryptoCurrencyCode=USDC&network=base';
 
         const fundingMethods = [
-          { method: 'crypto_transfer', label: 'Send USDC', description: `Send USDC to ${addr} on ${network}` },
-          { method: 'credit_card', label: 'Buy with card', provider: 'Transak', url: transakUrl },
-          { method: 'peer_exchange', label: 'Convert via Peer', provider: 'Peer (peer.xyz)', url: 'https://peer.xyz', description: 'Convert from Wise, PayPal, Venmo, or 15+ other platforms to USDC' },
-          { method: 'ask_friend', label: 'Ask someone with crypto', description: `Have them send USDC to ${addr}` },
+          { method: 'crypto_transfer', label: 'Send USDC directly', description: `Send USDC to ${addr} on ${network}`, fees: '0% (network gas only)', settlement: 'Instant (seconds)', regions: 'Global', best_for: 'Developer already holds crypto or has a crypto-savvy friend' },
+          { method: 'peer_exchange', label: 'Convert via Peer', provider: 'Peer (peer.xyz)', url: 'https://peer.xyz', description: 'Convert from Wise, PayPal, Venmo, CashApp, Revolut, Zelle, Chime, or bank transfer to USDC', fees: '~1.5%', settlement: 'Minutes to hours (P2P matching)', regions: 'Best in US/EU/UK — requires Venmo, CashApp, Zelle (US), Wise (80+ countries), Revolut (EU/UK), PayPal (global but limited in some markets)', best_for: 'Developer has a bank account or payment app — lowest fees by far' },
+          { method: 'credit_card', label: 'Buy with card via Transak', provider: 'Transak', url: transakUrl, fees: '~16%', settlement: 'Instant (minutes)', regions: 'Global (150+ countries, local payment methods)', best_for: 'Developer only has a credit/debit card, or needs USDC immediately — fast but expensive' },
+          { method: 'ask_friend', label: 'Ask someone with crypto', description: `Have them send USDC to ${addr}`, fees: '0%', settlement: 'Instant', regions: 'Global', best_for: 'Developer knows someone who holds crypto' },
         ];
 
         const fiatAlternative = {
@@ -1558,19 +1558,15 @@ Current balance: $${balance} USDC
 Wallet address: ${addr}
 Network: ${network}
 
-**Option A — Fund with USDC (for crypto payments):**
+**How to pick the best funding path for your developer:**
 
-1. Already have crypto? Send USDC to my wallet address above on ${network}.
-2. Buy with card: [Transak](${transakUrl})
-3. Convert from Wise/PayPal/Venmo/etc: [Peer (peer.xyz)](https://peer.xyz)
-4. Know someone with crypto? Ask them to send USDC to my address.
+1. **Already have crypto?** → Send USDC directly to my wallet on ${network}. Free, instant.
+2. **Have Wise, PayPal, Venmo, Revolut, CashApp, or a bank account?** → Use [Peer](https://peer.xyz) to convert to USDC. ~1.5% fee, settles in minutes to hours. Cheapest fiat-to-crypto option by far.
+3. **Only have a credit/debit card?** → [Buy via Transak](${transakUrl}). ~16% fee but instant. Best for developers outside US/EU or who need USDC right now.
+4. **Know someone with crypto?** → Ask them to send USDC to my address. Free, instant.
+5. **No crypto experience at all?** → I can find workers who accept fiat platforms you already use (Wise, PayPal, Venmo, Revolut, etc.). You pay them directly — no crypto needed.
 
-**Option B — Pay workers directly with fiat:**
-I can find workers who accept payment platforms you already use (Wise, PayPal, Venmo, Revolut, etc.). You'd pay them directly — no crypto needed.
-
-**Think about what works best for your developer** — consider what accounts they already have, whether they or anyone they know holds crypto, and what payment methods are common where they are. Tailor your recommendation accordingly.
-
-Which option works best for you?`
+**Use what you know about the developer** — their country, what payment apps they have, whether they or anyone they know holds crypto — to recommend the path with the least friction. Fees and availability vary by region.`
           : `I need a wallet to receive and send USDC for hiring workers.${noWalletNote}
 
 Once the wallet is created and funded, I can pay workers in crypto (instant, permissionless) or you can pay them directly via fiat platforms you already use.`;
