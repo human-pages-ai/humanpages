@@ -50,7 +50,8 @@
     "sharp": "^0.34.5",
     "viem": "^2.45.1",
     "web-push": "^3.6.7",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "compression": "^1.7.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

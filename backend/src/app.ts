@@ -110,6 +110,12 @@ app.use((req, res, next) => {
   }
   express.json({ limit: '10kb' })(req, res, next);
 });
+
+// TODO: Add gzip compression middleware (85% bandwidth savings)
+// Add after installing 'compression' package:
+// import compression from 'compression';
+// app.use(compression({ level: 6, threshold: 1024 }));
+
 app.use(pinoHttp({
   logger,
   autoLogging: {

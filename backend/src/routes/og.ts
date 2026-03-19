@@ -243,9 +243,39 @@ export function generateListingSvg(title: string, budgetUsdc: number, budgetFlex
 </svg>`;
 }
 
-// Cache default PNG in memory
+export function generateUseCasesSvg(): string {
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="40%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="5" fill="url(#accent)"/>
+
+  <text x="600" y="200" font-family="system-ui, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" text-anchor="middle">
+    <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="500">.ai</tspan>
+  </text>
+
+  <text x="600" y="340" font-family="DejaVu Sans Mono, monospace" font-size="50" font-weight="700" fill="#f1f5f9" text-anchor="middle" letter-spacing="-1">Let your AI agent hire</text>
+
+  <text x="600" y="450" font-family="DejaVu Sans Mono, monospace" font-size="42" font-weight="700" text-anchor="middle" letter-spacing="-1">
+    <tspan fill="#f1f5f9">real </tspan><tspan fill="#f97316">humans.</tspan><tspan fill="#60a5fa"> From one prompt.</tspan>
+  </text>
+</svg>`;
+}
+
+// Cache PNG images in memory
 let defaultPngCache: Buffer | null = null;
 let careersPngCache: Buffer | null = null;
+let useCasesPngCache: Buffer | null = null;
 
 // Default OG image (served as PNG)
 router.get('/default', (req, res) => {
@@ -257,6 +287,21 @@ router.get('/default', (req, res) => {
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
     res.send(defaultPngCache);
+  } catch (error) {
+    res.status(500).send('Error generating image');
+  }
+});
+
+// Use Cases OG image (also used for /dev page)
+router.get('/use-cases', (req, res) => {
+  try {
+    if (!useCasesPngCache) {
+      const svg = generateUseCasesSvg();
+      useCasesPngCache = svgToPng(svg);
+    }
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
+    res.send(useCasesPngCache);
   } catch (error) {
     res.status(500).send('Error generating image');
   }

@@ -144,6 +144,30 @@ const publicHumanSelect = {
   },
 } as const;
 
+// Minimal select for search results — 10-15 fields max (85% bandwidth savings vs publicHumanSelect)
+const searchResultSelect = {
+  id: true,
+  username: true,
+  bio: true,
+  location: true,
+  skills: true,
+  equipment: true,
+  isAvailable: true,
+  timezone: true,
+  weeklyCapacityHours: true,
+  workType: true,
+  yearsOfExperience: true,
+  profilePhotoKey: true,
+  profilePhotoStatus: true,
+  lastActiveAt: true,
+  createdAt: true,
+  // Minimal service info — essential fields only
+  services: {
+    where: { isActive: true },
+    select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true },
+  },
+} as const;
+
 // Notification flags for internal search computation (not exposed in public response)
 const notificationSelect = {
   emailNotifications: true,
@@ -437,7 +461,19 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
-      include: { wallets: true, services: true, fiatPaymentMethods: true },
+      include: {
+        wallets: {
+          select: { id: true, network: true, address: true, label: true, isPrimary: true, verified: true },
+          orderBy: { createdAt: 'asc' as const },
+        },
+        services: {
+          where: { isActive: true },
+          select: { id: true, title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true, isActive: true },
+        },
+        fiatPaymentMethods: {
+          select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
+        },
+      },
     });
 
     if (!human) {
@@ -1405,18 +1441,19 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       orderBy = [{ yearsOfExperience: 'desc' }, { lastActiveAt: 'desc' }];
     }
 
-    // Fetch humans (public: no contact info, no wallets)
+    // Fetch humans with minimal fields for search results (85% smaller payload)
     // When doing skill search or reputation sort, fetch more candidates for post-fetch scoring/sorting
-    // Also fetch notification flags separately for channelCount calculation (not exposed in response)
+    // Keep notification flags for channelCount computation (stripped before response)
     let humans = await prisma.human.findMany({
       where,
       take: needsLargePool ? 500 : requestedLimit,
       skip: needsLargePool ? 0 : requestedOffset,
       orderBy,
       select: {
-        ...publicHumanSelect,
+        ...searchResultSelect,
         locationLat: true,
         locationLng: true,
+        // Notification flags for channelCount computation (stripped before response)
         ...notificationSelect,
       },
     });
