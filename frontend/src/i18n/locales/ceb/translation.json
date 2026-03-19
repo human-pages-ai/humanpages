@@ -1,0 +1,198 @@
+{
+  "onboarding": {
+    "steps": {
+      "connect": "Konekta",
+      "cvUpload": "CV",
+      "skills": "Kahanas",
+      "equipment": "Kagamitan",
+      "vouch": "Botsahan",
+      "location": "Lokasyon",
+      "education": "Edukasyon",
+      "payment": "Bayad",
+      "services": "Serbisyo",
+      "profile": "Profile",
+      "availability": "Pagka-Andam",
+      "verification": "Beripikasyon"
+    },
+    "completion": {
+      "connect": "Na-konekta! Maabot ka na sa mga ahente",
+      "cvUpload": "Na-upload ang CV! Gi-analisa...",
+      "skills": "Nadugang ang kahanas! Makita ka na sa search",
+      "equipment": "Na-lista ang kagamitan! Bukas na ang physical tasks",
+      "vouch": "Na-share ang profile! Ang mga botsahan nagtukod ug pagsalig",
+      "location": "Na-set ang lokasyon! Bukas na ang lokal nga trabaho",
+      "education": "Nadugang ang kasinatian! Nagpakita ka na",
+      "payment": "Na-set ang bayad! Andam na mu-earn",
+      "services": "Na-define ang serbisyo! Pwede ka na i-hire sa ahente",
+      "profile": "Nindot na ang profile!",
+      "availability": "Na-set ang schedule! Hapit na mahuman",
+      "verification": "Na-verify! Pinakataas nga trust score"
+    },
+    "connect": {
+      "heading": "Pagkonekta",
+      "subtitle": "Mahibaloan dayon kung gusto ka i-hire sa mga ahente",
+      "pushEnabled": "Na-enable ang push notifications",
+      "notificationsDenied": "Gi-decline ang notifications",
+      "pushDescription": "Mahibaloan kung gusto ka i-hire sa mga ahente",
+      "installApp": "I-install ang App",
+      "telegram": {
+        "title": "Telegram",
+        "description": "Dawaton ang job offers pinaagi sa HumanPages bot",
+        "button": "I-konekta ang Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "Magsugod na ta",
+      "subtitle": "I-upload ang imong CV aron dali ma-fill up ang profile",
+      "uploadButton": "I-upload ang imong CV",
+      "format": "PDF o Word nga dokumento"
+    },
+    "skills": {
+      "heading": "Unsa ang imong mahimo?",
+      "subtitle": "Pilia ang imong kahanas",
+      "searchPlaceholder": "Pangitaa ang kahanas...",
+      "popular": "Sikat",
+      "browse": "Tan-awa"
+    },
+    "equipment": {
+      "heading": "Kagamitan ug mga Gamit",
+      "subtitle": "Ang mga ahente nag-match sa kagamitan ngadto sa tasks — i-lista ang tanan nimong gigamit sa imong serbisyo.",
+      "hint": "Pilia gikan sa mga suhestyon o mag-type ug bisan unsa"
+    },
+    "vouch": {
+      "heading": "Pagtukod ug Pagsalig",
+      "subtitle": "Ang mga tawo nga nakahibalo sa imong trabaho pwede mu-vouch para nimo.",
+      "shareButton": "I-share ug Pagpa-vouch",
+      "vouchHint": "Pangayo sa mga kauban nga nakahibalo sa imong trabaho nga mu-vouch para nimo"
+    },
+    "location": {
+      "heading": "Asa Ka?",
+      "subtitle": "Isulti ang imong lokasyon ug timezone",
+      "label": "Lokasyon",
+      "remote": "Remote",
+      "timezoneLabel": "Timezone",
+      "languagesLabel": "Mga Pinulongan (Opsyonal)"
+    },
+    "education": {
+      "heading": "Kasinatian ug Edukasyon",
+      "subtitle": "I-share ang imong background ug credentials",
+      "yearsLabel": "Mga Tuig sa Propesyonal nga Kasinatian",
+      "label": "Edukasyon (Opsyonal)"
+    },
+    "payment": {
+      "heading": "Pagkuha ug Bayad",
+      "subtitle": "I-set up ang imong payment methods",
+      "methodsTitle": "Mga Payment Method",
+      "crypto": {
+        "title": "Crypto Wallet",
+        "subtitle": "Dawaton ang USDC ug ETH"
+      }
+    },
+    "services": {
+      "heading": "Imong mga Serbisyo",
+      "subtitle": "Idugang ang mga serbisyo nga imong gi-offer",
+      "addButton": "+ Magdugang ug Serbisyo",
+      "noPriceSet": "Walay presyo — i-click aron idugang"
+    },
+    "profile": {
+      "heading": "Imong Profile",
+      "subtitle": "Kompleto-a ang imong profile information",
+      "photoLabel": "Profile Photo",
+      "nameLabel": "Tibuok Ngalan",
+      "bioLabel": "Mubo nga Bio",
+      "workType": {
+        "both": "Pareho",
+        "digital": "Digital",
+        "physical": "Personal"
+      },
+      "weeklyHours": {
+        "flexible": "Flexible",
+        "format": "{{hours}} oras/semana"
+      }
+    },
+    "availability": {
+      "heading": "Pagka-Andam ug Kapasidad",
+      "subtitle": "Tabangi ang mga AI ahente sa pagpangita nimo para sa sakto nga trabaho",
+      "hoursLabel": "Pila ka oras ang pwede nimong trabahoon matag semana?",
+      "typeLabel": "Unsang klase sa trabaho ang imong gibuhat?"
+    },
+    "finish": {
+      "heading": "I-verify ang Imong Pagkatawo",
+      "subtitle": "I-konekta ang imong propesyonal nga accounts aron magtukod ug pagsalig",
+      "platformsTitle": "Presensya sa Platform (Opsyonal)",
+      "platformsHint": "I-share ang imong online presence — followers, ratings, achievements"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "Notifications ug Koneksyon",
+        "emptyHint": "I-enable ang notifications aron dili masayop ug job offer"
+      },
+      "skills": {
+        "title": "Kahanas",
+        "emptyHint": "Idugang ang kahanas aron makita ka sa mga ahente"
+      },
+      "equipment": {
+        "title": "Kagamitan",
+        "emptyHint": "I-lista ang imong mga gamit para sa physical tasks"
+      },
+      "location": {
+        "title": "Lokasyon",
+        "emptyHint": "I-set ang lokasyon aron makita ka sa duol nga tasks",
+        "autoDetected": "(auto-detected)",
+        "verifyAccuracy": "Palihug i-check kung sakto"
+      },
+      "education": {
+        "title": "Edukasyon ug Kasinatian",
+        "emptyHint": "Idugang ang kasinatian aron mogawas",
+        "yearsLabel": "Tuig sa Kasinatian",
+        "addExperience": "Idugang ang imong kasinatian aron mogawas",
+        "addEducation": "Idugang ang edukasyon, bootcamp, o sertipikasyon"
+      },
+      "services": {
+        "title": "Serbisyo",
+        "emptyHint": "I-define ang serbisyo aron ma-hire"
+      },
+      "availability": {
+        "title": "Pagka-Andam",
+        "emptyHint": "I-set ang schedule aron mahibaloan sa ahente kung kanus-a ka i-hire",
+        "workTypeLabel": "Klase sa Trabaho (Digital / Personal)",
+        "weeklyHoursLabel": "Oras Matag Semana"
+      },
+      "verification": {
+        "title": "Beripikasyon",
+        "emptyHint": "I-verify ang accounts aron mopaas ang trust score",
+        "verified": "Na-verify",
+        "notVerified": "Wala pa na-verify"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "Idugang kini aron mas makita",
+      "addButton": "+ Idugang",
+      "editButton": "I-edit"
+    },
+    "share": {
+      "title": "I-share ang Imong Profile"
+    }
+  },
+  "common": {
+    "enable": "I-enable",
+    "tryAgain": "Sulayi Pag-usab",
+    "connecting": "Nagkonekta...",
+    "connected": "Nakonekta",
+    "add": "Idugang",
+    "cancel": "I-cancel",
+    "done": "Nahuman",
+    "delete": "I-delete",
+    "refresh": "I-refresh",
+    "skipForNow": "Laktawi sa karon",
+    "saving": "Nagtipig...",
+    "saved": "Natipig",
+    "loading": "Nagkarga...",
+    "copied": "Na-kopya!",
+    "enabled": "Na-enable",
+    "disabled": "Na-disable",
+    "dashboard": "Dashboard"
+  }
+}

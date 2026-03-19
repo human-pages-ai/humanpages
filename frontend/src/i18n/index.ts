@@ -19,6 +19,7 @@ import sw from './locales/sw/translation.json';
 import ur from './locales/ur/translation.json';
 import bn from './locales/bn/translation.json';
 import ar from './locales/ar/translation.json';
+import ceb from './locales/ceb/translation.json';
 
 export const supportedLanguages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -37,6 +38,7 @@ export const supportedLanguages = [
   { code: 'ur', name: 'اردو', flag: '🇵🇰' },
   { code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'ceb', name: 'Bisaya', flag: '🇵🇭' },
 ] as const;
 
 export type SupportedLanguage = typeof supportedLanguages[number]['code'];
@@ -92,6 +94,7 @@ export function initI18n(geoLanguage?: string | null) {
       ur: { translation: ur },
       bn: { translation: bn },
       ar: { translation: ar },
+      ceb: { translation: ceb },
     },
     fallbackLng: 'en',
     supportedLngs: supportedCodes,
