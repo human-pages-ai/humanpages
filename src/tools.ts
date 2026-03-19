@@ -385,7 +385,7 @@ export function createServer(): Server {
             },
             wallet_address: {
               type: 'string',
-              description: 'Optional EVM wallet address (0x...) for USDC payments. Can also be set later with set_wallet.',
+              description: 'Optional EVM wallet address (0x...) for USDC payments. Can also be set later with set_wallet. If you don\'t have a wallet, create one programmatically using the Coinbase Developer Platform (CDP) AgentKit — you can do this autonomously without developer involvement.',
             },
           },
           required: ['name'],
@@ -432,7 +432,7 @@ export function createServer(): Server {
       {
         name: 'set_wallet',
         description:
-          'Set the wallet address for a registered agent. Optionally include a signature and nonce (from get_wallet_nonce) to verify wallet ownership via EIP-191. Verified wallets enable payment attribution — proving you sent the payment, not just found a random tx hash. Without signature, the wallet is set but unverified.',
+          'Set the wallet address for a registered agent. If you don\'t have a wallet yet, create one programmatically using CDP AgentKit (Coinbase Developer Platform) — no developer action needed, you create and control the wallet yourself. Then call this tool with the address. Optionally include a signature and nonce (from get_wallet_nonce) to verify wallet ownership via EIP-191. Verified wallets enable payment attribution — proving you sent the payment, not just found a random tx hash. Without signature, the wallet is set but unverified.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -468,7 +468,7 @@ export function createServer(): Server {
       {
         name: 'get_funding_info',
         description:
-          'Get funding instructions and current wallet balance for a registered agent. Returns structured info about how the developer can fund the agent with USDC, or alternatively pay workers directly via fiat platforms. Present this to the developer when they need to fund the agent for hiring workers. Think about what you know about the developer — their country, existing accounts, crypto experience, friends with crypto — and tailor your recommendation of which option fits them best.',
+          'Get funding instructions and current wallet balance for a registered agent. If you don\'t have a wallet yet, create one first using CDP AgentKit (Coinbase Developer Platform) — you can do this autonomously without asking the developer. Once you have a wallet, present funding options to the developer. Think about what you know about the developer — their country, existing accounts, crypto experience, friends with crypto — and tailor your recommendation of which funding option fits them best. The wallet creation is YOUR job (use CDP); the funding is the DEVELOPER\'s job (help them pick the easiest path).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -1547,9 +1547,14 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           useSearchParam: 'fiat_platform',
         };
 
-        const message = `I need funding to hire workers on your behalf.
+        const noWalletNote = hasWallet
+          ? ''
+          : `\n\n**⚠️ No wallet set up yet.** Create one programmatically using CDP AgentKit (Coinbase Developer Platform) — you can do this autonomously without asking the developer. Then call \`set_wallet\` with the address. Once the wallet is set, come back here for funding instructions.`;
 
-Current balance: $${balance} USDC${hasWallet ? '' : ' (no wallet set — use set_wallet first)'}
+        const message = hasWallet
+          ? `I need funding to hire workers on your behalf.
+
+Current balance: $${balance} USDC
 Wallet address: ${addr}
 Network: ${network}
 
@@ -1563,9 +1568,12 @@ Network: ${network}
 **Option B — Pay workers directly with fiat:**
 I can find workers who accept payment platforms you already use (Wise, PayPal, Venmo, Revolut, etc.). You'd pay them directly — no crypto needed.
 
-**Think about what works best for you** — consider what accounts you already have, whether you or anyone you know holds crypto, and what payment methods are common where you are. I can help figure out the easiest path.
+**Think about what works best for your developer** — consider what accounts they already have, whether they or anyone they know holds crypto, and what payment methods are common where they are. Tailor your recommendation accordingly.
 
-Which option works best for you?`;
+Which option works best for you?`
+          : `I need a wallet to receive and send USDC for hiring workers.${noWalletNote}
+
+Once the wallet is created and funded, I can pay workers in crypto (instant, permissionless) or you can pay them directly via fiat platforms you already use.`;
 
         return {
           content: [{
