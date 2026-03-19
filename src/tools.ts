@@ -56,6 +56,7 @@ interface Human {
   wallets?: { network: string; chain?: string; address: string; label?: string; isPrimary?: boolean }[];
   fiatPaymentMethods?: { platform: string; handle: string; label?: string; isPrimary?: boolean }[];
   paymentMethods?: string[];
+  acceptsCrypto?: boolean;
   channelCount?: number;
   activeChannels?: string[];
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
@@ -138,6 +139,7 @@ interface SearchParams {
   min_experience?: number;
   fiat_platform?: string;
   payment_type?: string;
+  accepts_crypto?: boolean;
   degree?: string;
   field?: string;
   institution?: string;
@@ -173,6 +175,7 @@ async function searchHumans(params: SearchParams): Promise<SearchResponse> {
   if (params.min_experience) query.set('minExperience', params.min_experience.toString());
   if (params.fiat_platform) query.set('fiatPlatform', params.fiat_platform);
   if (params.payment_type) query.set('paymentType', params.payment_type);
+  if (params.accepts_crypto) query.set('acceptsCrypto', 'true');
   if (params.degree) query.set('degree', params.degree);
   if (params.field) query.set('field', params.field);
   if (params.institution) query.set('institution', params.institution);
@@ -289,6 +292,10 @@ export function createServer(): Server {
               type: 'string',
               enum: ['UPFRONT', 'ESCROW', 'UPON_COMPLETION'],
               description: 'Filter by accepted payment type (UPFRONT, ESCROW, or UPON_COMPLETION)',
+            },
+            accepts_crypto: {
+              type: 'boolean',
+              description: 'Filter to only show humans who have a crypto wallet set up and can accept USDC payments',
             },
             degree: {
               type: 'string',
@@ -1194,6 +1201,7 @@ export function createServer(): Server {
           min_experience: args?.min_experience as number | undefined,
           fiat_platform: args?.fiat_platform as string | undefined,
           payment_type: args?.payment_type as string | undefined,
+          accepts_crypto: args?.accepts_crypto as boolean | undefined,
           degree: args?.degree as string | undefined,
           field: args?.field as string | undefined,
           institution: args?.institution as string | undefined,
@@ -1246,7 +1254,7 @@ export function createServer(): Server {
   Equipment: ${h.equipment.join(', ') || 'None listed'}
   Languages: ${h.languages.join(', ') || 'Not specified'}
   Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
-  Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}
+  Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}${h.acceptsCrypto ? ' | 💰 Accepts crypto (USDC)' : ''}
   Reachability: ${(h.channelCount || 0) >= 3 ? '🟢 Highly reachable' : (h.channelCount || 0) >= 2 ? '🟡 Reachable' : (h.channelCount || 0) >= 1 ? '🟠 Limited' : '🔴 Low'} (${h.channelCount || 0}/4 channels)`;
           })
           .join('\n\n');
