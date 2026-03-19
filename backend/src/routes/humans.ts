@@ -22,6 +22,10 @@ import { queueModeration } from '../lib/moderation.js';
 
 const router = Router();
 
+// Rate limiter for username changes: users can only change their username once every 30 days
+const usernameChangeTimestamps = new Map<string, number>();
+const USERNAME_CHANGE_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+
 // Hebrew → English skill synonyms for search expansion
 const SKILL_SYNONYMS: Record<string, string> = {
   'ניקיון בתים': 'house cleaning',
@@ -622,8 +626,26 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const updates = updateProfileSchema.parse(req.body);
 
-    // Check username uniqueness if provided
+    // Check username uniqueness and rate limit if provided
     if (updates.username) {
+      // First, get the current username to check if it's actually changing
+      const current = await prisma.human.findUnique({
+        where: { id: req.userId },
+        select: { username: true },
+      });
+
+      // Only enforce rate limit if username is actually changing
+      if (current?.username !== updates.username) {
+        const lastChange = usernameChangeTimestamps.get(req.userId!);
+        if (lastChange && Date.now() - lastChange < USERNAME_CHANGE_COOLDOWN) {
+          const cooldownDays = Math.ceil((USERNAME_CHANGE_COOLDOWN - (Date.now() - lastChange)) / (24 * 60 * 60 * 1000));
+          return res.status(429).json({
+            error: `Username change rate limited. You can change your username again in ${cooldownDays} day${cooldownDays !== 1 ? 's' : ''}.`
+          });
+        }
+      }
+
+      // Check username uniqueness
       const existing = await prisma.human.findFirst({
         where: {
           username: updates.username,
@@ -690,6 +712,11 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       data: dataToSave,
       include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
+
+    // Record username change timestamp if username was actually updated
+    if (updates.username && updates.username !== human.username) {
+      usernameChangeTimestamps.set(req.userId!, Date.now());
+    }
 
     const [reputation, trustScore] = await Promise.all([
       getReputationStats(human.id),

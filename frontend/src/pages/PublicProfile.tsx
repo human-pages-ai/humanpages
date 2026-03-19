@@ -189,11 +189,18 @@ export default function PublicProfile() {
     );
   }
 
+  // Prepare OG description: use truncated bio (160 chars) or default message
+  const ogDescription = profile.bio && profile.bio.length > 0
+    ? profile.bio.length > 160
+      ? profile.bio.substring(0, 160) + '...'
+      : profile.bio
+    : `Hire ${formatPublicName(profile.name)} on HumanPages — the AI-powered freelance marketplace with 0% commission`;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title={profile.name || profile.username || 'Profile'}
-        description={profile.bio || `${formatPublicName(profile.name)} on Human Pages - ${profile.skills.slice(0, 3).join(', ')}`}
+        title={`${formatPublicName(profile.name)} on HumanPages`}
+        description={ogDescription}
         ogImage={`https://humanpages.ai/api/og/${profile.id}?v=2`}
         ogType="profile"
         path={`/humans/${profile.id}`}
