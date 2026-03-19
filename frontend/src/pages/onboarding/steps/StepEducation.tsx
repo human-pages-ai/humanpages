@@ -1,13 +1,35 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SearchableCombobox from '../../../components/common/SearchableCombobox';
+import type { ComboboxOption } from '../../../components/common/SearchableCombobox';
 import degrees from '../../../data/degrees';
 import countries from '../../../data/countries';
 import universitiesByCountry from '../../../data/universitiesByCountry';
 import type { EducationEntry } from '../types';
 
 const loadFields = () => import('../../../data/fieldsOfStudy').then(m => m.default);
-const getUniversitiesForCountry = (countryName: string): string[] => universitiesByCountry[countryName] || [];
+
+/** Build ComboboxOption[] for a specific country (no secondary text needed) */
+function getUniversityOptionsForCountry(countryName: string): ComboboxOption[] {
+  const unis = universitiesByCountry[countryName];
+  if (!unis) return [];
+  return unis.map(name => ({ label: name, value: name }));
+}
+
+/** Lazy-built flat list of all universities with country as secondary text */
+let _allUniversityOptions: ComboboxOption[] | null = null;
+function getAllUniversityOptions(): ComboboxOption[] {
+  if (_allUniversityOptions) return _allUniversityOptions;
+  const result: ComboboxOption[] = [];
+  for (const [country, unis] of Object.entries(universitiesByCountry)) {
+    for (const name of unis) {
+      result.push({ label: name, value: name, secondary: country });
+    }
+  }
+  result.sort((a, b) => a.label.localeCompare(b.label));
+  _allUniversityOptions = result;
+  return result;
+}
 
 interface StepEducationProps {
   educationEntries: EducationEntry[];
@@ -146,7 +168,7 @@ export function StepEducation({
                 <p className="text-xs text-slate-400 mt-1">Changing country resets the institution field</p>
               </div>
               <div>
-                <SearchableCombobox id="edu-inst" label="Institution" value={newEducation.institution} onChange={(v) => setNewEducation({ ...newEducation, institution: v })} options={newEducation.country ? getUniversitiesForCountry(newEducation.country) : []} placeholder="Type your institution name..." required allowFreeText />
+                <SearchableCombobox id="edu-inst" label="Institution" value={newEducation.institution} onChange={(v) => setNewEducation({ ...newEducation, institution: v })} options={newEducation.country ? getUniversityOptionsForCountry(newEducation.country) : getAllUniversityOptions()} placeholder="Type your institution name..." required allowFreeText />
                 <p className="text-xs text-slate-500 font-medium mt-1">Type any name — school, bootcamp, online course, or self-taught</p>
               </div>
             </div>

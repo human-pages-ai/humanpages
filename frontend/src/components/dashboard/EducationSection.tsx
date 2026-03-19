@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import SearchableCombobox from '../common/SearchableCombobox';
+import type { ComboboxOption } from '../common/SearchableCombobox';
 import degrees from '../../data/degrees';
 import certIssuers from '../../data/certIssuers';
 import countries from '../../data/countries';
@@ -33,9 +34,25 @@ interface Props {
 
 const loadFields = () => import('../../data/fieldsOfStudy').then(m => m.default);
 
-const getUniversitiesForCountry = (countryName: string): string[] => {
-  return universitiesByCountry[countryName] || [];
-};
+function getUniversityOptionsForCountry(countryName: string): ComboboxOption[] {
+  const unis = universitiesByCountry[countryName];
+  if (!unis) return [];
+  return unis.map(name => ({ label: name, value: name }));
+}
+
+let _allUniversityOptions: ComboboxOption[] | null = null;
+function getAllUniversityOptions(): ComboboxOption[] {
+  if (_allUniversityOptions) return _allUniversityOptions;
+  const result: ComboboxOption[] = [];
+  for (const [country, unis] of Object.entries(universitiesByCountry)) {
+    for (const name of unis) {
+      result.push({ label: name, value: name, secondary: country });
+    }
+  }
+  result.sort((a, b) => a.label.localeCompare(b.label));
+  _allUniversityOptions = result;
+  return result;
+}
 
 export default function EducationSection({ profile, onUpdate }: Props) {
   const [editingEducation, setEditingEducation] = useState(false);
@@ -170,7 +187,7 @@ export default function EducationSection({ profile, onUpdate }: Props) {
                   label="Institution"
                   value={educationForm.institution}
                   onChange={v => setEducationForm(f => ({ ...f, institution: v }))}
-                  options={educationForm.country ? getUniversitiesForCountry(educationForm.country) : []}
+                  options={educationForm.country ? getUniversityOptionsForCountry(educationForm.country) : getAllUniversityOptions()}
                   placeholder="Select or type your institution"
                   required
                   allowFreeText

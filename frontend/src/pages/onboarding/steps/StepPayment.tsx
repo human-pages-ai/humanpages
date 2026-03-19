@@ -1,33 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { api } from '../../../lib/api';
+import type { FiatPaymentMethod } from '../../../components/dashboard/types';
 
 interface StepPaymentProps {
   walletAddress: string;
   setWalletAddress: (v: string) => void;
-  fiatPayment?: string;
-  setFiatPayment?: (v: string) => void;
   onNext: () => void;
   onSkip: () => void;
   error: string;
   setError?: (v: string) => void;
 }
 
-const FIAT_PAYMENT_METHODS = [
-  'PayPal',
-  'Wise',
-  'Bank Transfer',
-  'Venmo',
-  'Cash App',
-  'M-Pesa',
-  'GCash',
-  'Other',
+const PLATFORM_OPTIONS: { value: string; label: string; placeholder: string }[] = [
+  { value: 'PAYPAL', label: 'PayPal', placeholder: 'email@example.com' },
+  { value: 'WISE', label: 'Wise', placeholder: 'email@example.com' },
+  { value: 'VENMO', label: 'Venmo', placeholder: '@username' },
+  { value: 'CASHAPP', label: 'Cash App', placeholder: '$cashtag' },
+  { value: 'REVOLUT', label: 'Revolut', placeholder: '@username' },
+  { value: 'ZELLE', label: 'Zelle', placeholder: 'email or phone' },
+  { value: 'MONZO', label: 'Monzo', placeholder: '@username' },
+  { value: 'N26', label: 'N26', placeholder: 'email@example.com' },
+  { value: 'MERCADOPAGO', label: 'Mercado Pago', placeholder: 'email or phone' },
 ];
+
+const PLATFORM_LABELS: Record<string, string> = Object.fromEntries(
+  PLATFORM_OPTIONS.map((p) => [p.value, p.label])
+);
 
 export function StepPayment({
   walletAddress,
   setWalletAddress,
-  fiatPayment,
-  setFiatPayment,
   onNext,
   onSkip: _onSkip,
   error,
@@ -35,20 +38,69 @@ export function StepPayment({
 }: StepPaymentProps) {
   const { t } = useTranslation();
   const [connectingPrivy, setConnectingPrivy] = useState(false);
-  const [fiatMethod, setFiatMethod] = useState(() => {
-    if (fiatPayment) {
-      const parts = fiatPayment.split(': ');
-      return parts[0] || '';
+
+  // Existing fiat payment methods (loaded from API)
+  const [methods, setMethods] = useState<FiatPaymentMethod[]>([]);
+  const [loadingMethods, setLoadingMethods] = useState(true);
+
+  // Add-method form state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newPlatform, setNewPlatform] = useState(PLATFORM_OPTIONS[0].value);
+  const [newHandle, setNewHandle] = useState('');
+  const [addingMethod, setAddingMethod] = useState(false);
+
+  // Load existing fiat payment methods on mount
+  const loadMethods = useCallback(async () => {
+    try {
+      const profile = await api.getProfile();
+      if (profile.fiatPaymentMethods) {
+        setMethods(profile.fiatPaymentMethods);
+      }
+    } catch {
+      // Non-critical — user can still add methods
+    } finally {
+      setLoadingMethods(false);
     }
-    return '';
-  });
-  const [fiatHandle, setFiatHandle] = useState(() => {
-    if (fiatPayment) {
-      const parts = fiatPayment.split(': ');
-      return parts[1] || '';
+  }, []);
+
+  useEffect(() => {
+    loadMethods();
+  }, [loadMethods]);
+
+  const handleAddMethod = async () => {
+    const handle = newHandle.trim();
+    if (!handle) {
+      if (setError) setError('Please enter your handle or username for this platform.');
+      return;
     }
-    return '';
-  });
+    setAddingMethod(true);
+    if (setError) setError('');
+    try {
+      const added = await api.addFiatPaymentMethod({
+        platform: newPlatform,
+        handle,
+      });
+      setMethods((prev) => [...prev, added]);
+      setNewPlatform(PLATFORM_OPTIONS[0].value);
+      setNewHandle('');
+      setShowAddForm(false);
+    } catch (err: any) {
+      if (setError) setError(err?.message || 'Failed to add payment method. Please try again.');
+    } finally {
+      setAddingMethod(false);
+    }
+  };
+
+  const handleRemoveMethod = async (id: string) => {
+    try {
+      await api.deleteFiatPaymentMethod(id);
+      setMethods((prev) => prev.filter((m) => m.id !== id));
+    } catch (err: any) {
+      if (setError) setError(err?.message || 'Failed to remove payment method.');
+    }
+  };
+
+  const selectedPlatform = PLATFORM_OPTIONS.find((p) => p.value === newPlatform);
 
   // Lazy load Privy to avoid impact on 2G networks
   const handleConnectWallet = async () => {
@@ -84,52 +136,123 @@ export function StepPayment({
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-slate-900">{t('onboarding.payment.methodsTitle')}</h3>
-            <p className="text-xs text-slate-500">Set up your preferred payment method</p>
+            <p className="text-xs text-slate-500">Add your preferred payment methods</p>
           </div>
         </div>
-        <div className="space-y-3">
-          <div>
-            <label htmlFor="fiat-method" className="block text-sm font-medium text-slate-700 mb-1">{t('onboarding.payment.methodLabel')}</label>
-            <select
-              id="fiat-method"
-              value={fiatMethod}
-              onChange={(e) => {
-                setFiatMethod(e.target.value);
-                if (setFiatPayment && fiatHandle) {
-                  setFiatPayment(`${e.target.value}: ${fiatHandle}`);
-                }
-              }}
-              className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-            >
-              <option value="">Select a payment method...</option>
-              {FIAT_PAYMENT_METHODS.map((method) => (
-                <option key={method} value={method}>{method}</option>
-              ))}
-            </select>
-          </div>
 
-          {fiatMethod && (
+        {/* List of added methods */}
+        {!loadingMethods && methods.length > 0 && (
+          <div className="space-y-2 mb-3">
+            {methods.map((method) => (
+              <div key={method.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                      {PLATFORM_LABELS[method.platform] || method.platform}
+                    </span>
+                    {method.isPrimary && (
+                      <span className="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-700 font-mono mt-1 truncate">{method.handle}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveMethod(method.id)}
+                  className="ml-2 p-1.5 text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                  title="Remove"
+                  aria-label={`Remove ${PLATFORM_LABELS[method.platform] || method.platform}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {loadingMethods && (
+          <div className="py-3 text-center text-sm text-slate-400">Loading payment methods...</div>
+        )}
+
+        {/* Add method form */}
+        {showAddForm ? (
+          <div className="space-y-3 border border-slate-200 rounded-lg p-3">
+            <div>
+              <label htmlFor="fiat-platform" className="block text-sm font-medium text-slate-700 mb-1">Platform</label>
+              <select
+                id="fiat-platform"
+                value={newPlatform}
+                onChange={(e) => setNewPlatform(e.target.value)}
+                disabled={addingMethod}
+                className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                {PLATFORM_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label htmlFor="fiat-handle" className="block text-sm font-medium text-slate-700 mb-1">
-                {fiatMethod === 'Bank Transfer' ? 'Account Details' : 'Handle / Username / Email'}
+                Handle / Username / Email
               </label>
               <input
                 id="fiat-handle"
                 type="text"
-                value={fiatHandle}
-                onChange={(e) => {
-                  setFiatHandle(e.target.value);
-                  if (setFiatPayment && fiatMethod) {
-                    setFiatPayment(`${fiatMethod}: ${e.target.value}`);
-                  }
-                }}
-                placeholder={fiatMethod === 'Bank Transfer' ? 'IBAN, account number, or details' : `e.g., user@email.com or @username`}
+                value={newHandle}
+                onChange={(e) => { setNewHandle(e.target.value); if (setError) setError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddMethod(); }}
+                placeholder={selectedPlatform?.placeholder || 'Your username or email'}
+                disabled={addingMethod}
+                maxLength={200}
                 className="w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
-              <p className="text-xs text-slate-500 mt-1">You can update this later from your dashboard</p>
             </div>
-          )}
-        </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleAddMethod}
+                disabled={addingMethod || !newHandle.trim()}
+                className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+              >
+                {addingMethod ? 'Adding...' : 'Add'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowAddForm(false); setNewHandle(''); if (setError) setError(''); }}
+                disabled={addingMethod}
+                className="px-4 py-2 text-slate-600 text-sm rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="w-full flex items-center gap-3 p-3 border border-dashed border-slate-300 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition-colors text-left"
+          >
+            <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-orange-100">
+              <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-slate-700">
+                {methods.length > 0 ? 'Add another payment method' : 'Add a payment method'}
+              </p>
+              <p className="text-xs text-slate-500">PayPal, Wise, Venmo, Cash App, Revolut, and more</p>
+            </div>
+          </button>
+        )}
+
+        {methods.length > 0 && (
+          <p className="text-xs text-slate-500 mt-2">You can manage these from your dashboard later.</p>
+        )}
       </div>
 
       {/* Crypto Wallet Section */}

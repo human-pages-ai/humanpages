@@ -4,6 +4,7 @@ import { usePrivy, useWallets, getIdentityToken } from '@privy-io/react-auth';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
 import { Wallet } from './types';
+import { isMobile } from './WalletProvider';
 
 type Step = 'idle' | 'busy';
 
@@ -255,6 +256,15 @@ export default function WalletsSection({
   /** Render the connect button + manual paste fallback */
   const renderConnectOptions = () => (
     <div className="space-y-3">
+      {/* Mobile notice: external wallets not available */}
+      {isMobile && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+          <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+          </svg>
+          <p className="text-sm text-amber-800">{t('dashboard.wallets.mobileNotice')}</p>
+        </div>
+      )}
       {/* Primary: Privy connect/create button */}
       <button
         onClick={handleConnectWallet}

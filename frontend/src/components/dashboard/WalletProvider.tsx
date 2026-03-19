@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 
 const appId = import.meta.env.VITE_PRIVY_APP_ID;
-const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+export const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 export default function WalletProvider({ children }: { children: ReactNode }) {
   if (!appId || appId.startsWith('<')) {

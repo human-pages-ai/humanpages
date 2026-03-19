@@ -221,7 +221,7 @@ describe('SearchableCombobox', () => {
       expect(screen.getByText(/No matches — press Enter to use custom value/)).toBeInTheDocument();
     });
 
-    it('limits displayed results to 50 options', async () => {
+    it('limits displayed results to 15 options', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       const options = Array.from({ length: 100 }, (_, i) => `Option ${i + 1}`);
@@ -240,7 +240,7 @@ describe('SearchableCombobox', () => {
       const listbox = screen.getByRole('listbox');
       const displayedOptions = within(listbox).getAllByRole('option');
 
-      expect(displayedOptions.length).toBe(50);
+      expect(displayedOptions.length).toBe(15);
     });
   });
 
@@ -294,7 +294,7 @@ describe('SearchableCombobox', () => {
       const input = screen.getByRole('combobox');
       await user.click(input);
 
-      const option1 = screen.getByText('Option 1');
+      const option1 = screen.getByText('Option 1').closest('[role="option"]');
       expect(option1).toHaveClass('bg-blue-50', 'text-blue-700', 'font-medium');
     });
   });
@@ -383,10 +383,10 @@ describe('SearchableCombobox', () => {
       await user.click(input);
 
       await user.keyboard('{ArrowDown}');
-      expect(screen.getByText('Option 1')).toHaveClass('bg-gray-100');
+      expect(screen.getByText('Option 1').closest('[role="option"]')).toHaveClass('bg-gray-100');
 
       await user.keyboard('{ArrowDown}');
-      expect(screen.getByText('Option 2')).toHaveClass('bg-gray-100');
+      expect(screen.getByText('Option 2').closest('[role="option"]')).toHaveClass('bg-gray-100');
     });
 
     it('navigates options with ArrowUp', async () => {
@@ -407,7 +407,7 @@ describe('SearchableCombobox', () => {
       await user.keyboard('{ArrowDown}{ArrowDown}');
       await user.keyboard('{ArrowUp}');
 
-      expect(screen.getByText('Option 1')).toHaveClass('bg-gray-100');
+      expect(screen.getByText('Option 1').closest('[role="option"]')).toHaveClass('bg-gray-100');
     });
 
     it('wraps around when navigating past last option', async () => {
@@ -426,7 +426,7 @@ describe('SearchableCombobox', () => {
 
       await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
 
-      expect(screen.getByText('Option 1')).toHaveClass('bg-gray-100');
+      expect(screen.getByText('Option 1').closest('[role="option"]')).toHaveClass('bg-gray-100');
     });
 
     it('wraps around when navigating above first option', async () => {
@@ -445,7 +445,7 @@ describe('SearchableCombobox', () => {
 
       await user.keyboard('{ArrowUp}');
 
-      expect(screen.getByText('Option 2')).toHaveClass('bg-gray-100');
+      expect(screen.getByText('Option 2').closest('[role="option"]')).toHaveClass('bg-gray-100');
     });
 
     it('selects highlighted option with Enter', async () => {
@@ -661,7 +661,7 @@ describe('SearchableCombobox', () => {
       await user.click(input);
       await user.keyboard('{ArrowDown}');
 
-      const option1 = screen.getByText('Option 1');
+      const option1 = screen.getByText('Option 1').closest('[role="option"]');
       expect(option1).toHaveClass('bg-gray-100', 'text-gray-900');
     });
   });

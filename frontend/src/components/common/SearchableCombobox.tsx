@@ -1,9 +1,26 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+
+export interface ComboboxOption {
+  label: string;
+  value: string;
+  secondary?: string;
+}
+
+type OptionsInput = string[] | ComboboxOption[] | (() => Promise<string[] | ComboboxOption[]>);
+
+/** Normalize mixed options to ComboboxOption[] */
+function normalizeOptions(raw: string[] | ComboboxOption[]): ComboboxOption[] {
+  if (raw.length === 0) return [];
+  if (typeof raw[0] === 'string') {
+    return (raw as string[]).map(s => ({ label: s, value: s }));
+  }
+  return raw as ComboboxOption[];
+}
 
 interface SearchableComboboxProps {
   value: string;
   onChange: (value: string) => void;
-  options: string[] | (() => Promise<string[]>);
+  options: OptionsInput;
   placeholder?: string;
   required?: boolean;
   allowFreeText?: boolean;
@@ -26,8 +43,8 @@ export default function SearchableCombobox({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(value);
   const [highlightIndex, setHighlightIndex] = useState(-1);
-  const [loadedOptions, setLoadedOptions] = useState<string[] | null>(
-    Array.isArray(options) ? options : null
+  const [loadedOptions, setLoadedOptions] = useState<ComboboxOption[] | null>(
+    Array.isArray(options) ? normalizeOptions(options) : null
   );
   const [loading, setLoading] = useState(false);
 
@@ -36,13 +53,21 @@ export default function SearchableCombobox({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
+  // Re-normalize when options array reference changes
+  const normalizedSyncOptions = useMemo(() => {
+    if (Array.isArray(options)) {
+      return normalizeOptions(options);
+    }
+    return null;
+  }, [options]);
+
   // Load async options on first focus
   const loadAsyncOptions = useCallback(async () => {
     if (!Array.isArray(options) && !loadedOptions) {
       setLoading(true);
       try {
         const result = await options();
-        setLoadedOptions(result);
+        setLoadedOptions(normalizeOptions(result));
       } catch (error) {
         console.error('Failed to load options:', error);
         setLoadedOptions([]);
@@ -53,35 +78,36 @@ export default function SearchableCombobox({
   }, [options, loadedOptions]);
 
   // Get current options list
-  const getCurrentOptions = useCallback((): string[] => {
-    if (Array.isArray(options)) {
-      return options;
+  const getCurrentOptions = useCallback((): ComboboxOption[] => {
+    if (normalizedSyncOptions) {
+      return normalizedSyncOptions;
     }
     return loadedOptions || [];
-  }, [options, loadedOptions]);
+  }, [normalizedSyncOptions, loadedOptions]);
 
   // Filter options based on search text
-  const getFilteredOptions = useCallback((): string[] => {
+  const getFilteredOptions = useCallback((): ComboboxOption[] => {
     const currentOptions = getCurrentOptions();
     if (!search.trim()) {
-      return currentOptions.slice(0, 50);
+      return currentOptions.slice(0, 15);
     }
 
     const searchLower = search.toLowerCase();
-    const prefixMatches: string[] = [];
-    const substringMatches: string[] = [];
+    const prefixMatches: ComboboxOption[] = [];
+    const substringMatches: ComboboxOption[] = [];
 
-    currentOptions.forEach((option) => {
-      const optionLower = option.toLowerCase();
-      if (optionLower.startsWith(searchLower)) {
+    for (const option of currentOptions) {
+      const labelLower = option.label.toLowerCase();
+      if (labelLower.startsWith(searchLower)) {
         prefixMatches.push(option);
-      } else if (optionLower.includes(searchLower)) {
+      } else if (labelLower.includes(searchLower)) {
         substringMatches.push(option);
       }
-    });
+      // Early exit once we have enough matches
+      if (prefixMatches.length + substringMatches.length >= 15) break;
+    }
 
-    const combined = [...prefixMatches, ...substringMatches].slice(0, 50);
-    return combined;
+    return [...prefixMatches, ...substringMatches].slice(0, 15);
   }, [search, getCurrentOptions]);
 
   const filteredOptions = getFilteredOptions();
@@ -145,10 +171,10 @@ export default function SearchableCombobox({
     setHighlightIndex(-1);
   };
 
-  const handleOptionClick = (option: string) => {
-    onChange(option);
+  const handleOptionClick = (option: ComboboxOption) => {
+    onChange(option.value);
     setOpen(false);
-    setSearch(option);
+    setSearch(option.value);
     setHighlightIndex(-1);
   };
 
@@ -262,12 +288,12 @@ export default function SearchableCombobox({
             </div>
           ) : filteredOptions.length > 0 ? (
             filteredOptions.map((option, index) => {
-              const isSelected = option === value;
+              const isSelected = option.value === value;
               const isHighlighted = index === highlightIndex;
 
               return (
                 <div
-                  key={option}
+                  key={`${option.value}-${index}`}
                   ref={(el) => {
                     if (el) {
                       optionRefs.current.set(index, el);
@@ -276,7 +302,7 @@ export default function SearchableCombobox({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => handleOptionClick(option)}
-                  className={`w-full text-left px-3 py-2.5 text-sm cursor-pointer min-h-[44px] flex items-center ${
+                  className={`w-full text-left px-3 py-2.5 text-sm cursor-pointer min-h-[44px] flex items-center justify-between gap-2 ${
                     isSelected
                       ? 'bg-blue-50 text-blue-700 font-medium'
                       : isHighlighted
@@ -284,7 +310,10 @@ export default function SearchableCombobox({
                         : 'hover:bg-blue-50 text-gray-700'
                   }`}
                 >
-                  {option}
+                  <span className="truncate">{option.label}</span>
+                  {option.secondary && (
+                    <span className="text-xs text-gray-400 flex-shrink-0">{option.secondary}</span>
+                  )}
                 </div>
               );
             })

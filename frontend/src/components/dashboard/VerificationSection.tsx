@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { Profile } from './types';
@@ -106,6 +107,7 @@ function VerificationItem({
 }
 
 export default function VerificationSection({ profile, onProfileUpdate }: VerificationSectionProps) {
+  const { t } = useTranslation();
   const [connectingLinkedin, setConnectingLinkedin] = useState(false);
   const [connectingGithub, setConnectingGithub] = useState(false);
 
@@ -168,7 +170,7 @@ export default function VerificationSection({ profile, onProfileUpdate }: Verifi
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
-          Boost Your Profile
+          {t('dashboard.boostYourProfile')}
         </h2>
         <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
           {verifiedCount}/5 verified
