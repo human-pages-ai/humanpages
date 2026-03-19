@@ -526,7 +526,7 @@ export default function GptSetupPage() {
                     Connect to GPT →
                   </a>
                   <CopyButton
-                    text={`Name: Human Pages\nDescription: Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments.\nURL: https://mcp.humanpages.ai/api/mcp\nAuthentication: OAuth`}
+                    text={`Name: Human Pages\nDescription: Search, hire, and pay real humans for physical tasks. Browse freelancers by skill and location, post job listings, send offers, and manage payments.\nURL: https://mcp.humanpages.ai/mcp\nAuthentication: OAuth`}
                     label="Copy All Settings"
                   />
                 </div>
@@ -571,8 +571,8 @@ export default function GptSetupPage() {
                     <div>
                       <label className="block text-sm font-medium text-slate-900 mb-2">URL</label>
                       <div className="flex items-center gap-2 bg-slate-100 p-3 rounded-lg">
-                        <code className="flex-1 text-blue-600 font-mono text-sm break-all">https://mcp.humanpages.ai/api/mcp</code>
-                        <CopyButton text="https://mcp.humanpages.ai/api/mcp" label="Copy" />
+                        <code className="flex-1 text-blue-600 font-mono text-sm break-all">https://mcp.humanpages.ai/mcp</code>
+                        <CopyButton text="https://mcp.humanpages.ai/mcp" label="Copy" />
                       </div>
                     </div>
 
