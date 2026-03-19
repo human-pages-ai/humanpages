@@ -721,16 +721,16 @@ export default function Dashboard() {
                   icon="🎓"
                   color="indigo"
                   isEmpty={(!profile.education || profile.education.length === 0) && !profile.yearsOfExperience}
-                  emptyHint="Add experience to stand out"
+                  emptyHint="Add education, bootcamps, or certifications"
                 >
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-500 text-xs">Years of Experience:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.yearsOfExperience ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.yearsOfExperience != null && profile.yearsOfExperience > 0
-                          ? `${profile.yearsOfExperience} ${profile.yearsOfExperience === 1 ? 'year' : 'years'}`
-                          : '—'}
-                      </span>
+                      <span className="text-gray-500 text-xs">Years of Experience:</span>
+                      {profile.yearsOfExperience != null && profile.yearsOfExperience > 0 ? (
+                        <span className="text-sm font-medium text-gray-900 block">{profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? 'year' : 'years'}</span>
+                      ) : (
+                        <span className="text-sm text-orange-600 block">Add your experience to stand out</span>
+                      )}
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">Education:</span>
@@ -739,12 +739,12 @@ export default function Dashboard() {
                           {profile.education.map((edu) => (
                             <div key={edu.id} className="text-xs min-w-0">
                               <span className="font-medium text-gray-900 truncate block">{edu.institution}</span>
-                              {edu.degree && <span className="text-gray-600 truncate block"> — {edu.degree}</span>}
+                              {edu.degree && <span className="text-gray-600 truncate block">{edu.degree}</span>}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400">None added</span>
+                        <span className="text-sm text-orange-600 block">Add education, bootcamps, or certifications</span>
                       )}
                     </div>
                   </div>

@@ -152,6 +152,47 @@ export default function Onboarding() {
   // CV auto-advance is handled by the onUploadComplete callback in useCvProcessing.
   // No effect needed — the callback fires directly after successful upload.
 
+  // ─── Save step data (for edit mode) ───
+  const saveCurrentStepData = useCallback(async (stepId: StepId) => {
+    try {
+      // Always save profile fields
+      await api.updateProfile({
+        name: form.name.trim() || undefined,
+        bio: form.bio.trim() || null,
+        location: form.location.trim() || null,
+        skills: form.skills,
+        equipment: form.equipment.length > 0 ? form.equipment : [],
+        timezone: form.timezone.trim() || null,
+        weeklyCapacityHours: form.weeklyCapacityHours,
+        workType: form.workType.trim() || null,
+        yearsOfExperience: form.yearsOfExperience,
+        languages: form.languageEntries.length > 0
+          ? [...new Map(form.languageEntries.map(e => [e.language.trim().toLowerCase(), serializeLanguageEntry(e)])).values()]
+          : null,
+      });
+
+      // Save services if on services step
+      if (stepId === 'services') {
+        for (const svc of form.services) {
+          if (svc.title.trim()) {
+            const price = svc.price?.trim() ? parseFloat(svc.price.trim()) : null;
+            const validPrice = price !== null && !isNaN(price) && price > 0 ? price : null;
+            await api.createService({
+              title: svc.title.trim(),
+              description: svc.description.trim(),
+              category: svc.category.trim(),
+              priceMin: validPrice,
+              priceCurrency: svc.currency,
+              priceUnit: svc.unit || null,
+            }).catch(err => console.error('Service save failed:', err));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Auto-save step data failed:', err);
+    }
+  }, [form]);
+
   // ─── Navigation ───
   const submittingRef = useRef(false);
 
@@ -162,6 +203,11 @@ export default function Onboarding() {
     // Save draft immediately before transitioning (for slow internet)
     const saveNow = (window as any).__draftSaveNow;
     if (saveNow) saveNow();
+
+    // In edit mode: save current step data when advancing or going back
+    if (urlStepId && form.profileCompleted && currentStepId) {
+      saveCurrentStepData(currentStepId);
+    }
 
     // Show step completion toast when advancing forward
     if (clamped > position && position > 0) {
@@ -185,7 +231,7 @@ export default function Onboarding() {
         heading?.focus();
       });
     });
-  }, [position, total, flow, setSearchParams, form]);
+  }, [position, total, flow, setSearchParams, form, urlStepId, currentStepId, saveCurrentStepData]);
 
   // Universal next/skip/back — every step uses these
   const handleNext = useCallback(() => {
@@ -497,7 +543,10 @@ export default function Onboarding() {
             {urlStepId && form.profileCompleted && (
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={async () => {
+                  await saveCurrentStepData(currentStepId);
+                  navigate('/dashboard');
+                }}
                 className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
