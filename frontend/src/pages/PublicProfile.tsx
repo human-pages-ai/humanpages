@@ -189,12 +189,11 @@ export default function PublicProfile() {
     );
   }
 
-  // Prepare OG description: use truncated bio (160 chars) or default message
-  const ogDescription = profile.bio && profile.bio.length > 0
-    ? profile.bio.length > 160
-      ? profile.bio.substring(0, 160) + '...'
-      : profile.bio
-    : `Hire ${formatPublicName(profile.name)} on HumanPages — the AI-powered freelance marketplace with 0% commission`;
+  // OG description: skills-based, never bio (bio may contain personal info)
+  const skillsSummary = profile.skills?.slice(0, 5).join(', ');
+  const ogDescription = skillsSummary
+    ? `${formatPublicName(profile.name)} — ${skillsSummary}. Hire on HumanPages, the AI-powered freelance marketplace with 0% commission.`
+    : `Hire ${formatPublicName(profile.name)} on HumanPages — the AI-powered freelance marketplace with 0% commission.`;
 
   return (
     <div className="min-h-screen bg-gray-50">
