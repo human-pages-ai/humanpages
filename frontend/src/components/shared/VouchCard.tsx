@@ -45,8 +45,8 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
     );
   }
 
-  const displayUrl = getProfileDisplayUrl({ id: userId });
-  const shareUrl = getProfileUrl({ id: userId });
+  const displayUrl = getProfileDisplayUrl({ username, id: userId });
+  const shareUrl = getProfileUrl({ username, id: userId });
   const pct = Math.min(100, Math.round((vouchCount / vouchTarget) * 100));
 
   const handleShare = async () => {

@@ -183,11 +183,16 @@ router.post('/google/callback', async (req, res) => {
           if (referrer) validReferrerId = referrer.id;
         }
 
+        // Generate username from name
+        const { generateUsername } = await import('../routes/auth.js');
+        const username = await generateUsername(name);
+
         // 3. Create new user (no password needed for OAuth-only)
         human = await prisma.human.create({
           data: {
             email,
             name,
+            username,
             googleId,
             contactEmail: email,
             referredBy: validReferrerId,
@@ -401,10 +406,15 @@ router.post('/linkedin/callback', async (req, res) => {
           if (referrer) validReferrerId = referrer.id;
         }
 
+        // Generate username from name
+        const { generateUsername } = await import('../routes/auth.js');
+        const username = await generateUsername(profile.name);
+
         human = await prisma.human.create({
           data: {
             email: profile.email,
             name: profile.name,
+            username,
             linkedinId: profile.linkedinId,
             linkedinHeadline: profile.headline || null,
             contactEmail: profile.email,

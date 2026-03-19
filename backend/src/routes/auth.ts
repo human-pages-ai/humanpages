@@ -16,6 +16,24 @@ import { verifyCaptcha } from '../lib/captcha.js';
 
 const router = Router();
 
+async function generateUsername(name: string): Promise<string> {
+  const firstName = name.split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const base = firstName.length >= 2 ? firstName : 'user';
+
+  // Try up to 10 times to find a unique username
+  for (let i = 0; i < 10; i++) {
+    const suffix = String(Math.floor(Math.random() * 1000)).padStart(2, '0');
+    const candidate = `${base}${suffix}`;
+    const existing = await prisma.human.findUnique({
+      where: { username: candidate },
+      select: { id: true },
+    });
+    if (!existing) return candidate;
+  }
+  // Fallback: use base + timestamp
+  return `${base}${Date.now().toString(36).slice(-4)}`;
+}
+
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(72),
@@ -99,11 +117,13 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
     }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const username = await generateUsername(name);
     const human = await prisma.human.create({
       data: {
         email,
         passwordHash,
         name,
+        username,
         contactEmail: email,
         referredBy: validReferrerId,
         referralCode: generateReferralCode(),
@@ -112,7 +132,7 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
         utmMedium: utmMedium || undefined,
         utmCampaign: utmCampaign || undefined,
       },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, username: true },
     });
 
     // Track signup in PostHog (pass req for country geolocation)
@@ -597,11 +617,13 @@ router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
 
       // Create account with WhatsApp as primary identity (no email/password needed)
       const placeholderEmail = `wa_${phone.replace('+', '')}@whatsapp.hp.internal`;
+      const username = await generateUsername(name);
 
       human = await prisma.human.create({
         data: {
           email: placeholderEmail,
           name,
+          username,
           contactEmail: null,
           whatsapp: phone,
           whatsappVerified: true,
@@ -613,7 +635,7 @@ router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
           utmMedium: utmMedium || undefined,
           utmCampaign: utmCampaign || undefined,
         },
-        select: { id: true, email: true, name: true },
+        select: { id: true, email: true, name: true, username: true },
       });
 
       isNew = true;
@@ -647,4 +669,5 @@ router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
   }
 });
 
+export { generateUsername };
 export default router;
