@@ -39,7 +39,14 @@
     "disabled": "Disabled",
     "skipForNow": "Skip for now",
     "refresh": "Refresh",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "saving": "Saving...",
+    "submitting": "Submitting...",
+    "agent": "Agent",
+    "unnamed": "Unnamed",
+    "opening": "Opening...",
+    "clear": "Clear",
+    "connect": "Connect"
   },
   "nav": {
     "home": "Home",
@@ -513,7 +520,7 @@
     "shareOnX": "Share on X",
     "shareOnLinkedIn": "Share on LinkedIn",
     "goToDashboard": "Go to Dashboard",
-    "shareText": "I'm now available for hire by AI agents on Humans! Check out my profile:",
+    "shareText": "Vouch for me on HumanPages — the AI hiring platform with 0% commission",
     "more": "+{{count}} more",
     "bioTipTitle": "Add your link to your social bios",
     "bioTipDesc": "Paste your profile link in your LinkedIn, X, GitHub, and Instagram bios so AI agents can find and hire you directly.",
@@ -1158,5 +1165,16 @@
     "Fitness Training": "Fitness Training",
     "Tailoring & Alterations": "Tailoring & Alterations",
     "Auto Repair": "Auto Repair"
+  },
+  "profile": {
+    "weeklyHours": {
+      "flexible": "Flexible",
+      "format": "{{hours}} hours/week"
+    },
+    "workType": {
+      "both": "Both",
+      "digital": "Digital",
+      "physical": "In-Person"
+    }
   }
 }
