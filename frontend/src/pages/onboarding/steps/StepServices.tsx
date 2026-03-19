@@ -36,6 +36,34 @@ const TIMEZONE_CURRENCY_MAP: Record<string, string> = {
   'America/Bogota': 'COP',
   'America/Lima': 'PEN',
   'America/Argentina/Buenos_Aires': 'ARS',
+  'Asia/Jerusalem': 'ILS',
+  'Asia/Tel_Aviv': 'ILS',
+  'Asia/Karachi': 'PKR',
+  'Asia/Dhaka': 'BDT',
+  'Africa/Nairobi': 'KES',
+  'Africa/Accra': 'GHS',
+  'Asia/Kuala_Lumpur': 'MYR',
+  'Asia/Singapore': 'SGD',
+  'Asia/Taipei': 'TWD',
+  'Europe/Istanbul': 'TRY',
+  'Europe/Moscow': 'RUB',
+  'Europe/Kiev': 'UAH',
+  'Europe/Warsaw': 'PLN',
+  'Europe/Prague': 'CZK',
+  'Europe/Budapest': 'HUF',
+  'Europe/Bucharest': 'RON',
+  'Europe/Stockholm': 'SEK',
+  'Europe/Oslo': 'NOK',
+  'Europe/Copenhagen': 'DKK',
+  'Pacific/Auckland': 'NZD',
+  'Australia/Sydney': 'AUD',
+  'America/Toronto': 'CAD',
+  'America/Vancouver': 'CAD',
+  'Asia/Dubai': 'AED',
+  'Asia/Riyadh': 'SAR',
+  'Africa/Cairo': 'EGP',
+  'Asia/Colombo': 'LKR',
+  'Asia/Kathmandu': 'NPR',
 };
 
 // All currencies with flags
@@ -191,7 +219,8 @@ interface StepServicesProps {
 export function StepServices({ cvProcessing, cvData, skills, services, setServices, equipment, setEquipment, equipmentOnly, onNext, onSkip: _onSkip, error }: StepServicesProps) {
   const { t } = useTranslation();
   const [addingService, setAddingService] = useState(false);
-  const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
+  const localeCurrency = detectUserCurrency();
+  const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: localeCurrency, unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
   const [priceError, setPriceError] = useState('');
   // Equipment two-picker state (category + tool)
@@ -216,7 +245,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
 
   const handleCancelService = () => {
     setAddingService(false);
-    setNewService({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
+    setNewService({ title: '', category: '', subcategory: '', description: '', price: '', currency: localeCurrency, unit: 'per hour' });
     setCategoryError(false);
     setPriceError('');
     setShowTitleSuggestions(false);
@@ -236,7 +265,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
       subcategory: svc.subcategory || '',
       description: svc.description || '',
       price: '',
-      currency: 'USD',
+      currency: localeCurrency,
       unit: 'per hour',
     }]);
   };
@@ -290,7 +319,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
       }
     }
     setServices(prev => [...prev, { ...newService, title: newService.title.trim(), category: newService.category.trim() }]);
-    setNewService({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
+    setNewService({ title: '', category: '', subcategory: '', description: '', price: '', currency: localeCurrency, unit: 'per hour' });
     setAddingService(false);
     setCategoryError(false);
     setPriceError('');
@@ -408,6 +437,19 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
       }
     };
 
+    // Add custom equipment from free-text input (category or category + tool)
+    const handleAddCustomEquipment = () => {
+      if (eqCategory.trim()) {
+        autoAddEquipment(eqCategory, eqTool);
+      }
+    };
+
+    // Whether the "Add" button should be visible: user typed custom text that isn't a
+    // predefined category with tools (those auto-add on selection), OR has custom tool text
+    const showAddButton = eqCategory.trim() && (
+      !TOOLS_BY_CATEGORY[eqCategory]?.length || eqTool.trim()
+    );
+
     return (
       <>
         <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.equipment.heading')}</h2>
@@ -432,6 +474,12 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                   onChange={handleCategoryChange}
                   suggestions={EQUIPMENT_CATEGORIES}
                   placeholder="Phone, Camera, Vehicle..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && eqCategory.trim() && !TOOLS_BY_CATEGORY[eqCategory]?.length) {
+                      e.preventDefault();
+                      handleAddCustomEquipment();
+                    }
+                  }}
                 />
               </div>
               {eqCategory && TOOLS_BY_CATEGORY[eqCategory]?.length > 0 && (
@@ -452,6 +500,15 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                 </div>
               )}
             </div>
+            {showAddButton && (
+              <button
+                type="button"
+                onClick={handleAddCustomEquipment}
+                className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium text-sm hover:bg-orange-600 active:bg-orange-700 transition-colors min-h-[44px]"
+              >
+                Add {eqTool.trim() ? `${eqCategory} - ${eqTool.trim()}` : eqCategory.trim()}
+              </button>
+            )}
             <p className="text-xs text-slate-400 mt-1">{t('onboarding.equipment.hint')}</p>
           </>
         )}
@@ -535,8 +592,8 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                           suggestions={(() => {
                             const suggestedCurrency = detectUserCurrency();
                             const suggested = [
-                              ALL_CURRENCIES.find(c => c.code === 'USD'),
                               suggestedCurrency !== 'USD' ? ALL_CURRENCIES.find(c => c.code === suggestedCurrency) : null,
+                              ALL_CURRENCIES.find(c => c.code === 'USD'),
                             ].filter(Boolean) as typeof ALL_CURRENCIES;
                             const rest = ALL_CURRENCIES.filter(c => !suggested.some(s => s?.code === c.code));
                             return [
@@ -644,6 +701,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                 id="service-category"
                 list="service-categories-list"
                 type="text"
+                autoComplete="off"
                 value={newService.category}
                 onChange={(e) => { setNewService({ ...newService, category: e.target.value, subcategory: '' }); setCategoryError(false); setShowTitleSuggestions(false); }}
                 placeholder="Start typing to find..."

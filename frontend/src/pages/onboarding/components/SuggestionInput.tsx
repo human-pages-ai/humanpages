@@ -67,7 +67,8 @@ export function SuggestionInput({
     setInputText('');
     setIsEditing(false);
     setIsOpen(false);
-    inputRef.current?.focus();
+    // Don't re-focus — it triggers handleFocus which re-opens the dropdown
+    inputRef.current?.blur();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,6 +140,7 @@ export function SuggestionInput({
       <input
         ref={inputRef}
         type="text"
+        autoComplete="off"
         value={displayValue}
         onChange={handleInputChange}
         onFocus={handleFocus}

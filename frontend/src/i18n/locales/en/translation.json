@@ -22,6 +22,7 @@
     "none": "None",
     "optional": "optional",
     "required": "required",
+    "copy": "Copy",
     "copied": "Copied!",
     "error": "Something went wrong",
     "success": "Success!",
@@ -318,17 +319,19 @@
       "title": "Share Your Profile"
     },
     "account": {
-      "confirmDelete": "Confirm delete",
-      "confirmPassword": "Confirm password",
-      "dangerZone": "Danger zone",
-      "deleteButton": "Delete button",
-      "deleteDesc": "Delete desc",
-      "deleteTitle": "Delete title",
-      "exportButton": "Export button",
-      "exportDesc": "Export desc",
-      "exportTitle": "Export title",
-      "analyticsDesc": "Analytics Description",
-      "analyticsTitle": "Analytics Title"
+      "confirmDelete": "Yes, Delete My Account",
+      "confirmDeleteTitle": "Delete Account?",
+      "confirmDeleteMsg": "This will permanently delete your account and all your data.",
+      "confirmPassword": "Enter your password to confirm",
+      "dangerZone": "Account Management",
+      "deleteButton": "Delete Account",
+      "deleteDesc": "Permanently delete your account and all associated data. This action cannot be undone.",
+      "deleteTitle": "Delete Account",
+      "exportButton": "Export Data",
+      "exportDesc": "Download a copy of all your data in JSON format.",
+      "exportTitle": "Export Your Data",
+      "analyticsDesc": "Help us improve by sharing anonymous usage data. We use PostHog with no cookies and memory-only storage. You can opt out at any time.",
+      "analyticsTitle": "Usage Analytics"
     },
     "availability": {
       "available": "Available",

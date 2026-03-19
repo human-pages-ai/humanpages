@@ -432,7 +432,12 @@ function AppRoutes() {
 }
 
 function ConnectedFeedbackWidget() {
+  const location = useLocation();
   const { isOpen, defaultType, openFeedback, closeFeedback } = useFeedback();
+
+  // Hide the floating feedback button during onboarding to avoid overlapping the Next/Submit buttons
+  if (location.pathname === '/onboarding') return null;
+
   return (
     <FeedbackWidget
       defaultType={defaultType}

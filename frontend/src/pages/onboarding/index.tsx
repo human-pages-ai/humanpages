@@ -129,15 +129,20 @@ export default function Onboarding() {
   const labels = useMemo(() => getStepLabels(flow), [flow]);
   const total = totalSteps(flow);
 
-  // Derive position from URL param, falling back to draft
+  // Derive position from URL param; always start at step 1 (connect) on fresh entry
   const urlStepId = searchParams.get('step') as StepId | null;
   const position = useMemo(() => {
     if (urlStepId) {
       const idx = flow.findIndex(s => s.id === urlStepId);
       if (idx !== -1) return idx + 1;
     }
-    return Math.max(1, Math.min(draft?.step || 1, total));
-  }, [urlStepId, flow, draft, total]);
+    // When there is no ?step= param (fresh entry to onboarding), always start at
+    // step 1 (connect). This prevents stale drafts from skipping StepConnect —
+    // e.g. when a user started email signup, got partway through, then switched to
+    // Google OAuth in the same session. The draft's step value is only used when
+    // the URL explicitly has a ?step= param (handled above).
+    return 1;
+  }, [urlStepId, flow, total]);
 
   const [loading, setLoading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
@@ -211,8 +216,38 @@ export default function Onboarding() {
           : null,
       });
 
+      // Save education if on education step
+      if (stepId === 'education') {
+        // Delete existing then re-create
+        const existingProfile = await api.getProfile();
+        if (existingProfile.educations?.length) {
+          for (const edu of existingProfile.educations) {
+            await api.deleteEducation(edu.id).catch(err => console.error('Education delete failed:', err));
+          }
+        }
+        for (const edu of form.educationEntries) {
+          if (edu.institution.trim()) {
+            await api.addEducation({
+              institution: edu.institution.trim(),
+              degree: edu.degree.trim() || undefined,
+              field: edu.field.trim() || undefined,
+              country: edu.country.trim() || undefined,
+              startYear: edu.startYear || undefined,
+              endYear: edu.endYear || undefined,
+            }).catch(err => console.error('Education save failed:', err));
+          }
+        }
+      }
+
       // Save services if on services step
       if (stepId === 'services') {
+        // Delete existing then re-create
+        const existingServices = await api.getServices();
+        if (existingServices?.length) {
+          for (const svc of existingServices) {
+            await api.deleteService(svc.id).catch(err => console.error('Service delete failed:', err));
+          }
+        }
         for (const svc of form.services) {
           if (svc.title.trim()) {
             const price = svc.price?.trim() ? parseFloat(svc.price.trim()) : null;
@@ -264,6 +299,9 @@ export default function Onboarding() {
 
     setTransitioning(true);
     prevPositionRef.current = position;
+
+    // Scroll to top immediately — the rAF scroll below may race with rendering
+    window.scrollTo(0, 0);
 
     requestAnimationFrame(() => {
       setSearchParams({ step: flow[clamped - 1].id }, { replace: true });
@@ -354,8 +392,23 @@ export default function Onboarding() {
         nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => console.error('OAuth photo import failed:', err)));
       }
 
+      // Delete existing education entries before re-creating to avoid duplicates
+      const existingProfile = await api.getProfile();
+      if (existingProfile.educations?.length) {
+        for (const edu of existingProfile.educations) {
+          await api.deleteEducation(edu.id).catch(err => console.error('Education delete failed:', err));
+        }
+      }
+      // Delete existing services before re-creating to avoid duplicates
+      const existingServices = await api.getServices();
+      if (existingServices?.length) {
+        for (const svc of existingServices) {
+          await api.deleteService(svc.id).catch(err => console.error('Service delete failed:', err));
+        }
+      }
+
       for (const edu of form.educationEntries) {
-        if (edu.institution.trim() || edu.degree.trim() || edu.field.trim()) {
+        if (edu.institution.trim()) {
           nonBlocking.push(
             api.addEducation({ institution: edu.institution.trim(), degree: edu.degree.trim() || undefined, field: edu.field.trim() || undefined, country: edu.country.trim() || undefined, startYear: edu.startYear || undefined, endYear: edu.endYear || undefined })
               .then(() => {}).catch(err => console.error('Education save failed:', err))

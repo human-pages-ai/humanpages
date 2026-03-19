@@ -90,7 +90,7 @@ describe('Services API', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should reject empty description', async () => {
+    it('should accept empty description (defaults to empty string)', async () => {
       const response = await authRequest(user.token)
         .post('/api/services')
         .send({
@@ -99,7 +99,8 @@ describe('Services API', () => {
           category: 'other',
         });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(201);
+      expect(response.body.description).toBe('');
     });
 
     it('should reject empty category', async () => {

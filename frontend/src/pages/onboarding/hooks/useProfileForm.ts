@@ -294,6 +294,19 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
         })));
       }
 
+      // Load services from API (relation data)
+      if (data.services?.length && useServer) {
+        setServices(data.services.map((s: any) => ({
+          title: s.title || '',
+          category: s.category || '',
+          subcategory: s.subcategory || '',
+          description: s.description || '',
+          price: s.priceMin ? String(s.priceMin) : '',
+          currency: s.priceCurrency || 'USD',
+          unit: s.priceUnit || 'per hour',
+        })));
+      }
+
       // If user has a username, use it; otherwise auto-generate one from name
       if (data.username && useServer) {
         setUsername(data.username);

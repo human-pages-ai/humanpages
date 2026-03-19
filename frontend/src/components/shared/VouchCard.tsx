@@ -27,7 +27,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-slate-600">Vouches</span>
+              <span className="text-xs font-medium text-slate-600">{t('dashboard.vouches.title')}</span>
               <span className="text-sm font-bold text-orange-600">0/10</span>
             </div>
             <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -36,9 +36,9 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Your profile link</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">{t('onboarding.vouch.profileLinkLabel')}</label>
           <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg mb-3">
-            <span className="text-sm text-slate-400 flex-1 truncate font-mono">Loading...</span>
+            <span className="text-sm text-slate-400 flex-1 truncate font-mono">{t('common.loading')}</span>
           </div>
         </div>
       </div>
@@ -74,7 +74,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
       <div className="flex items-center gap-4">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-medium text-slate-600">Vouches</span>
+            <span className="text-xs font-medium text-slate-600">{t('dashboard.vouches.title')}</span>
             <span className="text-sm font-bold text-orange-600">{vouchCount}/{vouchTarget}</span>
           </div>
           <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -85,25 +85,25 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
 
       {/* Profile URL */}
       <div>
-        <label htmlFor="vouch-profile-url" className="block text-xs font-medium text-slate-600 mb-1">Your profile link</label>
+        <label htmlFor="vouch-profile-url" className="block text-xs font-medium text-slate-600 mb-1">{t('onboarding.vouch.profileLinkLabel')}</label>
 
         {/* Always show the full computed URL as read-only */}
         <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg mb-3">
           <span className="text-sm text-slate-700 flex-1 truncate font-mono">{displayUrl}</span>
           <button
             type="button"
-            onClick={async () => { const success = await copyToClipboard(shareUrl); if (success) toast.success('Copied!'); }}
+            onClick={async () => { const success = await copyToClipboard(shareUrl); if (success) toast.success(t('common.copied')); }}
             className="text-xs text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
           >
-            Copy
+            {t('common.copy')}
           </button>
         </div>
 
         {/* Username edit field — only shown in wizard mode (onUsernameChange provided) */}
         {onUsernameChange && (
           <>
-            <label htmlFor="vouch-username" className="block text-xs font-medium text-slate-600 mb-1">Username (optional)</label>
-            <p className="text-xs text-slate-500 mb-1.5">Your username is public and visible in your profile link.</p>
+            <label htmlFor="vouch-username" className="block text-xs font-medium text-slate-600 mb-1">{t('onboarding.vouch.usernameLabel')}</label>
+            <p className="text-xs text-slate-500 mb-1.5">{t('onboarding.vouch.usernameHint')}</p>
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-slate-500 whitespace-nowrap">
                 {typeof window !== 'undefined' ? `${window.location.host}/u/` : 'humanpages.ai/u/'}
@@ -128,9 +128,9 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
         className="w-full py-2.5 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors text-sm flex items-center justify-center gap-2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-        Share & Get Vouched
+        {t('onboarding.vouch.shareButton')}
       </button>
-      <p className="text-xs text-slate-500 text-center">Ask colleagues who know your work to vouch for you</p>
+      <p className="text-xs text-slate-500 text-center">{t('onboarding.vouch.vouchHint')}</p>
     </div>
   );
 }
