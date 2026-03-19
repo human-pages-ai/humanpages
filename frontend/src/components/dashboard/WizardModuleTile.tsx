@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface WizardModuleTileProps {
   title: string;
@@ -31,6 +32,7 @@ export default function WizardModuleTile({
   isEmpty = false,
   emptyHint = 'Add this to boost discovery',
 }: WizardModuleTileProps) {
+  const { t } = useTranslation();
   const c = colorMap[color];
 
   return (
@@ -46,7 +48,7 @@ export default function WizardModuleTile({
           to={`/onboarding?step=${stepId}`}
           className={`text-xs font-medium ${isEmpty ? 'text-orange-500 hover:text-orange-600' : `${c.accent} hover:opacity-80`}`}
         >
-          {isEmpty ? '+ Add' : 'Edit'}
+          {isEmpty ? t('dashboard.wizardTile.addButton') : t('dashboard.wizardTile.editButton')}
         </Link>
       </div>
 

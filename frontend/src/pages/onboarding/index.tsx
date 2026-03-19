@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
 import { posthog } from '../../lib/posthog';
@@ -30,24 +31,25 @@ import { StepAvailability } from './steps/StepAvailability';
 import { StepFinish } from './steps/StepFinish';
 import { StepErrorBoundary } from './components/StepErrorBoundary';
 
-// Step completion gamification messages
-const STEP_COMPLETION: Record<StepId, { emoji: string; message: string }> = {
-  'connect':      { emoji: '🔔', message: 'Connected! Agents can reach you now' },
-  'cv-upload':    { emoji: '📄', message: 'CV uploaded! We\'re analyzing it...' },
-  'skills':       { emoji: '⚡', message: 'Skills added! You\'re searchable now' },
-  'equipment':    { emoji: '🔧', message: 'Equipment listed! Physical tasks unlocked' },
-  'vouch':        { emoji: '🤝', message: 'Profile shared! Vouches build trust' },
-  'location':     { emoji: '📍', message: 'Location set! Local jobs unlocked' },
-  'education':    { emoji: '🎓', message: 'Experience added! Standing out' },
-  'payment':      { emoji: '💰', message: 'Payment set! Ready to earn' },
-  'services':     { emoji: '💼', message: 'Services defined! Agents can hire you' },
-  'profile':      { emoji: '👤', message: 'Profile looking great!' },
-  'availability': { emoji: '📅', message: 'Availability set! Almost done' },
-  'verification': { emoji: '✅', message: 'Verified! Maximum trust score' },
+// Step completion emojis — universal
+const STEP_COMPLETION_EMOJIS: Record<StepId, string> = {
+  'connect':      '🔔',
+  'cv-upload':    '📄',
+  'skills':       '⚡',
+  'equipment':    '🔧',
+  'vouch':        '🤝',
+  'location':     '📍',
+  'education':    '🎓',
+  'payment':      '💰',
+  'services':     '💼',
+  'profile':      '👤',
+  'availability': '📅',
+  'verification': '✅',
 };
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const draft = useMemo(() => loadDraft(), []);
 
@@ -213,9 +215,12 @@ export default function Onboarding() {
     // Show step completion toast when advancing forward
     if (clamped > position && position > 0) {
       const completedStep = flow[position - 1];
-      const completion = STEP_COMPLETION[completedStep.id];
-      if (completion) {
-        toast(completion.message, { icon: completion.emoji, duration: 2000 });
+      const stepId = completedStep.id;
+      const emoji = STEP_COMPLETION_EMOJIS[stepId];
+      const messageKey = stepId === 'cv-upload' ? 'cvUpload' : stepId;
+      const message = t(`onboarding.completion.${messageKey}`);
+      if (message) {
+        toast(message, { icon: emoji, duration: 2000 });
       }
     }
 

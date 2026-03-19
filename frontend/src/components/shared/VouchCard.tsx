@@ -2,6 +2,7 @@
  * Shared vouch/share card — used in both the onboarding wizard (StepVouch)
  * and the dashboard (VouchSection). Single source of truth for the share UX.
  */
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { getProfileUrl, getProfileDisplayUrl } from '../../lib/profileUrl';
 import { copyToClipboard } from '../../lib/clipboard';
@@ -17,9 +18,8 @@ interface VouchCardProps {
   vouchTarget?: number;
 }
 
-const SHARE_TEXT = 'Vouch for me on HumanPages — the AI hiring platform with 0% commission';
-
 export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, vouchTarget = 10 }: VouchCardProps) {
+  const { t } = useTranslation();
   // If userId is not yet loaded from the API, show a loading state
   if (!userId) {
     return (
@@ -50,20 +50,21 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
   const pct = Math.min(100, Math.round((vouchCount / vouchTarget) * 100));
 
   const handleShare = async () => {
+    const shareText = t('welcome.shareText');
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'HumanPages', text: SHARE_TEXT, url: shareUrl });
+        await navigator.share({ title: 'HumanPages', text: shareText, url: shareUrl });
         return;
       } catch (err: any) {
         if (err.name === 'AbortError') return;
       }
     }
     // Fallback: copy to clipboard
-    const success = await copyToClipboard(`${SHARE_TEXT} ${shareUrl}`);
+    const success = await copyToClipboard(`${shareText} ${shareUrl}`);
     if (success) {
-      toast.success('Link copied!');
+      toast.success(t('common.copied'));
     } else {
-      toast.error('Could not copy link');
+      toast.error(t('common.error'));
     }
   };
 

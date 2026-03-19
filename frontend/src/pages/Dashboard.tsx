@@ -621,22 +621,22 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* 1. Notifications & Connect */}
                 <WizardModuleTile
-                  title="Notifications & Connect"
+                  title={t('dashboard.tiles.notifications.title')}
                   stepId="connect"
                   icon="🔔"
                   color="blue"
                   isEmpty={!profile.pushNotifications && !telegramStatus?.connected && !profile.whatsapp}
-                  emptyHint="Enable notifications to never miss a job offer"
+                  emptyHint={t('dashboard.tiles.notifications.emptyHint')}
                 >
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-500 text-xs">Push Notifications:</span>{' '}
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.notifications.push')}:</span>{' '}
                       <span className={`text-sm font-medium ${profile.pushNotifications ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.pushNotifications ? 'Enabled' : 'Disabled'}
+                        {profile.pushNotifications ? t('common.enabled') : t('common.disabled')}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs">Telegram:</span>{' '}
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.notifications.telegram')}:</span>{' '}
                       {telegramStatus?.connected ? (
                         <span className="text-sm text-green-600 font-medium">✓ Connected</span>
                       ) : (
@@ -644,7 +644,7 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs">WhatsApp:</span>{' '}
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.notifications.whatsapp')}:</span>{' '}
                       {profile.whatsapp ? (
                         <span className="text-sm text-green-600 font-medium">✓ Connected</span>
                       ) : (
@@ -656,12 +656,12 @@ export default function Dashboard() {
 
                 {/* 2. Skills */}
                 <WizardModuleTile
-                  title="Skills"
+                  title={t('dashboard.tiles.skills.title')}
                   stepId="skills"
                   icon="⚡"
                   color="purple"
                   isEmpty={!profile.skills || profile.skills.length === 0}
-                  emptyHint="Add skills so agents can find you"
+                  emptyHint={t('dashboard.tiles.skills.emptyHint')}
                 >
                   {profile.skills && profile.skills.length > 0 ? (
                     <ChipList items={profile.skills} color="blue" />
@@ -670,12 +670,12 @@ export default function Dashboard() {
 
                 {/* 3. Equipment */}
                 <WizardModuleTile
-                  title="Equipment"
+                  title={t('dashboard.tiles.equipment.title')}
                   stepId="equipment"
                   icon="🔧"
                   color="amber"
                   isEmpty={!profile.equipment || profile.equipment.length === 0}
-                  emptyHint="List your tools to match physical tasks"
+                  emptyHint={t('dashboard.tiles.equipment.emptyHint')}
                 >
                   {profile.equipment && profile.equipment.length > 0 ? (
                     <ChipList items={profile.equipment} color="amber" showCategory={true} />
@@ -684,16 +684,16 @@ export default function Dashboard() {
 
                 {/* 4. Location */}
                 <WizardModuleTile
-                  title="Location"
+                  title={t('dashboard.tiles.location.title')}
                   stepId="location"
                   icon="📍"
                   color="green"
                   isEmpty={!profile.location && !profile.timezone}
-                  emptyHint="Set location so agents find you for nearby tasks"
+                  emptyHint={t('dashboard.tiles.location.emptyHint')}
                 >
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-500 text-xs">Location:</span>{' '}
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.location.title')}:</span>{' '}
                       <span className={`text-sm font-medium ${profile.location ? 'text-gray-900' : 'text-gray-400'}`}>
                         {profile.location ? (
                           profile.locationGranularity === 'neighborhood' && profile.neighborhood
@@ -705,10 +705,10 @@ export default function Dashboard() {
                     <div>
                       <span className="text-gray-500 text-xs">Timezone:</span>{' '}
                       <span className={`text-sm font-medium ${profile.timezone ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.timezone ? `${formatTimezone(profile.timezone)}${profile.locationLat === undefined ? ' (auto-detected)' : ''}` : '—'}
+                        {profile.timezone ? `${formatTimezone(profile.timezone)}${profile.locationLat === undefined ? ` ${t('dashboard.tiles.location.autoDetected')}` : ''}` : '—'}
                       </span>
                       {profile.timezone && profile.locationLat === undefined && (
-                        <span className="text-xs text-orange-600 ml-1">Please verify this is accurate</span>
+                        <span className="text-xs text-orange-600 ml-1">{t('dashboard.tiles.location.verifyAccuracy')}</span>
                       )}
                     </div>
                   </div>
@@ -716,24 +716,24 @@ export default function Dashboard() {
 
                 {/* 5. Education & Experience */}
                 <WizardModuleTile
-                  title="Education & Experience"
+                  title={t('dashboard.tiles.education.title')}
                   stepId="education"
                   icon="🎓"
                   color="indigo"
                   isEmpty={(!profile.education || profile.education.length === 0) && !profile.yearsOfExperience}
-                  emptyHint="Add education, bootcamps, or certifications"
+                  emptyHint={t('dashboard.tiles.education.emptyHint')}
                 >
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-500 text-xs">Years of Experience:</span>
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.education.yearsLabel')}:</span>
                       {profile.yearsOfExperience != null && profile.yearsOfExperience > 0 ? (
-                        <span className="text-sm font-medium text-gray-900 block">{profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? 'year' : 'years'}</span>
+                        <span className="text-sm font-medium text-gray-900 block">{profile.yearsOfExperience} {profile.yearsOfExperience === 1 ? t('common.year') : t('common.years')}</span>
                       ) : (
-                        <span className="text-sm text-orange-600 block">Add your experience to stand out</span>
+                        <span className="text-sm text-orange-600 block">{t('dashboard.tiles.education.addExperience')}</span>
                       )}
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs">Education:</span>
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.education.educationLabel')}:</span>
                       {profile.education && profile.education.length > 0 ? (
                         <div className="space-y-1 mt-1">
                           {profile.education.map((edu) => (
@@ -744,7 +744,7 @@ export default function Dashboard() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-sm text-orange-600 block">Add education, bootcamps, or certifications</span>
+                        <span className="text-sm text-orange-600 block">{t('dashboard.tiles.education.addEducation')}</span>
                       )}
                     </div>
                   </div>
@@ -752,12 +752,12 @@ export default function Dashboard() {
 
                 {/* 6. Services */}
                 <WizardModuleTile
-                  title="Services"
+                  title={t('dashboard.tiles.services.title')}
                   stepId="services"
                   icon="💼"
                   color="teal"
                   isEmpty={!profile.services || profile.services.length === 0}
-                  emptyHint="Define services to get hired"
+                  emptyHint={t('dashboard.tiles.services.emptyHint')}
                 >
                   {profile.services && profile.services.length > 0 ? (
                     <div className="space-y-2">
@@ -777,22 +777,22 @@ export default function Dashboard() {
 
                 {/* 7. Availability */}
                 <WizardModuleTile
-                  title="Availability"
+                  title={t('dashboard.tiles.availability.title')}
                   stepId="availability"
                   icon="📅"
                   color="orange"
                   isEmpty={!profile.workType && profile.weeklyCapacityHours == null}
-                  emptyHint="Set availability so agents know when to hire you"
+                  emptyHint={t('dashboard.tiles.availability.emptyHint')}
                 >
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-500 text-xs">Work Type (Digital / In-Person):</span>{' '}
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.availability.workTypeLabel')}:</span>{' '}
                       <span className={`text-sm font-medium ${profile.workType ? 'text-gray-900' : 'text-gray-400'}`}>
                         {profile.workType ? t(`profile.workType.${profile.workType}`, profile.workType) : '—'}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs">Weekly Hours:</span>{' '}
+                      <span className="text-gray-500 text-xs">{t('dashboard.tiles.availability.weeklyHoursLabel')}:</span>{' '}
                       <span className={`text-sm font-medium ${profile.weeklyCapacityHours !== null ? 'text-gray-900' : 'text-gray-400'}`}>
                         {profile.weeklyCapacityHours !== null ? (profile.weeklyCapacityHours === 0 ? t('profile.weeklyHours.flexible') : t('profile.weeklyHours.format', { hours: profile.weeklyCapacityHours })) : '—'}
                       </span>
@@ -804,7 +804,7 @@ export default function Dashboard() {
 
               {/* Share Profile Link — using VouchCard for consistency */}
               <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Share Your Profile</h2>
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('dashboard.share.title')}</h2>
                 <VouchCard
                   username={profile.username}
                   userId={profile.id}
@@ -855,24 +855,24 @@ export default function Dashboard() {
               {/* Verification tile */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <WizardModuleTile
-                  title="Verification"
+                  title={t('dashboard.tiles.verification.title')}
                   stepId="verification"
                   icon="✅"
                   color="green"
                   isEmpty={!profile.linkedinVerified && !profile.githubVerified}
-                  emptyHint="Verify accounts to boost trust score"
+                  emptyHint={t('dashboard.tiles.verification.emptyHint')}
                 >
                   <div className="space-y-2">
                     <div>
                       <span className="text-gray-500 text-xs">LinkedIn:</span>{' '}
                       <span className={`text-sm font-medium ${profile.linkedinVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.linkedinVerified ? 'Verified' : 'Not verified'}
+                        {profile.linkedinVerified ? t('dashboard.tiles.verification.verified') : t('dashboard.tiles.verification.notVerified')}
                       </span>
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">GitHub:</span>{' '}
                       <span className={`text-sm font-medium ${profile.githubVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.githubVerified ? 'Verified' : 'Not verified'}
+                        {profile.githubVerified ? t('dashboard.tiles.verification.verified') : t('dashboard.tiles.verification.notVerified')}
                       </span>
                     </div>
                   </div>
