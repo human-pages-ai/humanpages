@@ -786,9 +786,9 @@ export default function Dashboard() {
                 >
                   <div className="space-y-2">
                     <div>
-                      <span className="text-gray-500 text-xs">Work Type:</span>{' '}
+                      <span className="text-gray-500 text-xs">Work Type (Digital / In-Person):</span>{' '}
                       <span className={`text-sm font-medium ${profile.workType ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.workType || '—'}
+                        {profile.workType === 'both' ? 'Both' : profile.workType === 'digital' ? 'Digital' : profile.workType === 'physical' ? 'In-Person' : profile.workType || '—'}
                       </span>
                     </div>
                     <div>
