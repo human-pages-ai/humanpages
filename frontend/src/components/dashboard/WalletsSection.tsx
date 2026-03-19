@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePrivy, useWallets, getIdentityToken } from '@privy-io/react-auth';
+import { usePrivy, useWallets, getIdentityToken, useCreateWallet } from '@privy-io/react-auth';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
 import { Wallet } from './types';
@@ -36,8 +36,10 @@ export default function WalletsSection({
   const { t } = useTranslation();
   const { login, authenticated, ready: privyReady, user: privyUser, logout, exportWallet } = usePrivy();
   const { wallets: privyWallets, ready: walletsReady } = useWallets();
+  const { createWallet } = useCreateWallet();
 
   const [step, setStep] = useState<Step>('idle');
+  const [needsWalletCreation, setNeedsWalletCreation] = useState(false);
   const [error, setError] = useState('');
   const [busyMessage, setBusyMessage] = useState('');
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
@@ -152,8 +154,15 @@ export default function WalletsSection({
 
     if (!walletAddress) {
       console.log('[Wallets] Authenticated but no wallet found yet');
+      // On mobile with createOnLogin:'off', user authenticated but has no wallet.
+      // Show opt-in button to create an embedded wallet.
+      if (isMobile) {
+        setNeedsWalletCreation(true);
+      }
       return;
     }
+
+    setNeedsWalletCreation(false);
 
     // Skip if this wallet is already registered with our backend
     const alreadyRegistered = wallets.some(
@@ -200,6 +209,23 @@ export default function WalletsSection({
     pendingVerifyRef.current = true;
     login();
   }, [login, authenticated, logout]);
+
+  /** User opted in to create an embedded wallet on mobile. */
+  const handleCreateEmbeddedWallet = useCallback(async () => {
+    setError('');
+    setStep('busy');
+    setBusyMessage(t('dashboard.wallets.addingWallet'));
+    analytics.track('wallet_create_embedded', { method: 'privy_mobile' });
+    try {
+      const wallet = await createWallet();
+      setNeedsWalletCreation(false);
+      // The auto-register effect will pick up the new wallet
+      console.log('[Wallets] Embedded wallet created:', wallet.address);
+    } catch (err: any) {
+      setError(err?.message || t('dashboard.wallets.verificationFailed'));
+      setStep('idle');
+    }
+  }, [createWallet, t]);
 
   /** Submit a manually pasted address. */
   const submitManualAddress = async () => {
@@ -265,25 +291,48 @@ export default function WalletsSection({
           <p className="text-sm text-amber-800">{t('dashboard.wallets.mobileNotice')}</p>
         </div>
       )}
-      {/* Primary: Privy connect/create button */}
-      <button
-        onClick={handleConnectWallet}
-        disabled={saving || step === 'busy'}
-        className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50 text-left"
-      >
-        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-blue-100">
-          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      {/* After Privy auth on mobile: opt-in to create embedded wallet */}
+      {needsWalletCreation ? (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+          <p className="text-sm text-blue-900 font-medium">{t('dashboard.wallets.createEmbeddedTitle')}</p>
+          <p className="text-sm text-blue-700">{t('dashboard.wallets.createEmbeddedDesc')}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCreateEmbeddedWallet}
+              disabled={step === 'busy'}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {t('dashboard.wallets.createEmbeddedButton')}
+            </button>
+            <button
+              onClick={() => { setNeedsWalletCreation(false); logout(); }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              {t('common.cancel')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Primary: Privy connect/create button */
+        <button
+          onClick={handleConnectWallet}
+          disabled={saving || step === 'busy'}
+          className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50 text-left"
+        >
+          <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-blue-100">
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-900">{t('dashboard.wallets.connectOrCreate')}</p>
+            <p className="text-xs text-gray-500">{t('dashboard.wallets.connectOrCreateDesc')}</p>
+          </div>
+          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900">{t('dashboard.wallets.connectOrCreate')}</p>
-          <p className="text-xs text-gray-500">{t('dashboard.wallets.connectOrCreateDesc')}</p>
-        </div>
-        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
+        </button>
+      )}
 
       {/* Manual address paste — collapsed by default */}
       <button
