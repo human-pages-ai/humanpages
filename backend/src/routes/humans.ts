@@ -263,7 +263,17 @@ const updateProfileSchema = z.object({
   locationLng: z.number().min(-180).max(180).optional().nullable(),
 
   // Capabilities
-  skills: z.array(z.string().max(100)).max(50).optional(),
+  skills: z.array(z.string().trim().min(1).max(100)).max(50).optional().transform((v) => {
+    if (!v) return undefined;
+    // Deduplicate and normalize
+    const seen = new Set<string>();
+    return v.filter(s => {
+      const key = s.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }),
   equipment: z.array(z.string().trim().min(1, 'Equipment item cannot be empty').max(50, 'Equipment item is too long')).max(20, 'Maximum 20 equipment items allowed').nullable().optional().transform((v) => {
     if (!v) return undefined;
     // Deduplicate and normalize
@@ -375,13 +385,20 @@ const updateProfileSchema = z.object({
   facebookFollowers: z.number().int().min(0).optional().nullable(),
 
   // Freelancer & platform presence
-  freelancerJobsRange: z.string().max(20).optional().nullable(),
+  freelancerJobsRange: z.enum(['new', '1-10', '10-50', '50-100', '100-500', '500+']).optional().nullable(),
   platformPresence: z.array(z.object({
     platform: z.string().max(100),
     url: z.string().max(500).optional(),
     details: z.string().max(500).optional(),
   })).max(20).optional().nullable(),
-  externalProfiles: z.array(z.string().min(1).max(500)).max(10).optional(),
+  externalProfiles: z.array(
+    z.string().min(1).max(500).refine(
+      (val) => {
+        try { new URL(val.startsWith('http') ? val : `https://${val}`); return true; } catch { return false; }
+      },
+      'Must be a valid URL'
+    )
+  ).max(10).optional(),
 });
 
 // ERC-8004: This function reads the internal `rating` (1-5 scale), NOT
