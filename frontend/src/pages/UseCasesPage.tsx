@@ -246,10 +246,10 @@ export default function UseCasesPage() {
   return (
     <>
       <SEO
-        title="Use Cases"
-        description="Publish to directories, run QA testing, recruit Play Store testers, review translations, monitor competitors, and manage communities — all from one prompt. Your AI agent hires a human and gets it done."
+        title="HumanPages.ai | Real-world tasks for your AI Agent"
+        description="You prompt, humans deliver. Connect the MCP and delegate tasks automatically."
         path="/use-cases"
-        ogImage="https://humanpages.ai/api/og/default"
+        ogImage="https://humanpages.ai/api/og/use-cases"
       />
 
       {/* Sticky header */}

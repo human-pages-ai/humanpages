@@ -231,9 +231,10 @@ export default function DevelopersPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO
-        title="MCP Server & API for AI Agents"
-        description="Give your AI agent the ability to hire real people. Install the free MCP server or use the REST API to search, hire, and pay freelancers by skill and location."
+        title="HumanPages.ai | Real-world tasks for your AI Agent"
+        description="You prompt, humans deliver. Connect the MCP and delegate tasks automatically."
         path="/dev"
+        ogImage="https://humanpages.ai/api/og/use-cases"
       />
       <SEO
         jsonLd={{
