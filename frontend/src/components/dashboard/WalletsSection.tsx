@@ -137,6 +137,11 @@ export default function WalletsSection({
   // When Privy authenticates and wallets are ready, auto-register the wallet
   // Handles both: (1) user just clicked connect, (2) existing session from previous page load
   useEffect(() => {
+    console.log('[Wallets] Effect check:', {
+      authenticated, walletsReady, autoRegistered: autoRegisteredRef.current,
+      privyWalletCount: privyWallets.length,
+      linkedAccounts: privyUser?.linkedAccounts?.filter((a: any) => a.type === 'wallet').length ?? 0,
+    });
     if (!authenticated || !walletsReady || autoRegisteredRef.current) return;
 
     // Try to get wallet from useWallets() first, fall back to user's linked accounts
@@ -153,9 +158,10 @@ export default function WalletsSection({
     }
 
     if (!walletAddress) {
-      console.log('[Wallets] Authenticated but no wallet found yet');
-      // On mobile with createOnLogin:'off', user authenticated but has no wallet.
-      // Show opt-in button to create an embedded wallet.
+      console.log('[Wallets] Authenticated but no wallet found yet, privyWallets:', privyWallets.length);
+      // Don't set autoRegisteredRef here — the effect will re-run when
+      // privyWallets updates with actual wallet data.
+      // On mobile with createOnLogin:'off', show opt-in after a delay.
       if (isMobile) {
         setNeedsWalletCreation(true);
       }
@@ -201,12 +207,14 @@ export default function WalletsSection({
   const handleConnectWallet = useCallback(async () => {
     setError('');
     analytics.track('wallet_connect_started', { method: 'privy' });
+    // Reset refs so the auto-register effect can fire again
+    autoRegisteredRef.current = false;
+    pendingVerifyRef.current = true;
     if (authenticated) {
       await logout();
       // Wait for Privy state to settle after logout
       await new Promise((r) => setTimeout(r, 500));
     }
-    pendingVerifyRef.current = true;
     login();
   }, [login, authenticated, logout]);
 
