@@ -141,9 +141,15 @@ export async function createTestUser(overrides?: {
     throw new Error(`Failed to create test user: ${JSON.stringify(response.body)}`);
   }
 
+  // Auto-verify email in test mode so verification-dependent tests pass
+  await prisma.human.update({
+    where: { id: response.body.human.id },
+    data: { emailVerified: true },
+  });
+
   return {
     id: response.body.human.id,
-    email: response.body.human.email,
+    email: response.body.human.email || email,
     name: response.body.human.name,
     token: response.body.token,
   };

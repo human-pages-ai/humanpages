@@ -35,6 +35,9 @@ vi.mock('../hooks/useAuth', () => ({
     signup: mockSignup,
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
+    loginWithWhatsApp: vi.fn(),
+    loginWithLinkedIn: vi.fn(),
+    updateUser: vi.fn(),
   }),
 }));
 
@@ -48,22 +51,32 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+/** Click the "or sign up with email" toggle to reveal the email form */
+async function expandEmailForm(user: ReturnType<typeof userEvent.setup>) {
+  const toggle = screen.getByRole('button', { name: /or sign up with email/i });
+  await user.click(toggle);
+}
+
 describe('Signup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSignup.mockResolvedValue(undefined);
   });
 
-  it('renders name, email, password inputs', () => {
+  it('renders name, email, password inputs', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     expect(screen.getByLabelText(/common.name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/common.email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/common.password/i)).toBeInTheDocument();
   });
 
-  it('renders the sign up button', () => {
+  it('renders the sign up button', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     expect(screen.getByRole('button', { name: /auth.signUp/i })).toBeInTheDocument();
   });
@@ -71,19 +84,23 @@ describe('Signup', () => {
   it('shows link to login page', () => {
     renderWithProviders(<Signup />);
 
-    const loginLink = screen.getByRole('link', { name: /auth.signIn/i });
+    const loginLink = screen.getByRole('link', { name: /sign in/i });
     expect(loginLink).toBeInTheDocument();
     expect(loginLink).toHaveAttribute('href', '/login');
   });
 
-  it('renders terms acceptance checkbox', () => {
+  it('renders terms acceptance checkbox', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     expect(screen.getByRole('checkbox')).toBeInTheDocument();
   });
 
-  it('disables submit button when terms not accepted', () => {
+  it('disables submit button when terms not accepted', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     const submitButton = screen.getByRole('button', { name: /auth.signUp/i });
     expect(submitButton).toBeDisabled();
@@ -92,6 +109,7 @@ describe('Signup', () => {
   it('calls signup on form submission with terms accepted', async () => {
     const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.name/i), 'Test User');
     await user.type(screen.getByLabelText(/common.email/i), 'test@example.com');
@@ -107,6 +125,7 @@ describe('Signup', () => {
   it('navigates to onboarding on success', async () => {
     const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.name/i), 'Test User');
     await user.type(screen.getByLabelText(/common.email/i), 'test@example.com');
@@ -123,6 +142,7 @@ describe('Signup', () => {
     mockSignup.mockRejectedValueOnce(new Error('Email already registered'));
     const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.name/i), 'Test User');
     await user.type(screen.getByLabelText(/common.email/i), 'taken@example.com');
@@ -139,6 +159,7 @@ describe('Signup', () => {
     mockSignup.mockImplementation(() => new Promise(() => {}));
     const user = userEvent.setup();
     renderWithProviders(<Signup />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.name/i), 'Test User');
     await user.type(screen.getByLabelText(/common.email/i), 'test@example.com');

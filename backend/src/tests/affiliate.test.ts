@@ -184,10 +184,10 @@ describe('Referral Program API', () => {
         await recordAffiliateReferral(referrer.id, newUserId);
       }
 
-      // Set referredBy
+      // Set referredBy and mark email as verified (required for qualification)
       await prisma.human.update({
         where: { id: newUserId },
-        data: { referredBy: referrer.id },
+        data: { referredBy: referrer.id, emailVerified: true },
       });
 
       // Complete profile (bio + skills) — triggers qualification

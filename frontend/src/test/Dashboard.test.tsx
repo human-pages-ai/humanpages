@@ -56,6 +56,9 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
+    loginWithWhatsApp: vi.fn(),
+    loginWithLinkedIn: vi.fn(),
+    updateUser: vi.fn(),
   }),
 }));
 
@@ -263,16 +266,22 @@ describe('Dashboard', () => {
 
   it('renders telegram section when bot is available', async () => {
     vi.mocked(api.getTelegramStatus).mockResolvedValue({ connected: false, botAvailable: true, botUsername: 'test_bot' });
+    // Need pushNotifications so the tile is not in "empty" mode (which hides children)
+    vi.mocked(api.getProfile).mockResolvedValue({
+      ...mockProfile,
+      pushNotifications: true,
+      wallets: [],
+      services: [],
+    });
 
     renderWithProviders(<Dashboard />);
 
     await waitForDashboard();
 
-    // Telegram is on the Settings tab
-    clickTab('dashboard.settings.title');
-
-    // Telegram notification is shown in the Notifications tile
-    expect(screen.getByText('dashboard.tiles.notifications.telegram')).toBeInTheDocument();
+    // Telegram notification is shown in the Notifications tile on the Profile tab (default tab)
+    await waitFor(() => {
+      expect(screen.getByText(/dashboard\.tiles\.notifications\.telegram/)).toBeInTheDocument();
+    });
   });
 
   it('renders job stats with review data', async () => {

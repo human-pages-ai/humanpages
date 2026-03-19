@@ -18,7 +18,7 @@ const UNIT_MAP: Record<string, string> = {
 
 const serviceSchema = z.object({
   title: z.string().min(1),
-  description: z.string().optional().default(''),
+  description: z.string().min(1),
   category: z.string().min(1),
   subcategory: z.string().max(100).optional().nullable(),
   priceMin: z.number().min(0).optional().nullable(),

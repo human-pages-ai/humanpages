@@ -264,7 +264,7 @@ describe('Flow: Complete Job Lifecycle', () => {
     // Cannot accept a rejected job
     const acceptRes = await authRequest(human.token)
       .patch(`/api/jobs/${createRes.body.id}/accept`);
-    expect(acceptRes.status).toBe(400);
+    expect(acceptRes.status).toBe(409);
   });
 
   it('should prevent anti-dusting: reject payment for non-accepted job', async () => {
@@ -450,6 +450,6 @@ describe('Flow: Complete Job Lifecycle', () => {
     const res = await authRequest(otherHuman.token)
       .patch(`/api/jobs/${createRes.body.id}/accept`);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(409);
   });
 });

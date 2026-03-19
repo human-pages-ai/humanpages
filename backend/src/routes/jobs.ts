@@ -68,7 +68,7 @@ const VALID_PAYMENT_PREFERENCES = ['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STRE
 
 // Schema for creating a job offer (called by agents)
 const createJobSchema = z.object({
-  humanId: z.string().uuid('humanId must be a valid UUID'),
+  humanId: z.string().min(1, 'humanId is required'),
   agentId: z.string().min(1),
   agentName: z.string().max(200).optional(),
   title: z.string().min(1).max(200),

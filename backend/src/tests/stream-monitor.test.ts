@@ -21,6 +21,7 @@ vi.mock('../lib/blockchain/superfluid.js', () => ({
 // Mock email/telegram/webhook to prevent actual sends
 vi.mock('../lib/email.js', () => ({
   sendStreamFlowStoppedEmail: vi.fn(async () => {}),
+  sendVerificationEmail: vi.fn(async () => {}),
 }));
 
 vi.mock('../lib/telegram.js', () => ({

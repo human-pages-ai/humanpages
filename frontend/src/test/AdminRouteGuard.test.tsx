@@ -18,6 +18,9 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
+    loginWithWhatsApp: vi.fn(),
+    loginWithLinkedIn: vi.fn(),
+    updateUser: vi.fn(),
   }),
 }));
 
@@ -108,7 +111,7 @@ describe('Admin Route Guards', () => {
       renderApp('/admin');
       await waitFor(() => {
         // Unauthenticated: AdminRoute redirects to /dashboard, ProtectedRoute redirects to /login
-        expect(screen.getByRole('button', { name: /auth.signIn/i })).toBeInTheDocument();
+        expect(screen.getByText('auth.signInTo')).toBeInTheDocument();
       });
     });
 

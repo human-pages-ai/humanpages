@@ -149,8 +149,8 @@ describe('Draft Persistence Functions', () => {
 
   describe('Prototype pollution protection', () => {
     it('should reject data with __proto__ key', () => {
-      const malicious = { _v: 4, data: { __proto__: { isAdmin: true } } };
-      sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(malicious));
+      // JSON.stringify strips __proto__, so we must craft the string directly
+      sessionStorage.setItem('hp_onboarding_draft', '{"_v":4,"data":{"__proto__":{"isAdmin":true}}}');
       const loaded = loadDraft();
 
       expect(loaded).toBeNull();

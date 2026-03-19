@@ -59,7 +59,7 @@ export function loadDraft(): Partial<OnboardingDraft> | null {
     const parsed = JSON.parse(raw);
     // Guard against prototype pollution from tampered session data
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
-    if ('__proto__' in parsed || 'constructor' in parsed || 'prototype' in parsed) return null;
+    if (Object.prototype.hasOwnProperty.call(parsed, '__proto__') || Object.prototype.hasOwnProperty.call(parsed, 'constructor') || Object.prototype.hasOwnProperty.call(parsed, 'prototype')) return null;
 
     // Handle versioned format
     if ('_v' in parsed) {
@@ -70,7 +70,7 @@ export function loadDraft(): Partial<OnboardingDraft> | null {
       }
       const data = parsed.data;
       if (typeof data !== 'object' || data === null || Array.isArray(data)) return null;
-      if ('__proto__' in data || 'constructor' in data || 'prototype' in data) return null;
+      if (Object.prototype.hasOwnProperty.call(data, '__proto__') || Object.prototype.hasOwnProperty.call(data, 'constructor') || Object.prototype.hasOwnProperty.call(data, 'prototype')) return null;
       return data;
     }
 
