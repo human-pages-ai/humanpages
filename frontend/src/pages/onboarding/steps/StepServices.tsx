@@ -194,7 +194,9 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
   const [priceError, setPriceError] = useState('');
-  const [newEquipmentCategory, setNewEquipmentCategory] = useState('');
+  // Equipment two-picker state (category + tool)
+  const [eqCategory, setEqCategory] = useState('');
+  const [eqTool, setEqTool] = useState('');
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
   const [editingServiceIndex, setEditingServiceIndex] = useState<number | null>(null);
 
@@ -299,68 +301,91 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
     setServices(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Equipment-only mode: render just the equipment section as a standalone step
+  // Equipment-only mode: two-picker (category → tool)
   if (equipmentOnly) {
-    // Categorized suggestions with subcategories
-    const equipmentSuggestions: { value: string; label: string }[] = [
-      // Phones
-      { value: 'Phone - iPhone', label: '📱 iPhone' },
-      { value: 'Phone - Samsung Galaxy', label: '📱 Samsung Galaxy' },
-      { value: 'Phone - Google Pixel', label: '📱 Google Pixel' },
-      { value: 'Phone - Xiaomi', label: '📱 Xiaomi' },
-      { value: 'Phone - OnePlus', label: '📱 OnePlus' },
-      // Cameras
-      { value: 'Camera - DSLR Camera', label: '📷 DSLR Camera' },
-      { value: 'Camera - Mirrorless Camera', label: '📷 Mirrorless Camera' },
-      { value: 'Camera - GoPro / Action Camera', label: '📷 GoPro / Action Camera' },
-      { value: 'Camera - Webcam', label: '📷 Webcam' },
-      { value: 'Camera - Ring Light', label: '📷 Ring Light' },
-      { value: 'Camera - Stabilizer / Gimbal', label: '📷 Stabilizer / Gimbal' },
-      { value: 'Camera - Green Screen', label: '📷 Green Screen' },
-      // Vehicles
-      { value: 'Vehicle - Car', label: '🚗 Car' },
-      { value: 'Vehicle - Motorcycle', label: '🚗 Motorcycle' },
-      { value: 'Vehicle - Bicycle', label: '🚗 Bicycle' },
-      { value: 'Vehicle - Van / Truck', label: '🚗 Van / Truck' },
-      { value: 'Vehicle - Scooter', label: '🚗 Scooter' },
-      // Computers
-      { value: 'Computer - Laptop', label: '💻 Laptop' },
-      { value: 'Computer - Desktop Computer', label: '💻 Desktop Computer' },
-      { value: 'Computer - iPad / Tablet', label: '💻 iPad / Tablet' },
-      { value: 'Computer - External Monitor', label: '💻 External Monitor' },
-      // Audio
-      { value: 'Audio - Microphone', label: '🎤 Microphone' },
-      { value: 'Audio - Studio Headphones', label: '🎤 Studio Headphones' },
-      { value: 'Audio - Audio Interface', label: '🎤 Audio Interface' },
-      { value: 'Audio - Speaker', label: '🎤 Speaker' },
-      // Drones
-      { value: 'Drone - DJI Drone', label: '🚁 DJI Drone' },
-      { value: 'Drone - FPV Drone', label: '🚁 FPV Drone' },
-      // Tools
-      { value: 'Tools - Power Drill', label: '🔨 Power Drill' },
-      { value: 'Tools - 3D Printer', label: '🔨 3D Printer' },
-      { value: 'Tools - Soldering Station', label: '🔨 Soldering Station' },
-      { value: 'Tools - Measuring Tools', label: '🔨 Measuring Tools' },
-      // Software
-      { value: 'Software - Adobe Creative Suite', label: '🖥️ Adobe Creative Suite' },
-      { value: 'Software - Final Cut Pro', label: '🖥️ Final Cut Pro' },
-      { value: 'Software - AutoCAD', label: '🖥️ AutoCAD' },
-      { value: 'Software - Figma', label: '🖥️ Figma' },
-      // Other
-      { value: 'Other - Sewing Machine', label: '🧵 Sewing Machine' },
-      { value: 'Other - Pressure Washer', label: '🧹 Pressure Washer' },
-      { value: 'Other - Portable Generator', label: '⚡ Portable Generator' },
-      { value: 'Other - Projector', label: '📽️ Projector' },
-      { value: 'Other - Printer / Scanner', label: '🖨️ Printer / Scanner' },
-    ].filter(s => !equipment.some(eq => eq.toLowerCase() === s.value.toLowerCase()));
+    const EQUIPMENT_CATEGORIES: { value: string; label: string }[] = [
+      { value: 'Phone', label: '📱 Phone' },
+      { value: 'Camera', label: '📷 Camera' },
+      { value: 'Vehicle', label: '🚗 Vehicle' },
+      { value: 'Computer', label: '💻 Computer' },
+      { value: 'Audio', label: '🎤 Audio' },
+      { value: 'Drone', label: '🚁 Drone' },
+      { value: 'Tools', label: '🔨 Tools' },
+      { value: 'Software', label: '🖥️ Software' },
+      { value: 'Other', label: '🧰 Other' },
+    ];
+
+    const TOOLS_BY_CATEGORY: Record<string, { value: string; label: string }[]> = {
+      Phone: [
+        { value: 'iPhone', label: 'iPhone' },
+        { value: 'Samsung Galaxy', label: 'Samsung Galaxy' },
+        { value: 'Google Pixel', label: 'Google Pixel' },
+        { value: 'Xiaomi', label: 'Xiaomi' },
+        { value: 'OnePlus', label: 'OnePlus' },
+      ],
+      Camera: [
+        { value: 'DSLR Camera', label: 'DSLR Camera' },
+        { value: 'Mirrorless Camera', label: 'Mirrorless Camera' },
+        { value: 'GoPro / Action Camera', label: 'GoPro / Action Camera' },
+        { value: 'Webcam', label: 'Webcam' },
+        { value: 'Ring Light', label: 'Ring Light' },
+        { value: 'Stabilizer / Gimbal', label: 'Stabilizer / Gimbal' },
+        { value: 'Green Screen', label: 'Green Screen' },
+      ],
+      Vehicle: [
+        { value: 'Car', label: 'Car' },
+        { value: 'Motorcycle', label: 'Motorcycle' },
+        { value: 'Bicycle', label: 'Bicycle' },
+        { value: 'Van / Truck', label: 'Van / Truck' },
+        { value: 'Scooter', label: 'Scooter' },
+      ],
+      Computer: [
+        { value: 'Laptop', label: 'Laptop' },
+        { value: 'Desktop', label: 'Desktop' },
+        { value: 'iPad / Tablet', label: 'iPad / Tablet' },
+        { value: 'External Monitor', label: 'External Monitor' },
+      ],
+      Audio: [
+        { value: 'Microphone', label: 'Microphone' },
+        { value: 'Studio Headphones', label: 'Studio Headphones' },
+        { value: 'Audio Interface', label: 'Audio Interface' },
+        { value: 'Speaker', label: 'Speaker' },
+      ],
+      Drone: [
+        { value: 'DJI Drone', label: 'DJI Drone' },
+        { value: 'FPV Drone', label: 'FPV Drone' },
+      ],
+      Tools: [
+        { value: 'Power Drill', label: 'Power Drill' },
+        { value: '3D Printer', label: '3D Printer' },
+        { value: 'Soldering Station', label: 'Soldering Station' },
+        { value: 'Measuring Tools', label: 'Measuring Tools' },
+      ],
+      Software: [
+        { value: 'Adobe Creative Suite', label: 'Adobe Creative Suite' },
+        { value: 'Final Cut Pro', label: 'Final Cut Pro' },
+        { value: 'AutoCAD', label: 'AutoCAD' },
+        { value: 'Figma', label: 'Figma' },
+      ],
+      Other: [
+        { value: 'Sewing Machine', label: 'Sewing Machine' },
+        { value: 'Pressure Washer', label: 'Pressure Washer' },
+        { value: 'Portable Generator', label: 'Portable Generator' },
+        { value: 'Projector', label: 'Projector' },
+        { value: 'Printer / Scanner', label: 'Printer / Scanner' },
+      ],
+    };
+
+    const toolSuggestions = eqCategory ? (TOOLS_BY_CATEGORY[eqCategory] || []) : [];
 
     const handleAddEquipment = () => {
-      const trimmed = newEquipmentCategory.trim();
-      if (!trimmed) return;
-      if (!equipment.some(eq => eq.toLowerCase() === trimmed.toLowerCase())) {
-        setEquipment(prev => [...prev, trimmed]);
+      if (!eqCategory.trim()) return;
+      const value = eqTool.trim() ? `${eqCategory} - ${eqTool.trim()}` : eqCategory.trim();
+      if (!equipment.some(eq => eq.toLowerCase() === value.toLowerCase())) {
+        setEquipment(prev => [...prev, value]);
       }
-      setNewEquipmentCategory('');
+      setEqCategory('');
+      setEqTool('');
     };
 
     return (
@@ -379,13 +404,23 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
         )}
         {equipment.length < 20 && (
           <>
-            <div className="flex gap-2 mb-2">
-              <div className="flex-1">
+            <div className="space-y-3 mb-2">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
                 <SuggestionInput
-                  value={newEquipmentCategory}
-                  onChange={setNewEquipmentCategory}
-                  suggestions={equipmentSuggestions}
-                  placeholder={t('onboarding.equipment.hint')}
+                  value={eqCategory}
+                  onChange={(v) => { setEqCategory(v); setEqTool(''); }}
+                  suggestions={EQUIPMENT_CATEGORIES}
+                  placeholder="Phone, Camera, Vehicle..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Tool / Model</label>
+                <SuggestionInput
+                  value={eqTool}
+                  onChange={setEqTool}
+                  suggestions={toolSuggestions}
+                  placeholder={eqCategory ? `Type or pick a ${eqCategory.toLowerCase()}...` : 'Pick a category first'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -394,15 +429,16 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                   }}
                 />
               </div>
-              <button
-                type="button"
-                onClick={handleAddEquipment}
-                disabled={!newEquipmentCategory.trim()}
-                className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px] flex-shrink-0"
-              >
-                {t('common.add')}
-              </button>
             </div>
+            <button
+              type="button"
+              onClick={handleAddEquipment}
+              disabled={!eqCategory.trim()}
+              className="w-full py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
+            >
+              {t('common.add')}
+            </button>
+            <p className="text-xs text-slate-400 mt-1">{t('onboarding.equipment.hint')}</p>
           </>
         )}
         <div className="flex justify-end mt-6">
