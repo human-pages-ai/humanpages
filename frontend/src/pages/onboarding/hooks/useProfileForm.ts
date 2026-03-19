@@ -89,6 +89,8 @@ export interface UseProfileFormReturn {
   // Messaging
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
+  smsNumber: string;
+  setSmsNumber: (v: string) => void;
 
   // Availability (agent-facing fields)
   timezone: string;

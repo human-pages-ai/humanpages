@@ -150,6 +150,21 @@ export interface Profile {
   }>;
   experienceHighlights?: string[];
   yearsOfExperience?: number;
+  freelancerJobsRange?: string;
+  sms?: string;
+  externalProfiles?: string[];
+  industries?: string[];
+  platformPresence?: Array<{ platform: string; url: string; details: string }>;
+  educations?: Array<{
+    id: string;
+    institution: string;
+    degree?: string;
+    field?: string;
+    country?: string;
+    startYear?: number;
+    endYear?: number;
+    source?: string;
+  }>;
 }
 
 export interface AgentProfile {

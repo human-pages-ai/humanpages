@@ -208,7 +208,7 @@ export function ProfileTilesGrid({ profile, telegramStatus }: ProfileTilesGridPr
           title={t('dashboard.tiles.verification.title')}
           stepId="verification"
           icon="✅"
-          color="emerald"
+          color="green"
           isEmpty={!profile.linkedinVerified && !profile.githubVerified && !profile.humanityVerified}
           emptyHint={t('dashboard.tiles.verification.emptyHint')}
         >

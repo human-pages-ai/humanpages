@@ -66,7 +66,7 @@ export default function EducationSection({ profile, onUpdate }: Props) {
         institution: educationForm.institution,
         degree: educationForm.degree || undefined,
         field: educationForm.field || undefined,
-        year: educationForm.endYear || educationForm.startYear || undefined,
+        endYear: educationForm.endYear || educationForm.startYear || undefined,
         country: educationForm.country || undefined,
       });
 

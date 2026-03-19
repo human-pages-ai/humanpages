@@ -146,7 +146,7 @@ export default function PublicProfile() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: profile?.name ? `${formatPublicName(profile.displayName)} on Human Pages` : 'Human Pages Profile',
+          title: profile?.displayName ? `${formatPublicName(profile.displayName)} on Human Pages` : 'Human Pages Profile',
           url,
         });
       } catch {
