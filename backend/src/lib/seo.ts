@@ -306,8 +306,8 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
-  const title = 'HumanPages.ai | Real-world tasks for your AI Agent';
-  const description = 'You prompt, humans deliver. Connect the MCP and delegate tasks automatically.';
+  const title = 'Human Pages';
+  const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
   const ogImage = `${SITE_URL}/api/og/use-cases`;
   const unprefixedPath = '/dev';
   const canonicalUrl = lang && lang !== 'en'
@@ -425,8 +425,8 @@ export function getUseCasesMetaHtml(lang?: string): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
-  const title = 'HumanPages.ai | Real-world tasks for your AI Agent';
-  const description = 'You prompt, humans deliver. Connect the MCP and delegate tasks automatically.';
+  const title = 'Human Pages';
+  const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
   const ogImage = `${SITE_URL}/api/og/use-cases`;
   const unprefixedPath = '/use-cases';
   const canonicalUrl = lang && lang !== 'en'
