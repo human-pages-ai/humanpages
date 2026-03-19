@@ -285,7 +285,7 @@ app.get('/gpt-setup/go', (_req, res) => {
     return res.redirect(302, appDirectoryUrl);
   }
 
-  const mcpUrl = 'https://mcp.humanpages.ai/api/mcp';
+  const mcpUrl = 'https://mcp.humanpages.ai/mcp';
   const frontendUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');

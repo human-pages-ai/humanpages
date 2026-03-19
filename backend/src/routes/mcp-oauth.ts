@@ -202,7 +202,7 @@ function isValidRedirectUri(uri: string): boolean {
 router.get('/.well-known/oauth-protected-resource', (_req: Request, res: Response) => {
   const baseUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
   res.json({
-    resource: `${baseUrl}/api/mcp`,
+    resource: 'https://mcp.humanpages.ai/mcp',
     authorization_server: baseUrl,
     bearer_methods: ['header'],
   });
