@@ -8,6 +8,29 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { prisma } from '../lib/prisma.js';
 import { parseCvWithOpenAI } from '../lib/cvParser.js';
 import { logger } from '../lib/logger.js';
+
+/**
+ * Strip personal data from CV-generated bio before saving to DB.
+ * This is the BACKEND safety net — even if the frontend doesn't sanitize,
+ * personal info never reaches the database.
+ */
+function sanitizeBio(bio: string | null | undefined, name: string | null | undefined): string | null {
+  if (!bio) return null;
+  let clean = bio;
+  // Strip the person's full name (case-insensitive)
+  if (name) {
+    clean = clean.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '').trim();
+  }
+  // Strip "FirstName LastName is/was/has/have/been" at the start
+  clean = clean.replace(/^[A-Z][a-z]+ [A-Z][a-z]+ (is |was |has |have |been )/i, '').trim();
+  // Strip email addresses
+  clean = clean.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim();
+  // Strip phone numbers
+  clean = clean.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '').trim();
+  // Clean up double spaces and leading punctuation
+  clean = clean.replace(/\s{2,}/g, ' ').replace(/^[,;.\s]+/, '').trim();
+  return clean.slice(0, 500) || null;
+}
 import { uploadToR2, getR2ObjectBuffer } from '../lib/storage.js';
 
 // pdf-parse v2 exports a PDFParse class; v1 exports a callable function.
@@ -248,7 +271,7 @@ async function parseAndSaveCv(fileId: string, job: CvParseJob): Promise<void> {
         data: {
           skills: mergedSkills,
           languages: Array.from(new Set([...user.languages || [], ...parseResult.languages])),
-          bio: parseResult.bio || user.bio || null,
+          bio: sanitizeBio(parseResult.bio, parseResult.name) || user.bio || null,
           experienceHighlights: parseResult.experienceHighlights,
           yearsOfExperience: parseResult.yearsOfExperience,
           cvParsedAt: new Date(),
@@ -406,7 +429,7 @@ router.post(
           data: {
             skills: mergedSkills,
             languages: Array.from(new Set([...user.languages || [], ...parseResult.languages])),
-            bio: parseResult.bio || user.bio || null,
+            bio: sanitizeBio(parseResult.bio, parseResult.name) || user.bio || null,
             experienceHighlights: parseResult.experienceHighlights,
             yearsOfExperience: parseResult.yearsOfExperience,
             cvParsedAt: new Date(),

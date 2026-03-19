@@ -735,6 +735,15 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
+    // Strip personal data from bio before saving (backend safety net)
+    if (updates.bio && typeof updates.bio === 'string') {
+      let bio = updates.bio;
+      bio = bio.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim(); // emails
+      bio = bio.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '').trim(); // phones
+      bio = bio.replace(/\s{2,}/g, ' ').replace(/^[,;.\s]+/, '').trim();
+      updates.bio = bio.slice(0, 500) || null;
+    }
+
     // Compute minRateUsdEstimate if rate or currency changed
     const dataToSave: any = { ...updates, lastActiveAt: new Date() };
     const rateChanged = updates.minRateUsdc !== undefined || updates.rateCurrency !== undefined;
