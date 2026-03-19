@@ -167,7 +167,7 @@ describe('Dashboard', () => {
     // Services are on the Profile tab — switch to it
     clickTab('dashboard.profile.title');
 
-    expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('dashboard.tiles.services.title')[0]).toBeInTheDocument();
   });
 
   it('shows empty states when no data', async () => {
@@ -187,7 +187,7 @@ describe('Dashboard', () => {
 
     // Switch to profile tab for services
     clickTab('dashboard.profile.title');
-    expect(screen.getAllByText('dashboard.services.title')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('dashboard.tiles.services.title')[0]).toBeInTheDocument();
 
     // Switch to payments tab for wallets
     clickTab('dashboard.wallets.paymentSetupTitle');
@@ -268,10 +268,11 @@ describe('Dashboard', () => {
 
     await waitForDashboard();
 
-    // Telegram is on the Boost Your Profile tab
-    clickTab('dashboard.boostYourProfile');
+    // Telegram is on the Settings tab
+    clickTab('dashboard.settings.title');
 
-    expect(screen.getByText('dashboard.telegram.title')).toBeInTheDocument();
+    // Telegram notification is shown in the Notifications tile
+    expect(screen.getByText('dashboard.tiles.notifications.telegram')).toBeInTheDocument();
   });
 
   it('renders job stats with review data', async () => {
@@ -296,7 +297,7 @@ describe('Dashboard', () => {
     // Share/referral is now on the Profile tab
     clickTab('dashboard.profile.title');
 
-    expect(screen.getByText('dashboard.shareProfile')).toBeInTheDocument();
+    expect(screen.getByText('dashboard.share.title')).toBeInTheDocument();
   });
 
   it('displays error state when profile fails to load', async () => {

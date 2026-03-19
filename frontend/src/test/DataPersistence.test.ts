@@ -17,7 +17,7 @@ describe('Draft Persistence Functions', () => {
 
   describe('saveDraft and loadDraft', () => {
     it('should save and load a simple draft', () => {
-      const draft = { name: 'Test User', bio: 'Test bio' };
+      const draft = { name: 'Test User', bio: 'Test bio', smsNumber: '' };
       saveDraft(draft as any);
       const loaded = loadDraft();
 
@@ -27,7 +27,7 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should save draft with skills array', () => {
-      const draft = { name: 'Jane Dev', skills: ['React', 'TypeScript'] };
+      const draft = { name: 'Jane Dev', skills: ['React', 'TypeScript'], smsNumber: '' };
       saveDraft(draft as any);
       const loaded = loadDraft();
 
@@ -35,7 +35,7 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should merge new draft data with existing data', () => {
-      saveDraft({ name: 'Jane' } as any);
+      saveDraft({ name: 'Jane', smsNumber: '' } as any);
       saveDraft({ bio: 'Developer' } as any);
       const loaded = loadDraft();
 
@@ -44,7 +44,7 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should overwrite existing fields when saving new values', () => {
-      saveDraft({ name: 'Jane' } as any);
+      saveDraft({ name: 'Jane', smsNumber: '' } as any);
       saveDraft({ name: 'John' } as any);
       const loaded = loadDraft();
 
@@ -65,6 +65,7 @@ describe('Draft Persistence Functions', () => {
           { institution: 'MIT', degree: 'BS', field: 'CS', country: 'US' },
         ],
         languageEntries: [{ language: 'English', proficiency: 'Native' }, { language: 'French', proficiency: 'Fluent' }],
+        smsNumber: '',
       };
       saveDraft(draft as any);
       const loaded = loadDraft();
@@ -79,7 +80,7 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should handle null values in draft', () => {
-      const draft = { name: 'Jane', bio: null };
+      const draft = { name: 'Jane', bio: null, smsNumber: '' };
       saveDraft(draft as any);
       const loaded = loadDraft();
 
@@ -90,7 +91,7 @@ describe('Draft Persistence Functions', () => {
 
   describe('clearDraft', () => {
     it('should clear saved draft', () => {
-      saveDraft({ name: 'Test User' } as any);
+      saveDraft({ name: 'Test User', smsNumber: '' } as any);
       clearDraft();
       const loaded = loadDraft();
 
@@ -102,9 +103,9 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should allow saving new draft after clearing', () => {
-      saveDraft({ name: 'First' } as any);
+      saveDraft({ name: 'First', smsNumber: '' } as any);
       clearDraft();
-      saveDraft({ name: 'Second' } as any);
+      saveDraft({ name: 'Second', smsNumber: '' } as any);
       const loaded = loadDraft();
 
       expect(loaded?.name).toBe('Second');
@@ -113,7 +114,7 @@ describe('Draft Persistence Functions', () => {
 
   describe('Draft versioning', () => {
     it('should save draft with version number', () => {
-      saveDraft({ name: 'Jane' } as any);
+      saveDraft({ name: 'Jane', smsNumber: '' } as any);
       // Get the raw storage value
       const raw = sessionStorage.getItem('hp_onboarding_draft');
       expect(raw).toBeTruthy();
@@ -126,7 +127,7 @@ describe('Draft Persistence Functions', () => {
 
     it('should accept draft with matching version', () => {
       // Simulate a versioned draft
-      const versioned = { _v: 3, data: { name: 'Jane', skills: ['React'] } };
+      const versioned = { _v: 3, data: { name: 'Jane', skills: ['React'], smsNumber: '' } };
       sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(versioned));
       const loaded = loadDraft();
 
@@ -136,7 +137,7 @@ describe('Draft Persistence Functions', () => {
 
     it('should discard draft with mismatched version', () => {
       // Simulate a draft with wrong version
-      const versioned = { _v: 1, data: { name: 'Jane' } };
+      const versioned = { _v: 1, data: { name: 'Jane', smsNumber: '' } };
       sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(versioned));
       const loaded = loadDraft();
 
@@ -205,7 +206,7 @@ describe('Draft Persistence Functions', () => {
       loadDraft(); // Should not throw
 
       clearDraft();
-      saveDraft({ name: 'After Corrupt' } as any);
+      saveDraft({ name: 'After Corrupt', smsNumber: '' } as any);
       const loaded = loadDraft();
 
       expect(loaded?.name).toBe('After Corrupt');
