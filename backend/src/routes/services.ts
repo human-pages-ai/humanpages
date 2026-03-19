@@ -3,21 +3,29 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { authenticateToken, requireEmailVerified, AuthRequest } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
-import { SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
+// Currency validation relaxed — frontend offers 70+ currencies, backend accepts any valid code
 
 const router = Router();
 
+// Map frontend unit labels to backend enum values
+const UNIT_MAP: Record<string, string> = {
+  'per hour': 'HOURLY', 'hourly': 'HOURLY', 'HOURLY': 'HOURLY',
+  'per task': 'FLAT_TASK', 'fixed price': 'FLAT_TASK', 'FLAT_TASK': 'FLAT_TASK',
+  'per word': 'FLAT_TASK', 'per page': 'FLAT_TASK',
+  'negotiable': 'NEGOTIABLE', "let's discuss": 'NEGOTIABLE', 'NEGOTIABLE': 'NEGOTIABLE',
+};
+
 const serviceSchema = z.object({
   title: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string().optional().default(''),
   category: z.string().min(1),
   subcategory: z.string().max(100).optional().nullable(),
   priceMin: z.number().min(0).optional().nullable(),
-  priceCurrency: z.string().refine(
-    (c) => SUPPORTED_CURRENCIES.includes(c as any),
-    `Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}`
-  ).optional(),
-  priceUnit: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional().nullable(),
+  priceCurrency: z.string().max(10).optional().nullable(),
+  priceUnit: z.string().optional().nullable().transform(v => {
+    if (!v) return null;
+    return UNIT_MAP[v.toLowerCase()] || v;
+  }),
   isActive: z.boolean().optional(),
 });
 
@@ -42,11 +50,18 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 // Create a new service
 router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const data = createServiceSchema.parse(req.body);
+    const parsed = createServiceSchema.parse(req.body);
 
     const service = await prisma.service.create({
       data: {
-        ...data,
+        title: parsed.title,
+        description: parsed.description || '',
+        category: parsed.category,
+        subcategory: parsed.subcategory || null,
+        priceMin: parsed.priceMin ?? null,
+        priceCurrency: parsed.priceCurrency || 'USD',
+        priceUnit: (parsed.priceUnit || null) as any,
+        isActive: parsed.isActive ?? true,
         humanId: req.userId!,
       },
     });
@@ -76,7 +91,7 @@ router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
 
     const service = await prisma.service.update({
       where: { id: req.params.id },
-      data: updates,
+      data: updates as any,
     });
 
     res.json(service);
