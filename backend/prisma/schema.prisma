@@ -381,6 +381,8 @@ model Human {
   @@index([preferredTaskDuration])
   @@index([earliestStartDate])
   @@index([profileCompleteness])
+  @@index([freelancerJobsRange])
+  @@index([externalProfiles], type: Gin)
 }
 
 model FiatPaymentMethod {
