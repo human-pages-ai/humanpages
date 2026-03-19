@@ -49,7 +49,7 @@ interface PublicVouch {
 
 interface PublicHuman {
   id: string;
-  name: string;
+  displayName?: string;
   username?: string;
   bio?: string;
   location?: string;
@@ -57,7 +57,7 @@ interface PublicHuman {
   locationGranularity?: 'city' | 'neighborhood';
   skills: string[];
   equipment?: string[];
-  languages?: { language: string; proficiency: string }[];
+  languages?: string[]; // "Language (Proficiency)" format
   contactEmail?: string;
   telegram?: string;
   whatsapp?: string;
@@ -94,6 +94,8 @@ interface PublicHuman {
   channelCount?: number;
   wallets?: Wallet[];
   yearsOfExperience?: number;
+  educations?: { institution: string; degree?: string; field?: string; country?: string; startYear?: number; endYear?: number }[];
+  certificates?: { name: string; issuer?: string; year?: number }[];
   services: Service[];
   vouches?: PublicVouch[];
 }
@@ -106,11 +108,8 @@ function getDisplayLocation(profile: PublicHuman): string | undefined {
   return profile.location;
 }
 
-function formatPublicName(name: string | undefined): string {
-  if (!name) return 'Anonymous';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+function formatPublicName(displayName: string | undefined): string {
+  return displayName || 'Anonymous';
 }
 
 export default function PublicProfile() {
@@ -147,7 +146,7 @@ export default function PublicProfile() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: profile?.name ? `${formatPublicName(profile.name)} on Human Pages` : 'Human Pages Profile',
+          title: profile?.name ? `${formatPublicName(profile.displayName)} on Human Pages` : 'Human Pages Profile',
           url,
         });
       } catch {
@@ -190,12 +189,12 @@ export default function PublicProfile() {
     );
   }
 
-  const ogDescription = `${formatPublicName(profile.name)} is on HumanPages — the AI hiring platform with 0% commission`;
+  const ogDescription = `${formatPublicName(profile.displayName)} is on HumanPages — the AI hiring platform with 0% commission`;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title={`${formatPublicName(profile.name)} on HumanPages`}
+        title={`${formatPublicName(profile.displayName)} on HumanPages`}
         description={ogDescription}
         ogImage={`https://humanpages.ai/api/og/${profile.id}?v=2`}
         ogType="profile"
@@ -203,7 +202,7 @@ export default function PublicProfile() {
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",
-          "name": formatPublicName(profile.name),
+          "name": formatPublicName(profile.displayName),
           "description": profile.bio,
           "url": `https://humanpages.ai/humans/${profile.id}`,
           ...(profile.location && { "address": {
@@ -250,13 +249,13 @@ export default function PublicProfile() {
                 {/* Profile photo or initials */}
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-blue-400 text-white font-bold text-xl flex items-center justify-center flex-shrink-0">
                   {profile.profilePhotoUrl && !photoError ? (
-                    <img src={profile.profilePhotoUrl} alt={profile.name || ''} className="w-full h-full object-cover" onError={() => setPhotoError(true)} />
+                    <img src={profile.profilePhotoUrl} alt={profile.displayName || ''} className="w-full h-full object-cover" onError={() => setPhotoError(true)} />
                   ) : (
-                    <span aria-hidden="true">{(profile.name || profile.username || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}</span>
+                    <span aria-hidden="true">{(profile.displayName || profile.username || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}</span>
                   )}
                 </div>
                 <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-white break-words">{formatPublicName(profile.name)}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-white break-words">{formatPublicName(profile.displayName)}</h1>
                 {profile.username && (
                   <p className="text-blue-200 text-sm mt-0.5">@{profile.username}</p>
                 )}
@@ -399,6 +398,25 @@ export default function PublicProfile() {
               </div>
             )}
 
+            {/* Education */}
+            {profile.educations && profile.educations.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.education.heading', 'Education')}</h2>
+                <div className="space-y-3">
+                  {profile.educations.map((edu, index) => (
+                    <div key={index} className="p-3 bg-indigo-50 rounded-lg">
+                      <p className="font-medium text-gray-900 text-sm">{edu.degree && edu.field ? `${edu.degree} in ${edu.field}` : edu.degree || edu.field || ''}</p>
+                      <p className="text-gray-600 text-sm">{edu.institution}</p>
+                      {edu.country && <p className="text-gray-500 text-xs">{edu.country}</p>}
+                      {(edu.startYear || edu.endYear) && (
+                        <p className="text-gray-400 text-xs mt-1">{edu.startYear && edu.endYear ? `${edu.startYear} – ${edu.endYear}` : edu.endYear || edu.startYear}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Languages */}
             {profile.languages && profile.languages.length > 0 && (
               <div>
@@ -406,8 +424,7 @@ export default function PublicProfile() {
                 <div className="flex flex-wrap gap-2">
                   {profile.languages.map((lang, index) => (
                     <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
-                      {lang.language}
-                      {lang.proficiency && <span className="text-xs opacity-75">({lang.proficiency})</span>}
+                      {lang}
                     </span>
                   ))}
                 </div>
@@ -741,7 +758,7 @@ export default function PublicProfile() {
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
           targetUserId={profile.id}
-          targetUserName={formatPublicName(profile.name)}
+          targetUserName={formatPublicName(profile.displayName)}
         />
       )}
 

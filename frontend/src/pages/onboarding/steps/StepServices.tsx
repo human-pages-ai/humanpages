@@ -378,14 +378,34 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
 
     const toolSuggestions = eqCategory ? (TOOLS_BY_CATEGORY[eqCategory] || []) : [];
 
-    const handleAddEquipment = () => {
-      if (!eqCategory.trim()) return;
-      const value = eqTool.trim() ? `${eqCategory} - ${eqTool.trim()}` : eqCategory.trim();
-      if (!equipment.some(eq => eq.toLowerCase() === value.toLowerCase())) {
+    // Auto-add: when tool is selected, add "Category - Tool" and reset
+    const autoAddEquipment = (category: string, tool: string) => {
+      const value = tool.trim() ? `${category} - ${tool.trim()}` : category.trim();
+      if (value && !equipment.some(eq => eq.toLowerCase() === value.toLowerCase())) {
         setEquipment(prev => [...prev, value]);
       }
       setEqCategory('');
       setEqTool('');
+    };
+
+    // When a tool is picked from suggestions, auto-add immediately
+    const handleToolChange = (v: string) => {
+      setEqTool(v);
+      // Auto-add if user selected a suggestion (not empty, not just typing)
+      const isSuggestion = toolSuggestions.some(s => s.value === v || s.label === v);
+      if (isSuggestion && eqCategory.trim()) {
+        setTimeout(() => autoAddEquipment(eqCategory, v), 50);
+      }
+    };
+
+    // When category is picked and there are no tool suggestions, auto-add just the category
+    const handleCategoryChange = (v: string) => {
+      setEqCategory(v);
+      setEqTool('');
+      const isSuggestion = EQUIPMENT_CATEGORIES.some(s => s.value === v || s.label === v);
+      if (isSuggestion && !(TOOLS_BY_CATEGORY[v]?.length)) {
+        setTimeout(() => autoAddEquipment(v, ''), 50);
+      }
     };
 
     return (
@@ -409,35 +429,29 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                 <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
                 <SuggestionInput
                   value={eqCategory}
-                  onChange={(v) => { setEqCategory(v); setEqTool(''); }}
+                  onChange={handleCategoryChange}
                   suggestions={EQUIPMENT_CATEGORIES}
                   placeholder="Phone, Camera, Vehicle..."
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Tool / Model</label>
-                <SuggestionInput
-                  value={eqTool}
-                  onChange={setEqTool}
-                  suggestions={toolSuggestions}
-                  placeholder={eqCategory ? `Type or pick a ${eqCategory.toLowerCase()}...` : 'Pick a category first'}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddEquipment();
-                    }
-                  }}
-                />
-              </div>
+              {eqCategory && TOOLS_BY_CATEGORY[eqCategory]?.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Tool / Model</label>
+                  <SuggestionInput
+                    value={eqTool}
+                    onChange={handleToolChange}
+                    suggestions={toolSuggestions}
+                    placeholder={`Pick a ${eqCategory.toLowerCase()}...`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && eqTool.trim()) {
+                        e.preventDefault();
+                        autoAddEquipment(eqCategory, eqTool);
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={handleAddEquipment}
-              disabled={!eqCategory.trim()}
-              className="w-full py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px]"
-            >
-              {t('common.add')}
-            </button>
             <p className="text-xs text-slate-400 mt-1">{t('onboarding.equipment.hint')}</p>
           </>
         )}

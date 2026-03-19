@@ -203,6 +203,47 @@ export function ProfileTilesGrid({ profile, telegramStatus }: ProfileTilesGridPr
           </div>
         </WizardModuleTile>
 
+        {/* 8. Verification & Social */}
+        <WizardModuleTile
+          title={t('dashboard.tiles.verification.title')}
+          stepId="verification"
+          icon="✅"
+          color="emerald"
+          isEmpty={!profile.linkedinVerified && !profile.githubVerified && !profile.humanityVerified}
+          emptyHint={t('dashboard.tiles.verification.emptyHint')}
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">LinkedIn:</span>
+              {profile.linkedinVerified ? (
+                <span className="text-sm text-green-600 font-medium">✓ {t('common.verified')}</span>
+              ) : profile.linkedinUrl ? (
+                <span className="text-sm text-orange-500 font-medium">{t('dashboard.tiles.verification.pending')}</span>
+              ) : (
+                <span className="text-sm text-gray-400">—</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">GitHub:</span>
+              {profile.githubVerified ? (
+                <span className="text-sm text-green-600 font-medium">✓ {t('common.verified')}</span>
+              ) : profile.githubUrl ? (
+                <span className="text-sm text-orange-500 font-medium">{t('dashboard.tiles.verification.pending')}</span>
+              ) : (
+                <span className="text-sm text-gray-400">—</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">{t('dashboard.tiles.verification.humanity')}:</span>
+              {profile.humanityVerified ? (
+                <span className="text-sm text-green-600 font-medium">✓ {t('common.verified')}</span>
+              ) : (
+                <span className="text-sm text-gray-400">—</span>
+              )}
+            </div>
+          </div>
+        </WizardModuleTile>
+
       </div>
 
       {/* Share Profile Link — using VouchCard for consistency */}

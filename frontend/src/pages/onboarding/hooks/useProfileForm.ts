@@ -168,6 +168,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
 
   // ─── Messaging ───
   const [whatsappNumber, setWhatsappNumber] = useState(draft?.whatsappNumber || '');
+  const [smsNumber, setSmsNumber] = useState(draft?.smsNumber || '');
 
   // ─── Availability (agent-facing) ───
   const [timezone, setTimezone] = useState(draft?.timezone || '');
@@ -244,22 +245,57 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
 
       // Always set ID from profile
       setId(data.id);
-
-      const hasDraft = draft != null;
-      if (data.name && !hasDraft) setName(data.name);
-      if (data.bio && !hasDraft) setBio(data.bio);
-      if (data.location && !hasDraft) setLocation(data.location);
-      if (data.neighborhood && !hasDraft) setNeighborhood(data.neighborhood);
-      if (data.locationLat != null && !hasDraft) setLocationLat(data.locationLat);
-      if (data.locationLng != null && !hasDraft) setLocationLng(data.locationLng);
-      if (data.skills?.length && !hasDraft) setSkills(data.skills);
-      if (data.languages?.length && !hasDraft) setLanguageEntries(data.languages.map((l: string) => parseLanguageString(l)));
       setEmailVerified(data.emailVerified || false);
 
+      const hasDraft = draft != null;
+      // For completed profiles (returning users editing via dashboard), always use server data
+      const isCompleted = data.name?.trim() && data.skills?.length > 0;
+      const useServer = isCompleted || !hasDraft;
+
+      if (data.name && useServer) setName(data.name);
+      if (data.bio && useServer) setBio(data.bio);
+      if (data.location && useServer) setLocation(data.location);
+      if (data.neighborhood && useServer) setNeighborhood(data.neighborhood);
+      if (data.locationLat != null && useServer) setLocationLat(data.locationLat);
+      if (data.locationLng != null && useServer) setLocationLng(data.locationLng);
+      if (data.skills?.length && useServer) setSkills(data.skills);
+      if (data.languages?.length && useServer) setLanguageEntries(data.languages.map((l: string) => parseLanguageString(l)));
+      if (data.equipment?.length && useServer) setEquipment(data.equipment);
+      if (data.yearsOfExperience != null && useServer) setYearsOfExperience(data.yearsOfExperience);
+      if (data.freelancerJobsRange && useServer) setFreelancerJobsRange(data.freelancerJobsRange);
+      if (data.timezone && useServer) setTimezone(data.timezone);
+      if (data.weeklyCapacityHours != null && useServer) setWeeklyCapacityHours(data.weeklyCapacityHours);
+      if (data.workType && useServer) setWorkType(data.workType);
+      if (data.whatsapp && useServer) setWhatsappNumber(data.whatsapp);
+      if (data.sms && useServer) setSmsNumber(data.sms);
+      if (data.linkedinUrl && useServer) setLinkedinUrl(data.linkedinUrl);
+      if (data.githubUrl && useServer) setGithubUrl(data.githubUrl);
+      if (data.twitterUrl && useServer) setTwitterUrl(data.twitterUrl);
+      if (data.websiteUrl && useServer) setWebsiteUrl(data.websiteUrl);
+      if (data.instagramUrl && useServer) setInstagramUrl(data.instagramUrl);
+      if (data.youtubeUrl && useServer) setYoutubeUrl(data.youtubeUrl);
+      if (data.facebookUrl && useServer) setFacebookUrl(data.facebookUrl);
+      if (data.tiktokUrl && useServer) setTiktokUrl(data.tiktokUrl);
+      if (data.externalProfiles?.length && useServer) setExternalProfiles(data.externalProfiles);
+      if (data.industries?.length && useServer) setIndustries(data.industries);
+      if (data.platformPresence?.length && useServer) setPlatformPresence(data.platformPresence);
+
+      // Load education entries from API (relation data)
+      if (data.educations?.length && useServer) {
+        setEducationEntries(data.educations.map((e: any) => ({
+          institution: e.institution || '',
+          degree: e.degree || '',
+          field: e.field || '',
+          country: e.country || '',
+          startYear: e.startYear || undefined,
+          endYear: e.endYear || undefined,
+        })));
+      }
+
       // If user has a username, use it; otherwise auto-generate one from name
-      if (data.username && !hasDraft) {
+      if (data.username && useServer) {
         setUsername(data.username);
-      } else if (!hasDraft && data.name?.trim()) {
+      } else if (useServer && data.name?.trim()) {
         const firstName = data.name.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 15);
         if (firstName.length >= 2) {
           const autogenUsername = `${firstName}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`;
@@ -267,8 +303,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
         }
       }
 
-      // If user already has name + skills, they've completed onboarding before
-      if (data.name?.trim() && data.skills?.length > 0) {
+      if (isCompleted) {
         setProfileCompleted(true);
       }
     } catch (err: any) {
@@ -386,6 +421,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
     facebookUrl, setFacebookUrl, tiktokUrl, setTiktokUrl,
     externalProfiles, setExternalProfiles, walletAddress, setWalletAddress, username, setUsername,
     whatsappNumber, setWhatsappNumber,
+    smsNumber, setSmsNumber,
     timezone, setTimezone, weeklyCapacityHours, setWeeklyCapacityHours,
     workType, setWorkType,
     yearsOfExperience, setYearsOfExperience,

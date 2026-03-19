@@ -173,6 +173,7 @@ export default function Onboarding() {
     facebookUrl: form.facebookUrl, tiktokUrl: form.tiktokUrl,
     walletAddress: form.walletAddress,
     whatsappNumber: form.whatsappNumber,
+    smsNumber: form.smsNumber,
     timezone: form.timezone, weeklyCapacityHours: form.weeklyCapacityHours,
     workType: form.workType,
     yearsOfExperience: form.yearsOfExperience,
@@ -330,6 +331,7 @@ export default function Onboarding() {
           username: form.username?.trim() || undefined,
           walletAddress: form.walletAddress.trim() || null,
           whatsapp: form.whatsappNumber.trim() || null,
+          sms: form.smsNumber?.trim() || null,
           timezone: form.timezone.trim() || null,
           weeklyCapacityHours: form.weeklyCapacityHours,
           workType: form.workType.trim() || null,
@@ -355,7 +357,7 @@ export default function Onboarding() {
       for (const edu of form.educationEntries) {
         if (edu.institution.trim() || edu.degree.trim() || edu.field.trim()) {
           nonBlocking.push(
-            api.addEducation({ institution: edu.institution.trim(), degree: edu.degree.trim() || undefined, field: edu.field.trim() || undefined, country: edu.country.trim() || undefined, year: edu.endYear || edu.startYear || undefined })
+            api.addEducation({ institution: edu.institution.trim(), degree: edu.degree.trim() || undefined, field: edu.field.trim() || undefined, country: edu.country.trim() || undefined, startYear: edu.startYear || undefined, endYear: edu.endYear || undefined })
               .then(() => {}).catch(err => console.error('Education save failed:', err))
           );
         }
@@ -442,6 +444,7 @@ export default function Onboarding() {
         return (
           <StepConnect
             whatsappNumber={form.whatsappNumber} setWhatsappNumber={form.setWhatsappNumber}
+            smsNumber={form.smsNumber} setSmsNumber={form.setSmsNumber}
             telegramStatus={telegramStatus} setTelegramStatus={setTelegramStatus}
             telegramLinkUrl={telegramLinkUrl} setTelegramLinkUrl={setTelegramLinkUrl}
             telegramLoading={telegramLoading} setTelegramLoading={setTelegramLoading}
@@ -454,7 +457,11 @@ export default function Onboarding() {
           <StepCvUpload
             cvInputRef={cv.cvInputRef} onCVChange={cv.handleCVChange} onProcessFile={cv.processFile}
             cvProcessing={cv.cvProcessing} cvUploaded={cv.cvUploaded} cvData={cv.cvData}
-            onReupload={() => cv.cvInputRef.current?.click()}
+            onReupload={() => {
+              // Clear value so re-selecting the same file triggers onChange
+              if (cv.cvInputRef.current) cv.cvInputRef.current.value = '';
+              cv.cvInputRef.current?.click();
+            }}
             onNext={handleNext} onSkip={handleSkip} {...stepProps}
           />
         );
@@ -670,7 +677,10 @@ export default function Onboarding() {
             {cv.cvStage === 'done' && cv.cvUploaded && (
               <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between text-xs text-green-700">
                 <span className="flex items-center gap-1.5"><span>✓</span> CV analyzed — fields pre-filled</span>
-                <button type="button" onClick={() => cv.cvInputRef.current?.click()} className="text-orange-600 hover:text-orange-700 font-medium">Re-upload</button>
+                <button type="button" onClick={() => {
+                  setSearchParams({ step: 'cv-upload' }, { replace: true });
+                  window.scrollTo({ top: 0 });
+                }} className="text-orange-600 hover:text-orange-700 font-medium">Re-upload</button>
               </div>
             )}
           </div>
@@ -702,17 +712,31 @@ export default function Onboarding() {
             )}
           </div>
 
-          {position > 1 && (
-            <button
-              type="button"
-              onClick={handleBack}
-              disabled={loading}
-              aria-label={`Go back to step ${position - 1}`}
-              className="w-full mt-4 mb-4 pb-[env(safe-area-inset-bottom)] sm:mb-0 sm:pb-0 py-2.5 sm:py-2 text-sm text-slate-600 hover:text-slate-900 font-medium border border-slate-200 rounded-lg hover:bg-slate-50 active:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500"
-            >
-              &larr; Back to previous step
-            </button>
-          )}
+          <div className="mt-4 mb-4 pb-[env(safe-area-inset-bottom)] sm:mb-0 sm:pb-0 flex flex-col gap-2">
+            {position > 1 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={loading}
+                aria-label={`Go back to step ${position - 1}`}
+                className="w-full py-2.5 sm:py-2 text-sm text-slate-600 hover:text-slate-900 font-medium border border-slate-200 rounded-lg hover:bg-slate-50 active:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500"
+              >
+                &larr; Back to previous step
+              </button>
+            )}
+            {urlStepId && form.profileCompleted && (
+              <button
+                type="button"
+                onClick={async () => {
+                  await saveCurrentStepData(currentStepId);
+                  navigate('/dashboard');
+                }}
+                className="w-full py-2.5 sm:py-2 text-sm text-slate-500 hover:text-slate-700 font-medium border border-slate-200 rounded-lg hover:bg-slate-50 active:bg-slate-100 transition-colors"
+              >
+                &larr; Save &amp; back to Dashboard
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

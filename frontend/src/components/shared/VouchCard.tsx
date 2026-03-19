@@ -103,9 +103,7 @@ export function VouchCard({ username, userId, onUsernameChange, vouchCount = 0, 
         {onUsernameChange && (
           <>
             <label htmlFor="vouch-username" className="block text-xs font-medium text-slate-600 mb-1">Username (optional)</label>
-            {!username && (
-              <p className="text-xs text-slate-500 mb-1.5">Set a username to get a shorter link</p>
-            )}
+            <p className="text-xs text-slate-500 mb-1.5">Your username is public and visible in your profile link.</p>
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-slate-500 whitespace-nowrap">
                 {typeof window !== 'undefined' ? `${window.location.host}/u/` : 'humanpages.ai/u/'}

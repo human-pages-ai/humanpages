@@ -54,6 +54,7 @@ export interface OnboardingDraft {
   externalProfiles: string[];
   walletAddress: string;
   whatsappNumber: string;
+  smsNumber: string;
   cvUploaded: boolean;
   cvData: any;
   timezone: string;

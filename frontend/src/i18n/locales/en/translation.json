@@ -46,7 +46,8 @@
     "unnamed": "Unnamed",
     "opening": "Opening...",
     "clear": "Clear",
-    "connect": "Connect"
+    "connect": "Connect",
+    "verified": "Verified"
   },
   "nav": {
     "home": "Home",
@@ -300,10 +301,12 @@
         "weeklyHoursLabel": "Weekly Hours"
       },
       "verification": {
-        "title": "Verification",
-        "emptyHint": "Verify accounts to boost trust score",
+        "title": "Verification & Social",
+        "emptyHint": "Verify your LinkedIn or GitHub to boost trust",
         "verified": "Verified",
-        "notVerified": "Not verified"
+        "notVerified": "Not verified",
+        "pending": "Linked — verify",
+        "humanity": "Humanity"
       }
     },
     "wizardTile": {
@@ -405,9 +408,17 @@
       "pushLabel": "Push"
     },
     "paymentPreference": {
-      "hint": "Hint",
-      "subtitle": "Subtitle",
-      "title": "Payment preference"
+      "hint": "Choose how you'd like to be paid for your work",
+      "subtitle": "Select your preferred payment methods",
+      "title": "Payment preference",
+      "upfront": "Upfront",
+      "upfrontDesc": "Full payment before work begins",
+      "escrow": "Escrow",
+      "escrowDesc": "Payment held in escrow until delivery",
+      "upon_completion": "Upon completion",
+      "upon_completionDesc": "Payment after work is delivered and approved",
+      "stream": "Streaming",
+      "streamDesc": "Continuous payment streamed as work progresses"
     },
     "photo": {
       "add": "Add",

@@ -199,7 +199,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
             type="tel"
             inputMode="tel"
             value={localPhone}
-            onChange={(e) => setLocalPhone(e.target.value)}
+            onChange={(e) => setLocalPhone(e.target.value.replace(/[^\d\s\-()]/g, ''))}
             onBlur={() => {
               const digitsOnly = localPhone.replace(/\D/g, '');
               if (localPhone && digitsOnly.length < 7) {
@@ -292,7 +292,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
               type="tel"
               inputMode="tel"
               value={smsLocalPhone}
-              onChange={(e) => setSmsLocalPhone(e.target.value)}
+              onChange={(e) => setSmsLocalPhone(e.target.value.replace(/[^\d\s\-()]/g, ''))}
               onBlur={() => {
                 const digitsOnly = smsLocalPhone.replace(/\D/g, '');
                 if (smsLocalPhone && digitsOnly.length < 7) {

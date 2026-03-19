@@ -11,6 +11,8 @@ datasource db {
 enum RateType {
   HOURLY
   FLAT_TASK
+  PER_WORD
+  PER_PAGE
   NEGOTIABLE
 }
 
@@ -172,7 +174,7 @@ model Human {
   // ===== CAPABILITIES (Bot Readable) =====
   skills        String[] @default([]) // Tags for search
   equipment     String[] @default([]) // Hardware (car, drone, camera, etc.)
-  languages     String[] @default([]) // ISO codes (en, es, zh, etc.)
+  languages     String[] @default([]) // "Language (Proficiency)" format, e.g. "English (Native)"
   yearsOfExperience Int?   // Total professional experience in years
   experienceHighlights String[] @default([]) // Top achievements from CV
   cvFileKey     String?    // R2 object key: "cvs/{userId}/{uuid}.{ext}" — persisted on upload
@@ -218,12 +220,14 @@ model Human {
   telegramChatId  String?  // For sending notifications via bot
   whatsapp        String?  // WhatsApp number (E.164 format from Twilio webhook)
   whatsappVerified Boolean @default(false) // True once linked via link code or self-connect
+  sms             String?  // SMS number if different from WhatsApp (E.164 format)
   signal          String?  // Signal number
 
   // ===== PAYMENT METHODS =====
   paymentMethods  String?  // Free-text: PayPal, Venmo, Wise links, etc.
 
   // ===== PRIVACY =====
+  hideRealName         Boolean   @default(false) // True = show "Anonymous" on public profile instead of "FirstName L."
   hideContact          Boolean   @default(true) // Hide contact info from public profile
   featuredConsent      Boolean   @default(false) // Opt-in to be featured on homepage
   featuredInviteSentAt DateTime? // When we sent the "want to be featured?" email
@@ -400,7 +404,9 @@ model Education {
   country     String?
   degree      String?
   field       String?
-  year        Int?
+  year        Int?      // Legacy — kept for backward compat with CV parser
+  startYear   Int?
+  endYear     Int?
   source      String   @default("manual") // "manual" | "cv"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

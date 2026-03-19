@@ -1391,7 +1391,7 @@ export const api = {
   pollCvParse: (fileId: string): Promise<{ status: 'pending' | 'complete' | 'failed'; data?: any; error?: string }> =>
     request(`/cv/parse-status/${fileId}`),
 
-  addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; year?: number }) =>
+  addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; startYear?: number; endYear?: number }) =>
     request('/cv/education', { method: 'POST', body: JSON.stringify(data) }),
 
   deleteEducation: (id: string) =>

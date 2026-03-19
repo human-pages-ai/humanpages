@@ -18,15 +18,20 @@ export function SuggestionInput({
   onKeyDown,
 }: SuggestionInputProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<{ value: string; label: string }[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Find the label for the current value
-  const currentLabel = suggestions.find(s => s.value === value)?.label || value;
+  // Resolve the display label for the current value
+  const selectedLabel = suggestions.find(s => s.value === value)?.label || value;
 
-  // Filter suggestions based on input
+  // What to show in the input: user's typed text while editing, otherwise the resolved label
+  const displayValue = isEditing ? inputText : selectedLabel;
+
+  // Filter suggestions based on typed text
   useEffect(() => {
     if (!isOpen) {
       setFilteredSuggestions([]);
@@ -34,19 +39,22 @@ export function SuggestionInput({
       return;
     }
 
-    const lowerValue = value.toLowerCase();
-    const filtered = suggestions.filter(
-      s => s.label.toLowerCase().includes(lowerValue) || s.value.toLowerCase().includes(lowerValue)
-    );
+    const searchText = isEditing ? inputText.toLowerCase() : '';
+    const filtered = searchText
+      ? suggestions.filter(
+          s => s.label.toLowerCase().includes(searchText) || s.value.toLowerCase().includes(searchText)
+        )
+      : suggestions; // Show all when just opened
     setFilteredSuggestions(filtered);
     setHighlightedIndex(-1);
-  }, [value, isOpen, suggestions]);
+  }, [inputText, isOpen, suggestions, isEditing]);
 
   // Handle click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setIsEditing(false);
       }
     };
 
@@ -56,8 +64,37 @@ export function SuggestionInput({
 
   const handleSelect = (suggestion: { value: string; label: string }) => {
     onChange(suggestion.value);
+    setInputText('');
+    setIsEditing(false);
     setIsOpen(false);
     inputRef.current?.focus();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setInputText(text);
+    setIsEditing(true);
+    setIsOpen(true);
+
+    // If user is typing freely (no match selected), pass raw text as value
+    // This allows free-text entry for currency codes etc.
+    const exactMatch = suggestions.find(
+      s => s.label.toLowerCase() === text.toLowerCase() || s.value.toLowerCase() === text.toLowerCase()
+    );
+    if (exactMatch) {
+      onChange(exactMatch.value);
+    } else {
+      onChange(text);
+    }
+  };
+
+  const handleFocus = () => {
+    setIsOpen(true);
+    // Start editing with empty text to show all suggestions
+    if (value) {
+      setInputText('');
+      setIsEditing(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -92,6 +129,7 @@ export function SuggestionInput({
       case 'Escape':
         e.preventDefault();
         setIsOpen(false);
+        setIsEditing(false);
         break;
     }
   };
@@ -101,9 +139,9 @@ export function SuggestionInput({
       <input
         ref={inputRef}
         type="text"
-        value={currentLabel}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setIsOpen(true)}
+        value={displayValue}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={`w-full px-3 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${value ? 'pr-8' : ''} ${className}`}
@@ -112,7 +150,7 @@ export function SuggestionInput({
       {value && (
         <button
           type="button"
-          onClick={() => { onChange(''); inputRef.current?.focus(); }}
+          onClick={() => { onChange(''); setInputText(''); setIsEditing(false); inputRef.current?.focus(); }}
           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none"
           aria-label="Clear selection"
         >
@@ -131,6 +169,8 @@ export function SuggestionInput({
                 className={`w-full text-left px-3 py-2.5 sm:py-2 text-base sm:text-sm transition-colors ${
                   idx === highlightedIndex
                     ? 'bg-orange-50 text-slate-900'
+                    : suggestion.value === value
+                    ? 'bg-orange-25 text-slate-900 font-medium'
                     : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >

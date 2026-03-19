@@ -19,12 +19,14 @@ import { computeTrustScore } from '../lib/trustScore.js';
 import { qualifyAffiliateReferral, getReferralProgramData } from './affiliate.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 import { queueModeration } from '../lib/moderation.js';
+import { sanitizeBio } from './cv.js';
 
 const router = Router();
 
-// Rate limiter for username changes: users can only change their username once every 30 days
-const usernameChangeTimestamps = new Map<string, number>();
-const USERNAME_CHANGE_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+// Rate limiter for username changes: max 3 per day per user
+const usernameChangeCounts = new Map<string, { count: number; resetAt: number }>();
+const USERNAME_MAX_CHANGES_PER_DAY = 3;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Hebrew → English skill synonyms for search expansion
 const SKILL_SYNONYMS: Record<string, string> = {
@@ -86,6 +88,8 @@ const TIER_PROFILE_LIMITS: Record<string, number> = {
 // Future developers: do NOT add notification prefs (emailNotifications, etc.) or contact fields here.
 const publicHumanSelect = {
   id: true,
+  name: true, // Masked to "FirstName L." before sending — never sent raw
+  hideRealName: true, // If true, name is sent as "Anonymous"
   username: true,
   bio: true,
   location: true,
@@ -138,6 +142,14 @@ const publicHumanSelect = {
   services: {
     where: { isActive: true },
     select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
+  },
+  educations: {
+    select: { institution: true, country: true, degree: true, field: true, year: true, startYear: true, endYear: true },
+    orderBy: { endYear: 'desc' },
+  },
+  certificates: {
+    select: { name: true, issuer: true, year: true },
+    orderBy: { year: 'desc' },
   },
   fiatPaymentMethods: {
     select: { platform: true },
@@ -202,6 +214,19 @@ const fullHumanSelect = {
     select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
   },
 } as const;
+
+// Helper: mask name for public profile — "FirstName L." or "Anonymous"
+function maskPublicName(human: any): any {
+  if (human.hideRealName || !human.name) {
+    human.displayName = 'Anonymous';
+  } else {
+    const parts = human.name.trim().split(/\s+/);
+    human.displayName = parts.length === 1 ? parts[0] : `${parts[0]} ${parts[parts.length - 1][0]}.`;
+  }
+  delete human.name; // Never expose full name publicly
+  delete human.hideRealName; // Internal flag
+  return human;
+}
 
 // Helper: generate signed photo URL and strip internal R2 key from response
 async function attachPhotoUrl(human: any): Promise<any> {
@@ -320,7 +345,7 @@ const updateProfileSchema = z.object({
     (c) => SUPPORTED_CURRENCIES.includes(c as any),
     `Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}`
   ).optional(),
-  rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
+  rateType: z.enum(['HOURLY', 'FLAT_TASK', 'PER_WORD', 'PER_PAGE', 'NEGOTIABLE']).optional(),
   paymentPreferences: z.array(
     z.enum(['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STREAM'])
   ).min(1).optional(),
@@ -337,6 +362,7 @@ const updateProfileSchema = z.object({
     'Must be a valid Telegram handle (e.g. @username, 5-32 characters after @, starts with a letter, cannot end with underscore)'
   ).optional().nullable(),
   whatsapp: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Must be a valid phone number with country code (e.g. +1234567890)').optional().nullable(),
+  sms: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Must be a valid phone number with country code (e.g. +1234567890)').optional().nullable(),
   signal: z.string().optional().nullable(),
 
   // Payment methods
@@ -354,6 +380,7 @@ const updateProfileSchema = z.object({
   // External profiles removed — dashboard-only feature, not in onboarding
 
   // Privacy
+  hideRealName: z.boolean().optional(),
   hideContact: z.boolean().optional(),
   featuredConsent: z.boolean().optional(),
 
@@ -461,14 +488,46 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
-      include: {
+      select: {
+        ...fullHumanSelect,
+        // /me needs additional fields for self-view
+        passwordHash: true, // needed for hasPassword check
+        emailVerified: true,
+        emailVerificationToken: false,
+        humanStatus: true,
+        referredBy: true,
+        referralCode: true,
+        profileCompleteness: true,
+        cvConsent: true,
+        cvParsedAt: true,
+        skillSources: true,
+        pushNotifications: true,
+        emailNotifications: true,
+        telegramNotifications: true,
+        whatsappNotifications: true,
+        analyticsOptOut: true,
+        experienceHighlights: true,
+        freelancerJobsRange: true,
+        platformPresence: true,
+        externalProfiles: true,
+        industries: true,
+        createdAt: true,
+        updatedAt: true,
+        educations: {
+          select: { id: true, institution: true, country: true, degree: true, field: true, year: true, startYear: true, endYear: true, source: true },
+          orderBy: { endYear: 'desc' as const },
+        },
+        certificates: {
+          select: { id: true, name: true, issuer: true, year: true, source: true },
+          orderBy: { year: 'desc' as const },
+        },
         wallets: {
           select: { id: true, network: true, address: true, label: true, isPrimary: true, verified: true },
           orderBy: { createdAt: 'asc' as const },
         },
         services: {
           where: { isActive: true },
-          select: { id: true, title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true, isActive: true },
+          select: { id: true, title: true, description: true, category: true, subcategory: true, priceMin: true, priceCurrency: true, priceUnit: true, isActive: true },
         },
         fiatPaymentMethods: {
           select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
@@ -493,7 +552,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
       getReferralProgramData(human.id),
     ]);
 
-    const { passwordHash, emailVerificationToken, ...profile } = human;
+    const { passwordHash, ...profile } = human as any;
     await attachPhotoUrl(profile);
     res.json({ ...profile, reputation, trustScore, referralCount, referralProgram, hasPassword: !!passwordHash });
   } catch (error) {
@@ -698,11 +757,11 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
 
       // Only enforce rate limit if username is actually changing
       if (current?.username !== updates.username) {
-        const lastChange = usernameChangeTimestamps.get(req.userId!);
-        if (lastChange && Date.now() - lastChange < USERNAME_CHANGE_COOLDOWN) {
-          const cooldownDays = Math.ceil((USERNAME_CHANGE_COOLDOWN - (Date.now() - lastChange)) / (24 * 60 * 60 * 1000));
+        const now = Date.now();
+        const entry = usernameChangeCounts.get(req.userId!);
+        if (entry && now < entry.resetAt && entry.count >= USERNAME_MAX_CHANGES_PER_DAY) {
           return res.status(429).json({
-            error: `Username change rate limited. You can change your username again in ${cooldownDays} day${cooldownDays !== 1 ? 's' : ''}.`
+            error: `You can only change your username ${USERNAME_MAX_CHANGES_PER_DAY} times per day. Try again tomorrow.`
           });
         }
       }
@@ -735,13 +794,13 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
-    // Strip personal data from bio before saving (backend safety net)
+    // Strip personal data from bio before saving (reuses full sanitization from CV pipeline)
     if (updates.bio && typeof updates.bio === 'string') {
-      let bio = updates.bio;
-      bio = bio.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim(); // emails
-      bio = bio.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '').trim(); // phones
-      bio = bio.replace(/\s{2,}/g, ' ').replace(/^[,;.\s]+/, '').trim();
-      updates.bio = bio.slice(0, 500) || null;
+      const current = await prisma.human.findUnique({
+        where: { id: req.userId },
+        select: { name: true },
+      });
+      updates.bio = sanitizeBio(updates.bio, current?.name) || null;
     }
 
     // Compute minRateUsdEstimate if rate or currency changed
@@ -806,9 +865,15 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       human.profileCompleteness = profileCompleteness;
     }
 
-    // Record username change timestamp if username was actually updated
+    // Record username change count if username was actually updated
     if (updates.username && updates.username !== human.username) {
-      usernameChangeTimestamps.set(req.userId!, Date.now());
+      const now = Date.now();
+      const entry = usernameChangeCounts.get(req.userId!);
+      if (!entry || now >= entry.resetAt) {
+        usernameChangeCounts.set(req.userId!, { count: 1, resetAt: now + ONE_DAY_MS });
+      } else {
+        entry.count++;
+      }
     }
 
     const [reputation, trustScore] = await Promise.all([
@@ -1857,6 +1922,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 
     const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
+    maskPublicName(rest);
     await attachPhotoUrl(rest);
     res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
@@ -1902,6 +1968,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
 
     const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
+    maskPublicName(rest);
     await attachPhotoUrl(rest);
     res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {

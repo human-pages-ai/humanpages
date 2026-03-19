@@ -11,7 +11,8 @@ const router = Router();
 const UNIT_MAP: Record<string, string> = {
   'per hour': 'HOURLY', 'hourly': 'HOURLY', 'HOURLY': 'HOURLY',
   'per task': 'FLAT_TASK', 'fixed price': 'FLAT_TASK', 'FLAT_TASK': 'FLAT_TASK',
-  'per word': 'FLAT_TASK', 'per page': 'FLAT_TASK',
+  'per word': 'PER_WORD', 'PER_WORD': 'PER_WORD',
+  'per page': 'PER_PAGE', 'PER_PAGE': 'PER_PAGE',
   'negotiable': 'NEGOTIABLE', "let's discuss": 'NEGOTIABLE', 'NEGOTIABLE': 'NEGOTIABLE',
 };
 

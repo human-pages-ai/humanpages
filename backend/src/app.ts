@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import path from 'path';
@@ -111,10 +112,9 @@ app.use((req, res, next) => {
   express.json({ limit: '10kb' })(req, res, next);
 });
 
-// TODO: Add gzip compression middleware (85% bandwidth savings)
-// Add after installing 'compression' package:
-// import compression from 'compression';
-// app.use(compression({ level: 6, threshold: 1024 }));
+// Gzip compression — ~85% bandwidth savings on JSON responses
+// Skip binary routes (photos, CV uploads) which handle their own encoding
+app.use(compression({ level: 6, threshold: 1024 }));
 
 app.use(pinoHttp({
   logger,

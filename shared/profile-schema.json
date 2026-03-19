@@ -1,0 +1,122 @@
+{
+  "_description": "Single point of truth for HumanPages profile data model. Every field the wizard collects, where it's stored, and what values are valid. Referenced by frontend, backend, tests, and AI agents.",
+  "_updated": "2026-03-19",
+
+  "enums": {
+    "RateType": ["HOURLY", "FLAT_TASK", "PER_WORD", "PER_PAGE", "NEGOTIABLE"],
+    "WorkMode": ["REMOTE", "ONSITE", "HYBRID"],
+    "WorkType": ["digital", "physical", "both"],
+    "FreelancerJobsRange": ["new", "1-10", "10-50", "50-100", "100-500", "500+"],
+    "PaymentPreference": ["UPFRONT", "ESCROW", "UPON_COMPLETION", "STREAM"],
+    "LocationGranularity": ["city", "neighborhood"],
+    "ResponseTimeCommitment": ["within_1h", "within_4h", "within_24h", "flexible"],
+    "SchedulePattern": ["morning", "afternoon", "evening", "flexible"],
+    "PreferredTaskDuration": ["micro", "half_day", "full_project", "any"],
+    "EmailDigestMode": ["REALTIME", "HOURLY", "DAILY"],
+    "ProfilePhotoStatus": ["none", "pending", "approved", "rejected"],
+    "LanguageProficiency": ["Native", "Fluent", "Advanced", "Conversational", "Basic"],
+    "EducationSource": ["manual", "cv"],
+    "FiatPaymentPlatform": ["WISE", "VENMO", "PAYPAL", "CASHAPP", "REVOLUT", "ZELLE", "MONZO", "N26", "MERCADOPAGO"]
+  },
+
+  "wizardSteps": {
+    "noCV":  ["connect", "cv-upload", "skills", "equipment", "vouch", "location", "education", "payment", "services", "profile", "availability", "verification"],
+    "withCV": ["connect", "cv-upload", "equipment", "vouch", "payment", "skills", "location", "education", "services", "profile", "availability", "verification"]
+  },
+
+  "fields": {
+    "identity": [
+      { "field": "name",         "type": "string",  "step": "profile",   "source": ["manual", "cv"],    "required": true,  "db": "Human.name",             "frontend": "form.name",             "validation": "min 1 char. Public API sends as displayName: 'FirstName L.' or 'Anonymous'" },
+      { "field": "hideRealName", "type": "boolean", "step": "dashboard", "source": ["manual"],          "required": false, "db": "Human.hideRealName",     "frontend": "dashboard toggle",      "validation": "default false. If true, public profile shows 'Anonymous'" },
+      { "field": "username",     "type": "string",  "step": "vouch",     "source": ["manual", "auto"],  "required": false, "db": "Human.username",          "frontend": "form.username",         "validation": "3-30 chars, [a-zA-Z0-9_], unique, max 3 changes/day" },
+      { "field": "bio",          "type": "string",  "step": "profile",   "source": ["manual", "cv"],    "required": false, "db": "Human.bio",               "frontend": "form.bio",              "validation": "max 500 chars, sanitized (name/email/phone stripped)" },
+      { "field": "profilePhoto", "type": "file",    "step": "profile",   "source": ["manual", "oauth"], "required": false, "db": "Human.profilePhotoKey",   "frontend": "form.photoFile",        "validation": "WebP, R2 storage, moderated" }
+    ],
+
+    "skills": [
+      { "field": "skills",              "type": "string[]", "step": "skills",    "source": ["manual", "cv"],    "required": true,  "db": "Human.skills",              "frontend": "form.skills",              "validation": "max 50 items, deduplicated" },
+      { "field": "equipment",           "type": "string[]", "step": "equipment", "source": ["manual"],          "required": false, "db": "Human.equipment",           "frontend": "form.equipment",           "validation": "max 20 items, 'Category - Tool' format" },
+      { "field": "yearsOfExperience",   "type": "int",      "step": "education", "source": ["manual", "cv"],    "required": false, "db": "Human.yearsOfExperience",   "frontend": "form.yearsOfExperience",   "validation": "0-70, CV: currentYear - earliestWorkYear" },
+      { "field": "freelancerJobsRange", "type": "enum:FreelancerJobsRange", "step": "education", "source": ["manual"], "required": false, "db": "Human.freelancerJobsRange", "frontend": "form.freelancerJobsRange", "validation": "" }
+    ],
+
+    "education": {
+      "_model": "Education (one-to-many)",
+      "_fields": [
+        { "field": "institution", "type": "string", "source": ["manual", "cv"], "required": true,  "validation": "" },
+        { "field": "degree",      "type": "string", "source": ["manual", "cv"], "required": false, "validation": "searchable combobox" },
+        { "field": "field",       "type": "string", "source": ["manual", "cv"], "required": false, "validation": "searchable combobox" },
+        { "field": "country",     "type": "string", "source": ["manual", "cv"], "required": false, "validation": "searchable combobox" },
+        { "field": "startYear",   "type": "int",    "source": ["manual", "cv"], "required": false, "validation": "1900-2100" },
+        { "field": "endYear",     "type": "int",    "source": ["manual", "cv"], "required": false, "validation": "1900-2100" }
+      ]
+    },
+
+    "services": {
+      "_model": "Service (one-to-many)",
+      "_fields": [
+        { "field": "title",         "type": "string",              "source": ["manual", "cv"], "required": true,  "validation": "" },
+        { "field": "description",   "type": "string",              "source": ["manual"],       "required": false, "validation": "" },
+        { "field": "category",      "type": "string",              "source": ["manual"],       "required": true,  "validation": "" },
+        { "field": "subcategory",   "type": "string",              "source": ["manual"],       "required": false, "validation": "" },
+        { "field": "priceMin",      "type": "decimal",             "source": ["manual"],       "required": false, "validation": "> 0" },
+        { "field": "priceCurrency", "type": "string",              "source": ["manual"],       "required": false, "validation": "any 1-10 chars, default USD" },
+        { "field": "priceUnit",     "type": "enum:RateType",       "source": ["manual"],       "required": false, "validation": "frontend sends 'per hour' etc, UNIT_MAP transforms to enum" }
+      ]
+    },
+
+    "location": [
+      { "field": "location",     "type": "string",  "step": "location", "source": ["manual", "cv"],       "required": false, "db": "Human.location",     "frontend": "form.location",     "validation": "auto-geocoded to lat/lng" },
+      { "field": "neighborhood", "type": "string",  "step": "location", "source": ["manual"],              "required": false, "db": "Human.neighborhood", "frontend": "form.neighborhood", "validation": "" },
+      { "field": "locationLat",  "type": "float",   "step": "location", "source": ["auto:geocode"],        "required": false, "db": "Human.locationLat",  "frontend": "form.locationLat",  "validation": "-90 to 90" },
+      { "field": "locationLng",  "type": "float",   "step": "location", "source": ["auto:geocode"],        "required": false, "db": "Human.locationLng",  "frontend": "form.locationLng",  "validation": "-180 to 180" },
+      { "field": "timezone",     "type": "string",  "step": "location", "source": ["auto:browser"],        "required": false, "db": "Human.timezone",     "frontend": "form.timezone",     "validation": "IANA format" },
+      { "field": "languages",    "type": "string[]","step": "location", "source": ["manual", "cv"],        "required": false, "db": "Human.languages",    "frontend": "form.languageEntries", "validation": "'Language (Proficiency)' format, max 30" }
+    ],
+
+    "communication": [
+      { "field": "whatsapp",          "type": "string",  "step": "connect", "source": ["manual"],         "required": false, "db": "Human.whatsapp",          "frontend": "form.whatsappNumber",    "validation": "E.164 regex: ^\\+[1-9]\\d{6,14}$" },
+      { "field": "sms",               "type": "string",  "step": "connect", "source": ["manual"],         "required": false, "db": "Human.sms",               "frontend": "form.smsNumber",         "validation": "E.164 regex, only if different from WhatsApp" },
+      { "field": "telegram",          "type": "string",  "step": "connect", "source": ["manual:bot"],     "required": false, "db": "Human.telegram",          "frontend": "telegramStatus",         "validation": "set via Telegram bot link" },
+      { "field": "pushNotifications", "type": "boolean", "step": "connect", "source": ["manual:browser"], "required": false, "db": "Human.pushNotifications", "frontend": "—",                      "validation": "browser push permission" }
+    ],
+
+    "payment": [
+      { "field": "wallets",            "type": "Wallet[]",                   "step": "payment", "source": ["manual:privy"], "required": false, "db": "Wallet model (1:N)", "frontend": "form.walletAddress", "validation": "multiple wallets supported" },
+      { "field": "paymentPreferences", "type": "enum:PaymentPreference[]",   "step": "payment", "source": ["manual"],       "required": false, "db": "Human.paymentPreferences", "frontend": "—", "validation": "at least 1 when setting" }
+    ],
+
+    "availability": [
+      { "field": "weeklyCapacityHours", "type": "int",              "step": "availability", "source": ["manual"], "required": false, "db": "Human.weeklyCapacityHours", "frontend": "form.weeklyCapacityHours", "validation": "0-168" },
+      { "field": "workType",            "type": "enum:WorkType",    "step": "availability", "source": ["manual"], "required": false, "db": "Human.workType",            "frontend": "form.workType",            "validation": "" }
+    ],
+
+    "verification": [
+      { "field": "linkedinUrl",      "type": "string",   "step": "verification", "source": ["manual", "oauth"], "required": false, "db": "Human.linkedinUrl",      "frontend": "form.linkedinUrl",      "validation": "locked after verification" },
+      { "field": "githubUrl",        "type": "string",   "step": "verification", "source": ["manual", "oauth"], "required": false, "db": "Human.githubUrl",        "frontend": "form.githubUrl",        "validation": "locked after verification" },
+      { "field": "twitterUrl",       "type": "string",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.twitterUrl",       "frontend": "form.twitterUrl",       "validation": "" },
+      { "field": "websiteUrl",       "type": "string",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.websiteUrl",       "frontend": "form.websiteUrl",       "validation": "" },
+      { "field": "facebookUrl",      "type": "string",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.facebookUrl",      "frontend": "form.facebookUrl",      "validation": "" },
+      { "field": "instagramUrl",     "type": "string",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.instagramUrl",     "frontend": "form.instagramUrl",     "validation": "" },
+      { "field": "youtubeUrl",       "type": "string",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.youtubeUrl",       "frontend": "form.youtubeUrl",       "validation": "" },
+      { "field": "tiktokUrl",        "type": "string",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.tiktokUrl",        "frontend": "form.tiktokUrl",        "validation": "" },
+      { "field": "externalProfiles", "type": "string[]", "step": "verification", "source": ["manual"],          "required": false, "db": "Human.externalProfiles", "frontend": "form.externalProfiles", "validation": "max 10 URLs" },
+      { "field": "platformPresence", "type": "json[]",   "step": "verification", "source": ["manual"],          "required": false, "db": "Human.platformPresence", "frontend": "form.platformPresence", "validation": "{platform, url, details}, max 20" }
+    ],
+
+    "cvPipeline": [
+      { "field": "cvFile",                "type": "file",     "step": "cv-upload", "source": ["manual"],    "db": "R2 (in-memory)",              "notes": "PDF/DOCX → OpenAI parse" },
+      { "field": "cvConsent",             "type": "boolean",  "step": "cv-upload", "source": ["implicit"],  "db": "Human.cvConsent",             "notes": "" },
+      { "field": "earliestWorkYear",      "type": "int",      "step": "—",         "source": ["cv"],        "db": "—",                           "notes": "used to compute yearsOfExperience" },
+      { "field": "experienceHighlights",  "type": "string[]", "step": "—",         "source": ["cv"],        "db": "Human.experienceHighlights",  "notes": "top 5 achievements" },
+      { "field": "skillSources",          "type": "json",     "step": "—",         "source": ["backend"],   "db": "Human.skillSources",          "notes": "skill → cv|cv_inferred|manual" }
+    ],
+
+    "backendComputed": [
+      { "field": "profileCompleteness", "type": "int",     "db": "Human.profileCompleteness", "notes": "0-100, recomputed on PATCH /me" },
+      { "field": "minRateUsdEstimate",  "type": "decimal", "db": "Human.minRateUsdEstimate",  "notes": "USD conversion of rate for search filtering" },
+      { "field": "isAvailable",         "type": "boolean", "db": "Human.isAvailable",         "notes": "false if all notification channels off" },
+      { "field": "vouchCount",          "type": "int",     "db": "Human.vouchCount",          "notes": "denormalized count" }
+    ]
+  }
+}

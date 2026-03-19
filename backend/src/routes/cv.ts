@@ -14,7 +14,7 @@ import { logger } from '../lib/logger.js';
  * This is the BACKEND safety net — even if the frontend doesn't sanitize,
  * personal info never reaches the database.
  */
-function sanitizeBio(bio: string | null | undefined, name: string | null | undefined): string | null {
+export function sanitizeBio(bio: string | null | undefined, name: string | null | undefined): string | null {
   if (!bio) return null;
   let clean = bio;
   // Strip the person's full name (case-insensitive)
@@ -23,6 +23,19 @@ function sanitizeBio(bio: string | null | undefined, name: string | null | undef
   }
   // Strip "FirstName LastName is/was/has/have/been" at the start
   clean = clean.replace(/^[A-Z][a-z]+ [A-Z][a-z]+ (is |was |has |have |been )/i, '').trim();
+  // Strip first name only patterns: "FirstName is/was/has..."
+  if (name) {
+    const firstName = name.split(/\s+/)[0];
+    if (firstName) {
+      clean = clean.replace(new RegExp(`^${firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(is |was |has |have |been )`, 'i'), '').trim();
+    }
+  }
+  // Strip orphaned "is a/was a/has been" at the very start (left after name removal)
+  clean = clean.replace(/^(is |was |has been |has |have been |have )(a |an )?/i, '').trim();
+  // Capitalize first letter after cleanup
+  if (clean.length > 0) {
+    clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+  }
   // Strip email addresses
   clean = clean.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim();
   // Strip phone numbers
@@ -228,7 +241,9 @@ async function parseAndSaveCv(fileId: string, job: CvParseJob): Promise<void> {
       country: edu.country || null,
       degree: edu.degree || null,
       field: edu.field || null,
-      year: edu.year || null,
+      startYear: edu.startYear || null,
+      endYear: edu.endYear || null,
+      year: edu.endYear || edu.startYear || null, // Legacy sync
       source: 'cv' as const,
     }));
 
@@ -386,7 +401,9 @@ router.post(
         country: edu.country || null,
         degree: edu.degree || null,
         field: edu.field || null,
-        year: edu.year || null,
+        startYear: edu.startYear || null,
+        endYear: edu.endYear || null,
+        year: edu.endYear || edu.startYear || null,
         source: 'cv' as const,
       }));
 
@@ -577,7 +594,8 @@ const educationSchema = z.object({
   country: z.string().optional().nullable(),
   degree: z.string().optional().nullable(),
   field: z.string().optional().nullable(),
-  year: z.number().int().min(1900).max(2100).optional().nullable(),
+  startYear: z.number().int().min(1900).max(2100).optional().nullable(),
+  endYear: z.number().int().min(1900).max(2100).optional().nullable(),
 });
 
 router.post('/education', authenticateToken, async (req: AuthRequest, res) => {
@@ -587,6 +605,7 @@ router.post('/education', authenticateToken, async (req: AuthRequest, res) => {
     const education = await (prisma as any).education.create({
       data: {
         ...data,
+        year: data.endYear || data.startYear || null, // Legacy field — kept in sync
         humanId: req.userId!,
         source: 'manual',
       },
