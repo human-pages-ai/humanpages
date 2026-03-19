@@ -788,13 +788,13 @@ export default function Dashboard() {
                     <div>
                       <span className="text-gray-500 text-xs">Work Type (Digital / In-Person):</span>{' '}
                       <span className={`text-sm font-medium ${profile.workType ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.workType === 'both' ? 'Both' : profile.workType === 'digital' ? 'Digital' : profile.workType === 'physical' ? 'In-Person' : profile.workType || '—'}
+                        {profile.workType ? t(`profile.workType.${profile.workType}`, profile.workType) : '—'}
                       </span>
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">Weekly Hours:</span>{' '}
                       <span className={`text-sm font-medium ${profile.weeklyCapacityHours !== null ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {profile.weeklyCapacityHours !== null ? (profile.weeklyCapacityHours === 0 ? 'Flexible' : `${profile.weeklyCapacityHours} hours/week`) : '—'}
+                        {profile.weeklyCapacityHours !== null ? (profile.weeklyCapacityHours === 0 ? t('profile.weeklyHours.flexible') : t('profile.weeklyHours.format', { hours: profile.weeklyCapacityHours })) : '—'}
                       </span>
                     </div>
                   </div>

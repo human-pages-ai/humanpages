@@ -416,7 +416,16 @@
       "walletConnected": "Wallet connected",
       "connectWalletPrompt": "How would you like to get paid?",
       "alsoAcceptNonCrypto": "I also accept non-crypto payments",
-      "usdcWalletConnected": "USDC (wallet connected)"
+      "usdcWalletConnected": "USDC (wallet connected)",
+      "workType": {
+        "both": "Both",
+        "digital": "Digital",
+        "physical": "In-Person"
+      },
+      "weeklyHours": {
+        "flexible": "Flexible",
+        "format": "{{hours}} hours/week"
+      }
     },
     "wallets": {
       "title": "Wallets",

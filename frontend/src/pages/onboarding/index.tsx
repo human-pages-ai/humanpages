@@ -165,6 +165,7 @@ export default function Onboarding() {
         timezone: form.timezone.trim() || null,
         weeklyCapacityHours: form.weeklyCapacityHours,
         workType: form.workType.trim() || null,
+        username: form.username?.trim() || undefined,
         yearsOfExperience: form.yearsOfExperience,
         languages: form.languageEntries.length > 0
           ? [...new Map(form.languageEntries.map(e => [e.language.trim().toLowerCase(), serializeLanguageEntry(e)])).values()]
@@ -284,6 +285,7 @@ export default function Onboarding() {
           skills: cleanSkills,
           languages: cleanLanguages,
           featuredConsent: true,
+          username: form.username?.trim() || undefined,
           walletAddress: form.walletAddress.trim() || null,
           whatsapp: form.whatsappNumber.trim() || null,
           timezone: form.timezone.trim() || null,
