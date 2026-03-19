@@ -1,6 +1,7 @@
 import Link from '../../components/LocalizedLink';
 import ConnectLayout from './ConnectLayout';
 import { PLATFORMS, getPlatformsByCategory } from './platforms';
+import { useState } from 'react';
 import { CodeBlock, Section, Callout } from './shared';
 
 /* ── SVG connection diagram ──────────────────────────────────── */
@@ -65,6 +66,28 @@ function PlatformCard({ platform }: { platform: typeof PLATFORMS[number] }) {
   );
 }
 
+/* ── Server URL copy widget ──────────────────────────────────── */
+function ServerUrlCopy() {
+  const [copied, setCopied] = useState(false);
+  const url = 'https://mcp.humanpages.ai/sse';
+  const copy = async () => {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="inline-flex items-center bg-slate-900 rounded-lg overflow-hidden max-w-lg mx-auto">
+      <code className="text-sm text-slate-300 px-4 py-2.5 select-all">{url}</code>
+      <button
+        onClick={copy}
+        className="bg-amber-500 hover:bg-amber-400 text-slate-900 text-sm font-semibold px-4 py-2.5 transition-colors"
+      >
+        {copied ? 'Copied!' : 'Copy URL'}
+      </button>
+    </div>
+  );
+}
+
 /* ── Main overview page ──────────────────────────────────────── */
 export default function ConnectOverview() {
   const categories = getPlatformsByCategory();
@@ -78,12 +101,17 @@ export default function ConnectOverview() {
     >
       {/* Hero */}
       <div className="text-center py-12">
+        <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-600 text-xs font-medium px-3 py-1 rounded-full mb-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          {PLATFORMS.length} platforms supported
+        </div>
         <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
           Connect your AI to real humans
         </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">
           One MCP server. Every major platform. Pick your tool and follow the guide — you'll be searching for real humans in under a minute.
         </p>
+        <ServerUrlCopy />
       </div>
 
       <ConnectionDiagram />

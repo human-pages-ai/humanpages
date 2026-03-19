@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const MCP_CONFIG = `{
   "mcpServers": {
@@ -80,6 +80,8 @@ export default function AndroidStudioPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="android-studio" slugs={['gemini', 'claude', 'cursor', 'smithery']} />
+      <PlatformNav currentSlug="android-studio" />
     </ConnectLayout>
   );
 }

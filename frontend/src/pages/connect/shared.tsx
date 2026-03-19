@@ -1,4 +1,7 @@
 import { useState, ReactNode } from 'react';
+import { Helmet } from 'react-helmet-async';
+import Link from '../../components/LocalizedLink';
+import { PLATFORMS } from './platforms';
 
 /* ── Copy button ─────────────────────────────────────────────── */
 export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
@@ -82,9 +85,14 @@ export function StepByStep({ steps }: { steps: { title: string; detail: ReactNod
 
 /* ── Section heading ─────────────────────────────────────────── */
 export function Section({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
+  const sectionId = id || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   return (
-    <section id={id} className="mt-16">
-      <h2 className="text-2xl font-bold text-slate-900 mb-6">{title}</h2>
+    <section id={sectionId} className="mt-16 scroll-mt-20">
+      <h2 className="text-2xl font-bold text-slate-900 mb-6">
+        <a href={`#${sectionId}`} className="hover:text-slate-600 transition-colors">
+          {title}
+        </a>
+      </h2>
       {children}
     </section>
   );
@@ -141,9 +149,37 @@ export function PlatformHero({
   );
 }
 
+/* ── Quick-copy card (shown at top for skimmers) ─────────────── */
+export function QuickCopyCard({ configs }: { configs: { label: string; code: string }[] }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-10">
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Quick start — copy & paste</p>
+      {configs.length > 1 && (
+        <div className="flex gap-2 mb-3">
+          {configs.map((c, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                i === active ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <CodeBlock code={configs[active].code} />
+    </div>
+  );
+}
+
 /* ── "Try it" prompt section (reused on every page) ──────────── */
-export function TryItSection() {
-  const prompt = `Connect to my HumanPages MCP server at https://mcp.humanpages.ai/sse and search for available humans who can do QA testing.`;
+export function TryItSection({ platformName }: { platformName?: string }) {
+  const prompt = platformName
+    ? `Search for available humans who can do QA testing on HumanPages.`
+    : `Connect to my HumanPages MCP server at https://mcp.humanpages.ai/sse and search for available humans who can do QA testing.`;
   return (
     <Section title="Try it now">
       <p className="text-slate-600 mb-4">
@@ -175,5 +211,115 @@ export function ToolsReference() {
         ))}
       </div>
     </Section>
+  );
+}
+
+/* ── Prev / Next navigation between platform pages ───────────── */
+export function PlatformNav({ currentSlug }: { currentSlug: string }) {
+  const idx = PLATFORMS.findIndex((p) => p.slug === currentSlug);
+  const prev = idx > 0 ? PLATFORMS[idx - 1] : null;
+  const next = idx < PLATFORMS.length - 1 ? PLATFORMS[idx + 1] : null;
+
+  return (
+    <nav className="mt-20 pt-8 border-t border-slate-100 flex items-center justify-between">
+      {prev ? (
+        <Link
+          to={`/dev/connect/${prev.slug}`}
+          className="group flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
+        >
+          <span className="text-lg">←</span>
+          <span>
+            <span className="block text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-500">Previous</span>
+            {prev.shortName}
+          </span>
+        </Link>
+      ) : (
+        <div />
+      )}
+      <Link
+        to="/dev/connect"
+        className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        All platforms
+      </Link>
+      {next ? (
+        <Link
+          to={`/dev/connect/${next.slug}`}
+          className="group flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors text-right"
+        >
+          <span>
+            <span className="block text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-500">Next</span>
+            {next.shortName}
+          </span>
+          <span className="text-lg">→</span>
+        </Link>
+      ) : (
+        <div />
+      )}
+    </nav>
+  );
+}
+
+/* ── Related platforms section ────────────────────────────────── */
+export function RelatedPlatforms({ currentSlug, slugs }: { currentSlug: string; slugs: string[] }) {
+  const related = PLATFORMS.filter((p) => slugs.includes(p.slug) && p.slug !== currentSlug);
+  if (related.length === 0) return null;
+
+  return (
+    <Section title="Also works with">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {related.map((p) => (
+          <Link
+            key={p.slug}
+            to={`/dev/connect/${p.slug}`}
+            className={`flex items-center gap-3 rounded-lg border border-slate-100 bg-gradient-to-br ${p.bgGradient} p-3 hover:shadow-sm transition-all`}
+          >
+            <span className="text-xl">{p.icon}</span>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{p.shortName}</p>
+              <p className="text-[11px] text-slate-500">{p.tagline}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+/* ── JSON-LD HowTo schema for SEO rich results ──────────────── */
+export function HowToSchema({
+  name,
+  description,
+  steps,
+}: {
+  name: string;
+  description: string;
+  steps: { name: string; text: string }[];
+}) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name,
+    description,
+    step: steps.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+    })),
+    tool: {
+      '@type': 'HowToTool',
+      name: 'HumanPages MCP Server',
+    },
+    supply: {
+      '@type': 'HowToSupply',
+      name: 'MCP Server URL: https://mcp.humanpages.ai/sse',
+    },
+  };
+
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
   );
 }

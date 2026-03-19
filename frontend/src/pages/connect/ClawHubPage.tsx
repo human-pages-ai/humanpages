@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const CLAWHUB_INSTALL = `clawhub install humanpages`;
 
@@ -73,6 +73,8 @@ export default function ClawHubPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="clawhub" slugs={['smithery', 'nanoclaw', 'zeroclaw', 'nanobot']} />
+      <PlatformNav currentSlug="clawhub" />
     </ConnectLayout>
   );
 }

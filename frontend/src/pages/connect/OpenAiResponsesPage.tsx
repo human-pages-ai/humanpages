@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const CURL_EXAMPLE = `curl https://api.openai.com/v1/responses \\
   -H "Authorization: Bearer $OPENAI_API_KEY" \\
@@ -99,6 +99,8 @@ export default function OpenAiResponsesPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="openai-responses" slugs={['openai-agents', 'chatgpt', 'langchain', 'claude']} />
+      <PlatformNav currentSlug="openai-responses" />
     </ConnectLayout>
   );
 }

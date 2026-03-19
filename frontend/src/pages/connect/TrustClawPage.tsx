@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const TRUSTCLAW_CONFIG = `# TrustClaw agent config — add HumanPages MCP
 mcp_servers:
@@ -74,6 +74,8 @@ export default function TrustClawPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="trustclaw" slugs={['maxclaw', 'nanoclaw', 'clawhub', 'smithery']} />
+      <PlatformNav currentSlug="trustclaw" />
     </ConnectLayout>
   );
 }

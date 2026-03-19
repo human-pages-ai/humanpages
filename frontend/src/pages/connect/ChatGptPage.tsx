@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 export default function ChatGptPage() {
   return (
@@ -94,6 +94,8 @@ export default function ChatGptPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="chatgpt" slugs={['claude', 'openai-agents', 'openai-responses', 'smithery']} />
+      <PlatformNav currentSlug="chatgpt" />
     </ConnectLayout>
   );
 }

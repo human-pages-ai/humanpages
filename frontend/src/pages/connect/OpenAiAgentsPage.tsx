@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const INSTALL = `pip install openai-agents`;
 
@@ -97,6 +97,8 @@ export default function OpenAiAgentsPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="openai-agents" slugs={['openai-responses', 'chatgpt', 'langchain', 'claude']} />
+      <PlatformNav currentSlug="openai-agents" />
     </ConnectLayout>
   );
 }

@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const MCP_CONFIG = `# In your NanoClaw agent's config, add HumanPages as an MCP server:
 mcp_servers:
@@ -92,6 +92,8 @@ export default function NanoClawPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="nanoclaw" slugs={['zeroclaw', 'trustclaw', 'clawhub', 'nanobot']} />
+      <PlatformNav currentSlug="nanoclaw" />
     </ConnectLayout>
   );
 }

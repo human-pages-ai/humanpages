@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const NANOBOT_YAML = `# nanobot.yaml — agent definition with HumanPages MCP
 name: hiring-agent
@@ -91,6 +91,8 @@ export default function NanobotPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="nanobot" slugs={['nanoclaw', 'langchain', 'openai-agents', 'clawhub']} />
+      <PlatformNav currentSlug="nanobot" />
     </ConnectLayout>
   );
 }

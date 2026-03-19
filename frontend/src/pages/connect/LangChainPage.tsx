@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const LANGCHAIN_EXAMPLE = `from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
@@ -94,6 +94,8 @@ export default function LangChainPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="langchain" slugs={['openai-agents', 'openai-responses', 'claude', 'nanobot']} />
+      <PlatformNav currentSlug="langchain" />
     </ConnectLayout>
   );
 }

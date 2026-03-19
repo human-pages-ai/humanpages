@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const CONFIG = `# picoclaw.yaml — add HumanPages MCP
 mcp:
@@ -95,6 +95,8 @@ export default function PicoClawPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="picoclaw" slugs={['zeroclaw', 'nanoclaw', 'trustclaw', 'clawhub']} />
+      <PlatformNav currentSlug="picoclaw" />
     </ConnectLayout>
   );
 }

@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 export default function MaxClawPage() {
   return (
@@ -73,6 +73,8 @@ export default function MaxClawPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="maxclaw" slugs={['trustclaw', 'chatgpt', 'clawhub', 'smithery']} />
+      <PlatformNav currentSlug="maxclaw" />
     </ConnectLayout>
   );
 }

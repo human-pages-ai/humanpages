@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const INSTALL_CLAUDE = `npx @smithery/cli install humanpages --client claude`;
 const INSTALL_CURSOR = `npx @smithery/cli install humanpages --client cursor`;
@@ -80,6 +80,8 @@ export default function SmitheryPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="smithery" slugs={['claude', 'cursor', 'windsurf', 'clawhub']} />
+      <PlatformNav currentSlug="smithery" />
     </ConnectLayout>
   );
 }

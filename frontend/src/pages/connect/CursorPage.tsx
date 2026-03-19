@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, QuickCopyCard, PlatformNav, RelatedPlatforms, HowToSchema } from './shared';
 
 const GLOBAL_CONFIG = `{
   "mcpServers": {
@@ -30,6 +30,16 @@ export default function CursorPage() {
       path="/dev/connect/cursor"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Cursor' }]}
     >
+      <HowToSchema
+        name="How to connect HumanPages MCP to Cursor IDE"
+        description="Add HumanPages MCP server to Cursor IDE to search and hire real humans from your code editor."
+        steps={[
+          { name: 'Create .cursor/mcp.json', text: 'In your project root, create .cursor/mcp.json and add the HumanPages server config.' },
+          { name: 'Verify in Settings', text: 'Open Settings → Tools & MCP. You should see humanpages listed with a green status indicator.' },
+          { name: 'Use in Agent mode', text: 'Switch to Agent mode in the chat panel. MCP tools are only available in Agent mode.' },
+        ]}
+      />
+
       <PlatformHero
         gradient="from-blue-50 to-indigo-50"
         icon={<span>⚡</span>}
@@ -89,8 +99,17 @@ export default function CursorPage() {
         Cursor MCP tools only work in <strong>Agent mode</strong>, not in Ask or Edit modes. Make sure Agent is selected in the chat dropdown.
       </Callout>
 
+      <QuickCopyCard
+        configs={[
+          { label: 'Local (npx)', code: GLOBAL_CONFIG },
+          { label: 'Remote (HTTP)', code: REMOTE_CONFIG },
+        ]}
+      />
+
       <ToolsReference />
-      <TryItSection />
+      <TryItSection platformName="Cursor" />
+      <RelatedPlatforms currentSlug="cursor" slugs={['claude', 'windsurf', 'chatgpt', 'smithery']} />
+      <PlatformNav currentSlug="cursor" />
     </ConnectLayout>
   );
 }

@@ -1,5 +1,9 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import {
+  CodeBlock, StepByStep, Section, Callout, PlatformHero,
+  TryItSection, ToolsReference, QuickCopyCard, PlatformNav,
+  RelatedPlatforms, HowToSchema,
+} from './shared';
 
 const DESKTOP_CONFIG = `{
   "mcpServers": {
@@ -37,17 +41,37 @@ const MCP_JSON = `{
 export default function ClaudePage() {
   return (
     <ConnectLayout
-      title="Connect HumanPages to Claude"
-      description="Add HumanPages MCP to Claude Desktop or Claude Code. Find and hire real humans directly from Claude conversations."
+      title="Connect HumanPages MCP to Claude Desktop & Claude Code"
+      description="Step-by-step guide to add HumanPages MCP server to Claude Desktop or Claude Code. Find and hire real humans directly from Claude conversations. Copy-paste config included."
       path="/dev/connect/claude"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Claude' }]}
     >
+      <HowToSchema
+        name="How to connect HumanPages MCP to Claude"
+        description="Add HumanPages MCP server to Claude Desktop or Claude Code to search and hire real humans from AI conversations."
+        steps={[
+          { name: 'Open Claude settings', text: 'In Claude Desktop, go to Settings → Developer → Edit Config. In Claude Code, open a terminal.' },
+          { name: 'Add HumanPages config', text: 'Paste the MCP server configuration into claude_desktop_config.json, or run: claude mcp add humanpages -- npx -y humanpages' },
+          { name: 'Restart and verify', text: 'Restart Claude Desktop or start a new Claude Code session. The HumanPages tools should now appear.' },
+        ]}
+      />
+
       <PlatformHero
         gradient="from-orange-50 to-amber-50"
         icon={<span>🟤</span>}
         name="Claude Desktop & Claude Code"
         tagline="The primary MCP ecosystem — where it all started"
         docsUrl="https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      />
+
+      {/* Quick-copy for skimmers */}
+      <QuickCopyCard
+        configs={[
+          { label: 'Claude Code (CLI)', code: CODE_CLI },
+          { label: 'Claude Code (remote)', code: CODE_REMOTE },
+          { label: '.mcp.json (project)', code: MCP_JSON },
+          { label: 'Desktop config', code: DESKTOP_CONFIG },
+        ]}
       />
 
       {/* ── Claude Code (fastest) ───────────────────────────── */}
@@ -123,7 +147,9 @@ export default function ClaudePage() {
       </Section>
 
       <ToolsReference />
-      <TryItSection />
+      <TryItSection platformName="Claude" />
+      <RelatedPlatforms currentSlug="claude" slugs={['cursor', 'windsurf', 'chatgpt', 'smithery', 'clawhub']} />
+      <PlatformNav currentSlug="claude" />
     </ConnectLayout>
   );
 }

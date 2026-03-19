@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const CONFIG_TOML = `# zeroclaw.toml — add HumanPages as an MCP provider
 [[mcp]]
@@ -90,6 +90,8 @@ export default function ZeroClawPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="zeroclaw" slugs={['nanoclaw', 'picoclaw', 'trustclaw', 'clawhub']} />
+      <PlatformNav currentSlug="zeroclaw" />
     </ConnectLayout>
   );
 }

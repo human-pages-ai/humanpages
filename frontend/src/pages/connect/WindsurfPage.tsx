@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const LOCAL_CONFIG = `{
   "mcpServers": {
@@ -92,6 +92,8 @@ export default function WindsurfPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="windsurf" slugs={['claude', 'cursor', 'chatgpt', 'smithery']} />
+      <PlatformNav currentSlug="windsurf" />
     </ConnectLayout>
   );
 }

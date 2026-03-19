@@ -1,5 +1,5 @@
 import ConnectLayout from './ConnectLayout';
-import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference } from './shared';
+import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
 const SETTINGS_JSON = `{
   "mcpServers": {
@@ -70,6 +70,8 @@ export default function GeminiPage() {
 
       <ToolsReference />
       <TryItSection />
+      <RelatedPlatforms currentSlug="gemini" slugs={['android-studio', 'claude', 'cursor', 'smithery']} />
+      <PlatformNav currentSlug="gemini" />
     </ConnectLayout>
   );
 }
