@@ -39,6 +39,8 @@ type EventName =
   | 'wallet_added'
   | 'wallet_added_manual'
   | 'wallet_deleted'
+  | 'fiat_payment_method_added'
+  | 'fiat_payment_method_deleted'
   | 'listing_viewed'
   | 'listing_signup_clicked'
   | 'listing_applied'

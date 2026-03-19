@@ -26,6 +26,7 @@ import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
 import PaymentPreferencesSection from '../components/dashboard/PaymentPreferencesSection';
+import FiatPaymentMethodsSection from '../components/dashboard/FiatPaymentMethodsSection';
 import ContactPrivacySection from '../components/dashboard/ContactPrivacySection';
 import ListingsSection from '../components/dashboard/ListingsSection';
 import SEO from '../components/SEO';
@@ -354,6 +355,67 @@ export default function Dashboard() {
 
 
 
+  const addFiatPaymentMethod = async (data: { platform: string; handle: string; label?: string }) => {
+    setSaving(true);
+    try {
+      await api.addFiatPaymentMethod(data);
+      analytics.track('fiat_payment_method_added', { platform: data.platform });
+      await loadProfile();
+      toast.success('Payment method added');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add payment method');
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateFiatPaymentMethod = async (id: string, data: { handle?: string; label?: string }) => {
+    setSaving(true);
+    try {
+      await api.updateFiatPaymentMethod(id, data);
+      await loadProfile();
+      toast.success('Payment method updated');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update payment method');
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteFiatPaymentMethod = async (id: string) => {
+    setConfirmDialog({
+      open: true,
+      title: 'Delete payment method?',
+      message: 'Are you sure you want to remove this payment method?',
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        try {
+          await api.deleteFiatPaymentMethod(id);
+          analytics.track('fiat_payment_method_deleted');
+          toast.success('Payment method removed');
+          await loadProfile();
+        } catch (error: any) {
+          toast.error(error.message || 'Failed to delete payment method');
+        }
+      },
+    });
+  };
+
+  const setFiatPaymentMethodPrimary = async (id: string) => {
+    setSaving(true);
+    try {
+      await api.setFiatPaymentMethodPrimary(id);
+      await loadProfile();
+      toast.success('Primary payment method updated');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to set primary');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const deleteAccount = async (password?: string) => {
     setSaving(true);
     try {
@@ -532,6 +594,14 @@ export default function Dashboard() {
                 setFiltersForm={setFiltersForm}
                 saving={saving}
                 onSaveFilters={saveFilters}
+              />
+              <FiatPaymentMethodsSection
+                methods={profile.fiatPaymentMethods || []}
+                saving={saving}
+                onAdd={addFiatPaymentMethod}
+                onUpdate={updateFiatPaymentMethod}
+                onDelete={deleteFiatPaymentMethod}
+                onSetPrimary={setFiatPaymentMethodPrimary}
               />
             </div>
           )}

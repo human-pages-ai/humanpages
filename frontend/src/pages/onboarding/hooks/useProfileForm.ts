@@ -270,6 +270,11 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
       if (data.workType && useServer) setWorkType(data.workType);
       if (data.whatsapp && useServer) setWhatsappNumber(data.whatsapp);
       if (data.sms && useServer) setSmsNumber(data.sms);
+
+      // Load existing profile photo from server (signed URL) so returning users see their photo
+      if (data.profilePhotoUrl && useServer && !photoFile) {
+        setPhotoPreview(data.profilePhotoUrl);
+      }
       if (data.linkedinUrl && useServer) setLinkedinUrl(data.linkedinUrl);
       if (data.githubUrl && useServer) setGithubUrl(data.githubUrl);
       if (data.twitterUrl && useServer) setTwitterUrl(data.twitterUrl);
