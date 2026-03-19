@@ -1,0 +1,264 @@
+{
+  "onboarding": {
+    "steps": {
+      "connect": "ያገናኙ",
+      "cvUpload": "ኢ.ቬ",
+      "skills": "ክህሎቶች",
+      "equipment": "መሳሪያዎች",
+      "vouch": "ወደብ",
+      "location": "ቦታ",
+      "education": "ትምህርት",
+      "payment": "ክፍያ",
+      "services": "አገልግሎቶች",
+      "profile": "መገለጫ",
+      "availability": "ተገኛነት",
+      "verification": "ማረጋገጥ"
+    },
+    "completion": {
+      "connect": "ተገናኘ! ወኪሎች አሁን ሊያገኙዎት ይችላሉ",
+      "cvUpload": "ኢ.ቬ ተሰቀለ! በመተንተን ላይ ነን...",
+      "skills": "ክህሎቶች ታክለዋል! አሁን ሊፈለግዎት ይችላሉ",
+      "equipment": "መሳሪያ ተዘርዘረ! ስሱ ሥራዎች በርቷል",
+      "vouch": "መገለጫ ተጋሩ! ወደብዎች ምስክርነትን ይገነባሉ",
+      "location": "ቦታ ተወስኖ! ሞባይል ስራዎች በርቷል",
+      "education": "ልምድ ታክሏል! ተወዳደር ስለሆነ",
+      "payment": "ክፍያ ተወስኖ! ገንዘብ ለመቀበል ዝግጁ",
+      "services": "አገልግሎቶች ተገለጹ! ወኪሎች ሊቅጠሩዎት ይችላሉ",
+      "profile": "መገለጫ በጣም ጥሩ ይመስላል!",
+      "availability": "ተገኛነት ተወስኖ! ሞላ ጆሮ",
+      "verification": "ታረጀ! ከፍተኛ ምስክርነት ነጥብ"
+    },
+    "success": {
+      "title": "🎉 መገለጫ ጨርሷል! ወደ HumanPages አቀwelcome"
+    },
+    "error": {
+      "offline": "ብቁ ብዘብ ይመስላል። እባክዎን ግንኙነትዎን ያረጋግጡ እና ደግመው ሞክሩ።",
+      "sessionExpired": "ክፍለ-ጊዜዎ ያበቃል። እባክዎ ደግመው ይግቡ - ሂደትዎ ተቀምጧል።",
+      "submitFailed": "ወደብ ማጠናቀቅ ተቋወመ። እንደገና ሞክሩ።"
+    },
+    "cv": {
+      "analyzing": "ኢ.ቬ እየተተነተነ ነው...",
+      "analyzed": "ኢ.ቬ ተተነተነ - ሜዳዎች በቅድሚያ ሞላሉ",
+      "reupload": "ደግመው ያስቀምጡ"
+    },
+    "loading": "መገለጫዎ ይጫወታል...",
+    "connect": {
+      "heading": "ከፍ ያድርጉ",
+      "subtitle": "ወኪሎች ሲፈልጉዎት ወዲያውኑ ሙያዊ ማስታወሻ ይቀበሉ",
+      "pushNotSupported": "ግዑዝ ማስታወሻዎች በዚህ ጸrowser ውስጥ አልደገፉም",
+      "pushNotConfigured": "ግዑዝ ማስታወሻዎች በሰርቨሩ ላይ አልተዋቀሙም",
+      "pushEnabled": "ግዑዝ ማስታወሻዎች ነቁ",
+      "notificationsDenied": "ማስታወሻዎች ተቃወሙ",
+      "pushDescription": "ወኪሎች ሲፈልጉዎት ሙያዊ ማስታወሻ ይቀበሉ",
+      "installApp": "መተግበሪያ ይጫኑ",
+      "installHint": "በአድራሻ ሌሊት ውስጥ \"⬇\" የ(ሥሪት) አዶ ይመልከቱ? HumanPages ተግባር ለመጫን ታግጉት።",
+      "telegram": {
+        "title": "Telegram",
+        "description": "በ HumanPages ቦትአችን ምክንያት ስራ ሀሳቦች ወስደዋለሁ",
+        "connectedMsg": "ከ Telegram ጋር ተገናኝተዋል! ለአዲስ ስራ ሀሳቦች ነቅ ማስታወሻ ያገኛሉ።",
+        "button": "Telegram ያገናኙ",
+        "didntOpen": "አልከፈተም?",
+        "clickHere": "በ Telegram ላይ ለማገናኘት ይህንን ጠቅ ያድርጉ"
+      }
+    },
+    "cvUpload": {
+      "heading": "እንጀምር",
+      "subtitle": "ኢ.ቬ ተሰቅለው ፈጣን ብቅ ስል መገለጫዎን ይሙሉ",
+      "uploadButton": "ኢ.ቬ ይሰቅሉ",
+      "format": "PDF ወይም Word ሰነድ",
+      "source": "ከመሳሪያዎ, Google Drive, ወይም Dropbox"
+    },
+    "skills": {
+      "heading": "ምን ማድረግ ይችላሉ?",
+      "subtitle": "ክህሎቶችህን ምረጥ እና ዳራህን ይጋሩ",
+      "searchPlaceholder": "ክህሎቶች ይፈልጉ...",
+      "customPlaceholder": "ብጁ ክህሎት ያክሉ...",
+      "popular": "ታዋቂ",
+      "browse": "ያጸድቁ"
+    },
+    "equipment": {
+      "heading": "መሳሪያዎች እና ምንጮች",
+      "subtitle": "ወኪሎች ተግባር ለቅድሚያ መሳሪያ ይጠቀማሉ - ለአገልግሎቶችዎ ማንኛውንም ይጠቀም።",
+      "hint": "ሀሳቦች ማረጋገጥ ወይም ስሙን ይተይቡ - ምልክት, ሞዴል, ሶፍትዌር, ወዘተ",
+      "searchPlaceholder": "ይፈልጉ ወይም የራስዎን ይተይቡ..."
+    },
+    "vouch": {
+      "heading": "ምስክርነት ይገነቡ",
+      "subtitle": "ሰዎች በዚህ ከሥራዎ ይችሉ ወደብ። ይህ ወኪሎች ጋር ምስክርነት ይገነባል።",
+      "shareText": "በ HumanPages ላይ ለሙያዊ - 0% ኮሚሽን ያለበት AI ቅጠር ዘርግ",
+      "profileLinkLabel": "የመገለጫ ትስስር",
+      "usernameLabel": "ስም (ምርጫ)",
+      "usernameHint": "ጠር ዋጋ ለማግኘት ስም ያግኙ",
+      "shareButton": "ይጋሩ እና በወደብ ይቅበል",
+      "vouchHint": "ሥራ ምልክት አወቃቀር ምክር ወደብ"
+    },
+    "location": {
+      "heading": "ምናምንተ ነህ?",
+      "subtitle": "ቦታ እና የሰዓት ክልል ንገሩን",
+      "label": "ቦታ",
+      "remote": "ሪሞት",
+      "placeholder": "ከተማ ወይም አድራሻ",
+      "hint": "ቦታ ወኪሎች ሞባይል ስራ ይፈልጉ",
+      "timezoneLabel": "የሰዓት ክልል",
+      "timezoneHint": "ከመሳሪያ አስተዳዳሪ (ሊለወጥ ይችላል)",
+      "languagesLabel": "ቋንቋዎች (ምርጫ)",
+      "addLanguageButton": "+ ቋንቋ ያክሉ",
+      "languageLabel": "ቋንቋ",
+      "proficiencyLabel": "ብቁ ደረጃ"
+    },
+    "education": {
+      "heading": "ሥራ ልምድ",
+      "subtitle": "ዳራ እና ምስክር ይጋሩ",
+      "yearsLabel": "ታሪካዊ የሥራ ልምድ",
+      "yearsHint": "ወኪሎች ተጨጣሪ ባለሥልጣንዎች ለማግኘት",
+      "jobsLabel": "ሥራ ካናፊ ተጠናቀ",
+      "jobsNew": "በሥራ ውስጥ አዲስ",
+      "label": "ትምህርት (ምርጫ)",
+      "addButton": "+ ትምህርት ያክሉ",
+      "institutionLabel": "ተቋም",
+      "institutionPlaceholder": "ተቋም ስሙን ይተይቡ...",
+      "institutionNote": "ስም ይተይቡ - ትምህርት ቤት, bootcamp, የመስመር ላይ ሂደት, ወይም በራስ-ተምህርት",
+      "degreeLabel": "ዲግሪ",
+      "fieldLabel": "የ-Phd",
+      "countryLabel": "ሀገር",
+      "startYearLabel": "ሐ-ቃል (ምርጫ)",
+      "endYearLabel": "ተነሳ ታወት (ምርጫ)"
+    },
+    "payment": {
+      "heading": "ለመቀበል",
+      "subtitle": "ገንዘብ ለመቀበል የክፍያ ዘዴ ያዘጋጁ",
+      "methodsTitle": "የክፍያ ዘዴዎች",
+      "methodLabel": "የክፍያ ዘዴ",
+      "handleLabel": "ሎጂስቲክ ዝርዝር",
+      "hint": "ይህ በኋላ ወደ ድልድይ ውስጥ ሊለወጥ ይችላል",
+      "crypto": {
+        "title": "ክሪፕቶ ጭራሽ",
+        "subtitle": "USDC እና ETH ይቀበሉ",
+        "connectButton": "ከ Privy ጋር ጭራሽ ያገናኙ",
+        "connectHint": "MetaMask, WalletConnect, ኢሜል ጋር ወይም በሴራ ቅንብር መጠቀሙ.",
+        "addressLabel": "Ethereum / Base ጭራሽ አድራሻ",
+        "divider": "ወይም ከዚህ ጀምር"
+      }
+    },
+    "services": {
+      "heading": "የስራ አገልግሎቶች",
+      "subtitle": "የ(ምርጫ) ሁለገብ ሆነ",
+      "cvSuggestion": "ኢ.ቬ ላይ ተመስረተ, ይህ አገልግሎቶች ሊሰጡ ይችላሉ:",
+      "addButton": "+ አገልግሎት ያክሉ",
+      "titleLabel": "አገልግሎት ርዕስ",
+      "categoryLabel": "ምድብ",
+      "subcategoryLabel": "ንዑስ-ምድብ (ምርጫ)",
+      "descriptionLabel": "መግለጫ (ምርጫ)",
+      "pricingLabel": "ዋጋ (ምርጫ - ይህንን በኋላ ሊለወጡ ይችላሉ)",
+      "priceLabel": "ዋጋ",
+      "currencyLabel": "ሕዳብ",
+      "rateTypeLabel": "ዓይነቱ",
+      "noPriceSet": "ዋጋ አልተወሰነም - ለ (ሥራ)",
+      "preview": "አገልግሎትዎ የሚታየው ጠወር:",
+      "rateType": {
+        "hourly": "ሣዓታዊ",
+        "fixedPrice": "ቁሚ ዋጋ",
+        "perWord": "ስብ ፅሁፈ",
+        "perPage": "ለመገጣጠሚያ",
+        "negotiate": "እንደግራ"
+      }
+    },
+    "profile": {
+      "heading": "መገለጫ",
+      "subtitle": "መገለጫ መረጃ ያጠናቅቁ",
+      "photoLabel": "መገለጫ ፎቶ",
+      "changePhoto": "ፎቶ ይለውጡ",
+      "uploadPhoto": "ፎቶ ለመሰቀል ጠቅ ያድርጉ",
+      "nameLabel": "ሙሉ ስም",
+      "bioLabel": "አጠር ያለ ሂደት",
+      "bioPlaceholder": "ስለ ራስህ ትንሽ ንገር...",
+      "workType": {
+        "both": "ሁለቱም",
+        "digital": "ዲጂታል",
+        "physical": "ግልጽ"
+      },
+      "weeklyHours": {
+        "flexible": "ተቀላላይ",
+        "format": "{{hours}} ሊሙ/ሳምንት"
+      }
+    },
+    "availability": {
+      "heading": "ተገኛነት እና ሙሉ",
+      "subtitle": "AI ወኪሎች ትክክለኛውን ስራ ሊያገኙዎት ይረዳል",
+      "hoursLabel": "በሳምንት ሊሙ ሊሠሩ ይችላሉ?",
+      "typeLabel": "ምን ዓይነት ስራ ታደርጋለህ?"
+    },
+    "finish": {
+      "heading": "የሚልካዓሳ ወግ",
+      "subtitle": "ፕሮ አカウント ለማገናኘት ምስክርነት ይገነቡ",
+      "verificationTitle": "ማረጋገጥ",
+      "emailTitle": "ኢሜል ማረጋገጥ",
+      "emailPending": "ኢሜል ያረጋግጡ (ሥጋት ጨምርሳ)",
+      "emailVerified": "ታረጀ",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "የሥራ መታወሳነት ያረጋግጡ",
+      "githubTitle": "GitHub",
+      "githubDesc": "ኮድ መውደቅ ታሪክ ይታይ",
+      "platformsTitle": "ሙያዊ መገለጫ (ምርጫ)",
+      "platformsHint": "መስመር ላይ መገለጫ ይጋሩ - ተከታይ, ደረጃ, ስኬቶች",
+      "addPlatformButton": "መድረክ ያክሉ"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "ማስታወሻዎች እና ያገናኙ",
+        "emptyHint": "ተግባር ሀሳብ ለመደሪስ ማስታወሻዎች ያስቆሩ",
+        "push": "ግዑዝ ማስታወሻዎች",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "ክህሎቶች",
+        "emptyHint": "ወኪሎች ሊያገኙዎት ስለ ክህሎት ያክሉ"
+      },
+      "equipment": {
+        "title": "መሳሪያዎች",
+        "emptyHint": "ስሱ ስራዎች ለማስቀመጡ መሳሪያ ዘርዝር"
+      },
+      "location": {
+        "title": "ቦታ",
+        "emptyHint": "ወኪሎች ቅርብ ተግባር ሊያገኙዎት ቦታ ያግኙ",
+        "autoDetected": "(አስተውሎት)",
+        "verifyAccuracy": "ይህ ቀጥተኛ ነው እባክዎ ያረጋግጡ"
+      },
+      "education": {
+        "title": "ትምህርት እና ልምድ",
+        "emptyHint": "ልምድ ያክሉ ለመውራት",
+        "yearsLabel": "የስራ አመታት",
+        "educationLabel": "ትምህርት",
+        "addExperience": "ልምድ ያክሉ ለመውራት",
+        "addEducation": "ትምህርት, bootcamps, ወይም ሚስክዎች ያክሉ"
+      },
+      "services": {
+        "title": "አገልግሎቶች",
+        "emptyHint": "አገልግሎት ግለሪት ለ ሙያዊ"
+      },
+      "availability": {
+        "title": "ተገኛነት",
+        "emptyHint": "ወኪሎች መቼ ሊቅጠርዎት ነው ተገኛነት ያስቀምጡ",
+        "workTypeLabel": "ሥራ ዓይነት (ዲጂታል / ግልጽ)",
+        "weeklyHoursLabel": "ሣዓታዊ ሊሙ"
+      },
+      "verification": {
+        "title": "ማረጋገጥ",
+        "emptyHint": "መገለጫ ምስክርነት ንጥፌ ለ(ተጋሪ)",
+        "verified": "ታረጀ",
+        "notVerified": "አልታረገም"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "የ(ንቅቅ) ለ(ዩሴሪ) ያክሉ",
+      "addButton": "+ ያክሉ",
+      "editButton": "ርማ"
+    },
+    "share": {
+      "title": "መገለጫ ይጋሩ"
+    }
+  }
+}

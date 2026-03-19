@@ -519,6 +519,61 @@
       "confirmDelete": "Có, Xóa Tài khoản",
       "confirmDeleteTitle": "Xóa Tài khoản?",
       "confirmDeleteMsg": "Điều này sẽ xóa vĩnh viễn tài khoản và tất cả dữ liệu của bạn."
+    },
+    "tiles": {
+      "notifications": {
+        "title": "Thông báo & Kết nối",
+        "emptyHint": "Bật thông báo để không bao giờ bỏ lỡ đề nghị công việc",
+        "push": "Thông báo đẩy",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "Kỹ năng",
+        "emptyHint": "Thêm kỹ năng để các agent có thể tìm thấy bạn"
+      },
+      "equipment": {
+        "title": "Thiết bị",
+        "emptyHint": "Liệt kê các công cụ của bạn để khớp các tác vụ vật lý"
+      },
+      "location": {
+        "title": "Vị trí",
+        "emptyHint": "Đặt vị trí để các agent tìm bạn cho công việc gần nhất",
+        "autoDetected": "(tự động phát hiện)",
+        "verifyAccuracy": "Vui lòng xác minh đây là chính xác"
+      },
+      "education": {
+        "title": "Giáo dục & Kinh nghiệm",
+        "emptyHint": "Thêm kinh nghiệm để nổi bật",
+        "yearsLabel": "Năm kinh nghiệm",
+        "educationLabel": "Giáo dục",
+        "addExperience": "Thêm kinh nghiệm của bạn để nổi bật",
+        "addEducation": "Thêm giáo dục, bootcamp hoặc chứng chỉ"
+      },
+      "services": {
+        "title": "Dịch vụ",
+        "emptyHint": "Xác định dịch vụ để được thuê"
+      },
+      "availability": {
+        "title": "Tính khả dụng",
+        "emptyHint": "Đặt tính khả dụng để các agent biết khi nào thuê bạn",
+        "workTypeLabel": "Loại công việc (Kỹ thuật số / Trực tiếp)",
+        "weeklyHoursLabel": "Giờ hàng tuần"
+      },
+      "verification": {
+        "title": "Xác minh",
+        "emptyHint": "Xác minh tài khoản để tăng điểm tin cậy",
+        "verified": "Đã xác minh",
+        "notVerified": "Chưa xác minh"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "Thêm cái này để tăng khám phá",
+      "addButton": "+ Thêm",
+      "editButton": "Chỉnh sửa"
+    },
+    "share": {
+      "title": "Chia sẻ Hồ sơ của Bạn"
     }
   },
   "onboarding": {
@@ -558,6 +613,209 @@
       "perTask": "mỗi công việc",
       "negotiable": "thương lượng",
       "equipment": "Thiết bị bạn có (tùy chọn)"
+    },
+    "steps": {
+      "connect": "Kết nối",
+      "cvUpload": "CV",
+      "skills": "Kỹ năng",
+      "equipment": "Thiết bị",
+      "vouch": "Ủng hộ",
+      "location": "Vị trí",
+      "education": "Giáo dục",
+      "payment": "Thanh toán",
+      "services": "Dịch vụ",
+      "profile": "Hồ sơ",
+      "availability": "Tính khả dụng",
+      "verification": "Xác minh"
+    },
+    "completion": {
+      "connect": "Đã kết nối! Các agent giờ có thể liên hệ với bạn",
+      "cvUpload": "CV đã tải lên! Chúng tôi đang phân tích...",
+      "skills": "Kỹ năng đã thêm! Giờ bạn có thể được tìm kiếm",
+      "equipment": "Thiết bị đã liệt kê! Công việc vật lý được mở khóa",
+      "vouch": "Hồ sơ đã chia sẻ! Sự ủng hộ xây dựng lòng tin",
+      "location": "Vị trí đã đặt! Công việc địa phương được mở khóa",
+      "education": "Kinh nghiệm đã thêm! Bạn nổi bật",
+      "payment": "Thanh toán đã đặt! Sẵn sàng kiếm tiền",
+      "services": "Dịch vụ đã xác định! Các agent có thể thuê bạn",
+      "profile": "Hồ sơ trông tuyệt vời!",
+      "availability": "Tính khả dụng đã đặt! Sắp hoàn thành",
+      "verification": "Đã xác minh! Điểm tin cậy tối đa"
+    },
+    "success": {
+      "title": "🎉 Hồ sơ Hoàn thành! Chào mừng đến với HumanPages"
+    },
+    "error": {
+      "offline": "Có vẻ như bạn đang ngoại tuyến. Vui lòng kiểm tra kết nối và thử lại.",
+      "sessionExpired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại - tiến trình của bạn đã được lưu.",
+      "submitFailed": "Không thể hoàn thành onboarding. Vui lòng thử lại."
+    },
+    "cv": {
+      "analyzing": "Đang phân tích CV của bạn...",
+      "analyzed": "CV đã phân tích - các trường được điền sẵn",
+      "reupload": "Tải lên lại"
+    },
+    "loading": "Đang tải hồ sơ của bạn...",
+    "connect": {
+      "heading": "Luôn Kết nối",
+      "subtitle": "Nhận thông báo tức thì khi các agent muốn thuê bạn",
+      "pushNotSupported": "Thông báo đẩy không được hỗ trợ trên trình duyệt này",
+      "pushNotConfigured": "Thông báo đẩy chưa được cấu hình trên máy chủ",
+      "pushEnabled": "Đã bật thông báo đẩy",
+      "notificationsDenied": "Thông báo bị từ chối",
+      "pushDescription": "Nhận thông báo khi các agent muốn thuê bạn",
+      "installApp": "Cài đặt Ứng dụng",
+      "installHint": "Thấy biểu tượng ⬇ tải xuống trong thanh địa chỉ? Nhấn để cài đặt HumanPages dưới dạng ứng dụng.",
+      "telegram": {
+        "title": "Telegram",
+        "description": "Nhận đề nghị công việc thông qua bot HumanPages của chúng tôi",
+        "connectedMsg": "Bạn đã kết nối với Telegram! Bạn sẽ nhận được thông báo tức thì cho các đề nghị công việc mới.",
+        "button": "Kết nối Telegram",
+        "didntOpen": "Không mở?",
+        "clickHere": "Nhấp vào đây để kết nối trên Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "Hãy bắt đầu",
+      "subtitle": "Tải lên CV của bạn để nhanh chóng điền sẵn hồ sơ",
+      "uploadButton": "Tải lên CV của bạn",
+      "format": "Tài liệu PDF hoặc Word",
+      "source": "Từ thiết bị của bạn, Google Drive hoặc Dropbox"
+    },
+    "skills": {
+      "heading": "Bạn có thể làm gì?",
+      "subtitle": "Chọn kỹ năng của bạn và chia sẻ lý lịch",
+      "searchPlaceholder": "Tìm kiếm kỹ năng...",
+      "customPlaceholder": "Thêm kỹ năng tùy chỉnh...",
+      "popular": "Phổ biến",
+      "browse": "Duyệt"
+    },
+    "equipment": {
+      "heading": "Thiết bị & Công cụ",
+      "subtitle": "Các agent so khớp thiết bị với các tác vụ - liệt kê bất cứ thứ gì bạn sử dụng cho dịch vụ của mình.",
+      "hint": "Chọn từ gợi ý hoặc gõ bất cứ thứ gì - thương hiệu, mẫu, phần mềm, bất kỳ cái gì",
+      "searchPlaceholder": "Tìm kiếm hoặc gõ của riêng bạn..."
+    },
+    "vouch": {
+      "heading": "Xây dựng Lòng tin",
+      "subtitle": "Những người biết công việc của bạn có thể ủng hộ bạn. Điều này xây dựng lòng tin với các agent.",
+      "shareText": "Ủng hộ tôi trên HumanPages - nền tảng tuyển dụng AI với 0% hoa hồng",
+      "profileLinkLabel": "Liên kết hồ sơ của bạn",
+      "usernameLabel": "Tên người dùng (tùy chọn)",
+      "usernameHint": "Đặt tên người dùng để có liên kết ngắn hơn",
+      "shareButton": "Chia sẻ & Nhận Ủng hộ",
+      "vouchHint": "Yêu cầu những đồng nghiệp biết công việc của bạn ủng hộ bạn"
+    },
+    "location": {
+      "heading": "Bạn Ở Đâu?",
+      "subtitle": "Cho chúng tôi biết vị trí và múi giờ của bạn",
+      "label": "Vị trí",
+      "remote": "Từ xa",
+      "placeholder": "Thành phố hoặc địa chỉ",
+      "hint": "Vị trí giúp các agent tìm bạn cho công việc địa phương",
+      "timezoneLabel": "Múi giờ",
+      "timezoneHint": "Tự động phát hiện từ thiết bị của bạn (có thể chỉnh sửa)",
+      "languagesLabel": "Ngôn ngữ (Tùy chọn)",
+      "addLanguageButton": "+ Thêm Ngôn ngữ",
+      "languageLabel": "Ngôn ngữ",
+      "proficiencyLabel": "Trình độ thành thạo"
+    },
+    "education": {
+      "heading": "Kinh nghiệm & Giáo dục",
+      "subtitle": "Chia sẻ lý lịch và thông tin xác thực của bạn",
+      "yearsLabel": "Năm kinh nghiệm chuyên môn",
+      "yearsHint": "Giúp các agent tìm những chuyên gia",
+      "jobsLabel": "Công việc đã hoàn thành dưới dạng freelancer",
+      "jobsNew": "Mới làm việc tự do",
+      "label": "Giáo dục (Tùy chọn)",
+      "addButton": "+ Thêm Giáo dục",
+      "institutionLabel": "Tổ chức",
+      "institutionPlaceholder": "Gõ tên tổ chức...",
+      "institutionNote": "Gõ bất kỳ tên nào - trường học, bootcamp, khóa học trực tuyến hoặc tự học",
+      "degreeLabel": "Bằng cấp",
+      "fieldLabel": "Lĩnh vực học tập",
+      "countryLabel": "Quốc gia",
+      "startYearLabel": "Năm bắt đầu (Tùy chọn)",
+      "endYearLabel": "Năm kết thúc (Tùy chọn)"
+    },
+    "payment": {
+      "heading": "Nhận Thanh toán",
+      "subtitle": "Thiết lập phương thức thanh toán để nhận thu nhập",
+      "methodsTitle": "Phương thức thanh toán",
+      "methodLabel": "Phương thức thanh toán",
+      "handleLabel": "Chi tiết tài khoản",
+      "hint": "Bạn có thể cập nhật này sau từ bảng điều khiển của mình",
+      "crypto": {
+        "title": "Ví tiền điện tử",
+        "subtitle": "Nhận USDC và ETH",
+        "connectButton": "Kết nối Ví với Privy",
+        "connectHint": "Nhấp để kết nối với MetaMask, WalletConnect, email hoặc tạo ví nhúng.",
+        "addressLabel": "Ethereum / Base wallet address",
+        "divider": "hoặc dán thủ công"
+      }
+    },
+    "services": {
+      "heading": "Dịch vụ của Bạn",
+      "subtitle": "Thêm các dịch vụ bạn cung cấp",
+      "cvSuggestion": "Dựa trên CV của bạn, bạn có thể cung cấp các dịch vụ này:",
+      "addButton": "+ Thêm Dịch vụ",
+      "titleLabel": "Tiêu đề Dịch vụ",
+      "categoryLabel": "Danh mục",
+      "subcategoryLabel": "Danh mục phụ (Tùy chọn)",
+      "descriptionLabel": "Mô tả (Tùy chọn)",
+      "pricingLabel": "Định giá (Tùy chọn - bạn có thể cập nhật sau)",
+      "priceLabel": "Giá",
+      "currencyLabel": "Tiền tệ",
+      "rateTypeLabel": "Loại tỷ giá",
+      "noPriceSet": "Chưa đặt giá - nhấp để thêm",
+      "preview": "Dịch vụ của bạn sẽ xuất hiện:",
+      "rateType": {
+        "hourly": "Theo giờ",
+        "fixedPrice": "Giá cố định",
+        "perWord": "Mỗi từ",
+        "perPage": "Mỗi trang",
+        "negotiate": "Hãy Thảo luận"
+      }
+    },
+    "profile": {
+      "heading": "Hồ sơ của Bạn",
+      "subtitle": "Hoàn thành thông tin hồ sơ",
+      "photoLabel": "Ảnh hồ sơ",
+      "changePhoto": "Thay đổi ảnh",
+      "uploadPhoto": "Nhấp để tải lên ảnh",
+      "nameLabel": "Họ và tên",
+      "bioLabel": "Tiểu sử ngắn",
+      "bioPlaceholder": "Kể cho chúng tôi biết một chút về bản thân...",
+      "workType": {
+        "both": "Cả hai",
+        "digital": "Kỹ thuật số",
+        "physical": "Trực tiếp"
+      },
+      "weeklyHours": {
+        "flexible": "Linh hoạt",
+        "format": "{{hours}} giờ/tuần"
+      }
+    },
+    "availability": {
+      "heading": "Tính khả dụng & Công suất",
+      "subtitle": "Giúp agent AI tìm bạn cho những công việc phù hợp",
+      "hoursLabel": "Bạn có thể làm việc bao nhiêu giờ mỗi tuần?",
+      "typeLabel": "Bạn làm loại công việc nào?"
+    },
+    "finish": {
+      "heading": "Xác minh Danh tính của Bạn",
+      "subtitle": "Kết nối tài khoản chuyên môn của bạn để xây dựng lòng tin",
+      "verificationTitle": "Xác minh",
+      "emailTitle": "Xác minh Email",
+      "emailPending": "Kiểm tra email của bạn (kể cả thư rác)",
+      "emailVerified": "Đã xác minh",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "Xác minh danh tính chuyên môn của bạn",
+      "githubTitle": "GitHub",
+      "githubDesc": "Trưng bày các đóng góp mã của bạn",
+      "platformsTitle": "Sự hiện diện nền tảng (Tùy chọn)",
+      "platformsHint": "Chia sẻ sự hiện diện trực tuyến của bạn - những người theo dõi, xếp hạng, thành tựu",
+      "addPlatformButton": "Thêm Nền tảng"
     }
   },
   "welcome": {
