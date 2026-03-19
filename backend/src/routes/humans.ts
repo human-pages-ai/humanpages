@@ -373,6 +373,15 @@ const updateProfileSchema = z.object({
   tiktokFollowers: z.number().int().min(0).optional().nullable(),
   linkedinFollowers: z.number().int().min(0).optional().nullable(),
   facebookFollowers: z.number().int().min(0).optional().nullable(),
+
+  // Freelancer & platform presence
+  freelancerJobsRange: z.string().max(20).optional().nullable(),
+  platformPresence: z.array(z.object({
+    platform: z.string().max(100),
+    url: z.string().max(500).optional(),
+    details: z.string().max(500).optional(),
+  })).max(20).optional().nullable(),
+  externalProfiles: z.array(z.string().min(1).max(500)).max(10).optional(),
 });
 
 // ERC-8004: This function reads the internal `rating` (1-5 scale), NOT
@@ -712,6 +721,28 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       data: dataToSave,
       include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
+
+    // Compute and write profileCompleteness after update
+    const completenessFields = [
+      !!human.name?.trim(),
+      !!human.bio?.trim(),
+      !!human.location?.trim(),
+      (human.skills?.length || 0) > 0,
+      !!(human.contactEmail || human.telegram || human.whatsapp),
+      human.profilePhotoStatus === 'approved',
+      (human.equipment?.length || 0) > 0,
+      !!human.timezone,
+    ];
+    const profileCompleteness = Math.round((completenessFields.filter(Boolean).length / completenessFields.length) * 100);
+
+    // Only update if changed to avoid unnecessary writes
+    if (human.profileCompleteness !== profileCompleteness) {
+      await prisma.human.update({
+        where: { id: req.userId },
+        data: { profileCompleteness },
+      });
+      human.profileCompleteness = profileCompleteness;
+    }
 
     // Record username change timestamp if username was actually updated
     if (updates.username && updates.username !== human.username) {

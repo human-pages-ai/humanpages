@@ -202,6 +202,9 @@ export default function Onboarding() {
         workType: form.workType.trim() || null,
         username: form.username?.trim() || undefined,
         yearsOfExperience: form.yearsOfExperience,
+        freelancerJobsRange: form.freelancerJobsRange || null,
+        platformPresence: form.platformPresence.length > 0 ? form.platformPresence : null,
+        externalProfiles: form.externalProfiles.length > 0 ? form.externalProfiles : undefined,
         languages: form.languageEntries.length > 0
           ? [...new Map(form.languageEntries.map(e => [e.language.trim().toLowerCase(), serializeLanguageEntry(e)])).values()]
           : null,
@@ -217,6 +220,7 @@ export default function Onboarding() {
               title: svc.title.trim(),
               description: svc.description.trim(),
               category: svc.category.trim(),
+              subcategory: svc.subcategory?.trim() || null,
               priceMin: validPrice,
               priceCurrency: svc.currency,
               priceUnit: svc.unit || null,
@@ -332,6 +336,9 @@ export default function Onboarding() {
           yearsOfExperience: form.yearsOfExperience,
           equipment: form.equipment.length > 0 ? form.equipment : [],
           industries: form.industries.length > 0 ? form.industries : [],
+          freelancerJobsRange: form.freelancerJobsRange || null,
+          platformPresence: form.platformPresence.length > 0 ? form.platformPresence : null,
+          externalProfiles: form.externalProfiles.length > 0 ? form.externalProfiles : undefined,
         }),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 15000)),
       ]);
@@ -359,7 +366,7 @@ export default function Onboarding() {
           const price = svc.price?.trim() ? parseFloat(svc.price.trim()) : null;
           const validPrice = price !== null && !isNaN(price) && price > 0 ? price : null;
           nonBlocking.push(
-            api.createService({ title: svc.title.trim(), description: svc.description.trim(), category: svc.category.trim(), priceMin: validPrice, priceCurrency: svc.currency, priceUnit: svc.unit || null })
+            api.createService({ title: svc.title.trim(), description: svc.description.trim(), category: svc.category.trim(), subcategory: svc.subcategory?.trim() || null, priceMin: validPrice, priceCurrency: svc.currency, priceUnit: svc.unit || null })
               .then(() => { posthog.capture('service_added'); })
               .catch(err => console.error('Service save failed:', err))
           );

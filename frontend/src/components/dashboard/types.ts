@@ -18,6 +18,7 @@ export interface Service {
   title: string;
   description: string;
   category: string;
+  subcategory?: string | null;
   priceRange?: string;
   priceMin?: string | null;
   priceCurrency?: string;

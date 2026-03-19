@@ -192,6 +192,9 @@ model Human {
   schedulePattern     String?   // "morning" | "afternoon" | "evening" | "flexible" — local timezone window
   preferredTaskDuration String? // "micro" (1-2h) | "half_day" (3-5h) | "full_project" (10+h) | "any"
   earliestStartDate   DateTime? // When they can start new work (null = immediately)
+  freelancerJobsRange String?   // "new" | "1-10" | "10-50" | "50-100" | "100-500" | "500+"
+  platformPresence    Json?     // [{ platform, url, details }]
+  externalProfiles    String[]  @default([]) // External profile URLs (Fiverr, Upwork, etc.)
 
   // ===== PROFILE COMPLETENESS (System-Computed) =====
   profileCompleteness Int       @default(0) // 0-100 computed score for search ranking
@@ -871,6 +874,7 @@ model Service {
   title           String
   description     String
   category        String
+  subcategory     String?
   priceMin        Decimal?  @db.Decimal(10, 2)
   priceCurrency   String    @default("USD") // Currency for service price
   priceUnit       RateType?

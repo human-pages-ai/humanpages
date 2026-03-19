@@ -20,18 +20,18 @@ async function generateUsername(name: string): Promise<string> {
   const firstName = name.split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   const base = firstName.length >= 2 ? firstName : 'user';
 
-  // Try up to 10 times to find a unique username
-  for (let i = 0; i < 10; i++) {
-    const suffix = String(Math.floor(Math.random() * 1000)).padStart(2, '0');
-    const candidate = `${base}${suffix}`;
+  // Try up to 20 times to find a unique username with improved suffix
+  for (let i = 0; i < 20; i++) {
+    const suffix = Math.random().toString(36).slice(2, 6); // 4-char alphanumeric
+    const candidate = `${base}_${suffix}`;
     const existing = await prisma.human.findUnique({
       where: { username: candidate },
       select: { id: true },
     });
     if (!existing) return candidate;
   }
-  // Fallback: use base + timestamp
-  return `${base}${Date.now().toString(36).slice(-4)}`;
+  // Ultra-fallback: timestamp-based, virtually impossible to collide
+  return `${base}_${Date.now().toString(36)}`;
 }
 
 const signupSchema = z.object({
