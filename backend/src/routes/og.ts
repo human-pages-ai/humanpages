@@ -243,7 +243,7 @@ export function generateListingSvg(title: string, budgetUsdc: number, budgetFlex
 </svg>`;
 }
 
-export function generateUseCasesSvg(): string {
+export function generatePromptToCompletionSvg(): string {
   return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="630" fill="#0f172a"/>
   <defs>
@@ -275,7 +275,7 @@ export function generateUseCasesSvg(): string {
 // Cache PNG images in memory
 let defaultPngCache: Buffer | null = null;
 let careersPngCache: Buffer | null = null;
-let useCasesPngCache: Buffer | null = null;
+let promptToCompletionPngCache: Buffer | null = null;
 
 // Default OG image (served as PNG)
 router.get('/default', (req, res) => {
@@ -292,16 +292,16 @@ router.get('/default', (req, res) => {
   }
 });
 
-// Use Cases OG image (also used for /dev page)
-router.get('/use-cases', (req, res) => {
+// Prompt to completion OG image (also used for /dev page)
+router.get('/prompt-to-completion', (req, res) => {
   try {
-    if (!useCasesPngCache) {
-      const svg = generateUseCasesSvg();
-      useCasesPngCache = svgToPng(svg);
+    if (!promptToCompletionPngCache) {
+      const svg = generatePromptToCompletionSvg();
+      promptToCompletionPngCache = svgToPng(svg);
     }
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
-    res.send(useCasesPngCache);
+    res.send(promptToCompletionPngCache);
   } catch (error) {
     res.status(500).send('Error generating image');
   }

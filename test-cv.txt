@@ -1,0 +1,36 @@
+SARAH CHEN
+Senior Full-Stack Developer & Designer
+
+Contact: sarah.chen@email.com | GitHub: github.com/sarahchen | LinkedIn: linkedin.com/in/sarahchen
+Location: Bangkok, Thailand
+
+PROFESSIONAL SUMMARY
+Full-stack developer with 8 years of experience building web applications, mobile apps, and design systems. Specializing in React, Node.js, and UI/UX design. Fluent in English and Thai, conversational Mandarin.
+
+SKILLS
+React, TypeScript, Node.js, Python, PostgreSQL, MongoDB, Figma, Adobe Creative Suite, Docker, AWS, GraphQL, REST APIs, Tailwind CSS, Next.js, Vue.js
+
+EXPERIENCE
+Senior Developer - TechCorp Asia (2020 - Present)
+- Led team of 6 developers building e-commerce platform serving 2M users
+- Designed and implemented microservices architecture reducing latency by 40%
+- Built real-time notification system using WebSockets
+
+Full-Stack Developer - StartupXYZ (2017 - 2020)
+- Developed React Native mobile app with 500K downloads
+- Created automated testing pipeline reducing bugs by 60%
+- Mentored 3 junior developers
+
+Junior Developer - WebAgency (2015 - 2017)
+- Built 20+ client websites using React and WordPress
+- Implemented responsive designs for mobile-first experiences
+
+EDUCATION
+B.Sc. Computer Science - Chulalongkorn University, Thailand (2011 - 2015)
+Online Certificate - UI/UX Design - Google (2019)
+
+LANGUAGES
+English (Native), Thai (Native), Mandarin (Conversational)
+
+EQUIPMENT
+MacBook Pro M2, iPhone 15 Pro, DSLR Camera (Canon EOS R6), External Monitor (LG 4K), Wacom Tablet

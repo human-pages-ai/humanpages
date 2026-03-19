@@ -421,14 +421,14 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
-export function getUseCasesMetaHtml(lang?: string): string | null {
+export function getPromptToCompletionMetaHtml(lang?: string): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
   const title = 'Human Pages';
   const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
-  const ogImage = `${SITE_URL}/api/og/use-cases`;
-  const unprefixedPath = '/use-cases';
+  const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
+  const unprefixedPath = '/prompt-to-completion';
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`
     : `${SITE_URL}${unprefixedPath}`;

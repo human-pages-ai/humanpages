@@ -175,6 +175,7 @@ model Human {
   languages     String[] @default([]) // ISO codes (en, es, zh, etc.)
   yearsOfExperience Int?   // Total professional experience in years
   experienceHighlights String[] @default([]) // Top achievements from CV
+  cvFileKey     String?    // R2 object key: "cvs/{userId}/{uuid}.{ext}" — persisted on upload
   cvParsedAt    DateTime?  // When CV was last parsed
   cvConsent     Boolean    @default(false) // User consented to CV analysis
   skillSources  Json?      // Maps skill → source (cv, cv_inferred, manual)

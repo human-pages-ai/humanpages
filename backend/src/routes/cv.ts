@@ -8,6 +8,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { prisma } from '../lib/prisma.js';
 import { parseCvWithOpenAI } from '../lib/cvParser.js';
 import { logger } from '../lib/logger.js';
+import { uploadToR2, getR2ObjectBuffer } from '../lib/storage.js';
 
 // pdf-parse v2 exports a PDFParse class; v1 exports a callable function.
 // Detect which version is installed and provide a unified interface.
@@ -49,6 +50,34 @@ interface CvParseJob {
 }
 
 const cvParseJobs = new Map<string, CvParseJob>();
+
+/** Map MIME type to file extension for R2 storage key */
+function mimeToExt(mime: string): string {
+  if (mime === 'application/pdf') return 'pdf';
+  if (mime.includes('word') || mime.includes('openxmlformats')) return 'docx';
+  return 'bin';
+}
+
+/**
+ * Persist CV file to R2 and save the key in the user's profile.
+ * Returns the R2 key. Non-blocking — errors are logged, not thrown.
+ */
+async function persistCvToR2(userId: string, fileBuffer: Buffer, mimeType: string): Promise<string | null> {
+  try {
+    const ext = mimeToExt(mimeType);
+    const key = `cvs/${userId}/${uuidv4()}.${ext}`;
+    await uploadToR2(key, fileBuffer, mimeType);
+    await prisma.human.update({
+      where: { id: userId },
+      data: { cvFileKey: key },
+    });
+    logger.info({ userId, key, size: fileBuffer.length }, 'CV file persisted to R2');
+    return key;
+  } catch (err) {
+    logger.error({ err, userId }, 'Failed to persist CV to R2 — parsing will continue from memory');
+    return null;
+  }
+}
 
 // Multer: memory storage, 5MB limit for PDFs and DOCX
 const upload = multer({
@@ -280,6 +309,11 @@ router.post(
         return res.status(400).json({ error: 'No CV file provided' });
       }
 
+      // Persist CV file to R2 immediately (fire-and-forget, don't block parsing)
+      persistCvToR2(req.userId!, req.file.buffer, req.file.mimetype).catch(err => {
+        logger.error({ err }, 'Background R2 persist failed (sync upload)');
+      });
+
       // Get current user's data
       const user = await prisma.human.findUnique({
         where: { id: req.userId },
@@ -440,6 +474,12 @@ router.post(
 
       // Generate a unique fileId
       const fileId = uuidv4();
+
+      // Persist CV file to R2 immediately (before parsing starts)
+      // This ensures the file survives server restarts and can be re-parsed later
+      persistCvToR2(req.userId!, req.file.buffer, req.file.mimetype).catch(err => {
+        logger.error({ err, fileId }, 'Background R2 persist failed');
+      });
 
       // Create job entry with pending status
       const job: CvParseJob = {
@@ -629,6 +669,55 @@ router.delete('/certificate/:id', authenticateToken, async (req: AuthRequest, re
   } catch (error) {
     logger.error({ err: error }, 'Delete certificate error');
     res.status(500).json({ error: 'Failed to delete certificate' });
+  }
+});
+
+/**
+ * POST /reparse — Re-parse the user's stored CV file from R2
+ * Useful when parsing failed previously, or when the AI parser improves
+ */
+router.post('/reparse', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.userId },
+      select: { cvFileKey: true },
+    });
+
+    if (!human?.cvFileKey) {
+      return res.status(404).json({ error: 'No CV file found. Please upload a new one.' });
+    }
+
+    // Determine MIME type from stored key
+    const ext = human.cvFileKey.split('.').pop()?.toLowerCase();
+    const mimeType = ext === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    // Download from R2
+    const fileBuffer = await getR2ObjectBuffer(human.cvFileKey);
+    if (!fileBuffer) {
+      logger.warn({ key: human.cvFileKey }, 'CV file not found in R2 for reparse');
+      return res.status(404).json({ error: 'CV file no longer available in storage. Please upload a new one.' });
+    }
+
+    // Create a parse job and run it
+    const fileId = uuidv4();
+    const job: CvParseJob = {
+      status: 'pending',
+      userId: req.userId!,
+      fileBuffer,
+      fileMimeType: mimeType,
+    };
+
+    cvParseJobs.set(fileId, job);
+
+    // Fire-and-forget background parse
+    parseAndSaveCv(fileId, job).catch(err => {
+      logger.error({ err, fileId }, 'Unhandled error in reparse');
+    });
+
+    res.json({ fileId, message: 'Re-parsing started. Poll /parse-status/:fileId for results.' });
+  } catch (error) {
+    logger.error({ err: error }, 'CV reparse error');
+    res.status(500).json({ error: 'Failed to start re-parse' });
   }
 });
 
