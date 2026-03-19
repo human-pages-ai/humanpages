@@ -13,11 +13,29 @@ import { safeSessionStorage } from './lib/safeStorage';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
+const ConnectOverview = lazy(() => import('./pages/connect/ConnectOverview'));
+const ConnectClaude = lazy(() => import('./pages/connect/ClaudePage'));
+const ConnectCursor = lazy(() => import('./pages/connect/CursorPage'));
+const ConnectWindsurf = lazy(() => import('./pages/connect/WindsurfPage'));
+const ConnectChatGpt = lazy(() => import('./pages/connect/ChatGptPage'));
+const ConnectOpenAiAgents = lazy(() => import('./pages/connect/OpenAiAgentsPage'));
+const ConnectOpenAiResponses = lazy(() => import('./pages/connect/OpenAiResponsesPage'));
+const ConnectGemini = lazy(() => import('./pages/connect/GeminiPage'));
+const ConnectAndroidStudio = lazy(() => import('./pages/connect/AndroidStudioPage'));
+const ConnectLangChain = lazy(() => import('./pages/connect/LangChainPage'));
+const ConnectClawHub = lazy(() => import('./pages/connect/ClawHubPage'));
+const ConnectNanoClaw = lazy(() => import('./pages/connect/NanoClawPage'));
+const ConnectZeroClaw = lazy(() => import('./pages/connect/ZeroClawPage'));
+const ConnectNanobot = lazy(() => import('./pages/connect/NanobotPage'));
+const ConnectTrustClaw = lazy(() => import('./pages/connect/TrustClawPage'));
+const ConnectPicoClaw = lazy(() => import('./pages/connect/PicoClawPage'));
+const ConnectMaxClaw = lazy(() => import('./pages/connect/MaxClawPage'));
+const ConnectSmithery = lazy(() => import('./pages/connect/SmitheryPage'));
 const FundingPage = lazy(() => import('./pages/FundingPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Onboarding = lazy(() => import('./pages/onboarding'));
 const Welcome = lazy(() => import('./pages/Welcome'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const LinkedInVerifyCallback = lazy(() => import('./pages/LinkedInVerifyCallback'));
@@ -40,7 +58,7 @@ const StatusPage = lazy(() => import('./pages/StatusPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const GptSetupPage = lazy(() => import('./pages/GptSetupPage'));
 const PartnersPage = lazy(() => import('./pages/PartnersPage'));
-const UseCasesPage = lazy(() => import('./pages/UseCasesPage'));
+const PromptToCompletionPage = lazy(() => import('./pages/PromptToCompletionPage'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -195,6 +213,24 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/dev" element={<DevelopersPage />} />
+      <Route path="/dev/connect" element={<ConnectOverview />} />
+      <Route path="/dev/connect/claude" element={<ConnectClaude />} />
+      <Route path="/dev/connect/cursor" element={<ConnectCursor />} />
+      <Route path="/dev/connect/windsurf" element={<ConnectWindsurf />} />
+      <Route path="/dev/connect/chatgpt" element={<ConnectChatGpt />} />
+      <Route path="/dev/connect/openai-agents" element={<ConnectOpenAiAgents />} />
+      <Route path="/dev/connect/openai-responses" element={<ConnectOpenAiResponses />} />
+      <Route path="/dev/connect/gemini" element={<ConnectGemini />} />
+      <Route path="/dev/connect/android-studio" element={<ConnectAndroidStudio />} />
+      <Route path="/dev/connect/langchain" element={<ConnectLangChain />} />
+      <Route path="/dev/connect/clawhub" element={<ConnectClawHub />} />
+      <Route path="/dev/connect/nanoclaw" element={<ConnectNanoClaw />} />
+      <Route path="/dev/connect/zeroclaw" element={<ConnectZeroClaw />} />
+      <Route path="/dev/connect/nanobot" element={<ConnectNanobot />} />
+      <Route path="/dev/connect/trustclaw" element={<ConnectTrustClaw />} />
+      <Route path="/dev/connect/picoclaw" element={<ConnectPicoClaw />} />
+      <Route path="/dev/connect/maxclaw" element={<ConnectMaxClaw />} />
+      <Route path="/dev/connect/smithery" element={<ConnectSmithery />} />
       <Route path="/funding" element={<FundingPage />} />
       <Route path="/gpt-setup" element={<GptSetupPage />} />
       <Route
@@ -282,7 +318,7 @@ function AppRoutes() {
       <Route path="/brand" element={<BrandKit />} />
       <Route path="/status" element={<StatusPage />} />
       <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/use-cases" element={<UseCasesPage />} />
+      <Route path="/prompt-to-completion" element={<PromptToCompletionPage />} />
       <Route path="/partners" element={<PartnersPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/careers" element={<CareersPage />} />
@@ -309,6 +345,24 @@ function AppRoutes() {
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
       <Route path="/:lang/dev" element={<LangWrapper><DevelopersPage /></LangWrapper>} />
+      <Route path="/:lang/dev/connect" element={<LangWrapper><ConnectOverview /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/claude" element={<LangWrapper><ConnectClaude /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/cursor" element={<LangWrapper><ConnectCursor /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/windsurf" element={<LangWrapper><ConnectWindsurf /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/chatgpt" element={<LangWrapper><ConnectChatGpt /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/openai-agents" element={<LangWrapper><ConnectOpenAiAgents /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/openai-responses" element={<LangWrapper><ConnectOpenAiResponses /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/gemini" element={<LangWrapper><ConnectGemini /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/android-studio" element={<LangWrapper><ConnectAndroidStudio /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/langchain" element={<LangWrapper><ConnectLangChain /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/clawhub" element={<LangWrapper><ConnectClawHub /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/nanoclaw" element={<LangWrapper><ConnectNanoClaw /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/zeroclaw" element={<LangWrapper><ConnectZeroClaw /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/nanobot" element={<LangWrapper><ConnectNanobot /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/trustclaw" element={<LangWrapper><ConnectTrustClaw /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/picoclaw" element={<LangWrapper><ConnectPicoClaw /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/maxclaw" element={<LangWrapper><ConnectMaxClaw /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/smithery" element={<LangWrapper><ConnectSmithery /></LangWrapper>} />
       <Route path="/:lang/humans/:id" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/u/:username" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/signup" element={<LangWrapper><PublicRoute><Signup /></PublicRoute></LangWrapper>} />
@@ -330,7 +384,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/status" element={<LangWrapper><StatusPage /></LangWrapper>} />
       <Route path="/:lang/pricing" element={<LangWrapper><PricingPage /></LangWrapper>} />
-      <Route path="/:lang/use-cases" element={<LangWrapper><UseCasesPage /></LangWrapper>} />
+      <Route path="/:lang/prompt-to-completion" element={<LangWrapper><PromptToCompletionPage /></LangWrapper>} />
       <Route path="/:lang/partners" element={<LangWrapper><PartnersPage /></LangWrapper>} />
       <Route path="/:lang/about" element={<LangWrapper><AboutPage /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />

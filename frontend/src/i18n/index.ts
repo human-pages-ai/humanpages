@@ -6,6 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en/translation.json';
 import es from './locales/es/translation.json';
 import zh from './locales/zh/translation.json';
+import zhTW from './locales/zh-TW/translation.json';
 import tl from './locales/tl/translation.json';
 import hi from './locales/hi/translation.json';
 import vi from './locales/vi/translation.json';
@@ -13,6 +14,14 @@ import tr from './locales/tr/translation.json';
 import th from './locales/th/translation.json';
 import fr from './locales/fr/translation.json';
 import pt from './locales/pt/translation.json';
+import am from './locales/am/translation.json';
+import sw from './locales/sw/translation.json';
+import ur from './locales/ur/translation.json';
+import bn from './locales/bn/translation.json';
+import ar from './locales/ar/translation.json';
+import ceb from './locales/ceb/translation.json';
+import id from './locales/id/translation.json';
+import ms from './locales/ms/translation.json';
 
 export const supportedLanguages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -20,11 +29,20 @@ export const supportedLanguages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'pt', name: 'Português', flag: '🇧🇷' },
   { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'zh-TW', name: '繁體中文', flag: '🇭🇰' },
   { code: 'tl', name: 'Filipino', flag: '🇵🇭' },
   { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
   { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
   { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
   { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+  { code: 'am', name: 'አማርኛ', flag: '🇪🇹' },
+  { code: 'sw', name: 'Kiswahili', flag: '🇰🇪' },
+  { code: 'ur', name: 'اردو', flag: '🇵🇰' },
+  { code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'ceb', name: 'Bisaya', flag: '🇵🇭' },
+  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+  { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
 ] as const;
 
 export type SupportedLanguage = typeof supportedLanguages[number]['code'];
@@ -69,11 +87,20 @@ export function initI18n(geoLanguage?: string | null) {
       fr: { translation: fr },
       pt: { translation: pt },
       zh: { translation: zh },
+      'zh-TW': { translation: zhTW },
       tl: { translation: tl },
       hi: { translation: hi },
       vi: { translation: vi },
       tr: { translation: tr },
       th: { translation: th },
+      am: { translation: am },
+      sw: { translation: sw },
+      ur: { translation: ur },
+      bn: { translation: bn },
+      ar: { translation: ar },
+      ceb: { translation: ceb },
+      id: { translation: id },
+      ms: { translation: ms },
     },
     fallbackLng: 'en',
     supportedLngs: supportedCodes,

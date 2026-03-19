@@ -519,6 +519,61 @@
       "addAnother": "Magdagdag ng isa pang serbisyo",
       "statusActive": "Active",
       "statusInactive": "Inactive"
+    },
+    "tiles": {
+      "notifications": {
+        "title": "Mga Notipikasyon at Kumonekta",
+        "emptyHint": "I-enable ang mga notification para hindi makaligtaan ang work offer",
+        "push": "Push Notifications",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "Mga Kasanayan",
+        "emptyHint": "Magdagdag ng kasanayan para mahanap ka ng agent"
+      },
+      "equipment": {
+        "title": "Kagamitan",
+        "emptyHint": "Ilista ang mga tool para i-match ang physical tasks"
+      },
+      "location": {
+        "title": "Lokasyon",
+        "emptyHint": "Itakda ang lokasyon para hanapin ka ng agent para sa nearby tasks",
+        "autoDetected": "(auto-detected)",
+        "verifyAccuracy": "Mangyaring i-verify na ito ay tumpak"
+      },
+      "education": {
+        "title": "Edukasyon at Karanasan",
+        "emptyHint": "Magdagdag ng karanasan upang mag-stand out",
+        "yearsLabel": "Taon ng Karanasan",
+        "educationLabel": "Edukasyon",
+        "addExperience": "Magdagdag ng karanasan upang mag-stand out",
+        "addEducation": "Magdagdag ng edukasyon, bootcamps, o certifications"
+      },
+      "services": {
+        "title": "Mga Serbisyo",
+        "emptyHint": "Tukuyin ang serbisyo para maging hired"
+      },
+      "availability": {
+        "title": "Availability",
+        "emptyHint": "Itakda ang availability para malaman ng agent kung kailan mag-hire",
+        "workTypeLabel": "Uri ng Trabaho (Digital / Personal)",
+        "weeklyHoursLabel": "Oras bawat Linggo"
+      },
+      "verification": {
+        "title": "Pagsusuri",
+        "emptyHint": "I-verify ang accounts para taasan ang trust score",
+        "verified": "Naverify",
+        "notVerified": "Hindi naverify"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "Magdagdag nito para sa discovery",
+      "addButton": "+ Magdagdag",
+      "editButton": "I-edit"
+    },
+    "share": {
+      "title": "Ibahagi ang Profile Mo"
     }
   },
   "onboarding": {
@@ -558,6 +613,209 @@
       "perTask": "bawat task",
       "negotiable": "negotiable",
       "equipment": "Equipment na mayroon ka (opsyonal)"
+    },
+    "steps": {
+      "connect": "Kumonekta",
+      "cvUpload": "CV",
+      "skills": "Mga Kasanayan",
+      "equipment": "Kagamitan",
+      "vouch": "Suportahan",
+      "location": "Lokasyon",
+      "education": "Edukasyon",
+      "payment": "Pagbabayad",
+      "services": "Mga Serbisyo",
+      "profile": "Profile",
+      "availability": "Availability",
+      "verification": "Pagsusuri"
+    },
+    "completion": {
+      "connect": "Konektado! Ang mga ahente ay maaari na kayong maabot",
+      "cvUpload": "Na-upload ang CV! Sinusuri namin ito...",
+      "skills": "Naidagdag ang kasanayan! Handa nang mahanap",
+      "equipment": "Nakalista ang kagamitan! Unclocked na ang physical tasks",
+      "vouch": "Ibinahagi ang profile! Ang suporta ay bumubuo ng tiwala",
+      "location": "Nakatakda ang lokasyon! Local jobs unlocked",
+      "education": "Idinagdag ang karanasan! Nangunguna",
+      "payment": "Nakatakda ang pagbabayad! Handa nang kumita",
+      "services": "Tinukoy ang serbisyo! Maaaring kontahin kayo ng mga ahente",
+      "profile": "Maganda ang profile!",
+      "availability": "Nakatakda ang availability! Malapit nang tapusin",
+      "verification": "Naverify! Maximum trust score"
+    },
+    "success": {
+      "title": "🎉 Profile Kumpleto! Welcome sa HumanPages"
+    },
+    "error": {
+      "offline": "Mukhang offline ka. Pakisuri ang koneksyon at subukan muli.",
+      "sessionExpired": "Nag-expire ang session mo. Pakisubo - nakatipid ang iyong progreso.",
+      "submitFailed": "Hindi makapag-onboard. Subukan muli."
+    },
+    "cv": {
+      "analyzing": "Sinusuri ang CV mo...",
+      "analyzed": "Sinuri ang CV - puno na ng fields",
+      "reupload": "I-upload muli"
+    },
+    "loading": "Kinukuha ang profile mo...",
+    "connect": {
+      "heading": "Manatiling Konektado",
+      "subtitle": "Makatanggap ng instant notification kapag nais ka hireng agent",
+      "pushNotSupported": "Hindi sinusuportahan ang push notifications sa browser na ito",
+      "pushNotConfigured": "Hindi ina-configure ang push notifications sa server",
+      "pushEnabled": "Enabled na ang push notifications",
+      "notificationsDenied": "Tanggihan ang mga notification",
+      "pushDescription": "Makatanggap ng notification kapag hinanap ka ng agent",
+      "installApp": "I-install ang App",
+      "installHint": "Nakikita mo ba ang ⬇ download icon sa address bar? I-tap para i-install ang HumanPages bilang app.",
+      "telegram": {
+        "title": "Telegram",
+        "description": "Makatanggap ng work offers sa aming HumanPages bot",
+        "connectedMsg": "Konektado ka na sa Telegram! Makakatanggap ka ng instant notifications para sa bagong work offers.",
+        "button": "Kumonekta sa Telegram",
+        "didntOpen": "Hindi nag-open?",
+        "clickHere": "I-click dito para kumonekta sa Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "Magsimula tayo",
+      "subtitle": "I-upload ang CV mo upang mabilis na puno ang profile",
+      "uploadButton": "I-upload ang CV",
+      "format": "PDF o Word document",
+      "source": "Mula sa device, Google Drive, o Dropbox"
+    },
+    "skills": {
+      "heading": "Ano ang kayang mo?",
+      "subtitle": "Piliin ang kasanayan at ibahagi ang background",
+      "searchPlaceholder": "Maghanap ng kasanayan...",
+      "customPlaceholder": "Magdagdag ng custom skill...",
+      "popular": "Popular",
+      "browse": "Tingnan"
+    },
+    "equipment": {
+      "heading": "Kagamitan at Tools",
+      "subtitle": "Kino-match ng agent ang kagamitan sa tasks - ilista ang ginagamit mo sa serbisyo.",
+      "hint": "Pumili sa suggestions o magsulat ng kahit ano - brand, model, software, lahat",
+      "searchPlaceholder": "Maghanap o magsulat ng sarili mo..."
+    },
+    "vouch": {
+      "heading": "Bumuo ng Tiwala",
+      "subtitle": "Mga taong nakakaalam ng trabaho ay maaaring suportahan ka. Binubuo nito ang tiwala sa agent.",
+      "shareText": "Suportahan ako sa HumanPages - AI hiring platform na walang commission",
+      "profileLinkLabel": "Ang link ng profile mo",
+      "usernameLabel": "Username (opsyonal)",
+      "usernameHint": "Magtakda ng username para sa mas maikling link",
+      "shareButton": "Ibahagi at Makatanggap ng Suporta",
+      "vouchHint": "Anyayahan ang mga kamaganak na nakakaalam ng trabaho mo na suportahan ka"
+    },
+    "location": {
+      "heading": "Nasaan Ka?",
+      "subtitle": "Sabihin sa amin ang lokasyon at timezone",
+      "label": "Lokasyon",
+      "remote": "Remote",
+      "placeholder": "Lungsod o address",
+      "hint": "Tumutulong ang lokasyon sa agent na hanapin ka para sa local tasks",
+      "timezoneLabel": "Timezone",
+      "timezoneHint": "Auto-detected mula sa device (editable)",
+      "languagesLabel": "Mga Wika (Opsyonal)",
+      "addLanguageButton": "+ Magdagdag ng Wika",
+      "languageLabel": "Wika",
+      "proficiencyLabel": "Antas ng Kahusayan"
+    },
+    "education": {
+      "heading": "Karanasan at Edukasyon",
+      "subtitle": "Ibahagi ang background at credentials",
+      "yearsLabel": "Mga Taong Propesyonal na Karanasan",
+      "yearsHint": "Tumutulong sa agent na hanapin ang mga eksperto",
+      "jobsLabel": "Mga trabahong nagawa bilang freelancer",
+      "jobsNew": "Bago sa freelancing",
+      "label": "Edukasyon (Opsyonal)",
+      "addButton": "+ Magdagdag ng Edukasyon",
+      "institutionLabel": "Institusyon",
+      "institutionPlaceholder": "Magsulat ng pangalan ng institusyon...",
+      "institutionNote": "Magsulat ng anumang pangalan - paaralan, bootcamp, online course, o self-taught",
+      "degreeLabel": "Degree",
+      "fieldLabel": "Field ng Pag-aaral",
+      "countryLabel": "Bansa",
+      "startYearLabel": "Taong Nagsimula (Opsyonal)",
+      "endYearLabel": "Taong Nagtapos (Opsyonal)"
+    },
+    "payment": {
+      "heading": "Kumita",
+      "subtitle": "Itakda ang payment methods para makatanggap ng earnings",
+      "methodsTitle": "Mga Payment Methods",
+      "methodLabel": "Payment Method",
+      "handleLabel": "Detalye ng Account",
+      "hint": "Maaari mong i-update ito mamaya sa dashboard",
+      "crypto": {
+        "title": "Crypto Wallet",
+        "subtitle": "Makatanggap ng USDC at ETH",
+        "connectButton": "Kumonekta ng Wallet gamit ang Privy",
+        "connectHint": "I-click para kumonekta sa MetaMask, WalletConnect, email, o lumikha ng embedded wallet.",
+        "addressLabel": "Ethereum / Base wallet address",
+        "divider": "o i-paste nang manual"
+      }
+    },
+    "services": {
+      "heading": "Ang Serbisyo Mo",
+      "subtitle": "Magdagdag ng mga serbisyong inaalok mo",
+      "cvSuggestion": "Base sa CV mo, maaari mong alok ang mga serbisyong ito:",
+      "addButton": "+ Magdagdag ng Serbisyo",
+      "titleLabel": "Pamagat ng Serbisyo",
+      "categoryLabel": "Kategorya",
+      "subcategoryLabel": "Subcategory (Opsyonal)",
+      "descriptionLabel": "Deskripsyon (Opsyonal)",
+      "pricingLabel": "Pricing (Opsyonal - maaari mong i-update mamaya)",
+      "priceLabel": "Presyo",
+      "currencyLabel": "Pera",
+      "rateTypeLabel": "Uri ng Rate",
+      "noPriceSet": "Walang presyong itinakda - i-click para magdagdag",
+      "preview": "Kung paano lalabas ang serbisyo:",
+      "rateType": {
+        "hourly": "Bawat Oras",
+        "fixedPrice": "Fixed Price",
+        "perWord": "Bawat Salita",
+        "perPage": "Bawat Pahina",
+        "negotiate": "Magusap Tayo"
+      }
+    },
+    "profile": {
+      "heading": "Ang Profile Mo",
+      "subtitle": "Kumpletuhin ang impormasyon ng profile",
+      "photoLabel": "Larawan ng Profile",
+      "changePhoto": "Baguhin ang larawan",
+      "uploadPhoto": "I-click para mag-upload ng larawan",
+      "nameLabel": "Buong Pangalan",
+      "bioLabel": "Maikling Bio",
+      "bioPlaceholder": "Sabihin sa amin tungkol sa iyo...",
+      "workType": {
+        "both": "Dalawa",
+        "digital": "Digital",
+        "physical": "Personal"
+      },
+      "weeklyHours": {
+        "flexible": "Flexible",
+        "format": "{{hours}} oras/linggo"
+      }
+    },
+    "availability": {
+      "heading": "Availability at Kapasidad",
+      "subtitle": "Tulungan ang AI agent na hanapin ka para sa tamang trabaho",
+      "hoursLabel": "Ilang oras per week ang kayang mo?",
+      "typeLabel": "Anong uri ng trabaho ang ginagawa mo?"
+    },
+    "finish": {
+      "heading": "I-verify ang Pagkakakilanlan",
+      "subtitle": "Kumonekta sa professional accounts para bumuo ng tiwala",
+      "verificationTitle": "Pagsusuri",
+      "emailTitle": "Pagsusuri ng Email",
+      "emailPending": "Tingnan ang email (kasama ang spam)",
+      "emailVerified": "Naverify",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "I-verify ang professional identity",
+      "githubTitle": "GitHub",
+      "githubDesc": "Ipakita ang code contributions",
+      "platformsTitle": "Platform Presence (Opsyonal)",
+      "platformsHint": "Ibahagi ang online presence - followers, ratings, achievements",
+      "addPlatformButton": "Magdagdag ng Platform"
     }
   },
   "welcome": {

@@ -27,7 +27,7 @@ describe('MCP Discovery', () => {
         .get('/.well-known/oauth-protected-resource');
 
       expect(res.status).toBe(200);
-      expect(res.body.resource).toMatch(/\/api\/mcp$/);
+      expect(res.body.resource).toMatch(/\/mcp$/);
       expect(res.body.bearer_methods).toContain('header');
     });
 

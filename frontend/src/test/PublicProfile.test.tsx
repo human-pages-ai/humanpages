@@ -60,7 +60,7 @@ vi.mock('../components/LanguageSwitcher', () => ({
 
 const mockPublicProfile = {
   id: 'test-id',
-  name: 'Test User',
+  displayName: 'Test User',
   bio: 'Test bio description',
   location: 'San Francisco',
   skills: ['react', 'typescript', 'node'],

@@ -1,0 +1,264 @@
+{
+  "onboarding": {
+    "steps": {
+      "connect": "الاتصال",
+      "cvUpload": "تحميل السيرة الذاتية",
+      "skills": "المهارات",
+      "equipment": "المعدات",
+      "vouch": "الضمان",
+      "location": "الموقع",
+      "education": "التعليم",
+      "payment": "الدفع",
+      "services": "الخدمات",
+      "profile": "الملف الشخصي",
+      "availability": "التوفر",
+      "verification": "التحقق"
+    },
+    "completion": {
+      "connect": "تم الاتصال! يمكن للوكلاء الآن العثور عليك",
+      "cvUpload": "تم تحميل السيرة الذاتية! جاري التحليل...",
+      "skills": "تمت إضافة المهارات! يمكن البحث عنك الآن",
+      "equipment": "تم إدراج المعدات! تم فتح الوظائف الأكثر أهمية",
+      "vouch": "تم مشاركة الملف الشخصي! سيؤدي الضمان إلى بناء سمعتك",
+      "location": "تم تحديد الموقع! الوظائف المحلية متاحة",
+      "education": "تمت إضافة الخبرة! تم ترتيبك للمقارنة",
+      "payment": "تم تحديد الدفع! جاهز لاستقبال الأموال",
+      "services": "تم وصف الخدمات! يمكن للوكلاء توظيفك",
+      "profile": "الملف الشخصي يبدو رائعاً!",
+      "availability": "تم تعيين التوفر! اكتمل",
+      "verification": "تم التحقق! درجة ثقة عالية"
+    },
+    "success": {
+      "title": "🎉 اكتمل الملف الشخصي! أهلا وسهلا في HumanPages"
+    },
+    "error": {
+      "offline": "يبدو أنك غير متصل. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+      "sessionExpired": "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى - تم حفظ تقدمك.",
+      "submitFailed": "فشل إكمال التحقق. حاول مرة أخرى."
+    },
+    "cv": {
+      "analyzing": "جاري تحليل السيرة الذاتية...",
+      "analyzed": "تم تحليل السيرة الذاتية - تم ملء الحقول تلقائياً",
+      "reupload": "أعد التحميل"
+    },
+    "loading": "جاري تحميل ملفك الشخصي...",
+    "connect": {
+      "heading": "ابقَ متصلاً",
+      "subtitle": "احصل على إشعارات فورية عندما يبحث الوكلاء عنك",
+      "pushNotSupported": "الإشعارات الفورية غير مدعومة في هذا المتصفح",
+      "pushNotConfigured": "لم يتم تكوين الإشعارات الفورية على الخادم",
+      "pushEnabled": "الإشعارات الفورية مفعلة",
+      "notificationsDenied": "تم رفض الإشعارات",
+      "pushDescription": "احصل على إشعارات احترافية عندما يبحث الوكلاء عنك",
+      "installApp": "تثبيت التطبيق",
+      "installHint": "هل تري زر \"⬇\" في شريط العنوان؟ انقر عليه لتثبيت تطبيق HumanPages.",
+      "telegram": {
+        "title": "Telegram",
+        "description": "احصل على اقتراحات الوظائف من خلال بوت HumanPages الخاص بنا",
+        "connectedMsg": "متصل بـ Telegram! ستتلقى إشعارات لاقتراحات الوظائف الجديدة.",
+        "button": "الاتصال بـ Telegram",
+        "didntOpen": "لم يتم الفتح؟",
+        "clickHere": "انقر هنا للاتصال على Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "لنبدأ",
+      "subtitle": "حمل السيرة الذاتية وأكمل ملفك الشخصي بسرعة",
+      "uploadButton": "تحميل السيرة الذاتية",
+      "format": "ملف PDF أو Word",
+      "source": "من جهازك أو Google Drive أو Dropbox"
+    },
+    "skills": {
+      "heading": "ماذا يمكنك أن تفعل؟",
+      "subtitle": "اختر مهاراتك وشارك خبرتك",
+      "searchPlaceholder": "ابحث عن المهارات...",
+      "customPlaceholder": "أضف مهارة مخصصة...",
+      "popular": "شهير",
+      "browse": "تصفح"
+    },
+    "equipment": {
+      "heading": "المعدات والموارد",
+      "subtitle": "يفضل الوكلاء المعدات للعمل - استخدم ما تستخدمه لخدماتك",
+      "hint": "اختر من الاقتراحات أو اكتب بنفسك - العلامة التجارية والطراز والبرنامج وما إلى ذلك",
+      "searchPlaceholder": "ابحث أو اكتب بنفسك..."
+    },
+    "vouch": {
+      "heading": "بناء السمعة",
+      "subtitle": "يمكن للناس أن يؤيدوك بناءً على عملك. هذا يبني سمعتك مع الوكلاء.",
+      "shareText": "المهن على HumanPages - بدون عمولة",
+      "profileLinkLabel": "رابط الملف الشخصي",
+      "usernameLabel": "الاسم (اختياري)",
+      "usernameHint": "أضف الاسم للحصول على الضمانات",
+      "shareButton": "شارك واحصل على الضمانات",
+      "vouchHint": "يمكن للناس الذين يسجلون من خلال رابط عملك أن يؤيدوك"
+    },
+    "location": {
+      "heading": "أين أنت؟",
+      "subtitle": "أخبرنا بموقعك والمنطقة الزمنية",
+      "label": "الموقع",
+      "remote": "عن بعد",
+      "placeholder": "مدينة أو عنوان",
+      "hint": "يساعد الموقع الوكلاء على العثور على الوظائف المحلية",
+      "timezoneLabel": "المنطقة الزمنية",
+      "timezoneHint": "تلقائي من جهازك (قابل للتغيير)",
+      "languagesLabel": "اللغات (اختياري)",
+      "addLanguageButton": "+ أضف لغة",
+      "languageLabel": "اللغة",
+      "proficiencyLabel": "مستوى الكفاءة"
+    },
+    "education": {
+      "heading": "خبرة العمل",
+      "subtitle": "شارك خلفيتك وأوراقك الاعتمادية",
+      "yearsLabel": "إجمالي خبرة العمل (سنوات)",
+      "yearsHint": "يفضل الوكلاء المحترفين الأكثر خبرة",
+      "jobsLabel": "الوظائف المكتملة",
+      "jobsNew": "جديد في الوظيفة",
+      "label": "التعليم (اختياري)",
+      "addButton": "+ أضف التعليم",
+      "institutionLabel": "المؤسسة",
+      "institutionPlaceholder": "اكتب اسم المؤسسة...",
+      "institutionNote": "اكتب الاسم - مدرسة أو معسكر تدريبي أو دورة عبر الإنترنت أو التعلم الذاتي",
+      "degreeLabel": "الدرجة",
+      "fieldLabel": "المجال",
+      "countryLabel": "الدولة",
+      "startYearLabel": "سنة البداية (اختياري)",
+      "endYearLabel": "سنة النهاية (اختياري)"
+    },
+    "payment": {
+      "heading": "استقبل الدفع",
+      "subtitle": "قم بإعداد طريقة الدفع الخاصة بك لاستقبال الأموال",
+      "methodsTitle": "طرق الدفع",
+      "methodLabel": "طريقة الدفع",
+      "handleLabel": "تفاصيل الحساب",
+      "hint": "يمكن تعديل هذا لاحقاً",
+      "crypto": {
+        "title": "محفظة العملات المشفرة",
+        "subtitle": "استقبل USDC و ETH",
+        "connectButton": "اتصل المحفظة مع Privy",
+        "connectHint": "استخدم MetaMask أو WalletConnect أو البريد الإلكتروني أو عبارة البذور.",
+        "addressLabel": "عنوان محفظة Ethereum / Base",
+        "divider": "أو ابدأ من هنا"
+      }
+    },
+    "services": {
+      "heading": "خدمات العمل",
+      "subtitle": "قدم خدماتك (اختياري)",
+      "cvSuggestion": "بناءً على السيرة الذاتية، يمكنك تقديم هذه الخدمات:",
+      "addButton": "+ أضف خدمة",
+      "titleLabel": "عنوان الخدمة",
+      "categoryLabel": "الفئة",
+      "subcategoryLabel": "الفئة الفرعية (اختياري)",
+      "descriptionLabel": "الوصف (اختياري)",
+      "pricingLabel": "السعر (اختياري - يمكن تغييره لاحقاً)",
+      "priceLabel": "السعر",
+      "currencyLabel": "العملة",
+      "rateTypeLabel": "النوع",
+      "noPriceSet": "لم يتم تحديد السعر - بالساعة",
+      "preview": "كيف ستبدو خدمتك:",
+      "rateType": {
+        "hourly": "بالساعة",
+        "fixedPrice": "السعر الثابت",
+        "perWord": "لكل كلمة",
+        "perPage": "لكل صفحة",
+        "negotiate": "قابل للتفاوض"
+      }
+    },
+    "profile": {
+      "heading": "الملف الشخصي",
+      "subtitle": "أكمل معلومات ملفك الشخصي",
+      "photoLabel": "صورة الملف الشخصي",
+      "changePhoto": "غير الصورة",
+      "uploadPhoto": "انقر لتحميل الصورة",
+      "nameLabel": "الاسم الكامل",
+      "bioLabel": "السيرة الذاتية المختصرة",
+      "bioPlaceholder": "قل شيئاً عن نفسك...",
+      "workType": {
+        "both": "كليهما",
+        "digital": "رقمي",
+        "physical": "جسدي"
+      },
+      "weeklyHours": {
+        "flexible": "مرن",
+        "format": "{{hours}} ساعة / أسبوع"
+      }
+    },
+    "availability": {
+      "heading": "التوفر والإستراتيجية",
+      "subtitle": "سيساعدك وكلاء الذكاء الاصطناعي في العثور على الوظيفة المناسبة",
+      "hoursLabel": "كم ساعة يمكنك العمل في الأسبوع؟",
+      "typeLabel": "ما نوع العمل الذي تقوم به؟"
+    },
+    "finish": {
+      "heading": "تحقق",
+      "subtitle": "بناء سمعتك لفتح حساب Pro",
+      "verificationTitle": "التحقق",
+      "emailTitle": "التحقق من البريد الإلكتروني",
+      "emailPending": "تحقق من البريد الإلكتروني (قيد الانتظار)",
+      "emailVerified": "تم التحقق",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "تحقق من سجل العمل",
+      "githubTitle": "GitHub",
+      "githubDesc": "عرض سجل الالتزامات",
+      "platformsTitle": "الملفات الشخصية المهنية (اختياري)",
+      "platformsHint": "شارك الملفات الشخصية عبر الإنترنت - المتابعون والتقييمات والإنجازات",
+      "addPlatformButton": "أضف منصة"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "الإشعارات والاتصال",
+        "emptyHint": "فعّل الإشعارات لاقتراحات الوظائف",
+        "push": "الإشعارات الفورية",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "المهارات",
+        "emptyHint": "أضف مهارات لكي يجدك الوكلاء"
+      },
+      "equipment": {
+        "title": "المعدات",
+        "emptyHint": "أدرج المعدات للوظائف الأفضل"
+      },
+      "location": {
+        "title": "الموقع",
+        "emptyHint": "أضف موقعاً لمساعدة الوكلاء على العثور على وظائف قريبة",
+        "autoDetected": "(تم الكشف عنه تلقائياً)",
+        "verifyAccuracy": "يرجى التحقق من الدقة"
+      },
+      "education": {
+        "title": "التعليم والخبرة",
+        "emptyHint": "أضف الخبرة لتحسين ملفك الشخصي",
+        "yearsLabel": "سنوات العمل",
+        "educationLabel": "التعليم",
+        "addExperience": "أضف الخبرة",
+        "addEducation": "أضف التعليم أو معسكرات التدريب أو الشهادات"
+      },
+      "services": {
+        "title": "الخدمات",
+        "emptyHint": "صف الخدمات للوظائف الاحترافية"
+      },
+      "availability": {
+        "title": "التوفر",
+        "emptyHint": "دع الوكلاء يعرفون متى تكون متاحاً",
+        "workTypeLabel": "نوع العمل (رقمي / جسدي)",
+        "weeklyHoursLabel": "الساعات الأسبوعية"
+      },
+      "verification": {
+        "title": "التحقق",
+        "emptyHint": "تحقق لبناء سمعتك",
+        "verified": "تم التحقق",
+        "notVerified": "لم يتم التحقق"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "أضف للمستخدم",
+      "addButton": "+ أضف",
+      "editButton": "تعديل"
+    },
+    "share": {
+      "title": "شارك الملف الشخصي"
+    }
+  }
+}

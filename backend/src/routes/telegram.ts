@@ -20,7 +20,7 @@ setInterval(() => {
   }
 }, 60000); // Every minute
 
-// Get Telegram connection status and link URL
+// ─── Get Telegram connection status ───
 router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
@@ -43,12 +43,27 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// Generate a verification code for linking
+// ─── Generate a verification code for linking ───
+// Rate-limited: if user already has a pending code, return the same one
 router.post('/link', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const botUsername = getTelegramBotUsername();
     if (!isTelegramConfigured() || !botUsername) {
       return res.status(400).json({ error: 'Telegram bot not configured' });
+    }
+
+    // Check if user already has a pending (non-expired) code — reuse it
+    for (const [existingCode, data] of pendingCodes) {
+      if (data.userId === req.userId! && data.expiresAt > Date.now()) {
+        const linkUrl = `https://t.me/${botUsername}?start=${existingCode}`;
+        const remainingMs = data.expiresAt - Date.now();
+        const remainingMin = Math.ceil(remainingMs / 60000);
+        return res.json({
+          code: existingCode,
+          linkUrl,
+          expiresIn: `${remainingMin} minute${remainingMin !== 1 ? 's' : ''}`,
+        });
+      }
     }
 
     // Generate a unique code
@@ -74,7 +89,7 @@ router.post('/link', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// Disconnect Telegram
+// ─── Disconnect Telegram ───
 router.delete('/link', authenticateToken, async (req: AuthRequest, res) => {
   try {
     await prisma.human.update({
@@ -89,25 +104,86 @@ router.delete('/link', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// Webhook endpoint for Telegram bot updates
+// ─── Dev-only: simulate Telegram webhook locally ───
+router.post('/dev-simulate', authenticateToken, async (req: AuthRequest, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Not available in production' });
+  }
+
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'Code required in request body' });
+    }
+
+    const pending = pendingCodes.get(code);
+
+    if (!pending) {
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+
+    if (pending.expiresAt < Date.now()) {
+      pendingCodes.delete(code);
+      return res.status(400).json({ error: 'Code has expired' });
+    }
+
+    // Link the account (same logic as webhook)
+    const chatId = `sim_${crypto.randomBytes(8).toString('hex')}`;
+    const username = 'dev_user';
+
+    await prisma.human.update({
+      where: { id: pending.userId },
+      data: {
+        telegramChatId: chatId,
+        telegram: `@${username}`,
+      },
+    });
+
+    pendingCodes.delete(code);
+
+    logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user via dev-simulate');
+
+    res.json({
+      success: true,
+      message: 'Telegram linked successfully',
+      chatId,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Telegram dev-simulate error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Webhook endpoint for Telegram bot updates ───
 // Set this as webhook URL: https://yourapi.com/api/telegram/webhook
 router.post('/webhook', async (req, res) => {
+  // Webhook secret is REQUIRED — reject all requests if not configured
   const secret = getTelegramWebhookSecret();
-  if (secret) {
-    const headerSecret = req.headers['x-telegram-bot-api-secret-token'];
-    if (headerSecret !== secret) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
+  if (!secret) {
+    logger.error('Telegram webhook called but TELEGRAM_WEBHOOK_SECRET is not configured — rejecting');
+    return res.status(500).json({ error: 'Webhook secret not configured' });
+  }
+
+  const headerSecret = req.headers['x-telegram-bot-api-secret-token'];
+  if (headerSecret !== secret) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   try {
     const update = req.body;
 
-    // Handle /start command with verification code
-    if (update.message?.text?.startsWith('/start ')) {
-      const code = update.message.text.replace('/start ', '').trim();
-      const chatId = String(update.message.chat.id);
-      const username = update.message.from?.username;
+    // Only handle message updates — ignore callback_query, channel_post, etc.
+    if (!update.message?.chat?.id) {
+      return res.json({ ok: true });
+    }
+
+    const chatId = String(update.message.chat.id);
+    const messageText = update.message.text || '';
+    const username = update.message.from?.username;
+
+    // ─── /start CODE — link account ───
+    if (messageText.startsWith('/start ')) {
+      const code = messageText.replace('/start ', '').trim();
 
       const pending = pendingCodes.get(code);
 
@@ -128,12 +204,45 @@ router.post('/webhook', async (req, res) => {
         return res.json({ ok: true });
       }
 
-      // Link the account
+      // Check if this Telegram chatId is already linked to a DIFFERENT user
+      const existingLink = await prisma.human.findFirst({
+        where: {
+          telegramChatId: chatId,
+          id: { not: pending.userId },
+        },
+        select: { id: true },
+      });
+
+      if (existingLink) {
+        pendingCodes.delete(code);
+        await sendTelegramMessage({
+          chatId,
+          text: 'This Telegram account is already linked to another Humans profile. Please disconnect it from the other profile first.',
+        });
+        return res.json({ ok: true });
+      }
+
+      // Verify the user still exists in the database
+      const userExists = await prisma.human.findUnique({
+        where: { id: pending.userId },
+        select: { id: true },
+      });
+
+      if (!userExists) {
+        pendingCodes.delete(code);
+        await sendTelegramMessage({
+          chatId,
+          text: 'Account not found. Please try again from your Humans dashboard.',
+        });
+        return res.json({ ok: true });
+      }
+
+      // Link the account — only update telegram username if present (don't wipe existing)
       await prisma.human.update({
         where: { id: pending.userId },
         data: {
           telegramChatId: chatId,
-          telegram: username ? `@${username}` : undefined,
+          ...(username && { telegram: `@${username}` }),
         },
       });
 
@@ -147,12 +256,20 @@ router.post('/webhook', async (req, res) => {
       logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user');
     }
 
-    // Handle plain /start (no code)
-    else if (update.message?.text === '/start') {
-      const chatId = String(update.message.chat.id);
+    // ─── Plain /start (no code) ───
+    else if (messageText === '/start') {
       await sendTelegramMessage({
         chatId,
         text: `Welcome to Humans Bot!\n\nTo connect your account, go to your Humans dashboard and click "Connect Telegram" to get a verification link.`,
+      });
+    }
+
+    // ─── Any other message — send helpful reply ───
+    else {
+      logger.info({ messageText, chatId }, 'Unhandled telegram message');
+      await sendTelegramMessage({
+        chatId,
+        text: 'I only understand the /start command. Go to your Humans dashboard to connect your account.',
       });
     }
 

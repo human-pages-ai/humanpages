@@ -8,6 +8,7 @@ const TELEGRAM_API = 'https://api.telegram.org/bot';
 // Retry config
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 1000;
+const FETCH_TIMEOUT_MS = 10000; // 10 second timeout on API calls
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -25,17 +26,38 @@ async function sendTelegramMessageOnce(options: SendMessageOptions): Promise<boo
     return false;
   }
 
-  const response = await fetch(`${TELEGRAM_API}${BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: options.chatId,
-      text: options.text,
-      parse_mode: options.parseMode || 'HTML',
-    }),
-  });
+  // Abort after timeout to prevent hanging connections
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-  const data = await response.json() as { ok: boolean; description?: string };
+  let response: Response;
+  try {
+    response = await fetch(`${TELEGRAM_API}${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: options.chatId,
+        text: options.text,
+        parse_mode: options.parseMode || 'HTML',
+      }),
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      throw new Error(`Telegram API timed out after ${FETCH_TIMEOUT_MS}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  // Safe JSON parsing — Telegram might return non-JSON on 502/503
+  let data: { ok: boolean; description?: string };
+  try {
+    data = await response.json() as { ok: boolean; description?: string };
+  } catch {
+    throw new Error(`Telegram API returned non-JSON response (status ${response.status})`);
+  }
 
   if (!data.ok) {
     throw new Error(`Telegram API error: ${data.description}`);
@@ -87,7 +109,7 @@ Price: <b>$${data.priceUsdc} USDC</b>
 
 ${escapeHtml(data.jobDescription.slice(0, 200))}${data.jobDescription.length > 200 ? '...' : ''}
 
-<a href="${data.dashboardUrl}">View Offer</a>
+<a href="${escapeHtmlAttr(data.dashboardUrl)}">View Offer</a>
 `.trim();
 
   return sendTelegramMessage({
@@ -107,7 +129,7 @@ Price: <b>$${data.priceUsdc} USDC</b>
 
 ${escapeHtml(data.jobDescription.slice(0, 200))}${data.jobDescription.length > 200 ? '...' : ''}
 
-<a href="${data.dashboardUrl}">Review Updated Offer</a>
+<a href="${escapeHtmlAttr(data.dashboardUrl)}">Review Updated Offer</a>
 `.trim();
 
   return sendTelegramMessage({
@@ -117,10 +139,20 @@ ${escapeHtml(data.jobDescription.slice(0, 200))}${data.jobDescription.length > 2
   });
 }
 
-// Escape HTML special characters for Telegram
+// Escape HTML special characters for Telegram message text
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Escape HTML attribute values (for href, src, etc.)
+function escapeHtmlAttr(url: string): string {
+  return url
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 }

@@ -306,9 +306,9 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
-  const title = 'MCP Server & API for AI Agents | Human Pages';
-  const description = 'Give your AI agent the ability to hire real people. Install the humanpages MCP server (npx humanpages) or use the REST API to search, hire, and pay freelancers.';
-  const ogImage = DEFAULT_OG_IMAGE;
+  const title = 'Human Pages';
+  const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
+  const ogImage = `${SITE_URL}/api/og/use-cases`;
   const unprefixedPath = '/dev';
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`
@@ -421,14 +421,14 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
-export function getUseCasesMetaHtml(lang?: string): string | null {
+export function getPromptToCompletionMetaHtml(lang?: string): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
-  const title = 'Use Cases | Human Pages';
-  const description = 'Publish to directories, run QA testing, recruit Play Store testers, review translations, monitor competitors, and manage communities — all from one prompt. Your AI agent hires a human and gets it done.';
-  const ogImage = DEFAULT_OG_IMAGE;
-  const unprefixedPath = '/use-cases';
+  const title = 'Human Pages';
+  const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
+  const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
+  const unprefixedPath = '/prompt-to-completion';
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`
     : `${SITE_URL}${unprefixedPath}`;

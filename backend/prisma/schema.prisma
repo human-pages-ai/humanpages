@@ -11,6 +11,8 @@ datasource db {
 enum RateType {
   HOURLY
   FLAT_TASK
+  PER_WORD
+  PER_PAGE
   NEGOTIABLE
 }
 
@@ -172,14 +174,33 @@ model Human {
   // ===== CAPABILITIES (Bot Readable) =====
   skills        String[] @default([]) // Tags for search
   equipment     String[] @default([]) // Hardware (car, drone, camera, etc.)
-  languages     String[] @default([]) // ISO codes (en, es, zh, etc.)
+  languages     String[] @default([]) // "Language (Proficiency)" format, e.g. "English (Native)"
   yearsOfExperience Int?   // Total professional experience in years
   experienceHighlights String[] @default([]) // Top achievements from CV
+  cvFileKey     String?    // R2 object key: "cvs/{userId}/{uuid}.{ext}" — persisted on upload
   cvParsedAt    DateTime?  // When CV was last parsed
   cvConsent     Boolean    @default(false) // User consented to CV analysis
   skillSources  Json?      // Maps skill → source (cv, cv_inferred, manual)
   preferredLanguage String @default("en") // UI/email language preference
   isAvailable   Boolean  @default(true) // Open for work
+
+  // ===== AVAILABILITY & CAPACITY (Agent-Facing Filters) =====
+  // These are HIGH-impact agent search filters that CV parsing cannot extract.
+  // Collected during the 5-10s CV processing window (Steps 2-3 of wizard).
+  timezone            String?   // IANA timezone (e.g., "Africa/Lagos", "Asia/Manila") — auto-detected via browser
+  weeklyCapacityHours Int?      // Self-reported: 5, 10, 20, 30, 40+ hours/week available
+  responseTimeCommitment String? // "within_1h" | "within_4h" | "within_24h" | "flexible"
+  workType            String?   // Primary: "digital" | "physical" | "both" — inferred from services, refinable
+  industries          String[] @default([]) // Domain experience: "healthcare", "finance", "ecommerce", etc.
+  schedulePattern     String?   // "morning" | "afternoon" | "evening" | "flexible" — local timezone window
+  preferredTaskDuration String? // "micro" (1-2h) | "half_day" (3-5h) | "full_project" (10+h) | "any"
+  earliestStartDate   DateTime? // When they can start new work (null = immediately)
+  freelancerJobsRange String?   // "new" | "1-10" | "10-50" | "50-100" | "100-500" | "500+"
+  platformPresence    Json?     // [{ platform, url, details }]
+  externalProfiles    String[]  @default([]) // External profile URLs (Fiverr, Upwork, etc.)
+
+  // ===== PROFILE COMPLETENESS (System-Computed) =====
+  profileCompleteness Int       @default(0) // 0-100 computed score for search ranking
 
   // ===== ECONOMICS (Deal Terms) =====
   minRateUsdc      Decimal? @db.Decimal(18, 6) // Minimum rate filter
@@ -199,12 +220,14 @@ model Human {
   telegramChatId  String?  // For sending notifications via bot
   whatsapp        String?  // WhatsApp number (E.164 format from Twilio webhook)
   whatsappVerified Boolean @default(false) // True once linked via link code or self-connect
+  sms             String?  // SMS number if different from WhatsApp (E.164 format)
   signal          String?  // Signal number
 
   // ===== PAYMENT METHODS =====
   paymentMethods  String?  // Free-text: PayPal, Venmo, Wise links, etc.
 
   // ===== PRIVACY =====
+  hideRealName         Boolean   @default(false) // True = show "Anonymous" on public profile instead of "FirstName L."
   hideContact          Boolean   @default(true) // Hide contact info from public profile
   featuredConsent      Boolean   @default(false) // Opt-in to be featured on homepage
   featuredInviteSentAt DateTime? // When we sent the "want to be featured?" email
@@ -349,6 +372,17 @@ model Human {
   @@index([lastActiveAt])
   @@index([isAvailable, lastActiveAt])
   @@index([humanStatus])
+  @@index([timezone])
+  @@index([weeklyCapacityHours])
+  @@index([responseTimeCommitment])
+  @@index([workType])
+  @@index([industries], type: Gin)
+  @@index([schedulePattern])
+  @@index([preferredTaskDuration])
+  @@index([earliestStartDate])
+  @@index([profileCompleteness])
+  @@index([freelancerJobsRange])
+  @@index([externalProfiles], type: Gin)
 }
 
 model FiatPaymentMethod {
@@ -372,7 +406,9 @@ model Education {
   country     String?
   degree      String?
   field       String?
-  year        Int?
+  year        Int?      // Legacy — kept for backward compat with CV parser
+  startYear   Int?
+  endYear     Int?
   source      String   @default("manual") // "manual" | "cv"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -847,6 +883,7 @@ model Service {
   title           String
   description     String
   category        String
+  subcategory     String?
   priceMin        Decimal?  @db.Decimal(10, 2)
   priceCurrency   String    @default("USD") // Currency for service price
   priceUnit       RateType?

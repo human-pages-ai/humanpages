@@ -18,6 +18,9 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: vi.fn(),
+    loginWithWhatsApp: vi.fn(),
+    loginWithLinkedIn: vi.fn(),
+    updateUser: vi.fn(),
   }),
 }));
 
@@ -173,7 +176,7 @@ describe('Route Guards', () => {
     it('shows login page for unauthenticated users', async () => {
       renderApp('/login');
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /auth.signIn/i })).toBeInTheDocument();
+        expect(screen.getByText('auth.signInTo')).toBeInTheDocument();
       });
     });
 
@@ -190,7 +193,7 @@ describe('Route Guards', () => {
     it('shows signup page for unauthenticated users', async () => {
       renderApp('/signup');
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /auth.signUp/i })).toBeInTheDocument();
+        expect(screen.getByText('auth.createAccount')).toBeInTheDocument();
       });
     });
 
@@ -208,7 +211,7 @@ describe('Route Guards', () => {
     it('shows signup page for unauthenticated user at /es/signup', async () => {
       renderApp('/es/signup');
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /auth.signUp/i })).toBeInTheDocument();
+        expect(screen.getByText('auth.createAccount')).toBeInTheDocument();
       });
     });
 
@@ -226,8 +229,8 @@ describe('Route Guards', () => {
     it('redirects unauthenticated users to /login', async () => {
       renderApp('/dashboard');
       await waitFor(() => {
-        // Redirected to /login, which shows the login form
-        expect(screen.getByRole('button', { name: /auth.signIn/i })).toBeInTheDocument();
+        // Redirected to /login, which shows the login page heading
+        expect(screen.getByText('auth.signInTo')).toBeInTheDocument();
       });
     });
   });

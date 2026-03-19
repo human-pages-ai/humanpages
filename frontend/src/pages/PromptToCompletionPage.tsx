@@ -15,7 +15,7 @@ import {
   UserIcon,
 } from '@heroicons/react/24/outline';
 
-interface UseCase {
+interface Task {
   id: string;
   icon: React.ReactNode;
   title: string;
@@ -33,7 +33,7 @@ interface UseCase {
 
 const PLAYBOOK_BASE = 'https://github.com/human-pages-ai/hire-humans/blob/main/playbooks';
 
-const USE_CASES: UseCase[] = [
+const TASKS: Task[] = [
   {
     id: 'directory-submissions',
     icon: <RocketLaunchIcon className="w-7 h-7" />,
@@ -206,7 +206,7 @@ function NewsletterForm() {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'use-cases' }),
+        body: JSON.stringify({ email, source: 'prompt-to-completion' }),
       });
       if (!res.ok) throw new Error();
       setStatus('success');
@@ -242,14 +242,14 @@ function NewsletterForm() {
   );
 }
 
-export default function UseCasesPage() {
+export default function PromptToCompletionPage() {
   return (
     <>
       <SEO
-        title="Use Cases"
-        description="Publish to directories, run QA testing, recruit Play Store testers, review translations, monitor competitors, and manage communities — all from one prompt. Your AI agent hires a human and gets it done."
-        path="/use-cases"
-        ogImage="https://humanpages.ai/api/og/default"
+        title="Human Pages"
+        description="You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP."
+        path="/prompt-to-completion"
+        ogImage="https://humanpages.ai/api/og/prompt-to-completion"
       />
 
       {/* Sticky header */}
@@ -347,7 +347,7 @@ export default function UseCasesPage() {
           </div>
         </section>
 
-        {/* More use cases */}
+        {/* More tasks */}
         <section className="py-12 md:py-16 px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">More things your agent can hire for</h2>
@@ -355,21 +355,21 @@ export default function UseCasesPage() {
               Directory submissions are just the start. Here are 6 more tasks with ready-made playbooks.
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {USE_CASES.filter(uc => uc.id !== 'directory-submissions').map((uc) => (
+              {TASKS.filter(task => task.id !== 'directory-submissions').map((task) => (
                 <a
-                  key={uc.id}
-                  href={uc.playbook}
+                  key={task.id}
+                  href={task.playbook}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-5 bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all group"
                 >
                   <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-                    {uc.icon}
+                    {task.icon}
                   </div>
-                  <h3 className="font-semibold text-slate-900 text-sm">{uc.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{uc.tagline}</p>
+                  <h3 className="font-semibold text-slate-900 text-sm">{task.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{task.tagline}</p>
                   <span className="inline-block mt-3 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                    {uc.price}
+                    {task.price}
                   </span>
                 </a>
               ))}
@@ -397,7 +397,7 @@ export default function UseCasesPage() {
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-3">Try it now</h2>
             <p className="text-slate-600 mb-6">
-              Register your agent, run your first directory submission, then pick any use case above.
+              Register your agent, run your first directory submission, then pick any task above.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link

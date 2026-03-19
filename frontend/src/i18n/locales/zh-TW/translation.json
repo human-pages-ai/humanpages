@@ -1,0 +1,264 @@
+{
+  "onboarding": {
+    "steps": {
+      "connect": "連結通知",
+      "cvUpload": "上傳履歷",
+      "skills": "技能",
+      "equipment": "設備",
+      "vouch": "推薦",
+      "location": "位置",
+      "education": "教育",
+      "payment": "付款",
+      "services": "服務",
+      "profile": "個人檔案",
+      "availability": "可用性",
+      "verification": "驗證"
+    },
+    "completion": {
+      "connect": "已連結！代理商現在可以找到您",
+      "cvUpload": "已上傳履歷！正在分析...",
+      "skills": "已新增技能！現在可以搜尋到您",
+      "equipment": "已列出設備！解鎖更多工作",
+      "vouch": "已分享個人檔案！推薦將建立您的信譽",
+      "location": "已設定位置！本地工作可用",
+      "education": "已新增經驗！已排名供比較",
+      "payment": "已設定付款！準備接收資金",
+      "services": "已描述服務！代理商可以聘請您",
+      "profile": "您的個人檔案看起來很棒！",
+      "availability": "已設定可用性！完成",
+      "verification": "已驗證！高信任度評分"
+    },
+    "success": {
+      "title": "🎉 個人檔案完成！歡迎來到 HumanPages"
+    },
+    "error": {
+      "offline": "您似乎離線了。請檢查您的連線並重試。",
+      "sessionExpired": "您的會話已過期。請重新登入 - 您的進度已保存。",
+      "submitFailed": "完成驗證失敗。請重試。"
+    },
+    "cv": {
+      "analyzing": "正在分析履歷...",
+      "analyzed": "履歷已分析 - 欄位自動填充",
+      "reupload": "重新上傳"
+    },
+    "loading": "正在載入您的個人檔案...",
+    "connect": {
+      "heading": "保持聯絡",
+      "subtitle": "當代理商尋找您時收到即時通知",
+      "pushNotSupported": "此瀏覽器不支援推播通知",
+      "pushNotConfigured": "伺服器上未設定推播通知",
+      "pushEnabled": "推播通知已啟用",
+      "notificationsDenied": "通知已被拒絕",
+      "pushDescription": "當代理商尋找您時收到專業通知",
+      "installApp": "安裝應用程式",
+      "installHint": "在地址列中看到「⬇」按鈕？點選它安裝 HumanPages 應用程式。",
+      "telegram": {
+        "title": "Telegram",
+        "description": "透過我們的 HumanPages 機器人獲取工作建議",
+        "connectedMsg": "已連結到 Telegram！您將收到新工作建議的通知。",
+        "button": "連結到 Telegram",
+        "didntOpen": "未打開？",
+        "clickHere": "點選此處在 Telegram 上連結"
+      }
+    },
+    "cvUpload": {
+      "heading": "開始使用",
+      "subtitle": "上傳履歷並快速完成您的個人檔案",
+      "uploadButton": "上傳履歷",
+      "format": "PDF 或 Word 文件",
+      "source": "從您的裝置、Google Drive 或 Dropbox"
+    },
+    "skills": {
+      "heading": "您能做什麼？",
+      "subtitle": "選擇您的技能並分享您的經驗",
+      "searchPlaceholder": "搜尋技能...",
+      "customPlaceholder": "新增自訂技能...",
+      "popular": "受歡迎",
+      "browse": "瀏覽"
+    },
+    "equipment": {
+      "heading": "設備和資源",
+      "subtitle": "代理商偏好工作用的設備 - 使用您為服務使用的任何東西",
+      "hint": "選擇建議或自行輸入 - 品牌、型號、軟體等",
+      "searchPlaceholder": "搜尋或自行輸入..."
+    },
+    "vouch": {
+      "heading": "建立信譽",
+      "subtitle": "人們可以根據您的工作推薦您。這會與代理商一起建立您的信譽。",
+      "shareText": "HumanPages 上的專業工作 - 無佣金",
+      "profileLinkLabel": "個人檔案連結",
+      "usernameLabel": "名稱（選擇性）",
+      "usernameHint": "新增名稱以獲取推薦",
+      "shareButton": "分享並獲得推薦",
+      "vouchHint": "透過您的工作連結註冊的人可以推薦您"
+    },
+    "location": {
+      "heading": "您在哪裡？",
+      "subtitle": "告訴我們您的位置和時區",
+      "label": "位置",
+      "remote": "遠端",
+      "placeholder": "城市或地址",
+      "hint": "位置幫助代理商找到本地工作",
+      "timezoneLabel": "時區",
+      "timezoneHint": "從您的裝置自動（可變更）",
+      "languagesLabel": "語言（選擇性）",
+      "addLanguageButton": "+ 新增語言",
+      "languageLabel": "語言",
+      "proficiencyLabel": "熟練程度"
+    },
+    "education": {
+      "heading": "工作經驗",
+      "subtitle": "分享您的背景和認證",
+      "yearsLabel": "總工作經驗（年）",
+      "yearsHint": "代理商偏好經驗更豐富的專業人士",
+      "jobsLabel": "已完成的職位",
+      "jobsNew": "工作新手",
+      "label": "教育（選擇性）",
+      "addButton": "+ 新增教育",
+      "institutionLabel": "機構",
+      "institutionPlaceholder": "輸入機構名稱...",
+      "institutionNote": "輸入名稱 - 學校、訓練營、線上課程或自學",
+      "degreeLabel": "學位",
+      "fieldLabel": "領域",
+      "countryLabel": "國家",
+      "startYearLabel": "開始年份（選擇性）",
+      "endYearLabel": "結束年份（選擇性）"
+    },
+    "payment": {
+      "heading": "接收付款",
+      "subtitle": "設定您的付款方式以接收資金",
+      "methodsTitle": "付款方式",
+      "methodLabel": "付款方式",
+      "handleLabel": "帳戶詳情",
+      "hint": "這可以稍後編輯",
+      "crypto": {
+        "title": "加密貨幣錢包",
+        "subtitle": "接收 USDC 和 ETH",
+        "connectButton": "使用 Privy 連結錢包",
+        "connectHint": "使用 MetaMask、WalletConnect、電子郵件或種子短語。",
+        "addressLabel": "Ethereum / Base 錢包地址",
+        "divider": "或從此處開始"
+      }
+    },
+    "services": {
+      "heading": "工作服務",
+      "subtitle": "展示您的服務（選擇性）",
+      "cvSuggestion": "根據履歷，您可以提供這些服務：",
+      "addButton": "+ 新增服務",
+      "titleLabel": "服務標題",
+      "categoryLabel": "類別",
+      "subcategoryLabel": "子類別（選擇性）",
+      "descriptionLabel": "說明（選擇性）",
+      "pricingLabel": "定價（選擇性 - 稍後可變更）",
+      "priceLabel": "價格",
+      "currencyLabel": "貨幣",
+      "rateTypeLabel": "類型",
+      "noPriceSet": "未設定價格 - 按小時",
+      "preview": "您的服務看起來如何：",
+      "rateType": {
+        "hourly": "按小時",
+        "fixedPrice": "固定價格",
+        "perWord": "每個單字",
+        "perPage": "每頁",
+        "negotiate": "可協商"
+      }
+    },
+    "profile": {
+      "heading": "個人檔案",
+      "subtitle": "完成您的個人檔案資訊",
+      "photoLabel": "個人檔案照片",
+      "changePhoto": "變更照片",
+      "uploadPhoto": "點選上傳照片",
+      "nameLabel": "全名",
+      "bioLabel": "簡短自傳",
+      "bioPlaceholder": "告訴我們關於您的事...",
+      "workType": {
+        "both": "兩者",
+        "digital": "數位",
+        "physical": "實體"
+      },
+      "weeklyHours": {
+        "flexible": "彈性",
+        "format": "{{hours}} 小時/週"
+      }
+    },
+    "availability": {
+      "heading": "可用性和策略",
+      "subtitle": "AI 代理商將幫助您找到合適的工作",
+      "hoursLabel": "您每週可以工作多少小時？",
+      "typeLabel": "您從事什麼類型的工作？"
+    },
+    "finish": {
+      "heading": "驗證",
+      "subtitle": "建立信譽以解鎖 Pro 帳戶",
+      "verificationTitle": "驗證",
+      "emailTitle": "電子郵件驗證",
+      "emailPending": "驗證電子郵件（待處理）",
+      "emailVerified": "已驗證",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "驗證工作歷史",
+      "githubTitle": "GitHub",
+      "githubDesc": "檢視提交歷史",
+      "platformsTitle": "專業檔案（選擇性）",
+      "platformsHint": "分享線上檔案 - 追蹤者、評分、成就",
+      "addPlatformButton": "新增平台"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "通知和連結",
+        "emptyHint": "啟用工作建議通知",
+        "push": "推播通知",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "技能",
+        "emptyHint": "新增技能以便代理商可以找到您"
+      },
+      "equipment": {
+        "title": "設備",
+        "emptyHint": "列出設備以獲得更好的工作"
+      },
+      "location": {
+        "title": "位置",
+        "emptyHint": "新增位置以幫助代理商找到附近的工作",
+        "autoDetected": "（自動偵測）",
+        "verifyAccuracy": "請驗證準確性"
+      },
+      "education": {
+        "title": "教育和經驗",
+        "emptyHint": "新增經驗以增強您的檔案",
+        "yearsLabel": "工作年數",
+        "educationLabel": "教育",
+        "addExperience": "新增經驗",
+        "addEducation": "新增教育、訓練營或認證"
+      },
+      "services": {
+        "title": "服務",
+        "emptyHint": "描述專業工作的服務"
+      },
+      "availability": {
+        "title": "可用性",
+        "emptyHint": "讓代理商知道您何時可用",
+        "workTypeLabel": "工作類型（數位/實體）",
+        "weeklyHoursLabel": "每週小時數"
+      },
+      "verification": {
+        "title": "驗證",
+        "emptyHint": "驗證以建立信譽",
+        "verified": "已驗證",
+        "notVerified": "未驗證"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "為使用者新增",
+      "addButton": "+ 新增",
+      "editButton": "編輯"
+    },
+    "share": {
+      "title": "分享個人檔案"
+    }
+  }
+}

@@ -16,6 +16,24 @@ import { verifyCaptcha } from '../lib/captcha.js';
 
 const router = Router();
 
+async function generateUsername(name: string): Promise<string> {
+  const firstName = name.split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const base = firstName.length >= 2 ? firstName : 'user';
+
+  // Try up to 20 times to find a unique username with improved suffix
+  for (let i = 0; i < 20; i++) {
+    const suffix = Math.random().toString(36).slice(2, 6); // 4-char alphanumeric
+    const candidate = `${base}_${suffix}`;
+    const existing = await prisma.human.findUnique({
+      where: { username: candidate },
+      select: { id: true },
+    });
+    if (!existing) return candidate;
+  }
+  // Ultra-fallback: timestamp-based, virtually impossible to collide
+  return `${base}_${Date.now().toString(36)}`;
+}
+
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(72),
@@ -99,11 +117,13 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
     }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const username = await generateUsername(name);
     const human = await prisma.human.create({
       data: {
         email,
         passwordHash,
         name,
+        username,
         contactEmail: email,
         referredBy: validReferrerId,
         referralCode: generateReferralCode(),
@@ -112,7 +132,7 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
         utmMedium: utmMedium || undefined,
         utmCampaign: utmCampaign || undefined,
       },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, username: true },
     });
 
     // Track signup in PostHog (pass req for country geolocation)
@@ -134,24 +154,16 @@ router.post('/signup', globalSignupThrottle, authRateLimiter, async (req, res) =
 
     const token = jwt.sign({ userId: human.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    // In non-production, auto-verify email for easier testing
-    if (process.env.NODE_ENV !== 'production') {
-      await prisma.human.update({
-        where: { id: human.id },
-        data: { emailVerified: true },
-      });
-    } else {
-      // Send verification email
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      await prisma.human.update({
-        where: { id: human.id },
-        data: { emailVerificationToken: verificationToken },
-      });
-      const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
-      sendVerificationEmail(email, verifyUrl).catch((err) =>
-        logger.error({ err }, 'Failed to send verification email')
-      );
-    }
+    // Send verification email
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.human.update({
+      where: { id: human.id },
+      data: { emailVerificationToken: verificationToken },
+    });
+    const verifyUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${verificationToken}`;
+    sendVerificationEmail(email, verifyUrl).catch((err) =>
+      logger.error({ err }, 'Failed to send verification email')
+    );
 
     res.status(201).json({ human, token });
   } catch (error) {
@@ -605,11 +617,13 @@ router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
 
       // Create account with WhatsApp as primary identity (no email/password needed)
       const placeholderEmail = `wa_${phone.replace('+', '')}@whatsapp.hp.internal`;
+      const username = await generateUsername(name);
 
       human = await prisma.human.create({
         data: {
           email: placeholderEmail,
           name,
+          username,
           contactEmail: null,
           whatsapp: phone,
           whatsappVerified: true,
@@ -621,7 +635,7 @@ router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
           utmMedium: utmMedium || undefined,
           utmCampaign: utmCampaign || undefined,
         },
-        select: { id: true, email: true, name: true },
+        select: { id: true, email: true, name: true, username: true },
       });
 
       isNew = true;
@@ -655,4 +669,5 @@ router.post('/whatsapp/verify-otp', authRateLimiter, async (req, res) => {
   }
 });
 
+export { generateUsername };
 export default router;

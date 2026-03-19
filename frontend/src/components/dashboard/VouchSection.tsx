@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
-import { Vouch } from './types';
+import { VouchCard } from '../shared/VouchCard';
+import { Vouch, Profile } from './types';
 
 export default function VouchSection() {
   const { t, i18n } = useTranslation();
   const [given, setGiven] = useState<Vouch[]>([]);
   const [received, setReceived] = useState<Vouch[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [comment, setComment] = useState('');
@@ -16,30 +18,31 @@ export default function VouchSection() {
 
   useEffect(() => {
     loadVouches();
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    try {
+      const data = await api.getProfile();
+      setProfile(data);
+    } catch { /* profile load failed */ }
+  };
 
   const loadVouches = async () => {
     try {
       const data = await api.getMyVouches();
       setGiven(data.given);
       setReceived(data.received);
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* vouch load failed */ }
+    finally { setLoading(false); }
   };
 
   const handleVouch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
-
     setSubmitting(true);
     try {
-      await api.createVouch({
-        username: username.trim(),
-        comment: comment.trim() || undefined,
-      });
+      await api.createVouch({ username: username.trim(), comment: comment.trim() || undefined });
       toast.success(t('dashboard.vouches.vouchSuccess'));
       setUsername('');
       setComment('');
@@ -66,6 +69,19 @@ export default function VouchSection() {
 
   return (
     <div className="space-y-4">
+      {/* Share & Vouch Card — same component as wizard */}
+      {profile && (
+        <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Get Vouched</h2>
+          <VouchCard
+            username={profile.username}
+            userId={profile.id}
+            vouchCount={received.length}
+            vouchTarget={10}
+          />
+        </div>
+      )}
+
       {/* Vouches Received */}
       <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
@@ -87,18 +103,13 @@ export default function VouchSection() {
             {received.map((v) => (
               <div key={v.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <div className="shrink-0 w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-medium">
-                  {v.voucher.name.charAt(0).toUpperCase()}
+                  {(v.voucher.username || '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900 text-sm">{v.voucher.name}</span>
-                    {v.voucher.username && (
-                      <span className="text-xs text-slate-400">@{v.voucher.username}</span>
-                    )}
-                  </div>
-                  {v.comment && (
-                    <p className="text-sm text-slate-600 mt-0.5">{v.comment}</p>
-                  )}
+                  <span className="font-medium text-slate-900 text-sm">
+                    {v.voucher.username ? `@${v.voucher.username}` : 'Anonymous'}
+                  </span>
+                  {v.comment && <p className="text-sm text-slate-600 mt-0.5">{v.comment}</p>}
                   <span className="text-xs text-slate-400 mt-1 block">
                     {new Date(v.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
@@ -128,7 +139,6 @@ export default function VouchSection() {
           )}
         </div>
 
-        {/* Vouch form */}
         {showForm && (
           <form onSubmit={handleVouch} className="mb-4 p-4 bg-slate-50 rounded-lg space-y-3">
             <div>
@@ -177,10 +187,9 @@ export default function VouchSection() {
             {given.map((v) => (
               <div key={v.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-medium text-slate-900 text-sm">{v.vouchee.name}</span>
-                  {v.vouchee.username && (
-                    <span className="text-xs text-slate-400">@{v.vouchee.username}</span>
-                  )}
+                  <span className="font-medium text-slate-900 text-sm">
+                    {v.vouchee.username ? `@${v.vouchee.username}` : 'Anonymous'}
+                  </span>
                   {v.comment && (
                     <span className="text-xs text-slate-500 truncate hidden sm:inline">— {v.comment}</span>
                   )}

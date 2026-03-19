@@ -18,6 +18,9 @@ vi.mock('../hooks/useAuth', () => ({
     signup: vi.fn(),
     logout: vi.fn(),
     loginWithGoogle: mockLoginWithGoogle,
+    loginWithWhatsApp: vi.fn(),
+    loginWithLinkedIn: vi.fn(),
+    updateUser: vi.fn(),
   }),
 }));
 
@@ -46,6 +49,12 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+/** Click the "or sign in with email" toggle to reveal the email/password form */
+async function expandEmailForm(user: ReturnType<typeof userEvent.setup>) {
+  const toggle = screen.getByRole('button', { name: /or sign in with email/i });
+  await user.click(toggle);
+}
+
 describe('Login', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,15 +62,19 @@ describe('Login', () => {
     mockLoginWithGoogle.mockResolvedValue(undefined);
   });
 
-  it('renders email and password inputs', () => {
+  it('renders email and password inputs', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     expect(screen.getByLabelText(/common.email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/common.password/i)).toBeInTheDocument();
   });
 
-  it('renders the sign in button', () => {
+  it('renders the sign in button', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     expect(screen.getByRole('button', { name: /auth.signIn/i })).toBeInTheDocument();
   });
@@ -74,8 +87,10 @@ describe('Login', () => {
     expect(signupLink).toHaveAttribute('href', '/signup');
   });
 
-  it('renders forgot password link', () => {
+  it('renders forgot password link', async () => {
+    const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     const forgotLink = screen.getByRole('link', { name: /auth.forgotPassword/i });
     expect(forgotLink).toBeInTheDocument();
@@ -85,6 +100,7 @@ describe('Login', () => {
   it('should call login on form submission', async () => {
     const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     const emailInput = screen.getByLabelText(/common.email/i);
     const passwordInput = screen.getByLabelText(/common.password/i);
@@ -102,6 +118,7 @@ describe('Login', () => {
   it('should navigate to dashboard on successful login', async () => {
     const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/common.password/i), 'password123');
@@ -117,6 +134,7 @@ describe('Login', () => {
 
     const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.email/i), 'wrong@example.com');
     await user.type(screen.getByLabelText(/common.password/i), 'wrongpassword');
@@ -144,6 +162,7 @@ describe('Login', () => {
 
     const user = userEvent.setup();
     renderWithProviders(<Login />);
+    await expandEmailForm(user);
 
     await user.type(screen.getByLabelText(/common.email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/common.password/i), 'password123');

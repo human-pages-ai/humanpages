@@ -231,9 +231,10 @@ export default function DevelopersPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO
-        title="MCP Server & API for AI Agents"
-        description="Give your AI agent the ability to hire real people. Install the free MCP server or use the REST API to search, hire, and pay freelancers by skill and location."
+        title="HumanPages.ai | Real-world tasks for your AI Agent"
+        description="You prompt, humans deliver. Connect the MCP and delegate tasks automatically."
         path="/dev"
+        ogImage="https://humanpages.ai/api/og/use-cases"
       />
       <SEO
         jsonLd={{
@@ -581,18 +582,13 @@ export default function DevelopersPage() {
 
             {/* PRO card */}
             <div className="p-6 bg-white rounded-xl border-2 border-blue-500 relative">
-              {promo?.enabled && promo.remaining > 0 && (
-                <span className="absolute -top-3 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {t('dev.pricing.proPromoPrice')}
-                </span>
-              )}
+              <span className="absolute -top-3 left-4 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                Launch Special
+              </span>
               <h3 className="text-lg font-bold text-slate-900 mb-1">{t('dev.pricing.proTitle')}</h3>
               <p className="text-2xl font-bold text-slate-900 mb-4">
-                {promo?.enabled && promo.remaining > 0 ? (
-                  <><span className="line-through text-slate-400 text-lg mr-2">{t('dev.pricing.proPrice')}</span> {t('dev.pricing.proPromoPrice')}</>
-                ) : (
-                  t('dev.pricing.proPrice')
-                )}
+                <span className="line-through text-slate-400 text-lg mr-2">{t('dev.pricing.proPrice')}</span>
+                <span className="text-green-600">{t('dev.pricing.proPromoPrice')}</span>
               </p>
               <ul className="space-y-2 text-sm text-slate-600">
                 <li className="flex items-center gap-2">

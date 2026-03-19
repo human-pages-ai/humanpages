@@ -1,0 +1,264 @@
+{
+  "onboarding": {
+    "steps": {
+      "connect": "Kuunganisha",
+      "cvUpload": "CV",
+      "skills": "Ujuzi",
+      "equipment": "Vifaa",
+      "vouch": "Ushuhuda",
+      "location": "Mahali",
+      "education": "Elimu",
+      "payment": "Malipo",
+      "services": "Huduma",
+      "profile": "Wasifu",
+      "availability": "Upatikanaji",
+      "verification": "Uthibitisho"
+    },
+    "completion": {
+      "connect": "Imeunganishwa! Wakala sasa wanaweza kukufikia",
+      "cvUpload": "CV iliyorudishwa! Tunaigundua...",
+      "skills": "Ujuzi umeonjezwa! Sasa unasoma",
+      "equipment": "Vifaa vimejenga! Kazi za kimwili zimefunguliwa",
+      "vouch": "Wasifu umegawiwa! Ushuhuda hujenga juhudi",
+      "location": "Mahali imewekwa! Kazi ya karibu imefunguliwa",
+      "education": "Uzoefu umeonjezwa! Unasimama",
+      "payment": "Malipo imewekwa! Nzuri kugawa",
+      "services": "Huduma zimefafanuliwa! Wakala wanaweza kukuhiri",
+      "profile": "Wasifu inaonekana nzuri!",
+      "availability": "Upatikanaji umewekwa! Karibu kumalizia",
+      "verification": "Inathibitishwa! Alama ya juhudi kwa juu"
+    },
+    "success": {
+      "title": "🎉 Wasifu Kumalizia! Karibu kwenye HumanPages"
+    },
+    "error": {
+      "offline": "Inaonekana wewe hako mkondoni. Tafadhali angalia uunganisho wako na ujaribu tena.",
+      "sessionExpired": "Kazi yako imeishia muda. Tafadhali ingia tena - maendeleo yako yamehifadhiwa.",
+      "submitFailed": "Kumaliza ukubali kumeandaliwa. Tafadhali jaribu tena."
+    },
+    "cv": {
+      "analyzing": "Kuchanganua CV yako...",
+      "analyzed": "CV imechanganuliwa - sehemu zilizojazwa mapema",
+      "reupload": "Rudisha upya"
+    },
+    "loading": "Wasifu wako inakemea...",
+    "connect": {
+      "heading": "Eneza Kuunganishwa",
+      "subtitle": "Pata onyo haraka sana wakala wanataka kukuhiri",
+      "pushNotSupported": "Arifa za kushinikiza hazijoidhinishwa kwenye browser hii",
+      "pushNotConfigured": "Arifa za kushinikiza hazijowekwa kwenye seva",
+      "pushEnabled": "Arifa za kushinikiza zimewezeshwa",
+      "notificationsDenied": "Arifa zimekataliwa",
+      "pushDescription": "Pata onyo wakala wanataka kukuhiri",
+      "installApp": "Kutekeleza Programu",
+      "installHint": "Kuona download icon ⬇ katika mwenyezi wa anwani? Tap ili kutekeleza HumanPages kama programu.",
+      "telegram": {
+        "title": "Telegram",
+        "description": "Pokea mialiko ya kazi kupitia bot yetu ya HumanPages",
+        "connectedMsg": "Umealingia kwenye Telegram! Utapokea onyo la papo hapo kwa ajili ya mialiko mitawazo.",
+        "button": "Kuunganisha Telegram",
+        "didntOpen": "Haikufungua?",
+        "clickHere": "Bofya hapa kuunganisha kwenye Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "Tuanze",
+      "subtitle": "Upige CV yako haraka kujaza wasifu wako",
+      "uploadButton": "Upige CV",
+      "format": "Hati ya PDF au Neno",
+      "source": "Kutoka kwa kifaa chako, Google Drive, au Dropbox"
+    },
+    "skills": {
+      "heading": "Nini unaweza kufanya?",
+      "subtitle": "Chagua ujuzi wako na gawa uzoefu wako",
+      "searchPlaceholder": "Ujuzi wa kutafuta...",
+      "customPlaceholder": "Ujuzi wa kawaida ongeza...",
+      "popular": "Maarufu",
+      "browse": "Pigia"
+    },
+    "equipment": {
+      "heading": "Vifaa na Zana",
+      "subtitle": "Wakala wanapanga vifaa kwa kazi - ongeza chochote unachotumia kwa ajili ya huduma zako.",
+      "hint": "Chagua kutoka kwa mapendekezo au ingia kitu chochote - chapa, mfano, programu, nini tahaja",
+      "searchPlaceholder": "Kutafuta au kuandika yako..."
+    },
+    "vouch": {
+      "heading": "Kujenga Imani",
+      "subtitle": "Watu wanajua kazi yako wanaweza kushuhuda wewe. Hii hujenga imani kwa ajili ya wakala.",
+      "shareText": "Ushuhuda kwa ajili yangu kwenye HumanPages - jukwaa la AI kuajiriwa na 0% ya komusheni",
+      "profileLinkLabel": "Kiungo chako cha wasifu",
+      "usernameLabel": "Jina la mtumiaji (kawaida)",
+      "usernameHint": "Weka jina la mtumiaji kupata kiungo kwa muda mfupi",
+      "shareButton": "Gawa na Pokea Ushuhuda",
+      "vouchHint": "Uliza wenzako ambao wanajua kazi yako kushuhuda wewe"
+    },
+    "location": {
+      "heading": "Wapi Wewe Unaishi?",
+      "subtitle": "Niambie mahali yako na eneo la saa",
+      "label": "Mahali",
+      "remote": "Mbali",
+      "placeholder": "Jiji au anwani",
+      "hint": "Mahali husaidia wakala kupata kazi za karibu",
+      "timezoneLabel": "Eneo la Saa",
+      "timezoneHint": "Kujigambula kutoka kwa kifaa chako (inabadilika)",
+      "languagesLabel": "Lugha (Kawaida)",
+      "addLanguageButton": "+ Lugha Ongeza",
+      "languageLabel": "Lugha",
+      "proficiencyLabel": "Ushawishi"
+    },
+    "education": {
+      "heading": "Uzoefu na Elimu",
+      "subtitle": "Gawa uzoefu wako na ujumbe",
+      "yearsLabel": "Miaka ya Uzoefu wa Mtaji",
+      "yearsHint": "Husaidia wakala kupata wataalamu",
+      "jobsLabel": "Kazi iliyokamilika kama mlolezi",
+      "jobsNew": "Mpya kwa kujibandika",
+      "label": "Elimu (Kawaida)",
+      "addButton": "+ Elimu Ongeza",
+      "institutionLabel": "Taasisi",
+      "institutionPlaceholder": "Andika jina la taasisi...",
+      "institutionNote": "Andika jina la kuona - shule, bootcamp, kozi ya mtandaoni, au kujifunza",
+      "degreeLabel": "Digrii",
+      "fieldLabel": "Sehemu ya Kujifunza",
+      "countryLabel": "Nchi",
+      "startYearLabel": "Mwaka wa Kuanza (Kawaida)",
+      "endYearLabel": "Mwaka wa Kumalizia (Kawaida)"
+    },
+    "payment": {
+      "heading": "Pata Kulipwa",
+      "subtitle": "Seti njia za malipo kupokea mapato",
+      "methodsTitle": "Njia za Malipo",
+      "methodLabel": "Njia ya Malipo",
+      "handleLabel": "Maelezo ya Akaunti",
+      "hint": "Unaweza kubadilisha hii baadaye kutoka kwa dashboard yako",
+      "crypto": {
+        "title": "Wallet ya Crypto",
+        "subtitle": "Pokea USDC na ETH",
+        "connectButton": "Kuunganisha Wallet na Privy",
+        "connectHint": "Bofya kuunganisha na MetaMask, WalletConnect, barua pepe, au kujenga wallet iliyoingia.",
+        "addressLabel": "Ethereum / Base wallet anwani",
+        "divider": "au kumbusu kauli"
+      }
+    },
+    "services": {
+      "heading": "Huduma Zako",
+      "subtitle": "Ongeza huduma unayotoa",
+      "cvSuggestion": "Kulingana na CV yako, unaweza kutoa huduma hizi:",
+      "addButton": "+ Huduma Ongeza",
+      "titleLabel": "Kichwa cha Huduma",
+      "categoryLabel": "Jamii",
+      "subcategoryLabel": "Ujamii wa Chini (Kawaida)",
+      "descriptionLabel": "Maelezo (Kawaida)",
+      "pricingLabel": "Bei (Kawaida - unaweza kubadilisha hii baadaye)",
+      "priceLabel": "Bei",
+      "currencyLabel": "Fedha",
+      "rateTypeLabel": "Aina ya Kiwango",
+      "noPriceSet": "Hakuna bei iliyowekwa - bofya kuongeza",
+      "preview": "Jinsi huduma yako itaonekana:",
+      "rateType": {
+        "hourly": "Kwa Saa",
+        "fixedPrice": "Bei Iliyowekwa",
+        "perWord": "Kwa Neno",
+        "perPage": "Kwa Ukurasa",
+        "negotiate": "Tukamatiane"
+      }
+    },
+    "profile": {
+      "heading": "Wasifu Wako",
+      "subtitle": "Kumalizia habari za wasifu",
+      "photoLabel": "Picha ya Wasifu",
+      "changePhoto": "Badilisha Picha",
+      "uploadPhoto": "Bofya kupiga picha",
+      "nameLabel": "Jina Kamili",
+      "bioLabel": "Kwa Muda Mfupi",
+      "bioPlaceholder": "Niambie habari kuhusu wewe...",
+      "workType": {
+        "both": "Zote Mbili",
+        "digital": "Dijitali",
+        "physical": "Ndani"
+      },
+      "weeklyHours": {
+        "flexible": "Njia Nyingi",
+        "format": "{{hours}} saa/juma"
+      }
+    },
+    "availability": {
+      "heading": "Upatikanaji na Uwezo",
+      "subtitle": "Kusaidia wakala wa AI kupata kazi sahihi",
+      "hoursLabel": "Saa ngapi kwa juma unaweza kufanya kazi?",
+      "typeLabel": "Aina gani ya kazi unayofanya?"
+    },
+    "finish": {
+      "heading": "Thibitisha Utambulisho Wako",
+      "subtitle": "Kuunganisha akaunti za mtaji kujenga imani",
+      "verificationTitle": "Uthibitisho",
+      "emailTitle": "Uthibitisho wa Barua Pepe",
+      "emailPending": "Angalia barua pepe yako (pamoja na takataka)",
+      "emailVerified": "Inathibitishwa",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "Thibitisha utambulisho wa mtaji wako",
+      "githubTitle": "GitHub",
+      "githubDesc": "Onyesha maafikiano yako ya code",
+      "platformsTitle": "Jukwaa la Mahali (Kawaida)",
+      "platformsHint": "Gawa mahali yako online - wajenzi, kiwango, malizoishi",
+      "addPlatformButton": "Jukwaa Ongeza"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "Arifa na Kuunganisha",
+        "emptyHint": "Wezeshu arifa kuzunguka sasa kwa mialiko ya kazi",
+        "push": "Arifa za Kushinikiza",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "Ujuzi",
+        "emptyHint": "Ongeza ujuzi wakala wanaweza kupata kwa ajili yako"
+      },
+      "equipment": {
+        "title": "Vifaa",
+        "emptyHint": "Orodhesha zana yako kupanga kazi za kimwili"
+      },
+      "location": {
+        "title": "Mahali",
+        "emptyHint": "Weka mahali wakala waiweze kupata karibu kazi",
+        "autoDetected": "(kujigambula)",
+        "verifyAccuracy": "Tafadhali thibitisha hii sahihi"
+      },
+      "education": {
+        "title": "Elimu na Uzoefu",
+        "emptyHint": "Ongeza uzoefu kusimama",
+        "yearsLabel": "Miaka ya Uzoefu",
+        "educationLabel": "Elimu",
+        "addExperience": "Ongeza uzoefu wako kusimama",
+        "addEducation": "Ongeza elimu, bootcamps, au cheti"
+      },
+      "services": {
+        "title": "Huduma",
+        "emptyHint": "Fafanua huduma kuajiriwa"
+      },
+      "availability": {
+        "title": "Upatikanaji",
+        "emptyHint": "Weka upatikanaji wakala wanajua lini kuajiriwa",
+        "workTypeLabel": "Aina ya Kazi (Dijitali / Ndani)",
+        "weeklyHoursLabel": "Saa za Kila Juma"
+      },
+      "verification": {
+        "title": "Uthibitisho",
+        "emptyHint": "Thibitisha akaunti kuongeza alama ya imani",
+        "verified": "Inathibitishwa",
+        "notVerified": "Haijathibitishwa"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "Ongeza hii kuongeza utafiti",
+      "addButton": "+ Ongeza",
+      "editButton": "Kuhariri"
+    },
+    "share": {
+      "title": "Gawa Wasifu Wako"
+    }
+  }
+}

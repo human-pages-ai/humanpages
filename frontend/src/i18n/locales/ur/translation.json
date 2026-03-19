@@ -1,0 +1,264 @@
+{
+  "onboarding": {
+    "steps": {
+      "connect": "رابطہ کریں",
+      "cvUpload": "سی وی اپ لوڈ کریں",
+      "skills": "مہارتیں",
+      "equipment": "سامان",
+      "vouch": "تصدیق",
+      "location": "مقام",
+      "education": "تعلیم",
+      "payment": "ادائیگی",
+      "services": "خدمات",
+      "profile": "پروفائل",
+      "availability": "دستیابی",
+      "verification": "تصدیق شدہ"
+    },
+    "completion": {
+      "connect": "رابطہ ہو گیا! ایجنٹس اب آپ کو تلاش کر سکتے ہیں",
+      "cvUpload": "سی وی اپ لوڈ ہو گیا! تجزیہ جاری ہے...",
+      "skills": "مہارتیں شامل ہو گئیں! اب آپ کو تلاش کیا جا سکتا ہے",
+      "equipment": "سامان درج ہو گیا! اہم کام اپ لاک ہو گیا",
+      "vouch": "پروفائل شیئر ہو گیا! تصدیق آپ کی ساکھ بنائے گی",
+      "location": "مقام متعین ہو گیا! مقامی کام دستیاب ہے",
+      "education": "تجربہ شامل ہو گیا! بہتری کے لیے موازنہ کیا گیا",
+      "payment": "ادائیگی متعین ہو گئی! رقم وصول کرنے کے لیے تیار",
+      "services": "خدمات بیان کی گئیں! ایجنٹس آپ کو کام دے سکتے ہیں",
+      "profile": "پروفائل بہت اچھا لگتا ہے!",
+      "availability": "دستیابی متعین ہو گئی! مکمل",
+      "verification": "تصدیق شدہ! اعلیٰ اعتماد کے اسکور"
+    },
+    "success": {
+      "title": "🎉 پروفائل مکمل! HumanPages میں خوش آمدید"
+    },
+    "error": {
+      "offline": "آپ آف لائن معلوم ہو رہے ہیں۔ براہ کرم اپنی رابطہ جانچیں اور دوبارہ کوشش کریں۔",
+      "sessionExpired": "آپ کا سیشن ختم ہو گیا ہے۔ براہ کرم دوبارہ لاگ ان کریں - آپ کی پیش رفت محفوظ ہے۔",
+      "submitFailed": "تصدیق مکمل کرنے میں ناکام۔ دوبارہ کوشش کریں۔"
+    },
+    "cv": {
+      "analyzing": "سی وی کا تجزیہ جاری ہے...",
+      "analyzed": "سی وی کا تجزیہ ہو گیا - فیلڈز خود ہی بھر گئے",
+      "reupload": "دوبارہ اپ لوڈ کریں"
+    },
+    "loading": "آپ کی پروفائل لوڈ ہو رہی ہے...",
+    "connect": {
+      "heading": "رابطے میں رہیں",
+      "subtitle": "جب ایجنٹس آپ کو ڈھونڈتے ہیں تو فوری اطلاع پائیں",
+      "pushNotSupported": "اس براؤزر میں فوری اطلاعات معاون نہیں ہیں",
+      "pushNotConfigured": "سرور پر فوری اطلاعات متشکل نہیں ہیں",
+      "pushEnabled": "فوری اطلاعات فعال ہیں",
+      "notificationsDenied": "اطلاعات مسترد کر دی گئیں",
+      "pushDescription": "جب ایجنٹس آپ کو ڈھونڈتے ہیں تو احترافی اطلاع پائیں",
+      "installApp": "ایپلیکیشن انسٹال کریں",
+      "installHint": "ایڈریس بار میں \"⬇\" بٹن دیکھیں؟ HumanPages ایپ انسٹال کرنے کے لیے اسے دبائیں۔",
+      "telegram": {
+        "title": "Telegram",
+        "description": "ہمارے HumanPages بوٹ سے کام کی تجاویز حاصل کریں",
+        "connectedMsg": "Telegram سے جڑ گیا! نئی نوکری کی تجاویز کے لیے سوچیں",
+        "button": "Telegram سے جڑیں",
+        "didntOpen": "نہیں کھلا؟",
+        "clickHere": "Telegram پر جڑنے کے لیے یہاں کلک کریں"
+      }
+    },
+    "cvUpload": {
+      "heading": "آئیے شروع کریں",
+      "subtitle": "سی وی اپ لوڈ کریں اور اپنی پروفائل فوری طریقے سے مکمل کریں",
+      "uploadButton": "سی وی اپ لوڈ کریں",
+      "format": "PDF یا Word دستاویز",
+      "source": "اپنے ڈیوائس سے، Google Drive، یا Dropbox سے"
+    },
+    "skills": {
+      "heading": "آپ کیا کر سکتے ہیں؟",
+      "subtitle": "اپنی مہارتوں کو منتخب کریں اور اپنا تجربہ شیئر کریں",
+      "searchPlaceholder": "مہارتوں کو تلاش کریں...",
+      "customPlaceholder": "حسب ضرورت مہارت شامل کریں...",
+      "popular": "مشہور",
+      "browse": "براؤز کریں"
+    },
+    "equipment": {
+      "heading": "سامان اور وسائل",
+      "subtitle": "ایجنٹس کام کے لیے سامان کو ترجیح دیتے ہیں - اپنی خدمات کے لیے جو کچھ استعمال کرتے ہیں",
+      "hint": "تجاویز منتخب کریں یا اپنا ٹائپ کریں - نشان، ماڈل، سافٹ ویئر، وغیرہ",
+      "searchPlaceholder": "تلاش کریں یا اپنا ٹائپ کریں..."
+    },
+    "vouch": {
+      "heading": "ساکھ بنائیں",
+      "subtitle": "لوگ آپ کے کام سے آپ کی سفارش کر سکتے ہیں۔ یہ ایجنٹس کے ساتھ آپ کی ساکھ بناتا ہے۔",
+      "shareText": "HumanPages پر پیشہ ورانہ کاموں کے لیے - بغیر کمیشن کے",
+      "profileLinkLabel": "پروفائل کا لنک",
+      "usernameLabel": "نام (اختیاری)",
+      "usernameHint": "سفارشات کے لیے نام شامل کریں",
+      "shareButton": "شیئر کریں اور سفارش حاصل کریں",
+      "vouchHint": "کام کے لنک سے شامل کیے ہوئے لوگ آپ کی سفارش کر سکتے ہیں"
+    },
+    "location": {
+      "heading": "آپ کہاں ہیں؟",
+      "subtitle": "اپنی جگہ اور وقت کا شمار بتائیں",
+      "label": "مقام",
+      "remote": "دور سے",
+      "placeholder": "شہر یا پتہ",
+      "hint": "مقام سے ایجنٹس مقامی کام ڈھونڈ سکتے ہیں",
+      "timezoneLabel": "وقت کا شمار",
+      "timezoneHint": "آپ کے ڈیوائس سے خود بخود (بدلا جا سکتا ہے)",
+      "languagesLabel": "زبانیں (اختیاری)",
+      "addLanguageButton": "+ زبان شامل کریں",
+      "languageLabel": "زبان",
+      "proficiencyLabel": "مہارت کی سطح"
+    },
+    "education": {
+      "heading": "کام کا تجربہ",
+      "subtitle": "اپنے پس منظر اور اہلیت کو شیئر کریں",
+      "yearsLabel": "کام کا کل تجربہ (سال)",
+      "yearsHint": "ایجنٹس زیادہ تجربہ کار پیشہ ور کو ترجیح دیتے ہیں",
+      "jobsLabel": "مکمل شدہ نوکریاں",
+      "jobsNew": "نوکری میں نیا",
+      "label": "تعلیم (اختیاری)",
+      "addButton": "+ تعلیم شامل کریں",
+      "institutionLabel": "ادارہ",
+      "institutionPlaceholder": "ادارے کا نام ٹائپ کریں...",
+      "institutionNote": "نام ٹائپ کریں - سکول، بوٹ کیمپ، آن لائن کورس، یا خود سے سیکھیں",
+      "degreeLabel": "ڈگری",
+      "fieldLabel": "فیلڈ",
+      "countryLabel": "ملک",
+      "startYearLabel": "شروع کا سال (اختیاری)",
+      "endYearLabel": "اختتام کا سال (اختیاری)"
+    },
+    "payment": {
+      "heading": "ادائیگی حاصل کریں",
+      "subtitle": "رقم وصول کرنے کے لیے اپنی ادائیگی کا طریقہ سیٹ اپ کریں",
+      "methodsTitle": "ادائیگی کے طریقے",
+      "methodLabel": "ادائیگی کا طریقہ",
+      "handleLabel": "اکاؤنٹ ڈیٹیلز",
+      "hint": "یہ بعد میں ترمیم کیا جا سکتا ہے",
+      "crypto": {
+        "title": "کریپٹو والٹ",
+        "subtitle": "USDC اور ETH حاصل کریں",
+        "connectButton": "Privy سے والٹ سے جڑیں",
+        "connectHint": "MetaMask، WalletConnect، ای میل، یا سیڈ فریز استعمال کریں۔",
+        "addressLabel": "Ethereum / Base والٹ کا پتہ",
+        "divider": "یا یہاں سے شروع کریں"
+      }
+    },
+    "services": {
+      "heading": "کام کی خدمات",
+      "subtitle": "اپنی خدمات کو متعارف کرائیں (اختیاری)",
+      "cvSuggestion": "سی وی سے، یہ خدمات فراہم کر سکتے ہیں:",
+      "addButton": "+ خدمت شامل کریں",
+      "titleLabel": "خدمت کا عنوان",
+      "categoryLabel": "زمرہ",
+      "subcategoryLabel": "ذیلی زمرہ (اختیاری)",
+      "descriptionLabel": "تفصیل (اختیاری)",
+      "pricingLabel": "قیمت (اختیاری - بعد میں بدلی جا سکتی ہے)",
+      "priceLabel": "قیمت",
+      "currencyLabel": "کرنسی",
+      "rateTypeLabel": "قسم",
+      "noPriceSet": "قیمت متعین نہیں - گھنٹے کے حساب سے",
+      "preview": "آپ کی خدمت کیسی دکھائے گی:",
+      "rateType": {
+        "hourly": "فی گھنٹہ",
+        "fixedPrice": "مقررہ قیمت",
+        "perWord": "فی لفظ",
+        "perPage": "فی صفحہ",
+        "negotiate": "بحث و مذاکرہ کریں"
+      }
+    },
+    "profile": {
+      "heading": "پروفائل",
+      "subtitle": "اپنی پروفائل کی معلومات مکمل کریں",
+      "photoLabel": "پروفائل کی تصویر",
+      "changePhoto": "تصویر تبدیل کریں",
+      "uploadPhoto": "تصویر اپ لوڈ کرنے کے لیے کلک کریں",
+      "nameLabel": "مکمل نام",
+      "bioLabel": "مختصر حیاتیہ",
+      "bioPlaceholder": "اپنے بارے میں کچھ بتائیں...",
+      "workType": {
+        "both": "دونوں",
+        "digital": "ڈیجیٹل",
+        "physical": "جسمانی"
+      },
+      "weeklyHours": {
+        "flexible": "لچکدار",
+        "format": "{{hours}} گھنٹے / ہفتہ"
+      }
+    },
+    "availability": {
+      "heading": "دستیابی اور حکمت عملی",
+      "subtitle": "ای آئی ایجنٹس کو آپ کے لیے صحیح کام تلاش کرنے میں مدد ملے گی",
+      "hoursLabel": "آپ ہفتے میں کتنے گھنٹے کام کر سکتے ہیں؟",
+      "typeLabel": "آپ کس قسم کے کام کرتے ہیں؟"
+    },
+    "finish": {
+      "heading": "تصدیق کریں",
+      "subtitle": "Pro اکاؤنٹ اپ لاک کرنے کے لیے اپنی ساکھ بنائیں",
+      "verificationTitle": "تصدیق",
+      "emailTitle": "ای میل کی تصدیق",
+      "emailPending": "ای میل کی تصدیق کریں (زیر التوا)",
+      "emailVerified": "تصدیق شدہ",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "کام کی تاریخ کی تصدیق کریں",
+      "githubTitle": "GitHub",
+      "githubDesc": "کوڈ کو کمٹ کرنے کی تاریخ دیکھیں",
+      "platformsTitle": "پیشہ ورانہ پروفائلیں (اختیاری)",
+      "platformsHint": "آن لائن پروفائلیں شیئر کریں - فالورز، ریٹنگز، کامیابیاں",
+      "addPlatformButton": "پلیٹ فارم شامل کریں"
+    }
+  },
+  "dashboard": {
+    "tiles": {
+      "notifications": {
+        "title": "اطلاعات اور رابطہ",
+        "emptyHint": "کام کی تجاویز کے لیے اطلاعات فعال کریں",
+        "push": "فوری اطلاعات",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "مہارتیں",
+        "emptyHint": "ایجنٹس کو آپ تلاش کر سکیں اس کے لیے مہارتیں شامل کریں"
+      },
+      "equipment": {
+        "title": "سامان",
+        "emptyHint": "بہتر کاموں کے لیے سامان کی فہرست کریں"
+      },
+      "location": {
+        "title": "مقام",
+        "emptyHint": "ایجنٹس قریبی کام تلاش کریں اس کے لیے مقام شامل کریں",
+        "autoDetected": "(خود بخود پتہ چلایا گیا)",
+        "verifyAccuracy": "کیا یہ درست ہے براہ کرم تصدیق کریں"
+      },
+      "education": {
+        "title": "تعلیم اور تجربہ",
+        "emptyHint": "اپنی بہتری کے لیے تجربہ شامل کریں",
+        "yearsLabel": "کام کے سال",
+        "educationLabel": "تعلیم",
+        "addExperience": "تجربہ شامل کریں",
+        "addEducation": "تعلیم، بوٹ کیمپس، یا سرٹیفیکیٹ شامل کریں"
+      },
+      "services": {
+        "title": "خدمات",
+        "emptyHint": "پیشہ ورانہ کاموں کے لیے خدمات بیان کریں"
+      },
+      "availability": {
+        "title": "دستیابی",
+        "emptyHint": "ایجنٹس جانیں کہ آپ کب دستیاب ہیں",
+        "workTypeLabel": "کام کی قسم (ڈیجیٹل / جسمانی)",
+        "weeklyHoursLabel": "فی ہفتہ گھنٹے"
+      },
+      "verification": {
+        "title": "تصدیق",
+        "emptyHint": "اپنی ساکھ بڑھانے کے لیے تصدیق کریں",
+        "verified": "تصدیق شدہ",
+        "notVerified": "تصدیق نہیں ہوئی"
+      }
+    },
+    "wizardTile": {
+      "defaultEmptyHint": "صارف کے لیے شامل کریں",
+      "addButton": "+ شامل کریں",
+      "editButton": "ترمیم کریں"
+    },
+    "share": {
+      "title": "پروفائل شیئر کریں"
+    }
+  }
+}

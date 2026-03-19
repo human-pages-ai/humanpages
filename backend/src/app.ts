@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import path from 'path';
@@ -31,7 +32,7 @@ import blogApiRoutes from './routes/blog.js';
 import cvRouter from './routes/cv.js';
 import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getUseCasesMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -110,6 +111,11 @@ app.use((req, res, next) => {
   }
   express.json({ limit: '10kb' })(req, res, next);
 });
+
+// Gzip compression — ~85% bandwidth savings on JSON responses
+// Skip binary routes (photos, CV uploads) which handle their own encoding
+app.use(compression({ level: 6, threshold: 1024 }));
+
 app.use(pinoHttp({
   logger,
   autoLogging: {
@@ -246,10 +252,10 @@ app.get('/dev', (req, res, next) => {
   next();
 });
 
-// Use cases page: inject meta tags + crawler-visible content
-app.get('/:lang/use-cases', (req, res, next) => {
+// Prompt to completion page: inject meta tags + crawler-visible content
+app.get('/:lang/prompt-to-completion', (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
-  const html = getUseCasesMetaHtml(req.params.lang);
+  const html = getPromptToCompletionMetaHtml(req.params.lang);
   if (html) {
     res.set('Content-Type', 'text/html');
     return res.send(html);
@@ -257,8 +263,8 @@ app.get('/:lang/use-cases', (req, res, next) => {
   next();
 });
 
-app.get('/use-cases', (req, res, next) => {
-  const html = getUseCasesMetaHtml();
+app.get('/prompt-to-completion', (req, res, next) => {
+  const html = getPromptToCompletionMetaHtml();
   if (html) {
     res.set('Content-Type', 'text/html');
     return res.send(html);

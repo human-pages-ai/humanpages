@@ -1,0 +1,109 @@
+import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { CompactCvProcessingBar } from '../components/CvProcessingBar';
+import { WEEKLY_CAPACITY_OPTIONS, WORK_TYPE_OPTIONS } from '../constants';
+
+interface StepAvailabilityProps {
+  weeklyCapacityHours: number | null;
+  setWeeklyCapacityHours: (v: number | null) => void;
+  workType: string;
+  setWorkType: (v: string) => void;
+  cvProcessing: boolean;
+  onNext: () => void;
+  onSkip: () => void;
+  error: string;
+}
+
+export function StepAvailability({
+  weeklyCapacityHours, setWeeklyCapacityHours,
+  workType, setWorkType,
+  cvProcessing, onNext, onSkip: _onSkip, error,
+}: StepAvailabilityProps) {
+  const { t } = useTranslation();
+  const onNextRef = useRef(onNext);
+
+  // Update ref on each render
+  useEffect(() => {
+    onNextRef.current = onNext;
+  }, [onNext]);
+
+  // Allow Enter key to advance (no text inputs on this step)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLSelectElement)) {
+        e.preventDefault();
+        onNextRef.current();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.availability.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.availability.subtitle')}</p>
+
+      {cvProcessing && <CompactCvProcessingBar />}
+      {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
+
+      {/* Info banner */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex gap-3">
+          <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <p className="text-xs text-blue-700">AI agents use these fields to match you with tasks that fit your schedule. The more you fill in, the more jobs you'll be matched with.</p>
+        </div>
+      </div>
+
+      {/* Weekly Capacity */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.availability.hoursLabel')}</label>
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
+          {WEEKLY_CAPACITY_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setWeeklyCapacityHours(weeklyCapacityHours === opt.value ? null : opt.value)}
+              className={`p-3 rounded-lg border-2 text-left transition-colors min-h-[44px] ${
+                weeklyCapacityHours === opt.value
+                  ? 'border-orange-500 bg-orange-50 text-orange-900'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700'
+              }`}
+            >
+              <p className="text-sm font-medium">{opt.label}</p>
+              <p className="text-xs text-slate-500">{opt.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Work Type */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.availability.typeLabel')}</label>
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2">
+          {WORK_TYPE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setWorkType(workType === opt.value ? '' : opt.value)}
+              className={`p-3 rounded-lg border-2 text-left transition-colors min-h-[44px] ${
+                workType === opt.value
+                  ? 'border-orange-500 bg-orange-50 text-orange-900'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700'
+              }`}
+            >
+              <p className="text-sm font-medium">{opt.label}</p>
+              <p className="text-xs text-slate-500">{opt.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-6">
+        <button type="button" onClick={onNext} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+    </>
+  );
+}

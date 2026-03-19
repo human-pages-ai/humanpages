@@ -18,6 +18,7 @@ export interface Service {
   title: string;
   description: string;
   category: string;
+  subcategory?: string | null;
   priceRange?: string;
   priceMin?: string | null;
   priceCurrency?: string;
@@ -104,6 +105,9 @@ export interface Profile {
   rateType?: 'HOURLY' | 'FLAT_TASK' | 'NEGOTIABLE';
   paymentPreferences?: ('UPFRONT' | 'ESCROW' | 'UPON_COMPLETION' | 'STREAM')[];
   workMode?: 'REMOTE' | 'ONSITE' | 'HYBRID' | null;
+  workType?: string;
+  weeklyCapacityHours?: number | null;
+  timezone?: string;
   preferredLanguage?: string;
   linkedinVerified?: boolean;
   githubVerified?: boolean;
@@ -146,6 +150,21 @@ export interface Profile {
   }>;
   experienceHighlights?: string[];
   yearsOfExperience?: number;
+  freelancerJobsRange?: string;
+  sms?: string;
+  externalProfiles?: string[];
+  industries?: string[];
+  platformPresence?: Array<{ platform: string; url: string; details: string }>;
+  educations?: Array<{
+    id: string;
+    institution: string;
+    degree?: string;
+    field?: string;
+    country?: string;
+    startYear?: number;
+    endYear?: number;
+    source?: string;
+  }>;
 }
 
 export interface AgentProfile {

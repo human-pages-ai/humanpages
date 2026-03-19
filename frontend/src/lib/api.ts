@@ -210,13 +210,13 @@ export const api = {
   // Services
   getServices: () => request<Service[]>('/services'),
 
-  createService: (data: { title: string; description: string; category: string; priceRange?: string; priceMin?: number | null; priceCurrency?: string; priceUnit?: string | null }) =>
+  createService: (data: { title: string; description: string; category: string; subcategory?: string | null; priceRange?: string; priceMin?: number | null; priceCurrency?: string; priceUnit?: string | null }) =>
     request<Service>('/services', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  updateService: (id: string, data: Partial<Pick<Service, 'title' | 'description' | 'category' | 'priceRange' | 'priceMin' | 'priceUnit' | 'isActive'>>) =>
+  updateService: (id: string, data: Partial<Pick<Service, 'title' | 'description' | 'category' | 'subcategory' | 'priceRange' | 'priceMin' | 'priceUnit' | 'isActive'>>) =>
     request<Service>(`/services/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -374,6 +374,12 @@ export const api = {
 
   unlinkTelegram: () =>
     request<{ message: string }>('/telegram/link', { method: 'DELETE' }),
+
+  devSimulateTelegramConnection: (code: string) =>
+    request<{ success: boolean; message: string; chatId: string }>('/telegram/dev-simulate', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
 
   // WhatsApp
   getWhatsAppStatus: () =>
@@ -1341,6 +1347,7 @@ export const api = {
     }),
 
   // ─── CV ───
+  /** @deprecated Use uploadCvFile + pollCvParse for the 3-stage flow */
   uploadCV: (file: File) => {
     const token = getToken();
     const formData = new FormData();
@@ -1360,6 +1367,30 @@ export const api = {
     });
   },
 
+  /** Stage 2: Upload the CV file to the server. Returns a fileId for polling. */
+  uploadCvFile: (file: File): Promise<{ fileId: string }> => {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('cv', file);
+    return fetch(`${API_BASE}/cv/upload-file`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    }).then(async res => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(error.error || 'Upload failed');
+      }
+      return res.json();
+    });
+  },
+
+  /** Stage 3: Poll for CV parse result. Returns status + parsed data when ready. */
+  pollCvParse: (fileId: string): Promise<{ status: 'pending' | 'complete' | 'failed'; data?: any; error?: string }> =>
+    request(`/cv/parse-status/${fileId}`),
+
   addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; startYear?: number; endYear?: number }) =>
     request('/cv/education', { method: 'POST', body: JSON.stringify(data) }),
 
@@ -1371,6 +1402,22 @@ export const api = {
 
   deleteCertificate: (id: string) =>
     request(`/cv/certificate/${id}`, { method: 'DELETE' }),
+
+  // Push Notifications
+  getVapidPublicKey: () =>
+    request<{ vapidPublicKey: string }>('/push/vapid-key'),
+
+  subscribeToPushNotifications: (data: { endpoint: string; keys: { p256dh: string; auth: string }; userAgent?: string }) =>
+    request<{ success: boolean }>('/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  unsubscribeFromPushNotifications: (endpoint: string) =>
+    request<{ success: boolean }>('/push/unsubscribe', {
+      method: 'DELETE',
+      body: JSON.stringify({ endpoint }),
+    }),
 };
 
 // Referral Program types (included in profile response)

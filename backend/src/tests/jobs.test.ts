@@ -186,7 +186,7 @@ describe('Jobs API - Mutual Handshake', () => {
         .patch(`/api/jobs/${jobId}/accept`)
         .set('Authorization', `Bearer ${humanToken}`);
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
     });
   });
 

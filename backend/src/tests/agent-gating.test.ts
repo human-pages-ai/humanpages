@@ -195,7 +195,7 @@ describe('Agent Access Gating', () => {
       expect(res.body.bio).toBe('Public bio');
       expect(res.body.contactEmail).toBeUndefined();
       expect(res.body.telegram).toBeUndefined();
-      expect(res.body.websiteUrl).toBeUndefined();
+      expect(res.body.websiteUrl).toBe('https://private.example.com'); // websiteUrl is a public social link
       expect(res.body.wallets).toBeUndefined();
     });
 
@@ -207,7 +207,7 @@ describe('Agent Access Gating', () => {
       expect(res.body.bio).toBe('Public bio');
       expect(res.body.contactEmail).toBeUndefined();
       expect(res.body.telegram).toBeUndefined();
-      expect(res.body.websiteUrl).toBeUndefined();
+      expect(res.body.websiteUrl).toBe('https://private.example.com'); // websiteUrl is a public social link
     });
   });
 

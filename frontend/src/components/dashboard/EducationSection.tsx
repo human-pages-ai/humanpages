@@ -64,11 +64,10 @@ export default function EducationSection({ profile, onUpdate }: Props) {
     try {
       await api.addEducation({
         institution: educationForm.institution,
-        degree: educationForm.degree,
-        field: educationForm.field,
-        startYear: educationForm.startYear,
-        endYear: educationForm.endYear,
-        country: educationForm.country,
+        degree: educationForm.degree || undefined,
+        field: educationForm.field || undefined,
+        endYear: educationForm.endYear || educationForm.startYear || undefined,
+        country: educationForm.country || undefined,
       });
 
       toast.success('Education added');

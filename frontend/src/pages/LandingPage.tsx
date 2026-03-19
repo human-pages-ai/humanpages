@@ -541,10 +541,10 @@ function FeaturedSection() {
   const { stats, featured } = data;
 
   return (
-    <section className="py-16 bg-white px-4">
+    <section className="py-8 md:py-16 bg-white px-4">
       <div className="max-w-5xl mx-auto">
         {/* Stats counters */}
-        <div className="grid grid-cols-2 gap-6 mb-12 max-w-md mx-auto">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-12 max-w-md mx-auto">
           <div className="text-center">
             <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">{stats.withSkills.toLocaleString()}+</p>
             <p className="text-sm text-slate-500 mt-1">{t('landing.stats.withSkills', { defaultValue: 'Skills listed' })}</p>
@@ -844,7 +844,7 @@ export default function LandingPage() {
 
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="max-w-5xl mx-auto px-4 py-2 sm:py-3 flex justify-between items-center">
           <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-4 md:gap-6">
             <Link to="/" className="text-sm font-medium text-slate-900 hidden sm:inline">
@@ -862,9 +862,10 @@ export default function LandingPage() {
             <LanguageSwitcher />
             <Link
               to="/signup"
-              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
+              className="px-3 py-2 bg-orange-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
             >
-              {t('nav.startProfile')}
+              <span className="sm:hidden">Start</span>
+              <span className="hidden sm:inline">{t('nav.startProfile')}</span>
             </Link>
           </div>
         </div>
@@ -872,7 +873,7 @@ export default function LandingPage() {
 
       <main>
         {/* Hero */}
-        <section className="py-10 md:py-24 px-4 bg-white overflow-hidden">
+        <section className="py-8 md:py-24 px-4 bg-white overflow-hidden">
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6 md:gap-16 items-center">
               {/* Left: copy */}
@@ -925,24 +926,24 @@ export default function LandingPage() {
         </section>
 
         {/* How it works — 3-step visual */}
-        <section className="py-16 bg-slate-50 px-4">
+        <section className="py-8 md:py-16 bg-slate-50 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8 md:mb-12">
               {t('landing.howItWorks.title')}
             </h2>
-            <div className="grid md:grid-cols-3 gap-8 relative">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8 relative">
               {/* Connector line (desktop) */}
               <div className="hidden md:block absolute top-12 left-[16.7%] right-[16.7%] h-0.5 bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200" />
               {HOW_IT_WORKS.map((step, i) => (
                 <div key={i} className="relative text-center">
-                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white border-2 border-blue-100 shadow-sm mb-4 relative z-10">
-                    <step.icon className="w-10 h-10 text-blue-600" />
+                  <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white border-2 border-blue-100 shadow-sm mb-3 md:mb-4 relative z-10">
+                    <step.icon className="w-8 md:w-10 h-8 md:h-10 text-blue-600" />
                   </div>
-                  <div className="absolute -top-2 -right-2 md:top-0 md:right-auto md:left-1/2 md:ml-8 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center z-20">
+                  <div className="absolute -top-2 -right-2 md:top-0 md:right-auto md:left-1/2 md:ml-8 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center z-20 whitespace-nowrap">
                     {i + 1}
                   </div>
-                  <h3 className="font-semibold text-slate-900 text-lg">{step.title}</h3>
-                  <p className="mt-2 text-slate-600 text-sm">{step.description}</p>
+                  <h3 className="font-semibold text-slate-900 text-base md:text-lg whitespace-nowrap">{step.title}</h3>
+                  <p className="mt-2 text-slate-600 text-xs md:text-sm">{step.description}</p>
                 </div>
               ))}
             </div>
@@ -953,16 +954,16 @@ export default function LandingPage() {
         <FeaturedSection />
 
         {/* Job Board showcase */}
-        <section className="py-16 bg-slate-50 px-4">
+        <section className="py-8 md:py-16 bg-slate-50 px-4">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-sm font-medium rounded-full mb-4">
+            <div className="text-center mb-8 md:mb-12">
+              <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-xs sm:text-sm font-medium rounded-full mb-3 md:mb-4">
                 {t('listings.title')}
               </span>
               <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">
                 {t('landing.jobBoard.title')}
               </h2>
-              <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
+              <p className="mt-2 md:mt-3 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
                 {t('landing.jobBoard.subtitle')}
               </p>
             </div>
@@ -972,31 +973,31 @@ export default function LandingPage() {
         </section>
 
         {/* Job offer mockup + example */}
-        <section className="py-16 bg-slate-50 px-4">
+        <section className="py-8 md:py-16 bg-slate-50 px-4">
           <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
+            <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
+              <div className="hidden md:block">
                 <JobOfferMockup />
               </div>
               <div>
                 <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-slate-900">
                   {t('landing.tasks.title')}
                 </h2>
-                <p className="mt-2 text-slate-600 mb-6">
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 mb-4 md:mb-6">
                   {t('landing.tasks.subtitle')}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                   {TASKS.map((task) => (
                     <div
                       key={task.title}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                      className="flex items-start gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
                     >
-                      <div className="flex-shrink-0 w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <task.icon className="w-5 h-5 text-blue-600" />
+                      <div className="flex-shrink-0 w-8 md:w-9 h-8 md:h-9 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <task.icon className="w-4 md:w-5 h-4 md:h-5 text-blue-600" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-medium text-slate-900 text-sm">{task.title}</h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">{task.description}</p>
+                        <h3 className="font-medium text-slate-900 text-xs md:text-sm">{task.title}</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed hidden sm:block">{task.description}</p>
                       </div>
                     </div>
                   ))}
@@ -1007,21 +1008,21 @@ export default function LandingPage() {
         </section>
 
         {/* Why list — benefits */}
-        <section className="py-16 px-4 bg-white">
+        <section className="py-8 md:py-16 px-4 bg-white">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8 md:mb-12">
               {t('landing.benefits.title')}
             </h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-4 md:gap-6">
               {BENEFITS.map((benefit, i) => (
-                <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <div key={i} className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <div className="w-8 md:w-10 h-8 md:h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3 md:mb-4">
+                    <svg className="w-5 md:w-6 h-5 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="font-semibold text-slate-900 text-lg">{benefit.title}</h3>
-                  <p className="mt-2 text-slate-600 text-sm">{benefit.description}</p>
+                  <h3 className="font-semibold text-slate-900 text-base md:text-lg">{benefit.title}</h3>
+                  <p className="mt-2 text-slate-600 text-xs md:text-sm">{benefit.description}</p>
                 </div>
               ))}
             </div>
@@ -1047,7 +1048,7 @@ export default function LandingPage() {
         </section>
 
         {/* Trust & Controls */}
-        <section className="py-16 px-4 bg-white">
+        <section className="py-8 md:py-16 px-4 bg-white">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
               {t('landing.trust.title')}
@@ -1066,12 +1067,12 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ */}
-        <section className="py-16 bg-slate-50 px-4">
+        <section className="py-8 md:py-16 bg-slate-50 px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-12">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-slate-900 mb-8 md:mb-12">
               {t('landing.faq.title')}
             </h2>
-            <div className="bg-white rounded-xl border border-slate-200 px-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-slate-200 px-4 md:px-6 shadow-sm">
               {FAQS.map((faq, i) => (
                 <FAQItem key={i} q={faq.q} a={faq.a} />
               ))}
@@ -1111,7 +1112,7 @@ export default function LandingPage() {
       </div>
 
       {/* Spacer for mobile sticky CTA */}
-      <div className="h-24 md:hidden" />
+      <div className="h-0 md:hidden" />
     </div>
   );
 }

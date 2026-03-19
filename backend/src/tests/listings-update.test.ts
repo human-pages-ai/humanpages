@@ -40,6 +40,7 @@ vi.mock('../lib/moderation.js', () => ({
 vi.mock('../lib/email.js', () => ({
   sendJobOfferEmail: vi.fn().mockResolvedValue(true),
   sendListingTermsChangedEmail: vi.fn().mockResolvedValue(true),
+  sendVerificationEmail: vi.fn().mockResolvedValue(true),
 }));
 
 // Mock sharp (image processing)

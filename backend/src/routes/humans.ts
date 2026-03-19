@@ -19,8 +19,14 @@ import { computeTrustScore } from '../lib/trustScore.js';
 import { qualifyAffiliateReferral, getReferralProgramData } from './affiliate.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 import { queueModeration } from '../lib/moderation.js';
+import { sanitizeBio } from './cv.js';
 
 const router = Router();
+
+// Rate limiter for username changes: max 3 per day per user
+const usernameChangeCounts = new Map<string, { count: number; resetAt: number }>();
+const USERNAME_MAX_CHANGES_PER_DAY = 3;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Hebrew → English skill synonyms for search expansion
 const SKILL_SYNONYMS: Record<string, string> = {
@@ -62,7 +68,7 @@ function expandSkillSynonyms(input: string): string {
   const lower = expanded.toLowerCase();
   for (const [alt, canonical] of Object.entries(ENGLISH_SKILL_SYNONYMS)) {
     if (lower.includes(alt)) {
-      expanded = expanded.replace(new RegExp(alt, 'gi'), canonical);
+      expanded = expanded.replace(new RegExp(alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), canonical);
     }
   }
   return expanded;
@@ -74,9 +80,16 @@ const TIER_PROFILE_LIMITS: Record<string, number> = {
   PRO: 50,
 };
 
-// Public select fields (no contact info, no wallets)
+// Public select fields (no contact info, no wallets, no notification preferences)
+// Privacy boundaries:
+// - INCLUDED: public profile info, skills, rates, availability, social URLs, verification status, photo
+// - EXCLUDED: contact email/phone, notification channel settings, payment wallet addresses, R2 keys
+// - COMPUTED SEPARATELY: channelCount (derived from notification flags for visibility without exposing individual settings)
+// Future developers: do NOT add notification prefs (emailNotifications, etc.) or contact fields here.
 const publicHumanSelect = {
   id: true,
+  name: true, // Masked to "FirstName L." before sending — never sent raw
+  hideRealName: true, // If true, name is sent as "Anonymous"
   username: true,
   bio: true,
   location: true,
@@ -87,26 +100,36 @@ const publicHumanSelect = {
   languages: true,
   yearsOfExperience: true,
   isAvailable: true,
+  timezone: true,
+  weeklyCapacityHours: true,
+  responseTimeCommitment: true,
+  workType: true,
+  schedulePattern: true,
+  preferredTaskDuration: true,
+  industries: true,
   minRateUsdc: true,
   rateCurrency: true,
   minRateUsdEstimate: true,
   rateType: true,
   paymentPreferences: true,
   workMode: true,
+  linkedinUrl: true,
+  twitterUrl: true,
+  githubUrl: true,
+  facebookUrl: true,
+  instagramUrl: true,
+  youtubeUrl: true,
+  tiktokUrl: true,
+  websiteUrl: true,
   twitterFollowers: true,
   instagramFollowers: true,
   youtubeFollowers: true,
-  tiktokUrl: true,
   tiktokFollowers: true,
   linkedinFollowers: true,
   facebookFollowers: true,
   linkedinVerified: true,
   githubVerified: true,
   githubUsername: true,
-  emailNotifications: true,
-  telegramNotifications: true,
-  whatsappNotifications: true,
-  pushNotifications: true,
   humanityVerified: true,
   humanityScore: true,
   humanityProvider: true,
@@ -120,15 +143,58 @@ const publicHumanSelect = {
     where: { isActive: true },
     select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true, priceUnit: true },
   },
+  educations: {
+    select: { institution: true, country: true, degree: true, field: true, year: true, startYear: true, endYear: true },
+    orderBy: { endYear: 'desc' },
+  },
+  certificates: {
+    select: { name: true, issuer: true, year: true },
+    orderBy: { year: 'desc' },
+  },
   fiatPaymentMethods: {
     select: { platform: true },
   },
+} as const;
+
+// Minimal select for search results — 10-15 fields max (85% bandwidth savings vs publicHumanSelect)
+const searchResultSelect = {
+  id: true,
+  username: true,
+  bio: true,
+  location: true,
+  skills: true,
+  equipment: true,
+  isAvailable: true,
+  timezone: true,
+  weeklyCapacityHours: true,
+  workType: true,
+  yearsOfExperience: true,
+  humanityVerified: true,
+  humanityScore: true,
+  profilePhotoKey: true,
+  profilePhotoStatus: true,
+  lastActiveAt: true,
+  createdAt: true,
+  // Minimal service info — essential fields only
+  services: {
+    where: { isActive: true },
+    select: { title: true, description: true, category: true, priceMin: true, priceCurrency: true },
+  },
+} as const;
+
+// Notification flags for internal search computation (not exposed in public response)
+const notificationSelect = {
+  emailNotifications: true,
+  telegramNotifications: true,
+  whatsappNotifications: true,
+  pushNotifications: true,
 } as const;
 
 // Full select fields for active agents (includes contact info + wallets + name)
 const fullHumanSelect = {
   ...publicHumanSelect,
   name: true,
+  email: true,
   contactEmail: true,
   telegram: true,
   telegramChatId: true,
@@ -151,6 +217,19 @@ const fullHumanSelect = {
     select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
   },
 } as const;
+
+// Helper: mask name for public profile — "FirstName L." or "Anonymous"
+function maskPublicName(human: any): any {
+  if (human.hideRealName || !human.name) {
+    human.displayName = 'Anonymous';
+  } else {
+    const parts = human.name.trim().split(/\s+/);
+    human.displayName = parts.length === 1 ? parts[0] : `${parts[0]} ${parts[parts.length - 1][0]}.`;
+  }
+  delete human.name; // Never expose full name publicly
+  delete human.hideRealName; // Internal flag
+  return human;
+}
 
 // Helper: generate signed photo URL and strip internal R2 key from response
 async function attachPhotoUrl(human: any): Promise<any> {
@@ -236,8 +315,28 @@ const updateProfileSchema = z.object({
   locationLng: z.number().min(-180).max(180).optional().nullable(),
 
   // Capabilities
-  skills: z.array(z.string().max(100)).max(50).optional(),
-  equipment: z.array(z.string().max(100)).max(50).nullable().optional().transform(v => v ?? undefined),
+  skills: z.array(z.string().trim().min(1).max(100)).max(50).optional().transform((v) => {
+    if (!v) return undefined;
+    // Deduplicate and normalize
+    const seen = new Set<string>();
+    return v.filter(s => {
+      const key = s.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }),
+  equipment: z.array(z.string().trim().min(1, 'Equipment item cannot be empty').max(50, 'Equipment item is too long')).max(20, 'Maximum 20 equipment items allowed').nullable().optional().transform((v) => {
+    if (!v) return undefined;
+    // Deduplicate and normalize
+    const seen = new Set<string>();
+    return v.filter(item => {
+      const normalized = item.trim().toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  }),
   languages: z.array(z.string().max(100)).max(30).nullable().optional().transform(v => v ?? undefined),
   yearsOfExperience: z.number().int().min(0).max(70).optional().nullable(),
   preferredLanguage: z.enum(['en', 'es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th']).optional(),
@@ -249,7 +348,7 @@ const updateProfileSchema = z.object({
     (c) => SUPPORTED_CURRENCIES.includes(c as any),
     `Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}`
   ).optional(),
-  rateType: z.enum(['HOURLY', 'FLAT_TASK', 'NEGOTIABLE']).optional(),
+  rateType: z.enum(['HOURLY', 'FLAT_TASK', 'PER_WORD', 'PER_PAGE', 'NEGOTIABLE']).optional(),
   paymentPreferences: z.array(
     z.enum(['UPFRONT', 'ESCROW', 'UPON_COMPLETION', 'STREAM'])
   ).min(1).optional(),
@@ -266,12 +365,25 @@ const updateProfileSchema = z.object({
     'Must be a valid Telegram handle (e.g. @username, 5-32 characters after @, starts with a letter, cannot end with underscore)'
   ).optional().nullable(),
   whatsapp: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Must be a valid phone number with country code (e.g. +1234567890)').optional().nullable(),
+  sms: z.string().regex(/^\+[1-9]\d{6,14}$/, 'Must be a valid phone number with country code (e.g. +1234567890)').optional().nullable(),
   signal: z.string().optional().nullable(),
 
   // Payment methods
   paymentMethods: z.string().optional().nullable(),
 
+  // Availability & capacity (agent-facing)
+  timezone: z.string().max(100).optional().nullable(),
+  weeklyCapacityHours: z.number().int().min(0).max(168).optional().nullable(),
+  responseTimeCommitment: z.enum(['within_1h', 'within_4h', 'within_24h', 'flexible']).optional().nullable(),
+  workType: z.enum(['digital', 'physical', 'both']).optional().nullable(),
+  schedulePattern: z.enum(['morning', 'afternoon', 'evening', 'flexible']).optional().nullable(),
+  preferredTaskDuration: z.enum(['micro', 'half_day', 'full_project', 'any']).optional().nullable(),
+  industries: z.array(z.string().max(100)).max(30).optional().nullable().transform(v => v ?? undefined),
+
+  // External profiles removed — dashboard-only feature, not in onboarding
+
   // Privacy
+  hideRealName: z.boolean().optional(),
   hideContact: z.boolean().optional(),
   featuredConsent: z.boolean().optional(),
 
@@ -325,6 +437,22 @@ const updateProfileSchema = z.object({
   tiktokFollowers: z.number().int().min(0).optional().nullable(),
   linkedinFollowers: z.number().int().min(0).optional().nullable(),
   facebookFollowers: z.number().int().min(0).optional().nullable(),
+
+  // Freelancer & platform presence
+  freelancerJobsRange: z.enum(['new', '1-10', '10-50', '50-100', '100-500', '500+']).optional().nullable(),
+  platformPresence: z.array(z.object({
+    platform: z.string().max(100),
+    url: z.string().max(500).optional(),
+    details: z.string().max(500).optional(),
+  })).max(20).optional().nullable(),
+  externalProfiles: z.array(
+    z.string().min(1).max(500).refine(
+      (val) => {
+        try { new URL(val.startsWith('http') ? val : `https://${val}`); return true; } catch { return false; }
+      },
+      'Must be a valid URL'
+    )
+  ).max(10).optional(),
 });
 
 // ERC-8004: This function reads the internal `rating` (1-5 scale), NOT
@@ -363,7 +491,53 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
-      include: { wallets: true, services: true, fiatPaymentMethods: true },
+      select: {
+        ...fullHumanSelect,
+        // /me needs additional fields for self-view
+        passwordHash: true, // needed for hasPassword check
+        emailVerified: true,
+        emailVerificationToken: false,
+        humanStatus: true,
+        referredBy: true,
+        referralCode: true,
+        profileCompleteness: true,
+        cvConsent: true,
+        cvParsedAt: true,
+        skillSources: true,
+        pushNotifications: true,
+        emailNotifications: true,
+        telegramNotifications: true,
+        whatsappNotifications: true,
+        analyticsOptOut: true,
+        minOfferPrice: true,
+        maxOfferDistance: true,
+        experienceHighlights: true,
+        freelancerJobsRange: true,
+        platformPresence: true,
+        externalProfiles: true,
+        industries: true,
+        createdAt: true,
+        updatedAt: true,
+        educations: {
+          select: { id: true, institution: true, country: true, degree: true, field: true, year: true, startYear: true, endYear: true, source: true },
+          orderBy: { endYear: 'desc' as const },
+        },
+        certificates: {
+          select: { id: true, name: true, issuer: true, year: true, source: true },
+          orderBy: { year: 'desc' as const },
+        },
+        wallets: {
+          select: { id: true, network: true, address: true, label: true, isPrimary: true, verified: true },
+          orderBy: { createdAt: 'asc' as const },
+        },
+        services: {
+          where: { isActive: true },
+          select: { id: true, title: true, description: true, category: true, subcategory: true, priceMin: true, priceCurrency: true, priceUnit: true, isActive: true },
+        },
+        fiatPaymentMethods: {
+          select: { id: true, platform: true, handle: true, label: true, isPrimary: true },
+        },
+      },
     });
 
     if (!human) {
@@ -383,7 +557,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
       getReferralProgramData(human.id),
     ]);
 
-    const { passwordHash, emailVerificationToken, ...profile } = human;
+    const { passwordHash, ...profile } = human as any;
     await attachPhotoUrl(profile);
     res.json({ ...profile, reputation, trustScore, referralCount, referralProgram, hasPassword: !!passwordHash });
   } catch (error) {
@@ -578,8 +752,26 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const updates = updateProfileSchema.parse(req.body);
 
-    // Check username uniqueness if provided
+    // Check username uniqueness and rate limit if provided
     if (updates.username) {
+      // First, get the current username to check if it's actually changing
+      const current = await prisma.human.findUnique({
+        where: { id: req.userId },
+        select: { username: true },
+      });
+
+      // Only enforce rate limit if username is actually changing
+      if (current?.username !== updates.username) {
+        const now = Date.now();
+        const entry = usernameChangeCounts.get(req.userId!);
+        if (entry && now < entry.resetAt && entry.count >= USERNAME_MAX_CHANGES_PER_DAY) {
+          return res.status(429).json({
+            error: `You can only change your username ${USERNAME_MAX_CHANGES_PER_DAY} times per day. Try again tomorrow.`
+          });
+        }
+      }
+
+      // Check username uniqueness
       const existing = await prisma.human.findFirst({
         where: {
           username: updates.username,
@@ -607,23 +799,39 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
+    // Strip personal data from bio before saving (reuses full sanitization from CV pipeline)
+    if (updates.bio && typeof updates.bio === 'string') {
+      const current = await prisma.human.findUnique({
+        where: { id: req.userId },
+        select: { name: true },
+      });
+      updates.bio = sanitizeBio(updates.bio, current?.name) || null;
+    }
+
     // Compute minRateUsdEstimate if rate or currency changed
     const dataToSave: any = { ...updates, lastActiveAt: new Date() };
     const rateChanged = updates.minRateUsdc !== undefined || updates.rateCurrency !== undefined;
     const urlLockNeeded = updates.linkedinUrl !== undefined || updates.githubUrl !== undefined;
+    const errors: string[] = [];
     if (rateChanged || urlLockNeeded) {
       // Need current human to get rate values and verification state
       const current = await prisma.human.findUnique({
         where: { id: req.userId },
-        select: { minRateUsdc: true, rateCurrency: true, linkedinVerified: true, githubVerified: true },
+        select: { minRateUsdc: true, rateCurrency: true, linkedinVerified: true, githubVerified: true, linkedinUrl: true, githubUrl: true },
       });
 
-      // Prevent changing verified URLs — silently strip the update
+      // Prevent changing verified URLs — report error to user
       if (current?.linkedinVerified && updates.linkedinUrl !== undefined) {
+        errors.push('LinkedIn URL is verified and cannot be changed. Contact support if you need to update it.');
         delete dataToSave.linkedinUrl;
       }
       if (current?.githubVerified && updates.githubUrl !== undefined) {
+        errors.push('GitHub URL is verified and cannot be changed. Contact support if you need to update it.');
         delete dataToSave.githubUrl;
+      }
+
+      if (errors.length > 0) {
+        return res.status(400).json({ error: errors.join(' ') });
       }
       const rate = updates.minRateUsdc !== undefined ? updates.minRateUsdc : current?.minRateUsdc?.toNumber() ?? null;
       const currency = updates.rateCurrency || current?.rateCurrency || 'USD';
@@ -639,6 +847,39 @@ router.patch('/me', authenticateToken, async (req: AuthRequest, res) => {
       data: dataToSave,
       include: { wallets: true, services: true, fiatPaymentMethods: true },
     });
+
+    // Compute and write profileCompleteness after update
+    const completenessFields = [
+      !!human.name?.trim(),
+      !!human.bio?.trim(),
+      !!human.location?.trim(),
+      (human.skills?.length || 0) > 0,
+      !!(human.contactEmail || human.telegram || human.whatsapp),
+      human.profilePhotoStatus === 'approved',
+      (human.equipment?.length || 0) > 0,
+      !!human.timezone,
+    ];
+    const profileCompleteness = Math.round((completenessFields.filter(Boolean).length / completenessFields.length) * 100);
+
+    // Only update if changed to avoid unnecessary writes
+    if (human.profileCompleteness !== profileCompleteness) {
+      await prisma.human.update({
+        where: { id: req.userId },
+        data: { profileCompleteness },
+      });
+      human.profileCompleteness = profileCompleteness;
+    }
+
+    // Record username change count if username was actually updated
+    if (updates.username && updates.username !== human.username) {
+      const now = Date.now();
+      const entry = usernameChangeCounts.get(req.userId!);
+      if (!entry || now >= entry.resetAt) {
+        usernameChangeCounts.set(req.userId!, { count: 1, resetAt: now + ONE_DAY_MS });
+      } else {
+        entry.count++;
+      }
+    }
 
     const [reputation, trustScore] = await Promise.all([
       getReputationStats(human.id),
@@ -960,6 +1201,13 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       offset = '0',
     } = req.query;
 
+    if (skill && (skill as string).length > 500) {
+      return res.status(400).json({ error: 'Skill query too long (max 500 characters)' });
+    }
+    if (location && (location as string).length > 500) {
+      return res.status(400).json({ error: 'Location query too long (max 500 characters)' });
+    }
+
     const where: any = {
       // Identity verified OR has completed at least one job (proven real)
       OR: [
@@ -983,12 +1231,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Filter by equipment
     if (equipment) {
-      where.equipment = { has: equipment as string };
+      const equipStr = String(equipment).slice(0, 200);
+      where.equipment = { has: equipStr };
     }
 
     // Filter by language
     if (language) {
-      where.languages = { has: language as string };
+      const langStr = String(language).slice(0, 100);
+      where.languages = { has: langStr };
     }
 
     // Location: geocode text → coordinates if lat/lng not provided explicitly
@@ -1000,7 +1250,14 @@ router.get('/search', searchRateLimiter, async (req, res) => {
     if (lat && lng) {
       centerLat = parseFloat(lat as string);
       centerLng = parseFloat(lng as string);
+      if (isNaN(centerLat) || centerLat < -90 || centerLat > 90 ||
+          isNaN(centerLng) || centerLng < -180 || centerLng > 180) {
+        return res.status(400).json({ error: 'Invalid coordinates (lat: -90 to 90, lng: -180 to 180)' });
+      }
       radiusKm = radius ? parseFloat(radius as string) : DEFAULT_SEARCH_RADIUS_KM;
+      if (radiusKm !== undefined && (isNaN(radiusKm) || radiusKm <= 0 || radiusKm > 40075)) {
+        return res.status(400).json({ error: 'Invalid radius' });
+      }
     } else if (location) {
       const geo = await geocodeLocation(location as string);
       if (geo) {
@@ -1040,6 +1297,79 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       where.AND = [...((where as any).AND || []), workModeFilter];
     }
 
+    // Filter by timezone (exact match — IANA timezone string)
+    const { timezone: tzFilter } = req.query;
+    if (tzFilter && typeof tzFilter === 'string' && tzFilter.length <= 100) {
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: tzFilter });
+        where.timezone = tzFilter;
+      } catch {
+        return res.status(400).json({ error: 'Invalid timezone (use IANA format, e.g. America/New_York)' });
+      }
+    }
+
+    // Filter by weekly capacity (minimum hours available)
+    const { minCapacity } = req.query;
+    if (minCapacity) {
+      const minCapVal = parseInt(minCapacity as string);
+      if (!isNaN(minCapVal) && isFinite(minCapVal) && minCapVal > 0) {
+        where.weeklyCapacityHours = { gte: minCapVal };
+      }
+    }
+
+    // Filter by response time commitment
+    const { responseTime } = req.query;
+    if (responseTime && typeof responseTime === 'string') {
+      const validResponseTimes = ['within_1h', 'within_4h', 'within_24h', 'flexible'];
+      if (validResponseTimes.includes(responseTime)) {
+        where.responseTimeCommitment = responseTime;
+      }
+    }
+
+    // Filter by work type (digital, physical, both)
+    const { workType: workTypeFilter } = req.query;
+    if (workTypeFilter && typeof workTypeFilter === 'string') {
+      const validWorkTypes = ['digital', 'physical', 'both'];
+      if (validWorkTypes.includes(workTypeFilter)) {
+        // Include humans who do "both" when searching for either specific type
+        if (workTypeFilter === 'digital' || workTypeFilter === 'physical') {
+          where.AND = [...((where as any).AND || []), {
+            OR: [{ workType: workTypeFilter }, { workType: 'both' }, { workType: null }],
+          }];
+        } else {
+          where.workType = workTypeFilter;
+        }
+      }
+    }
+
+    // Filter by industries (array overlap)
+    const { industry } = req.query;
+    if (industry && typeof industry === 'string') {
+      where.industries = { has: industry.slice(0, 200) };
+    }
+
+    // Filter by schedule pattern
+    const { schedulePattern: scheduleFilter } = req.query;
+    if (scheduleFilter && typeof scheduleFilter === 'string') {
+      const validPatterns = ['morning', 'afternoon', 'evening', 'flexible'];
+      if (validPatterns.includes(scheduleFilter)) {
+        where.AND = [...((where as any).AND || []), {
+          OR: [{ schedulePattern: scheduleFilter }, { schedulePattern: 'flexible' }, { schedulePattern: null }],
+        }];
+      }
+    }
+
+    // Filter by preferred task duration
+    const { taskDuration } = req.query;
+    if (taskDuration && typeof taskDuration === 'string') {
+      const validDurations = ['micro', 'half_day', 'full_project', 'any'];
+      if (validDurations.includes(taskDuration)) {
+        where.AND = [...((where as any).AND || []), {
+          OR: [{ preferredTaskDuration: taskDuration }, { preferredTaskDuration: 'any' }, { preferredTaskDuration: null }],
+        }];
+      }
+    }
+
     // Filter by minimum years of experience
     const { minExperience } = req.query;
     if (minExperience) {
@@ -1056,8 +1386,9 @@ router.get('/search', searchRateLimiter, async (req, res) => {
 
     // Filter by fiat payment platform (e.g., WISE, PAYPAL)
     if (fiatPlatform) {
+      const platformStr = String(fiatPlatform).slice(0, 50);
       where.fiatPaymentMethods = {
-        some: { platform: (fiatPlatform as string).toUpperCase() },
+        some: { platform: platformStr.toUpperCase() },
       };
     }
 
@@ -1139,8 +1470,16 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       }
     }
 
-    const requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
-    const requestedOffset = parseInt(offset as string) || 0;
+    // Validate and normalize pagination parameters
+    let requestedLimit = Math.min(parseInt(limit as string) || 20, 100);
+    let requestedOffset = parseInt(offset as string) || 0;
+
+    // Ensure limit is reasonable (minimum 1, maximum 100)
+    if (requestedLimit < 1) requestedLimit = 1;
+    if (requestedLimit > 100) requestedLimit = 100;
+
+    // Ensure offset is non-negative (page should default to 1, offset to 0)
+    if (requestedOffset < 0) requestedOffset = 0;
 
     const MAX_OFFSET = 200;
     if (requestedOffset > MAX_OFFSET) {
@@ -1181,17 +1520,20 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       orderBy = [{ yearsOfExperience: 'desc' }, { lastActiveAt: 'desc' }];
     }
 
-    // Fetch humans (public: no contact info, no wallets)
+    // Fetch humans with minimal fields for search results (85% smaller payload)
     // When doing skill search or reputation sort, fetch more candidates for post-fetch scoring/sorting
+    // Keep notification flags for channelCount computation (stripped before response)
     let humans = await prisma.human.findMany({
       where,
       take: needsLargePool ? 500 : requestedLimit,
       skip: needsLargePool ? 0 : requestedOffset,
       orderBy,
       select: {
-        ...publicHumanSelect,
+        ...searchResultSelect,
         locationLat: true,
         locationLng: true,
+        // Notification flags for channelCount computation (stripped before response)
+        ...notificationSelect,
       },
     });
 
@@ -1307,6 +1649,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           ...publicHumanSelect,
           locationLat: true,
           locationLng: true,
+          ...notificationSelect,
         },
       });
 
@@ -1343,12 +1686,24 @@ router.get('/search', searchRateLimiter, async (req, res) => {
       ])
     );
 
-    // Attach stats to each human and strip coords (contact info already excluded from select)
-    const humansWithReputation = await Promise.all(humans.map(async (h) => {
-      const { locationLat, locationLng, fiatPaymentMethods, emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...rest } = h as any;
-      await attachPhotoUrl(rest);
+    // Batch-sign photo URLs to avoid N+1 lookups
+    const humansWithUrls = await Promise.all(humans.map(async (h) => {
+      if (h.profilePhotoKey && ['approved', 'pending'].includes(h.profilePhotoStatus)) {
+        try {
+          const signedUrl = await getProfilePhotoSignedUrl(h.profilePhotoKey);
+          return { ...h, profilePhotoUrl: signedUrl };
+        } catch {
+          return h;
+        }
+      }
+      return h;
+    }));
 
-      // Compute channel count for agent visibility (names not exposed for privacy)
+    // Attach stats to each human and strip coords + notification flags (contact info already excluded from select)
+    const humansWithReputation = humansWithUrls.map((h) => {
+      const { locationLat, locationLng, profilePhotoKey, fiatPaymentMethods, emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...rest } = h as any;
+
+      // Compute channel count for agent visibility (notification preference details not exposed for privacy)
       const channelCount = [emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications].filter(Boolean).length;
 
       return {
@@ -1361,7 +1716,7 @@ router.get('/search', searchRateLimiter, async (req, res) => {
           reviewCount: reviewStatsMap.get(h.id)?.reviewCount || 0,
         },
       };
-    }));
+    });
 
     // Track search in PostHog (pass req for country geolocation)
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'anonymous';
@@ -1518,15 +1873,13 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
     const reputation = await getReputationStats(human.id);
     const profileWithPhoto = await attachPhotoUrl({ ...human });
 
-    // Compute reachability for agent visibility
-    const activeChannels: string[] = [];
-    if ((human as any).emailNotifications) activeChannels.push('email');
-    if ((human as any).telegramNotifications && (human as any).telegramChatId) activeChannels.push('telegram');
-    if ((human as any).whatsappNotifications && (human as any).whatsappVerified) activeChannels.push('whatsapp');
-    if ((human as any).pushNotifications) activeChannels.push('push');
-    const channelCount = activeChannels.length;
+    // Compute channel count for agent visibility (notification preference details not exposed for privacy)
+    const channelCount = [(human as any).emailNotifications, (human as any).telegramNotifications, (human as any).whatsappNotifications, (human as any).pushNotifications].filter(Boolean).length;
 
-    res.json(filterHiddenContact({ ...profileWithPhoto, reputation, channelCount, activeChannels }));
+    // Strip notification flags from response
+    const { emailNotifications, telegramNotifications, whatsappNotifications, pushNotifications, ...profileWithoutNotifs } = profileWithPhoto as any;
+
+    res.json(filterHiddenContact({ ...profileWithoutNotifs, reputation, channelCount }));
   } catch (error) {
     logger.error({ err: error }, 'Get full profile error');
     res.status(500).json({ error: 'Internal server error' });
@@ -1537,7 +1890,19 @@ router.get('/:id/profile', profileViewLimiter, x402PaymentCheck('profile_view'),
 router.get('/:id', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { id: req.params.id, OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }], humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: {
+        id: req.params.id,
+        humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
+        // Allow public profile viewing for unverified users if they have any content (name, skills, bio)
+        // OR they're verified OR they have completed jobs
+        OR: [
+          ...identityVerifiedWhere.OR,
+          { jobs: { some: { status: 'COMPLETED' } } },
+          { name: { not: '' } },
+          { skills: { isEmpty: false } },
+          { bio: { not: '' } },
+        ]
+      },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1545,7 +1910,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, username: true } },
+            voucher: { select: { id: true, username: true } }, // Public profile: username only, not name
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -1562,6 +1927,7 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 
     const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
+    maskPublicName(rest);
     await attachPhotoUrl(rest);
     res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
@@ -1574,7 +1940,19 @@ router.get('/:id', profileLookupLimiter, async (req, res) => {
 router.get('/u/:username', profileLookupLimiter, async (req, res) => {
   try {
     const human = await prisma.human.findFirst({
-      where: { username: req.params.username, OR: [...identityVerifiedWhere.OR, { jobs: { some: { status: 'COMPLETED' } } }], humanStatus: { in: ['ACTIVE', 'FLAGGED'] } },
+      where: {
+        username: req.params.username,
+        humanStatus: { in: ['ACTIVE', 'FLAGGED'] },
+        // Allow public profile viewing for unverified users if they have any content (name, skills, bio)
+        // OR they're verified OR they have completed jobs
+        OR: [
+          ...identityVerifiedWhere.OR,
+          { jobs: { some: { status: 'COMPLETED' } } },
+          { name: { not: '' } },
+          { skills: { isEmpty: false } },
+          { bio: { not: '' } },
+        ]
+      },
       select: {
         ...publicHumanSelect,
         vouchesReceived: {
@@ -1582,7 +1960,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
             id: true,
             comment: true,
             createdAt: true,
-            voucher: { select: { id: true, username: true } },
+            voucher: { select: { id: true, username: true } }, // Public profile: username only, not name
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -1595,6 +1973,7 @@ router.get('/u/:username', profileLookupLimiter, async (req, res) => {
 
     const reputation = await getReputationStats(human.id);
     const { vouchesReceived, ...rest } = human;
+    maskPublicName(rest);
     await attachPhotoUrl(rest);
     res.json({ ...rest, reputation, vouches: vouchesReceived });
   } catch (error) {
