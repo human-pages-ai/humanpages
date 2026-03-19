@@ -260,8 +260,65 @@ router.post('/webhook', async (req, res) => {
     else if (messageText === '/start') {
       await sendTelegramMessage({
         chatId,
-        text: `Welcome to Humans Bot!\n\nTo connect your account, go to your Humans dashboard and click "Connect Telegram" to get a verification link.`,
+        text: `Welcome to HumanPages Bot!\n\nTo connect your account, go to your HumanPages dashboard and click "Connect Telegram" to get a verification link.\n\nIf you already have a code, just send it here as a message.`,
       });
+    }
+
+    // ─── Raw code (user manually sent the verification code) ───
+    else if (/^[A-F0-9]{8}$/i.test(messageText.trim())) {
+      const code = messageText.trim().toUpperCase();
+      const pending = pendingCodes.get(code);
+
+      if (!pending) {
+        await sendTelegramMessage({
+          chatId,
+          text: 'Invalid or expired code. Please generate a new link from your HumanPages dashboard.',
+        });
+      } else if (pending.expiresAt < Date.now()) {
+        pendingCodes.delete(code);
+        await sendTelegramMessage({
+          chatId,
+          text: 'This code has expired. Please generate a new link from your HumanPages dashboard.',
+        });
+      } else {
+        // Check if this Telegram chatId is already linked to a DIFFERENT user
+        const existingLink = await prisma.human.findFirst({
+          where: { telegramChatId: chatId, id: { not: pending.userId } },
+          select: { id: true },
+        });
+
+        if (existingLink) {
+          pendingCodes.delete(code);
+          await sendTelegramMessage({
+            chatId,
+            text: 'This Telegram account is already linked to another profile. Please disconnect it first.',
+          });
+        } else {
+          const userExists = await prisma.human.findUnique({
+            where: { id: pending.userId },
+            select: { id: true },
+          });
+
+          if (!userExists) {
+            pendingCodes.delete(code);
+            await sendTelegramMessage({ chatId, text: 'Account not found. Please try again from your dashboard.' });
+          } else {
+            await prisma.human.update({
+              where: { id: pending.userId },
+              data: {
+                telegramChatId: chatId,
+                ...(username && { telegram: `@${username}` }),
+              },
+            });
+            pendingCodes.delete(code);
+            await sendTelegramMessage({
+              chatId,
+              text: `Your Telegram is now connected to HumanPages! You'll receive notifications here when you get new job offers.`,
+            });
+            logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user via raw code');
+          }
+        }
+      }
     }
 
     // ─── Any other message — send helpful reply ───
@@ -269,7 +326,7 @@ router.post('/webhook', async (req, res) => {
       logger.info({ messageText, chatId }, 'Unhandled telegram message');
       await sendTelegramMessage({
         chatId,
-        text: 'I only understand the /start command. Go to your Humans dashboard to connect your account.',
+        text: 'I only understand verification codes. Go to your HumanPages dashboard to connect your account.',
       });
     }
 

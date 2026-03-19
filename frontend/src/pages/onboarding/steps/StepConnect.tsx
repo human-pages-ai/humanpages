@@ -339,6 +339,14 @@ export function StepConnect({
               <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs text-blue-700" aria-live="polite">
                 <p>Didn't open? <a href={telegramLinkUrl} target="_blank" rel="noopener noreferrer" className="underline font-medium">Click here to connect on Telegram</a>.</p>
                 <p className="mt-1">After clicking <strong>Start</strong> in Telegram, we'll detect the connection automatically. {window.location.hostname === 'localhost' && <span className="text-blue-500">(Note: auto-detection requires a public URL — in local dev, deploy or use a tunnel like ngrok.)</span>}</p>
+                {(() => {
+                  const codeMatch = telegramLinkUrl.match(/start=([A-F0-9]+)/i);
+                  return codeMatch ? (
+                    <p className="mt-2 pt-2 border-t border-blue-200">
+                      If the bot only says "Welcome", send this code manually: <code className="px-1.5 py-0.5 bg-blue-100 rounded font-mono font-bold text-blue-900 select-all">{codeMatch[1]}</code>
+                    </p>
+                  ) : null;
+                })()}
                 {process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost' && telegramLinkUrl && (
                   <p className="mt-2 pt-2 border-t border-blue-200">
                     <button
