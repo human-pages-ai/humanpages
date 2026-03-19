@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface StepAboutYouProps {
   name: string;
   setName: (v: string) => void;
@@ -21,17 +23,18 @@ export function StepAboutYou({
   oauthPhotoUrl, cvUploaded: _cvUploaded, cvData: _cvData,
   onNext, error, setError,
 }: StepAboutYouProps) {
+  const { t } = useTranslation();
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Your Profile</h2>
-      <p className="text-slate-600 mb-6">Complete your profile information</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.profile.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.profile.subtitle')}</p>
 
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
 
       {/* Photo */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Profile Photo</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.profile.photoLabel')}</label>
         {photoPreview || oauthPhotoUrl ? (
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
             <img src={photoPreview || oauthPhotoUrl || ''} alt="Profile photo preview" loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-orange-200" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).alt = 'Photo failed to load'; }} />
@@ -52,13 +55,13 @@ export function StepAboutYou({
 
       {/* Name */}
       <div className="mb-4">
-        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">{t('onboarding.profile.nameLabel')}</label>
         <input id="name" type="text" value={name} onChange={(e) => { setName(e.target.value.slice(0, 100)); setError(''); }} onBlur={(e) => { setName(e.target.value.trim()); }} maxLength={100} placeholder="John Doe" autoComplete="name" className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
       </div>
 
       {/* Bio */}
       <div className="mb-6">
-        <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-1">Short Bio</label>
+        <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-1">{t('onboarding.profile.bioLabel')}</label>
         <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself..." maxLength={500} rows={2} aria-describedby="bio-count" className="w-full px-4 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
         <p id="bio-count" className={`text-xs mt-1 ${bio.length >= 480 ? 'text-red-500 font-medium' : bio.length >= 400 ? 'text-orange-600 font-medium' : 'text-slate-400'}`}>{bio.length}/500 characters{bio.length === 0 && ' — a good bio helps you stand out'}</p>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CvProcessingBar } from '../components/CvProcessingBar';
 
 interface StepCvUploadProps {
@@ -15,11 +16,12 @@ interface StepCvUploadProps {
 }
 
 export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessing, cvUploaded, cvData, onReupload, onNext, onSkip: _onSkip, error }: StepCvUploadProps) {
+  const { t } = useTranslation();
   const [dragActive, setDragActive] = useState(false);
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Let's get started</h2>
-      <p className="text-slate-600 mb-6">Upload your CV to quickly auto-fill your profile</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.cvUpload.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.cvUpload.subtitle')}</p>
 
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
 
@@ -70,9 +72,9 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
           >
             <button type="button" onClick={() => cvInputRef.current?.click()} aria-label="Upload your CV (PDF or Word document)" className={`w-full p-8 sm:p-10 border-3 border-dashed rounded-lg transition-colors text-center ${dragActive ? 'border-orange-500 bg-orange-100' : 'border-orange-300 bg-orange-50 hover:bg-orange-100 hover:border-orange-400 active:bg-orange-100'}`}>
               <div className="text-4xl mb-3" aria-hidden="true">📄</div>
-              <p className="text-lg font-bold text-orange-700 mb-1">Upload your CV</p>
-              <p className="text-sm text-orange-600 mb-3">PDF or Word document</p>
-              <p className="text-xs text-orange-500">From your device, Google Drive, or Dropbox</p>
+              <p className="text-lg font-bold text-orange-700 mb-1">{t('onboarding.cvUpload.uploadButton')}</p>
+              <p className="text-sm text-orange-600 mb-3">{t('onboarding.cvUpload.format')}</p>
+              <p className="text-xs text-orange-500">{t('onboarding.cvUpload.source')}</p>
             </button>
           </div>
         )}
@@ -81,7 +83,7 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
 
       <div className="flex items-center justify-between gap-3 mt-6">
         <button type="button" onClick={_onSkip} className="text-sm font-medium text-slate-600 hover:text-slate-900 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 active:bg-slate-100 transition-colors">
-          Skip for now
+          {t('common.skipForNow')}
         </button>
         <button type="button" onClick={onNext} disabled={!cvUploaded && !cvProcessing} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500 ${cvUploaded || cvProcessing ? 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`} aria-label="Next step">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SuggestionInput } from '../components/SuggestionInput';
 import type { PlatformEntry } from '../types';
 
@@ -38,6 +39,7 @@ export function StepFinish({
   onNext, onSkip: _onSkip, isLoading, error,
   profileData,
 }: StepFinishProps) {
+  const { t } = useTranslation();
   const [connectingLI, setConnectingLI] = useState(false);
   const [connectingGH, setConnectingGH] = useState(false);
   const [newPlatform, setNewPlatform] = useState('');
@@ -69,31 +71,31 @@ export function StepFinish({
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Verify Your Identity</h2>
-      <p className="text-slate-600 mb-6">Connect your professional accounts to build trust and appear higher in search results</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.finish.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.finish.subtitle')}</p>
 
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
       {isLoading && <div className="mb-4 flex items-center gap-2 text-sm text-slate-500"><div className="w-4 h-4 border-2 border-slate-200 border-t-orange-500 rounded-full animate-spin flex-shrink-0" /><span>Saving your profile — please don't close this page...</span></div>}
 
       {/* Verification & Social Links */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1">Verification</h3>
+        <h3 className="text-sm font-semibold text-slate-900 mb-1">{t('onboarding.finish.verificationTitle')}</h3>
         <p className="text-xs text-slate-500 mb-3">Verified accounts build trust and appear higher in search</p>
       </div>
       <div className="space-y-3 mb-6">
         <div className="p-3 sm:p-4 border border-slate-200 rounded-lg flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-slate-50">
           <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${emailVerified ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-600'}`}><span aria-hidden="true">{emailVerified ? '✓' : '📧'}</span></div>
-          <div><p className="font-medium text-slate-900">Email Verification</p><p className="text-xs text-slate-600">{emailVerified ? 'Verified' : 'Check your email (including spam)'}</p></div></div>
+          <div><p className="font-medium text-slate-900">{t('onboarding.finish.emailTitle')}</p><p className="text-xs text-slate-600">{emailVerified ? 'Verified' : 'Check your email (including spam)'}</p></div></div>
           {emailVerified && <span className="text-xs font-medium text-green-600">Connected</span>}
         </div>
         <div className="p-3 sm:p-4 border border-slate-200 rounded-lg flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-slate-50">
           <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-600"><span aria-hidden="true">in</span></div>
-          <div><p className="font-medium text-slate-900">LinkedIn</p><p className="text-xs text-slate-600">Verify your professional identity</p></div></div>
+          <div><p className="font-medium text-slate-900">{t('onboarding.finish.linkedinTitle')}</p><p className="text-xs text-slate-600">{t('onboarding.finish.linkedinDesc')}</p></div></div>
           <button type="button" onClick={handleLI} disabled={connectingLI} aria-label="Connect LinkedIn account" className="text-xs font-medium text-blue-600 hover:text-blue-700 active:text-blue-800 bg-blue-50 active:bg-blue-100 px-4 py-2 rounded-lg disabled:opacity-50 min-h-[44px]">{connectingLI ? 'Opening...' : 'Connect'}</button>
         </div>
         <div className="p-3 sm:p-4 border border-slate-200 rounded-lg flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-slate-50">
           <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 text-white text-xs font-bold"><span aria-hidden="true">&lt;/&gt;</span></div>
-          <div><p className="font-medium text-slate-900">GitHub</p><p className="text-xs text-slate-600">Showcase your code contributions</p></div></div>
+          <div><p className="font-medium text-slate-900">{t('onboarding.finish.githubTitle')}</p><p className="text-xs text-slate-600">{t('onboarding.finish.githubDesc')}</p></div></div>
           <button type="button" onClick={handleGH} disabled={connectingGH} aria-label="Connect GitHub account" className="text-xs font-medium text-slate-700 hover:text-slate-900 active:text-slate-950 bg-slate-100 active:bg-slate-200 px-4 py-2 rounded-lg disabled:opacity-50 min-h-[44px]">{connectingGH ? 'Opening...' : 'Connect'}</button>
         </div>
       </div>
@@ -101,8 +103,8 @@ export function StepFinish({
 
       {/* Platform Presence */}
       <div className="mb-6 pt-4 border-t border-slate-200">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1">Platform Presence (Optional)</h3>
-        <p className="text-xs text-slate-500 mb-3">Share your online presence — followers, ratings, achievements</p>
+        <h3 className="text-sm font-semibold text-slate-900 mb-1">{t('onboarding.finish.platformsTitle')}</h3>
+        <p className="text-xs text-slate-500 mb-3">{t('onboarding.finish.platformsHint')}</p>
         {platformPresence.length > 0 && (
           <div className="mb-4 space-y-2">
             {platformPresence.map((entry, idx) => (
@@ -171,7 +173,7 @@ export function StepFinish({
                 disabled={!newPlatform.trim()}
                 className="px-4 py-2.5 sm:py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 transition-colors min-h-[44px]"
               >
-                Add Platform
+                {t('onboarding.finish.addPlatformButton')}
               </button>
               {(newPlatform || newUrl || newDetails) && (
                 <button

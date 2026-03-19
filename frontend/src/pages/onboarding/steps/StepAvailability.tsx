@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CompactCvProcessingBar } from '../components/CvProcessingBar';
 import { WEEKLY_CAPACITY_OPTIONS, WORK_TYPE_OPTIONS } from '../constants';
 
@@ -18,6 +19,7 @@ export function StepAvailability({
   workType, setWorkType,
   cvProcessing, onNext, onSkip: _onSkip, error,
 }: StepAvailabilityProps) {
+  const { t } = useTranslation();
   const onNextRef = useRef(onNext);
 
   // Update ref on each render
@@ -39,8 +41,8 @@ export function StepAvailability({
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Availability & Capacity</h2>
-      <p className="text-slate-600 mb-6">Help AI agents find you for the right jobs</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.availability.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.availability.subtitle')}</p>
 
       {cvProcessing && <CompactCvProcessingBar />}
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
@@ -55,7 +57,7 @@ export function StepAvailability({
 
       {/* Weekly Capacity */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">How many hours can you work per week?</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.availability.hoursLabel')}</label>
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
           {WEEKLY_CAPACITY_OPTIONS.map(opt => (
             <button
@@ -77,7 +79,7 @@ export function StepAvailability({
 
       {/* Work Type */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">What type of work do you do?</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.availability.typeLabel')}</label>
         <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2">
           {WORK_TYPE_OPTIONS.map(opt => (
             <button

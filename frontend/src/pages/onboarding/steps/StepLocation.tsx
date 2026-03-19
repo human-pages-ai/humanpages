@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import SearchableCombobox from '../../../components/common/SearchableCombobox';
 import toast from 'react-hot-toast';
 import LocationAutocomplete from '../../../components/LocationAutocomplete';
@@ -52,6 +53,7 @@ export function StepLocation({
   onSkip: _onSkip,
   error,
 }: StepLocationProps) {
+  const { t } = useTranslation();
   const [isRemote, setIsRemote] = useState(location === 'Remote');
   const [defaultLocationDetected, setDefaultLocationDetected] = useState(false);
   const [newLang, setNewLang] = useState('');
@@ -134,15 +136,15 @@ export function StepLocation({
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Where Are You?</h2>
-      <p className="text-slate-600 mb-6">Tell us your location and timezone</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.location.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.location.subtitle')}</p>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error}</div>}
 
       {/* Location Section */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-3">
-          <label htmlFor="location-input" className="block text-sm font-medium text-slate-700">Location</label>
+          <label htmlFor="location-input" className="block text-sm font-medium text-slate-700">{t('onboarding.location.label')}</label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -150,7 +152,7 @@ export function StepLocation({
               onChange={(e) => setIsRemote(e.target.checked)}
               className="w-4 h-4 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
             />
-            <span className="text-sm font-medium text-slate-700">Remote</span>
+            <span className="text-sm font-medium text-slate-700">{t('onboarding.location.remote')}</span>
           </label>
         </div>
         {!isRemote ? (
@@ -162,22 +164,22 @@ export function StepLocation({
                 setLocation(loc);
                 if (lat != null && lng != null) { setLocationLat(lat); setLocationLng(lng); setNeighborhood(nbhd || ''); } else { setLocationLat(undefined); setLocationLng(undefined); setNeighborhood(''); }
               }}
-              placeholder="City or address"
+              placeholder={t('onboarding.location.placeholder')}
               className="w-full px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             />
             {!location && (
-              <p className="text-xs text-slate-500 mt-2">Location helps agents find you for local tasks</p>
+              <p className="text-xs text-slate-500 mt-2">{t('onboarding.location.hint')}</p>
             )}
           </>
         ) : (
-          <div className="px-4 py-2.5 sm:py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-medium text-slate-700">Remote</div>
+          <div className="px-4 py-2.5 sm:py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-medium text-slate-700">{t('onboarding.location.remote')}</div>
         )}
       </div>
 
       {/* Timezone Section */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <label htmlFor="timezone-input" className="block text-sm font-medium text-slate-700">Timezone</label>
+          <label htmlFor="timezone-input" className="block text-sm font-medium text-slate-700">{t('onboarding.location.timezoneLabel')}</label>
           <button
             type="button"
             onClick={handleRefreshTimezone}
@@ -194,13 +196,13 @@ export function StepLocation({
           placeholder="e.g., America/New_York"
           className="w-full px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
         />
-        <p className="text-xs text-slate-500 mt-2">Auto-detected from your device (editable)</p>
+        <p className="text-xs text-slate-500 mt-2">{t('onboarding.location.timezoneHint')}</p>
       </div>
 
       {/* ─── Languages Section ─── */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 mb-2">
-          Languages (Optional){languageEntries.length > 0 && <span className="ml-2 text-xs font-normal text-orange-600">{languageEntries.length} added</span>}
+          {t('onboarding.location.languagesLabel')}{languageEntries.length > 0 && <span className="ml-2 text-xs font-normal text-orange-600">{languageEntries.length} added</span>}
         </label>
         {languageEntries.length > 0 && (
           <div className="space-y-3 mb-4">

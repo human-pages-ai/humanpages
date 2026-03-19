@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CompactCvProcessingBar } from '../components/CvProcessingBar';
 import { SuggestionInput } from '../components/SuggestionInput';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
@@ -188,6 +189,7 @@ interface StepServicesProps {
 }
 
 export function StepServices({ cvProcessing, cvData, skills, services, setServices, equipment, setEquipment, equipmentOnly, onNext, onSkip: _onSkip, error }: StepServicesProps) {
+  const { t } = useTranslation();
   const [addingService, setAddingService] = useState(false);
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: 'USD', unit: 'per hour' });
   const [categoryError, setCategoryError] = useState(false);
@@ -363,8 +365,8 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
 
     return (
       <>
-        <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Equipment & Tools</h2>
-        <p className="text-slate-600 mb-6">Agents match equipment to tasks — list anything you use for your services. Phones, cameras, vehicles, software, tools — anything that helps you deliver.</p>
+        <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.equipment.heading')}</h2>
+        <p className="text-slate-600 mb-6">{t('onboarding.equipment.subtitle')}</p>
         {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
         {equipment.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -383,7 +385,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                   value={newEquipmentCategory}
                   onChange={setNewEquipmentCategory}
                   suggestions={equipmentSuggestions}
-                  placeholder="Search or type your own..."
+                  placeholder={t('onboarding.equipment.hint')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -398,10 +400,9 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                 disabled={!newEquipmentCategory.trim()}
                 className="px-4 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 active:bg-slate-300 disabled:opacity-50 min-h-[44px] flex-shrink-0"
               >
-                Add
+                {t('common.add')}
               </button>
             </div>
-            <p className="text-xs text-slate-400 mb-4">Pick from suggestions or type anything — brand, model, software, you name it</p>
           </>
         )}
         <div className="flex justify-end mt-6">
@@ -415,8 +416,8 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Your Services</h2>
-      <p className="text-slate-600 mb-6">Add the services you offer</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.services.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.services.subtitle')}</p>
 
       {cvProcessing && <CompactCvProcessingBar />}
       {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
@@ -424,7 +425,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
       {/* CV-suggested services */}
       {cvSuggestedServices.length > 0 && services.length === 0 && (
         <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <p className="text-sm font-medium text-orange-900 mb-2">Based on your CV, you might offer these services:</p>
+          <p className="text-sm font-medium text-orange-900 mb-2">{t('onboarding.services.cvSuggestion')}</p>
           <div className="space-y-2">
             {cvSuggestedServices.map((svc: any, idx: number) => (
               <button key={idx} type="button" onClick={() => addSuggestedService(svc)} className="w-full text-left p-3 bg-white border border-orange-200 rounded-lg hover:border-orange-400 transition-colors">
@@ -503,11 +504,11 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                           updated[idx] = { ...svc, unit: e.target.value };
                           setServices(updated);
                         }} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                          <option value="per hour">Hourly</option>
-                          <option value="per task">Fixed Price</option>
-                          <option value="per word">Per Word</option>
-                          <option value="per page">Per Page</option>
-                          <option value="negotiable">Let's Discuss</option>
+                          <option value="per hour">{t('onboarding.services.rateType.hourly')}</option>
+                          <option value="per task">{t('onboarding.services.rateType.fixedPrice')}</option>
+                          <option value="per word">{t('onboarding.services.rateType.perWord')}</option>
+                          <option value="per page">{t('onboarding.services.rateType.perPage')}</option>
+                          <option value="negotiable">{t('onboarding.services.rateType.negotiate')}</option>
                         </select>
                       </div>
                     </div>
@@ -540,7 +541,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                     </div>
                     {svc.description && <p className="text-xs text-slate-600 mb-2 line-clamp-2">{svc.description}</p>}
                     <div className="flex items-center justify-between">
-                      {svc.price ? <p className="text-xs text-slate-700 font-medium">{svc.currency} {svc.price}/{formatUnitLabel(svc.unit)}</p> : <p className="text-xs text-slate-400">No price set — click to add</p>}
+                      {svc.price ? <p className="text-xs text-slate-700 font-medium">{svc.currency} {svc.price}/{formatUnitLabel(svc.unit)}</p> : <p className="text-xs text-slate-400">{t('onboarding.services.noPriceSet')}</p>}
                     </div>
                   </div>
                 )}
@@ -550,7 +551,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
         )}
 
         {!addingService && (
-          <button type="button" onClick={() => setAddingService(true)} disabled={services.length >= 5} aria-disabled={services.length >= 5} className={`w-full py-3 min-h-[44px] border-2 border-dashed rounded-lg text-sm font-medium mb-4 transition-colors ${services.length >= 5 ? 'border-slate-300 text-slate-400 bg-slate-50 cursor-not-allowed opacity-50' : 'border-orange-300 text-orange-600 hover:text-orange-700 hover:border-orange-400 hover:bg-orange-50 active:bg-orange-100'}`}>+ Add a Service</button>
+          <button type="button" onClick={() => setAddingService(true)} disabled={services.length >= 5} aria-disabled={services.length >= 5} className={`w-full py-3 min-h-[44px] border-2 border-dashed rounded-lg text-sm font-medium mb-4 transition-colors ${services.length >= 5 ? 'border-slate-300 text-slate-400 bg-slate-50 cursor-not-allowed opacity-50' : 'border-orange-300 text-orange-600 hover:text-orange-700 hover:border-orange-400 hover:bg-orange-50 active:bg-orange-100'}`}>{t('onboarding.services.addButton')}</button>
         )}
 
         {addingService && (

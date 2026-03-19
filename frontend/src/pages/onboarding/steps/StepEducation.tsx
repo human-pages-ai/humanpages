@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SearchableCombobox from '../../../components/common/SearchableCombobox';
 import degrees from '../../../data/degrees';
 import countries from '../../../data/countries';
@@ -31,6 +32,7 @@ export function StepEducation({
   onSkip: _onSkip,
   error,
 }: StepEducationProps) {
+  const { t } = useTranslation();
   const [addingEducation, setAddingEducation] = useState(false);
   const [newEducation, setNewEducation] = useState<EducationEntry>({ institution: '', degree: '', field: '', country: '' });
 
@@ -55,14 +57,14 @@ export function StepEducation({
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Experience & Education</h2>
-      <p className="text-slate-600 mb-6">Share your background and credentials</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.education.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.education.subtitle')}</p>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error}</div>}
 
       {/* Years of Experience */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Years of Professional Experience</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.education.yearsLabel')}</label>
         <div className="flex items-center gap-3">
           <input
             type="number"
@@ -87,7 +89,7 @@ export function StepEducation({
 
       {/* Jobs Completed as Freelancer */}
       <div className="mb-6">
-        <label htmlFor="jobs-range" className="block text-sm font-medium text-slate-700 mb-2">Jobs completed as freelancer</label>
+        <label htmlFor="jobs-range" className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.education.jobsLabel')}</label>
         <select
           id="jobs-range"
           value={freelancerJobsRange}
@@ -107,7 +109,7 @@ export function StepEducation({
 
       {/* Education Section */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Education (Optional)</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('onboarding.education.label')}</label>
         {educationEntries.length === 0 ? (
           <p className="text-xs text-slate-400 mb-4">No education added yet</p>
         ) : (

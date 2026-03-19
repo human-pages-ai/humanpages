@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { VouchCard } from '../../../components/shared/VouchCard';
 
 interface StepVouchProps {
@@ -10,13 +11,14 @@ interface StepVouchProps {
 }
 
 export function StepVouch({ userId, username, setUsername, onNext, onSkip: _onSkip, error }: StepVouchProps) {
+  const { t } = useTranslation();
   // Username is now auto-generated and set in useProfileForm.loadProfile
   // No need to generate it here, just display what's already set
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Build Trust</h2>
-      <p className="text-slate-600 mb-6">People who know your work can vouch for you. This builds trust with agents.</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.vouch.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.vouch.subtitle')}</p>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error}</div>}
 

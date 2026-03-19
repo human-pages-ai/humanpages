@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../../lib/api';
 import { isInAppBrowser } from '../utils';
 import { WhatsAppSection } from '../components/WhatsAppSection';
@@ -42,6 +43,7 @@ export function StepConnect({
   telegramLoading, setTelegramLoading,
   onNext, onSkip: _onSkip, error,
 }: StepConnectProps) {
+  const { t } = useTranslation();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
@@ -96,7 +98,7 @@ export function StepConnect({
 
   const handleEnablePushNotifications = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setRegistrationError('Push notifications are not supported on this browser');
+      setRegistrationError(t('onboarding.connect.pushNotSupported', 'Push notifications are not supported on this browser'));
       return;
     }
 
@@ -128,7 +130,7 @@ export function StepConnect({
       const vapidPublicKey = vapidResponse.vapidPublicKey;
 
       if (!vapidPublicKey) {
-        setRegistrationError('Push notifications are not configured on the server');
+        setRegistrationError(t('onboarding.connect.pushNotConfigured', 'Push notifications are not configured on the server'));
         return;
       }
 
@@ -201,8 +203,8 @@ export function StepConnect({
 
   return (
     <>
-      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">Stay Connected</h2>
-      <p className="text-slate-600 mb-6">Get notified instantly when agents want to hire you</p>
+      <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.connect.heading')}</h2>
+      <p className="text-slate-600 mb-6">{t('onboarding.connect.subtitle')}</p>
 
       {(error || registrationError) && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error || registrationError}</div>}
 
@@ -213,9 +215,9 @@ export function StepConnect({
             <span className="text-green-500">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             </span>
-            <span className="text-sm text-green-700 flex-1">Push notifications enabled</span>
+            <span className="text-sm text-green-700 flex-1">{t('onboarding.connect.pushEnabled')}</span>
             {showInstallButton && (
-              <button type="button" onClick={handleInstallApp} className="text-xs text-purple-600 hover:text-purple-700 font-medium">Install App</button>
+              <button type="button" onClick={handleInstallApp} className="text-xs text-purple-600 hover:text-purple-700 font-medium">{t('onboarding.connect.installApp')}</button>
             )}
           </div>
         ) : notificationStatus === 'denied' ? (
@@ -223,17 +225,17 @@ export function StepConnect({
             <span className="text-slate-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </span>
-            <span className="text-sm text-slate-500 flex-1">Notifications declined</span>
-            <button type="button" onClick={() => setNotificationStatus('idle')} className="text-xs text-blue-600 hover:text-blue-700 font-medium">Try Again</button>
+            <span className="text-sm text-slate-500 flex-1">{t('onboarding.connect.notificationsDenied')}</span>
+            <button type="button" onClick={() => setNotificationStatus('idle')} className="text-xs text-blue-600 hover:text-blue-700 font-medium">{t('common.tryAgain')}</button>
           </div>
         ) : (
           <div className="flex items-center gap-3">
             <span className="text-blue-500">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </span>
-            <span className="text-sm text-slate-700 flex-1">Get notified when agents want to hire you</span>
+            <span className="text-sm text-slate-700 flex-1">{t('onboarding.connect.pushDescription')}</span>
             <button type="button" onClick={handleEnablePushNotifications} disabled={isRegistering} className="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50">
-              {isRegistering ? '...' : 'Enable'}
+              {isRegistering ? '...' : t('common.enable')}
             </button>
           </div>
         )}
@@ -252,8 +254,8 @@ export function StepConnect({
             <svg className="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.015-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.751-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.015 3.333-1.386 4.025-1.627 4.477-1.635.099-.002.321.023.465.141.121.1.154.234.169.337.015.102.034.331.019.51z"/></svg>
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-slate-900">Telegram</h3>
-            <p className="text-xs text-slate-500">Receive job offers via our HumanPages bot</p>
+            <h3 className="font-semibold text-slate-900">{t('onboarding.connect.telegram.title')}</h3>
+            <p className="text-xs text-slate-500">{t('onboarding.connect.telegram.description')}</p>
           </div>
           {telegramStatus?.connected && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -267,7 +269,7 @@ export function StepConnect({
         ) : (
           <>
             <button type="button" onClick={handleConnectTelegram} disabled={telegramLoading} className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm">
-              {telegramLoading ? 'Connecting...' : 'Connect Telegram'}
+              {telegramLoading ? t('common.connecting') : t('onboarding.connect.telegram.button')}
             </button>
             {telegramLinkUrl && (
               <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
