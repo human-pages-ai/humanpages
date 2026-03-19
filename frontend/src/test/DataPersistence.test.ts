@@ -11,7 +11,8 @@ import {
 
 describe('Draft Persistence Functions', () => {
   beforeEach(() => {
-    // Clear all session storage for each test
+    // Clear draft via the same API the code uses (handles both real sessionStorage and in-memory fallback)
+    clearDraft();
     sessionStorage.clear();
   });
 
@@ -127,7 +128,7 @@ describe('Draft Persistence Functions', () => {
 
     it('should accept draft with matching version', () => {
       // Simulate a versioned draft
-      const versioned = { _v: 3, data: { name: 'Jane', skills: ['React'], smsNumber: '' } };
+      const versioned = { _v: 4, data: { name: 'Jane', skills: ['React'], smsNumber: '' } };
       sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(versioned));
       const loaded = loadDraft();
 
@@ -148,7 +149,7 @@ describe('Draft Persistence Functions', () => {
 
   describe('Prototype pollution protection', () => {
     it('should reject data with __proto__ key', () => {
-      const malicious = { _v: 3, data: { __proto__: { isAdmin: true } } };
+      const malicious = { _v: 4, data: { __proto__: { isAdmin: true } } };
       sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(malicious));
       const loaded = loadDraft();
 
@@ -156,7 +157,7 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should reject data with constructor key', () => {
-      const malicious = { _v: 3, data: { constructor: { isAdmin: true } } };
+      const malicious = { _v: 4, data: { constructor: { isAdmin: true } } };
       sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(malicious));
       const loaded = loadDraft();
 
@@ -164,7 +165,7 @@ describe('Draft Persistence Functions', () => {
     });
 
     it('should reject data with prototype key', () => {
-      const malicious = { _v: 3, data: { prototype: { isAdmin: true } } };
+      const malicious = { _v: 4, data: { prototype: { isAdmin: true } } };
       sessionStorage.setItem('hp_onboarding_draft', JSON.stringify(malicious));
       const loaded = loadDraft();
 

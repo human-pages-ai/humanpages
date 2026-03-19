@@ -7,8 +7,9 @@ import type { OnboardingDraft } from '../types';
  * Draft schema version. Increment this when OnboardingDraft shape changes.
  * Old drafts with a different version are discarded to prevent corruption.
  * v3: Removed dead fields (earliestStart, schedulePattern, taskDuration, paymentMethod)
+ * v4: Added smsNumber field
  */
-const DRAFT_VERSION = 3;
+const DRAFT_VERSION = 4;
 
 interface VersionedDraft {
   _v: number;
