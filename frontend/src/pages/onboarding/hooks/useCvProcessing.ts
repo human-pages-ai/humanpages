@@ -1,9 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '../../../lib/api';
 import { posthog } from '../../../lib/posthog';
 import toast from 'react-hot-toast';
 import type { LanguageEntry, EducationEntry } from '../types';
 import { parseLanguageString } from '../utils';
+
+// ─── Minimum data thresholds for a "real" CV ───
+const MIN_SKILLS_FOR_VALID_CV = 2;
+const PARSE_POLL_INTERVAL_MS = 1500;
+const PARSE_POLL_MAX_ATTEMPTS = 40; // ~60s max polling
 
 interface CvAutoFillTargets {
   setName: (v: string) => void;
@@ -20,13 +25,33 @@ interface CvAutoFillTargets {
   getCurrentSocialUrls: () => { linkedinUrl: string; githubUrl: string; twitterUrl: string; websiteUrl: string };
   setExternalProfiles: React.Dispatch<React.SetStateAction<string[]>>;
   mountedRef: React.MutableRefObject<boolean>;
-  /** Called when CV upload succeeds and data is applied — used for auto-advance */
-  onUploadComplete?: () => void;
+
+  /**
+   * Stage 1 — called immediately when the user selects a valid file.
+   * The parent should advance to the next step (equipment).
+   */
+  onFileSelected?: () => void;
+
+  /**
+   * Stage 2/3 failure — upload failed or CV couldn't be parsed.
+   * The parent should revert to FLOW_NO_CV and navigate back to cv-upload.
+   */
+  onCvFailed?: (reason: string) => void;
+
+  /**
+   * Stage 3 success — CV parsed and data applied to form fields.
+   * The parent can use this to confirm the CV flow is valid.
+   */
+  onParseComplete?: () => void;
 }
+
+export type CvStage = 'idle' | 'uploading' | 'parsing' | 'done' | 'failed';
 
 export interface UseCvProcessingReturn {
   cvUploaded: boolean;
   cvData: any;
+  cvStage: CvStage;
+  /** True when upload or parsing is in progress (convenience flag for UI spinners) */
   cvProcessing: boolean;
   cvInputRef: React.RefObject<HTMLInputElement>;
   handleCVChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -39,10 +64,13 @@ export interface UseCvProcessingReturn {
 export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingReturn {
   const [cvUploaded, setCvUploaded] = useState(false);
   const [cvData, setCvData] = useState<any>(null);
-  const [cvProcessing, setCvProcessing] = useState(false);
+  const [cvStage, setCvStage] = useState<CvStage>('idle');
 
   const cvInputRef = useRef<HTMLInputElement>(null);
   const cvUploadingRef = useRef(false);
+
+  // Derived convenience flag (backward compat for UI spinners)
+  const cvProcessing = cvStage === 'uploading' || cvStage === 'parsing';
 
   // Cleanup on unmount
   useEffect(() => {
@@ -51,11 +79,34 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     };
   }, []);
 
+  // ─── Data quality check ───
+  const validateCvData = useCallback((result: any): { valid: boolean; reason: string } => {
+    if (!result) {
+      return { valid: false, reason: 'CV parsing returned no data. Please try a different file.' };
+    }
+
+    const skillCount =
+      (result.skills?.explicit?.length || 0) + (result.skills?.inferred?.length || 0);
+    const hasName = !!result.name;
+
+    // Must have at least some skills — this is the primary signal it's a real CV
+    if (skillCount < MIN_SKILLS_FOR_VALID_CV) {
+      return {
+        valid: false,
+        reason: hasName
+          ? "We couldn't find enough skills in your CV. Please upload a more detailed resume, or skip to add skills manually."
+          : "This file doesn't appear to be a CV/resume. Please upload your CV or skip this step.",
+      };
+    }
+
+    return { valid: true, reason: '' };
+  }, []);
+
   /**
    * Auto-fill form fields from parsed CV result.
    * CV data is authoritative for key fields since the user explicitly uploaded it.
    */
-  const applyParsedCvData = (result: any) => {
+  const applyParsedCvData = useCallback((result: any) => {
     if (!targets.mountedRef.current) return;
 
     // Identity — CV always overwrites
@@ -64,13 +115,9 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
       let bio = result.bio;
       // Strip personal info that the CV parser might include in the bio
       if (result.name) bio = bio.replace(new RegExp(result.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '').trim();
-      // Strip common name patterns at the start (e.g., "John Smith is a..." or "Jane Doe has...")
       bio = bio.replace(/^[A-Z][a-z]+ [A-Z][a-z]+ (is |was |has |have |been )/i, '').trim();
-      // Strip email patterns
       bio = bio.replace(/[\w.-]+@[\w.-]+\.\w+/g, '').trim();
-      // Strip phone patterns
       bio = bio.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '').trim();
-      // Clean up double spaces and leading punctuation
       bio = bio.replace(/\s{2,}/g, ' ').replace(/^[,;.\s]+/, '').trim();
       targets.setBio(bio.slice(0, 500));
     }
@@ -178,7 +225,7 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
       certsCount: result.certificates?.length || 0,
       hasSocials: !!(result.linkedinUrl || result.githubUrl),
     });
-  };
+  }, [targets]);
 
   /**
    * Check CV processing status. With the synchronous API, CV processing
@@ -188,11 +235,53 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     return Promise.resolve(cvUploaded);
   };
 
-  /** Process a CV file (called from both file input change and drag-and-drop) */
+  // ─── Stage 2: Upload file to server ───
+  const uploadFile = async (file: File): Promise<string | null> => {
+    setCvStage('uploading');
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const { fileId } = await api.uploadCvFile(file);
+        return fileId;
+      } catch (err) {
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1500));
+        }
+      }
+    }
+    return null;
+  };
+
+  // ─── Stage 3: Poll for parse result ───
+  const pollParseResult = async (fileId: string): Promise<any | null> => {
+    setCvStage('parsing');
+
+    for (let attempt = 0; attempt < PARSE_POLL_MAX_ATTEMPTS; attempt++) {
+      try {
+        const res = await api.pollCvParse(fileId);
+
+        if (res.status === 'complete' && res.data) {
+          return res.data;
+        }
+        if (res.status === 'failed') {
+          return null;
+        }
+        // status === 'pending' — keep polling
+      } catch {
+        // Network blip — keep polling
+      }
+
+      await new Promise(resolve => setTimeout(resolve, PARSE_POLL_INTERVAL_MS));
+    }
+
+    return null; // Timed out
+  };
+
+  /** Process a CV file — 3-stage pipeline */
   const processFile = async (file: File) => {
     if (cvUploadingRef.current) return;
 
-    // Reject legacy .doc files
+    // ─── Stage 1: Client-side validation ───
     const isDoc = file.type === 'application/msword' || /\.doc$/i.test(file.name);
     if (isDoc) {
       toast.error('Legacy .doc format is not supported. Please save as .docx or .pdf.');
@@ -207,41 +296,68 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
       return;
     }
 
-    // Show processing state
+    // File is valid — advance immediately
     cvUploadingRef.current = true;
-    setCvProcessing(true);
     setCvUploaded(false);
     setCvData(null);
+    setCvStage('uploading');
     if (cvInputRef.current) cvInputRef.current.value = '';
 
-    // Upload and parse — the API does extraction + OpenAI parsing synchronously
-    let uploaded = false;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const result = await api.uploadCV(file);
-        if (!targets.mountedRef.current) return;
-        applyParsedCvData(result);
-        uploaded = true;
-        break;
-      } catch (err) {
-        if (attempt < 2) {
-          // Wait before retry: 1.5s, 3s
-          await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1500));
-        }
-      }
+    // Notify parent to advance to equipment NOW (before upload starts)
+    if (targets.onFileSelected) {
+      targets.onFileSelected();
     }
 
+    // ─── Stage 2: Upload to server ───
+    const fileId = await uploadFile(file);
+    if (!targets.mountedRef.current) { cvUploadingRef.current = false; return; }
+
+    if (!fileId) {
+      cvUploadingRef.current = false;
+      setCvStage('failed');
+      toast.error('CV upload failed. Please check your connection and try again.');
+      if (targets.onCvFailed) {
+        targets.onCvFailed('Upload failed after multiple attempts.');
+      }
+      return;
+    }
+
+    // ─── Stage 3: Poll for parsed result ───
+    const result = await pollParseResult(fileId);
     cvUploadingRef.current = false;
     if (!targets.mountedRef.current) return;
-    setCvProcessing(false);
 
-    // Notify parent that upload completed successfully — triggers auto-advance
-    if (uploaded && targets.onUploadComplete) {
-      targets.onUploadComplete();
+    if (!result) {
+      setCvStage('failed');
+      toast.error('CV processing failed. Please try a different file.');
+      if (targets.onCvFailed) {
+        targets.onCvFailed('Parsing failed or timed out.');
+      }
+      return;
     }
 
-    if (!uploaded) {
-      toast.error('CV upload failed after multiple attempts. Please try again.');
+    // ─── Data quality validation ───
+    const { valid, reason } = validateCvData(result);
+    if (!valid) {
+      setCvStage('failed');
+      toast.error(reason);
+      posthog.capture('cv_quality_rejected', {
+        skillCount: (result.skills?.explicit?.length || 0) + (result.skills?.inferred?.length || 0),
+        hasName: !!result.name,
+        hasEducation: (result.education?.length || 0) > 0,
+      });
+      if (targets.onCvFailed) {
+        targets.onCvFailed(reason);
+      }
+      return;
+    }
+
+    // ─── All good — apply data ───
+    applyParsedCvData(result);
+    setCvStage('done');
+
+    if (targets.onParseComplete) {
+      targets.onParseComplete();
     }
   };
 
@@ -254,6 +370,7 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
   return {
     cvUploaded,
     cvData,
+    cvStage,
     cvProcessing,
     cvInputRef,
     handleCVChange,

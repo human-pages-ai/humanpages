@@ -4,6 +4,12 @@
  * Each step is a module identified by a string ID.
  * The flow order changes based on whether the user uploaded a CV.
  * All navigation logic lives here — index.tsx just renders the current step.
+ *
+ * Flow states:
+ *   - NO CV:       User fills everything manually. Skills comes early.
+ *   - CV (active): User selected a file. Equipment first, skills deferred to verify.
+ *                  Used optimistically on file selection AND after confirmed parse.
+ *   - Revert:      Upload/parse failed → switches back to NO CV flow.
  */
 
 export type StepId =
@@ -45,7 +51,7 @@ const FLOW_NO_CV: StepDef[] = [
 ];
 
 /**
- * Flow when CV IS uploaded.
+ * Flow when CV IS uploaded (or optimistically selected).
  * CV pre-fills: skills, location, languages, education (partial),
  * services (partial, no price), profile (partial).
  * So we prioritize what CV can't infer first, then let user verify pre-filled steps.
@@ -69,9 +75,15 @@ const FLOW_CV_UPLOADED: StepDef[] = [
   { id: 'verification',  label: 'Verify' },
 ];
 
-/** Get the step flow based on CV upload status */
-export function getFlow(cvUploaded: boolean): StepDef[] {
-  return cvUploaded ? FLOW_CV_UPLOADED : FLOW_NO_CV;
+/**
+ * Get the step flow.
+ * @param cvActive — true when we should use the CV flow. This covers both:
+ *   - Optimistic: user just selected a file (upload in progress)
+ *   - Confirmed: CV parsed successfully and data applied
+ *   Set to false to revert (upload/parse failed, or user never uploaded).
+ */
+export function getFlow(cvActive: boolean): StepDef[] {
+  return cvActive ? FLOW_CV_UPLOADED : FLOW_NO_CV;
 }
 
 /** Get step labels array for the current flow */

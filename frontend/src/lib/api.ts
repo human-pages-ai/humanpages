@@ -1347,6 +1347,7 @@ export const api = {
     }),
 
   // ─── CV ───
+  /** @deprecated Use uploadCvFile + pollCvParse for the 3-stage flow */
   uploadCV: (file: File) => {
     const token = getToken();
     const formData = new FormData();
@@ -1365,6 +1366,30 @@ export const api = {
       return res.json();
     });
   },
+
+  /** Stage 2: Upload the CV file to the server. Returns a fileId for polling. */
+  uploadCvFile: (file: File): Promise<{ fileId: string }> => {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('cv', file);
+    return fetch(`${API_BASE}/cv/upload-file`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    }).then(async res => {
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(error.error || 'Upload failed');
+      }
+      return res.json();
+    });
+  },
+
+  /** Stage 3: Poll for CV parse result. Returns status + parsed data when ready. */
+  pollCvParse: (fileId: string): Promise<{ status: 'pending' | 'complete' | 'failed'; data?: any; error?: string }> =>
+    request(`/cv/parse-status/${fileId}`),
 
   addEducation: (data: { institution: string; degree?: string; field?: string; country?: string; year?: number }) =>
     request('/cv/education', { method: 'POST', body: JSON.stringify(data) }),

@@ -14,6 +14,8 @@ vi.mock('../lib/api', () => ({
     addEducation: vi.fn(),
     createService: vi.fn(),
     uploadCV: vi.fn(),
+    uploadCvFile: vi.fn().mockResolvedValue({ fileId: 'test-file-id' }),
+    pollCvParse: vi.fn().mockResolvedValue({ status: 'complete', data: { name: 'Test', skills: { explicit: ['JavaScript'], inferred: ['React'] } } }),
     submitCareerApplication: vi.fn(),
     getLinkedInVerifyUrl: vi.fn(),
     getGitHubVerifyUrl: vi.fn(),

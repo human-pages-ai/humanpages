@@ -55,6 +55,15 @@ export default function Onboarding() {
 
   // ─── Hooks ───
   const form = useProfileForm(draft);
+
+  // Optimistic CV flow state — true from the moment user selects a file,
+  // reverted to false if upload or parsing fails.
+  const [cvActive, setCvActive] = useState(() => !!(draft?.cvUploaded && draft?.cvData));
+
+  // Track which step to return to after a successful re-upload.
+  // When CV fails and user is sent back to cv-upload, this stores where they were.
+  const returnToStepRef = useRef<string | null>(null);
+
   const cv = useCvProcessing({
     setName: form.setName,
     setBio: form.setBio,
@@ -75,10 +84,33 @@ export default function Onboarding() {
     }),
     setExternalProfiles: form.setExternalProfiles,
     mountedRef: form.mountedRef,
-    onUploadComplete: () => {
-      // CV uploaded successfully — switch to CV flow and advance to equipment
-      setSearchParams({ step: 'equipment' }, { replace: true });
+
+    // Stage 1: File selected — advance to equipment immediately
+    onFileSelected: () => {
+      setCvActive(true);
+      // If we have a saved return step (re-upload), go there; otherwise equipment
+      const target = returnToStepRef.current || 'equipment';
+      returnToStepRef.current = null;
+      setSearchParams({ step: target }, { replace: true });
       window.scrollTo({ top: 0 });
+    },
+
+    // Stage 2/3 failure: revert to NO_CV flow, send user back to cv-upload
+    onCvFailed: (_reason: string) => {
+      // Save where the user currently is so we can return them on re-upload
+      const currentStep = searchParams.get('step');
+      if (currentStep && currentStep !== 'cv-upload') {
+        returnToStepRef.current = currentStep;
+      }
+      setCvActive(false);
+      setSearchParams({ step: 'cv-upload' }, { replace: true });
+      window.scrollTo({ top: 0 });
+    },
+
+    // Stage 3 success: CV data applied — confirm the flow (already on CV flow)
+    onParseComplete: () => {
+      // cvActive is already true from onFileSelected, and cvUploaded is now true
+      // from applyParsedCvData. Nothing to do here — the user keeps working.
     },
   });
 
@@ -91,8 +123,9 @@ export default function Onboarding() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps — only on mount, draft is memoized
 
   // ─── Flow engine ───
-  // The flow reorders based on whether CV was uploaded
-  const flow = useMemo(() => getFlow(cv.cvUploaded), [cv.cvUploaded]);
+  // Use optimistic cvActive for flow ordering (not cvUploaded, which only becomes
+  // true after parsing completes). This lets us switch to CV flow on file selection.
+  const flow = useMemo(() => getFlow(cvActive), [cvActive]);
   const labels = useMemo(() => getStepLabels(flow), [flow]);
   const total = totalSteps(flow);
 
@@ -151,8 +184,8 @@ export default function Onboarding() {
     cvData: cv.cvData,
   });
 
-  // CV auto-advance is handled by the onUploadComplete callback in useCvProcessing.
-  // No effect needed — the callback fires directly after successful upload.
+  // CV auto-advance is handled by the onFileSelected callback in useCvProcessing.
+  // No effect needed — the callback fires directly on file selection.
 
   // ─── Save step data (for edit mode) ───
   const saveCurrentStepData = useCallback(async (stepId: StepId) => {
@@ -613,15 +646,21 @@ export default function Onboarding() {
             </div>
           </div>
 
-          {/* CV processing indicator */}
+          {/* CV processing indicator — shows stage-specific status */}
           <div aria-live="polite" aria-atomic="true">
-            {cv.cvProcessing && (
+            {cv.cvStage === 'uploading' && (
+              <div className="px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-2 text-xs text-orange-700">
+                <div className="w-3 h-3 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin flex-shrink-0" />
+                <span>Uploading your CV...</span>
+              </div>
+            )}
+            {cv.cvStage === 'parsing' && (
               <div className="px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-2 text-xs text-orange-700">
                 <div className="w-3 h-3 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin flex-shrink-0" />
                 <span>Analyzing your CV...</span>
               </div>
             )}
-            {cv.cvUploaded && !cv.cvProcessing && (
+            {cv.cvStage === 'done' && cv.cvUploaded && (
               <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between text-xs text-green-700">
                 <span className="flex items-center gap-1.5"><span>✓</span> CV analyzed — fields pre-filled</span>
                 <button type="button" onClick={() => cv.cvInputRef.current?.click()} className="text-orange-600 hover:text-orange-700 font-medium">Re-upload</button>
