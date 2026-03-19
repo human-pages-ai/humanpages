@@ -19,6 +19,10 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Polling times out after link expiry (10 min)
+const POLL_INTERVAL_MS = 3000;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000;
+
 interface StepConnectProps {
   whatsappNumber: string;
   setWhatsappNumber: (v: string) => void;
@@ -45,14 +49,21 @@ export function StepConnect({
 }: StepConnectProps) {
   const { t } = useTranslation();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isConnectingRef = useRef(false); // Guard against rapid clicks
+  const mountedRef = useRef(true);
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationError, setRegistrationError] = useState('');
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const [telegramError, setTelegramError] = useState('');
+  const [linkExpired, setLinkExpired] = useState(false);
 
   // Check if notifications are already enabled and set install button from module-level capture
   useEffect(() => {
+    mountedRef.current = true;
+
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
         setNotificationStatus('granted');
@@ -62,25 +73,34 @@ export function StepConnect({
     }
 
     // Check if beforeinstallprompt event was already captured at module level.
-    // Note: Chrome suppresses the beforeinstallprompt event when its own banner is shown.
-    // If deferredInstallPrompt is null, the install text instructions below will still guide
-    // users through the manual installation process (Menu → Install app).
     if (deferredInstallPrompt) {
       installPromptRef.current = deferredInstallPrompt;
       setShowInstallButton(true);
     }
 
-    api.getTelegramStatus().then(status => setTelegramStatus(status)).catch(() => {
+    api.getTelegramStatus().then(status => {
+      if (mountedRef.current) setTelegramStatus(status);
+    }).catch(() => {
       // Initial status check failed — user may not have bot available
     });
 
     return () => {
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
+      mountedRef.current = false;
+      stopPolling();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — runs only on mount to fetch initial telegram status
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — runs only on mount
+
+  /** Stop polling and clear timeout */
+  function stopPolling() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    if (pollTimeoutRef.current) {
+      clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = null;
+    }
+  }
 
   const handleInstallApp = async () => {
     if (!installPromptRef.current) return;
@@ -106,7 +126,6 @@ export function StepConnect({
     setRegistrationError('');
 
     try {
-      // Request notification permission
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setNotificationStatus('denied');
@@ -115,17 +134,13 @@ export function StepConnect({
 
       setNotificationStatus('granted');
 
-      // Register service worker if not already registered
       let registration: ServiceWorkerRegistration;
       try {
         registration = await navigator.serviceWorker.ready;
       } catch {
-        // Service worker not available, but notification permission was granted
-        // User can skip this step and enable it later from settings
         return;
       }
 
-      // Get VAPID public key
       const vapidResponse = await api.getVapidPublicKey();
       const vapidPublicKey = vapidResponse.vapidPublicKey;
 
@@ -134,7 +149,6 @@ export function StepConnect({
         return;
       }
 
-      // Subscribe to push notifications
       setIsRegistering(true);
       const uint8Array = urlBase64ToUint8Array(vapidPublicKey);
       const subscription = await registration.pushManager.subscribe({
@@ -142,7 +156,6 @@ export function StepConnect({
         applicationServerKey: uint8Array as BufferSource,
       });
 
-      // Send subscription to server
       const endpoint = subscription.endpoint;
       const keys = subscription.getKey('p256dh');
       const auth = subscription.getKey('auth');
@@ -169,36 +182,64 @@ export function StepConnect({
   };
 
   const handleConnectTelegram = async () => {
+    // Guard against rapid clicks — ref-based because state updates are async
+    if (isConnectingRef.current) return;
+    isConnectingRef.current = true;
+
     setTelegramLoading(true);
+    setTelegramError('');
+    setLinkExpired(false);
+
     try {
       const result = await api.linkTelegram();
+      if (!mountedRef.current) return;
+
       setTelegramLinkUrl(result.linkUrl);
-      if (isInAppBrowser()) {
-        window.location.href = result.linkUrl;
-      } else {
+
+      // Open in new tab — don't navigate away from onboarding
+      // (in-app browsers can't reliably open new tabs, so show the link prominently)
+      if (!isInAppBrowser()) {
         window.open(result.linkUrl, '_blank');
       }
-      // Clear any existing poll before starting a new one
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-      }
+
+      // Start polling for connection
+      stopPolling();
       pollRef.current = setInterval(async () => {
+        if (!mountedRef.current) { stopPolling(); return; }
         try {
           const status = await api.getTelegramStatus();
+          if (!mountedRef.current) return;
           setTelegramStatus(status);
-          if (status.connected && pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
+          if (status.connected) {
+            stopPolling();
           }
         } catch {
           // Poll attempt failed — will retry in next interval
         }
-      }, 3000);
-    } catch {
-      // Link URL generation failed — will be caught and displayed to user
+      }, POLL_INTERVAL_MS);
+
+      // Stop polling after link expires (10 min)
+      pollTimeoutRef.current = setTimeout(() => {
+        if (!mountedRef.current) return;
+        stopPolling();
+        setLinkExpired(true);
+      }, POLL_TIMEOUT_MS);
+
+    } catch (err) {
+      if (!mountedRef.current) return;
+      const message = err instanceof Error ? err.message : 'Failed to connect to Telegram';
+      setTelegramError(message);
     } finally {
-      setTelegramLoading(false);
+      isConnectingRef.current = false;
+      if (mountedRef.current) setTelegramLoading(false);
     }
+  };
+
+  const handleRetryTelegram = () => {
+    setTelegramLinkUrl(null);
+    setTelegramError('');
+    setLinkExpired(false);
+    handleConnectTelegram();
   };
 
   return (
@@ -264,18 +305,41 @@ export function StepConnect({
             </span>
           )}
         </div>
+
+        {/* Error display */}
+        {telegramError && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center justify-between" role="alert">
+            <span>{telegramError}</span>
+            <button type="button" onClick={handleRetryTelegram} className="text-red-800 hover:text-red-900 font-medium text-xs ml-2 shrink-0">
+              {t('common.tryAgain', 'Try again')}
+            </button>
+          </div>
+        )}
+
+        {/* Link expired notice */}
+        {linkExpired && !telegramStatus?.connected && (
+          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700 flex items-center justify-between" role="alert">
+            <span>Link expired. Please generate a new one.</span>
+            <button type="button" onClick={handleRetryTelegram} className="text-amber-800 hover:text-amber-900 font-medium text-xs ml-2 shrink-0">
+              {t('common.tryAgain', 'Try again')}
+            </button>
+          </div>
+        )}
+
         {telegramStatus?.connected ? (
-          <p className="text-sm text-green-700 bg-green-50 rounded-lg p-3">You're connected to Telegram! You'll receive instant notifications for new job offers.</p>
+          <p className="text-sm text-green-700 bg-green-50 rounded-lg p-3" aria-live="polite">You're connected to Telegram! You'll receive instant notifications for new job offers.</p>
+        ) : telegramStatus?.botAvailable === false ? (
+          <p className="text-sm text-slate-500 bg-slate-50 rounded-lg p-3">Telegram notifications are not available at the moment. You can skip this step and connect later from your dashboard.</p>
         ) : (
           <>
             <button type="button" onClick={handleConnectTelegram} disabled={telegramLoading} className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm">
               {telegramLoading ? t('common.connecting') : t('onboarding.connect.telegram.button')}
             </button>
-            {telegramLinkUrl && (
-              <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
-                <p>Didn't open? <a href={telegramLinkUrl} target="_blank" rel="noopener noreferrer" className="underline font-medium" onClick={(e) => { if (isInAppBrowser()) { e.preventDefault(); window.location.href = telegramLinkUrl!; } }}>Click here to connect on Telegram</a>.</p>
+            {telegramLinkUrl && !linkExpired && (
+              <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs text-blue-700" aria-live="polite">
+                <p>Didn't open? <a href={telegramLinkUrl} target="_blank" rel="noopener noreferrer" className="underline font-medium">Click here to connect on Telegram</a>.</p>
                 <p className="mt-1">After clicking <strong>Start</strong> in Telegram, we'll detect the connection automatically. {window.location.hostname === 'localhost' && <span className="text-blue-500">(Note: auto-detection requires a public URL — in local dev, deploy or use a tunnel like ngrok.)</span>}</p>
-                {window.location.hostname === 'localhost' && telegramLinkUrl && (
+                {process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost' && telegramLinkUrl && (
                   <p className="mt-2 pt-2 border-t border-blue-200">
                     <button
                       type="button"
@@ -283,16 +347,17 @@ export function StepConnect({
                         try {
                           const codeMatch = telegramLinkUrl.match(/start=([A-F0-9]+)/i);
                           if (!codeMatch) {
-                            alert('Could not extract code from URL');
+                            setTelegramError('Could not extract code from URL');
                             return;
                           }
                           const code = codeMatch[1];
                           const response = await api.devSimulateTelegramConnection(code);
                           if (response.success) {
                             setTelegramStatus({ connected: true, botAvailable: true });
+                            stopPolling();
                           }
                         } catch (err) {
-                          alert('Simulation failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+                          setTelegramError('Simulation failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
                         }
                       }}
                       className="underline font-medium hover:text-blue-900"
