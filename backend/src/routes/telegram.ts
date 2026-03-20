@@ -45,6 +45,31 @@ router.get('/debug', authenticateToken, async (req: AuthRequest, res) => {
   });
 });
 
+// ─── Debug: send a test message to the current user's Telegram (admin only) ───
+router.post('/debug/send', authenticateToken, async (req: AuthRequest, res) => {
+  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+  const user = await prisma.human.findUnique({
+    where: { id: req.userId },
+    select: { email: true, telegramChatId: true, name: true },
+  });
+  if (!user?.email || !adminEmails.includes(user.email)) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  if (!user.telegramChatId) {
+    return res.status(400).json({ error: 'No Telegram connected to your account' });
+  }
+
+  try {
+    await sendTelegramMessage({
+      chatId: user.telegramChatId,
+      text: `🔔 Test message from HumanPages!\n\nHi ${user.name || 'there'}, this confirms your Telegram notifications are working.\n\nTimestamp: ${new Date().toISOString()}`,
+    });
+    res.json({ success: true, chatId: user.telegramChatId });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Failed to send', details: String(err) });
+  }
+});
+
 // ─── Get Telegram connection status ───
 router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
   try {
