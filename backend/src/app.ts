@@ -562,6 +562,11 @@ const FROM_SLUGS: Record<string, { utm_source: string; utm_medium: string; utm_c
   'board-web3career': { utm_source: 'web3career', utm_medium: 'paid', utm_campaign: 'jobboard_web3career' },
   'board-remote3':    { utm_source: 'remote3', utm_medium: 'paid', utm_campaign: 'jobboard_remote3' },
   'board-laborx':     { utm_source: 'laborx', utm_medium: 'paid', utm_campaign: 'jobboard_laborx' },
+  // Social media bios
+  'x':                { utm_source: 'twitter', utm_medium: 'bio', utm_campaign: 'social_x' },
+  'linkedin':         { utm_source: 'linkedin', utm_medium: 'bio', utm_campaign: 'social_linkedin' },
+  'instagram':        { utm_source: 'instagram', utm_medium: 'bio', utm_campaign: 'social_instagram' },
+  'tiktok':           { utm_source: 'tiktok', utm_medium: 'bio', utm_campaign: 'social_tiktok' },
 };
 
 app.get('/from/:slug', (req, res) => {
