@@ -277,7 +277,7 @@ router.post('/webhook', async (req, res) => {
       // Verify the user still exists in the database
       const userExists = await prisma.human.findUnique({
         where: { id: pending.userId },
-        select: { id: true },
+        select: { id: true, username: true, name: true },
       });
 
       if (!userExists) {
@@ -300,9 +300,13 @@ router.post('/webhook', async (req, res) => {
 
       pendingCodes.delete(code);
 
+      const profileUrl = userExists.username
+        ? `https://humanpages.ai/u/${userExists.username}`
+        : `https://humanpages.ai/profile/${userExists.id}`;
+
       await sendTelegramMessage({
         chatId,
-        text: `Your Telegram is now connected to Humans! You'll receive notifications here when you get new job offers.`,
+        text: `✅ Your Telegram is now connected to HumanPages!\n\nYou'll receive notifications here when agents send you job offers.\n\n🔗 Share your profile with friends and ask them to vouch for you — vouches boost your visibility and help you get more jobs:\n${profileUrl}\n\nThe more vouches you have, the higher you rank in agent searches!`,
       });
 
       logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user');
@@ -312,7 +316,7 @@ router.post('/webhook', async (req, res) => {
     else if (messageText === '/start') {
       await sendTelegramMessage({
         chatId,
-        text: `Welcome to HumanPages Bot!\n\nTo connect your account, go to your HumanPages dashboard and click "Connect Telegram" to get a verification link.\n\nIf you already have a code, just send it here as a message.`,
+        text: `Welcome to HumanPages Bot! 👋\n\nTo connect your account, go to your HumanPages dashboard and click "Connect Telegram" to get a verification link.\n\nIf you already have a code, just send it here as a message.\n\n💡 Tip: Once connected, share your profile link with friends and ask them to vouch for you — it helps AI agents find and hire you!`,
       });
     }
 
@@ -348,7 +352,7 @@ router.post('/webhook', async (req, res) => {
         } else {
           const userExists = await prisma.human.findUnique({
             where: { id: pending.userId },
-            select: { id: true },
+            select: { id: true, username: true, name: true },
           });
 
           if (!userExists) {
@@ -363,9 +367,12 @@ router.post('/webhook', async (req, res) => {
               },
             });
             pendingCodes.delete(code);
+            const profileUrl = userExists.username
+              ? `https://humanpages.ai/u/${userExists.username}`
+              : `https://humanpages.ai/profile/${userExists.id}`;
             await sendTelegramMessage({
               chatId,
-              text: `Your Telegram is now connected to HumanPages! You'll receive notifications here when you get new job offers.`,
+              text: `✅ Your Telegram is now connected to HumanPages!\n\nYou'll receive notifications here when agents send you job offers.\n\n🔗 Share your profile with friends and ask them to vouch for you — vouches boost your visibility and help you get more jobs:\n${profileUrl}\n\nThe more vouches you have, the higher you rank in agent searches!`,
             });
             logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user via raw code');
           }
