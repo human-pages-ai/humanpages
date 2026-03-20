@@ -376,7 +376,7 @@ export default function DevelopersPage() {
         {/* Hero — Agent as Hiring Cofounder */}
         <section className="pt-20 md:pt-32 pb-16 md:pb-24 px-4 md:px-8 bg-white overflow-hidden min-h-[70vh] flex items-center">
         <div className="max-w-5xl mx-auto w-full">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 leading-[1.08] text-center">
+          <h1 className="text-[2rem] sm:text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 leading-[1.08] text-center">
             Your agent knows you<br />
             <span className="bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">better than your mama</span>
           </h1>
