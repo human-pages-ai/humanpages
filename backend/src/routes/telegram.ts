@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { isTelegramConfigured, getTelegramBotUsername, getTelegramWebhookSecret, sendTelegramMessage } from '../lib/telegram.js';
 import { logger } from '../lib/logger.js';
+import { getTranslator } from '../i18n/index.js';
 
 const router = Router();
 
@@ -232,6 +233,20 @@ router.post('/webhook', async (req, res) => {
     const chatId = String(update.message.chat.id);
     const messageText = update.message.text || '';
     const username = update.message.from?.username;
+    // Telegram sends user's language_code (e.g. "en", "es", "he")
+    const tgLang = update.message.from?.language_code || 'en';
+
+    // Helper: get translator for a user by ID, falling back to Telegram's language_code
+    async function getUserTranslator(userId: string) {
+      const u = await prisma.human.findUnique({ where: { id: userId }, select: { preferredLanguage: true } });
+      return getTranslator(u?.preferredLanguage || tgLang);
+    }
+
+    // Helper: get translator for a chatId (already-linked user) or fall back to TG lang
+    async function getChatTranslator() {
+      const u = await prisma.human.findFirst({ where: { telegramChatId: chatId }, select: { preferredLanguage: true } });
+      return getTranslator(u?.preferredLanguage || tgLang);
+    }
 
     // ─── /start CODE — link account ───
     if (messageText.startsWith('/start ')) {
@@ -240,37 +255,28 @@ router.post('/webhook', async (req, res) => {
       const pending = pendingCodes.get(code);
 
       if (!pending) {
-        await sendTelegramMessage({
-          chatId,
-          text: 'Invalid or expired code. Please generate a new link from your Humans dashboard.',
-        });
+        const tt = await getChatTranslator();
+        await sendTelegramMessage({ chatId, text: tt('telegram.invalidCode') });
         return res.json({ ok: true });
       }
 
+      const tt = await getUserTranslator(pending.userId);
+
       if (pending.expiresAt < Date.now()) {
         pendingCodes.delete(code);
-        await sendTelegramMessage({
-          chatId,
-          text: 'This code has expired. Please generate a new link from your Humans dashboard.',
-        });
+        await sendTelegramMessage({ chatId, text: tt('telegram.expiredCode') });
         return res.json({ ok: true });
       }
 
       // Check if this Telegram chatId is already linked to a DIFFERENT user
       const existingLink = await prisma.human.findFirst({
-        where: {
-          telegramChatId: chatId,
-          id: { not: pending.userId },
-        },
+        where: { telegramChatId: chatId, id: { not: pending.userId } },
         select: { id: true },
       });
 
       if (existingLink) {
         pendingCodes.delete(code);
-        await sendTelegramMessage({
-          chatId,
-          text: 'This Telegram account is already linked to another Humans profile. Please disconnect it from the other profile first.',
-        });
+        await sendTelegramMessage({ chatId, text: tt('telegram.alreadyLinked') });
         return res.json({ ok: true });
       }
 
@@ -282,10 +288,7 @@ router.post('/webhook', async (req, res) => {
 
       if (!userExists) {
         pendingCodes.delete(code);
-        await sendTelegramMessage({
-          chatId,
-          text: 'Account not found. Please try again from your Humans dashboard.',
-        });
+        await sendTelegramMessage({ chatId, text: tt('telegram.accountNotFound') });
         return res.json({ ok: true });
       }
 
@@ -304,20 +307,15 @@ router.post('/webhook', async (req, res) => {
         ? `https://humanpages.ai/u/${userExists.username}`
         : `https://humanpages.ai/profile/${userExists.id}`;
 
-      await sendTelegramMessage({
-        chatId,
-        text: `✅ Your Telegram is now connected to HumanPages!\n\nYou'll receive notifications here when agents send you job offers.\n\n🔗 Share your profile with friends and ask them to vouch for you — vouches boost your visibility and help you get more jobs:\n${profileUrl}\n\nThe more vouches you have, the higher you rank in agent searches!`,
-      });
+      await sendTelegramMessage({ chatId, text: tt('telegram.linked', { profileUrl }) });
 
       logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user');
     }
 
     // ─── Plain /start (no code) ───
     else if (messageText === '/start') {
-      await sendTelegramMessage({
-        chatId,
-        text: `Welcome to HumanPages Bot! 👋\n\nTo connect your account, go to your HumanPages dashboard and click "Connect Telegram" to get a verification link.\n\nIf you already have a code, just send it here as a message.\n\n💡 Tip: Once connected, share your profile link with friends and ask them to vouch for you — it helps AI agents find and hire you!`,
-      });
+      const tt = await getChatTranslator();
+      await sendTelegramMessage({ chatId, text: tt('telegram.welcome') });
     }
 
     // ─── Raw code (user manually sent the verification code) ───
@@ -326,17 +324,15 @@ router.post('/webhook', async (req, res) => {
       const pending = pendingCodes.get(code);
 
       if (!pending) {
-        await sendTelegramMessage({
-          chatId,
-          text: 'Invalid or expired code. Please generate a new link from your HumanPages dashboard.',
-        });
+        const tt = await getChatTranslator();
+        await sendTelegramMessage({ chatId, text: tt('telegram.invalidCode') });
       } else if (pending.expiresAt < Date.now()) {
         pendingCodes.delete(code);
-        await sendTelegramMessage({
-          chatId,
-          text: 'This code has expired. Please generate a new link from your HumanPages dashboard.',
-        });
+        const tt = await getUserTranslator(pending.userId);
+        await sendTelegramMessage({ chatId, text: tt('telegram.expiredCode') });
       } else {
+        const tt = await getUserTranslator(pending.userId);
+
         // Check if this Telegram chatId is already linked to a DIFFERENT user
         const existingLink = await prisma.human.findFirst({
           where: { telegramChatId: chatId, id: { not: pending.userId } },
@@ -345,10 +341,7 @@ router.post('/webhook', async (req, res) => {
 
         if (existingLink) {
           pendingCodes.delete(code);
-          await sendTelegramMessage({
-            chatId,
-            text: 'This Telegram account is already linked to another profile. Please disconnect it first.',
-          });
+          await sendTelegramMessage({ chatId, text: tt('telegram.alreadyLinked') });
         } else {
           const userExists = await prisma.human.findUnique({
             where: { id: pending.userId },
@@ -357,7 +350,7 @@ router.post('/webhook', async (req, res) => {
 
           if (!userExists) {
             pendingCodes.delete(code);
-            await sendTelegramMessage({ chatId, text: 'Account not found. Please try again from your dashboard.' });
+            await sendTelegramMessage({ chatId, text: tt('telegram.accountNotFound') });
           } else {
             await prisma.human.update({
               where: { id: pending.userId },
@@ -370,10 +363,7 @@ router.post('/webhook', async (req, res) => {
             const profileUrl = userExists.username
               ? `https://humanpages.ai/u/${userExists.username}`
               : `https://humanpages.ai/profile/${userExists.id}`;
-            await sendTelegramMessage({
-              chatId,
-              text: `✅ Your Telegram is now connected to HumanPages!\n\nYou'll receive notifications here when agents send you job offers.\n\n🔗 Share your profile with friends and ask them to vouch for you — vouches boost your visibility and help you get more jobs:\n${profileUrl}\n\nThe more vouches you have, the higher you rank in agent searches!`,
-            });
+            await sendTelegramMessage({ chatId, text: tt('telegram.linked', { profileUrl }) });
             logger.info({ chatId, userId: pending.userId }, 'Telegram linked to user via raw code');
           }
         }
@@ -383,10 +373,8 @@ router.post('/webhook', async (req, res) => {
     // ─── Any other message — send helpful reply ───
     else {
       logger.info({ messageText, chatId }, 'Unhandled telegram message');
-      await sendTelegramMessage({
-        chatId,
-        text: 'I only understand verification codes. Go to your HumanPages dashboard to connect your account.',
-      });
+      const tt = await getChatTranslator();
+      await sendTelegramMessage({ chatId, text: tt('telegram.unknownMessage') });
     }
 
     logWebhookEvent({ time: new Date().toISOString(), type: 'message', chatId, text: messageText.substring(0, 50), result: 'processed' });

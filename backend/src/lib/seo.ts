@@ -308,7 +308,7 @@ export function getDevPageMetaHtml(lang?: string): string | null {
 
   const title = 'Human Pages';
   const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
-  const ogImage = `${SITE_URL}/api/og/use-cases`;
+  const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
   const unprefixedPath = '/dev';
   const canonicalUrl = lang && lang !== 'en'
     ? `${SITE_URL}/${lang}${unprefixedPath}`

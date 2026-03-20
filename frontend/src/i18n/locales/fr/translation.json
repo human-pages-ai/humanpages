@@ -22,6 +22,7 @@
     "none": "Aucun",
     "optional": "facultatif",
     "required": "requis",
+    "copy": "Copier",
     "copied": "Copié !",
     "error": "Une erreur est survenue",
     "success": "Succès !",
@@ -30,7 +31,24 @@
     "backHome": "Retour à l'accueil",
     "done": "Terminé",
     "year": "an",
-    "years": "ans"
+    "years": "ans",
+    "tryAgain": "Réessayer",
+    "enable": "Activer",
+    "connecting": "Connexion...",
+    "connected": "Connecté",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "skipForNow": "Passer pour l'instant",
+    "refresh": "Actualiser",
+    "dashboard": "Tableau de bord",
+    "saving": "Enregistrement...",
+    "submitting": "Envoi...",
+    "agent": "Agent",
+    "unnamed": "Sans nom",
+    "opening": "Ouverture...",
+    "clear": "Effacer",
+    "connect": "Connecter",
+    "verified": "Vérifié"
   },
   "nav": {
     "home": "Accueil",
@@ -53,7 +71,23 @@
     "hero": {
       "tagline": "Soyez embauché pour des tâches concrètes",
       "rotatingPrefix": "L'IA ne peut pas ",
-      "rotatingPhrases": ["faire votre lessive.", "opérer un patient.", "préparer un gâteau.", "éteindre un incendie.", "prendre une photo.", "construire une maison.", "promener votre chien.", "mettre un bébé au monde.", "tondre la pelouse.", "piloter un avion.", "faire vos courses.", "porter secours.", "livrer un colis.", "monter un meuble.", "réparer une fuite."],
+      "rotatingPhrases": [
+        "faire votre lessive.",
+        "opérer un patient.",
+        "préparer un gâteau.",
+        "éteindre un incendie.",
+        "prendre une photo.",
+        "construire une maison.",
+        "promener votre chien.",
+        "mettre un bébé au monde.",
+        "tondre la pelouse.",
+        "piloter un avion.",
+        "faire vos courses.",
+        "porter secours.",
+        "livrer un colis.",
+        "monter un meuble.",
+        "réparer une fuite."
+      ],
       "title": "Les Pages Jaunes,",
       "titleLine2": "mais pour l'IA.",
       "titleLine2Rotating": "Vous, oui. Faites-vous payer.",
@@ -85,8 +119,6 @@
       "phoneCallsDesc": "Rendez-vous, vérifications, prospection client",
       "deliveries": "Livraisons",
       "deliveriesDesc": "Collectes, livraisons, coursier le jour même",
-      "dataEntry": "Saisie de données",
-      "dataEntryDesc": "Formulaires, transcription, traitement de documents",
       "handyman": "Bricolage",
       "handymanDesc": "Assemblage de meubles, montage, petites réparations",
       "mysteryShopping": "Client mystère",
@@ -99,21 +131,13 @@
       "keepEarnings": "Gardez 100 % de vos revenus",
       "keepEarningsDesc": "Nous ne prenons aucune commission. Vous négociez les conditions et êtes payé directement sur votre portefeuille ou compte bancaire.",
       "oneProfile": "Un profil, tous les agents IA",
-      "oneProfileDesc": "Pas besoin de comptes sur dix plateformes différentes. N'importe quel agent IA peut vous trouver via une seule fiche. Transformez vos compétences en revenus.",
-      "workAnywhere": "Travaillez partout dans le monde",
-      "workAnywhereDesc": "Que vous soyez à Tokyo ou à Montréal, les clients peuvent vous trouver selon vos compétences et votre localisation."
+      "oneProfileDesc": "Pas besoin de comptes sur dix plateformes différentes. N'importe quel agent IA peut vous trouver via une seule fiche. Transformez vos compétences en revenus."
     },
     "cta": {
       "ready": "Prêt à être découvert ?",
       "createListing": "Créez votre profil en moins d'une minute.",
       "startGetting": "Commencez à être embauché",
       "letOpportunities": "Créez votre profil et laissez les opportunités venir à vous."
-    },
-    "trust": {
-      "title": "Vous gardez le contrôle",
-      "dataPrivacy": "Vos données restent les vôtres. Nous ne vendons jamais vos informations.",
-      "visibility": "Vous contrôlez votre visibilité. Devenez invisible à tout moment.",
-      "contact": "Vous choisissez comment être contacté. N'importe quelle méthode qui vous convient."
     },
     "jobBoard": {
       "title": "Parcourez les offres",
@@ -130,7 +154,14 @@
       "card3Title": "Coursier le jour même",
       "card3Budget": "60 €",
       "card3Agent": "delivery-bot",
-      "card3Skills": "Conduite, Navigation"
+      "card3Skills": "Conduite, Navigation",
+      "applicants": "Candidats"
+    },
+    "trust": {
+      "title": "Vous gardez le contrôle",
+      "dataPrivacy": "Vos données restent les vôtres. Nous ne vendons jamais vos informations.",
+      "visibility": "Vous contrôlez votre visibilité. Devenez invisible à tout moment.",
+      "contact": "Vous choisissez comment être contacté. N'importe quelle méthode qui vous convient."
     },
     "faq": {
       "title": "Questions et réponses",
@@ -143,9 +174,7 @@
       "available": "Est-ce disponible dans mon pays ?",
       "availableAnswer": "Oui ! Human Pages est mondial. Les paiements peuvent se faire de la manière qui convient aux deux parties. Applications de paiement, crypto, virement bancaire, comme vous voulez. Ajoutez votre localisation et vous serez trouvable pour des tâches dans votre zone.",
       "free": "C'est vraiment gratuit ?",
-      "freeAnswer": "Oui. Créer un profil est 100 % gratuit, pour toujours. Il n'y a aucun frais de plateforme sur aucune transaction. Nous prévoyons d'offrir des fonctionnalités premium optionnelles à l'avenir - mais votre profil et vos paiements seront toujours gratuits.",
-      "token": "Human Pages a-t-il un token ?",
-      "tokenAnswer": "Non. Human Pages n'a pas de token de cryptomonnaie et nous n'avons pas l'intention d'en lancer un. Si quelqu'un vous propose un « token Human Pages » ou similaire, c'est une arnaque. Nous ne vous demanderons jamais d'acheter ou d'échanger un token."
+      "freeAnswer": "Oui. Créer un profil est 100 % gratuit, pour toujours. Il n'y a aucun frais de plateforme sur aucune transaction. Nous prévoyons d'offrir des fonctionnalités premium optionnelles à l'avenir - mais votre profil et vos paiements seront toujours gratuits."
     },
     "footer": {
       "copyright": "© 2026 Human Pages",
@@ -153,6 +182,13 @@
       "terms": "Conditions",
       "api": "API",
       "contact": "Contact"
+    },
+    "featured": {
+      "title": "En vedette"
+    },
+    "stats": {
+      "countries": "Pays",
+      "withSkills": "Avec compétences"
     }
   },
   "chat": {
@@ -225,327 +261,599 @@
     "linkCopied": "Lien copié !"
   },
   "dashboard": {
-    "title": "Tableau de bord",
-    "settings": "Settings",
-    "boostYourProfile": "Booster Votre Profil",
-    "privacy": "Confidentialité",
-    "contactPrivacy": {
-      "title": "Contact et Confidentialité",
-      "subtitle": "Contrôlez comment on peut vous contacter et ce qui est visible sur votre profil public"
+    "tiles": {
+      "notifications": {
+        "title": "Notifications et connexion",
+        "emptyHint": "Activez les notifications pour ne manquer aucune offre d'emploi",
+        "push": "Notifications push",
+        "telegram": "Telegram",
+        "whatsapp": "WhatsApp"
+      },
+      "skills": {
+        "title": "Compétences",
+        "emptyHint": "Ajoutez des compétences pour que les agents vous trouvent"
+      },
+      "equipment": {
+        "title": "Équipement",
+        "emptyHint": "Listez vos outils pour les tâches physiques"
+      },
+      "location": {
+        "title": "Localisation",
+        "emptyHint": "Définissez votre localisation pour que les agents vous trouvent pour des tâches à proximité",
+        "autoDetected": "(détecté automatiquement)",
+        "verifyAccuracy": "Veuillez vérifier que c'est correct"
+      },
+      "education": {
+        "title": "Éducation et expérience",
+        "emptyHint": "Ajoutez de l'expérience pour vous démarquer",
+        "yearsLabel": "Années d'expérience",
+        "educationLabel": "Éducation",
+        "addExperience": "Ajoutez votre expérience pour vous démarquer",
+        "addEducation": "Ajoutez formations, bootcamps ou certifications"
+      },
+      "services": {
+        "title": "Services",
+        "emptyHint": "Définissez des services pour être embauché"
+      },
+      "availability": {
+        "title": "Disponibilité",
+        "emptyHint": "Définissez votre disponibilité pour que les agents sachent quand vous embaucher",
+        "workTypeLabel": "Type de travail (numérique / en personne)",
+        "weeklyHoursLabel": "Heures hebdomadaires"
+      },
+      "verification": {
+        "title": "Vérification et réseaux sociaux",
+        "emptyHint": "Vérifiez votre LinkedIn ou GitHub pour renforcer la confiance",
+        "verified": "Vérifié",
+        "notVerified": "Non vérifié",
+        "pending": "Lié — vérifier",
+        "humanity": "Humanité"
+      }
     },
-    "trustScoreLabel": "Score de confiance : {{score}}%",
-    "welcome": "Bienvenue",
-    "shareProfile": "Partagez votre profil",
-    "shareProfileDesc": "Partagez le lien de votre profil pour que les agents IA et les clients vous trouvent",
-    "copyProfileLink": "Copier le lien du profil",
-    "getBadge": "Obtenir un badge",
-    "referralProgram": "Programme de parrainage",
-    "referralProgramDesc": "Gagnez des crédits pour chaque personne que vous parrainez qui complète son profil.",
-    "copyReferralLink": "Copier le lien d'invitation",
-    "referralYourLink": "Votre lien de parrainage",
-    "referralSignups": "Inscriptions",
-    "referralQualified": "Qualifiés",
-    "referralQualifiedHint": "Ont complété leur profil",
-    "referralCreditsEarned": "Crédits gagnés",
-    "referralCreditsPerSignup": "crédits / inscription",
-    "referralBonusAt10": "à 10 parrainages",
-    "referralBonusAt100": "à 100 parrainages",
-    "referralAvailableCredits": "Crédits disponibles",
-    "referralTotalEarned": "Total gagné",
-    "referralMilestones": "Bonus d'étapes",
-    "referralMilestoneReferrals": "parrainages",
-    "referralMilestoneBonusCredits": "crédits bonus",
-    "referralRecentReferrals": "Parrainages récents",
-    "referralCredits": "crédits",
-    "referralPendingProfile": "Profil en attente",
-    "referralCreditHistory": "Historique des crédits",
-    "referralTypeReferral": "Parrainage",
-    "referralTypeBonus": "Bonus",
-    "referrals": "{{count}} parrainage",
-    "referrals_plural": "{{count}} parrainages",
+    "wizardTile": {
+      "defaultEmptyHint": "Ajoutez ceci pour améliorer votre visibilité",
+      "addButton": "+ Ajouter",
+      "editButton": "Modifier"
+    },
+    "share": {
+      "title": "Partagez votre profil"
+    },
+    "account": {
+      "confirmDelete": "Oui, supprimer mon compte",
+      "confirmDeleteTitle": "Supprimer le compte ?",
+      "confirmDeleteMsg": "Cela supprimera définitivement votre compte et toutes vos données.",
+      "confirmPassword": "Entrez votre mot de passe pour confirmer",
+      "dangerZone": "Gestion du compte",
+      "deleteButton": "Supprimer le compte",
+      "deleteDesc": "Supprimez définitivement votre compte et toutes les données associées. Cette action est irréversible.",
+      "deleteTitle": "Supprimer le compte",
+      "exportButton": "Exporter les données",
+      "exportDesc": "Téléchargez une copie de toutes vos données au format JSON.",
+      "exportTitle": "Exporter vos données",
+      "analyticsDesc": "Aidez-nous à nous améliorer en partageant des données d'utilisation anonymes. Nous utilisons PostHog sans cookies et avec un stockage en mémoire uniquement. Vous pouvez vous désinscrire à tout moment.",
+      "analyticsTitle": "Analyse d'utilisation"
+    },
     "availability": {
-      "title": "Disponibilité",
-      "visible": "Vous êtes visible pour les agents IA",
-      "hidden": "Vous êtes masqué des recherches",
       "available": "Disponible",
-      "unavailable": "Indisponible"
+      "hidden": "Vous êtes masqué des recherches",
+      "title": "Disponibilité",
+      "unavailable": "Indisponible",
+      "visible": "Vous êtes visible pour les agents IA"
     },
-    "workStatus": {
-      "title": "Statut de travail",
-      "activeDesc": "Vous êtes visible pour les agents et acceptez les offres d'emploi",
-      "pausedDesc": "Vous êtes masqué des recherches et ne recevrez pas d'offres",
-      "active": "Actif",
-      "paused": "En pause",
-      "notifyVia": "Me notifier par",
-      "enableToNotify": "Activez la disponibilité pour configurer les notifications",
-      "confirmSuspend": "Cela vous suspendra de recevoir des offres d'emploi. Êtes-vous sûr ?"
+    "boostYourProfile": "Booster Votre Profil",
+    "contactPrivacy": {
+      "subtitle": "Contrôlez comment on peut vous contacter et ce qui est visible sur votre profil public",
+      "title": "Contact et Confidentialité"
     },
+    "copyProfileLink": "Copier le lien du profil",
+    "copyReferralLink": "Copier le lien d'invitation",
+    "emailDigest": {
+      "subtitle": "Choisissez la fréquence de réception des notifications par e-mail",
+      "title": "Résumé par e-mail",
+      "realtime": "Temps réel",
+      "hourly": "Toutes les heures",
+      "daily": "Quotidien"
+    },
+    "emailVerification": {
+      "banner": "Veuillez vérifier votre adresse e-mail. Consultez votre boîte de réception (et le dossier spam/indésirables) pour le lien de vérification.",
+      "resend": "Renvoyer l'e-mail de vérification",
+      "restricted": "Votre profil est masqué des recherches et vous ne pouvez pas modifier votre profil, gérer les portefeuilles, services ou accepter des emplois tant qu'il n'est pas vérifié."
+    },
+    "filters": {
+      "configure": "Configurer",
+      "distanceWarning": "Le filtrage par distance nécessite de définir votre localisation",
+      "maxDistance": "Distance maximale (km)",
+      "maxDistanceDesc": "N'accepter que les offres dans ce rayon (nécessite la localisation)",
+      "minPriceDesc": "Les offres en dessous de ce montant seront automatiquement rejetées",
+      "minRateDesc": "Rejeter les offres des agents qui ne correspondent pas à vos attentes",
+      "noFilters": "Aucun filtre configuré. Toutes les offres seront livrées dans votre boîte de réception.",
+      "saveFilters": "Enregistrer les filtres",
+      "subtitle": "Filtrez automatiquement les offres de faible qualité",
+      "title": "Filtres d'offres",
+      "minPrice": "Prix minimum de l'offre ({{currency}})",
+      "minRate": "Taux horaire minimum ({{currency}})"
+    },
+    "getBadge": "Obtenir un badge",
+    "jobs": {
+      "accept": "Accepter",
+      "all": "tous",
+      "active": "actifs",
+      "awaitingPayment": "En attente de paiement...",
+      "copyProfileUrl": "Copier l'URL du profil",
+      "emptyDescription": "Partagez votre profil avec les agents IA pour commencer à recevoir des offres",
+      "emptyTitle": "Pas encore d'offres d'emploi",
+      "from": "De",
+      "markComplete": "Marquer comme terminé",
+      "noRatings": "Pas encore de notes",
+      "pending": "en attente",
+      "completed": "terminés",
+      "reject": "Refuser",
+      "reviewReceived": "Avis reçu",
+      "status": {
+        "PENDING": "En attente",
+        "ACCEPTED": "Accepté",
+        "REJECTED": "Refusé",
+        "PAYMENT_CLAIMED": "Paiement revendiqué",
+        "PAID": "Payé",
+        "SUBMITTED": "Soumis",
+        "COMPLETED": "Terminé",
+        "CANCELLED": "Annulé",
+        "DISPUTED": "Contesté"
+      },
+      "title": "Emplois",
+      "updated": "Mis à jour !",
+      "avgRating": "{{rating}}★ moyenne",
+      "completeBeforePayment": "Vous pouvez aussi marquer ce travail comme terminé avant le paiement",
+      "noJobsFiltered": "Aucun emploi {{filter}}.",
+      "stats": "{{completed}} terminés · {{reviews}} avis",
+      "submitWork": "Soumettre le travail"
+    },
+    "linkedin": {
+      "connect": "Connecter LinkedIn",
+      "connected": "Connecté",
+      "connectedDesc": "Votre profil LinkedIn est vérifié et lié à votre compte",
+      "notConnected": "Connectez votre LinkedIn pour vérifier votre identité professionnelle",
+      "title": "LinkedIn",
+      "verified": "Vérifié",
+      "verifying": "Vérification..."
+    },
+    "notifications": {
+      "emailDesc": "Recevoir des notifications par e-mail pour les offres d'emploi",
+      "emailLabel": "E-mail",
+      "telegramDesc": "Recevoir des messages Telegram pour les offres d'emploi",
+      "telegramLabel": "Telegram",
+      "title": "Notifications",
+      "pushDesc": "Notifications instantanées du navigateur pour les offres d'emploi",
+      "pushLabel": "Push"
+    },
+    "privacy": "Confidentialité",
     "paymentPreference": {
-      "title": "Préférences de Paiement",
-      "subtitle": "Indiquez aux agents comment vous préférez être payé",
       "hint": "Sélectionnez tous les modes de paiement acceptés. Au moins un est requis.",
+      "subtitle": "Indiquez aux agents comment vous préférez être payé",
+      "title": "Préférences de Paiement",
       "upfront": "Paiement d'avance",
       "upfrontDesc": "Soyez payé intégralement avant de commencer le travail",
       "escrow": "Séquestre",
       "escrowDesc": "Fonds détenus par un tiers de confiance jusqu'à vérification du travail",
-      "both": "Flexible (les deux)",
-      "bothDesc": "D'avance, séquestre ou après l'achèvement du travail",
       "upon_completion": "À la Fin",
       "upon_completionDesc": "Soyez payé après la livraison et l'approbation du travail",
       "stream": "Streaming",
       "streamDesc": "Soyez payé en continu pendant que vous travaillez via Superfluid ou micro-transferts"
     },
-    "workMode": {
-      "title": "Mode de travail",
-      "remote": "À distance",
-      "onsite": "Sur site",
-      "hybrid": "Hybride"
-    },
-    "telegram": {
-      "title": "Notifications Telegram",
-      "connected": "Connecté - Vous recevrez les offres d'emploi par Telegram",
-      "notConnected": "Recevez des notifications instantanées pour les offres d'emploi",
-      "connect": "Connecter Telegram",
-      "connecting": "Connexion...",
-      "disconnect": "Déconnecter les notifications Telegram ?",
-      "openTelegram": "Cliquez sur le bouton ci-dessus pour ouvrir Telegram. Si ça ne s'est pas ouvert,",
-      "clickHere": "cliquez ici",
-      "waiting": "En attente de confirmation..."
-    },
-    "filters": {
-      "title": "Filtres d'offres",
-      "subtitle": "Filtrez automatiquement les offres de faible qualité",
-      "configure": "Configurer",
-      "minPrice": "Prix minimum de l'offre ({{currency}})",
-      "minPriceDesc": "Les offres en dessous de ce montant seront automatiquement rejetées",
-      "minRate": "Taux horaire minimum ({{currency}})",
-      "minRateDesc": "Rejeter les offres des agents qui ne correspondent pas à vos attentes",
-      "maxDistance": "Distance maximale (km)",
-      "maxDistanceDesc": "N'accepter que les offres dans ce rayon (nécessite la localisation)",
-      "noFilters": "Aucun filtre configuré. Toutes les offres seront livrées dans votre boîte de réception.",
-      "distanceWarning": "Le filtrage par distance nécessite de définir votre localisation",
-      "saveFilters": "Enregistrer les filtres"
-    },
-    "jobs": {
-      "title": "Emplois",
-      "stats": "{{completed}} terminés · {{reviews}} avis",
-      "avgRating": "{{rating}}★ moyenne",
-      "noRatings": "Pas encore de notes",
-      "all": "tous",
-      "pending": "en attente",
-      "active": "actifs",
-      "completed": "terminés",
-      "noJobs": "Pas encore d'offres d'emploi. Quand les agents IA voudront vous embaucher, leurs offres apparaîtront ici.",
-      "noJobsFiltered": "Aucun emploi {{filter}}.",
-      "emptyTitle": "Pas encore d'offres d'emploi",
-      "emptyDescription": "Partagez votre profil avec les agents IA pour commencer à recevoir des offres",
-      "copyProfileUrl": "Copier l'URL du profil",
-      "accept": "Accepter",
-      "reject": "Refuser",
-      "markComplete": "Marquer comme terminé",
-      "awaitingPayment": "En attente de paiement...",
-      "completeBeforePayment": "Vous pouvez aussi marquer ce travail comme terminé avant le paiement",
-      "awaitingPaymentAfterComplete": "Terminé - en attente de paiement",
-      "reviewReceived": "Avis reçu",
-      "from": "De",
-      "confirmReject": "Refuser cette offre d'emploi ?",
-      "status": {
-        "PENDING": "En attente",
-        "ACCEPTED": "Accepté",
-        "REJECTED": "Refusé",
-        "PAID": "Payé",
-        "COMPLETED": "Terminé",
-        "CANCELLED": "Annulé",
-        "DISPUTED": "Contesté",
-        "PAYMENT_CLAIMED": "Paiement revendiqué"
-      }
+    "photo": {
+      "add": "Ajouter une photo",
+      "change": "Changer",
+      "cropTitle": "Recadrez votre photo",
+      "rejected": "Photo rejetée",
+      "remove": "Supprimer",
+      "reviewing": "Photo en cours d'examen",
+      "save": "Enregistrer",
+      "cropHint": "Pincez ou faites défiler pour zoomer, faites glisser pour repositionner",
+      "deleteFailed": "Échec de la suppression de la photo",
+      "deleted": "Photo supprimée",
+      "invalidType": "Seules les images JPEG, PNG et WebP sont autorisées",
+      "tooLarge": "L'image doit faire moins de 10 Mo",
+      "uploadFailed": "Échec du téléchargement",
+      "uploaded": "Photo téléchargée",
+      "uploading": "Téléchargement...",
+      "zoom": "Zoom"
     },
     "profile": {
-      "title": "Profil",
+      "alsoAcceptNonCrypto": "J'accepte aussi les paiements non-crypto",
       "bio": "Biographie",
+      "checkingUsername": "Vérification de la disponibilité...",
+      "connectWalletPrompt": "Connectez un portefeuille pour recevoir des paiements en USDC",
+      "contactEmail": "E-mail de contact",
+      "defaultPaymentUsdc": "Paiement par défaut : USDC via votre portefeuille connecté",
+      "equipment": "Équipement",
+      "facebook": "Facebook",
+      "github": "GitHub",
+      "hideContact": "Masquer les infos de contact du profil public",
+      "hideContactHelp": "Quand activé, votre e-mail, Telegram et méthodes de paiement ne seront pas visibles pour les visiteurs.",
+      "howToPayYou": "Comment vous payer",
+      "instagram": "Instagram",
+      "invalidTelegram": "Identifiant Telegram invalide. Utilisez le format @utilisateur (5-32 caractères, lettres, chiffres et tirets bas).",
+      "invalidWhatsapp": "Numéro WhatsApp invalide. Incluez l'indicatif du pays (ex. +1234567890).",
+      "languages": "Langues",
+      "linkedin": "LinkedIn",
       "location": "Localisation",
+      "neighborhoodHint": "Lorsque désactivé, seule votre ville est visible sur votre profil public",
+      "paymentInfo": "Informations de paiement",
+      "paymentMethods": "Méthodes de paiement",
+      "paymentMethodsHelp": "Indiquez comment les clients peuvent vous payer",
+      "paymentMethodsPlaceholder": "ex., PayPal: paypal.me/vous, virement bancaire",
+      "profileUrl": "Votre profil : humanpages.ai/u/{{username}}",
+      "saved": "Enregistré !",
+      "saving": "Enregistrement...",
+      "showNeighborhood": "Afficher le quartier sur mon profil public",
       "skills": "Compétences",
       "skillsPlaceholder": "javascript, react, nodejs",
       "skillsSeparator": "séparées par des virgules",
-      "equipment": "Équipement",
-      "languages": "Langues",
-      "yearsOfExperience": "Années d'expérience",
-      "contactEmail": "E-mail de contact",
+      "socialForTrust": "pour la confiance",
+      "socialProfiles": "Profils sociaux",
       "telegramHandle": "Telegram",
       "telegramPlaceholder": "@utilisateur",
-      "whatsapp": "WhatsApp",
-      "whatsappPlaceholder": "+33612345678",
-      "paymentMethods": "Méthodes de paiement",
-      "paymentMethodsPlaceholder": "ex., PayPal: paypal.me/vous, virement bancaire",
-      "paymentMethodsHelp": "Indiquez comment les clients peuvent vous payer",
-      "username": "Nom d'utilisateur",
-      "usernameLength": "Le nom d'utilisateur doit contenir entre 3 et 30 caractères",
-      "usernameChars": "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores",
-      "profileUrl": "Votre profil : humanpages.ai/u/{{username}}",
-      "socialProfiles": "Profils sociaux",
-      "socialForTrust": "pour la confiance",
-      "linkedin": "LinkedIn",
+      "title": "Profil",
       "twitter": "Twitter / X",
-      "github": "GitHub",
-      "instagram": "Instagram",
-      "youtube": "YouTube",
+      "usdcHint": "USDC est un stablecoin - toujours d'une valeur de 1 $ USD",
+      "usdcWalletConnected": "Portefeuille USDC connecté",
+      "username": "Nom d'utilisateur",
+      "usernameChars": "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores",
+      "usernameLength": "Le nom d'utilisateur doit contenir entre 3 et 30 caractères",
+      "usernameTaken": "Ce nom d'utilisateur est déjà pris",
+      "verifyLink": "Vérifier ce lien",
+      "walletConnected": "Portefeuille connecté",
       "website": "Site web",
-      "howToReachYou": "Comment vous joindre",
-      "howToPayYou": "Comment vous payer",
-      "saveProfile": "Enregistrer le profil",
-      "showNeighborhood": "Afficher le quartier sur mon profil public",
-      "neighborhoodHint": "Lorsque désactivé, seule votre ville est visible sur votre profil public",
-      "hideContact": "Masquer les infos de contact du profil public",
-      "hideContactHelp": "Quand activé, votre e-mail, Telegram et méthodes de paiement ne seront pas visibles pour les visiteurs.",
-      "saving": "Enregistrement...",
-      "defaultPaymentUsdc": "Paiement par défaut : USDC via votre portefeuille connecté",
-      "usdcHint": "USDC est un stablecoin - toujours d'une valeur de 1 $ USD"
+      "yearsOfExperience": "Années d'expérience",
+      "youtube": "YouTube",
+      "disconnectToEdit": "Déconnectez pour modifier ce champ",
+      "featuredConsent": "Me mettre en avant sur la page d'accueil",
+      "featuredConsentHelp": "Autorisez votre photo, nom, compétences et localisation à apparaître sur notre page d'accueil pour présenter la communauté.",
+      "followers": "Abonnés",
+      "tiktok": "TikTok"
     },
-    "wallets": {
-      "title": "Portefeuilles",
-      "addWallet": "Ajouter un portefeuille",
-      "connectWallet": "Connecter un portefeuille",
-      "connectDescription": "Connect your wallet to verify ownership. It will be available on all supported EVM networks.",
-      "verifyAndAdd": "Vérifier et ajouter",
-      "connectAndVerify": "Connecter et vérifier",
-      "connectHint": "Votre portefeuille s'ouvrira deux fois : une pour connecter, une pour signer. Aucun fonds n'est envoyé.",
-      "signing": "Veuillez signer le message dans votre portefeuille...",
-      "connecting": "Connexion au portefeuille...",
-      "connectedAs": "Connecté en tant que",
-      "changeWallet": "Changer de portefeuille",
-      "noWalletExtension": "Aucune extension de portefeuille détectée. Installez un portefeuille navigateur pour continuer.",
-      "openInMetaMask": "Ouvrir dans MetaMask",
-      "openInCoinbase": "Ouvrir dans Coinbase Wallet",
-      "mobileWalletHint": "Ouvre cette page dans le navigateur de l'application portefeuille pour se connecter.",
-      "connectionRejected": "La demande de connexion a été rejetée.",
-      "connectionFailed": "Échec de la connexion au portefeuille.",
-      "signatureRejected": "La demande de signature a été rejetée.",
-      "verificationFailed": "La vérification du portefeuille a échoué. Veuillez réessayer.",
-      "selectNetwork": "Réseau",
-      "network": "Réseau",
-      "address": "Adresse",
-      "label": "Libellé",
-      "labelPlaceholder": "ex., Portefeuille principal",
-      "noWallets": "Aucun portefeuille ajouté",
-      "emptyTitle": "Aucun portefeuille connecté",
-      "emptyDescription": "Ajoutez un portefeuille pour recevoir les paiements des emplois terminés",
-      "walletAddress": "Adresse du portefeuille",
-      "confirmDelete": "Supprimer ce portefeuille ?",
-      "networks": {
-        "ethereum": "Ethereum",
-        "polygon": "Polygon",
-        "arbitrum": "Arbitrum",
-        "base": "Base"
-      },
-      "allNetworksNote": "Available on all EVM networks",
-      "exportKey": "Exporter la clé privée du portefeuille",
-      "replaceWallet": "Remplacer le portefeuille",
-      "showManualPaste": "Vous avez déjà une adresse de portefeuille ? Collez-la manuellement",
-      "hideManualPaste": "Masquer le collage manuel",
-      "connectOrCreate": "Connecter ou Créer un Portefeuille",
-      "connectOrCreateDesc": "Utilisez un portefeuille existant ou créez-en un avec votre e-mail"
-    },
+    "referralAvailableCredits": "Crédits disponibles",
+    "referralBonusAt10": "à 10 parrainages",
+    "referralBonusAt100": "à 100 parrainages",
+    "referralCreditHistory": "Historique des crédits",
+    "referralCredits": "crédits",
+    "referralCreditsEarned": "Crédits gagnés",
+    "referralCreditsPerSignup": "crédits / inscription",
+    "referralMilestoneBonusCredits": "crédits bonus",
+    "referralMilestoneReferrals": "parrainages",
+    "referralMilestones": "Bonus d'étapes",
+    "referralPendingProfile": "Profil en attente",
+    "referralProgram": "Programme de parrainage",
+    "referralProgramDesc": "Gagnez des crédits pour chaque personne que vous parrainez qui complète son profil.",
+    "referralQualified": "Qualifiés",
+    "referralQualifiedHint": "Ont complété leur profil",
+    "referralRecentReferrals": "Parrainages récents",
+    "referralSignups": "Inscriptions",
+    "referralTotalEarned": "Total gagné",
+    "referralTypeBonus": "Bonus",
+    "referralTypeReferral": "Parrainage",
+    "referralYourLink": "Votre lien de parrainage",
     "services": {
-      "title": "Services",
+      "addAnother": "Ajouter un autre service",
       "addService": "Ajouter un service",
-      "serviceTitle": "Titre",
-      "serviceTitlePlaceholder": "Quel service proposez-vous ?",
-      "description": "Description",
-      "descriptionPlaceholder": "Décrivez ce que vous pouvez faire...",
       "category": "Catégorie",
       "categoryPlaceholder": "ex., développement, design, données",
+      "description": "Description",
+      "descriptionPlaceholder": "Décrivez ce que vous pouvez faire...",
+      "emptyDescription": "Ajoutez des services pour que les agents IA sachent ce que vous pouvez faire",
+      "emptyTitle": "Aucun service listé",
+      "negotiable": "Négociable",
+      "perHour": "Par heure",
+      "perTask": "Par tâche",
       "price": "Prix",
       "pricePlaceholder": "50",
       "selectUnit": "Sélectionner l'unité",
-      "perHour": "Par heure",
-      "perHourShort": "h",
-      "perTask": "Par tâche",
-      "perTaskShort": "tâche",
-      "negotiable": "Négociable",
-      "noServices": "Aucun service listé. Ajoutez des services pour montrer aux agents IA ce que vous pouvez faire !",
-      "emptyTitle": "Aucun service listé",
-      "emptyDescription": "Ajoutez des services pour que les agents IA sachent ce que vous pouvez faire",
-      "confirmDelete": "Supprimer ce service ?",
-      "addAnother": "Ajouter un autre service",
+      "serviceTitle": "Titre",
+      "serviceTitlePlaceholder": "Quel service proposez-vous ?",
       "statusActive": "Actif",
-      "statusInactive": "Inactif"
+      "statusInactive": "Inactif",
+      "title": "Services"
     },
-    "emailVerification": {
-      "banner": "Veuillez vérifier votre adresse e-mail. Consultez votre boîte de réception (et le dossier spam/indésirables) pour le lien de vérification.",
-      "restricted": "Votre profil est masqué des recherches et vous ne pouvez pas modifier votre profil, gérer les portefeuilles, services ou accepter des emplois tant qu'il n'est pas vérifié.",
-      "resend": "Renvoyer l'e-mail de vérification",
-      "required": "Vérification de l'e-mail requise pour effectuer cette action."
+    "shareProfile": "Partagez votre profil",
+    "shareProfileDesc": "Partagez le lien de votre profil pour que les agents IA et les clients vous trouvent",
+    "telegram": {
+      "clickHere": "cliquez ici",
+      "connect": "Connecter Telegram",
+      "connected": "Connecté - Vous recevrez les offres d'emploi par Telegram",
+      "connecting": "Connexion...",
+      "notConnected": "Recevez des notifications instantanées pour les offres d'emploi",
+      "openTelegram": "Cliquez sur le bouton ci-dessus pour ouvrir Telegram. Si ça ne s'est pas ouvert,",
+      "title": "Notifications Telegram",
+      "waiting": "En attente de confirmation..."
     },
-    "notifications": {
-      "title": "Notifications",
-      "emailLabel": "E-mail",
-      "emailDesc": "Recevoir des notifications par e-mail pour les offres d'emploi",
-      "telegramLabel": "Telegram",
-      "telegramDesc": "Recevoir des messages Telegram pour les offres d'emploi",
-      "whatsappLabel": "WhatsApp",
-      "whatsappDesc": "Recevoir des messages WhatsApp pour les offres d'emploi"
+    "vouches": {
+      "commentExample": "ex. Excellent photographe, livraison à temps et au-delà des attentes",
+      "commentPlaceholder": "Ajoutez un commentaire sur leur travail (optionnel)",
+      "given": "Donnés",
+      "noVouchesGiven": "Aucun aval donné",
+      "noVouchesReceived": "Aucun aval reçu",
+      "revoke": "Révoquer",
+      "revokeSuccess": "Aval révoqué",
+      "subtitle": "Les avals de personnes qui connaissent votre travail renforcent la confiance avec les agents",
+      "title": "Avals",
+      "vouchButton": "Avaliser",
+      "vouchFor": "Avaliser quelqu'un",
+      "vouchPlaceholder": "Entrez leur nom d'utilisateur ou l'URL de leur profil",
+      "vouchSuccess": "Aval soumis !",
+      "vouchLimit": "{{count}} / {{max}} avals donnés"
     },
-    "account": {
-      "dangerZone": "Gestion du compte",
-      "exportTitle": "Exporter vos données",
-      "exportDesc": "Téléchargez une copie de toutes vos données au format JSON.",
-      "exportButton": "Exporter les données",
-      "deleteTitle": "Supprimer le compte",
-      "deleteDesc": "Supprimez définitivement votre compte et toutes les données associées. Cette action est irréversible.",
-      "deleteButton": "Supprimer le compte",
-      "confirmPassword": "Entrez votre mot de passe pour confirmer",
-      "confirmDelete": "Oui, supprimer mon compte",
-      "confirmDeleteTitle": "Supprimer le compte ?",
-      "confirmDeleteMsg": "Cela supprimera définitivement votre compte et toutes vos données."
-    }
+    "wallets": {
+      "addLabel": "Ajouter un libellé",
+      "addingWallet": "Ajout du portefeuille...",
+      "allNetworksNote": "Available on all EVM networks",
+      "confirmDelete": "Supprimer ce portefeuille ?",
+      "connectOrCreate": "Connecter ou Créer un Portefeuille",
+      "connectOrCreateDesc": "Utilisez un portefeuille existant ou créez-en un avec votre e-mail",
+      "createEmbeddedTitle": "Créer un portefeuille intégré",
+      "createEmbeddedDesc": "Cela créera un portefeuille sécurisé lié à votre compte. Vous pouvez l'utiliser pour recevoir des paiements en USDC des agents.",
+      "createEmbeddedButton": "Créer un portefeuille",
+      "editLabel": "Modifier le libellé",
+      "emptyDescription": "Ajoutez un portefeuille pour recevoir les paiements des emplois terminés",
+      "emptyTitle": "Aucun portefeuille connecté",
+      "exportKey": "Exporter la clé privée du portefeuille",
+      "hideManualPaste": "Masquer le collage manuel",
+      "invalidAddress": "Adresse de portefeuille invalide",
+      "labelPlaceholder": "ex., Portefeuille principal",
+      "networks": {
+        "ethereum": "Ethereum"
+      },
+      "pasteAddressNote": "Collez votre adresse de portefeuille Ethereum ou Base (0x...)",
+      "paymentSetupSubtitle": "Connectez un portefeuille pour recevoir les paiements des agents",
+      "paymentSetupTitle": "Paiements",
+      "replaceWallet": "Remplacer le portefeuille",
+      "showManualPaste": "Vous avez déjà une adresse de portefeuille ? Collez-la manuellement",
+      "signatureRejected": "La demande de signature a été rejetée.",
+      "signing": "Veuillez signer le message dans votre portefeuille...",
+      "title": "Portefeuilles",
+      "verificationFailed": "La vérification du portefeuille a échoué. Veuillez réessayer.",
+      "walletAddress": "Adresse du portefeuille",
+      "mobileNotice": "La connexion de portefeuille externe (ex. MetaMask) est disponible uniquement sur ordinateur. Sur mobile, vous pouvez vous connecter par e-mail ou Google pour créer un portefeuille intégré, ou coller votre adresse de portefeuille manuellement."
+    },
+    "workStatus": {
+      "active": "Actif",
+      "activeDesc": "Vous êtes visible pour les agents et acceptez les offres d'emploi",
+      "enableToNotify": "Activez la disponibilité pour configurer les notifications",
+      "notifyVia": "Me notifier par",
+      "paused": "En pause",
+      "pausedDesc": "Vous êtes masqué des recherches et ne recevrez pas d'offres",
+      "title": "Statut de travail",
+      "allChannelsOffNote": "Tous les canaux de notification sont désactivés. Votre compte a été désactivé — les agents ne peuvent pas vous contacter.",
+      "allChannelsOffWarning": "Désactiver tous les canaux de notification désactivera votre compte. Les agents ne pourront plus vous contacter. Continuer ?"
+    },
+    "featuredModal": {
+      "description": "Mettez votre profil en valeur auprès des visiteurs et des agents IA. Les profils en vedette obtiennent plus de visibilité et attirent plus d'offres d'emploi.",
+      "optOut": "Vous pouvez changer cela à tout moment dans vos paramètres de confidentialité.",
+      "title": "Apparaître en vedette sur notre page d'accueil",
+      "whatsShown": "Ce qui est affiché"
+    },
+    "github": {
+      "verifying": "Vérification..."
+    },
+    "installApp": {
+      "description": "Installez pour des notifications push instantanées et un accès rapide",
+      "install": "Installer",
+      "iosInstructions": "Dans Safari, appuyez sur Partager puis \"Ajouter à l'écran d'accueil\" pour les notifications instantanées",
+      "title": "Installer HumanPages"
+    },
+    "reachability": {
+      "agentsSee": "Les agents peuvent voir votre score de joignabilité ({{count}}/{{total}})",
+      "count": "{{active}} sur {{total}} canaux",
+      "full": "Vous êtes entièrement joignable — les agents sont plus susceptibles de vous envoyer des offres",
+      "partial": "Activez plus de canaux pour que les agents soient plus susceptibles de vous contacter",
+      "title": "Joignabilité"
+    },
+    "viewPublic": "Voir le profil public"
   },
   "onboarding": {
-    "title": "Complétez votre profil",
-    "step": "Étape {{current}} sur {{total}}",
-    "stepOf": "Étape {{step}} sur {{total}}",
-    "getStarted": "Commençons la configuration",
-    "almostDone": "Presque terminé !",
-    "continue": "Continuer",
-    "saving": "Enregistrement...",
-    "completeProfile": "Compléter le profil",
-    "skipForNow": "Passer pour le moment",
-    "skipToDashboard": "Passer et aller au tableau de bord",
-    "step1": {
-      "title": "Comment vous joindre",
-      "subtitle": "C'est ainsi que les agents IA et les entreprises vous contacteront pour des emplois.",
-      "email": "E-mail",
-      "whatsapp": "WhatsApp",
-      "telegram": "Telegram",
-      "emailPlaceholder": "vous@exemple.com",
-      "whatsappPlaceholder": "+33612345678",
-      "telegramPlaceholder": "@utilisateur",
-      "errorRequired": "Veuillez entrer vos coordonnées",
-      "errorWhatsapp": "Veuillez entrer un numéro de téléphone valide avec l'indicatif pays (ex. +33612345678)"
+    "steps": {
+      "connect": "Connecter",
+      "cvUpload": "CV",
+      "skills": "Compétences",
+      "equipment": "Équipement",
+      "vouch": "Avals",
+      "location": "Localisation",
+      "education": "Éducation",
+      "payment": "Paiement",
+      "services": "Services",
+      "profile": "Profil",
+      "availability": "Disponibilité",
+      "verification": "Vérifier"
     },
-    "step2": {
-      "title": "Que savez-vous faire ?",
-      "subtitle": "Sélectionnez vos compétences pour que les agents vous trouvent pour les bons emplois.",
-      "location": "Votre localisation",
-      "locationPlaceholder": "ex., Paris, France",
-      "skills": "Vos compétences (sélectionnez toutes celles qui s'appliquent)",
-      "addCustomSkill": "Ajouter une compétence personnalisée...",
-      "add": "Ajouter",
-      "selected": "Sélectionnées",
-      "errorLocation": "Veuillez entrer votre localisation",
-      "errorLocationSelect": "Veuillez sélectionner une localisation dans la liste",
-      "errorSkills": "Veuillez sélectionner au moins une compétence",
-      "errorBoth": "Veuillez entrer votre localisation et sélectionner au moins une compétence"
+    "completion": {
+      "connect": "Connecté ! Les agents peuvent vous contacter maintenant",
+      "cvUpload": "CV téléchargé ! Nous l'analysons...",
+      "skills": "Compétences ajoutées ! Vous êtes maintenant recherchable",
+      "equipment": "Équipement listé ! Tâches physiques débloquées",
+      "vouch": "Profil partagé ! Les avals renforcent la confiance",
+      "location": "Localisation définie ! Emplois locaux débloqués",
+      "education": "Expérience ajoutée ! Vous vous démarquez",
+      "payment": "Paiement configuré ! Prêt à gagner",
+      "services": "Services définis ! Les agents peuvent vous embaucher",
+      "profile": "Votre profil est superbe !",
+      "availability": "Disponibilité définie ! Presque terminé",
+      "verification": "Vérifié ! Score de confiance maximum"
     },
-    "step3": {
-      "title": "Définissez votre tarif",
-      "subtitle": "Aidez les agents à filtrer par budget. C'est facultatif.",
-      "minRate": "Tarif minimum (USD)",
-      "perHour": "par heure",
-      "perTask": "par tâche",
-      "negotiable": "négociable",
-      "equipment": "Équipement que vous possédez (facultatif)",
-      "languages": "Langues que vous parlez (facultatif)"
-    }
+    "success": {
+      "title": "🎉 Profil complet ! Bienvenue sur HumanPages"
+    },
+    "error": {
+      "offline": "Vous semblez être hors ligne. Veuillez vérifier votre connexion et réessayer.",
+      "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter — votre progression a été sauvegardée.",
+      "submitFailed": "Échec de la finalisation de l'inscription. Veuillez réessayer."
+    },
+    "cv": {
+      "analyzing": "Analyse de votre CV...",
+      "analyzed": "CV analysé — champs pré-remplis",
+      "reupload": "Re-télécharger"
+    },
+    "loading": "Chargement de votre profil...",
+    "connect": {
+      "heading": "Restez connecté",
+      "subtitle": "Recevez des notifications instantanément quand des agents veulent vous embaucher",
+      "pushNotSupported": "Les notifications push ne sont pas prises en charge sur ce navigateur",
+      "pushNotConfigured": "Les notifications push ne sont pas configurées sur le serveur",
+      "pushEnabled": "Notifications push activées",
+      "notificationsDenied": "Notifications refusées",
+      "pushDescription": "Recevez des notifications quand des agents veulent vous embaucher",
+      "installApp": "Installer l'app",
+      "installHint": "Vous voyez une icône de téléchargement dans votre barre d'adresse ? Appuyez dessus pour installer HumanPages comme app.",
+      "telegram": {
+        "title": "Telegram",
+        "description": "Recevez des offres d'emploi via notre bot HumanPages",
+        "connectedMsg": "Vous êtes connecté à Telegram ! Vous recevrez des notifications instantanées pour les nouvelles offres d'emploi.",
+        "button": "Connecter Telegram",
+        "didntOpen": "Ça ne s'est pas ouvert ?",
+        "clickHere": "Cliquez ici pour vous connecter sur Telegram"
+      }
+    },
+    "cvUpload": {
+      "heading": "Commençons",
+      "subtitle": "Téléchargez votre CV pour remplir automatiquement votre profil",
+      "uploadButton": "Téléchargez votre CV",
+      "format": "Document PDF ou Word",
+      "source": "Depuis votre appareil, Google Drive ou Dropbox"
+    },
+    "skills": {
+      "heading": "Que savez-vous faire ?",
+      "subtitle": "Sélectionnez vos compétences et partagez votre parcours",
+      "searchPlaceholder": "Rechercher des compétences...",
+      "customPlaceholder": "Ajouter une compétence personnalisée...",
+      "popular": "Populaires",
+      "browse": "Parcourir"
+    },
+    "equipment": {
+      "heading": "Équipement et outils",
+      "subtitle": "Les agents associent l'équipement aux tâches — listez tout ce que vous utilisez pour vos services.",
+      "hint": "Choisissez parmi les suggestions ou tapez n'importe quoi — marque, modèle, logiciel, ce que vous voulez",
+      "searchPlaceholder": "Rechercher ou taper le vôtre..."
+    },
+    "vouch": {
+      "heading": "Construire la confiance",
+      "subtitle": "Les personnes qui connaissent votre travail peuvent vous avaliser. Cela renforce la confiance avec les agents.",
+      "shareText": "Avalisez-moi sur HumanPages — la plateforme de recrutement IA avec 0% de commission",
+      "profileLinkLabel": "Votre lien de profil",
+      "usernameLabel": "Nom d'utilisateur (optionnel)",
+      "usernameHint": "Définissez un nom d'utilisateur pour obtenir un lien plus court",
+      "shareButton": "Partager et obtenir des avals",
+      "vouchHint": "Demandez à des collègues qui connaissent votre travail de vous avaliser"
+    },
+    "location": {
+      "heading": "Où êtes-vous ?",
+      "subtitle": "Indiquez-nous votre localisation et fuseau horaire",
+      "label": "Localisation",
+      "remote": "À distance",
+      "placeholder": "Ville ou adresse",
+      "hint": "La localisation aide les agents à vous trouver pour des tâches locales",
+      "timezoneLabel": "Fuseau horaire",
+      "timezoneHint": "Détecté automatiquement depuis votre appareil (modifiable)",
+      "languagesLabel": "Langues (optionnel)",
+      "addLanguageButton": "+ Ajouter une langue",
+      "languageLabel": "Langue",
+      "proficiencyLabel": "Niveau"
+    },
+    "education": {
+      "heading": "Expérience et éducation",
+      "subtitle": "Partagez votre parcours et vos qualifications",
+      "yearsLabel": "Années d'expérience professionnelle",
+      "yearsHint": "Aide les agents à trouver des professionnels expérimentés",
+      "jobsLabel": "Missions complétées en freelance",
+      "jobsNew": "Nouveau en freelance",
+      "label": "Éducation (optionnel)",
+      "addButton": "+ Ajouter une formation",
+      "institutionLabel": "Établissement",
+      "institutionPlaceholder": "Tapez le nom de votre établissement...",
+      "institutionNote": "Tapez n'importe quel nom — école, bootcamp, cours en ligne ou autodidacte",
+      "degreeLabel": "Diplôme",
+      "fieldLabel": "Domaine d'étude",
+      "countryLabel": "Pays",
+      "startYearLabel": "Année de début (optionnel)",
+      "endYearLabel": "Année de fin (optionnel)"
+    },
+    "payment": {
+      "heading": "Être payé",
+      "subtitle": "Configurez vos méthodes de paiement pour recevoir vos revenus",
+      "methodsTitle": "Méthodes de paiement",
+      "methodLabel": "Méthode de paiement",
+      "handleLabel": "Détails du compte",
+      "hint": "Vous pouvez mettre à jour cela plus tard depuis votre tableau de bord",
+      "crypto": {
+        "title": "Portefeuille crypto",
+        "subtitle": "Recevez des USDC et ETH",
+        "connectButton": "Connecter un portefeuille avec Privy",
+        "connectHint": "Cliquez pour vous connecter avec MetaMask, WalletConnect, e-mail ou créer un portefeuille intégré.",
+        "addressLabel": "Adresse de portefeuille Ethereum / Base",
+        "divider": "ou coller manuellement"
+      }
+    },
+    "services": {
+      "heading": "Vos services",
+      "subtitle": "Ajoutez les services que vous proposez",
+      "cvSuggestion": "D'après votre CV, vous pourriez proposer ces services :",
+      "addButton": "+ Ajouter un service",
+      "titleLabel": "Titre du service",
+      "categoryLabel": "Catégorie",
+      "subcategoryLabel": "Sous-catégorie (optionnel)",
+      "descriptionLabel": "Description (optionnel)",
+      "pricingLabel": "Tarification (optionnel — vous pouvez la modifier plus tard)",
+      "priceLabel": "Prix",
+      "currencyLabel": "Devise",
+      "rateTypeLabel": "Type de tarif",
+      "noPriceSet": "Aucun prix défini — cliquez pour ajouter",
+      "preview": "Comment votre service apparaîtra :",
+      "rateType": {
+        "hourly": "À l'heure",
+        "fixedPrice": "Prix fixe",
+        "perWord": "Par mot",
+        "perPage": "Par page",
+        "negotiate": "À discuter"
+      }
+    },
+    "profile": {
+      "heading": "Votre profil",
+      "subtitle": "Complétez les informations de votre profil",
+      "photoLabel": "Photo de profil",
+      "changePhoto": "Changer la photo",
+      "uploadPhoto": "Cliquez pour télécharger une photo",
+      "nameLabel": "Nom complet",
+      "bioLabel": "Courte biographie",
+      "bioPlaceholder": "Parlez-nous un peu de vous...",
+      "workType": {
+        "both": "Les deux",
+        "digital": "Numérique",
+        "physical": "En personne"
+      },
+      "weeklyHours": {
+        "flexible": "Flexible",
+        "format": "{{hours}} heures/semaine"
+      }
+    },
+    "availability": {
+      "heading": "Disponibilité et capacité",
+      "subtitle": "Aidez les agents IA à vous trouver pour les bons emplois",
+      "hoursLabel": "Combien d'heures pouvez-vous travailler par semaine ?",
+      "typeLabel": "Quel type de travail faites-vous ?"
+    },
+    "finish": {
+      "heading": "Vérifiez votre identité",
+      "subtitle": "Connectez vos comptes professionnels pour renforcer la confiance",
+      "verificationTitle": "Vérification",
+      "emailTitle": "Vérification de l'e-mail",
+      "emailPending": "Vérifiez votre e-mail (y compris les spams)",
+      "emailVerified": "Vérifié",
+      "linkedinTitle": "LinkedIn",
+      "linkedinDesc": "Vérifiez votre identité professionnelle",
+      "githubTitle": "GitHub",
+      "githubDesc": "Présentez vos contributions de code",
+      "platformsTitle": "Présence sur les plateformes (optionnel)",
+      "platformsHint": "Partagez votre présence en ligne — abonnés, évaluations, réalisations",
+      "addPlatformButton": "Ajouter une plateforme"
+    },
+    "title": "Complétez votre profil"
   },
   "welcome": {
     "profileLive": "Votre profil est en ligne !",
@@ -576,6 +884,8 @@
     "reviews": "Avis",
     "noReviews": "Pas encore d'avis",
     "paymentPreference": "Préférence de paiement",
+    "vouchedBy": "Avalisé par",
+    "showAllVouches": "+{{count}} de plus",
     "workMode": {
       "remote": "À distance",
       "onsite": "Sur site",
@@ -603,11 +913,40 @@
     "paymentRate": "Payés",
     "avgPaySpeed": "Vitesse de paiement moyenne",
     "memberSince": "Membre depuis {{date}}",
+    "updated": "Mis à jour",
+    "lastUpdated": "Dernière mise à jour",
+    "offerUpdated": "Cette offre a été mise à jour par l'agent",
+    "viewTransaction": "Voir la transaction",
     "walletNudge": {
       "title": "Choisissez comment être payé pour ce travail",
       "description": "Choisissez un mode de paiement pour que l'agent puisse vous envoyer l'argent une fois le travail terminé.",
       "action": "Recevoir"
-    }
+    },
+    "paymentClaimed": "L'agent affirme avoir envoyé le paiement",
+    "paymentClaimMethod": "Méthode",
+    "paymentClaimNote": "Note",
+    "confirmPayment": "Confirmer la réception du paiement",
+    "denyPayment": "Refuser - Je n'ai pas reçu le paiement",
+    "confirmDenyPayment": "Refuser la demande de paiement ?",
+    "confirmDenyPaymentMessage": "Cela marquera le travail comme contesté. Refusez uniquement si vous n'avez pas reçu le paiement.",
+    "cancelJob": "Annuler le travail",
+    "confirmCancel": "Annuler ce travail ?",
+    "confirmCancelMessage": "Cela annulera le travail. Cette action ne peut pas être annulée.",
+    "disputeJob": "Contester",
+    "confirmDispute": "Contester ce travail ?",
+    "confirmDisputeMessage": "Cela marquera le travail comme contesté. Utilisez ceci si quelque chose s'est mal passé avec le paiement ou le travail.",
+    "disputeReason": "Raison de la contestation",
+    "raisedBy": "Soulevée par",
+    "jobCancelled": "Ce travail a été annulé",
+    "cancelledBy": "Annulé par",
+    "confirmQuality": "Je confirme avoir accompli toutes les tâches selon les standards professionnels",
+    "disputePostPayment": "Contestation de paiement — les fonds ont déjà été envoyés",
+    "disputePrePayment": "Contestation de travail — aucun paiement n'a été échangé",
+    "evidenceLengthOk": "C'est bon",
+    "evidenceMinLength": "{{remaining}} caractères supplémentaires nécessaires",
+    "evidencePlaceholder": "Décrivez ce que vous avez fait et incluez des liens vers votre travail",
+    "submitWorkTitle": "Soumettez votre travail pour examen",
+    "workSubmitted": "Votre travail a été soumis et est en attente d'examen"
   },
   "currency": {
     "label": "Devise",
@@ -656,6 +995,7 @@
     "profileSaved": "Profil enregistré",
     "filtersSaved": "Filtres enregistrés",
     "walletAdded": "Wallet added on all networks",
+    "walletLabelUpdated": "Libellé du portefeuille mis à jour",
     "walletDeleted": "Portefeuille supprimé",
     "serviceAdded": "Service ajouté",
     "serviceDeleted": "Service supprimé",
@@ -666,6 +1006,9 @@
     "paymentDenied": "Paiement refusé",
     "jobCancelled": "Emploi annulé",
     "jobDisputed": "Emploi contesté",
+    "offerUpdated": "Offre mise à jour",
+    "linkedinConnected": "LinkedIn vérifié avec succès",
+    "linkedinDisconnected": "LinkedIn déconnecté",
     "telegramConnected": "Telegram connecté",
     "telegramDisconnected": "Telegram déconnecté",
     "accountDeleted": "Compte supprimé avec succès",
@@ -676,7 +1019,8 @@
     "genericError": "Une erreur est survenue. Veuillez réessayer.",
     "walletNudgeTitle": "Comment les robots doivent-ils vous payer ?",
     "walletNudgeDescription": "Choisissez un mode de paiement pour commencer à gagner de l'argent.",
-    "walletNudgeAction": "Recevoir"
+    "walletNudgeAction": "Recevoir",
+    "workSubmitted": "Travail soumis avec succès"
   },
   "emailVerifiedPage": {
     "title": "E-mail verifie",
@@ -687,72 +1031,6 @@
     "title": "Page non trouvée",
     "message": "La page que vous recherchez n'existe pas ou a été déplacée.",
     "goHome": "Retour à l'accueil"
-  },
-  "dev": {
-    "hero": {
-      "tagline": "Pour les agents IA et développeurs",
-      "title": "Trouvez des humains pour",
-      "titleLine2": "des tâches concrètes",
-      "subtitle": "Human Pages est un répertoire de vraies personnes pour des tâches concrètes. Installez le serveur MCP (ou appelez l'API REST) et votre agent pourra rechercher des humains par compétence et localisation.",
-      "installBtn": "Installer le serveur MCP",
-      "viewToolsBtn": "Voir les outils"
-    },
-    "install": {
-      "title": "Installer via MCP",
-      "optionA": "Option A : Ajouter à .mcp.json (recommandé)",
-      "optionADesc": "Ajoutez ceci au fichier <code>.mcp.json</code> de votre projet :",
-      "optionB": "Option B : CLI Claude Code",
-      "optionBDesc": "Ou ajoutez directement via la CLI Claude Code :",
-      "optionC": "Option C : ClawHub (OpenClaw)",
-      "optionCDesc": "Installez en tant que skill <a href=\"https://clawhub.com/skills/humanpages\" class=\"text-blue-600 hover:underline\">OpenClaw</a> via ClawHub :"
-    },
-    "tools": {
-      "title": "Outils disponibles",
-      "searchTitle": "search_humans",
-      "searchDesc": "Recherchez des humains par compétence, localisation et disponibilité. Renvoie des profils publics avec compétences, localisation, tarifs et réputation.",
-      "searchParams": "Paramètres :",
-      "getTitle": "get_human",
-      "getDesc": "Consultez le profil public d'un humain. Utilisez get_human_profile pour les coordonnées et portefeuilles (activation requise).",
-      "getParams": "Paramètres :",
-      "profileTitle": "get_human_profile",
-      "profileDesc": "Obtenez le profil complet incluant coordonnées, liens sociaux et adresses de portefeuille. Nécessite un agent activé.",
-      "profileParams": "Paramètres :",
-      "registerTitle": "register_agent",
-      "registerDesc": "Enregistrez votre agent IA pour obtenir une clé API. L'agent démarre en statut EN ATTENTE - activation requise avant de créer des offres.",
-      "registerParams": "Paramètres :",
-      "activateTitle": "request_activation_code",
-      "activateDesc": "Demandez un code unique à publier sur les réseaux sociaux pour une activation BASIC gratuite. Ou utilisez l'activation par paiement pour le niveau PRO.",
-      "activateParams": "Paramètres :",
-      "createJobTitle": "create_job_offer",
-      "createJobDesc": "Envoyez une offre d'emploi à un humain. Ils sont notifiés et peuvent accepter ou refuser. Nécessite un agent activé.",
-      "createJobParams": "Paramètres :",
-      "exampleTitle": "Exemple d'utilisation"
-    },
-    "restApi": {
-      "toggle": "Vous préférez HTTP ? Référence de l'API REST",
-      "searchTitle": "Rechercher des humains",
-      "getTitle": "Obtenir un humain par ID",
-      "profileTitle": "Obtenir le Profil Complet (Protégé)",
-      "baseUrl": "URL de base :"
-    },
-    "howItWorks": {
-      "title": "Comment ça marche",
-      "discoveryTitle": "Découverte uniquement",
-      "discoveryDesc": "Pas de séquestre, pas de garde. Nous vous connectons avec des humains - vous gérez le reste.",
-      "contactTitle": "Contact direct",
-      "contactDesc": "Enregistrez et activez votre agent, puis accédez aux profils complets avec coordonnées. Messagerie intégrée disponible sur toutes les missions.",
-      "paymentsTitle": "Paiements de pair à pair",
-      "paymentsDesc": "La plateforme ne touche jamais aux fonds. Payez via leur lien de paiement, portefeuille ou méthode préférée."
-    },
-    "cta": {
-      "title": "Besoin d'humains dans votre répertoire ?",
-      "subtitle": "Partagez le lien d'inscription avec votre communauté pour augmenter l'offre."
-    }
-  },
-  "listings": {
-    "card": {
-      "viewDetails": "Postulez et décrochez un emploi"
-    }
   },
   "report": {
     "title": "Signaler un agent",
@@ -796,6 +1074,111 @@
       "other": "Autre"
     }
   },
+  "dev": {
+    "hero": {
+      "tagline": "Pour les agents IA et développeurs",
+      "title": "Trouvez des humains pour",
+      "titleLine2": "des tâches concrètes",
+      "subtitle": "Human Pages est un répertoire de vraies personnes pour des tâches concrètes. Installez le serveur MCP (ou appelez l'API REST) et votre agent pourra rechercher des humains par compétence et localisation.",
+      "installBtn": "Installer le serveur MCP",
+      "viewToolsBtn": "Voir les outils"
+    },
+    "install": {
+      "title": "Installer via MCP",
+      "optionA": "Option A : Ajouter à .mcp.json (recommandé)",
+      "optionADesc": "Ajoutez ceci au fichier <code>.mcp.json</code> de votre projet :",
+      "optionB": "Option B : CLI Claude Code",
+      "optionBDesc": "Ou ajoutez directement via la CLI Claude Code :",
+      "optionC": "Option C : ClawHub (OpenClaw)",
+      "optionCDesc": "Installez en tant que skill <a href=\"https://clawhub.com/skills/humanpages\" class=\"text-blue-600 hover:underline\">OpenClaw</a> via ClawHub :"
+    },
+    "tools": {
+      "title": "Outils disponibles",
+      "searchTitle": "search_humans",
+      "searchDesc": "Recherchez des humains par compétence, localisation et disponibilité. Renvoie des profils publics avec compétences, localisation, tarifs et réputation.",
+      "searchParams": "Paramètres :",
+      "getTitle": "get_human",
+      "getDesc": "Consultez le profil public d'un humain. Utilisez get_human_profile pour les coordonnées et portefeuilles (activation requise).",
+      "getParams": "Paramètres :",
+      "profileTitle": "get_human_profile",
+      "profileDesc": "Obtenez le profil complet incluant coordonnées, liens sociaux et adresses de portefeuille. Nécessite un agent activé.",
+      "profileParams": "Paramètres :",
+      "registerTitle": "register_agent",
+      "registerDesc": "Enregistrez votre agent IA pour obtenir une clé API. L'agent démarre en statut EN ATTENTE - activation requise avant de créer des offres.",
+      "registerParams": "Paramètres :",
+      "activateTitle": "request_activation_code",
+      "activateDesc": "Demandez un code unique à publier sur les réseaux sociaux pour une activation BASIC gratuite. Ou utilisez l'activation par paiement pour le niveau PRO.",
+      "activateParams": "Paramètres :",
+      "createJobTitle": "create_job_offer",
+      "createJobDesc": "Envoyez une offre d'emploi à un humain. Ils sont notifiés et peuvent accepter ou refuser. Nécessite un agent activé.",
+      "createJobParams": "Paramètres :",
+      "listingsTitle": "Offres d'emploi - Vous ne trouvez pas le bon pro ? Publiez une annonce et laissez-les venir à vous.",
+      "listingsDesc": "Créez des annonces sur le tableau d'offres public. Les humains naviguent, postulent avec une proposition, et vous choisissez le meilleur candidat. Les annonces des agents PRO apparaissent en premier avec un badge de confiance.",
+      "createListingTitle": "create_listing",
+      "createListingDesc": "Publiez une annonce sur le tableau d'offres public. Les humains peuvent naviguer et postuler. BASIC : 1 gratuite/semaine, PRO : 5 gratuites/jour, puis 0,50 $ chacune via x402.",
+      "createListingParams": "Paramètres :",
+      "browseListingsTitle": "browse_listings",
+      "browseListingsDesc": "Parcourez les annonces ouvertes sur le tableau d'offres. Point d'accès public, pas d'authentification requise. Les annonces PRO apparaissent en premier. Filtrable par compétence, localisation, catégorie, budget et mode de travail.",
+      "browseListingsParams": "Paramètres :",
+      "makeOfferTitle": "make_listing_offer",
+      "makeOfferDesc": "Faites une offre à un candidat sur votre annonce. Crée un travail standard EN ATTENTE que l'humain peut accepter ou refuser. Nécessite confirm: true pour reconnaître l'engagement.",
+      "makeOfferParams": "Paramètres :",
+      "exampleTitle": "Exemple d'utilisation"
+    },
+    "restApi": {
+      "toggle": "Vous préférez HTTP ? Référence de l'API REST",
+      "searchTitle": "Rechercher des humains",
+      "getTitle": "Obtenir un humain par ID",
+      "profileTitle": "Obtenir le Profil Complet (Protégé)",
+      "createListingTitle": "Créer une annonce (offres d'emploi)",
+      "browseListingsTitle": "Parcourir les annonces (public)",
+      "baseUrl": "URL de base :"
+    },
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "discoveryTitle": "Découverte uniquement",
+      "discoveryDesc": "Pas de séquestre, pas de garde. Nous vous connectons avec des humains - vous gérez le reste.",
+      "contactTitle": "Contact direct",
+      "contactDesc": "Enregistrez et activez votre agent, puis accédez aux profils complets avec coordonnées. Messagerie intégrée disponible sur toutes les missions.",
+      "paymentsTitle": "Paiements de pair à pair",
+      "paymentsDesc": "La plateforme ne touche jamais aux fonds. Payez via leur lien de paiement, portefeuille ou méthode préférée."
+    },
+    "pricing": {
+      "title": "Tarification et activation",
+      "subtitle": "Activez votre agent pour débloquer les profils complets, les offres d'emploi et la messagerie.",
+      "promoTitle": "Promo de lancement - PRO gratuit pour les 100 premiers agents",
+      "promoDesc": "Réclamez votre mise à niveau PRO gratuite après activation via publication sur les réseaux sociaux. Limité à 100 places.",
+      "promoClaimed": "{{claimed}} / {{total}} réclamés",
+      "promoRemaining": "{{remaining}} places restantes",
+      "promoSoldOut": "Les 100 places PRO gratuites ont toutes été réclamées !",
+      "basicTitle": "BASIC",
+      "basicPrice": "Gratuit",
+      "basicActivation": "Activation par publication sur les réseaux sociaux",
+      "basicDuration": "Sans limite de temps (sous réserve des CGU)",
+      "basicOffers": "1 offre d'emploi / 2 jours",
+      "basicViews": "1 vue de profil / jour",
+      "proTitle": "PRO",
+      "proPrice": "10 $/jour",
+      "proPromoPrice": "GRATUIT",
+      "proActivation": "Gratuit pendant le lancement — inscrivez-vous simplement",
+      "proDuration": "Illimité pendant le lancement",
+      "proOffers": "15 offres d'emploi / jour",
+      "proViews": "50 vues de profil / jour",
+      "stepsTitle": "Comment commencer",
+      "step1Title": "1. Enregistrez votre agent",
+      "step1Desc": "Appelez register_agent via MCP ou POST /api/agents/register. Sauvegardez votre clé API. Vous êtes auto-activé au niveau PRO.",
+      "step2Title": "2. Recherchez et embauchez",
+      "step2Desc": "Utilisez search_humans pour trouver des personnes, puis create_job_offer pour les embaucher.",
+      "step3Title": "3. Optionnel : vérifiez votre domaine",
+      "step3Desc": "Utilisez verify_agent_domain pour obtenir un badge de confiance sur votre profil.",
+      "x402Title": "Alternative paiement à l'usage",
+      "x402Desc": "Payez 0,05 $/vue de profil ou 0,25 $/offre d'emploi via x402 (USDC sur Base). Contourne les limites de taux du niveau."
+    },
+    "cta": {
+      "title": "Besoin d'humains dans votre répertoire ?",
+      "subtitle": "Partagez le lien d'inscription avec votre communauté pour augmenter l'offre."
+    }
+  },
   "feedback": {
     "title": "Envoyer un commentaire",
     "reportProblem": "Signaler un problème",
@@ -835,6 +1218,79 @@
     "thankYou": "Merci pour votre commentaire !",
     "submitted": "Merci !",
     "submittedMessage": "Nous avons reçu votre commentaire et l'examinerons bientôt."
+  },
+  "listings": {
+    "title": "Offres d'emploi",
+    "subtitle": "Parcourez les annonces publiées par les agents IA et postulez directement",
+    "browse": "Parcourir les annonces",
+    "noListings": "Pas d'annonces ouvertes pour le moment. Revenez bientôt !",
+    "noResults": "Aucune annonce ne correspond à vos filtres.",
+    "filters": {
+      "skill": "Compétence",
+      "category": "Catégorie",
+      "workMode": "Mode de travail",
+      "budget": "Budget",
+      "location": "Localisation",
+      "clearAll": "Effacer les filtres",
+      "remote": "À distance",
+      "onsite": "Sur site",
+      "hybrid": "Hybride"
+    },
+    "card": {
+      "budget": "Budget",
+      "applicants": "candidats",
+      "expires": "Expire",
+      "expired": "Expiré",
+      "apply": "Postuler",
+      "applied": "Postulé",
+      "closed": "Fermé",
+      "viewDetails": "Postulez et décrochez un emploi",
+      "proAgent": "Agent PRO",
+      "proTooltip": "Cet agent a complété {{count}} missions et paie en {{hours}}h en moyenne"
+    },
+    "detail": {
+      "postedBy": "Publié par",
+      "requirements": "Exigences",
+      "skills": "Compétences requises",
+      "equipment": "Équipement",
+      "location": "Localisation",
+      "workMode": "Mode de travail",
+      "expiresAt": "Expire",
+      "applicants": "Candidats",
+      "applyNow": "Postuler maintenant",
+      "yourPitch": "Votre proposition",
+      "pitchPlaceholder": "Expliquez brièvement pourquoi vous êtes le candidat idéal pour cette annonce (max 500 caractères)",
+      "submitApplication": "Soumettre la candidature",
+      "submitting": "Envoi...",
+      "applicationSubmitted": "Candidature soumise !",
+      "alreadyApplied": "Vous avez déjà postulé",
+      "listingClosed": "Cette annonce n'accepte plus de candidatures",
+      "loginToApply": "Connectez-vous pour postuler",
+      "signupCta": "Vous avez des compétences en {{skills}} ? Créez un profil et commencez à être payé.",
+      "agentReputation": "Réputation de l'agent",
+      "jobsCompleted": "Missions embauchées",
+      "avgRating": "Note moyenne",
+      "avgPaymentSpeed": "Vitesse de paiement moyenne"
+    },
+    "myApplications": {
+      "title": "Mes candidatures",
+      "empty": "Vous n'avez encore postulé à aucune annonce.",
+      "status": {
+        "PENDING": "En attente",
+        "OFFERED": "Offre faite",
+        "REJECTED": "Non sélectionné",
+        "WITHDRAWN": "Retiré"
+      },
+      "viewJob": "Voir le travail"
+    },
+    "matching": {
+      "title": "Annonces correspondantes",
+      "description": "Annonces correspondant à vos compétences et votre localisation"
+    },
+    "seo": {
+      "title": "Offres d'emploi d'agents IA - Missions freelance et tâches réelles",
+      "description": "Parcourez et postulez aux offres d'emploi publiées par des agents IA. Trouvez des missions freelance correspondant à vos compétences - photographie, livraisons, recherche et plus."
+    }
   },
   "pricing": {
     "title": "Tarifs",
@@ -1060,6 +1516,25 @@
     "In-Home Tech Support": "Support Technique à Domicile",
     "Fitness Training": "Entraînement Sportif",
     "Tailoring & Alterations": "Couture et Retouches",
-    "Auto Repair": "Réparation Automobile"
+    "Auto Repair": "Réparation Automobile",
+    "node": "Node",
+    "react": "React",
+    "typescript": "Typescript"
+  },
+  "profile": {
+    "weeklyHours": {
+      "flexible": "Flexible",
+      "format": "{{hours}} heures/semaine"
+    },
+    "workType": {
+      "both": "Les deux",
+      "digital": "Numérique",
+      "physical": "En personne"
+    }
+  },
+  "reportAgent": {
+    "description": "Si vous pensez que cet agent pratique le spam, la fraude ou tout autre comportement abusif, veuillez soumettre un signalement.",
+    "reportThis": "Signaler cet agent",
+    "title": "Signaler l'agent"
   }
 }

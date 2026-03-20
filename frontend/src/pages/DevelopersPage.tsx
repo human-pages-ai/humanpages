@@ -234,7 +234,7 @@ export default function DevelopersPage() {
         title="HumanPages.ai | Real-world tasks for your AI Agent"
         description="You prompt, humans deliver. Connect the MCP and delegate tasks automatically."
         path="/dev"
-        ogImage="https://humanpages.ai/api/og/use-cases"
+        ogImage="https://humanpages.ai/api/og/prompt-to-completion"
       />
       <SEO
         jsonLd={{
@@ -405,7 +405,7 @@ export default function DevelopersPage() {
 
           <div className="mt-6 text-center">
             <Link
-              to="/use-cases"
+              to="/prompt-to-completion"
               className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
               View full playbooks with agent workflows &rarr;
