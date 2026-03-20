@@ -316,26 +316,29 @@ export default function DevelopersPage() {
           {/* Promo banner — only visible with ?promo=Itai-loves-you */}
           {showItaiPromo && (
             <div className="mt-10 md:mt-12 max-w-2xl mx-auto text-center">
-              <p className="text-lg md:text-xl font-black mb-5">
+              <p className="text-sm md:text-xl font-black mb-5">
                 <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
                   Itai loves you &mdash; pick a service, $10 is on us
                 </span>
               </p>
-              <div className="grid grid-cols-3 gap-4">
-                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/directory-submissions.md" target="_blank" rel="noopener noreferrer" className="group py-5 px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
-                  <span className="text-4xl md:text-5xl block mb-3 group-hover:scale-110 transition-transform">🚀</span>
-                  <p className="font-bold text-slate-900 text-base md:text-lg">SEO Submissions</p>
-                  <p className="text-slate-400 text-xs md:text-sm mt-1">80+ directories</p>
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
+                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/directory-submissions.md" target="_blank" rel="noopener noreferrer" className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
+                  <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform">🚀</span>
+                  <p className="font-bold text-slate-900 text-xs md:text-lg">SEO Submissions</p>
+                  <p className="text-slate-400 text-[10px] md:text-sm mt-1">80+ directories</p>
+                  <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500">Claim &rarr;</p>
                 </a>
-                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/social-media-marketing.md" target="_blank" rel="noopener noreferrer" className="group py-5 px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
-                  <span className="text-4xl md:text-5xl block mb-3 group-hover:scale-110 transition-transform">📱</span>
-                  <p className="font-bold text-slate-900 text-base md:text-lg">Social Media Marketing</p>
-                  <p className="text-slate-400 text-xs md:text-sm mt-1">Daily posting & growth</p>
+                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/social-media-marketing.md" target="_blank" rel="noopener noreferrer" className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
+                  <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform">📱</span>
+                  <p className="font-bold text-slate-900 text-xs md:text-lg">Social Media Marketing</p>
+                  <p className="text-slate-400 text-[10px] md:text-sm mt-1">Daily posting & growth</p>
+                  <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500">Claim &rarr;</p>
                 </a>
-                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/virtual-assistant.md" target="_blank" rel="noopener noreferrer" className="group py-5 px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
-                  <span className="text-4xl md:text-5xl block mb-3 group-hover:scale-110 transition-transform">🧑‍💼</span>
-                  <p className="font-bold text-slate-900 text-base md:text-lg">Virtual Assistant</p>
-                  <p className="text-slate-400 text-xs md:text-sm mt-1">Admin & research</p>
+                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/virtual-assistant.md" target="_blank" rel="noopener noreferrer" className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
+                  <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform">🧑‍💼</span>
+                  <p className="font-bold text-slate-900 text-xs md:text-lg">Virtual Assistant</p>
+                  <p className="text-slate-400 text-[10px] md:text-sm mt-1">Admin & research</p>
+                  <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500">Claim &rarr;</p>
                 </a>
               </div>
             </div>
