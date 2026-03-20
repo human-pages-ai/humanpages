@@ -1,0 +1,20 @@
+{
+  "name": "humanpages",
+  "version": "1.4.4",
+  "description": "Search and hire real humans for tasks — photography, delivery, research, and more. 37 tools for the full hiring lifecycle.",
+  "author": {
+    "name": "Human Pages",
+    "url": "https://humanpages.ai"
+  },
+  "homepage": "https://humanpages.ai/dev",
+  "repository": "https://github.com/human-pages-ai/humanpages",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "hiring",
+    "freelancer",
+    "agent-tools",
+    "crypto-payments",
+    "human-in-the-loop"
+  ]
+}
