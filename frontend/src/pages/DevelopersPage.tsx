@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
@@ -13,6 +14,7 @@ import {
   EyeIcon,
   ChatBubbleLeftRightIcon,
   UserIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 
 const SUGGESTED_SERVICES = [
@@ -57,6 +59,12 @@ const SUGGESTED_SERVICES = [
     title: 'Virtual Assistant',
     desc: 'Admin, research, scheduling, and recurring tasks handled by a dedicated human.',
     price: '$5\u201315/hour',
+  },
+  {
+    icon: <MegaphoneIcon className="w-6 h-6" />,
+    title: 'Social Media Marketing',
+    desc: 'Daily posting, engagement, and analytics across Twitter/X, LinkedIn, Instagram, and TikTok.',
+    price: '$15\u201340/week',
   },
 ];
 
@@ -214,6 +222,8 @@ Response (PRO listings surface first):
 
 export default function DevelopersPage() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const showItaiPromo = searchParams.get('promo') === 'Itai-loves-you';
   const [showRestApi, setShowRestApi] = useState(false);
   const [promo, setPromo] = useState<{ enabled: boolean; total: number; claimed: number; remaining: number } | null>(null);
 
@@ -295,30 +305,83 @@ export default function DevelopersPage() {
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="py-16 md:py-20 px-4 bg-white">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-blue-600 font-medium mb-2">{t('dev.hero.tagline')}</p>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-            {t('dev.hero.title')}<br />{t('dev.hero.titleLine2')}
+        {/* Hero — Agent as Hiring Cofounder */}
+        <section className="pt-20 md:pt-32 pb-16 md:pb-24 px-4 md:px-8 bg-white overflow-hidden min-h-[70vh] flex items-center">
+        <div className="max-w-5xl mx-auto w-full">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 leading-[1.08] text-center">
+            Your agent knows you<br />
+            <span className="bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">better than your mama</span>
           </h1>
-          <p className="mt-4 text-xl text-slate-600">
-            {t('dev.hero.subtitle')}
+          <p className="mt-6 md:mt-8 text-xl md:text-2xl text-slate-500 text-center max-w-2xl mx-auto leading-relaxed">
+            It reads your codebase, knows your roadmap, and hires real humans for the work you shouldn't be doing yourself.
           </p>
-          <div className="mt-8 flex gap-4">
-            <button
-              onClick={scrollToInstall}
-              className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+
+          {/* Promo banner — only visible with ?promo=Itai-loves-you */}
+          {showItaiPromo && (
+            <Link
+              to="/prompt-to-completion"
+              className="block mt-10 md:mt-12 max-w-2xl mx-auto p-5 md:p-6 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 text-white text-center shadow-lg shadow-fuchsia-300/40 animate-pulse hover:animate-none hover:scale-[1.01] transition-transform"
             >
-              {t('dev.hero.installBtn')}
-            </button>
-            <a
-              href="#tools"
-              className="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+              <p className="text-lg md:text-xl font-bold">
+                Itai loves you &mdash; and gave you $10 credit
+              </p>
+              <p className="text-sm md:text-base text-white/80 mt-1">
+                Try SEO submissions, a virtual assistant, or social media marketing on us. Click to see workflows &rarr;
+              </p>
+            </Link>
+          )}
+
+          {/* Primary CTA */}
+          <div className="mt-10 md:mt-14 text-center">
+            <Link
+              to="/dev/connect"
+              className="inline-block px-10 md:px-14 py-4 md:py-5 bg-orange-500 text-white font-bold rounded-2xl hover:bg-orange-600 transition-all hover:scale-[1.02] text-lg md:text-2xl shadow-xl shadow-orange-200/50"
             >
-              {t('dev.hero.viewToolsBtn')}
-            </a>
+              Give your AI agent hiring powers
+            </Link>
+            <p className="text-slate-400 text-sm md:text-base mt-5">
+              One prompt to connect our MCP. Works with Claude, Cursor, GPT, Gemini &mdash; any MCP agent.
+            </p>
+            <Link to="/prompt-to-completion" className="inline-block mt-3 text-sm md:text-base text-blue-500 hover:text-blue-600 font-medium">
+              See example workflows &rarr;
+            </Link>
           </div>
+
+          {/* Value props */}
+          <div className="mt-24 md:mt-32 max-w-5xl mx-auto grid md:grid-cols-3 gap-8 md:gap-12">
+            <div className="text-center px-4 py-8">
+              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span className="text-3xl">🧠</span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl md:text-2xl mb-3">Context is the superpower</h3>
+              <p className="text-slate-500 text-base md:text-lg leading-relaxed">
+                Your agent knows your stack, your gaps, and your goals. It writes better briefs than you ever would on Fiverr.
+              </p>
+            </div>
+            <div className="text-center px-4 py-8">
+              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span className="text-3xl">🤖</span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl md:text-2xl mb-3">Agent-first, not you-first</h3>
+              <p className="text-slate-500 text-base md:text-lg leading-relaxed">
+                Search, hire, communicate, review deliverables, request revisions &mdash; your agent runs the whole thing.
+              </p>
+            </div>
+            <div className="text-center px-4 py-8">
+              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span className="text-3xl">🚫</span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-xl md:text-2xl mb-3">Zero busywork for you</h3>
+              <p className="text-slate-500 text-base md:text-lg leading-relaxed">
+                No briefs. No screening. No "checking in." You get notified when the work is done.
+              </p>
+            </div>
+          </div>
+
+          {/* One-liner closer */}
+          <p className="mt-20 md:mt-28 text-center text-slate-900 font-bold text-xl md:text-2xl lg:text-3xl max-w-3xl mx-auto leading-snug">
+            The dev who ships 10x faster isn't writing 10x more code &mdash; their agent is hiring humans to handle the rest.
+          </p>
         </div>
       </section>
 

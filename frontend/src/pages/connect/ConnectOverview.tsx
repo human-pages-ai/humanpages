@@ -10,7 +10,7 @@ function ConnectionDiagram() {
     <svg viewBox="0 0 800 200" className="w-full max-w-3xl mx-auto my-8" aria-label="MCP connection flow diagram">
       {/* Your App */}
       <rect x="20" y="60" width="180" height="80" rx="12" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="2" />
-      <text x="110" y="95" textAnchor="middle" className="text-sm" fill="#334155" fontWeight="600" fontSize="14">Your AI App</text>
+      <text x="110" y="95" textAnchor="middle" className="text-sm" fill="#334155" fontWeight="600" fontSize="14">Your AI Agent</text>
       <text x="110" y="115" textAnchor="middle" fill="#94a3b8" fontSize="11">Claude, GPT, Cursor…</text>
 
       {/* Arrow 1 */}

@@ -13,6 +13,7 @@ import { safeSessionStorage } from './lib/safeStorage';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
+const DevHeroVariants = lazy(() => import('./pages/DevHeroVariants'));
 const ConnectOverview = lazy(() => import('./pages/connect/ConnectOverview'));
 const ConnectClaude = lazy(() => import('./pages/connect/ClaudePage'));
 const ConnectCursor = lazy(() => import('./pages/connect/CursorPage'));
@@ -213,6 +214,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/dev" element={<DevelopersPage />} />
+      <Route path="/dev/variants" element={<DevHeroVariants />} />
       <Route path="/dev/connect" element={<ConnectOverview />} />
       <Route path="/dev/connect/claude" element={<ConnectClaude />} />
       <Route path="/dev/connect/cursor" element={<ConnectCursor />} />
