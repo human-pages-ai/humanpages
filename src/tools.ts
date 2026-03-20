@@ -1518,18 +1518,20 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           currency: 'USD',
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **Coinbase** → Buy USDC with **zero fees**. ACH bank transfer, debit card, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+3. **Coinbase** → Buy USDC with **zero fees via ACH bank transfer**. Card purchases incur ~3.99% fee. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
 4. **Peer** → Convert from Venmo, CashApp, Zelle, PayPal, or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
-5. **No crypto experience?** → Pay workers directly via Venmo, PayPal, Zelle, or Wise — no crypto needed.`,
+5. **Robinhood** → Buy USDC commission-free. Instant bank transfers. [robinhood.com](https://robinhood.com)
+6. **No crypto experience?** → Pay workers directly via Venmo, PayPal, Zelle, or Wise — no crypto needed.`,
         },
         GB: {
           country: 'United Kingdom',
           currency: 'GBP',
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **Coinbase** → Buy USDC with **zero fees**. Faster Payments (instant), debit card, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
-4. **Peer** → Convert from CashApp, PayPal, or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
-5. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+3. **Coinbase** → Buy USDC with **zero fees via Faster Payments**. Card purchases incur ~3.99% fee. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Revolut** → Buy crypto directly in-app, then send USDC. GBP deposits free. [revolut.com](https://www.revolut.com)
+5. **Peer** → Convert from PayPal or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
         },
         CA: {
           country: 'Canada',
@@ -1564,20 +1566,21 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           currency: 'INR',
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **CoinDCX** → India's largest exchange. Buy USDC via UPI (instant) or IMPS. Low fees. [coindcx.com](https://coindcx.com)
-4. **Ramp Network** → Card or bank transfer. [ramp.network](https://ramp.network)
-5. **No crypto experience?** → Pay workers directly via Wise or PayPal — no crypto needed.`,
-          note: 'India has 30% tax on crypto gains + 1% TDS. Factor this into your recommendation.',
+3. **Mudrex** → Buy USDC via UPI (instant). INR deposits free. [mudrex.com](https://mudrex.com)
+4. **CoinDCX** → India's largest exchange. Buy USDC via UPI or IMPS. [coindcx.com](https://coindcx.com)
+5. **Onramp Money** → INR to USDC onramp, UPI supported. [onramp.money](https://onramp.money)
+6. **No crypto experience?** → Pay workers directly via Wise or PayPal — no crypto needed.`,
+          note: 'India has 30% tax on crypto gains + 1% TDS on transactions above ₹10,000. The developer should be aware of this when buying crypto.',
         },
         JP: {
           country: 'Japan',
           currency: 'JPY',
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **SBI VC Trade** → Only Japanese exchange with USDC. Bank transfer (JPY). [sbivc.co.jp](https://www.sbivc.co.jp)
+3. **SBI VC Trade** → First Japanese exchange with USDC support. Bank transfer (JPY). Trusted SBI Group brand. [sbivc.co.jp](https://www.sbivc.co.jp)
 4. **Transak** → Buy with credit card (higher fees ~7-16%). [transak.com](https://transak.com)
 5. **No crypto experience?** → Pay workers directly via PayPal or Wise — no crypto needed.`,
-          note: 'Ramp Network is blocked in Japan. Coinbase Japan has limited USDC support. SBI VC Trade is the primary path.',
+          note: 'Ramp Network is blocked in Japan. Coinbase exited Japan entirely (2023). SBI VC Trade is the primary path for USDC.',
         },
         AU: {
           country: 'Australia',
@@ -1594,9 +1597,10 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           currency: 'SGD',
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **Coinbase** → Buy USDC **commission-free** (USDC/SGD pair). SGD bank transfer via Standard Chartered. [coinbase.com](https://www.coinbase.com/en-sg/how-to-buy/usdc)
-4. **StraitsX** → MAS-licensed. Deposit SGD via PayNow/FAST, mint USDC. [straitsx.com](https://www.straitsx.com)
-5. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+3. **Coinbase** → Buy USDC via SGD bank transfer (Standard Chartered). Note: ~0.5% spread may apply. [coinbase.com](https://www.coinbase.com/en-sg/how-to-buy/usdc)
+4. **StraitsX** → MAS-licensed. Deposit SGD via PayNow/FAST, buy XSGD then swap to USDC. [straitsx.com](https://www.straitsx.com)
+5. **Coinhako** → MAS-licensed. SGD deposits via PayNow, buy USDC. [coinhako.com](https://www.coinhako.com)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
         },
         NL: {
           country: 'Netherlands',
@@ -1630,24 +1634,26 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
         IL: {
           country: 'Israel',
           currency: 'ILS',
-          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+          steps: `1. **Already have crypto?** → Send USDC directly on Base. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **Bits of Gold** → Israel's largest crypto brokerage. ILS bank transfer or credit card. Licensed by Capital Markets Authority. [bitsofgold.co.il](https://www.bitsofgold.co.il)
-4. **Bit2C** → ILS bank transfer to USDC. [bit2c.co.il](https://www.bit2c.co.il)
-5. **Ramp Network** → Card or bank transfer. Available in Israel. [ramp.network](https://ramp.network)
-6. **Peer** → Convert from Wise or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
-7. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
-          note: 'Coinbase is unavailable/very limited in Israel. Bits of Gold and Bit2C are the main local options.',
+3. **Bits of Gold** → Israel's oldest crypto platform. Buy USDC with ILS bank transfer or credit card. Licensed by Israel's Capital Markets Authority (CMISA). Note: USDC is on ERC-20 — you'll need to bridge to Base. [bitsofgold.co.il](https://www.bitsofgold.co.il)
+4. **Bit2C** → Buy USDC directly with ILS (USDC/NIS pair). Bank transfer deposit. [bit2c.co.il](https://www.bit2c.co.il)
+5. **MoonPay** → Buy USDC directly with Israeli credit card (ILS supported). ~4.5% fee. Best for loading ₪200+ at once. [moonpay.com](https://www.moonpay.com)
+6. **Ramp Network** → Buy USDC with credit/debit card. ~2.5-4.5% total (card charged in USD/EUR + FX conversion). [ramp.network](https://ramp.network)
+7. **Peer** → Convert from Wise or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+8. **No crypto experience?** → Pay workers directly via PayPal, Wise, Revolut, or Bit — no crypto needed.`,
+          note: 'Coinbase does not support Israeli payment methods. Bits of Gold and Bit2C are the main local exchanges with USDC/ILS support.',
         },
         PH: {
           country: 'Philippines',
           currency: 'PHP',
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
-3. **GCash (GCrypto)** → Buy USDC directly from your GCash peso balance. 93M users, frictionless. Open GCash → GCrypto → buy USDC.
+3. **GCash (GCrypto)** → Buy USDC directly from your GCash peso balance. 100M users, supports Base network. Open GCash → GCrypto → buy USDC.
 4. **Coins.ph** → BSP-licensed. USDC/PHP pair, 0.1% fee. Deposit via GCash, Maya, bank transfer, or 3,000+ physical outlets. [coins.ph](https://coins.ph)
-5. **No crypto experience?** → Pay workers directly via GCash, Maya, or PayPal — no crypto needed.`,
-          note: 'Ramp Network and Coinbase are blocked/unavailable in Philippines. GCash is the dominant payment rail.',
+5. **PDAX** → BSP-licensed Philippine exchange. PHP deposits via bank transfer or GCash. [pdax.ph](https://pdax.ph)
+6. **No crypto experience?** → Pay workers directly via GCash, Maya, or PayPal — no crypto needed.`,
+          note: 'Ramp Network and Coinbase are blocked/unavailable in Philippines. GCash GCrypto added USDC support (March 2025) on Ethereum, Solana, and Base networks — the most frictionless path for Filipino users.',
         },
         NG: {
           country: 'Nigeria',
@@ -1655,9 +1661,9 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
 2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
 3. **Quidax** → Nigerian SEC compliant. Free NGN deposit, 0.1% trading fee. Best rates. [quidax.com](https://www.quidax.com)
-4. **Yellow Card** → Nigerian SEC compliant. Reliable, supports USDC. [yellowcard.io](https://yellowcard.io)
-5. **No crypto experience?** → Pay workers directly via Wise or PayPal — no crypto needed.`,
-          note: 'Ramp Network, Coinbase, and most global onramps are blocked in Nigeria. Quidax and Yellow Card are the practical paths.',
+4. **Luno** → Licensed in Nigeria. NGN deposit via bank transfer. [luno.com](https://www.luno.com)
+5. **No crypto experience?** → Pay workers directly via Wise — no crypto needed.`,
+          note: 'Ramp Network, Coinbase, and most global onramps are blocked in Nigeria. Yellow Card shut down retail operations (Dec 2025). PayPal receive is unreliable in Nigeria. Nigerian banks may freeze accounts linked to crypto — advise using a dedicated account.',
         },
         AE: {
           country: 'United Arab Emirates',
@@ -1783,7 +1789,7 @@ Network: ${network}
 
 ${fundingSteps}${countryNote}
 
-Fees and availability may change. When in doubt, ask the developer what payment apps or accounts they already have.`
+⚠️ This is informational only — not financial advice. Fees, availability, and supported coins change frequently. Always verify directly with the provider before transacting.`
           : `I need a wallet to receive and send USDC for hiring workers.${noWalletNote}
 
 Once the wallet is created and funded, I can pay workers in crypto (instant, permissionless) or you can pay them directly via fiat platforms you already use.`;
