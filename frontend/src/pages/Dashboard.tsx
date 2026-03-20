@@ -16,7 +16,7 @@ import JobsSection from '../components/dashboard/JobsSection';
 // import CvUpload from '../components/dashboard/CvUpload'; // Hidden: CV upload disabled
 import { ProfileCard } from '../components/dashboard/ProfileCard';
 import { ProfileTilesGrid } from '../components/dashboard/ProfileTilesGrid';
-import WizardModuleTile from '../components/dashboard/WizardModuleTile';
+
 
 // Lazy-load wallet stack (Privy) — only fetched when payments tab opens
 const WalletProvider = lazy(() => import('../components/dashboard/WalletProvider'));
@@ -24,6 +24,7 @@ const WalletsSection = lazy(() => import('../components/dashboard/WalletsSection
 import AccountSection from '../components/dashboard/AccountSection';
 import HumanitySection from '../components/dashboard/HumanitySection';
 import VouchSection from '../components/dashboard/VouchSection';
+import ShareReferralSection from '../components/dashboard/ShareReferralSection';
 import VerificationSection from '../components/dashboard/VerificationSection';
 import PaymentPreferencesSection from '../components/dashboard/PaymentPreferencesSection';
 import FiatPaymentMethodsSection from '../components/dashboard/FiatPaymentMethodsSection';
@@ -45,6 +46,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingProfile] = useState(false);
+  const [copiedProfile, setCopiedProfile] = useState(false);
 
   // Tab state — driven by URL search param
   const tabParam = searchParams.get('tab') as DashboardTab | null;
@@ -561,6 +563,7 @@ export default function Dashboard() {
           {activeTab === 'profile' && (
             <div className="space-y-6">
               <ProfileCard profile={profile} />
+              <ShareReferralSection profile={profile} copiedProfile={copiedProfile} setCopiedProfile={setCopiedProfile} />
               <ProfileTilesGrid profile={profile} telegramStatus={telegramStatus} />
             </div>
           )}
@@ -609,33 +612,6 @@ export default function Dashboard() {
           {/* ───── BOOST YOUR PROFILE TAB ───── */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* Verification tile */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <WizardModuleTile
-                  title={t('dashboard.tiles.verification.title')}
-                  stepId="verification"
-                  icon="✅"
-                  color="green"
-                  isEmpty={!profile.linkedinVerified && !profile.githubVerified}
-                  emptyHint={t('dashboard.tiles.verification.emptyHint')}
-                >
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-gray-500 text-xs">LinkedIn:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.linkedinVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.linkedinVerified ? t('dashboard.tiles.verification.verified') : t('dashboard.tiles.verification.notVerified')}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 text-xs">GitHub:</span>{' '}
-                      <span className={`text-sm font-medium ${profile.githubVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                        {profile.githubVerified ? t('dashboard.tiles.verification.verified') : t('dashboard.tiles.verification.notVerified')}
-                      </span>
-                    </div>
-                  </div>
-                </WizardModuleTile>
-              </div>
-
               {/* Vouching — share profile and get vouched */}
               <VouchSection />
 

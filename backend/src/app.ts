@@ -583,6 +583,11 @@ app.get('/from/:slug', (req, res) => {
   res.redirect(302, url.toString());
 });
 
+// /vouch/:username — shareable vouch request link
+app.get('/vouch/:username', (req, res) => {
+  res.redirect(302, `/u/${encodeURIComponent(req.params.username)}?vouch=1`);
+});
+
 // SPA catch-all: serve index.html for all non-API routes
 app.get('*', (req, res) => {
   const indexPath = path.join(frontendDistPath, 'index.html');

@@ -14,6 +14,8 @@ type EventName =
   | 'profile_share_click'
   | 'profile_share_copy'
   | 'referral_link_copy'
+  | 'vouch_link_copy'
+  | 'vouch_from_profile'
   | 'profile_view'
   | 'login_success'
   | 'affiliate_applied'

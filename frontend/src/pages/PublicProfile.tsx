@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import { api } from '../lib/api';
@@ -115,6 +115,8 @@ function formatPublicName(displayName: string | undefined): string {
 export default function PublicProfile() {
   const { t, i18n } = useTranslation();
   const { id, username } = useParams<{ id?: string; username?: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [profile, setProfile] = useState<PublicHuman | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,6 +125,9 @@ export default function PublicProfile() {
   const [showAllVouches, setShowAllVouches] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [photoError, setPhotoError] = useState(false);
+  const [vouching, setVouching] = useState(false);
+  const [vouchSuccess, setVouchSuccess] = useState(false);
+  const isVouchMode = searchParams.get('vouch') === '1';
 
   useEffect(() => {
     if (!id && !username) return;
@@ -162,6 +167,25 @@ export default function PublicProfile() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+
+  const handleVouch = async () => {
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname + '?vouch=1')}`);
+      return;
+    }
+    if (!profile) return;
+    setVouching(true);
+    try {
+      await api.createVouch({ username: profile.username || profile.id });
+      setVouchSuccess(true);
+      analytics.track('vouch_from_profile', { profileId: profile.id });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Could not vouch';
+      alert(message);
+    } finally {
+      setVouching(false);
+    }
   };
 
   if (loading) {
@@ -727,6 +751,27 @@ export default function PublicProfile() {
                   {t('publicProfile.hireMe')}
                 </a>
               )}
+              {/* Vouch button — shown to other logged-in users (or as sign-in prompt) */}
+              {(!user || profile.id !== user.id) && !vouchSuccess && (
+                <button
+                  onClick={handleVouch}
+                  disabled={vouching}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-50 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  {vouching ? 'Vouching...' : user ? 'Vouch' : 'Sign in to vouch'}
+                </button>
+              )}
+              {vouchSuccess && (
+                <div className="flex items-center gap-2 py-3 px-4 bg-emerald-50 text-emerald-700 rounded-lg font-medium">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Vouched
+                </div>
+              )}
               <button
                 onClick={handleShare}
                 className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
@@ -737,6 +782,15 @@ export default function PublicProfile() {
                 {copied ? t('common.copied') : 'Share'}
               </button>
             </div>
+
+            {/* Vouch prompt banner when arriving via /vouch/:username */}
+            {isVouchMode && !vouchSuccess && (
+              <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
+                <p className="text-sm text-emerald-800">
+                  {user ? `Tap "Vouch" above to confirm you trust ${formatPublicName(profile.displayName)}` : 'Sign in to vouch for this person'}
+                </p>
+              </div>
+            )}
 
             {/* Report link — only for logged-in users viewing someone else's profile */}
             {user && profile.id !== user.id && (

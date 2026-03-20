@@ -11,25 +11,19 @@ interface Props {
   setCopiedProfile: (v: boolean) => void;
 }
 
-function getCurrentTier(qualifiedSignups: number) {
-  if (qualifiedSignups >= 100) return { name: 'Tier 3', color: 'text-amber-600', bg: 'bg-amber-100' };
-  if (qualifiedSignups >= 50) return { name: 'Tier 2', color: 'text-purple-600', bg: 'bg-purple-100' };
-  if (qualifiedSignups >= 10) return { name: 'Tier 1', color: 'text-emerald-600', bg: 'bg-emerald-100' };
-  return { name: 'Starter', color: 'text-slate-600', bg: 'bg-slate-100' };
-}
-
 export default function ShareReferralSection({
   profile,
   copiedProfile,
   setCopiedProfile,
 }: Props) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [copiedReferral, setCopiedReferral] = useState(false);
+  const [copiedVouch, setCopiedVouch] = useState(false);
 
   const profileUrl = getProfileUrl({ username: profile.username, id: profile.id });
   const referralUrl = `${window.location.origin}/signup?ref=${profile.referralCode}`;
+  const vouchUrl = `${window.location.origin}/vouch/${profile.username || profile.id}`;
   const rp = profile.referralProgram;
-  const tier = rp ? getCurrentTier(rp.qualifiedSignups) : null;
 
   return (
     <div className="space-y-4">
@@ -99,48 +93,76 @@ export default function ShareReferralSection({
         </div>
       </div>
 
-      {/* Referral Program */}
+      {/* Ask for Vouches */}
+      <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Ask for vouches</h2>
+            <p className="text-slate-500 text-sm">Share this link so people who know you can vouch for your work</p>
+          </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(vouchUrl);
+              setCopiedVouch(true);
+              analytics.track('vouch_link_copy');
+              setTimeout(() => setCopiedVouch(false), 2000);
+            }}
+            className="shrink-0 px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+          >
+            {copiedVouch ? (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {t('common.copied')}
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Copy vouch link
+              </>
+            )}
+          </button>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <div className="flex-1 text-xs text-slate-600 font-mono bg-slate-50 rounded px-3 py-1.5 truncate">
+            {vouchUrl}
+          </div>
+        </div>
+      </div>
+
+      {/* Invite Friends */}
       <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 sm:p-6 text-white">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <h2 className="text-lg font-semibold">{t('dashboard.referralProgram')}</h2>
-            </div>
-            {tier && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tier.bg} ${tier.color}`}>
-                {tier.name}
-              </span>
-            )}
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h2 className="text-lg font-semibold">Invite friends</h2>
           </div>
-          <p className="text-emerald-100 text-sm">{t('dashboard.referralProgramDesc')}</p>
+          <p className="text-emerald-100 text-sm">Help people you trust get discovered by AI agents</p>
 
-          {/* Stats grid — only if user has referrals */}
+          {/* Stats — only show when user has referrals (hide zeros) */}
           {rp && rp.totalSignups > 0 && (
-            <div className="grid grid-cols-3 gap-3 mt-4">
+            <div className="grid grid-cols-2 gap-3 mt-4">
               <div className="bg-white/10 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold">{rp.totalSignups}</div>
-                <div className="text-xs text-emerald-100">{t('dashboard.referralSignups')}</div>
+                <div className="text-xs text-emerald-100">People invited</div>
               </div>
               <div className="bg-white/10 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold">{rp.qualifiedSignups}</div>
-                <div className="text-xs text-emerald-100">{t('dashboard.referralQualified')}</div>
-                <div className="text-xs text-emerald-200/60 mt-0.5">{t('dashboard.referralQualifiedHint')}</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold">{rp.totalCredits}</div>
-                <div className="text-xs text-emerald-100">{t('dashboard.referralCreditsEarned')}</div>
+                <div className="text-xs text-emerald-100">Completed profiles</div>
               </div>
             </div>
           )}
         </div>
 
         <div className="p-4 sm:p-6 space-y-4">
-          {/* Referral link */}
+          {/* Invite link */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('dashboard.referralYourLink')}</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Your invite link</label>
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 font-mono truncate">
                 {referralUrl}
@@ -158,81 +180,13 @@ export default function ShareReferralSection({
               </button>
             </div>
           </div>
-
-          {/* Credit tiers preview (always visible) */}
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-lg font-bold text-emerald-600">10</div>
-              <div className="text-xs text-slate-500">{t('dashboard.referralCreditsPerSignup')}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-lg font-bold text-emerald-600">+50</div>
-              <div className="text-xs text-slate-500">{t('dashboard.referralBonusAt10')}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-lg font-bold text-emerald-600">+500</div>
-              <div className="text-xs text-slate-500">{t('dashboard.referralBonusAt100')}</div>
-            </div>
-          </div>
-
-          {/* Available credits (if any) */}
-          {rp && rp.totalCredits > 0 && (
-            <div className="flex items-center justify-between py-3 border-t border-slate-100">
-              <div>
-                <div className="text-sm text-slate-500">{t('dashboard.referralAvailableCredits')}</div>
-                <div className="text-lg font-bold text-slate-900">{rp.availableCredits}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-slate-500">{t('dashboard.referralTotalEarned')}</div>
-                <div className="text-lg font-bold text-emerald-600">{rp.totalCredits}</div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Milestones */}
-      {rp && rp.milestones.length > 0 && (
-        <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">{t('dashboard.referralMilestones')}</h3>
-          <div className="space-y-3">
-            {rp.milestones.map((m, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.reached ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                  {m.reached ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    <span className="text-xs font-bold">{m.threshold}</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700">
-                      {m.threshold} {t('dashboard.referralMilestoneReferrals')} &mdash; {m.bonus} {t('dashboard.referralMilestoneBonusCredits')}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {rp.qualifiedSignups}/{m.threshold}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5">
-                    <div
-                      className={`h-1.5 rounded-full transition-all duration-500 ${m.reached ? 'bg-emerald-500' : 'bg-emerald-300'}`}
-                      style={{ width: `${Math.min(m.progress * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent referrals */}
+      {/* Recent referrals — only show when there are some */}
       {rp && rp.referrals.length > 0 && (
         <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">{t('dashboard.referralRecentReferrals')}</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">People you invited</h3>
           <div className="space-y-2">
             {rp.referrals.slice(0, 10).map((r) => (
               <div key={r.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
@@ -242,43 +196,11 @@ export default function ShareReferralSection({
                 </div>
                 <div className="flex items-center gap-3">
                   {r.qualified && (
-                    <span className="text-xs font-medium text-emerald-600">+{r.creditsAwarded} {t('dashboard.referralCredits')}</span>
+                    <span className="text-xs font-medium text-emerald-600">Profile complete</span>
                   )}
                   {!r.qualified && (
                     <span className="text-xs text-slate-400">{t('dashboard.referralPendingProfile')}</span>
                   )}
-                  <span className="text-xs text-slate-400">
-                    {new Date(r.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Credit history */}
-      {rp && rp.creditLedger.length > 0 && (
-        <div className="bg-white rounded-lg shadow border border-slate-200 p-4 sm:p-6">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">{t('dashboard.referralCreditHistory')}</h3>
-          <div className="space-y-2">
-            {rp.creditLedger.map((c) => (
-              <div key={c.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                <div>
-                  <span className="text-sm text-slate-700">+{c.credits} {t('dashboard.referralCredits')}</span>
-                  {c.description && <span className="text-xs text-slate-400 ml-2">{c.description}</span>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    c.type === 'referral' ? 'bg-emerald-100 text-emerald-700' :
-                    c.type.startsWith('bonus') ? 'bg-amber-100 text-amber-700' :
-                    'bg-slate-100 text-slate-600'
-                  }`}>
-                    {c.type === 'referral' ? t('dashboard.referralTypeReferral') : t('dashboard.referralTypeBonus')}
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    {new Date(c.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
-                  </span>
                 </div>
               </div>
             ))}

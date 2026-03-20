@@ -621,7 +621,7 @@ const vouchRateLimiter = rateLimit({
 });
 
 // Vouch for another human
-router.post('/me/vouch', authenticateToken, requireIdentityVerified, vouchRateLimiter, async (req: AuthRequest, res) => {
+router.post('/me/vouch', authenticateToken, vouchRateLimiter, async (req: AuthRequest, res) => {
   try {
     const schema = z.object({
       username: z.string().min(1),
@@ -632,10 +632,7 @@ router.post('/me/vouch', authenticateToken, requireIdentityVerified, vouchRateLi
     // Find vouchee by username or ID
     const vouchee = await prisma.human.findFirst({
       where: {
-        AND: [
-          { OR: [{ username }, { id: username }] },
-          identityVerifiedWhere,
-        ],
+        OR: [{ username }, { id: username }],
       },
       select: { id: true, name: true, username: true },
     });
