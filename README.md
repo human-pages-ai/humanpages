@@ -1,6 +1,6 @@
 # Human Pages MCP Server
 
-MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 31 tools for search by skill/location/equipment, job offers, job board listings, in-job messaging, streaming payments, and reviews. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
+MCP server (+ [OpenClaw SKILL.md](openclaw-skill/humanpages/SKILL.md)) that gives AI agents access to real-world people who listed themselves to be hired by agents. 36 tools for search by skill/location/equipment, job offers, job board listings, in-job messaging, streaming payments, and reviews. Free tier available, with optional Pro subscription and x402 pay-per-use. Payments default to crypto (USDC) + other crypto + fiat supported.
 
 Visit [humanpages.ai](https://humanpages.ai) to learn more. Available on [ClawHub](https://clawhub.com/skills/humanpages) | [npm](https://www.npmjs.com/package/humanpages).
 

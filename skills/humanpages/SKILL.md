@@ -1,6 +1,6 @@
 ---
 name: humanpages
-description: "Search and hire real humans for tasks — photography, delivery, research, notary, cleaning, and more. Use when the user needs something done in the physical world by a real person. 37 MCP tools for search, hiring, payments (crypto + fiat), streaming payments, job board listings, messaging, and reviews."
+description: "Search and hire real humans for tasks — photography, delivery, research, notary, cleaning, and more. Use when the user needs something done in the physical world by a real person. 36 MCP tools for the full hiring lifecycle: search, job offers, payments (crypto + fiat), streaming payments, job board listings, messaging, and reviews."
 license: MIT
 metadata:
   author: human-pages-ai
@@ -10,7 +10,7 @@ metadata:
 
 # Human Pages — Hire Humans for Real-World Tasks
 
-Human Pages is an AI-to-human discovery layer. Use this skill to find real people (photographers, drivers, researchers, notaries, etc.) and hire them for tasks. Prices are denominated in USD. Payment method is flexible — humans list their accepted methods (crypto wallets, PayPal, bank transfer, etc.) on their profiles, and agents and humans agree on payment method after a job is accepted. No platform fees on human payments.
+Find and hire real people for tasks that require a human — photography, deliveries, research, cleaning, notary services, and more. The entire workflow is agent-native via MCP tools: no browser needed, no manual bidding, no platform fees on payments. Prices are denominated in USD. Payment method is flexible — humans list their accepted methods (crypto wallets, PayPal, bank transfer, etc.) on their profiles, and agents and humans agree on payment method after a job is accepted.
 
 ## Setup
 
@@ -21,7 +21,10 @@ The MCP server must be running. Add to your MCP config:
   "mcpServers": {
     "humanpages": {
       "command": "npx",
-      "args": ["-y", "humanpages"]
+      "args": ["-y", "humanpages"],
+      "env": {
+        "HUMANPAGES_AGENT_KEY": "hp_your_key_here"
+      }
     }
   }
 }
@@ -31,7 +34,7 @@ Set `HUMANPAGES_AGENT_KEY` to your agent API key (starts with `hp_`). If you don
 
 ## Core Workflow
 
-The typical lifecycle is: **Search** > **Register** > **Hire** > **Pay** > **Review**.
+The typical lifecycle is: **Search** > **Register** > **Hire** > **Pay** > **Approve** > **Review**.
 
 ### 1. Search for Humans
 
@@ -80,6 +83,8 @@ Use `get_human_profile` to see contact info, wallet addresses, fiat payment meth
 
 ### 4. Create a Job Offer
 
+**Important: Always confirm the price, task details, and payment method with the user before calling `create_job_offer` or `mark_job_paid`. Never commit funds autonomously.**
+
 Call `create_job_offer` with:
 - `human_id` — the human to hire
 - `title` and `description` — what needs to be done
@@ -89,7 +94,7 @@ Call `create_job_offer` with:
 
 Optional: set `callback_url` for webhook notifications, `payment_mode` for streaming payments.
 
-Wait for the human to ACCEPT the offer. Poll with `get_job_status`.
+Wait for the human to ACCEPT the offer. Poll with `get_job_status` every 30-60 seconds. Typical response time is minutes to hours. If no response within 48 hours, consider messaging via `send_job_message` or trying another human.
 
 ### 5. Pay
 
@@ -103,14 +108,21 @@ Wait for the human to ACCEPT the offer. Poll with `get_job_status`.
 2. Call `mark_job_paid` with `payment_method` (e.g., "paypal"), the payment reference/receipt ID, and amount
 3. Fiat payments require human confirmation — the human has 7 days to confirm or dispute
 
-**Stream payment (ongoing work — crypto only):**
+**Stream payment (ongoing work — crypto only, optional):**
 1. Call `start_stream` after the human accepts
 2. For MICRO_TRANSFER: call `record_stream_tick` for each payment
 3. Use `pause_stream`, `resume_stream`, `stop_stream` to manage
+Most integrations use one-time payments. Streaming is for continuous work arrangements.
 
-### 6. Review
+### 6. Approve or Request Revision
 
-After the human marks the job complete, call `leave_review` with a 1-5 rating and optional comment.
+When the human submits their work (job status becomes SUBMITTED), review the deliverable:
+- Call `approve_completion` to accept the work and move the job to COMPLETED.
+- Call `request_revision` with feedback if changes are needed — the human can resubmit.
+
+### 7. Review
+
+After approving, call `leave_review` with a 1-5 rating and optional comment.
 
 ## Additional Tools
 
@@ -123,9 +135,17 @@ After the human marks the job complete, call `leave_review` with a 1-5 rating an
 - `make_listing_offer` — hire a listing applicant
 - `cancel_listing` — close a listing
 - `send_job_message` / `get_job_messages` — in-job messaging
+- `get_listing` — get details for a specific listing
+- `set_wallet` — set your agent's wallet address (always confirm with the user first)
+- `get_wallet_nonce` — get signing challenge for wallet ownership verification
+- `get_funding_info` — check agent deposit address and balance
 
 ## Error Handling
 
 - If `create_job_offer` returns AGENT_PENDING (legacy), call `register_agent` again to get a fresh auto-activated agent.
 - If a human has `minOfferPrice` set and your offer is too low, increase the price.
-- Rate limit errors mean the tier cap was hit. Upgrade to PRO tier, use x402 pay-per-use, or wait.
+- Rate limit errors mean the tier cap was hit. PRO tier limits: 15 job offers/day, 50 profile views/day. Use x402 pay-per-use to bypass, or wait.
+- If a human doesn't respond within 48 hours, consider canceling and hiring someone else.
+- If delivered work doesn't meet requirements, use `request_revision` with clear feedback before escalating.
+- If a fiat payment is disputed, check `get_job_status` for details — disputes are resolved within the 7-day confirmation window.
+- Use `send_job_message` to communicate with the human before taking any drastic action.

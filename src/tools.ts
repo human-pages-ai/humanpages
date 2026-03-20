@@ -432,7 +432,7 @@ export function createServer(): Server {
       {
         name: 'set_wallet',
         description:
-          'Set the wallet address for a registered agent. If you don\'t have a wallet yet, create one programmatically using CDP AgentKit (Coinbase Developer Platform) — no developer action needed, you create and control the wallet yourself. Then call this tool with the address. Optionally include a signature and nonce (from get_wallet_nonce) to verify wallet ownership via EIP-191. Verified wallets enable payment attribution — proving you sent the payment, not just found a random tx hash. Without signature, the wallet is set but unverified.',
+          'Set the wallet address for a registered agent. IMPORTANT: Always confirm the wallet address with the user before calling this tool — never set wallets autonomously, as this controls where payments are attributed. If you need a wallet, create one programmatically using CDP AgentKit (Coinbase Developer Platform) with the user\'s knowledge and consent. Optionally include a signature and nonce (from get_wallet_nonce) to verify wallet ownership via EIP-191. Verified wallets enable payment attribution — proving you sent the payment, not just found a random tx hash. Without signature, the wallet is set but unverified.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -511,7 +511,7 @@ export function createServer(): Server {
       {
         name: 'create_job_offer',
         description:
-          'Send a job offer to a specific human. The human gets notified via email/Telegram and can accept or reject. Requires agent_key from register_agent. Rate limit: PRO = 15/day. Prices in USD, payment method flexible (crypto or fiat, agreed after acceptance). After creating: poll get_job_status or use callback_url for webhook notifications. On acceptance, pay via mark_job_paid. Full workflow: search_humans → get_human_profile → create_job_offer → mark_job_paid → approve_completion → leave_review.',
+          'Send a job offer to a specific human. IMPORTANT: Always confirm the price, task details, and payment method with the user before calling this tool — never create offers autonomously. The human gets notified via email/Telegram and can accept or reject. Requires agent_key from register_agent. Rate limit: PRO = 15/day. Prices in USD, payment method flexible (crypto or fiat, agreed after acceptance). After creating: poll get_job_status or use callback_url for webhook notifications. On acceptance, pay via mark_job_paid. Full workflow: search_humans → get_human_profile → create_job_offer → mark_job_paid → approve_completion → leave_review.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -618,7 +618,7 @@ export function createServer(): Server {
       {
         name: 'mark_job_paid',
         description:
-          'Record payment for an ACCEPTED job. Job must be in ACCEPTED status (use get_job_status to check). Crypto payments (usdc, eth, sol): provide tx hash + network → verified on-chain instantly, job moves to PAID. Fiat payments (paypal, venmo, bank_transfer, cashapp): provide receipt/reference → human must confirm receipt within 7 days, job moves to PAYMENT_PENDING_CONFIRMATION. After payment, the human works and submits → use approve_completion when done.',
+          'Record payment for an ACCEPTED job. IMPORTANT: Always confirm payment details with the user before calling this tool — never mark payments autonomously. Job must be in ACCEPTED status (use get_job_status to check). Crypto payments (usdc, eth, sol): provide tx hash + network → verified on-chain instantly, job moves to PAID. Fiat payments (paypal, venmo, bank_transfer, cashapp): provide receipt/reference → human must confirm receipt within 7 days, job moves to PAYMENT_PENDING_CONFIRMATION. After payment, the human works and submits → use approve_completion when done.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -650,7 +650,7 @@ export function createServer(): Server {
       {
         name: 'approve_completion',
         description:
-          'Approve submitted work for a SUBMITTED job. Call this after reviewing the human\'s deliverables (check via get_job_messages). Moves the job to COMPLETED. After approval, use leave_review to rate the human. If the work needs changes, use request_revision instead.',
+          'Approve submitted work for a SUBMITTED job. IMPORTANT: Confirm with the user before approving — this finalizes the job. Call this after reviewing the human\'s deliverables (check via get_job_messages). Moves the job to COMPLETED. After approval, use leave_review to rate the human. If the work needs changes, use request_revision instead.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -840,7 +840,7 @@ export function createServer(): Server {
       {
         name: 'start_stream',
         description:
-          'Start a stream payment for an ACCEPTED stream job. Stream payments require crypto (on-chain). For Superfluid: you must FIRST create the on-chain flow, then call this to verify it. Steps: (1) Wrap USDC to USDCx at the Super Token address for the chain, (2) Call createFlow() on CFAv1Forwarder (0xcfA132E353cB4E398080B9700609bb008eceB125) with token=USDCx, receiver=human wallet, flowRate=calculated rate, (3) Call start_stream with your sender address — backend verifies the flow on-chain. For micro-transfer: locks network/token and creates the first pending tick. Prefer L2s (Base, Arbitrum, Polygon) for lower gas costs.',
+          'Start a stream payment for an ACCEPTED stream job. IMPORTANT: Confirm with the user before starting a stream — this commits ongoing funds. Stream payments require crypto (on-chain). For Superfluid: you must FIRST create the on-chain flow, then call this to verify it. Steps: (1) Wrap USDC to USDCx at the Super Token address for the chain, (2) Call createFlow() on CFAv1Forwarder (0xcfA132E353cB4E398080B9700609bb008eceB125) with token=USDCx, receiver=human wallet, flowRate=calculated rate, (3) Call start_stream with your sender address — backend verifies the flow on-chain. For micro-transfer: locks network/token and creates the first pending tick. Prefer L2s (Base, Arbitrum, Polygon) for lower gas costs.',
         inputSchema: {
           type: 'object',
           properties: {
