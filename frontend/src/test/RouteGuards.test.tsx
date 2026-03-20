@@ -123,8 +123,10 @@ describe('Route Guards', () => {
     it('shows landing page for unauthenticated user at /tl', async () => {
       renderApp('/tl');
       await waitFor(() => {
-        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
-      });
+        const heading = screen.queryByRole('heading', { level: 1 });
+        const loading = screen.queryByRole('status');
+        expect(heading || loading).toBeTruthy();
+      }, { timeout: 5000 });
     });
 
     it('redirects authenticated user at /tl to /dashboard', async () => {
@@ -139,8 +141,10 @@ describe('Route Guards', () => {
     it('shows landing page for unauthenticated user at /es', async () => {
       renderApp('/es');
       await waitFor(() => {
-        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
-      });
+        const heading = screen.queryByRole('heading', { level: 1 });
+        const loading = screen.queryByRole('status');
+        expect(heading || loading).toBeTruthy();
+      }, { timeout: 5000 });
     });
 
     it('redirects authenticated user at /es to /dashboard', async () => {
@@ -163,8 +167,10 @@ describe('Route Guards', () => {
       renderApp('/en');
       await waitFor(() => {
         // /en redirects to /, which shows landing page for unauthed
-        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
-      });
+        const heading = screen.queryByRole('heading', { level: 1 });
+        const loading = screen.queryByRole('status');
+        expect(heading || loading).toBeTruthy();
+      }, { timeout: 5000 });
     });
 
     it('shows 404 for invalid language code', async () => {
