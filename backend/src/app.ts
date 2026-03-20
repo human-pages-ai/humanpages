@@ -567,6 +567,8 @@ const FROM_SLUGS: Record<string, { utm_source: string; utm_medium: string; utm_c
   'linkedin':         { utm_source: 'linkedin', utm_medium: 'bio', utm_campaign: 'social_linkedin' },
   'instagram':        { utm_source: 'instagram', utm_medium: 'bio', utm_campaign: 'social_instagram' },
   'tiktok':           { utm_source: 'tiktok', utm_medium: 'bio', utm_campaign: 'social_tiktok' },
+  'facebook':         { utm_source: 'facebook', utm_medium: 'bio', utm_campaign: 'social_facebook' },
+  'discord':          { utm_source: 'discord', utm_medium: 'bio', utm_campaign: 'social_discord' },
 };
 
 app.get('/from/:slug', (req, res) => {
