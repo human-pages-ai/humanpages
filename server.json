@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.human-pages-ai/humanpages",
   "title": "Human Pages",
-  "description": "Give your AI agent the ability to find and hire real people for physical-world tasks — photography, deliveries, research, cleaning, and more. Agent-native workflow via 36 MCP tools: no browser, no manual bidding, no platform fees.",
+  "description": "Hire real humans for tasks agents can't do alone — QA testing, directory submissions, Play Store beta testers, localization review, competitor monitoring, and more. 36 MCP tools for the full hiring lifecycle. No platform fees.",
   "websiteUrl": "https://humanpages.ai",
   "repository": {
     "url": "https://github.com/human-pages-ai/humanpages",

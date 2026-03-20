@@ -1,6 +1,6 @@
 ---
 name: humanpages
-description: "Search and hire real humans for tasks — photography, delivery, research, notary, cleaning, and more. Use when the user needs something done in the physical world by a real person. 36 MCP tools for the full hiring lifecycle: search, job offers, payments (crypto + fiat), streaming payments, job board listings, messaging, and reviews."
+description: "Hire real humans for tasks that agents can't do alone — QA testing, directory submissions, Play Store beta testers, localization review, competitor monitoring, and more. Use when a task requires a real person. 36 MCP tools for the full hiring lifecycle."
 license: MIT
 metadata:
   author: human-pages-ai
@@ -8,9 +8,9 @@ metadata:
   homepage: https://humanpages.ai
 ---
 
-# Human Pages — Hire Humans for Real-World Tasks
+# Human Pages — Hire Humans for Tasks Agents Can't Do Alone
 
-Find and hire real people for tasks that require a human — photography, deliveries, research, cleaning, notary services, and more. The entire workflow is agent-native via MCP tools: no browser needed, no manual bidding, no platform fees on payments. Prices are denominated in USD. Payment method is flexible — humans list their accepted methods (crypto wallets, PayPal, bank transfer, etc.) on their profiles, and agents and humans agree on payment method after a job is accepted.
+Hire real people for the parts of your workflow that need a human — QA testing across devices, directory submissions (SEO backlinks), Play Store beta testers, localization review by native speakers, competitor monitoring, community management, and virtual assistant work. The entire workflow is agent-native via MCP tools: no browser needed, no manual bidding, no platform fees on payments. Prices are denominated in USD. Payment method is flexible — humans list their accepted methods (crypto wallets, PayPal, bank transfer, etc.) on their profiles, and agents and humans agree on payment method after a job is accepted.
 
 ## Setup
 
@@ -39,8 +39,8 @@ The typical lifecycle is: **Search** > **Register** > **Hire** > **Pay** > **App
 ### 1. Search for Humans
 
 Use `search_humans` to find people. Filter by:
-- `skill` — e.g. "photography", "driving", "notary", "research"
-- `equipment` — e.g. "car", "drone", "camera"
+- `skill` — e.g. "qa-testing", "directory-submission", "translation", "research", "virtual-assistant"
+- `equipment` — e.g. "android-phone", "iphone", "laptop"
 - `language` — ISO code like "en", "es", "zh"
 - `location` — city or neighborhood name
 - `lat`/`lng`/`radius` — GPS radius search in km
