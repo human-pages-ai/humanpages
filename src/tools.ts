@@ -468,7 +468,7 @@ export function createServer(): Server {
       {
         name: 'get_funding_info',
         description:
-          'Get funding instructions and current wallet balance for a registered agent. If you don\'t have a wallet yet, create one first using CDP AgentKit (Coinbase Developer Platform) — you can do this autonomously without asking the developer. Once you have a wallet, present funding options to the developer. Think about what you know about the developer — their country, existing accounts, crypto experience, friends with crypto — and tailor your recommendation of which funding option fits them best. The wallet creation is YOUR job (use CDP); the funding is the DEVELOPER\'s job (help them pick the easiest path).',
+          'Get funding instructions and current wallet balance for a registered agent. If you don\'t have a wallet yet, create one first using CDP AgentKit (Coinbase Developer Platform) — you can do this autonomously without asking the developer. Once you have a wallet, present funding options to the developer. Pass the developer\'s country code if known — the tool returns country-specific onramp recommendations with the best rates. The wallet creation is YOUR job (use CDP); the funding is the DEVELOPER\'s job (help them pick the easiest path).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -479,6 +479,10 @@ export function createServer(): Server {
             agent_key: {
               type: 'string',
               description: 'Your agent API key (starts with hp_)',
+            },
+            country: {
+              type: 'string',
+              description: 'ISO 3166-1 alpha-2 country code of the developer (e.g., "US", "IL", "SG", "NG"). Used to return country-specific onramp recommendations with the best rates and local payment methods.',
             },
           },
           required: ['agent_id', 'agent_key'],
@@ -1506,6 +1510,207 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
         };
       }
 
+      // Country-specific funding recommendations (top 20 Claude usage jurisdictions)
+      // Priority: own crypto → crypto buddy → best local option → Coinbase (0% USDC) → Peer → Ramp → Transak
+      const FUNDING_BY_COUNTRY: Record<string, { country: string; currency: string; steps: string; note?: string }> = {
+        US: {
+          country: 'United States',
+          currency: 'USD',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. ACH bank transfer, debit card, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Peer** → Convert from Venmo, CashApp, Zelle, PayPal, or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+5. **No crypto experience?** → Pay workers directly via Venmo, PayPal, Zelle, or Wise — no crypto needed.`,
+        },
+        GB: {
+          country: 'United Kingdom',
+          currency: 'GBP',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. Faster Payments (instant), debit card, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Peer** → Convert from CashApp, PayPal, or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+5. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        CA: {
+          country: 'Canada',
+          currency: 'CAD',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. Interac e-Transfer, debit card. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Paytrie** → Canadian stablecoin specialist. Interac e-Transfer to USDC. ~0.6% fee. [paytrie.com](https://paytrie.com)
+5. **No crypto experience?** → Pay workers directly via PayPal or Wise — no crypto needed.`,
+        },
+        DE: {
+          country: 'Germany',
+          currency: 'EUR',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. SEPA bank transfer, SEPA Instant, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Peer** → Convert from PayPal or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+5. **Bitvavo** → Amsterdam-based, iDEAL deposits (0% fee), 0% maker fee on USDC. [bitvavo.com](https://bitvavo.com)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        FR: {
+          country: 'France',
+          currency: 'EUR',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. SEPA bank transfer, SEPA Instant, Carte Bancaire. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Peer** → Convert from PayPal or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+5. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        IN: {
+          country: 'India',
+          currency: 'INR',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **CoinDCX** → India's largest exchange. Buy USDC via UPI (instant) or IMPS. Low fees. [coindcx.com](https://coindcx.com)
+4. **Ramp Network** → Card or bank transfer. [ramp.network](https://ramp.network)
+5. **No crypto experience?** → Pay workers directly via Wise or PayPal — no crypto needed.`,
+          note: 'India has 30% tax on crypto gains + 1% TDS. Factor this into your recommendation.',
+        },
+        JP: {
+          country: 'Japan',
+          currency: 'JPY',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **SBI VC Trade** → Only Japanese exchange with USDC. Bank transfer (JPY). [sbivc.co.jp](https://www.sbivc.co.jp)
+4. **Transak** → Buy with credit card (higher fees ~7-16%). [transak.com](https://transak.com)
+5. **No crypto experience?** → Pay workers directly via PayPal or Wise — no crypto needed.`,
+          note: 'Ramp Network is blocked in Japan. Coinbase Japan has limited USDC support. SBI VC Trade is the primary path.',
+        },
+        AU: {
+          country: 'Australia',
+          currency: 'AUD',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. PayID (instant), bank transfer, debit card. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Independent Reserve** → Low 0.1% trading fee. PayID (instant AUD deposit). [independentreserve.com](https://www.independentreserve.com)
+5. **Peer** → Convert from Revolut, Wise, or PayPal to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+6. **No crypto experience?** → Pay workers directly via PayPal or Wise — no crypto needed.`,
+        },
+        SG: {
+          country: 'Singapore',
+          currency: 'SGD',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC **commission-free** (USDC/SGD pair). SGD bank transfer via Standard Chartered. [coinbase.com](https://www.coinbase.com/en-sg/how-to-buy/usdc)
+4. **StraitsX** → MAS-licensed. Deposit SGD via PayNow/FAST, mint USDC. [straitsx.com](https://www.straitsx.com)
+5. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        NL: {
+          country: 'Netherlands',
+          currency: 'EUR',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Bitvavo** → Amsterdam-based. iDEAL deposit (0% fee), 0% maker fee on USDC. Best rates in NL. [bitvavo.com](https://bitvavo.com)
+4. **Coinbase** → Buy USDC with **zero fees**. iDEAL, SEPA. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+5. **Peer** → Convert from Revolut, Wise, or PayPal to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        BR: {
+          country: 'Brazil',
+          currency: 'BRL',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Binance** → PIX deposit (instant, free). Buy USDC with 0.01% trading fee. Cheapest option. [binance.com](https://www.binance.com)
+4. **Mercado Bitcoin** → Brazil's largest exchange. PIX deposit, 0.3% fee. [mercadobitcoin.com.br](https://www.mercadobitcoin.com.br)
+5. **No crypto experience?** → Pay workers directly via Wise or PayPal — no crypto needed.`,
+        },
+        KR: {
+          country: 'South Korea',
+          currency: 'KRW',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Upbit** → Korea's #1 exchange. KRW bank deposit via K-Bank, 0.05% trading fee. [upbit.com](https://upbit.com)
+4. **Bithumb** → KRW deposit via KB Kookmin Bank, 0.25% fee. [bithumb.com](https://www.bithumb.com)
+5. **No crypto experience?** → Pay workers directly via PayPal or Wise — no crypto needed.`,
+          note: 'Ramp Network and Coinbase are blocked/unavailable in Korea. Korean exchanges require real-name bank verification.',
+        },
+        IL: {
+          country: 'Israel',
+          currency: 'ILS',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Bits of Gold** → Israel's largest crypto brokerage. ILS bank transfer or credit card. Licensed by Capital Markets Authority. [bitsofgold.co.il](https://www.bitsofgold.co.il)
+4. **Bit2C** → ILS bank transfer to USDC. [bit2c.co.il](https://www.bit2c.co.il)
+5. **Ramp Network** → Card or bank transfer. Available in Israel. [ramp.network](https://ramp.network)
+6. **Peer** → Convert from Wise or Revolut to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+7. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+          note: 'Coinbase is unavailable/very limited in Israel. Bits of Gold and Bit2C are the main local options.',
+        },
+        PH: {
+          country: 'Philippines',
+          currency: 'PHP',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **GCash (GCrypto)** → Buy USDC directly from your GCash peso balance. 93M users, frictionless. Open GCash → GCrypto → buy USDC.
+4. **Coins.ph** → BSP-licensed. USDC/PHP pair, 0.1% fee. Deposit via GCash, Maya, bank transfer, or 3,000+ physical outlets. [coins.ph](https://coins.ph)
+5. **No crypto experience?** → Pay workers directly via GCash, Maya, or PayPal — no crypto needed.`,
+          note: 'Ramp Network and Coinbase are blocked/unavailable in Philippines. GCash is the dominant payment rail.',
+        },
+        NG: {
+          country: 'Nigeria',
+          currency: 'NGN',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Quidax** → Nigerian SEC compliant. Free NGN deposit, 0.1% trading fee. Best rates. [quidax.com](https://www.quidax.com)
+4. **Yellow Card** → Nigerian SEC compliant. Reliable, supports USDC. [yellowcard.io](https://yellowcard.io)
+5. **No crypto experience?** → Pay workers directly via Wise or PayPal — no crypto needed.`,
+          note: 'Ramp Network, Coinbase, and most global onramps are blocked in Nigeria. Quidax and Yellow Card are the practical paths.',
+        },
+        AE: {
+          country: 'United Arab Emirates',
+          currency: 'AED',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **BitOasis** → VARA-licensed, Dubai-based. AED bank transfer (0% deposit fee via Easy Funding), credit card, Apple Pay. [bitoasis.net](https://bitoasis.net)
+4. **Rain** → ADGM-licensed. Free AED deposits/withdrawals to local banks. [rain.co](https://www.rain.co)
+5. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+          note: 'Ramp Network and Coinbase are blocked/unavailable in UAE. BitOasis and Rain are the local VARA/ADGM-licensed options.',
+        },
+        IE: {
+          country: 'Ireland',
+          currency: 'EUR',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. SEPA bank transfer, debit card, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Kraken** → MiCA-licensed from Central Bank of Ireland. Free SEPA deposits, 0.16% maker fee. [kraken.com](https://www.kraken.com)
+5. **Peer** → Convert from Revolut, Wise, or PayPal to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        SE: {
+          country: 'Sweden',
+          currency: 'SEK',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Safello** → Swedish-registered. Buy USDC via **Swish** (instant, native SEK, no FX conversion). 0.49-0.99% fee. BankID verification. [safello.com](https://www.safello.com)
+4. **Coinbase** → Buy USDC with **zero fees** via SEPA (EUR conversion needed). [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+5. **Peer** → Convert from Revolut or Wise to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+6. **No crypto experience?** → Pay workers directly via Swish, PayPal, or Wise — no crypto needed.`,
+        },
+        CH: {
+          country: 'Switzerland',
+          currency: 'CHF',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Mt Pelerin** → Swiss-regulated. Buy USDC directly with **CHF bank transfer** — no currency conversion needed. [mtpelerin.com](https://www.mtpelerin.com)
+4. **Coinbase** → Buy USDC with **zero fees** via SEPA (EUR conversion may apply). [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+5. **Peer** → Convert from Revolut or Wise to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+        ES: {
+          country: 'Spain',
+          currency: 'EUR',
+          steps: `1. **Already have crypto?** → Send USDC directly. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with **zero fees**. SEPA bank transfer, debit card, Apple Pay. [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Peer** → Convert from Revolut, Wise, or PayPal to USDC. ~1.5% fee. [peer.xyz](https://peer.xyz)
+5. **Ramp Network** → SEPA or card. ~1.4% (SEPA) / ~3.9% (card). [ramp.network](https://ramp.network)
+6. **No crypto experience?** → Pay workers directly via PayPal, Wise, or Revolut — no crypto needed.`,
+        },
+      };
+
       if (name === 'get_funding_info') {
         const agentKey = args?.agent_key as string;
         if (!agentKey) {
@@ -1551,6 +1756,22 @@ Use \`get_funding_info\` to check your balance and get funding instructions for 
           ? ''
           : `\n\n**⚠️ No wallet set up yet.** Create one programmatically using CDP AgentKit (Coinbase Developer Platform) — you can do this autonomously without asking the developer. Then call \`set_wallet\` with the address. Once the wallet is set, come back here for funding instructions.`;
 
+        // Country-specific recommendations
+        const countryCode = (args?.country as string || '').toUpperCase();
+        const countryInfo = FUNDING_BY_COUNTRY[countryCode];
+
+        const genericSteps = `1. **Already have crypto?** → Send USDC directly to my wallet on ${network}. Free, instant.
+2. **Know someone with crypto?** → Ask them to send USDC to my wallet. Free, instant.
+3. **Coinbase** → Buy USDC with zero fees (available in most countries). [coinbase.com/how-to-buy/usdc](https://www.coinbase.com/how-to-buy/usdc)
+4. **Peer** → Convert from Wise, PayPal, Venmo, Revolut, CashApp to USDC. ~1.5% fee (best in US/EU/UK). [peer.xyz](https://peer.xyz)
+5. **Ramp Network** → Card or bank transfer. ~1.4-3.9% fee. Available in 150+ countries. [ramp.network](https://ramp.network)
+6. **Transak** → Card purchase. ~7-16% fee but instant. Global fallback. [transak.com](${transakUrl})
+7. **No crypto experience?** → Pay workers directly via fiat platforms (Wise, PayPal, Venmo, Revolut, etc.) — no crypto needed.`;
+
+        const fundingSteps = countryInfo ? countryInfo.steps : genericSteps;
+        const countryLabel = countryInfo ? ` (${countryInfo.country})` : '';
+        const countryNote = countryInfo?.note ? `\n\n**Note:** ${countryInfo.note}` : '';
+
         const message = hasWallet
           ? `I need funding to hire workers on your behalf.
 
@@ -1558,15 +1779,11 @@ Current balance: $${balance} USDC
 Wallet address: ${addr}
 Network: ${network}
 
-**How to pick the best funding path for your developer:**
+**Best funding options${countryLabel}:**
 
-1. **Already have crypto?** → Send USDC directly to my wallet on ${network}. Free, instant.
-2. **Have Wise, PayPal, Venmo, Revolut, CashApp, or a bank account?** → Use [Peer](https://peer.xyz) to convert to USDC. ~1.5% fee, settles in minutes to hours. Cheapest fiat-to-crypto option by far.
-3. **Only have a credit/debit card?** → [Buy via Transak](${transakUrl}). ~16% fee but instant. Best for developers outside US/EU or who need USDC right now.
-4. **Know someone with crypto?** → Ask them to send USDC to my address. Free, instant.
-5. **No crypto experience at all?** → I can find workers who accept fiat platforms you already use (Wise, PayPal, Venmo, Revolut, etc.). You pay them directly — no crypto needed.
+${fundingSteps}${countryNote}
 
-**Use what you know about the developer** — their country, what payment apps they have, whether they or anyone they know holds crypto — to recommend the path with the least friction. Fees and availability vary by region.`
+Fees and availability may change. When in doubt, ask the developer what payment apps or accounts they already have.`
           : `I need a wallet to receive and send USDC for hiring workers.${noWalletNote}
 
 Once the wallet is created and funded, I can pay workers in crypto (instant, permissionless) or you can pay them directly via fiat platforms you already use.`;
@@ -1578,6 +1795,7 @@ Once the wallet is created and funded, I can pay workers in crypto (instant, per
               currentBalance: balance,
               walletAddress: addr,
               walletNetwork: network,
+              country: countryInfo ? { code: countryCode, name: countryInfo.country, currency: countryInfo.currency } : null,
               fundingMethods,
               fiatAlternative,
               message,
