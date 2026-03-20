@@ -220,6 +220,77 @@ Response (PRO listings surface first):
   "pagination": { "page": 1, "limit": 12, "total": 1, "totalPages": 1 }
 }`;
 
+const PROMO_TILES = [
+  { emoji: '🚀', title: 'SEO Submissions', desc: '80+ directories', url: 'https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/directory-submissions.md' },
+  { emoji: '📱', title: 'Social Media Marketing', desc: 'Daily posting & growth', url: 'https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/social-media-marketing.md' },
+  { emoji: '🧑\u200D💼', title: 'Virtual Assistant', desc: 'Admin & research', url: 'https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/virtual-assistant.md' },
+];
+
+function PromoSection() {
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalUrl, setModalUrl] = useState('');
+
+  const handleClaim = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setModalUrl(url);
+    setShowModal(true);
+    setTimeout(() => setCopiedUrl(null), 3000);
+  };
+
+  return (
+    <div className="mt-10 md:mt-12 max-w-2xl mx-auto text-center">
+      <p className="text-sm md:text-xl font-black mb-5">
+        <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
+          Itai loves you &mdash; pick a service, $10 is on us
+        </span>
+      </p>
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
+        {PROMO_TILES.map((tile) => (
+          <button
+            key={tile.title}
+            onClick={() => handleClaim(tile.url)}
+            className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer text-left"
+          >
+            <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform text-center">{tile.emoji}</span>
+            <p className="font-bold text-slate-900 text-xs md:text-lg text-center">{tile.title}</p>
+            <p className="text-slate-400 text-[10px] md:text-sm mt-1 text-center">{tile.desc}</p>
+            <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500 text-center">
+              {copiedUrl === tile.url ? 'Copied!' : 'Claim \u2192'}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      {/* Modal — paste this to your AI agent */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-4xl md:text-5xl text-center mb-4">🤖</div>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 text-center mb-2">
+              Link copied!
+            </h3>
+            <p className="text-slate-600 text-center mb-6">
+              Paste it to your AI agent (Claude, GPT, Cursor...) and it will take it from here.
+            </p>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-6">
+              <p className="text-xs text-slate-500 mb-1 font-medium">Copied to clipboard:</p>
+              <p className="text-sm text-slate-700 font-mono break-all">{modalUrl}</p>
+            </div>
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DevelopersPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -315,33 +386,7 @@ export default function DevelopersPage() {
 
           {/* Promo banner — only visible with ?promo=Itai-loves-you */}
           {showItaiPromo && (
-            <div className="mt-10 md:mt-12 max-w-2xl mx-auto text-center">
-              <p className="text-sm md:text-xl font-black mb-5">
-                <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
-                  Itai loves you &mdash; pick a service, $10 is on us
-                </span>
-              </p>
-              <div className="grid grid-cols-3 gap-2 md:gap-4">
-                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/directory-submissions.md" target="_blank" rel="noopener noreferrer" className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
-                  <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform">🚀</span>
-                  <p className="font-bold text-slate-900 text-xs md:text-lg">SEO Submissions</p>
-                  <p className="text-slate-400 text-[10px] md:text-sm mt-1">80+ directories</p>
-                  <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500">Claim &rarr;</p>
-                </a>
-                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/social-media-marketing.md" target="_blank" rel="noopener noreferrer" className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
-                  <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform">📱</span>
-                  <p className="font-bold text-slate-900 text-xs md:text-lg">Social Media Marketing</p>
-                  <p className="text-slate-400 text-[10px] md:text-sm mt-1">Daily posting & growth</p>
-                  <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500">Claim &rarr;</p>
-                </a>
-                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/virtual-assistant.md" target="_blank" rel="noopener noreferrer" className="group py-3 md:py-5 px-2 md:px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
-                  <span className="text-2xl md:text-5xl block mb-2 md:mb-3 group-hover:scale-110 transition-transform">🧑‍💼</span>
-                  <p className="font-bold text-slate-900 text-xs md:text-lg">Virtual Assistant</p>
-                  <p className="text-slate-400 text-[10px] md:text-sm mt-1">Admin & research</p>
-                  <p className="mt-2 text-[10px] md:text-xs font-semibold text-fuchsia-500">Claim &rarr;</p>
-                </a>
-              </div>
-            </div>
+            <PromoSection />
           )}
 
           {/* Primary CTA */}
