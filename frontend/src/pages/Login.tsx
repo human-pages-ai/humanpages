@@ -299,6 +299,8 @@ export default function Login() {
           </button>
         </div>
 
+        {/* Email login temporarily hidden — Turnstile captcha not loading */}
+        {false && <>
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -383,6 +385,7 @@ export default function Login() {
           </button>
         </form>
         )}
+        </>}
 
         <p className="text-center text-sm text-gray-600">
           {t('auth.noAccount')}{' '}

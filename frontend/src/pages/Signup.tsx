@@ -395,6 +395,8 @@ export default function Signup() {
           </button>
         </div>
 
+        {/* Email signup temporarily hidden — Turnstile captcha not loading */}
+        {false && <>
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -525,6 +527,7 @@ export default function Signup() {
           <InAppBrowserBanner />
         </form>
         )}
+        </>}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
