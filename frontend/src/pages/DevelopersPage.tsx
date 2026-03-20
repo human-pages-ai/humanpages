@@ -89,9 +89,9 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
 
 function CodeBlock({ code }: { code: string }) {
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden rounded-lg">
       <CopyButton text={code} />
-      <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+      <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-xs sm:text-sm max-w-[calc(100vw-2rem)]">
         <code>{code}</code>
       </pre>
     </div>
@@ -236,7 +236,7 @@ export default function DevelopersPage() {
 
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <SEO
         title="HumanPages.ai | Real-world tasks for your AI Agent"
         description="You prompt, humans deliver. Connect the MCP and delegate tasks automatically."
@@ -283,17 +283,17 @@ export default function DevelopersPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <Link to="/"><Logo /></Link>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-sm text-slate-500 hover:text-slate-700">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link to="/" className="hidden sm:inline text-sm text-slate-500 hover:text-slate-700">
               {t('nav.humans')}
             </Link>
-            <Link to="/dev" className="text-sm font-medium text-slate-900">
+            <Link to="/dev" className="hidden sm:inline text-sm font-medium text-slate-900">
               {t('nav.developers')}
             </Link>
             <LanguageSwitcher />
             <Link
               to="/signup?utm_source=dev_page"
-              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
+              className="px-3 sm:px-4 py-2 bg-orange-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
             >
               {t('nav.startProfile')}
             </Link>
