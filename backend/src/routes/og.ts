@@ -272,10 +272,62 @@ export function generatePromptToCompletionSvg(): string {
 </svg>`;
 }
 
+export function generateConnectSvg(platform: string): string {
+  const platforms: Record<string, string> = {
+    'claude': 'Claude',
+    'cursor': 'Cursor',
+    'windsurf': 'Windsurf',
+    'chatgpt': 'ChatGPT',
+    'openai-agents': 'OpenAI Agents SDK',
+    'openai-responses': 'OpenAI Responses API',
+    'gemini': 'Gemini CLI',
+    'android-studio': 'Android Studio',
+    'langchain': 'LangChain',
+    'clawhub': 'ClawHub',
+    'nanoclaw': 'NanoClaw',
+    'zeroclaw': 'ZeroClaw',
+    'nanobot': 'Nanobot',
+    'trustclaw': 'TrustClaw',
+    'picoclaw': 'PicoClaw',
+    'maxclaw': 'MaxClaw',
+    'smithery': 'Smithery',
+  };
+
+  const name = platforms[platform] || platform;
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="40%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="5" fill="url(#accent)"/>
+
+  <text x="600" y="200" font-family="system-ui, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" text-anchor="middle">
+    <tspan fill="#f1f5f9">human</tspan><tspan fill="#3b82f6">pages</tspan><tspan fill="#f97316" font-weight="500">.ai</tspan>
+  </text>
+
+  <text x="600" y="340" font-family="DejaVu Sans Mono, monospace" font-size="50" font-weight="700" fill="#f1f5f9" text-anchor="middle" letter-spacing="-1">Connect ${esc(name)} to</text>
+
+  <text x="600" y="450" font-family="DejaVu Sans Mono, monospace" font-size="42" font-weight="700" text-anchor="middle" letter-spacing="-1">
+    <tspan fill="#f1f5f9">real </tspan><tspan fill="#f97316">humans.</tspan><tspan fill="#60a5fa"> Via MCP.</tspan>
+  </text>
+</svg>`;
+}
+
 // Cache PNG images in memory
 let defaultPngCache: Buffer | null = null;
 let careersPngCache: Buffer | null = null;
 let promptToCompletionPngCache: Buffer | null = null;
+const connectPngCache: Map<string, Buffer> = new Map();
 
 // Default OG image (served as PNG)
 router.get('/default', (req, res) => {
@@ -317,6 +369,22 @@ router.get('/careers', (req, res) => {
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
     res.send(careersPngCache);
+  } catch (error) {
+    res.status(500).send('Error generating image');
+  }
+});
+
+// Connect platform OG image (served as PNG)
+router.get('/connect/:platform', (req, res) => {
+  try {
+    const platform = req.params.platform;
+    if (!connectPngCache.has(platform)) {
+      const svg = generateConnectSvg(platform);
+      connectPngCache.set(platform, svgToPng(svg));
+    }
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=604800'); // cache 7 days
+    res.send(connectPngCache.get(platform));
   } catch (error) {
     res.status(500).send('Error generating image');
   }

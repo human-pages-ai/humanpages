@@ -21,19 +21,19 @@ const DESKTOP_REMOTE = `{
   "mcpServers": {
     "humanpages": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.humanpages.ai/sse"]
+      "args": ["-y", "mcp-remote", "https://mcp.humanpages.ai/mcp"]
     }
   }
 }`;
 
 const CODE_CLI = `claude mcp add humanpages -- npx -y humanpages`;
-const CODE_REMOTE = `claude mcp add --transport http humanpages https://mcp.humanpages.ai/sse`;
+const CODE_REMOTE = `claude mcp add --transport http humanpages https://mcp.humanpages.ai/mcp`;
 
 const MCP_JSON = `{
   "mcpServers": {
     "humanpages": {
       "type": "http",
-      "url": "https://mcp.humanpages.ai/sse"
+      "url": "https://mcp.humanpages.ai/mcp"
     }
   }
 }`;

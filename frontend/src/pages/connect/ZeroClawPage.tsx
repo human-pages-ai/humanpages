@@ -1,21 +1,14 @@
 import ConnectLayout from './ConnectLayout';
 import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
-const CONFIG_TOML = `# zeroclaw.toml — add HumanPages as an MCP provider
-[[mcp]]
-name = "humanpages"
-transport = "sse"
-url = "https://mcp.humanpages.ai/sse"`;
-
-const STDIO_CONFIG = `# Alternative: local stdio via npx
-[[mcp]]
-name = "humanpages"
-transport = "stdio"
+const CONFIG_TOML = `# ~/.zeroclaw/config.toml — add HumanPages as an MCP server
+[mcp_servers.humanpages]
 command = "npx"
-args = ["-y", "humanpages"]
+args = ["-y", "humanpages"]`;
 
-[mcp.env]
-API_BASE_URL = "https://humanpages.ai"`;
+const CONFIG_REMOTE = `# Or use remote HTTP transport
+[mcp_servers.humanpages]
+url = "https://mcp.humanpages.ai/mcp"`;
 
 export default function ZeroClawPage() {
   return (
@@ -29,7 +22,7 @@ export default function ZeroClawPage() {
         gradient="from-orange-50 to-red-50"
         icon={<span>🦀</span>}
         name="ZeroClaw"
-        tagline="Rust-based, 3-5 MB binary, sub-10ms startup — MCP on the edge"
+        tagline="Rust-based, ~9 MB binary, sub-10ms startup — MCP on the edge"
         docsUrl="https://github.com/zeroclaw-labs/zeroclaw"
       />
 
@@ -39,22 +32,25 @@ export default function ZeroClawPage() {
             {
               title: 'Install ZeroClaw',
               detail: (
-                <CodeBlock code={`cargo install zeroclaw\n# or download binary from GitHub releases`} lang="bash" filename="Terminal" />
-              ),
-            },
-            {
-              title: 'Add HumanPages MCP (remote)',
-              detail: (
                 <div>
-                  <p className="mb-2">Add to your <code>zeroclaw.toml</code>:</p>
-                  <CodeBlock code={CONFIG_TOML} lang="toml" filename="zeroclaw.toml" />
+                  <CodeBlock code={`# Download binary from GitHub releases\ncurl -fsSL https://zeroclaw.net/install.sh | sh\n\n# Then run onboarding to generate config\nzeroclaw onboard`} lang="bash" filename="Terminal" />
+                  <p className="text-sm text-slate-500 mt-2">This creates <code>~/.zeroclaw/config.toml</code> with your provider keys and preferences.</p>
                 </div>
               ),
             },
             {
-              title: 'Or use local stdio',
+              title: 'Add HumanPages MCP (local stdio)',
               detail: (
-                <CodeBlock code={STDIO_CONFIG} lang="toml" filename="zeroclaw.toml (local)" />
+                <div>
+                  <p className="mb-2">Add to your <code>~/.zeroclaw/config.toml</code>:</p>
+                  <CodeBlock code={CONFIG_TOML} lang="toml" filename="~/.zeroclaw/config.toml" />
+                </div>
+              ),
+            },
+            {
+              title: 'Or use remote transport',
+              detail: (
+                <CodeBlock code={CONFIG_REMOTE} lang="toml" filename="~/.zeroclaw/config.toml (remote)" />
               ),
             },
             {
@@ -70,7 +66,7 @@ export default function ZeroClawPage() {
       <Section title="Why ZeroClaw + HumanPages">
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 text-center">
-            <p className="text-2xl font-bold text-orange-900">3-5 MB</p>
+            <p className="text-2xl font-bold text-orange-900">~9 MB</p>
             <p className="text-xs text-orange-600 mt-1">Binary size — runs on Raspberry Pi</p>
           </div>
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 text-center">

@@ -151,7 +151,7 @@ export const PLATFORMS: PlatformConfig[] = [
     bgGradient: 'from-rose-50 to-pink-50',
     tagline: 'One-command install via OpenClaw',
     description: 'Install as an OpenClaw skill: clawhub install humanpages.',
-    docsUrl: 'https://clawhub.com/skills/humanpages',
+    docsUrl: 'https://clawhub.ai',
     transport: ['stdio'],
     configType: 'cli',
     category: 'framework',
@@ -227,7 +227,7 @@ export const PLATFORMS: PlatformConfig[] = [
     bgGradient: 'from-emerald-50 to-green-50',
     tagline: 'Cloud-sandboxed execution',
     description: 'Managed cloud agent sandbox — zero local setup, zero local risk.',
-    docsUrl: 'https://trustclaw.com',
+    docsUrl: 'https://trustclaw.app',
     transport: ['sse'],
     configType: 'ui',
     category: 'runtime',
@@ -280,7 +280,7 @@ export const PLATFORMS: PlatformConfig[] = [
   },
 ];
 
-export const MCP_SERVER_URL = 'https://mcp.humanpages.ai/sse';
+export const MCP_SERVER_URL = 'https://mcp.humanpages.ai/mcp';
 export const MCP_NPX_COMMAND = 'npx -y humanpages';
 export const API_BASE_URL = 'https://humanpages.ai';
 

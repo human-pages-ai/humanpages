@@ -37,8 +37,8 @@ export default function SEO({
 }: SEOProps) {
   const { i18n } = useTranslation();
   const currentLang = lang || i18n.language || 'en';
-  const pageTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Get Hired by AI Agents for Real-World Tasks`;
-  const ogTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
+  const pageTitle = title ? (title === SITE_NAME ? SITE_NAME : `${title} | ${SITE_NAME}`) : `${SITE_NAME} — Get Hired by AI Agents for Real-World Tasks`;
+  const ogTitle = title ? (title === SITE_NAME ? SITE_NAME : `${title} | ${SITE_NAME}`) : SITE_NAME;
   const canonicalUrl = canonical || (path ? getLangUrl(currentLang, path) : SITE_URL);
 
   return (

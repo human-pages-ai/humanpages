@@ -1,16 +1,15 @@
 import ConnectLayout from './ConnectLayout';
 import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
-const MCP_CONFIG = `# In your NanoClaw agent's config, add HumanPages as an MCP server:
-mcp_servers:
-  humanpages:
-    command: npx
-    args: ["-y", "humanpages"]
-    env:
-      API_BASE_URL: https://humanpages.ai`;
-
-const SKILL_ADD = `# Or add via Claude Code skill inside your NanoClaw container:
-claude mcp add humanpages -- npx -y humanpages`;
+const MCP_JSON = `// .mcp.json — add HumanPages to your NanoClaw agent
+{
+  "mcpServers": {
+    "humanpages": {
+      "command": "npx",
+      "args": ["-y", "humanpages"]
+    }
+  }
+}`;
 
 export default function NanoClawPage() {
   return (
@@ -24,23 +23,23 @@ export default function NanoClawPage() {
         gradient="from-indigo-50 to-blue-50"
         icon={<span>🐳</span>}
         name="NanoClaw"
-        tagline="Secure containerized agents — built on Anthropic's Agent SDK"
+        tagline="Secure containerized agents with multi-channel messaging"
         docsUrl="https://github.com/qwibitai/nanoclaw"
       />
 
       <Callout type="info">
-        NanoClaw runs each agent in its own Docker/Apple Container sandbox. MCP servers you add run <strong>inside</strong> the container — isolated from your host system.
+        NanoClaw runs each agent in its own Docker Sandbox or Apple Container. MCP servers you add run <strong>inside</strong> the container — isolated from your host system.
       </Callout>
 
       <Section title="Setup">
         <StepByStep
           steps={[
             {
-              title: 'Install NanoClaw',
+              title: 'Fork & clone NanoClaw',
               detail: (
                 <div>
-                  <CodeBlock code={`git clone https://github.com/qwibitai/nanoclaw.git\ncd nanoclaw\nclaude\n/setup`} lang="bash" filename="Terminal" />
-                  <p className="text-sm text-slate-500 mt-2">Claude Code handles dependencies, auth, container setup, and service config automatically.</p>
+                  <CodeBlock code={`gh repo fork qwibitai/nanoclaw --clone\ncd nanoclaw\nclaude`} lang="bash" filename="Terminal" />
+                  <p className="text-sm text-slate-500 mt-2">Then run <code>/setup</code> inside Claude Code. It handles dependencies, container setup, and service config automatically.</p>
                 </div>
               ),
             },
@@ -48,16 +47,17 @@ export default function NanoClawPage() {
               title: 'Add HumanPages MCP server',
               detail: (
                 <div>
-                  <p className="mb-2">Add to your agent's MCP config:</p>
-                  <CodeBlock code={MCP_CONFIG} lang="yaml" filename="agent config" />
+                  <p className="mb-2">Add to <code>.mcp.json</code> in the agent directory:</p>
+                  <CodeBlock code={MCP_JSON} lang="json" filename=".mcp.json" />
                 </div>
               ),
             },
             {
-              title: 'Or add via Claude Code skill',
+              title: 'Add channels',
               detail: (
                 <div>
-                  <CodeBlock code={SKILL_ADD} lang="bash" filename="Inside NanoClaw container" />
+                  <p className="mb-2">Connect messaging channels via built-in skills:</p>
+                  <CodeBlock code={`/add-whatsapp\n/add-telegram\n/add-slack\n/add-discord\n/add-gmail`} lang="bash" filename="Inside Claude Code" />
                 </div>
               ),
             },
@@ -73,19 +73,19 @@ export default function NanoClawPage() {
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
             <p className="font-semibold text-indigo-900 mb-1">Container isolation</p>
-            <p className="text-sm text-indigo-700">Every agent runs in a sandboxed container — MCP tools can't touch your host filesystem.</p>
+            <p className="text-sm text-indigo-700">Every agent runs in a Docker Sandbox VM or Apple Container — MCP tools can't touch your host filesystem.</p>
           </div>
           <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
             <p className="font-semibold text-indigo-900 mb-1">Multi-channel</p>
-            <p className="text-sm text-indigo-700">Hire humans from WhatsApp, Telegram, Slack, or Discord — all through one agent.</p>
+            <p className="text-sm text-indigo-700">Hire humans from WhatsApp, Telegram, Slack, Discord, or Gmail — all through one agent.</p>
           </div>
           <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-            <p className="font-semibold text-indigo-900 mb-1">Portable skills</p>
-            <p className="text-sm text-indigo-700">MCP servers are Layer 3 — they travel with you if you switch agent frameworks.</p>
+            <p className="font-semibold text-indigo-900 mb-1">Standard MCP config</p>
+            <p className="text-sm text-indigo-700">Uses the standard <code>.mcp.json</code> format — same config structure as Claude Code and Cursor.</p>
           </div>
           <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-            <p className="font-semibold text-indigo-900 mb-1">Anthropic Agent SDK</p>
-            <p className="text-sm text-indigo-700">Built on the same SDK as Claude Code — first-class MCP support out of the box.</p>
+            <p className="font-semibold text-indigo-900 mb-1">Scheduled tasks</p>
+            <p className="text-sm text-indigo-700">Built-in task scheduling — set up recurring hiring workflows that run on autopilot.</p>
           </div>
         </div>
       </Section>

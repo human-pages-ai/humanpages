@@ -1,11 +1,21 @@
 import ConnectLayout from './ConnectLayout';
 import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
-const CONFIG = `# picoclaw.yaml — add HumanPages MCP
-mcp:
-  humanpages:
-    url: https://mcp.humanpages.ai/sse
-    transport: sse`;
+const CONFIG_JSON = `// ~/.picoclaw/config.json — add HumanPages under tools.mcp
+{
+  "tools": {
+    "mcp": {
+      "enabled": true,
+      "servers": {
+        "humanpages": {
+          "enabled": true,
+          "command": "npx",
+          "args": ["-y", "humanpages"]
+        }
+      }
+    }
+  }
+}`;
 
 export default function PicoClawPage() {
   return (
@@ -19,12 +29,12 @@ export default function PicoClawPage() {
         gradient="from-yellow-50 to-amber-50"
         icon={<span>🤏</span>}
         name="PicoClaw"
-        tagline="10 MB of RAM, runs anywhere — from Raspberry Pi to $10 hardware"
+        tagline="<10 MB RAM, runs anywhere — from Raspberry Pi to $10 hardware"
         docsUrl="https://github.com/sipeed/picoclaw"
       />
 
       <Callout type="info">
-        PicoClaw added native MCP support in v0.2.1 (March 2026). Make sure you're on the latest version for full compatibility.
+        PicoClaw supports ARM, RISC-V, MIPS, and x86 architectures. A single binary that runs on virtually any hardware.
       </Callout>
 
       <Section title="Setup">
@@ -33,15 +43,18 @@ export default function PicoClawPage() {
             {
               title: 'Install PicoClaw',
               detail: (
-                <CodeBlock code={`# Pre-built binaries for ARM, x86, RISC-V\ncurl -fsSL https://picoclaw.net/install.sh | sh\n\n# Or build from source\ngo install github.com/sipeed/picoclaw@latest`} lang="bash" filename="Terminal" />
+                <div>
+                  <CodeBlock code={`# Pre-built binaries for ARM, x86, RISC-V, MIPS, LoongArch\ncurl -fsSL https://picoclaw.net/install.sh | sh\n\n# Then run onboarding\npicoclaw onboard`} lang="bash" filename="Terminal" />
+                  <p className="text-sm text-slate-500 mt-2">This generates <code>~/.picoclaw/config.json</code> with your initial configuration.</p>
+                </div>
               ),
             },
             {
               title: 'Add HumanPages MCP',
               detail: (
                 <div>
-                  <p className="mb-2">Add to your PicoClaw config:</p>
-                  <CodeBlock code={CONFIG} lang="yaml" filename="picoclaw.yaml" />
+                  <p className="mb-2">Add to the <code>tools.mcp.servers</code> section in <code>~/.picoclaw/config.json</code>:</p>
+                  <CodeBlock code={CONFIG_JSON} lang="json" filename="~/.picoclaw/config.json" />
                 </div>
               ),
             },
@@ -70,8 +83,8 @@ export default function PicoClawPage() {
             <p className="text-sm text-yellow-700">Smart home agent that can hire people for physical tasks — cleaning, repairs, delivery.</p>
           </div>
           <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
-            <p className="font-semibold text-yellow-900 mb-1">Offline-first</p>
-            <p className="text-sm text-yellow-700">Queue hiring requests when offline, execute them when connectivity returns.</p>
+            <p className="font-semibold text-yellow-900 mb-1">Multi-channel</p>
+            <p className="text-sm text-yellow-700">Connect via Telegram, Discord, Slack, QQ, DingTalk, WeCom, LINE, Matrix, or IRC.</p>
           </div>
         </div>
       </Section>
@@ -83,8 +96,8 @@ export default function PicoClawPage() {
             <p className="text-xs text-amber-600 mt-1">RAM usage</p>
           </div>
           <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 text-center">
-            <p className="text-2xl font-bold text-amber-900">ARM + x86</p>
-            <p className="text-xs text-amber-600 mt-1">Multi-architecture</p>
+            <p className="text-2xl font-bold text-amber-900">6 archs</p>
+            <p className="text-xs text-amber-600 mt-1">ARM, RISC-V, MIPS, x86, LoongArch</p>
           </div>
           <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 text-center">
             <p className="text-2xl font-bold text-amber-900">Go</p>

@@ -22,10 +22,11 @@ export default function ConnectLayout({ children, title, description, path, brea
   return (
     <div className="min-h-screen bg-white">
       <SEO
-        title={title}
+        title="Human Pages"
         description={description}
         path={path}
         ogType="article"
+        ogImage="https://humanpages.ai/api/og/prompt-to-completion"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'TechArticle',

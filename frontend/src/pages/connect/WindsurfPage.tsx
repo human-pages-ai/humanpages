@@ -16,7 +16,7 @@ const LOCAL_CONFIG = `{
 const REMOTE_CONFIG = `{
   "mcpServers": {
     "humanpages": {
-      "serverUrl": "https://mcp.humanpages.ai/sse"
+      "serverUrl": "https://mcp.humanpages.ai/mcp"
     }
   }
 }`;

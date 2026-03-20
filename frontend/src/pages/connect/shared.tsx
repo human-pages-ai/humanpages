@@ -179,7 +179,7 @@ export function QuickCopyCard({ configs }: { configs: { label: string; code: str
 export function TryItSection({ platformName }: { platformName?: string }) {
   const prompt = platformName
     ? `Search for available humans who can do QA testing on HumanPages.`
-    : `Connect to my HumanPages MCP server at https://mcp.humanpages.ai/sse and search for available humans who can do QA testing.`;
+    : `Connect to my HumanPages MCP server at https://mcp.humanpages.ai/mcp and search for available humans who can do QA testing.`;
   return (
     <Section title="Try it now">
       <p className="text-slate-600 mb-4">
@@ -313,7 +313,7 @@ export function HowToSchema({
     },
     supply: {
       '@type': 'HowToSupply',
-      name: 'MCP Server URL: https://mcp.humanpages.ai/sse',
+      name: 'MCP Server URL: https://mcp.humanpages.ai/mcp',
     },
   };
 

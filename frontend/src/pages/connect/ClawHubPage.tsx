@@ -1,14 +1,8 @@
 import ConnectLayout from './ConnectLayout';
 import { CodeBlock, StepByStep, Section, Callout, PlatformHero, TryItSection, ToolsReference, PlatformNav, RelatedPlatforms } from './shared';
 
-const CLAWHUB_INSTALL = `clawhub install humanpages`;
-
-const CLAWHUB_CONFIG = `# Or add directly to your .clawhub/config.yaml
-skills:
-  - name: humanpages
-    source: clawhub.com/skills/humanpages
-    env:
-      API_BASE_URL: https://humanpages.ai`;
+const CLAWHUB_INSTALL = `# Install the HumanPages skill from ClawHub
+clawhub install humanpages`;
 
 export default function ClawHubPage() {
   return (
@@ -21,16 +15,16 @@ export default function ClawHubPage() {
       <PlatformHero
         gradient="from-rose-50 to-pink-50"
         icon={<span>🦞</span>}
-        name="ClawHub (OpenClaw)"
-        tagline="Install as an OpenClaw skill — one command"
-        docsUrl="https://clawhub.com/skills/humanpages"
+        name="ClawHub"
+        tagline="The skill registry for OpenClaw — 13,000+ published skills"
+        docsUrl="https://clawhub.ai"
       />
 
       <Section title="Install via ClawHub CLI">
         <StepByStep
           steps={[
             {
-              title: 'Install ClawHub (if needed)',
+              title: 'Install ClawHub CLI',
               detail: (
                 <CodeBlock code="npm install -g clawhub" lang="bash" filename="Terminal" />
               ),
@@ -41,24 +35,21 @@ export default function ClawHubPage() {
                 <div>
                   <CodeBlock code={CLAWHUB_INSTALL} lang="bash" filename="Terminal" />
                   <p className="text-sm text-slate-500 mt-2">
-                    This installs HumanPages as an OpenClaw skill and registers all MCP tools automatically.
+                    This installs HumanPages as an OpenClaw skill into <code>~/.openclaw/skills/</code> and registers all MCP tools automatically.
                   </p>
                 </div>
               ),
             },
             {
-              title: 'Start using it',
-              detail: <p>The HumanPages tools are now available to any OpenClaw-compatible agent in your environment.</p>,
+              title: 'Manage installed skills',
+              detail: (
+                <div className="space-y-2">
+                  <CodeBlock code={`clawhub list          # see installed skills\nclawhub update --all  # update all skills\nclawhub uninstall humanpages`} lang="bash" filename="Terminal" />
+                </div>
+              ),
             },
           ]}
         />
-      </Section>
-
-      <Section title="Manual config (alternative)">
-        <p className="text-slate-600 mb-4">
-          You can also add it directly to your ClawHub config file:
-        </p>
-        <CodeBlock code={CLAWHUB_CONFIG} lang="yaml" filename=".clawhub/config.yaml" />
       </Section>
 
       <Section title="What is OpenClaw?">

@@ -11,7 +11,7 @@ const CURL_EXAMPLE = `curl https://api.openai.com/v1/responses \\
       {
         "type": "mcp",
         "server_label": "humanpages",
-        "server_url": "https://mcp.humanpages.ai/sse",
+        "server_url": "https://mcp.humanpages.ai/mcp",
         "require_approval": "never"
       }
     ]
@@ -27,7 +27,7 @@ response = client.responses.create(
     tools=[{
         "type": "mcp",
         "server_label": "humanpages",
-        "server_url": "https://mcp.humanpages.ai/sse",
+        "server_url": "https://mcp.humanpages.ai/mcp",
         "require_approval": "never"
     }]
 )
@@ -38,7 +38,7 @@ const FILTERED_EXAMPLE = `# Limit which tools the model can use (reduces token o
 tools=[{
     "type": "mcp",
     "server_label": "humanpages",
-    "server_url": "https://mcp.humanpages.ai/sse",
+    "server_url": "https://mcp.humanpages.ai/mcp",
     "require_approval": "never",
     "allowed_tools": ["search_humans", "get_human"]
 }]`;
