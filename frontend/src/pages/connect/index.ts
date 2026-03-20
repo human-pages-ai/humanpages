@@ -9,6 +9,7 @@ export { default as GeminiPage } from './GeminiPage';
 export { default as AndroidStudioPage } from './AndroidStudioPage';
 export { default as LangChainPage } from './LangChainPage';
 export { default as ClawHubPage } from './ClawHubPage';
+export { default as OpenClawPage } from './OpenClawPage';
 export { default as NanoClawPage } from './NanoClawPage';
 export { default as ZeroClawPage } from './ZeroClawPage';
 export { default as NanobotPage } from './NanobotPage';

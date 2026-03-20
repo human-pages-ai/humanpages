@@ -24,6 +24,7 @@ const ConnectGemini = lazy(() => import('./pages/connect/GeminiPage'));
 const ConnectAndroidStudio = lazy(() => import('./pages/connect/AndroidStudioPage'));
 const ConnectLangChain = lazy(() => import('./pages/connect/LangChainPage'));
 const ConnectClawHub = lazy(() => import('./pages/connect/ClawHubPage'));
+const ConnectOpenClaw = lazy(() => import('./pages/connect/OpenClawPage'));
 const ConnectNanoClaw = lazy(() => import('./pages/connect/NanoClawPage'));
 const ConnectZeroClaw = lazy(() => import('./pages/connect/ZeroClawPage'));
 const ConnectNanobot = lazy(() => import('./pages/connect/NanobotPage'));
@@ -224,6 +225,7 @@ function AppRoutes() {
       <Route path="/dev/connect/android-studio" element={<ConnectAndroidStudio />} />
       <Route path="/dev/connect/langchain" element={<ConnectLangChain />} />
       <Route path="/dev/connect/clawhub" element={<ConnectClawHub />} />
+      <Route path="/dev/connect/openclaw" element={<ConnectOpenClaw />} />
       <Route path="/dev/connect/nanoclaw" element={<ConnectNanoClaw />} />
       <Route path="/dev/connect/zeroclaw" element={<ConnectZeroClaw />} />
       <Route path="/dev/connect/nanobot" element={<ConnectNanobot />} />
@@ -356,6 +358,7 @@ function AppRoutes() {
       <Route path="/:lang/dev/connect/android-studio" element={<LangWrapper><ConnectAndroidStudio /></LangWrapper>} />
       <Route path="/:lang/dev/connect/langchain" element={<LangWrapper><ConnectLangChain /></LangWrapper>} />
       <Route path="/:lang/dev/connect/clawhub" element={<LangWrapper><ConnectClawHub /></LangWrapper>} />
+      <Route path="/:lang/dev/connect/openclaw" element={<LangWrapper><ConnectOpenClaw /></LangWrapper>} />
       <Route path="/:lang/dev/connect/nanoclaw" element={<LangWrapper><ConnectNanoClaw /></LangWrapper>} />
       <Route path="/:lang/dev/connect/zeroclaw" element={<LangWrapper><ConnectZeroClaw /></LangWrapper>} />
       <Route path="/:lang/dev/connect/nanobot" element={<LangWrapper><ConnectNanobot /></LangWrapper>} />

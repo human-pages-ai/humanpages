@@ -29,6 +29,7 @@ export default function CursorPage() {
       description="Add HumanPages MCP to Cursor IDE. Search and hire real humans for tasks directly from your code editor."
       path="/dev/connect/cursor"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Cursor' }]}
+      ogPlatform="cursor"
     >
       <HowToSchema
         name="How to connect HumanPages MCP to Cursor IDE"

@@ -25,6 +25,7 @@ export default function NanobotPage() {
       description="Add HumanPages MCP to Nanobot — the open-source framework that turns MCP servers into full AI agents with UI, memory, and reasoning."
       path="/dev/connect/nanobot"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Nanobot' }]}
+      ogPlatform="nanobot"
     >
       <PlatformHero
         gradient="from-cyan-50 to-teal-50"

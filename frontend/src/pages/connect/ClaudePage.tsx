@@ -45,6 +45,7 @@ export default function ClaudePage() {
       description="Step-by-step guide to add HumanPages MCP server to Claude Desktop or Claude Code. Find and hire real humans directly from Claude conversations. Copy-paste config included."
       path="/dev/connect/claude"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Claude' }]}
+      ogPlatform="claude"
     >
       <HowToSchema
         name="How to connect HumanPages MCP to Claude"

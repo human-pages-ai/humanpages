@@ -18,6 +18,7 @@ export default function NanoClawPage() {
       description="Add HumanPages MCP to your NanoClaw agent. Hire real humans from a secure, containerized AI assistant connected to WhatsApp, Telegram, Slack, and more."
       path="/dev/connect/nanoclaw"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'NanoClaw' }]}
+      ogPlatform="nanoclaw"
     >
       <PlatformHero
         gradient="from-indigo-50 to-blue-50"

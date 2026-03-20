@@ -20,6 +20,7 @@ export default function AndroidStudioPage() {
       description="Add HumanPages MCP to Android Studio's Gemini integration. Hire testers, designers, and translators for your Android app — from inside your IDE."
       path="/dev/connect/android-studio"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Android Studio' }]}
+      ogPlatform="android-studio"
     >
       <PlatformHero
         gradient="from-green-50 to-lime-50"

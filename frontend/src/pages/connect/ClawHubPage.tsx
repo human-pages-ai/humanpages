@@ -11,6 +11,7 @@ export default function ClawHubPage() {
       description="Install HumanPages as an OpenClaw skill via ClawHub. One command to add real human-hiring capabilities to your AI agent."
       path="/dev/connect/clawhub"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'ClawHub' }]}
+      ogPlatform="clawhub"
     >
       <PlatformHero
         gradient="from-rose-50 to-pink-50"

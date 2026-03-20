@@ -8,6 +8,7 @@ export default function TrustClawPage() {
       description="Add HumanPages MCP to TrustClaw — secure cloud-sandboxed AI agent execution by Composio. No local setup, no risk to your dev machine."
       path="/dev/connect/trustclaw"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'TrustClaw' }]}
+      ogPlatform="trustclaw"
     >
       <PlatformHero
         gradient="from-emerald-50 to-green-50"

@@ -17,6 +17,7 @@ export default function ZeroClawPage() {
       description="Add HumanPages MCP to ZeroClaw — the ultra-lightweight Rust-based agent runtime for edge devices and self-hosted systems."
       path="/dev/connect/zeroclaw"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'ZeroClaw' }]}
+      ogPlatform="zeroclaw"
     >
       <PlatformHero
         gradient="from-orange-50 to-red-50"

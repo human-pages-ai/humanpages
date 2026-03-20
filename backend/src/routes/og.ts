@@ -284,6 +284,7 @@ export function generateConnectSvg(platform: string): string {
     'android-studio': 'Android Studio',
     'langchain': 'LangChain',
     'clawhub': 'ClawHub',
+    'openclaw': 'OpenClaw',
     'nanoclaw': 'NanoClaw',
     'zeroclaw': 'ZeroClaw',
     'nanobot': 'Nanobot',

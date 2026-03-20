@@ -16,9 +16,10 @@ interface ConnectLayoutProps {
   description: string;
   path: string;
   breadcrumbs: Breadcrumb[];
+  ogPlatform?: string;
 }
 
-export default function ConnectLayout({ children, title, description, path, breadcrumbs }: ConnectLayoutProps) {
+export default function ConnectLayout({ children, title, description, path, breadcrumbs, ogPlatform }: ConnectLayoutProps) {
   return (
     <div className="min-h-screen bg-white">
       <SEO
@@ -26,7 +27,7 @@ export default function ConnectLayout({ children, title, description, path, brea
         description={description}
         path={path}
         ogType="article"
-        ogImage="https://humanpages.ai/api/og/prompt-to-completion"
+        ogImage={ogPlatform ? `https://humanpages.ai/api/og/connect/${ogPlatform}` : 'https://humanpages.ai/api/og/prompt-to-completion'}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'TechArticle',

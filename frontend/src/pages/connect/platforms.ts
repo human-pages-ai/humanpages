@@ -171,6 +171,21 @@ export const PLATFORMS: PlatformConfig[] = [
     configType: 'python',
     category: 'framework',
   },
+  {
+    id: 'openclaw',
+    name: 'OpenClaw',
+    shortName: 'OpenClaw',
+    slug: 'openclaw',
+    icon: '🦞',
+    color: 'red',
+    bgGradient: 'from-red-50 to-rose-50',
+    tagline: 'Open ecosystem for AI agent skills',
+    description: 'The open framework that powers ClawHub, NanoClaw, ZeroClaw, TrustClaw, PicoClaw, and MaxClaw.',
+    docsUrl: 'https://openclaw.ai',
+    transport: ['stdio', 'sse'],
+    configType: 'json',
+    category: 'framework',
+  },
   // ── Agent Runtimes ─────────────────────────────────────────
   {
     id: 'nanoclaw',

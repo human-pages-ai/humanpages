@@ -17,6 +17,7 @@ export default function SmitheryPage() {
       description="Install HumanPages MCP from the Smithery registry — the largest third-party MCP server directory with a CLI that auto-configures your client."
       path="/dev/connect/smithery"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Smithery' }]}
+      ogPlatform="smithery"
     >
       <PlatformHero
         gradient="from-sky-50 to-blue-50"

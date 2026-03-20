@@ -24,6 +24,7 @@ export default function PicoClawPage() {
       description="Add HumanPages MCP to PicoClaw — the ultra-lightweight AI assistant for IoT devices, Raspberry Pi, and resource-constrained hardware."
       path="/dev/connect/picoclaw"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'PicoClaw' }]}
+      ogPlatform="picoclaw"
     >
       <PlatformHero
         gradient="from-yellow-50 to-amber-50"

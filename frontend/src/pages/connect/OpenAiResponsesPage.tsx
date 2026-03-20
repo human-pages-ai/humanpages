@@ -50,6 +50,7 @@ export default function OpenAiResponsesPage() {
       description="Use HumanPages as an MCP tool in the OpenAI Responses API. Add type: mcp to your tools array — zero infrastructure needed."
       path="/dev/connect/openai-responses"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Responses API' }]}
+      ogPlatform="openai-responses"
     >
       <PlatformHero
         gradient="from-gray-50 to-slate-100"

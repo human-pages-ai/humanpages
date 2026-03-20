@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getI18n } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -268,6 +269,14 @@ function NewsletterForm() {
 }
 
 export default function PromptToCompletionPage() {
+  // Force English on this developer-facing page
+  useEffect(() => {
+    const i18n = getI18n();
+    const prev = i18n.language;
+    if (prev !== 'en') i18n.changeLanguage('en');
+    return () => { if (prev !== 'en') i18n.changeLanguage(prev); };
+  }, []);
+
   return (
     <>
       <SEO

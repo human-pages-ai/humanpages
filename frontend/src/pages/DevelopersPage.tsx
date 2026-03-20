@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, getI18n } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -296,7 +296,23 @@ export default function DevelopersPage() {
   const [searchParams] = useSearchParams();
   const showItaiPromo = searchParams.get('promo') === 'Itai-loves-you';
   const [showRestApi, setShowRestApi] = useState(false);
+  const [showDocs, setShowDocs] = useState(() => {
+    // Auto-expand if URL has #install or #tools anchor
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      return hash === '#install' || hash === '#tools';
+    }
+    return false;
+  });
   const [promo, setPromo] = useState<{ enabled: boolean; total: number; claimed: number; remaining: number } | null>(null);
+
+  // Force English on this developer-facing page
+  useEffect(() => {
+    const i18n = getI18n();
+    const prev = i18n.language;
+    if (prev !== 'en') i18n.changeLanguage('en');
+    return () => { if (prev !== 'en') i18n.changeLanguage(prev); };
+  }, []);
 
   useEffect(() => {
     fetch('https://humanpages.ai/api/agents/activate/promo-status')
@@ -304,7 +320,6 @@ export default function DevelopersPage() {
       .then(data => setPromo(data))
       .catch(() => {});
   }, []);
-
 
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
@@ -443,6 +458,74 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Suggested Services */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+            What to hire humans for
+          </h2>
+          <p className="text-slate-600 mb-8">
+            Concrete tasks your agent can delegate today. Each one has a ready-made playbook.
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {SUGGESTED_SERVICES.map((svc) => (
+              <div
+                key={svc.title}
+                className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    {svc.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-slate-900 text-sm">{svc.title}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{svc.desc}</p>
+                    <span className="inline-block mt-2 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                      {svc.price}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/prompt-to-completion"
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              View full playbooks with agent workflows &rarr;
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Technical Docs Toggle */}
+      <section className="py-8 px-4 bg-slate-50">
+        <div className="max-w-3xl mx-auto text-center">
+          <button
+            onClick={() => setShowDocs(!showDocs)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-sm transition-all font-semibold text-slate-700"
+          >
+            <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            {showDocs ? 'Hide technical docs' : 'Installation, tools & API docs'}
+            <svg
+              className={`w-4 h-4 text-slate-400 transition-transform ${showDocs ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      {showDocs && (
+      <>
       {/* Install Section */}
       <section id="install" className="py-16 px-4 bg-slate-50">
         <div className="max-w-3xl mx-auto">
@@ -488,49 +571,6 @@ export default function DevelopersPage() {
                 Go to GPT Setup →
               </Link>
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Suggested Services */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-            What to hire humans for
-          </h2>
-          <p className="text-slate-600 mb-8">
-            Concrete tasks your agent can delegate today. Each one has a ready-made playbook.
-          </p>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            {SUGGESTED_SERVICES.map((svc) => (
-              <div
-                key={svc.title}
-                className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                    {svc.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-slate-900 text-sm">{svc.title}</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{svc.desc}</p>
-                    <span className="inline-block mt-2 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                      {svc.price}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 text-center">
-            <Link
-              to="/prompt-to-completion"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              View full playbooks with agent workflows &rarr;
-            </Link>
           </div>
         </div>
       </section>
@@ -647,7 +687,109 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* Pricing & Activation Section */}
+      {/* REST API Section (Accordion) */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <button
+            onClick={() => setShowRestApi(!showRestApi)}
+            className="w-full flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+          >
+            <span className="font-semibold text-slate-900">{t('dev.restApi.toggle')}</span>
+            <svg
+              className={`w-5 h-5 text-slate-400 transition-transform ${showRestApi ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showRestApi && (
+            <div className="mt-4 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.searchTitle')}</h3>
+                <CodeBlock code={REST_SEARCH} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.getTitle')}</h3>
+                <CodeBlock code={REST_GET_HUMAN} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.profileTitle')}</h3>
+                <CodeBlock code={REST_GET_PROFILE} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.createListingTitle')}</h3>
+                <CodeBlock code={REST_CREATE_LISTING} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.browseListingsTitle')}</h3>
+                <CodeBlock code={REST_BROWSE_LISTINGS} />
+              </div>
+
+              <p className="text-sm text-slate-500">
+                {t('dev.restApi.baseUrl')} <code className="bg-slate-200 px-1 rounded">https://humanpages.ai</code>
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Architecture Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
+            {t('dev.howItWorks.title')}
+          </h2>
+
+          <div className="grid gap-4">
+            <div className="flex gap-4 p-4 bg-slate-50 rounded-lg">
+              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.discoveryTitle')}</h3>
+                <p className="text-slate-600 text-sm">{t('dev.howItWorks.discoveryDesc')}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 p-4 bg-slate-50 rounded-lg">
+              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.contactTitle')}</h3>
+                <p className="text-slate-600 text-sm">{t('dev.howItWorks.contactDesc')}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 p-4 bg-slate-50 rounded-lg">
+              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.paymentsTitle')}</h3>
+                <p className="text-slate-600 text-sm">{t('dev.howItWorks.paymentsDesc')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      </>
+      )}
+
+      {/* Pricing & Activation Section — always visible */}
       <section id="pricing" className="py-16 px-4 bg-slate-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
@@ -762,106 +904,6 @@ export default function DevelopersPage() {
           <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
             <h4 className="font-semibold text-slate-900 mb-1">{t('dev.pricing.x402Title')}</h4>
             <p className="text-sm text-slate-600">{t('dev.pricing.x402Desc')}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* REST API Section (Accordion) */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-3xl mx-auto">
-          <button
-            onClick={() => setShowRestApi(!showRestApi)}
-            className="w-full flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
-          >
-            <span className="font-semibold text-slate-900">{t('dev.restApi.toggle')}</span>
-            <svg
-              className={`w-5 h-5 text-slate-400 transition-transform ${showRestApi ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {showRestApi && (
-            <div className="mt-4 space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.searchTitle')}</h3>
-                <CodeBlock code={REST_SEARCH} />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.getTitle')}</h3>
-                <CodeBlock code={REST_GET_HUMAN} />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.profileTitle')}</h3>
-                <CodeBlock code={REST_GET_PROFILE} />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.createListingTitle')}</h3>
-                <CodeBlock code={REST_CREATE_LISTING} />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('dev.restApi.browseListingsTitle')}</h3>
-                <CodeBlock code={REST_BROWSE_LISTINGS} />
-              </div>
-
-              <p className="text-sm text-slate-500">
-                {t('dev.restApi.baseUrl')} <code className="bg-slate-200 px-1 rounded">https://humanpages.ai</code>
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Architecture Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8">
-            {t('dev.howItWorks.title')}
-          </h2>
-
-          <div className="grid gap-4">
-            <div className="flex gap-4 p-4 bg-slate-50 rounded-lg">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.discoveryTitle')}</h3>
-                <p className="text-slate-600 text-sm">{t('dev.howItWorks.discoveryDesc')}</p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 p-4 bg-slate-50 rounded-lg">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.contactTitle')}</h3>
-                <p className="text-slate-600 text-sm">{t('dev.howItWorks.contactDesc')}</p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 p-4 bg-slate-50 rounded-lg">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">{t('dev.howItWorks.paymentsTitle')}</h3>
-                <p className="text-slate-600 text-sm">{t('dev.howItWorks.paymentsDesc')}</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>

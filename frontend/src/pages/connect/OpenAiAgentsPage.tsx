@@ -44,6 +44,7 @@ export default function OpenAiAgentsPage() {
       description="Use HumanPages MCP tools in your Python agents built with the OpenAI Agents SDK. Search and hire humans programmatically."
       path="/dev/connect/openai-agents"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Agents SDK' }]}
+      ogPlatform="openai-agents"
     >
       <PlatformHero
         gradient="from-slate-50 to-gray-100"

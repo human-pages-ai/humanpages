@@ -8,6 +8,7 @@ export default function MaxClawPage() {
       description="Add HumanPages MCP to MaxClaw — MiniMax's cloud-hosted AI agent platform. Deploy a hiring agent in seconds, no setup required."
       path="/dev/connect/maxclaw"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'MaxClaw' }]}
+      ogPlatform="maxclaw"
     >
       <PlatformHero
         gradient="from-violet-50 to-purple-50"

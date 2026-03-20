@@ -47,6 +47,7 @@ export default function LangChainPage() {
       description="Use HumanPages MCP tools in LangChain agents and LlamaIndex pipelines. Framework-level integration with automatic tool schema translation."
       path="/dev/connect/langchain"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'LangChain' }]}
+      ogPlatform="langchain"
     >
       <PlatformHero
         gradient="from-purple-50 to-violet-50"

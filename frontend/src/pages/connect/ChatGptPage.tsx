@@ -8,6 +8,7 @@ export default function ChatGptPage() {
       description="Add HumanPages as an MCP connector in ChatGPT. Search and hire real humans from any ChatGPT conversation — no code needed."
       path="/dev/connect/chatgpt"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'ChatGPT' }]}
+      ogPlatform="chatgpt"
     >
       <PlatformHero
         gradient="from-green-50 to-emerald-50"

@@ -20,6 +20,7 @@ export default function GeminiPage() {
       description="Add HumanPages MCP server to Gemini CLI. Find and hire real humans from Google's command-line AI assistant."
       path="/dev/connect/gemini"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Gemini CLI' }]}
+      ogPlatform="gemini"
     >
       <PlatformHero
         gradient="from-blue-50 to-sky-50"

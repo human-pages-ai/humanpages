@@ -28,6 +28,7 @@ export default function WindsurfPage() {
       description="Add HumanPages MCP to Windsurf IDE by Codeium. Hire real humans from Cascade conversations."
       path="/dev/connect/windsurf"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'Windsurf' }]}
+      ogPlatform="windsurf"
     >
       <PlatformHero
         gradient="from-teal-50 to-cyan-50"
