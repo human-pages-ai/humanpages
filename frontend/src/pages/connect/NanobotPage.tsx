@@ -7,7 +7,7 @@ instructions: You help users find and hire real humans for tasks.
 
 mcpServers:
   humanpages:
-    url: https://mcp.humanpages.ai/sse
+    url: https://mcp.humanpages.ai/mcp
     transport: sse`;
 
 const NANOBOT_LOCAL = `# Or use local stdio transport

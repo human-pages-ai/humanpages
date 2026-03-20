@@ -20,7 +20,7 @@ function ConnectionDiagram() {
       {/* HumanPages MCP */}
       <rect x="290" y="50" width="220" height="100" rx="12" fill="#fefce8" stroke="#fbbf24" strokeWidth="2" />
       <text x="400" y="85" textAnchor="middle" fill="#92400e" fontWeight="700" fontSize="14">HumanPages MCP</text>
-      <text x="400" y="105" textAnchor="middle" fill="#a16207" fontSize="11">mcp.humanpages.ai/sse</text>
+      <text x="400" y="105" textAnchor="middle" fill="#a16207" fontSize="11">mcp.humanpages.ai/mcp</text>
       <text x="400" y="125" textAnchor="middle" fill="#a16207" fontSize="10">search · hire · manage</text>
 
       {/* Arrow 2 */}
@@ -69,7 +69,7 @@ function PlatformCard({ platform }: { platform: typeof PLATFORMS[number] }) {
 /* ── Server URL copy widget ──────────────────────────────────── */
 function ServerUrlCopy() {
   const [copied, setCopied] = useState(false);
-  const url = 'https://mcp.humanpages.ai/sse';
+  const url = 'https://mcp.humanpages.ai/mcp';
   const copy = async () => {
     await navigator.clipboard.writeText(url);
     setCopied(true);
@@ -161,7 +161,7 @@ export default function ConnectOverview() {
 }`}
         />
         <p className="text-sm text-slate-500 mt-3">
-          For remote (HTTP/SSE) connections — use <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">https://mcp.humanpages.ai/sse</code> as the server URL instead.
+          For remote (HTTP/SSE) connections — use <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">https://mcp.humanpages.ai/mcp</code> as the server URL instead.
         </p>
       </Section>
 

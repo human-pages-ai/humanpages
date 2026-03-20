@@ -10,7 +10,7 @@ model = ChatOpenAI(model="gpt-4o")
 async with MultiServerMCPClient(
     {
         "humanpages": {
-            "url": "https://mcp.humanpages.ai/sse",
+            "url": "https://mcp.humanpages.ai/mcp",
             "transport": "sse",
         }
     }
@@ -25,7 +25,7 @@ async with MultiServerMCPClient(
 
 const LLAMAINDEX_EXAMPLE = `from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 
-mcp_client = BasicMCPClient("https://mcp.humanpages.ai/sse")
+mcp_client = BasicMCPClient("https://mcp.humanpages.ai/mcp")
 mcp_tool_spec = McpToolSpec(client=mcp_client)
 
 # Get tools as LlamaIndex tools

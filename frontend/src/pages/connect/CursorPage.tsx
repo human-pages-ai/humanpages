@@ -17,7 +17,7 @@ const REMOTE_CONFIG = `{
   "mcpServers": {
     "humanpages": {
       "type": "http",
-      "url": "https://mcp.humanpages.ai/sse"
+      "url": "https://mcp.humanpages.ai/mcp"
     }
   }
 }`;

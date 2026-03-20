@@ -37,7 +37,7 @@ export default function ChatGptPage() {
               detail: (
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 space-y-2">
                   <div><strong className="text-slate-700">Name:</strong> <code>HumanPages</code></div>
-                  <div><strong className="text-slate-700">MCP Server URL:</strong> <code>https://mcp.humanpages.ai/sse</code></div>
+                  <div><strong className="text-slate-700">MCP Server URL:</strong> <code>https://mcp.humanpages.ai/mcp</code></div>
                   <div><strong className="text-slate-700">Authentication:</strong> None</div>
                 </div>
               ),
@@ -65,7 +65,7 @@ export default function ChatGptPage() {
             {/* URL field */}
             <text x="24" y="138" fill="#6b7280" fontSize="11" fontWeight="500">MCP Server URL</text>
             <rect x="24" y="144" width="352" height="36" rx="8" fill="white" stroke="#d1d5db" strokeWidth="1" />
-            <text x="36" y="167" fill="#111827" fontSize="11" fontFamily="monospace">https://mcp.humanpages.ai/sse</text>
+            <text x="36" y="167" fill="#111827" fontSize="11" fontFamily="monospace">https://mcp.humanpages.ai/mcp</text>
 
             {/* Auth field */}
             <text x="24" y="202" fill="#6b7280" fontSize="11" fontWeight="500">Authentication</text>

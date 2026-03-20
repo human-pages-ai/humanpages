@@ -8,7 +8,7 @@ const SEARCH = `# Search for HumanPages on Smithery
 npx @smithery/cli search humanpages`;
 
 const ADD_REMOTE = `# Or add directly via MCP URL
-smithery mcp add https://mcp.humanpages.ai/sse`;
+smithery mcp add https://mcp.humanpages.ai/mcp`;
 
 export default function SmitheryPage() {
   return (

@@ -8,7 +8,7 @@ from agents.mcp import MCPServerStreamableHttp
 
 # Connect to HumanPages MCP server
 humanpages = MCPServerStreamableHttp(
-    url="https://mcp.humanpages.ai/sse",
+    url="https://mcp.humanpages.ai/mcp",
     name="humanpages"
 )
 
