@@ -234,9 +234,6 @@ export default function DevelopersPage() {
       .catch(() => {});
   }, []);
 
-  const scrollToInstall = () => {
-    document.getElementById('install')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -318,17 +315,30 @@ export default function DevelopersPage() {
 
           {/* Promo banner — only visible with ?promo=Itai-loves-you */}
           {showItaiPromo && (
-            <Link
-              to="/prompt-to-completion"
-              className="block mt-10 md:mt-12 max-w-2xl mx-auto p-5 md:p-6 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 text-white text-center shadow-lg shadow-fuchsia-300/40 animate-pulse hover:animate-none hover:scale-[1.01] transition-transform"
-            >
-              <p className="text-lg md:text-xl font-bold">
-                Itai loves you &mdash; and gave you $10 credit
+            <div className="mt-10 md:mt-12 max-w-2xl mx-auto text-center">
+              <p className="text-lg md:text-xl font-black mb-5">
+                <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
+                  Itai loves you &mdash; pick a service, $10 is on us
+                </span>
               </p>
-              <p className="text-sm md:text-base text-white/80 mt-1">
-                Try SEO submissions, a virtual assistant, or social media marketing on us. Click to see workflows &rarr;
-              </p>
-            </Link>
+              <div className="grid grid-cols-3 gap-4">
+                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/directory-submissions.md" target="_blank" rel="noopener noreferrer" className="group py-5 px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
+                  <span className="text-4xl md:text-5xl block mb-3 group-hover:scale-110 transition-transform">🚀</span>
+                  <p className="font-bold text-slate-900 text-base md:text-lg">SEO Submissions</p>
+                  <p className="text-slate-400 text-xs md:text-sm mt-1">80+ directories</p>
+                </a>
+                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/social-media-marketing.md" target="_blank" rel="noopener noreferrer" className="group py-5 px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
+                  <span className="text-4xl md:text-5xl block mb-3 group-hover:scale-110 transition-transform">📱</span>
+                  <p className="font-bold text-slate-900 text-base md:text-lg">Social Media Marketing</p>
+                  <p className="text-slate-400 text-xs md:text-sm mt-1">Daily posting & growth</p>
+                </a>
+                <a href="https://github.com/human-pages-ai/hire-humans/blob/main/playbooks/virtual-assistant.md" target="_blank" rel="noopener noreferrer" className="group py-5 px-4 text-center rounded-2xl border border-slate-200 bg-white hover:border-fuchsia-300 hover:shadow-lg hover:shadow-fuchsia-100/50 hover:scale-[1.03] transition-all cursor-pointer">
+                  <span className="text-4xl md:text-5xl block mb-3 group-hover:scale-110 transition-transform">🧑‍💼</span>
+                  <p className="font-bold text-slate-900 text-base md:text-lg">Virtual Assistant</p>
+                  <p className="text-slate-400 text-xs md:text-sm mt-1">Admin & research</p>
+                </a>
+              </div>
+            </div>
           )}
 
           {/* Primary CTA */}

@@ -13,6 +13,7 @@ import {
   RocketLaunchIcon,
   ShieldCheckIcon,
   UserIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 
 interface Task {
@@ -191,6 +192,30 @@ const TASKS: Task[] = [
       'Review completed work, set up recurring job for ongoing support',
     ],
   },
+  {
+    id: 'social-media-marketing',
+    icon: <MegaphoneIcon className="w-7 h-7" />,
+    title: 'Social Media Marketing',
+    isNew: true,
+    tagline: 'Consistent, on-brand posting across Twitter/X, LinkedIn, Instagram, and TikTok — without you touching a single app.',
+    why: 'Social media demands daily presence, trend awareness, and authentic engagement. AI can draft posts, but a human knows when to hop on a trend, how to reply to comments naturally, and what actually gets shared. Algorithms reward consistency — and you\'re too busy shipping features to post every day.',
+    price: '$15–40/week',
+    cadence: 'Daily posting, weekly strategy review',
+    timeline: '1–3 hours/day',
+    playbook: `${PLAYBOOK_BASE}/social-media-marketing.md`,
+    deliverables: [
+      'Content calendar with scheduled posts across platforms',
+      'Daily posts (3–5/day across platforms) with hashtags and media',
+      'Engagement — replies, comments, community interaction',
+      'Weekly analytics report: impressions, engagement rate, follower growth, top posts',
+    ],
+    agentSteps: [
+      'Search for humans with "social media marketing", "content creation", or "copywriting" skills',
+      'Share brand guidelines, tone of voice, product info, and platform credentials',
+      'Human creates content calendar, posts daily, engages with audience',
+      'Review weekly analytics report, adjust strategy, approve payment',
+    ],
+  },
 ];
 
 
@@ -264,7 +289,7 @@ export default function PromptToCompletionPage() {
               Pricing
             </Link>
             <LanguageSwitcher />
-            <Link to="/dev" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+            <Link to="/dev/connect" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
               Get started
             </Link>
           </div>
@@ -277,7 +302,7 @@ export default function PromptToCompletionPage() {
           <div className="max-w-2xl mx-auto text-center">
             {/* pricing badge hidden */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Publish to 10–15 directories in one prompt
+              One prompt. 80+ directories submitted. SEO boosted.
             </h1>
             <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto mb-6">
               Your agent hires a human, sends the brief, and gets back a full report — AI tool directories, SaaS listings, startup launches, dev platforms, and more.
@@ -295,7 +320,7 @@ export default function PromptToCompletionPage() {
 
             <div>
               <Link
-                to="/dev"
+                to="/dev/connect"
                 className="inline-block px-8 py-3.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-lg shadow-lg shadow-green-600/25"
               >
                 Register your agent
@@ -314,7 +339,7 @@ export default function PromptToCompletionPage() {
             <div className="space-y-4">
               {[
                 { step: '1', title: 'Your agent searches for a human', desc: 'It finds someone with directory submission experience using the search_humans MCP tool.' },
-                { step: '2', title: 'It creates a job offer', desc: 'Your product details + a list of 10–15 directories matched to your product type (AI tools, SaaS, dev tools, etc.). The human accepts.' },
+                { step: '2', title: 'It creates a job offer', desc: 'Your product details + a list of 80+ directories matched to your product type (AI tools, SaaS, dev tools, etc.). The human accepts.' },
                 { step: '3', title: 'The human submits to each directory', desc: 'Manual forms, CAPTCHAs, email confirmations — all handled. They log every result.' },
                 { step: '4', title: 'You get a deliverable', desc: 'A table with every directory URL, submission status, and notes. Your agent verifies and approves.' },
               ].map((item) => (
@@ -401,7 +426,7 @@ export default function PromptToCompletionPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                to="/dev"
+                to="/dev/connect"
                 className="inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
               >
                 Register your agent
