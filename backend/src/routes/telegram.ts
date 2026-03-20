@@ -315,7 +315,12 @@ router.post('/webhook', async (req, res) => {
     // ─── Plain /start (no code) ───
     else if (messageText === '/start') {
       const tt = await getChatTranslator();
-      await sendTelegramMessage({ chatId, text: tt('telegram.welcome') });
+      const existingUser = await prisma.human.findFirst({ where: { telegramChatId: chatId }, select: { id: true } });
+      if (existingUser) {
+        await sendTelegramMessage({ chatId, text: tt('telegram.welcome') });
+      } else {
+        await sendTelegramMessage({ chatId, text: tt('telegram.welcomeNew') });
+      }
     }
 
     // ─── Raw code (user manually sent the verification code) ───
