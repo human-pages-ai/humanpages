@@ -344,7 +344,8 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   // Crawler-visible content block — rendered below <div id="root"></div>
   // so JS-capable browsers see the React app, while crawlers/AI agents see real content.
   const crawlerContent = `
-    <div id="dev-ssr" style="padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+    <div id="dev-ssr" style="display:none;padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+    <noscript><style>#dev-ssr{display:block!important}</style></noscript>
       <h1>Human Pages — MCP Server &amp; API for AI Agents</h1>
       <p>Give your AI agent the ability to hire real people for physical tasks. Search by skill, location, and availability. Send job offers. Pay in USDC.</p>
 
