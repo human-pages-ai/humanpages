@@ -10,6 +10,13 @@ const router = Router();
 // Store pending verification codes (in production, use Redis with TTL)
 const pendingCodes = new Map<string, { userId: string; expiresAt: number }>();
 
+// Recent webhook events for debugging (circular buffer, last 20)
+const recentWebhookEvents: { time: string; type: string; chatId?: string; text?: string; result: string }[] = [];
+function logWebhookEvent(event: typeof recentWebhookEvents[0]) {
+  recentWebhookEvents.push(event);
+  if (recentWebhookEvents.length > 20) recentWebhookEvents.shift();
+}
+
 // Clean up expired codes periodically
 setInterval(() => {
   const now = Date.now();
@@ -19,6 +26,24 @@ setInterval(() => {
     }
   }
 }, 60000); // Every minute
+
+// ─── Debug: view recent webhook events (admin only) ───
+router.get('/debug', authenticateToken, async (req: AuthRequest, res) => {
+  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+  const user = await prisma.human.findUnique({ where: { id: req.userId }, select: { email: true } });
+  if (!user?.email || !adminEmails.includes(user.email)) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+
+  const secret = getTelegramWebhookSecret();
+  res.json({
+    webhookConfigured: !!secret,
+    botConfigured: isTelegramConfigured(),
+    botUsername: getTelegramBotUsername(),
+    pendingCodes: pendingCodes.size,
+    recentEvents: recentWebhookEvents,
+  });
+});
 
 // ─── Get Telegram connection status ───
 router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
@@ -166,6 +191,7 @@ router.post('/webhook', async (req, res) => {
 
   const headerSecret = req.headers['x-telegram-bot-api-secret-token'];
   if (headerSecret !== secret) {
+    logWebhookEvent({ time: new Date().toISOString(), type: 'auth_failed', result: 'wrong secret' });
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -174,6 +200,7 @@ router.post('/webhook', async (req, res) => {
 
     // Only handle message updates — ignore callback_query, channel_post, etc.
     if (!update.message?.chat?.id) {
+      logWebhookEvent({ time: new Date().toISOString(), type: 'ignored', result: 'no message.chat.id' });
       return res.json({ ok: true });
     }
 
@@ -330,8 +357,10 @@ router.post('/webhook', async (req, res) => {
       });
     }
 
+    logWebhookEvent({ time: new Date().toISOString(), type: 'message', chatId, text: messageText.substring(0, 50), result: 'processed' });
     res.json({ ok: true });
   } catch (error) {
+    logWebhookEvent({ time: new Date().toISOString(), type: 'error', result: String(error) });
     logger.error({ err: error }, 'Telegram webhook error');
     res.json({ ok: true }); // Always return 200 to Telegram
   }
