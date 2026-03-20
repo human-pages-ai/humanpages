@@ -9,7 +9,7 @@ set -e
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 UPSTREAM="${1:-}"
-WAIT_TIMEOUT=30  # seconds per server
+WAIT_TIMEOUT=60  # seconds per server (30s too tight when unit tests run in parallel)
 
 # ── Wait for backend ──
 echo "  [e2e] Waiting for backend (max ${WAIT_TIMEOUT}s)..."

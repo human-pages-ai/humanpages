@@ -300,7 +300,7 @@ describe('PhoneInput', () => {
   });
 
   describe('country data integrity', () => {
-    it('has no duplicate country code + name combinations', { timeout: 15000 }, () => {
+    it('has no duplicate country code + name combinations', { timeout: 30000 }, () => {
       // This is a data integrity check — import the module and verify
       // We can check by rendering and opening dropdown
       const seen = new Set<string>();
