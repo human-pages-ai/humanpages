@@ -950,6 +950,13 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
       })();
     }
 
+    trackServerEvent(req.userId!, 'job_accepted', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      responseTimeMinutes: updated.responseTimeMinutes,
+      priceUsdc: updated.priceUsdc?.toString(),
+    }, req);
+
     res.json({
       id: updated.id,
       status: updated.status,
@@ -999,6 +1006,12 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
         'job.rejected',
       );
     }
+
+    trackServerEvent(req.userId!, 'job_rejected', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      responseTimeMinutes: updated.responseTimeMinutes,
+    }, req);
 
     res.json({
       id: updated.id,
@@ -1265,6 +1278,12 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       );
     }
 
+    trackServerEvent(req.userId!, 'job_completed', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      completedBy: 'human',
+    }, req);
+
     res.json({
       id: updated.id,
       status: updated.status,
@@ -1321,6 +1340,12 @@ router.patch('/:id/approve-completion', authenticateEither, requireActiveIfAgent
         'job.completed',
       );
     }
+
+    trackServerEvent(req.senderId!, 'job_completed', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      completedBy: 'agent_approved',
+    }, req);
 
     res.json({
       id: updated.id,
@@ -1385,6 +1410,12 @@ router.patch('/:id/request-revision', authenticateEither, requireActiveIfAgent, 
         { reason: body.reason },
       );
     }
+
+    trackServerEvent(req.senderId!, 'job_revision_requested', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      humanId: updated.humanId,
+    }, req);
 
     res.json({
       id: updated.id,
@@ -1801,6 +1832,13 @@ router.post('/:id/review', authenticateAgent, requireActiveAgent, async (req: Ag
       });
     }
 
+    trackServerEvent(req.agent!.id, 'review_submitted', {
+      jobId: job.id,
+      humanId: job.humanId,
+      rating: data.rating,
+      hasComment: !!data.comment,
+    }, req);
+
     res.status(201).json({
       id: review.id,
       rating: review.rating,
@@ -2130,6 +2168,14 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
         );
       }
 
+      trackServerEvent(agent.id, 'stream_started', {
+        jobId: updated.id,
+        humanId: updated.humanId,
+        method: 'SUPERFLUID',
+        network: networkLower,
+        rateUsdc: job.streamRateUsdc?.toString(),
+      }, req);
+
       return res.json({
         id: updated.id,
         status: updated.status,
@@ -2194,6 +2240,14 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
           { method: 'MICRO_TRANSFER', network: networkLower },
         );
       }
+
+      trackServerEvent(agent.id, 'stream_started', {
+        jobId: updated.id,
+        humanId: updated.humanId,
+        method: 'MICRO_TRANSFER',
+        network: networkLower,
+        rateUsdc: job.streamRateUsdc?.toString(),
+      }, req);
 
       return res.json({
         id: updated.id,
@@ -2674,6 +2728,14 @@ router.patch('/:id/stop-stream', authenticateEither, requireActiveIfAgent, async
         { totalPaid: job.streamTotalPaid?.toString() },
       );
     }
+
+    trackServerEvent(req.senderId!, 'stream_stopped', {
+      jobId: job.id,
+      humanId: job.humanId,
+      agentId: job.registeredAgentId || job.agentId,
+      stoppedBy: req.senderType,
+      totalPaid: job.streamTotalPaid?.toString(),
+    }, req);
 
     res.json({
       id: job.id,

@@ -2,6 +2,7 @@ import Link from '../../components/LocalizedLink';
 import ConnectLayout from './ConnectLayout';
 import { PLATFORMS, getPlatformsByCategory } from './platforms';
 import { useState } from 'react';
+import { analytics } from '../../lib/analytics';
 import { CodeBlock, Section, Callout } from './shared';
 
 /* ── SVG connection diagram ──────────────────────────────────── */
@@ -73,6 +74,7 @@ function ServerUrlCopy() {
   const copy = async () => {
     await navigator.clipboard.writeText(url);
     setCopied(true);
+    analytics.track('dev_server_url_copied');
     setTimeout(() => setCopied(false), 2000);
   };
   return (
@@ -175,6 +177,7 @@ export default function ConnectOverview() {
           href="https://github.com/humanpages/mcp-server/issues"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => analytics.track('dev_external_link_clicked', { label: 'request_platform_guide', url: 'https://github.com/humanpages/mcp-server/issues' })}
           className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
         >
           Request a platform guide →

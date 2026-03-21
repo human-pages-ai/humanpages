@@ -56,7 +56,15 @@ type EventName =
   | 'whatsapp_provided_onboarding'
   | 'connect_step_completed'
   | 'onboarding_step_viewed'
-  | 'onboarding_step_completed';
+  | 'onboarding_step_completed'
+  | 'dev_code_copied'
+  | 'dev_prompt_copied'
+  | 'dev_config_tab_switched'
+  | 'dev_platform_nav_clicked'
+  | 'dev_docs_link_clicked'
+  | 'dev_server_url_copied'
+  | 'dev_claim_service_clicked'
+  | 'dev_external_link_clicked';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

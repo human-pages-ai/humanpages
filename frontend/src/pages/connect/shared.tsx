@@ -1,14 +1,16 @@
 import { useState, ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Link from '../../components/LocalizedLink';
+import { analytics } from '../../lib/analytics';
 import { PLATFORMS } from './platforms';
 
 /* ── Copy button ─────────────────────────────────────────────── */
-export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+export function CopyButton({ text, label = 'Copy', context }: { text: string; label?: string; context?: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    analytics.track('dev_code_copied', { label: context || label, length: text.length });
     setTimeout(() => setCopied(false), 2000);
   };
   return (
@@ -44,6 +46,7 @@ export function CopyPrompt({ prompt, label }: { prompt: string; label?: string }
   const copy = async () => {
     await navigator.clipboard.writeText(prompt);
     setCopied(true);
+    analytics.track('dev_prompt_copied', { label: label || 'prompt' });
     setTimeout(() => setCopied(false), 2500);
   };
   return (
@@ -141,6 +144,7 @@ export function PlatformHero({
         href={docsUrl}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => analytics.track('dev_docs_link_clicked', { platform: name, url: docsUrl })}
         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors mt-2"
       >
         Official docs ↗
@@ -160,7 +164,7 @@ export function QuickCopyCard({ configs }: { configs: { label: string; code: str
           {configs.map((c, i) => (
             <button
               key={i}
-              onClick={() => setActive(i)}
+              onClick={() => { setActive(i); analytics.track('dev_config_tab_switched', { tab: c.label }); }}
               className={`px-3 py-1 text-xs rounded-full transition-colors ${
                 i === active ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
               }`}
@@ -225,6 +229,7 @@ export function PlatformNav({ currentSlug }: { currentSlug: string }) {
       {prev ? (
         <Link
           to={`/dev/connect/${prev.slug}`}
+          onClick={() => analytics.track('dev_platform_nav_clicked', { from: currentSlug, to: prev.slug, direction: 'prev' })}
           className="group flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
         >
           <span className="text-lg">←</span>
@@ -245,6 +250,7 @@ export function PlatformNav({ currentSlug }: { currentSlug: string }) {
       {next ? (
         <Link
           to={`/dev/connect/${next.slug}`}
+          onClick={() => analytics.track('dev_platform_nav_clicked', { from: currentSlug, to: next.slug, direction: 'next' })}
           className="group flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors text-right"
         >
           <span>

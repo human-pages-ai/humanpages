@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation, getI18n } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { analytics } from '../lib/analytics';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
@@ -74,6 +75,7 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    analytics.track('dev_code_copied', { label, length: text.length });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -236,6 +238,8 @@ function PromoSection() {
     setCopiedUrl(url);
     setModalUrl(url);
     setShowModal(true);
+    const tile = PROMO_TILES.find(t => t.url === url);
+    analytics.track('dev_claim_service_clicked', { service: tile?.title || url });
     setTimeout(() => setCopiedUrl(null), 3000);
   };
 
