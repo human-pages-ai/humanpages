@@ -151,6 +151,19 @@ export default function Onboarding() {
   // Current step ID derived from position
   const currentStepId = stepAt(flow, position);
 
+  // Track initial step view on mount
+  const initialTrackRef = useRef(false);
+  useEffect(() => {
+    if (!initialTrackRef.current) {
+      initialTrackRef.current = true;
+      analytics.track('onboarding_step_viewed', {
+        step: currentStepId,
+        stepNumber: position,
+        totalSteps: total,
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — fire once on mount
+
   // ─── Completed onboarding guard ───
   // Only redirect if user landed on /onboarding without a ?step= param.
   // If ?step= is present, the user explicitly wants to edit that step (e.g., from dashboard "Edit" button).
@@ -295,7 +308,21 @@ export default function Onboarding() {
       if (message) {
         toast(message, { icon: emoji, duration: 2000 });
       }
+      // Track step completion
+      analytics.track('onboarding_step_completed', {
+        step: stepId,
+        stepNumber: position,
+        totalSteps: total,
+      });
     }
+
+    // Track step view
+    const nextStep = flow[clamped - 1];
+    analytics.track('onboarding_step_viewed', {
+      step: nextStep.id,
+      stepNumber: clamped,
+      totalSteps: total,
+    });
 
     setTransitioning(true);
     prevPositionRef.current = position;

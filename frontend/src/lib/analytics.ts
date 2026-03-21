@@ -54,7 +54,9 @@ type EventName =
   | 'push_notifications_granted'
   | 'push_notifications_denied'
   | 'whatsapp_provided_onboarding'
-  | 'connect_step_completed';
+  | 'connect_step_completed'
+  | 'onboarding_step_viewed'
+  | 'onboarding_step_completed';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;
