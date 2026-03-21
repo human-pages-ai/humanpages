@@ -58,7 +58,7 @@ function PrivyWalletConnectInner({ walletAddress, onWalletConnected, setError }:
         {connecting ? 'Connecting...' : t('onboarding.payment.crypto.connectButton')}
       </button>
       <p className="text-xs text-slate-500 mt-2">{t('onboarding.payment.crypto.connectHint')}</p>
-      {isMobile && (
+      {isMobile && !walletAddress && (
         <p className="text-xs text-amber-600 mt-1">
           On mobile, sign in with email or Google to create a wallet.
         </p>
