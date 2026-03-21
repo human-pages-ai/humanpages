@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { analytics } from '../lib/analytics';
 import Link from '../components/LocalizedLink';
 import Logo from '../components/Logo';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -27,7 +28,7 @@ export default function PricingPage() {
           <Link to="/"><Logo /></Link>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link to="/signup" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+            <Link to="/signup" onClick={() => analytics.track('pricing_cta_clicked', { tier: 'header', section: 'nav' })} className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
               {t('nav.signup')}
             </Link>
           </div>
@@ -52,6 +53,7 @@ export default function PricingPage() {
             </p>
             <Link
               to="/signup"
+              onClick={() => analytics.track('pricing_cta_clicked', { tier: 'human', section: 'hero' })}
               className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25"
             >
               {t('pricing.humansHeroCta')}
@@ -103,7 +105,7 @@ export default function PricingPage() {
 
               <p className="mt-4 text-xs text-slate-500 text-center">{t('pricing.proLaunchNote')}</p>
 
-              <Link to="/dev" className="mt-4 block text-center text-sm font-medium text-white bg-blue-600 rounded-lg py-2.5 hover:bg-blue-700 transition-colors">
+              <Link to="/dev" onClick={() => analytics.track('pricing_cta_clicked', { tier: 'pro', section: 'card' })} className="mt-4 block text-center text-sm font-medium text-white bg-blue-600 rounded-lg py-2.5 hover:bg-blue-700 transition-colors">
                 {t('pricing.getStarted')}
               </Link>
             </div>
@@ -129,7 +131,7 @@ export default function PricingPage() {
                 </li>
               </ul>
 
-              <Link to="/dev" className="mt-6 block text-center text-sm font-medium text-blue-600 border border-blue-600 rounded-lg py-2.5 hover:bg-blue-50 transition-colors">
+              <Link to="/dev" onClick={() => analytics.track('pricing_cta_clicked', { tier: 'x402', section: 'card' })} className="mt-6 block text-center text-sm font-medium text-blue-600 border border-blue-600 rounded-lg py-2.5 hover:bg-blue-50 transition-colors">
                 {t('pricing.getStarted')}
               </Link>
             </div>
@@ -140,7 +142,7 @@ export default function PricingPage() {
         <section className="px-4 pb-16">
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-slate-600 mb-4">{t('pricing.bottomHumanReminder')}</p>
-            <Link to="/signup" className="inline-block text-sm font-medium text-white bg-orange-500 rounded-lg px-6 py-2.5 hover:bg-orange-600 transition-colors">
+            <Link to="/signup" onClick={() => analytics.track('pricing_cta_clicked', { tier: 'human', section: 'bottom' })} className="inline-block text-sm font-medium text-white bg-orange-500 rounded-lg px-6 py-2.5 hover:bg-orange-600 transition-colors">
               {t('pricing.humansHeroCta')}
             </Link>
           </div>

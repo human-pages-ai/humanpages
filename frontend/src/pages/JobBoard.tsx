@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { analytics } from '../lib/analytics';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import SEO from '../components/SEO';
@@ -62,6 +63,7 @@ export default function JobBoard() {
   };
 
   const updateFilter = (key: string, value: string) => {
+    analytics.track('jobboard_filter_applied', { filter: key, value: value || '(cleared)' });
     const newParams = new URLSearchParams(searchParams);
     if (value) {
       newParams.set(key, value);
@@ -79,6 +81,7 @@ export default function JobBoard() {
   const hasActiveFilters = skill || category || workMode || minBudget || maxBudget;
 
   const changePage = (newPage: number) => {
+    analytics.track('jobboard_paginated', { page: newPage });
     const newParams = new URLSearchParams(searchParams);
     newParams.set('page', String(newPage));
     setSearchParams(newParams);
@@ -331,6 +334,7 @@ export default function JobBoard() {
                     {/* Apply & Get Hired button */}
                     <Link
                       to={`/listings/${listing.id}`}
+                      onClick={() => analytics.track('jobboard_listing_clicked', { listingId: listing.id, isPro: listing.isPro })}
                       className="block w-full text-center bg-green-600 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
                     >
                       {t('listings.card.viewDetails')}

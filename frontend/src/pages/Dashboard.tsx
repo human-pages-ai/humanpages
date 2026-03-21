@@ -151,6 +151,11 @@ export default function Dashboard() {
       setSearchParams(searchParams, { replace: true });
       loadProfile();
     }
+    if (searchParams.get('emailVerifyError') === 'true') {
+      toast.error(t('toast.emailVerifyError', 'Email verification failed. The link may have expired or already been used. Please request a new one from your dashboard.'));
+      searchParams.delete('emailVerifyError');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, []);
 
   // Poll for identity verification when unverified (user may verify on another device)
@@ -455,6 +460,7 @@ export default function Dashboard() {
 
   const resendVerification = async () => {
     try {
+      analytics.track('dashboard_resend_verification');
       await api.resendVerification();
       toast.success(t('toast.verificationSent'));
     } catch (error: any) {
@@ -463,6 +469,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
+    analytics.track('dashboard_logout');
     logout();
     navigate('/login');
   };

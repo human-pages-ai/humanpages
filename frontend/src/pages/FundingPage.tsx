@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { analytics } from '../lib/analytics';
 import Link from '../components/LocalizedLink';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
@@ -20,6 +21,7 @@ function CopyButton({ text }: { text: string }) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    analytics.track('funding_wallet_copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -168,6 +170,7 @@ export default function FundingPage() {
               href={transakUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => analytics.track('funding_external_clicked', { target: 'transak' })}
               className="block bg-slate-900 border border-slate-700 rounded-lg p-4 hover:border-blue-500 transition-colors"
             >
               <h3 className="font-medium mb-1">Buy with card via Transak</h3>
@@ -179,6 +182,7 @@ export default function FundingPage() {
               href="https://peer.xyz"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => analytics.track('funding_external_clicked', { target: 'peer' })}
               className="block bg-slate-900 border border-slate-700 rounded-lg p-4 hover:border-blue-500 transition-colors"
             >
               <h3 className="font-medium mb-1">Convert via Peer</h3>

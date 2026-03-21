@@ -147,6 +147,7 @@ export default function PublicProfile() {
 
   const handleShare = async () => {
     const url = window.location.href;
+    analytics.track('profile_shared', { humanId: id });
 
     if (navigator.share) {
       try {
@@ -796,7 +797,7 @@ export default function PublicProfile() {
             {user && profile.id !== user.id && (
               <div className="pt-2 text-center">
                 <button
-                  onClick={() => setShowReportModal(true)}
+                  onClick={() => { analytics.track('profile_reported', { humanId: id }); setShowReportModal(true); }}
                   className="text-xs text-gray-400 hover:text-red-500 transition-colors"
                 >
                   {t('reportUser.reportLink', 'Report')}

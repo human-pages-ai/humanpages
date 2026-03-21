@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { analytics } from '../../lib/analytics';
 import Link from '../../components/LocalizedLink';
 import Logo from '../../components/Logo';
 import SEO from '../../components/SEO';
@@ -185,7 +186,7 @@ export default function BlogIndex() {
               <div className="space-y-6">
                 {featuredArticles.map((article) => (
                   <article key={article.slug} className="bg-white border border-slate-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-sm transition-all">
-                    <Link to={`/blog/${article.slug}`} className="block">
+                    <Link to={`/blog/${article.slug}`} onClick={() => analytics.track('blog_article_clicked', { slug: article.slug, section: 'featured' })} className="block">
                       <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 hover:text-blue-600 transition-colors">
                         {article.title}
                       </h3>
@@ -209,7 +210,7 @@ export default function BlogIndex() {
               <div className="space-y-3">
                 {latestArticles.map((article) => (
                   <article key={article.slug} className="bg-white border border-slate-200 rounded-lg px-5 py-4 hover:border-blue-300 hover:shadow-sm transition-all">
-                    <Link to={`/blog/${article.slug}`} className="flex items-start justify-between gap-4">
+                    <Link to={`/blog/${article.slug}`} onClick={() => analytics.track('blog_article_clicked', { slug: article.slug, section: 'latest' })} className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <h3 className="font-semibold text-slate-900 hover:text-blue-600 transition-colors truncate">
                           {article.title}

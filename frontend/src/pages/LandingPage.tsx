@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { analytics } from '../lib/analytics';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
@@ -27,7 +28,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   return (
     <div className="border-b border-slate-200 last:border-b-0">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => { if (!open) analytics.track('landing_faq_toggled', { question: q.slice(0, 80) }); setOpen(!open); }}
         aria-expanded={open}
         className="w-full py-4 flex justify-between items-center text-left"
       >
@@ -566,6 +567,7 @@ function FeaturedSection() {
                 <Link
                   key={h.id}
                   to={`/humans/${h.id}`}
+                  onClick={() => analytics.track('landing_profile_clicked', { humanId: h.id })}
                   className="group p-3 sm:p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all text-center min-w-0 w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)]"
                 >
                   {h.profilePhotoUrl ? (
@@ -618,6 +620,7 @@ function LiveListingCards() {
           <Link
             key={card.id}
             to={`/listings/${card.id}`}
+            onClick={() => analytics.track('landing_listing_clicked', { listingId: card.id })}
             className={`block p-5 rounded-xl border transition-shadow hover:shadow-md ${
               card.isPro ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-white'
             }`}
@@ -648,6 +651,7 @@ function LiveListingCards() {
       <div className="text-center">
         <Link
           to="/listings"
+          onClick={() => analytics.track('landing_cta_clicked', { location: 'job_board', target: 'listings' })}
           className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
         >
           {t('landing.jobBoard.browseCta')}
@@ -862,6 +866,7 @@ export default function LandingPage() {
             <LanguageSwitcher />
             <Link
               to="/signup"
+              onClick={() => analytics.track('landing_cta_clicked', { location: 'header', target: 'signup' })}
               className="px-3 py-2 bg-orange-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
             >
               <span className="sm:hidden">Start</span>
@@ -897,12 +902,14 @@ export default function LandingPage() {
                 <div className="mt-6 md:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
                   <Link
                     to="/signup"
+                    onClick={() => analytics.track('landing_cta_clicked', { location: 'hero', target: 'signup' })}
                     className="inline-block px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25 text-center"
                   >
                     {t('landing.hero.cta')}
                   </Link>
                   <Link
                     to="/listings"
+                    onClick={() => analytics.track('landing_cta_clicked', { location: 'hero', target: 'listings' })}
                     className="hidden sm:inline-block px-6 sm:px-8 py-3 sm:py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors text-base sm:text-lg text-center"
                   >
                     {t('landing.hero.browseListings')}

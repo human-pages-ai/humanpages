@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { analytics } from '../../lib/analytics';
 
 export type DashboardTab = 'jobs' | 'listings' | 'profile' | 'payments' | 'settings' | 'privacy';
 
@@ -78,7 +79,7 @@ export default function DashboardTabs({ activeTab, onTabChange, pendingJobCount 
           return (
             <button
               key={key}
-              onClick={() => onTabChange(key)}
+              onClick={() => { analytics.track('dashboard_tab_changed', { tab: key }); onTabChange(key); }}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 isActive
                   ? 'border-blue-600 text-blue-600'

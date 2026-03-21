@@ -64,7 +64,27 @@ type EventName =
   | 'dev_docs_link_clicked'
   | 'dev_server_url_copied'
   | 'dev_claim_service_clicked'
-  | 'dev_external_link_clicked';
+  | 'dev_external_link_clicked'
+  | 'landing_cta_clicked'
+  | 'landing_faq_toggled'
+  | 'landing_profile_clicked'
+  | 'landing_listing_clicked'
+  | 'dashboard_tab_changed'
+  | 'dashboard_logout'
+  | 'dashboard_resend_verification'
+  | 'dashboard_privacy_toggled'
+  | 'dashboard_filters_saved'
+  | 'dashboard_export_data'
+  | 'dashboard_delete_account'
+  | 'funding_wallet_copied'
+  | 'funding_external_clicked'
+  | 'profile_shared'
+  | 'profile_reported'
+  | 'jobboard_filter_applied'
+  | 'jobboard_listing_clicked'
+  | 'jobboard_paginated'
+  | 'pricing_cta_clicked'
+  | 'blog_article_clicked';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;
