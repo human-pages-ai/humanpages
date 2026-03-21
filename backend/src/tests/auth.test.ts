@@ -247,7 +247,7 @@ describe('Auth API', () => {
       // Verify the user is now verified
       const human = await prisma.human.findUnique({ where: { id: user.id } });
       expect(human?.emailVerified).toBe(true);
-      expect(human?.emailVerificationToken).toBeNull();
+      expect(human?.emailVerificationToken).toBe(verificationToken);
     });
 
     it('should redirect with error when token is missing', async () => {

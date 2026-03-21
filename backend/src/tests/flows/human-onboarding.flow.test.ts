@@ -76,7 +76,7 @@ describe('Flow: Human Onboarding — Full User Journey', () => {
     // Confirm DB state
     const verifiedUser = await prisma.human.findUnique({ where: { id: userId } });
     expect(verifiedUser?.emailVerified).toBe(true);
-    expect(verifiedUser?.emailVerificationToken).toBeNull();
+    expect(verifiedUser?.emailVerificationToken).toBeTruthy();
 
     // ─── Step 3: Login with credentials ────────────────────────────────
     const loginRes = await request(app)

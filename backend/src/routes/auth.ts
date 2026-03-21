@@ -343,6 +343,7 @@ router.get('/verify-email', async (req, res) => {
   try {
     const token = req.query.token as string;
     if (!token) {
+      logger.info({ outcome: 'missing_token' }, 'Email verify attempt');
       return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
     }
 
@@ -351,18 +352,25 @@ router.get('/verify-email', async (req, res) => {
     });
 
     if (!human) {
+      logger.info({ outcome: 'token_not_found', tokenPrefix: token.slice(0, 8) }, 'Email verify attempt');
       return res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
+    }
+
+    if (human.emailVerified) {
+      // Already verified (double-click, prefetch bot, retry) — treat as success
+      logger.info({ outcome: 'already_verified', userId: human.id }, 'Email verify attempt');
+      return res.redirect(`${process.env.FRONTEND_URL}/email-verified`);
     }
 
     await prisma.human.update({
       where: { id: human.id },
-      data: { emailVerified: true, emailVerificationToken: null },
+      data: { emailVerified: true },
     });
 
+    logger.info({ outcome: 'verified', userId: human.id }, 'Email verify attempt');
     res.redirect(`${process.env.FRONTEND_URL}/email-verified`);
   } catch (error) {
-    logger.error({ err: error }, 'Verify email error');
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard?emailVerifyError=true`);
+    logger.error({ err: error }, 'Email verify attempt');
   }
 });
 
