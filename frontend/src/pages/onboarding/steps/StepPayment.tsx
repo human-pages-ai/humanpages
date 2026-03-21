@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../../lib/api';
 import type { FiatPaymentMethod } from '../../../components/dashboard/types';
@@ -28,6 +28,10 @@ const PLATFORM_LABELS: Record<string, string> = Object.fromEntries(
   PLATFORM_OPTIONS.map((p) => [p.value, p.label])
 );
 
+// Lazy-load the Privy-powered connect button so @privy-io/react-auth
+// is not bundled for users who never reach the payment step.
+const PrivyWalletConnect = lazy(() => import('./PrivyWalletConnect'));
+
 export function StepPayment({
   walletAddress,
   setWalletAddress,
@@ -37,7 +41,6 @@ export function StepPayment({
   setError,
 }: StepPaymentProps) {
   const { t } = useTranslation();
-  const [connectingPrivy, setConnectingPrivy] = useState(false);
 
   // Existing fiat payment methods (loaded from API)
   const [methods, setMethods] = useState<FiatPaymentMethod[]>([]);
@@ -101,25 +104,6 @@ export function StepPayment({
   };
 
   const selectedPlatform = PLATFORM_OPTIONS.find((p) => p.value === newPlatform);
-
-  // Lazy load Privy to avoid impact on 2G networks
-  const handleConnectWallet = async () => {
-    setConnectingPrivy(true);
-    if (setError) setError('');
-    try {
-      const { usePrivy } = await import('@privy-io/react-auth');
-      const usePrivyHook = usePrivy();
-      if (usePrivyHook && usePrivyHook.login) {
-        usePrivyHook.login();
-      } else {
-        if (setError) setError('Wallet connection not available. You can paste your address manually below.');
-      }
-    } catch (err) {
-      if (setError) setError('Failed to load wallet connector. Please paste your address manually.');
-    } finally {
-      setConnectingPrivy(false);
-    }
-  };
 
   return (
     <>
@@ -267,17 +251,23 @@ export function StepPayment({
           </div>
         </div>
 
-        {/* Connect Wallet Button */}
+        {/* Connect Wallet via Privy */}
         <div className="mb-4">
-          <button
-            type="button"
-            onClick={handleConnectWallet}
-            disabled={connectingPrivy}
-            className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors text-sm min-h-[44px]"
-          >
-            {connectingPrivy ? 'Connecting...' : t('onboarding.payment.crypto.connectButton')}
-          </button>
-          <p className="text-xs text-slate-500 mt-2">{t('onboarding.payment.crypto.connectHint')}</p>
+          <Suspense fallback={
+            <button
+              type="button"
+              disabled
+              className="w-full py-2.5 bg-blue-500 text-white font-medium rounded-lg disabled:opacity-50 transition-colors text-sm min-h-[44px]"
+            >
+              Loading...
+            </button>
+          }>
+            <PrivyWalletConnect
+              walletAddress={walletAddress}
+              onWalletConnected={setWalletAddress}
+              setError={setError}
+            />
+          </Suspense>
         </div>
 
         {/* Divider */}

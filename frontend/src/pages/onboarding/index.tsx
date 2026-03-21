@@ -26,6 +26,7 @@ import { StepVouch } from './steps/StepVouch';
 import { StepLocation } from './steps/StepLocation';
 import { StepEducation } from './steps/StepEducation';
 import { StepPayment } from './steps/StepPayment';
+import WalletProvider from '../../components/dashboard/WalletProvider';
 import { StepAboutYou } from './steps/StepAboutYou';
 import { StepAvailability } from './steps/StepAvailability';
 import { StepFinish } from './steps/StepFinish';
@@ -605,10 +606,12 @@ export default function Onboarding() {
 
       case 'payment':
         return (
-          <StepPayment
-            walletAddress={form.walletAddress} setWalletAddress={form.setWalletAddress}
-            onNext={handleNext} onSkip={handleSkip} {...stepProps}
-          />
+          <WalletProvider>
+            <StepPayment
+              walletAddress={form.walletAddress} setWalletAddress={form.setWalletAddress}
+              onNext={handleNext} onSkip={handleSkip} {...stepProps}
+            />
+          </WalletProvider>
         );
 
       case 'services':
