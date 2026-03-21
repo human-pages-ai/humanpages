@@ -46,13 +46,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://static.cloudflareinsights.com", "https://us-assets.i.posthog.com"],
+      scriptSrc: ["'self'", "https://static.cloudflareinsights.com", "https://us-assets.i.posthog.com", "https://challenges.cloudflare.com"],
       connectSrc: ["'self'", "https://us.i.posthog.com", "https://us-assets.i.posthog.com", "https://auth.privy.io", "wss://relay.walletconnect.com", "wss://relay.walletconnect.org", "wss://www.walletlink.org", "https://*.rpc.privy.systems", "https://explorer-api.walletconnect.com"],
       imgSrc: ["'self'", "data:", "https://*.r2.cloudflarestorage.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       fontSrc: ["'self'"],
       frameSrc: ["'self'", "https://auth.privy.io", "https://verify.walletconnect.com", "https://verify.walletconnect.org", "https://challenges.cloudflare.com"],
       childSrc: ["https://auth.privy.io", "https://verify.walletconnect.com", "https://verify.walletconnect.org"],
+      workerSrc: ["'self'"],
     },
   },
 }));
