@@ -452,7 +452,8 @@ export function getPromptToCompletionMetaHtml(lang?: string): string | null {
     <meta name="twitter:image" content="${ogImage}" />`;
 
   const crawlerContent = `
-    <div id="use-cases-ssr" style="padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+    <div id="use-cases-ssr" style="display:none;padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+    <noscript><style>#use-cases-ssr{display:block!important}</style></noscript>
       <h1>Use Cases — Human Pages</h1>
       <p>Real tasks your AI agent can delegate to humans. One prompt, real submissions.</p>
 
