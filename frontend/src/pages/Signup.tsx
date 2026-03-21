@@ -395,8 +395,20 @@ export default function Signup() {
           </button>
         </div>
 
-        {/* Email signup temporarily hidden — Turnstile captcha not loading */}
-        {false && <>
+        {/* Turnstile — rendered outside email form so it resolves on page load */}
+        <Turnstile
+          sitekey={TURNSTILE_SITE_KEY}
+          onVerify={(token) => { captchaResolved.current = true; setCaptchaFailed(false); setCaptchaToken(token); }}
+          onExpire={() => setCaptchaToken('')}
+          onError={() => setCaptchaFailed(true)}
+          onTimeout={() => setCaptchaFailed(true)}
+        />
+        {captchaFailed && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+            {t('auth.captchaFailed')}
+          </div>
+        )}
+
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -500,18 +512,6 @@ export default function Signup() {
               </Link>
             </label>
           </div>
-          <Turnstile
-            sitekey={TURNSTILE_SITE_KEY}
-            onVerify={(token) => { captchaResolved.current = true; setCaptchaFailed(false); setCaptchaToken(token); }}
-            onExpire={() => setCaptchaToken('')}
-            onError={() => setCaptchaFailed(true)}
-            onTimeout={() => setCaptchaFailed(true)}
-          />
-          {captchaFailed && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
-              {t('auth.captchaFailed')}
-            </div>
-          )}
           <button
             type="submit"
             disabled={loading || !termsAccepted || !captchaToken}
@@ -527,7 +527,6 @@ export default function Signup() {
           <InAppBrowserBanner />
         </form>
         )}
-        </>}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
