@@ -50,7 +50,11 @@ type EventName =
   | 'listing_share'
   | 'telegram_connected_onboarding'
   | 'telegram_skipped_onboarding'
-  | 'telegram_connect_attempted';
+  | 'telegram_connect_attempted'
+  | 'push_notifications_granted'
+  | 'push_notifications_denied'
+  | 'whatsapp_provided_onboarding'
+  | 'connect_step_completed';
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;

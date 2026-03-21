@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../../lib/api';
+import { analytics } from '../../../lib/analytics';
 import { isInAppBrowser } from '../utils';
 import { WhatsAppSection } from '../components/WhatsAppSection';
 import type { TelegramState } from '../types';
@@ -129,10 +130,12 @@ export function StepConnect({
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setNotificationStatus('denied');
+        analytics.track('push_notifications_denied');
         return;
       }
 
       setNotificationStatus('granted');
+      analytics.track('push_notifications_granted');
 
       let registration: ServiceWorkerRegistration;
       try {
@@ -189,6 +192,7 @@ export function StepConnect({
     setTelegramLoading(true);
     setTelegramError('');
     setLinkExpired(false);
+    analytics.track('telegram_connect_attempted');
 
     try {
       const result = await api.linkTelegram();
@@ -212,6 +216,7 @@ export function StepConnect({
           setTelegramStatus(status);
           if (status.connected) {
             stopPolling();
+            analytics.track('telegram_connected_onboarding');
           }
         } catch {
           // Poll attempt failed — will retry in next interval
@@ -383,7 +388,15 @@ export function StepConnect({
       <WhatsAppSection whatsappNumber={whatsappNumber} setWhatsappNumber={setWhatsappNumber} smsNumber={smsNumber} setSmsNumber={setSmsNumber} />
 
       <div className="flex justify-end mt-6">
-        <button type="button" onClick={onNext} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">
+        <button type="button" onClick={() => {
+          const hasWhatsapp = !!whatsappNumber;
+          const hasTelegram = !!telegramStatus?.connected;
+          const hasPush = notificationStatus === 'granted';
+          if (hasWhatsapp) analytics.track('whatsapp_provided_onboarding');
+          if (!hasTelegram) analytics.track('telegram_skipped_onboarding');
+          analytics.track('connect_step_completed', { hasWhatsapp, hasTelegram, hasPush });
+          onNext();
+        }} className="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 active:bg-orange-700 transition-colors shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-500" aria-label="Next step">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
       </div>
