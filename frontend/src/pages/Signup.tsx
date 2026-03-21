@@ -46,15 +46,16 @@ export default function Signup() {
   const [waTerms, setWaTerms] = useState(false);
   const [waSending, setWaSending] = useState(false);
 
-  // Application-level timeout: if Turnstile hasn't verified within 10s, show fallback
+  // Application-level timeout: if Turnstile hasn't verified within 10s of opening email form, show fallback
   useEffect(() => {
+    if (!showEmailForm) return;
     const timer = setTimeout(() => {
       if (!captchaResolved.current) {
         setCaptchaFailed(true);
       }
     }, CAPTCHA_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, []);
+  }, [showEmailForm]);
 
   useEffect(() => {
     // Store referral ID if present
@@ -362,7 +363,7 @@ export default function Signup() {
           <button
             type="button"
             onClick={handleWhatsAppStart}
-            disabled={oauthLoading !== null || !captchaToken}
+            disabled={oauthLoading !== null}
             className="!hidden"
           >
             <WhatsAppIcon />
@@ -395,20 +396,6 @@ export default function Signup() {
           </button>
         </div>
 
-        {/* Turnstile — rendered outside email form so it resolves on page load */}
-        <Turnstile
-          sitekey={TURNSTILE_SITE_KEY}
-          onVerify={(token) => { captchaResolved.current = true; setCaptchaFailed(false); setCaptchaToken(token); }}
-          onExpire={() => setCaptchaToken('')}
-          onError={() => setCaptchaFailed(true)}
-          onTimeout={() => setCaptchaFailed(true)}
-        />
-        {captchaFailed && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
-            {t('auth.captchaFailed')}
-          </div>
-        )}
-
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -426,7 +413,19 @@ export default function Signup() {
         </div>
 
         {/* Email/password form */}
-        {showEmailForm && (
+        {showEmailForm && (<>
+        <Turnstile
+          sitekey={TURNSTILE_SITE_KEY}
+          onVerify={(token) => { captchaResolved.current = true; setCaptchaFailed(false); setCaptchaToken(token); }}
+          onExpire={() => setCaptchaToken('')}
+          onError={() => setCaptchaFailed(true)}
+          onTimeout={() => setCaptchaFailed(true)}
+        />
+        {captchaFailed && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+            {t('auth.captchaFailed')}
+          </div>
+        )}
         <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" role="alert">
@@ -526,7 +525,7 @@ export default function Signup() {
 
           <InAppBrowserBanner />
         </form>
-        )}
+        </>)}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
