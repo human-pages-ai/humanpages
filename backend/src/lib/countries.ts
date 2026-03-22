@@ -332,3 +332,64 @@ export function countryFromLocation(location: string): string {
   }
   return 'Unknown';
 }
+
+/**
+ * Map a country name to its continent for geographic diversity balancing.
+ */
+const COUNTRY_TO_CONTINENT: Record<string, string> = {
+  // Africa
+  ...Object.fromEntries([
+    'Algeria', 'Angola', 'Benin', 'Botswana', 'Burkina Faso', 'Burundi',
+    'Cameroon', 'Cape Verde', 'Central African Republic', 'Chad', 'Comoros',
+    'Congo', 'Democratic Republic of the Congo', 'Djibouti', 'Egypt',
+    'Equatorial Guinea', 'Eritrea', 'Eswatini', 'Ethiopia', 'Gabon', 'Gambia',
+    'Ghana', 'Guinea', 'Guinea-Bissau', 'Ivory Coast', 'Kenya', 'Lesotho',
+    'Liberia', 'Libya', 'Madagascar', 'Malawi', 'Mali', 'Mauritania',
+    'Mauritius', 'Morocco', 'Mozambique', 'Namibia', 'Niger', 'Nigeria',
+    'Rwanda', 'São Tomé and Príncipe', 'Senegal', 'Seychelles', 'Sierra Leone',
+    'Somalia', 'South Africa', 'South Sudan', 'Sudan', 'Tanzania', 'Togo',
+    'Tunisia', 'Uganda', 'Zambia', 'Zimbabwe',
+  ].map(c => [c, 'Africa'])),
+  // Europe
+  ...Object.fromEntries([
+    'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium', 'Bosnia and Herzegovina',
+    'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 'Denmark', 'Estonia',
+    'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'Iceland', 'Ireland',
+    'Italy', 'Kosovo', 'Latvia', 'Liechtenstein', 'Lithuania', 'Luxembourg',
+    'Malta', 'Moldova', 'Monaco', 'Montenegro', 'Netherlands', 'North Macedonia',
+    'Norway', 'Poland', 'Portugal', 'Romania', 'Russia', 'San Marino', 'Serbia',
+    'Slovakia', 'Slovenia', 'Spain', 'Sweden', 'Switzerland', 'Ukraine',
+    'United Kingdom',
+  ].map(c => [c, 'Europe'])),
+  // Asia
+  ...Object.fromEntries([
+    'Afghanistan', 'Armenia', 'Azerbaijan', 'Bahrain', 'Bangladesh', 'Bhutan',
+    'Brunei', 'Cambodia', 'China', 'Georgia', 'India', 'Indonesia', 'Iran',
+    'Iraq', 'Israel', 'Japan', 'Jordan', 'Kazakhstan', 'Kuwait', 'Kyrgyzstan',
+    'Laos', 'Lebanon', 'Malaysia', 'Maldives', 'Mongolia', 'Myanmar', 'Nepal',
+    'North Korea', 'Oman', 'Pakistan', 'Palestine', 'Philippines', 'Qatar',
+    'Saudi Arabia', 'Singapore', 'South Korea', 'Sri Lanka', 'Syria',
+    'Tajikistan', 'Thailand', 'Timor-Leste', 'Turkey', 'Turkmenistan',
+    'United Arab Emirates', 'Uzbekistan', 'Vietnam', 'Yemen',
+  ].map(c => [c, 'Asia'])),
+  // Americas
+  ...Object.fromEntries([
+    'Antigua and Barbuda', 'Argentina', 'Bahamas', 'Barbados', 'Belize',
+    'Bolivia', 'Brazil', 'Canada', 'Chile', 'Colombia', 'Costa Rica', 'Cuba',
+    'Dominica', 'Dominican Republic', 'Ecuador', 'El Salvador', 'Grenada',
+    'Guatemala', 'Guyana', 'Haiti', 'Honduras', 'Jamaica', 'Mexico',
+    'Nicaragua', 'Panama', 'Paraguay', 'Peru', 'Saint Kitts and Nevis',
+    'Saint Lucia', 'Saint Vincent and the Grenadines', 'Suriname',
+    'Trinidad and Tobago', 'United States', 'Uruguay', 'Venezuela',
+  ].map(c => [c, 'Americas'])),
+  // Oceania
+  ...Object.fromEntries([
+    'Australia', 'Fiji', 'Kiribati', 'Marshall Islands', 'Micronesia',
+    'Nauru', 'New Zealand', 'Palau', 'Papua New Guinea', 'Samoa',
+    'Solomon Islands', 'Tonga', 'Tuvalu', 'Vanuatu',
+  ].map(c => [c, 'Oceania'])),
+};
+
+export function continentFromCountry(country: string): string {
+  return COUNTRY_TO_CONTINENT[country] ?? 'Other';
+}

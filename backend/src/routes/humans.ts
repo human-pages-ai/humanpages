@@ -12,7 +12,7 @@ import { isX402Enabled, X402_PRICES, buildPaymentRequiredResponse } from '../lib
 import { calculateDistance, boundingBox, DEFAULT_SEARCH_RADIUS_KM } from '../lib/geo.js';
 import { geocodeLocation } from '../lib/geocode.js';
 import { logger } from '../lib/logger.js';
-import { normalizeCountry, countryFromLocation } from '../lib/countries.js';
+import { normalizeCountry, countryFromLocation, continentFromCountry } from '../lib/countries.js';
 import { trackServerEvent } from '../lib/posthog.js';
 import { convertToUsd, SUPPORTED_CURRENCIES } from '../lib/exchangeRates.js';
 import { computeTrustScore } from '../lib/trustScore.js';
@@ -1123,34 +1123,64 @@ router.get('/featured', async (_req, res) => {
         h.name.length >= 3
       );
 
-      // Pick up to 8 profiles with geographic diversity (max 2 per country)
-      const byCountry = new Map<string, typeof quality>();
-      for (const h of quality.sort(() => Math.random() - 0.5)) {
+      // Pick up to 8 profiles with geographic diversity:
+      // 1. Group by continent, then by country within each continent
+      // 2. Round-robin across continents first (max 3 per continent in first pass)
+      // 3. Fill remaining slots respecting max 2 per country
+      const shuffled = quality.sort(() => Math.random() - 0.5);
+      const byContinent = new Map<string, typeof quality>();
+      for (const h of shuffled) {
         const country = countryFromLocation(h.location ?? '');
-        if (!byCountry.has(country)) byCountry.set(country, []);
-        byCountry.get(country)!.push(h);
+        const continent = continentFromCountry(country);
+        if (!byContinent.has(continent)) byContinent.set(continent, []);
+        byContinent.get(continent)!.push(h);
       }
-      const countryGroups = [...byCountry.values()].sort(() => Math.random() - 0.5);
+      const continentGroups = [...byContinent.entries()].sort(() => Math.random() - 0.5);
       const picked: typeof quality = [];
       const perCountry = new Map<string, number>();
+      const perContinent = new Map<string, number>();
+      const pickedIds = new Set<string>();
+      const MAX_PER_CONTINENT = 3;
+      const MAX_PER_COUNTRY = 2;
+
+      // First pass: round-robin across continents, capped per continent
       let round = 0;
       while (picked.length < 8) {
         let addedAny = false;
-        for (const group of countryGroups) {
+        for (const [continent, group] of continentGroups) {
           if (picked.length >= 8) break;
-          if (round < group.length) {
-            const h = group[round];
-            const country = countryFromLocation(h.location ?? '');
-            const count = perCountry.get(country) ?? 0;
-            if (count < 2) {
-              picked.push(h);
-              perCountry.set(country, count + 1);
-              addedAny = true;
-            }
+          if (round >= group.length) continue;
+          const h = group[round];
+          if (pickedIds.has(h.id)) continue;
+          const country = countryFromLocation(h.location ?? '');
+          const cc = perCountry.get(country) ?? 0;
+          const ct = perContinent.get(continent) ?? 0;
+          if (cc < MAX_PER_COUNTRY && ct < MAX_PER_CONTINENT) {
+            picked.push(h);
+            pickedIds.add(h.id);
+            perCountry.set(country, cc + 1);
+            perContinent.set(continent, ct + 1);
+            addedAny = true;
           }
         }
         round++;
         if (!addedAny) break;
+      }
+
+      // Second pass: fill remaining slots if < 8, relaxing continent cap
+      if (picked.length < 8) {
+        for (const [, group] of continentGroups) {
+          for (const h of group) {
+            if (picked.length >= 8) break;
+            if (pickedIds.has(h.id)) continue;
+            const country = countryFromLocation(h.location ?? '');
+            if ((perCountry.get(country) ?? 0) < MAX_PER_COUNTRY) {
+              picked.push(h);
+              pickedIds.add(h.id);
+              perCountry.set(country, (perCountry.get(country) ?? 0) + 1);
+            }
+          }
+        }
       }
       featured = await Promise.all(picked.map(h => attachPhotoUrl({ ...h })));
       profilesCache = { data: featured, expiresAt: now + 24 * 60 * 60 * 1000 };
