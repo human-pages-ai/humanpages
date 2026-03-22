@@ -39,6 +39,28 @@ export interface AdminStats {
     byStatus: Record<string, number>;
     applications: number;
   };
+  insights?: {
+    cvUploaded: number;
+    telegramConnected: number;
+    telegramBotSignups: number;
+    education: { bachelors: number; masters: number; doctorate: number; other: number };
+    profileCompleteness: {
+      avgScore: number;
+      withBio: number;
+      withPhoto: number;
+      withService: number;
+      withEducation: number;
+      withSkills: number;
+      withLocation: number;
+      available: number;
+      distribution: Record<string, number>;
+    };
+    verification: { google: number; linkedin: number; github: number };
+    workMode: Record<string, number>;
+    utmSources: Record<string, number>;
+    topSkills: { skill: string; count: number }[];
+    topLocations: { location: string; count: number }[];
+  };
 }
 
 export interface AdminUser {

@@ -316,6 +316,131 @@ router.get('/stats', async (_req, res) => {
       prisma.listingApplication.count(),
     ]);
 
+    // --- New insight stats (separate Promise.all for clarity) ---
+    const [
+      cvUploaded,
+      telegramConnected,
+      telegramBotSignups,
+      withBio,
+      withPhoto,
+      withService,
+      withEducation,
+      withSkills,
+      withLocation,
+      availableCount,
+      googleOAuth,
+      linkedinVerifiedCount,
+      githubVerifiedCount,
+      workModeRemote,
+      workModeOnsite,
+      workModeHybrid,
+    ] = await Promise.all([
+      prisma.human.count({ where: { cvFileKey: { not: null } } }),
+      prisma.human.count({ where: { telegramChatId: { not: null } } }),
+      prisma.human.count({ where: { utmSource: 'telegram_bot' } }),
+      prisma.human.count({ where: { bio: { not: null } } }),
+      prisma.human.count({ where: { profilePhotoStatus: 'approved' } }),
+      prisma.human.count({ where: { services: { some: {} } } }),
+      prisma.human.count({ where: { educations: { some: {} } } }),
+      prisma.human.count({ where: { NOT: { skills: { isEmpty: true } } } }),
+      prisma.human.count({ where: { location: { not: null } } }),
+      prisma.human.count({ where: { isAvailable: true } }),
+      prisma.human.count({ where: { googleId: { not: null } } }),
+      prisma.human.count({ where: { linkedinVerified: true } }),
+      prisma.human.count({ where: { githubVerified: true } }),
+      prisma.human.count({ where: { workMode: 'REMOTE' } }),
+      prisma.human.count({ where: { workMode: 'ONSITE' } }),
+      prisma.human.count({ where: { workMode: 'HYBRID' } }),
+    ]);
+
+    const utmBreakdownRaw = await prisma.human.groupBy({
+      by: ['utmSource'],
+      _count: true,
+      where: { utmSource: { not: null } },
+    });
+
+    // Raw SQL queries — unique users per education tier, funnel, skills, locations, completeness
+    const [
+      educationByTierRaw,
+      topSkillsRaw,
+      topLocationsRaw,
+      completenessDistRaw,
+    ] = await Promise.all([
+      // Count distinct HUMANS at each education tier (highest degree wins)
+      prisma.$queryRaw`
+        SELECT tier, COUNT(*)::int AS cnt FROM (
+          SELECT DISTINCT ON ("humanId")
+            "humanId",
+            CASE
+              WHEN degree IN ('PhD','Postdoc','PsyD','EdD','DBA','DMin','DNP','DO','DPharm','MD','JD') THEN 'doctorate'
+              WHEN degree IN ('MA','MBA','MCom','MEd','MEng','MFA','MPH','MPhil','MSc','MSW','MTech','LLM') THEN 'masters'
+              WHEN degree IN ('BA','BBA','BCA','BEd','BEng','BFA','BMus','BPharm','BSc','BTech') THEN 'bachelors'
+              WHEN degree IN ('Associate','Diploma','Certificate') THEN 'other'
+              ELSE 'other'
+            END AS tier
+          FROM "Education"
+          ORDER BY "humanId",
+            CASE
+              WHEN degree IN ('PhD','Postdoc','PsyD','EdD','DBA','DMin','DNP','DO','DPharm','MD','JD') THEN 1
+              WHEN degree IN ('MA','MBA','MCom','MEd','MEng','MFA','MPH','MPhil','MSc','MSW','MTech','LLM') THEN 2
+              WHEN degree IN ('BA','BBA','BCA','BEd','BEng','BFA','BMus','BPharm','BSc','BTech') THEN 3
+              ELSE 4
+            END
+        ) ranked
+        GROUP BY tier
+      ` as Promise<{ tier: string; cnt: number }[]>,
+      prisma.$queryRaw`
+        SELECT unnest(skills) AS skill, COUNT(*)::int AS cnt
+        FROM "Human"
+        WHERE array_length(skills, 1) > 0
+        GROUP BY skill ORDER BY cnt DESC LIMIT 10
+      ` as Promise<{ skill: string; cnt: number }[]>,
+      prisma.$queryRaw`
+        SELECT location AS loc, COUNT(*)::int AS cnt
+        FROM "Human"
+        WHERE location IS NOT NULL AND location != ''
+        GROUP BY location ORDER BY cnt DESC LIMIT 10
+      ` as Promise<{ loc: string; cnt: number }[]>,
+      prisma.$queryRaw`
+        SELECT bucket, COUNT(*)::int AS cnt, ROUND(AVG(score))::int AS avg_score FROM (
+          SELECT score, CASE
+            WHEN score < 20 THEN '0-19'
+            WHEN score < 40 THEN '20-39'
+            WHEN score < 60 THEN '40-59'
+            WHEN score < 80 THEN '60-79'
+            ELSE '80-100'
+          END AS bucket
+          FROM (
+            SELECT (
+              (CASE WHEN bio IS NOT NULL AND bio != '' THEN 15 ELSE 0 END) +
+              (CASE WHEN "profilePhotoStatus" = 'approved' THEN 15 ELSE 0 END) +
+              (CASE WHEN array_length(skills, 1) > 0 THEN 15 ELSE 0 END) +
+              (CASE WHEN location IS NOT NULL AND location != '' THEN 10 ELSE 0 END) +
+              (CASE WHEN EXISTS (SELECT 1 FROM "Service" s WHERE s."humanId" = h.id) THEN 15 ELSE 0 END) +
+              (CASE WHEN EXISTS (SELECT 1 FROM "Education" e WHERE e."humanId" = h.id) THEN 10 ELSE 0 END) +
+              (CASE WHEN array_length(languages, 1) > 0 THEN 5 ELSE 0 END) +
+              (CASE WHEN "emailVerified" = true THEN 10 ELSE 0 END) +
+              (CASE WHEN telegram IS NOT NULL OR whatsapp IS NOT NULL THEN 5 ELSE 0 END)
+            ) AS score
+            FROM "Human" h
+          ) scored
+        ) bucketed
+        GROUP BY bucket ORDER BY bucket
+      ` as Promise<{ bucket: string; cnt: number; avg_score: number }[]>,
+    ]);
+
+    // Compute average completeness score across all buckets
+    const totalCompUsers = (completenessDistRaw as { bucket: string; cnt: number; avg_score: number }[]).reduce((s, r) => s + r.cnt, 0);
+    const weightedAvg = totalCompUsers > 0
+      ? Math.round((completenessDistRaw as { bucket: string; cnt: number; avg_score: number }[]).reduce((s, r) => s + r.avg_score * r.cnt, 0) / totalCompUsers)
+      : 0;
+
+    // Education tier map
+    const eduMap: Record<string, number> = {};
+    for (const r of (educationByTierRaw as { tier: string; cnt: number }[])) {
+      eduMap[r.tier] = r.cnt;
+    }
+
     // Time-to-first-job: avg and median hours from agent registration to first job offer
     const ttfjResult = await prisma.$queryRaw<{ avg_hours: number | null; median_hours: number | null; agent_count: number }[]>`
       SELECT
@@ -385,6 +510,44 @@ router.get('/stats', async (_req, res) => {
         avgHours: ttfjResult[0]?.avg_hours ?? null,
         medianHours: ttfjResult[0]?.median_hours ?? null,
         agentsWithJobs: ttfjResult[0]?.agent_count ?? 0,
+      },
+      insights: {
+        cvUploaded,
+        telegramConnected,
+        telegramBotSignups,
+        education: {
+          bachelors: eduMap['bachelors'] ?? 0,
+          masters: eduMap['masters'] ?? 0,
+          doctorate: eduMap['doctorate'] ?? 0,
+          other: eduMap['other'] ?? 0,
+        },
+        profileCompleteness: {
+          avgScore: weightedAvg,
+          withBio,
+          withPhoto,
+          withService,
+          withEducation,
+          withSkills,
+          withLocation,
+          available: availableCount,
+          distribution: Object.fromEntries(
+            ['0-19', '20-39', '40-59', '60-79', '80-100'].map(b => [
+              b,
+              (completenessDistRaw as { bucket: string; cnt: number }[]).find(r => r.bucket === b)?.cnt ?? 0,
+            ])
+          ),
+        },
+        verification: { google: googleOAuth, linkedin: linkedinVerifiedCount, github: githubVerifiedCount },
+        workMode: { REMOTE: workModeRemote, ONSITE: workModeOnsite, HYBRID: workModeHybrid },
+        utmSources: Object.fromEntries(
+          utmBreakdownRaw
+            .filter(r => r.utmSource != null)
+            .sort((a, b) => b._count - a._count)
+            .slice(0, 15)
+            .map(r => [r.utmSource, r._count])
+        ),
+        topSkills: (topSkillsRaw as { skill: string; cnt: number }[]).map(r => ({ skill: r.skill, count: r.cnt })),
+        topLocations: (topLocationsRaw as { loc: string; cnt: number }[]).map(r => ({ location: r.loc, count: r.cnt })),
       },
     });
   } catch (error) {
