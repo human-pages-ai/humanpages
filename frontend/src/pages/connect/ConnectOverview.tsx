@@ -174,10 +174,10 @@ export default function ConnectOverview() {
           Any MCP-compatible client can connect. Use the universal config above, or reach out and we'll write a guide.
         </p>
         <a
-          href="https://github.com/humanpages/mcp-server/issues"
+          href="https://github.com/human-pages-ai/humanpages/issues"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => analytics.track('dev_external_link_clicked', { label: 'request_platform_guide', url: 'https://github.com/humanpages/mcp-server/issues' })}
+          onClick={() => analytics.track('dev_external_link_clicked', { label: 'request_platform_guide', url: 'https://github.com/human-pages-ai/humanpages/issues' })}
           className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
         >
           Request a platform guide →
