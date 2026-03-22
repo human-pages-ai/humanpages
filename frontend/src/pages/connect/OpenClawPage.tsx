@@ -25,7 +25,7 @@ export default function OpenClawPage() {
   return (
     <ConnectLayout
       title="Connect HumanPages to OpenClaw"
-      description="Add real human-hiring capabilities to any OpenClaw-powered agent. OpenClaw is the open ecosystem that powers ClawHub, NanoClaw, ZeroClaw, TrustClaw, PicoClaw, and MaxClaw."
+      description="Add real human-hiring capabilities to any OpenClaw-compatible agent. OpenClaw is the open specification for packaging and distributing AI agent skills."
       path="/dev/connect/openclaw"
       breadcrumbs={[{ label: 'Connect', href: '/dev/connect' }, { label: 'OpenClaw' }]}
       ogPlatform="openclaw"
@@ -79,51 +79,17 @@ export default function OpenClawPage() {
         />
       </Section>
 
-      <Section title="The OpenClaw Ecosystem">
+      <Section title="What is OpenClaw?">
         <p className="text-slate-600 mb-4">
-          OpenClaw is the open framework and specification that defines how AI agent skills are packaged, distributed, and executed. It powers an entire family of tools, each serving a different part of the ecosystem:
+          OpenClaw is an open specification for packaging, distributing, and executing AI agent skills. Skills published to the OpenClaw format can be installed by any compatible runtime or registry.
         </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-rose-50 rounded-lg p-4 border border-rose-100">
-            <p className="font-semibold text-rose-900 mb-1">ClawHub</p>
-            <p className="text-sm text-rose-700">The package registry — discover and install skills from 13,000+ published packages. Think npm for AI tools.</p>
-          </div>
-          <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-            <p className="font-semibold text-indigo-900 mb-1">NanoClaw</p>
-            <p className="text-sm text-indigo-700">Secure containerized agents with Docker Sandbox isolation and multi-channel messaging (WhatsApp, Telegram, Slack).</p>
-          </div>
-          <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
-            <p className="font-semibold text-orange-900 mb-1">ZeroClaw</p>
-            <p className="text-sm text-orange-700">Ultra-lightweight Rust runtime at 3 MB — runs on Raspberry Pi and edge devices.</p>
-          </div>
-          <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
-            <p className="font-semibold text-emerald-900 mb-1">TrustClaw</p>
-            <p className="text-sm text-emerald-700">Managed cloud sandbox — zero local setup, zero local risk. Deploy agents in seconds.</p>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
-            <p className="font-semibold text-yellow-900 mb-1">PicoClaw</p>
-            <p className="text-sm text-yellow-700">IoT and embedded agent runtime in Go — runs on 10 MB RAM for edge and embedded systems.</p>
-          </div>
-          <div className="bg-violet-50 rounded-lg p-4 border border-violet-100">
-            <p className="font-semibold text-violet-900 mb-1">MaxClaw</p>
-            <p className="text-sm text-violet-700">Fully managed cloud agent by MiniMax — deploy in 10 seconds, always-on, free credits to start.</p>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="How HumanPages Fits In">
         <p className="text-slate-600 mb-4">
-          When you add HumanPages as an OpenClaw skill, any agent running on <em>any</em> OpenClaw-compatible runtime gets access to real human workers. Whether your agent runs in a NanoClaw container, on a ZeroClaw edge device, or in the TrustClaw cloud — the same MCP tools work everywhere.
+          When you add HumanPages as an OpenClaw skill, any compatible agent gets access to real human workers via MCP — search, hire, and pay people for real-world tasks.
         </p>
-        <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-          <p className="font-mono text-sm text-slate-600">
-            Agent prompt → OpenClaw skill (HumanPages) → MCP tools → search_humans, create_listing, create_job_offer → Real humans get hired
-          </p>
-        </div>
       </Section>
 
       <Callout type="tip">
-        If you're using a specific OpenClaw runtime (NanoClaw, ZeroClaw, etc.), check their dedicated setup pages for runtime-specific instructions. This page covers the base OpenClaw CLI setup.
+        Several independent platforms support the OpenClaw spec. If you're using one of them, check their dedicated setup page for platform-specific instructions — this page covers the base OpenClaw CLI.
       </Callout>
 
       <ToolsReference />

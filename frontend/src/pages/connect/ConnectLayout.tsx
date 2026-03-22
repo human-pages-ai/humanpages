@@ -3,7 +3,6 @@ import Link from '../../components/LocalizedLink';
 import Logo from '../../components/Logo';
 import SEO from '../../components/SEO';
 import Footer from '../../components/Footer';
-import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 interface Breadcrumb {
   label: string;
@@ -50,7 +49,6 @@ export default function ConnectLayout({ children, title, description, path, brea
             <Link to="/dev/connect" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
               Connect
             </Link>
-            <LanguageSwitcher />
           </div>
         </div>
       </nav>

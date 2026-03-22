@@ -302,24 +302,19 @@ export function getCareersMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
-export function getDevPageMetaHtml(lang?: string): string | null {
+export function getDevPageMetaHtml(): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
   const title = 'Human Pages';
   const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
   const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
-  const unprefixedPath = '/dev';
-  const canonicalUrl = lang && lang !== 'en'
-    ? `${SITE_URL}/${lang}${unprefixedPath}`
-    : `${SITE_URL}${unprefixedPath}`;
-
-  const hreflangTags = buildHreflangTags(unprefixedPath);
+  const canonicalUrl = `${SITE_URL}/dev`;
 
   const metaTags = `
     <title>${title}</title>
     <meta name="description" content="${escapeHtml(description)}" />
-    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
+    <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${ogImage}" />
@@ -422,24 +417,19 @@ export function getDevPageMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
-export function getPromptToCompletionMetaHtml(lang?: string): string | null {
+export function getPromptToCompletionMetaHtml(): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
   const title = 'Human Pages';
   const description = 'You prompt. Humans deliver. Real-world tasks completed for your AI agent via MCP.';
   const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
-  const unprefixedPath = '/prompt-to-completion';
-  const canonicalUrl = lang && lang !== 'en'
-    ? `${SITE_URL}/${lang}${unprefixedPath}`
-    : `${SITE_URL}${unprefixedPath}`;
-
-  const hreflangTags = buildHreflangTags(unprefixedPath);
+  const canonicalUrl = `${SITE_URL}/prompt-to-completion`;
 
   const metaTags = `
     <title>${title}</title>
     <meta name="description" content="${escapeHtml(description)}" />
-    <link rel="canonical" href="${canonicalUrl}" />${hreflangTags}
+    <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${ogImage}" />
@@ -630,6 +620,70 @@ export function getGptSetupMetaHtml(): string | null {
     })}</script>`;
 
   return html.replace('</head>', `${metaTags}\n</head>`);
+}
+
+// ── Connect pages: server-side OG meta for WhatsApp/Twitter/social crawlers ──
+// English-only — no language prefix support
+
+const CONNECT_PLATFORM_DESCRIPTIONS: Record<string, string> = {
+  'android-studio': 'Add HumanPages MCP to Android Studio\'s Gemini integration. Hire testers, designers, and translators for your Android app — from inside your IDE.',
+  'chatgpt': 'Add HumanPages as an MCP connector in ChatGPT. Search and hire real humans from any ChatGPT conversation — no code needed.',
+  'claude': 'Add HumanPages MCP server to Claude Desktop or Claude Code to search and hire real humans from AI conversations.',
+  'clawhub': 'Install HumanPages as an OpenClaw skill via ClawHub. One command to add real human-hiring capabilities to your AI agent.',
+  'cursor': 'Add HumanPages MCP server to Cursor IDE to search and hire real humans from your code editor.',
+  'gemini': 'Add HumanPages MCP server to Gemini CLI. Find and hire real humans from Google\'s command-line AI assistant.',
+  'langchain': 'Use HumanPages MCP tools in LangChain agents and LlamaIndex pipelines. Framework-level integration with automatic tool schema translation.',
+  'maxclaw': 'Add HumanPages MCP to MaxClaw — MiniMax\'s cloud-hosted AI agent platform. Deploy a hiring agent in seconds, no setup required.',
+  'nanoclaw': 'Add HumanPages MCP to your NanoClaw agent. Hire real humans from a secure, containerized AI assistant connected to WhatsApp, Telegram, Slack, and more.',
+  'nanobot': 'Add HumanPages MCP to Nanobot — the open-source framework that turns MCP servers into full AI agents with UI, memory, and reasoning.',
+  'openai-agents': 'Use HumanPages MCP tools in your Python agents built with the OpenAI Agents SDK. Search and hire humans programmatically.',
+  'openai-responses': 'Use HumanPages as an MCP tool in the OpenAI Responses API. Add type: mcp to your tools array — zero infrastructure needed.',
+  'openclaw': 'Add real human-hiring capabilities to any OpenClaw-compatible agent. OpenClaw is the open specification for packaging and distributing AI agent skills.',
+  'picoclaw': 'Add HumanPages MCP to PicoClaw — the ultra-lightweight AI assistant for IoT devices, Raspberry Pi, and resource-constrained hardware.',
+  'smithery': 'Install HumanPages MCP from the Smithery registry — the largest third-party MCP server directory with a CLI that auto-configures your client.',
+  'trustclaw': 'Add HumanPages MCP to TrustClaw — secure cloud-sandboxed AI agent execution by Composio. No local setup, no risk to your dev machine.',
+  'windsurf': 'Add HumanPages MCP to Windsurf IDE by Codeium. Hire real humans from Cascade conversations.',
+  'zeroclaw': 'Add HumanPages MCP to ZeroClaw — the ultra-lightweight Rust-based agent runtime for edge devices and self-hosted systems.',
+};
+
+const CONNECT_OVERVIEW_DESCRIPTION = 'Step-by-step guides to connect your AI app to real humans via the HumanPages MCP server. Works with Claude, ChatGPT, Cursor, Windsurf, OpenAI, Gemini, and more.';
+
+export function getConnectMetaHtml(platform?: string): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  const title = 'Human Pages';
+  const description = platform
+    ? (CONNECT_PLATFORM_DESCRIPTIONS[platform] || `Connect ${platform} to real humans via the HumanPages MCP server.`)
+    : CONNECT_OVERVIEW_DESCRIPTION;
+  const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
+  const canonicalPath = platform ? `/dev/connect/${platform}` : '/dev/connect';
+  const canonicalUrl = `${SITE_URL}${canonicalPath}`;
+
+  const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${ogImage}" />`;
+
+  let modifiedHtml = html;
+  modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+
+  return modifiedHtml;
 }
 
 // Clear template cache (useful for development)

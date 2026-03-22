@@ -3,7 +3,6 @@ import { useTranslation, getI18n } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { analytics } from '../lib/analytics';
 import Link from '../components/LocalizedLink';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
@@ -380,7 +379,6 @@ export default function DevelopersPage() {
             <Link to="/dev" className="hidden sm:inline text-sm font-medium text-slate-900">
               {t('nav.developers')}
             </Link>
-            <LanguageSwitcher />
             <Link
               to="/signup?utm_source=dev_page"
               className="px-3 sm:px-4 py-2 bg-orange-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"

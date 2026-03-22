@@ -35,7 +35,7 @@ import mcpRemoteRoutes from './routes/mcp-remote.js';
 import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
 import moltbookSolverRoutes from './routes/moltbookSolver.js';
 import solverVerificationRoutes from './routes/solverVerification.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -264,16 +264,7 @@ app.use(express.static(frontendDistPath, { index: false }));
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'];
 
 // Dev page: inject meta tags + crawler-visible content for AI agents and non-JS crawlers
-app.get('/:lang/dev', (req, res, next) => {
-  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
-  const html = getDevPageMetaHtml(req.params.lang);
-  if (html) {
-    res.set('Content-Type', 'text/html');
-    return res.send(html);
-  }
-  next();
-});
-
+// No language-prefixed routes — /dev section is English-only
 app.get('/dev', (req, res, next) => {
   const html = getDevPageMetaHtml();
   if (html) {
@@ -283,10 +274,10 @@ app.get('/dev', (req, res, next) => {
   next();
 });
 
-// Prompt to completion page: inject meta tags + crawler-visible content
-app.get('/:lang/prompt-to-completion', (req, res, next) => {
-  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
-  const html = getPromptToCompletionMetaHtml(req.params.lang);
+// Connect pages: inject OG meta tags for social sharing (WhatsApp, Twitter, etc.)
+// English-only — no /:lang prefix
+app.get('/dev/connect/:platform', (req, res, next) => {
+  const html = getConnectMetaHtml(req.params.platform);
   if (html) {
     res.set('Content-Type', 'text/html');
     return res.send(html);
@@ -294,6 +285,17 @@ app.get('/:lang/prompt-to-completion', (req, res, next) => {
   next();
 });
 
+app.get('/dev/connect', (req, res, next) => {
+  const html = getConnectMetaHtml();
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+// Prompt to completion page: inject meta tags + crawler-visible content
+// English-only — no /:lang prefix
 app.get('/prompt-to-completion', (req, res, next) => {
   const html = getPromptToCompletionMetaHtml();
   if (html) {
