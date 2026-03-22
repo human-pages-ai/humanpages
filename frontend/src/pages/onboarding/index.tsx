@@ -395,7 +395,6 @@ export default function Onboarding() {
           languages: cleanLanguages,
           featuredConsent: true,
           username: form.username?.trim() || undefined,
-          walletAddress: form.walletAddress.trim() || null,
           whatsapp: form.whatsappNumber.trim() || null,
           sms: form.smsNumber?.trim() || null,
           timezone: form.timezone.trim() || null,
@@ -413,6 +412,17 @@ export default function Onboarding() {
 
       // Non-blocking parallel saves
       const nonBlocking: Promise<void>[] = [];
+
+      // Persist wallet address to Wallet table (covers manual paste; Privy flow already saved it)
+      if (form.walletAddress.trim()) {
+        nonBlocking.push(
+          api.addWalletManual({ address: form.walletAddress.trim(), source: 'manual_paste' })
+            .then(() => {}).catch(err => {
+              // Duplicate wallet is fine — already saved via Privy flow
+              if (!err?.message?.includes('already')) console.error('Wallet save failed:', err);
+            })
+        );
+      }
 
       if (form.photoFile) {
         nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => console.error('Photo upload failed:', err)));
