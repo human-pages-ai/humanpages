@@ -56,3 +56,22 @@ Tests should reference `shared/profile-schema.json` for valid field names, enum 
 - **Languages format**: Stored as "Language (Proficiency)" strings (e.g., "English (Native)"), NOT ISO codes.
 - **Equipment format**: "Category - Tool" (e.g., "Phone - iPhone 15") or just category.
 - **Prisma migrations**: `setup.sh` runs `prisma migrate dev` which may auto-generate conflicting migrations. Delete any auto-generated `*_init` migration and re-run.
+
+## Cowork / Claude Code Session Rules
+
+**Git safety**: This repo is mounted from the user's machine. Multiple sessions (Cowork, VSCode, other terminals) may be active simultaneously. To avoid clobbering each other:
+
+1. **Never commit directly to master.** Always create a feature branch first.
+2. **Use `isolation: "worktree"` on sub-agents** when they need to read/write code. This gives them an isolated copy.
+3. **Don't `git push` from the VM** — it has no GitHub credentials. Tell the user to push from their Mac.
+4. **Check `git branch --show-current` before committing** — another session may have switched branches under you.
+5. **Before editing, always `git stash` or verify the working tree is clean** — another session's uncommitted changes will be visible.
+
+**Pre-push hooks**: The repo has heavy pre-push hooks (tsc, vitest, e2e). Known issues:
+- Prisma client corruption: `Cannot find module '.prisma/client/default'` — caused by Vitest forked workers racing with `prisma generate`. Fix: add a resolve alias in `backend/vitest.config.ts`.
+- e2e timeout: backend can't start within 30s when unit tests are running in parallel. `PUSH_LITE=1 git push` skips e2e.
+- Flaky RouteGuards tests: landing page tests fail when i18n doesn't resolve in test env.
+
+**SPA + OG tags**: This is a client-side SPA. `react-helmet-async` tags are invisible to social crawlers (WhatsApp, Twitter). Any page that needs correct OG previews must have server-side meta injection in `backend/src/lib/seo.ts` + route handlers in `backend/src/app.ts`.
+
+**English-only pages**: `/dev/*`, `/dev/connect/*`, and `/prompt-to-completion` are English-only. No `/:lang` prefix routes, no hreflang tags, no LanguageSwitcher component.
