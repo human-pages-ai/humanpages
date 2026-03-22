@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-const REDACT_PATHS = ['authorization', 'password', 'passwordHash', 'token', 'req.headers.authorization', 'callbackSecret'];
+const REDACT_PATHS = ['authorization', 'password', 'passwordHash', 'token', 'req.headers.authorization', 'req.headers.cookie', 'cookie', 'callbackSecret'];
 
 /**
  * Build the initial logger — stdout only.

@@ -87,7 +87,7 @@ async function sendEmail(params: SendEmailParams): Promise<boolean> {
     try {
       return await sendEmailOnce(params);
     } catch (err) {
-      logger.warn({ err, attempt, to: params.to }, 'Email send attempt failed');
+      logger.warn({ err, attempt }, 'Email send attempt failed');
       if (attempt < MAX_RETRIES) {
         await sleep(RETRY_BASE_MS * Math.pow(2, attempt - 1));
       }
@@ -138,7 +138,7 @@ export async function sendEmailWithOutbox(params: SendEmailParams): Promise<bool
   );
 
   if (!sent && process.env.RESEND_API_KEY) {
-    logger.info({ to: params.to, subject: params.subject }, 'Queuing email to outbox after inline failure');
+    logger.info({ subject: params.subject }, 'Queuing email to outbox after inline failure');
     await writeToOutbox('email', params.to, params, params.subject).catch(err =>
       logger.error({ err }, 'Failed to write email to outbox')
     );

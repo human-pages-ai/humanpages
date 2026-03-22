@@ -32,6 +32,7 @@ import blogApiRoutes from './routes/blog.js';
 import cvRouter from './routes/cv.js';
 import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
+import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
@@ -122,6 +123,24 @@ app.use(pinoHttp({
   autoLogging: {
     ignore: (req) => req.url === '/health',
   },
+  serializers: {
+    req(req) {
+      return {
+        method: req.method,
+        url: req.url,
+        headers: {
+          'user-agent': req.headers?.['user-agent'],
+          'content-length': req.headers?.['content-length'],
+          'x-request-id': req.headers?.['x-request-id'],
+        },
+      };
+    },
+    res(res) {
+      return {
+        statusCode: res.statusCode,
+      };
+    },
+  },
 }));
 
 // Health check
@@ -161,6 +180,9 @@ app.use(sitemapRoutes);
 app.use('/api', sitemapRoutes);
 app.use('/api/og', ogRoutes);
 app.use('/api/badge', badgeRoutes);
+
+// Moltbook solver telemetry (public, anonymous, opt-in)
+app.use('/api/moltbook-telemetry', express.json({ limit: '2kb' }), moltbookTelemetryRoutes);
 
 // Newsletter signup (public, rate-limited by IP via express defaults)
 app.post('/api/newsletter', express.json({ limit: '1kb' }), async (req, res) => {
