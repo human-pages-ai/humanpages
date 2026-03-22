@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/api';
 
 export default function SolverPage() {
   const [name, setName] = useState('');
@@ -15,16 +14,21 @@ export default function SolverPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/api/agents/register', {
-        name: name.trim(),
-        description: 'Moltbook solver user',
-        source: 'direct',
-        sourceDetail: 'solver-landing-page',
+      const res = await fetch('/api/agents/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          description: 'Moltbook solver user',
+          source: 'direct',
+          sourceDetail: 'solver-landing-page',
+        }),
       });
-      setResult({ apiKey: res.apiKey, agentId: res.agent.id });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      setResult({ apiKey: data.apiKey, agentId: data.agent.id });
     } catch (err: any) {
-      const msg = err?.response?.data?.error || err?.message || 'Registration failed';
-      setError(msg);
+      setError(err?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
