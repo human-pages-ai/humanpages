@@ -61,6 +61,7 @@ const GptSetupPage = lazy(() => import('./pages/GptSetupPage'));
 const PartnersPage = lazy(() => import('./pages/PartnersPage'));
 const PromptToCompletionPage = lazy(() => import('./pages/PromptToCompletionPage'));
 const AgentProfile = lazy(() => import('./pages/AgentProfile'));
+const SolverPage = lazy(() => import('./pages/SolverPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
@@ -214,6 +215,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/dev" element={<DevelopersPage />} />
+      <Route path="/solver" element={<SolverPage />} />
       <Route path="/dev/connect" element={<ConnectOverview />} />
       <Route path="/dev/connect/claude" element={<ConnectClaude />} />
       <Route path="/dev/connect/cursor" element={<ConnectCursor />} />
