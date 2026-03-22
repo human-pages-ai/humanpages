@@ -90,6 +90,13 @@ else
 fi
 
 echo ""
+echo "=== Deploying Solver LLM Service ==="
+cd /opt/human-pages/services/solver-llm
+npm ci
+pm2 restart solver-llm 2>/dev/null || pm2 start npx --name solver-llm -- tsx index.ts
+echo "Solver LLM service updated & restarted"
+
+echo ""
 echo "=== Restarting services ==="
 pm2 restart human-pages
 echo "Deployed successfully"

@@ -33,6 +33,7 @@ import cvRouter from './routes/cv.js';
 import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
 import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
+import moltbookSolverRoutes from './routes/moltbookSolver.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
@@ -108,7 +109,7 @@ app.use('/api/cv', cvRouter);
 // Global body parser — 10kb limit for all other routes (bot/abuse protection)
 // Skip JSON parser for multipart/file upload routes (already handled per-path above)
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/cv') || req.path.startsWith('/api/photos') || req.path.startsWith('/api/agents/photos') || req.path.startsWith('/api/listings')) {
+  if (req.path.startsWith('/api/cv') || req.path.startsWith('/api/photos') || req.path.startsWith('/api/agents/photos') || req.path.startsWith('/api/listings') || req.path.startsWith('/api/moltbook-solve')) {
     return next();
   }
   express.json({ limit: '10kb' })(req, res, next);
@@ -180,6 +181,9 @@ app.use(sitemapRoutes);
 app.use('/api', sitemapRoutes);
 app.use('/api/og', ogRoutes);
 app.use('/api/badge', badgeRoutes);
+
+// Moltbook solver API (authenticated, rate-limited, 5kb body limit)
+app.use('/api/moltbook-solve', express.json({ limit: '5kb' }), moltbookSolverRoutes);
 
 // Moltbook solver telemetry (public, anonymous, opt-in)
 app.use('/api/moltbook-telemetry', express.json({ limit: '2kb' }), moltbookTelemetryRoutes);

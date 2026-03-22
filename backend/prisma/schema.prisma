@@ -1798,6 +1798,38 @@ model GeoCache {
   createdAt   DateTime @default(now())
 }
 
+// Moltbook solver API — daily usage tracking per agent
+model SolverUsage {
+  id        Int      @id @default(autoincrement())
+  agentId   String
+  date      String   // "2026-03-22"
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agentId, date])
+  @@index([agentId])
+}
+
+// Moltbook solver API — full request log for monitoring and improvement
+model SolverRequest {
+  id            Int      @id @default(autoincrement())
+  agentId       String
+  challenge     String   // full challenge text
+  answer        String?  // what we returned
+  correct       Boolean? // if we can verify (from telemetry)
+  solveTimeMs   Int
+  ip            String?
+  userAgent     String?
+  rejected      Boolean  @default(false) // true if lobster validator rejected
+  rejectReason  String?
+  createdAt     DateTime @default(now())
+
+  @@index([agentId])
+  @@index([createdAt])
+  @@index([rejected])
+}
+
 // Moltbook solver telemetry — anonymous, opt-in reports from moltbook-agent
 model SolverTelemetry {
   id              Int      @id @default(autoincrement())
