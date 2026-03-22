@@ -47,6 +47,7 @@ export default function Footer({ className = '' }: FooterProps) {
           <Link to="/terms" className="text-slate-500 hover:text-slate-700">{t('landing.footer.terms')}</Link>
           <Link to="/listings" className="text-slate-500 hover:text-slate-700">{t('nav.jobBoard')}</Link>
           <Link to="/dev" className="text-slate-500 hover:text-slate-700">{t('landing.footer.api')}</Link>
+          <Link to="/solver" className="text-slate-500 hover:text-slate-700">Moltbook Solver</Link>
           <Link to="/blog" className="text-slate-500 hover:text-slate-700">{t('nav.blog')}</Link>
           <Link to="/pricing" className="text-slate-500 hover:text-slate-700">{t('nav.pricing')}</Link>
           <Link to="/status" className="text-slate-500 hover:text-slate-700">{t('nav.status')}</Link>

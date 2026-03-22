@@ -550,6 +550,14 @@ model Agent {
   isVerified   Boolean   @default(false)
   verifiedByAdminAt DateTime?
 
+  // ===== SOLVER ACCESS (sybil-resistant verification) =====
+  solverVerified         Boolean   @default(false)
+  solverVerifiedAt       DateTime?
+  solverVerifiedMethod   String?   // "email" | "telegram" | "github" | "wallet"
+  solverVerificationToken String?  // email verification token (JWT or random)
+  solverGithubId         String?   // GitHub user ID (prevent reuse)
+  solverTelegramId       String?   // Telegram user ID (prevent reuse)
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)

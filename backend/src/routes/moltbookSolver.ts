@@ -212,7 +212,7 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
 
   const { challenge } = parsed.data;
 
-  // 2. Lobster validator — reject non-challenges before any LLM call
+  // Lobster validator — reject non-challenges before any LLM call
   const validation = validateLobsterChallenge(challenge);
   if (!validation.valid) {
     const solveTimeMs = Date.now() - startTime;

@@ -34,6 +34,7 @@ import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
 import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
 import moltbookSolverRoutes from './routes/moltbookSolver.js';
+import solverVerificationRoutes from './routes/solverVerification.js';
 import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
@@ -184,6 +185,9 @@ app.use('/api/badge', badgeRoutes);
 
 // Moltbook solver API (authenticated, rate-limited, 5kb body limit)
 app.use('/api/moltbook-solve', express.json({ limit: '5kb' }), moltbookSolverRoutes);
+
+// Solver verification endpoints (email, GitHub, Telegram, wallet)
+app.use('/api/solver-verify', express.json({ limit: '10kb' }), solverVerificationRoutes);
 
 // Moltbook solver telemetry (public, anonymous, opt-in)
 app.use('/api/moltbook-telemetry', express.json({ limit: '2kb' }), moltbookTelemetryRoutes);

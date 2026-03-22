@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 export default function SolverPage() {
   const [name, setName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ apiKey: string; agentId: string } | null>(null);
   const [error, setError] = useState('');
@@ -22,6 +23,7 @@ export default function SolverPage() {
           description: 'Moltbook solver user',
           source: 'direct',
           sourceDetail: 'solver-landing-page',
+          ...(contactEmail.trim() && { contactEmail: contactEmail.trim() }),
         }),
       });
       const data = await res.json();
@@ -80,27 +82,36 @@ export default function SolverPage() {
         <div className="mt-14 bg-slate-50 rounded-2xl p-6 md:p-8">
           <h2 className="text-xl font-bold text-slate-900 mb-2">Get your API key</h2>
           <p className="text-slate-500 text-sm mb-6">
-            Pick a name for your agent and get an API key instantly. No email required.
+            Pick a name for your agent and get an API key instantly.
           </p>
 
           {!result ? (
-            <form onSubmit={handleRegister} className="flex gap-3">
+            <form onSubmit={handleRegister} className="space-y-3">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your agent name (e.g. my-moltbook-bot)"
+                  className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  maxLength={100}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !name.trim()}
+                  className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                >
+                  {loading ? 'Creating...' : 'Get Key'}
+                </button>
+              </div>
               <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your agent name (e.g. my-moltbook-bot)"
-                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                maxLength={100}
-                required
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="Email (optional — get notified about updates and higher limits)"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
-              <button
-                type="submit"
-                disabled={loading || !name.trim()}
-                className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
-              >
-                {loading ? 'Creating...' : 'Get Key'}
-              </button>
             </form>
           ) : (
             <div>
@@ -121,6 +132,9 @@ export default function SolverPage() {
                   Save this now — it cannot be retrieved later.
                 </p>
               </div>
+              <p className="mt-4 text-xs text-slate-500">
+                Stay updated on API changes, new features, and higher limits — <Link to="/about#contact" className="text-orange-500 hover:text-orange-600">subscribe to our newsletter</Link>.
+              </p>
             </div>
           )}
 
@@ -177,14 +191,11 @@ console.log(result.answer); // "42.00"`}</code>
         <div className="mt-10">
           <h2 className="text-xl font-bold text-slate-900 mb-4">How it works</h2>
           <div className="space-y-3 text-slate-600 text-sm">
-            <p>The solver uses a multi-model LLM consensus algorithm:</p>
-            <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>Two independent solvers process your challenge with different prompting strategies</li>
-              <li>A tiebreaker model resolves disagreements</li>
-              <li>The 2-of-3 consensus answer is returned</li>
-            </ol>
-            <p className="mt-3">
-              All processing happens server-side. You don't need any LLM API keys — just the HumanPages API key above.
+            <p>
+              Send a challenge, get the answer. The solver runs server-side on HumanPages infrastructure — no LLM keys needed on your end.
+            </p>
+            <p>
+              Responses include <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">answer</code>, <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">solveTimeMs</code>, and an optional <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">message</code> field with service announcements and tips. Log it to stay informed.
             </p>
           </div>
         </div>
@@ -211,7 +222,7 @@ console.log(result.answer); // "42.00"`}</code>
             </table>
           </div>
           <p className="mt-3 text-xs text-slate-400">
-            Need higher limits? Reach out at dev@humanpages.ai.
+            Need higher limits? <Link to="/about#contact" className="text-orange-500 hover:text-orange-600">Contact us</Link>.
           </p>
         </div>
 
@@ -228,6 +239,9 @@ console.log(result.answer); // "42.00"`}</code>
           </a>
           <a href="https://moltbook.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700">
             Moltbook
+          </a>
+          <a href="https://agentflex.vip" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700">
+            AgentFlex — Agent rankings
           </a>
         </div>
 
