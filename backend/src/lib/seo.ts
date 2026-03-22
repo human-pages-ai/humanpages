@@ -625,6 +625,14 @@ export function getGptSetupMetaHtml(): string | null {
 // ── Connect pages: server-side OG meta for WhatsApp/Twitter/social crawlers ──
 // English-only — no language prefix support
 
+interface PlatformContent {
+  name: string;
+  headline: string;
+  intro: string;
+  setupSteps: string[];
+  keywords: string[];
+}
+
 const CONNECT_PLATFORM_DESCRIPTIONS: Record<string, string> = {
   'android-studio': 'Add HumanPages MCP to Android Studio\'s Gemini integration. Hire testers, designers, and translators for your Android app — from inside your IDE.',
   'chatgpt': 'Add HumanPages as an MCP connector in ChatGPT. Search and hire real humans from any ChatGPT conversation — no code needed.',
@@ -646,13 +654,217 @@ const CONNECT_PLATFORM_DESCRIPTIONS: Record<string, string> = {
   'zeroclaw': 'Add HumanPages MCP to ZeroClaw — the ultra-lightweight Rust-based agent runtime for edge devices and self-hosted systems.',
 };
 
+const CONNECT_PLATFORM_CONTENT: Record<string, PlatformContent> = {
+  'picoclaw': {
+    name: 'PicoClaw',
+    headline: 'Connect PicoClaw to Human Pages',
+    intro: 'Add HumanPages MCP server to PicoClaw, the ultra-lightweight Go-based AI assistant for IoT devices, Raspberry Pi, and edge hardware. Hire real humans for tasks directly from your PicoClaw agent.',
+    setupSteps: [
+      'Install PicoClaw binary for your architecture (ARM, RISC-V, MIPS, x86, LoongArch)',
+      'Add HumanPages MCP server to ~/.picoclaw/config.json under tools.mcp.servers',
+      'Run picoclaw start to launch your agent with human-hiring capabilities',
+    ],
+    keywords: ['PicoClaw', 'PicoClaw MCP', 'PicoClaw setup', 'PicoClaw Raspberry Pi', 'PicoClaw AI agent', 'lightweight AI agent', 'edge AI', 'IoT agent', 'PicoClaw HumanPages'],
+  },
+  'claude': {
+    name: 'Claude',
+    headline: 'Connect Claude to Human Pages',
+    intro: 'Add HumanPages MCP server to Claude Desktop or Claude Code. Search and hire real humans for tasks directly from Claude conversations.',
+    setupSteps: [
+      'Open Claude Desktop settings or use Claude Code CLI',
+      'Add HumanPages MCP server configuration to .mcp.json',
+      'Start a conversation and use human-hiring tools',
+    ],
+    keywords: ['Claude MCP', 'Claude Desktop MCP', 'Claude Code MCP', 'Claude HumanPages', 'Claude hire humans'],
+  },
+  'cursor': {
+    name: 'Cursor',
+    headline: 'Connect Cursor to Human Pages',
+    intro: 'Add HumanPages MCP server to Cursor IDE. Search and hire real humans for tasks like testing, design, and translation directly from your code editor.',
+    setupSteps: [
+      'Open Cursor Settings and navigate to MCP servers',
+      'Add HumanPages server configuration to .cursor/mcp.json',
+      'Enable Agent mode and start using human-hiring tools',
+    ],
+    keywords: ['Cursor MCP', 'Cursor IDE MCP', 'Cursor HumanPages', 'Cursor hire humans'],
+  },
+  'windsurf': {
+    name: 'Windsurf',
+    headline: 'Connect Windsurf to Human Pages',
+    intro: 'Add HumanPages MCP server to Windsurf IDE by Codeium. Hire real humans from Cascade conversations.',
+    setupSteps: [
+      'Open Windsurf settings',
+      'Add HumanPages MCP server URL to your configuration',
+      'Use Cascade to search and hire humans',
+    ],
+    keywords: ['Windsurf MCP', 'Windsurf IDE MCP', 'Windsurf Codeium MCP', 'Windsurf HumanPages'],
+  },
+  'chatgpt': {
+    name: 'ChatGPT',
+    headline: 'Connect ChatGPT to Human Pages',
+    intro: 'Add HumanPages as an MCP connector in ChatGPT. Search and hire real humans from any ChatGPT conversation, no code needed.',
+    setupSteps: [
+      'Enable Developer Mode in ChatGPT settings',
+      'Add Human Pages as an MCP connector with the server URL',
+      'Start chatting and use human-hiring tools',
+    ],
+    keywords: ['ChatGPT MCP', 'ChatGPT connector', 'ChatGPT HumanPages', 'ChatGPT hire humans'],
+  },
+  'openai-agents': {
+    name: 'OpenAI Agents SDK',
+    headline: 'Connect OpenAI Agents SDK to Human Pages',
+    intro: 'Use HumanPages MCP tools in your Python agents built with the OpenAI Agents SDK. Search and hire humans programmatically.',
+    setupSteps: [
+      'Install the openai-agents Python package',
+      'Configure the HumanPages MCP server as a tool provider',
+      'Build agents that can search and hire real humans',
+    ],
+    keywords: ['OpenAI Agents SDK MCP', 'OpenAI Agents HumanPages', 'Python AI agent hire humans'],
+  },
+  'openai-responses': {
+    name: 'OpenAI Responses API',
+    headline: 'Connect OpenAI Responses API to Human Pages',
+    intro: 'Use HumanPages as an MCP tool in the OpenAI Responses API. Add type: mcp to your tools array for zero-infrastructure human hiring.',
+    setupSteps: [
+      'Add a tool with type: mcp to your Responses API call',
+      'Set the server URL to the HumanPages MCP endpoint',
+      'Call the API and use human-hiring tools in responses',
+    ],
+    keywords: ['OpenAI Responses API MCP', 'OpenAI MCP tool', 'OpenAI HumanPages'],
+  },
+  'gemini': {
+    name: 'Gemini CLI',
+    headline: 'Connect Gemini CLI to Human Pages',
+    intro: 'Add HumanPages MCP server to Gemini CLI. Find and hire real humans from Google\'s command-line AI assistant.',
+    setupSteps: [
+      'Install Gemini CLI',
+      'Add HumanPages to your MCP server configuration',
+      'Run Gemini and use human-hiring tools',
+    ],
+    keywords: ['Gemini CLI MCP', 'Gemini MCP server', 'Gemini HumanPages'],
+  },
+  'android-studio': {
+    name: 'Android Studio',
+    headline: 'Connect Android Studio to Human Pages',
+    intro: 'Add HumanPages MCP to Android Studio\'s Gemini integration. Hire testers, designers, and translators for your Android app from inside your IDE.',
+    setupSteps: [
+      'Open Android Studio settings for Gemini',
+      'Add HumanPages MCP server configuration',
+      'Use Gemini in Android Studio to hire humans for app tasks',
+    ],
+    keywords: ['Android Studio MCP', 'Android Studio Gemini MCP', 'Android Studio HumanPages'],
+  },
+  'langchain': {
+    name: 'LangChain',
+    headline: 'Connect LangChain to Human Pages',
+    intro: 'Use HumanPages MCP tools in LangChain agents and LlamaIndex pipelines. Framework-level integration with automatic tool schema translation.',
+    setupSteps: [
+      'Install the langchain-mcp package',
+      'Configure the HumanPages MCP server as a tool provider',
+      'Build chains and agents with human-hiring capabilities',
+    ],
+    keywords: ['LangChain MCP', 'LangChain HumanPages', 'LlamaIndex MCP', 'LangChain hire humans'],
+  },
+  'clawhub': {
+    name: 'ClawHub',
+    headline: 'Connect ClawHub to Human Pages',
+    intro: 'Install HumanPages as an OpenClaw skill via ClawHub, the package registry for AI agent skills. One command to add human-hiring capabilities.',
+    setupSteps: [
+      'Install the ClawHub CLI',
+      'Run clawhub install humanpages to add the skill',
+      'Configure your agent to use HumanPages tools',
+    ],
+    keywords: ['ClawHub MCP', 'ClawHub HumanPages', 'ClawHub skills', 'OpenClaw registry'],
+  },
+  'openclaw': {
+    name: 'OpenClaw',
+    headline: 'Connect OpenClaw to Human Pages',
+    intro: 'Add real human-hiring capabilities to any OpenClaw-compatible agent. OpenClaw is the open specification for packaging and distributing AI agent skills.',
+    setupSteps: [
+      'Install the OpenClaw CLI',
+      'Run openclaw add humanpages',
+      'Configure your project and run your agent',
+    ],
+    keywords: ['OpenClaw MCP', 'OpenClaw HumanPages', 'OpenClaw skills'],
+  },
+  'nanoclaw': {
+    name: 'NanoClaw',
+    headline: 'Connect NanoClaw to Human Pages',
+    intro: 'Add HumanPages MCP to your NanoClaw agent. Hire real humans from a secure, containerized AI assistant connected to WhatsApp, Telegram, Slack, and more.',
+    setupSteps: [
+      'Fork and clone the NanoClaw repository',
+      'Add HumanPages MCP server to your .mcp.json configuration',
+      'Deploy your NanoClaw agent with human-hiring capabilities',
+    ],
+    keywords: ['NanoClaw MCP', 'NanoClaw HumanPages', 'NanoClaw Docker', 'NanoClaw WhatsApp bot'],
+  },
+  'zeroclaw': {
+    name: 'ZeroClaw',
+    headline: 'Connect ZeroClaw to Human Pages',
+    intro: 'Add HumanPages MCP to ZeroClaw, the ultra-lightweight Rust-based agent runtime for edge devices and self-hosted systems.',
+    setupSteps: [
+      'Install ZeroClaw on your device',
+      'Add HumanPages to your ZeroClaw TOML configuration',
+      'Start ZeroClaw with human-hiring capabilities',
+    ],
+    keywords: ['ZeroClaw MCP', 'ZeroClaw HumanPages', 'ZeroClaw Rust agent', 'ZeroClaw edge AI'],
+  },
+  'nanobot': {
+    name: 'Nanobot',
+    headline: 'Connect Nanobot to Human Pages',
+    intro: 'Add HumanPages MCP to Nanobot, the open-source framework that turns MCP servers into full AI agents with UI, memory, and reasoning.',
+    setupSteps: [
+      'Install Nanobot',
+      'Add HumanPages MCP server to your agent configuration',
+      'Launch Nanobot with human-hiring tools',
+    ],
+    keywords: ['Nanobot MCP', 'Nanobot HumanPages', 'Nanobot AI agent framework'],
+  },
+  'trustclaw': {
+    name: 'TrustClaw',
+    headline: 'Connect TrustClaw to Human Pages',
+    intro: 'Add HumanPages MCP to TrustClaw, the secure cloud-sandboxed AI agent platform by Composio. No local setup, no risk to your dev machine.',
+    setupSteps: [
+      'Sign up at trustclaw.app',
+      'Add HumanPages as an MCP tool from the dashboard',
+      'Deploy your sandboxed agent with human-hiring capabilities',
+    ],
+    keywords: ['TrustClaw MCP', 'TrustClaw HumanPages', 'TrustClaw Composio', 'cloud AI agent sandbox'],
+  },
+  'maxclaw': {
+    name: 'MaxClaw',
+    headline: 'Connect MaxClaw to Human Pages',
+    intro: 'Add HumanPages MCP to MaxClaw, MiniMax\'s fully managed cloud agent platform. Deploy a hiring agent in seconds, always-on, free credits to start.',
+    setupSteps: [
+      'Sign up at maxclaw.ai',
+      'Add HumanPages MCP server from the platform settings',
+      'Deploy your cloud agent with human-hiring capabilities',
+    ],
+    keywords: ['MaxClaw MCP', 'MaxClaw HumanPages', 'MaxClaw MiniMax', 'cloud AI agent'],
+  },
+  'smithery': {
+    name: 'Smithery',
+    headline: 'Connect Smithery to Human Pages',
+    intro: 'Install HumanPages MCP from the Smithery registry, the largest third-party MCP server directory. One CLI command to auto-configure your client.',
+    setupSteps: [
+      'Install the Smithery CLI',
+      'Run smithery install humanpages to add the MCP server',
+      'Your client is automatically configured',
+    ],
+    keywords: ['Smithery MCP', 'Smithery registry', 'Smithery HumanPages', 'MCP server directory'],
+  },
+};
+
 const CONNECT_OVERVIEW_DESCRIPTION = 'Step-by-step guides to connect your AI app to real humans via the HumanPages MCP server. Works with Claude, ChatGPT, Cursor, Windsurf, OpenAI, Gemini, and more.';
 
 export function getConnectMetaHtml(platform?: string): string | null {
   const html = getIndexHtml();
   if (!html) return null;
 
-  const title = 'Human Pages';
+  const platformContent = platform ? CONNECT_PLATFORM_CONTENT[platform] : null;
+  const title = platform && platformContent
+    ? `Connect ${platformContent.name} to Human Pages | Human Pages`
+    : 'Connect to Human Pages | Human Pages';
   const description = platform
     ? (CONNECT_PLATFORM_DESCRIPTIONS[platform] || `Connect ${platform} to real humans via the HumanPages MCP server.`)
     : CONNECT_OVERVIEW_DESCRIPTION;
@@ -663,6 +875,7 @@ export function getConnectMetaHtml(platform?: string): string | null {
   const metaTags = `
     <title>${title}</title>
     <meta name="description" content="${escapeHtml(description)}" />
+    ${platform && platformContent ? `<meta name="keywords" content="${escapeHtml(platformContent.keywords.join(', '))}" />` : ''}
     <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
@@ -675,13 +888,74 @@ export function getConnectMetaHtml(platform?: string): string | null {
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${ogImage}" />`;
 
+  // Generate crawler content and schema.org JSON-LD
+  let crawlerContent = '';
+  let schemaJsonLd = '';
+
+  if (platform && platformContent) {
+    // Single platform view
+    const stepsHtml = platformContent.setupSteps
+      .map(step => `      <li>${escapeHtml(step)}</li>`)
+      .join('\n');
+
+    const howToSteps = platformContent.setupSteps.map((step, index) => ({
+      '@type': 'HowToStep',
+      'position': index + 1,
+      'name': step,
+    }));
+
+    crawlerContent = `
+    <div id="connect-ssr" style="display:none;padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+    <noscript><style>#connect-ssr{display:block!important}</style></noscript>
+      <h1>${escapeHtml(platformContent.headline)}</h1>
+      <p>${escapeHtml(platformContent.intro)}</p>
+
+      <h2>Setup Steps</h2>
+      <ol>
+${stepsHtml}
+      </ol>
+
+      <p><a href="https://humanpages.ai">Learn more about HumanPages MCP</a></p>
+    </div>
+    <script>document.getElementById('connect-ssr').style.display='none'</script>`;
+
+    schemaJsonLd = `
+    <script type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'HowTo',
+      'name': platformContent.headline,
+      'description': platformContent.intro,
+      'step': howToSteps,
+    })}</script>`;
+  } else {
+    // Overview page with all platforms
+    const platformLinks = Object.entries(CONNECT_PLATFORM_CONTENT)
+      .map(([slug, content]) => `      <li><a href="/dev/connect/${slug}">${escapeHtml(content.name)}</a> — ${escapeHtml(content.intro)}</li>`)
+      .join('\n');
+
+    crawlerContent = `
+    <div id="connect-ssr" style="display:none;padding:2rem;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif">
+    <noscript><style>#connect-ssr{display:block!important}</style></noscript>
+      <h1>Connect to Human Pages</h1>
+      <p>Step-by-step guides to connect your AI app to real humans via the HumanPages MCP server.</p>
+
+      <h2>Supported Platforms</h2>
+      <ul>
+${platformLinks}
+      </ul>
+    </div>
+    <script>document.getElementById('connect-ssr').style.display='none'</script>`;
+  }
+
   let modifiedHtml = html;
   modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
   modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="keywords"[^>]*>/, '');
   modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
   modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
   modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
-  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}${schemaJsonLd}\n  </head>`);
+  modifiedHtml = modifiedHtml.replace('</body>', `${crawlerContent}\n  </body>`);
 
   return modifiedHtml;
 }
