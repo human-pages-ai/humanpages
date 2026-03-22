@@ -1797,3 +1797,25 @@ model GeoCache {
   lng         Float
   createdAt   DateTime @default(now())
 }
+
+// Moltbook solver telemetry — anonymous, opt-in reports from moltbook-agent
+model SolverTelemetry {
+  id              Int      @id @default(autoincrement())
+  timestamp       DateTime
+  model           String               // e.g. "claude-haiku-4-5", "gpt-4o-mini"
+  provider        String               // e.g. "anthropic", "openai", "ollama"
+  primaryCorrect  Boolean
+  primaryAnswer   String?
+  sidecar1Answer  String?              // MCP deterministic
+  sidecar2Answer  String?              // PY deterministic
+  sidecar1Correct Boolean?
+  sidecar2Correct Boolean?
+  challengeLength Int
+  solveTimeMs     Int
+  version         String               // client version
+  ip              String?              // for rate limiting only, not displayed
+  createdAt       DateTime @default(now())
+
+  @@index([model])
+  @@index([createdAt])
+}
