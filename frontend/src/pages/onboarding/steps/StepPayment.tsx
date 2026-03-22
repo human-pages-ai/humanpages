@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../../lib/api';
+import { PLATFORM_OPTIONS, PLATFORM_LABELS, isValidEvmAddress } from '../../../lib/paymentConstants';
 import type { FiatPaymentMethod } from '../../../components/dashboard/types';
 
 interface StepPaymentProps {
@@ -11,22 +12,6 @@ interface StepPaymentProps {
   error: string;
   setError?: (v: string) => void;
 }
-
-const PLATFORM_OPTIONS: { value: string; label: string; placeholder: string }[] = [
-  { value: 'PAYPAL', label: 'PayPal', placeholder: 'email@example.com' },
-  { value: 'WISE', label: 'Wise', placeholder: 'email@example.com' },
-  { value: 'VENMO', label: 'Venmo', placeholder: '@username' },
-  { value: 'CASHAPP', label: 'Cash App', placeholder: '$cashtag' },
-  { value: 'REVOLUT', label: 'Revolut', placeholder: '@username' },
-  { value: 'ZELLE', label: 'Zelle', placeholder: 'email or phone' },
-  { value: 'MONZO', label: 'Monzo', placeholder: '@username' },
-  { value: 'N26', label: 'N26', placeholder: 'email@example.com' },
-  { value: 'MERCADOPAGO', label: 'Mercado Pago', placeholder: 'email or phone' },
-];
-
-const PLATFORM_LABELS: Record<string, string> = Object.fromEntries(
-  PLATFORM_OPTIONS.map((p) => [p.value, p.label])
-);
 
 // Lazy-load the Privy-powered connect button so @privy-io/react-auth
 // is not bundled for users who never reach the payment step.
@@ -289,9 +274,13 @@ export function StepPayment({
             value={walletAddress}
             onChange={(e) => { setWalletAddress(e.target.value.trim()); if (setError) setError(''); }}
             placeholder="0x..."
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono"
+            className={`w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono ${walletAddress && !isValidEvmAddress(walletAddress) ? 'border-red-300' : 'border-slate-300'}`}
           />
-          <p className="text-xs text-slate-500 mt-2">Paste your wallet address to skip connecting with Privy.</p>
+          {walletAddress && !isValidEvmAddress(walletAddress) ? (
+            <p className="text-xs text-red-500 mt-2">Please enter a valid EVM wallet address (0x followed by 40 hex characters).</p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-2">Paste your wallet address to skip connecting with Privy.</p>
+          )}
         </div>
       </div>
 

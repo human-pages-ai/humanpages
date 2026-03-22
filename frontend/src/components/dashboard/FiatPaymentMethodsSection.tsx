@@ -1,31 +1,6 @@
 import { useState } from 'react';
 import { FiatPaymentMethod } from './types';
-
-const PLATFORM_NAMES: Record<string, string> = {
-  WISE: 'Wise',
-  VENMO: 'Venmo',
-  PAYPAL: 'PayPal',
-  CASHAPP: 'Cash App',
-  REVOLUT: 'Revolut',
-  ZELLE: 'Zelle',
-  MONZO: 'Monzo',
-  N26: 'N26',
-  MERCADOPAGO: 'Mercado Pago',
-};
-
-const PLATFORMS = Object.keys(PLATFORM_NAMES) as FiatPaymentMethod['platform'][];
-
-const HANDLE_PLACEHOLDERS: Record<string, string> = {
-  VENMO: '@username',
-  PAYPAL: 'email@example.com',
-  CASHAPP: '$cashtag',
-  REVOLUT: '@username',
-  ZELLE: 'email or phone',
-  WISE: 'email@example.com',
-  MONZO: '@username',
-  N26: 'email@example.com',
-  MERCADOPAGO: 'email or phone',
-};
+import { PLATFORM_OPTIONS, PLATFORM_LABELS, PLATFORM_PLACEHOLDERS } from '../../lib/paymentConstants';
 
 interface Props {
   methods: FiatPaymentMethod[];
@@ -45,7 +20,7 @@ export default function FiatPaymentMethodsSection({
   onSetPrimary,
 }: Props) {
   const [showForm, setShowForm] = useState(false);
-  const [platform, setPlatform] = useState<string>(PLATFORMS[0]);
+  const [platform, setPlatform] = useState<string>(PLATFORM_OPTIONS[0].value);
   const [handle, setHandle] = useState('');
   const [label, setLabel] = useState('');
   const [busy, setBusy] = useState(false);
@@ -56,7 +31,7 @@ export default function FiatPaymentMethodsSection({
   const [editLabel, setEditLabel] = useState('');
 
   const resetForm = () => {
-    setPlatform(PLATFORMS[0]);
+    setPlatform(PLATFORM_OPTIONS[0].value);
     setHandle('');
     setLabel('');
     setError('');
@@ -174,14 +149,14 @@ export default function FiatPaymentMethodsSection({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                        {PLATFORM_NAMES[method.platform] || method.platform}
+                        {PLATFORM_LABELS[method.platform] || method.platform}
                       </span>
                     </div>
                     <input
                       type="text"
                       value={editHandle}
                       onChange={(e) => setEditHandle(e.target.value)}
-                      placeholder={HANDLE_PLACEHOLDERS[method.platform] || 'Handle'}
+                      placeholder={PLATFORM_PLACEHOLDERS[method.platform] || 'Handle'}
                       className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md"
                       autoFocus
                     />
@@ -214,7 +189,7 @@ export default function FiatPaymentMethodsSection({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                          {PLATFORM_NAMES[method.platform] || method.platform}
+                          {PLATFORM_LABELS[method.platform] || method.platform}
                         </span>
                         {method.isPrimary && (
                           <span className="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
@@ -277,8 +252,8 @@ export default function FiatPaymentMethodsSection({
                   className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md bg-white"
                   disabled={busy}
                 >
-                  {PLATFORMS.map((p) => (
-                    <option key={p} value={p}>{PLATFORM_NAMES[p]}</option>
+                  {PLATFORM_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
@@ -289,7 +264,7 @@ export default function FiatPaymentMethodsSection({
                   value={handle}
                   onChange={(e) => { setHandle(e.target.value); setError(''); }}
                   onKeyDown={(e) => { if (e.key === 'Enter') submitAdd(); }}
-                  placeholder={HANDLE_PLACEHOLDERS[platform] || 'Your username, email, or tag'}
+                  placeholder={PLATFORM_PLACEHOLDERS[platform] || 'Your username, email, or tag'}
                   className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md"
                   disabled={busy}
                   maxLength={200}

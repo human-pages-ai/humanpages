@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { usePrivy, useWallets, getIdentityToken, useCreateWallet } from '@privy-io/react-auth';
 import { api } from '../../lib/api';
 import { analytics } from '../../lib/analytics';
+import { isValidEvmAddress } from '../../lib/paymentConstants';
+import { extractWalletAddress } from '../../lib/walletUtils';
 import { Wallet } from './types';
 import { isMobile } from './WalletProvider';
 
@@ -22,8 +24,6 @@ interface WalletGroup {
   label?: string;
   wallets: Wallet[];
 }
-
-const EVM_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
 export default function WalletsSection({
   wallets,
@@ -144,18 +144,9 @@ export default function WalletsSection({
     });
     if (!authenticated || !walletsReady || autoRegisteredRef.current) return;
 
-    // Try to get wallet from useWallets() first, fall back to user's linked accounts
-    let walletAddress = privyWallets.find((w) => w.walletClientType === 'privy')?.address
-      || privyWallets[0]?.address;
-    let walletType = privyWallets.find((w) => w.address === walletAddress)?.walletClientType;
-
-    if (!walletAddress && privyUser) {
-      const linkedWallet = privyUser.linkedAccounts?.find((a: any) => a.type === 'wallet');
-      if (linkedWallet) {
-        walletAddress = (linkedWallet as any).address;
-        walletType = 'privy';
-      }
-    }
+    const extracted = extractWalletAddress(privyWallets, privyUser);
+    let walletAddress = extracted.address;
+    let walletType: string | undefined = extracted.isEmbedded ? 'privy' : privyWallets.find((w) => w.address === walletAddress)?.walletClientType;
 
     if (!walletAddress) {
       console.log('[Wallets] Authenticated but no wallet found yet, privyWallets:', privyWallets.length);
@@ -239,7 +230,7 @@ export default function WalletsSection({
   const submitManualAddress = async () => {
     const trimmed = manualAddress.trim();
     setManualError('');
-    if (!EVM_ADDRESS_RE.test(trimmed)) {
+    if (!isValidEvmAddress(trimmed)) {
       setManualError(t('dashboard.wallets.invalidAddress'));
       return;
     }
