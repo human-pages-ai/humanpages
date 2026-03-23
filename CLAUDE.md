@@ -63,7 +63,7 @@ Tests should reference `shared/profile-schema.json` for valid field names, enum 
 
 1. **Never commit directly to master.** Always create a feature branch first.
 2. **Use `isolation: "worktree"` on sub-agents** when they need to read/write code. This gives them an isolated copy.
-3. **Don't `git push` from the VM** — it has no GitHub credentials. Tell the user to push from their Mac.
+3. **Never use `--no-verify`** to skip pre-push hooks. If hooks fail, fix the underlying issue first.
 4. **Check `git branch --show-current` before committing** — another session may have switched branches under you.
 5. **Before editing, always `git stash` or verify the working tree is clean** — another session's uncommitted changes will be visible.
 

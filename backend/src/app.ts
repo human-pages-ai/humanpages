@@ -263,6 +263,24 @@ app.use(express.static(frontendDistPath, { index: false }));
 // Blog posts & Profile pages: inject dynamic meta tags for social sharing / SEO
 const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'];
 
+// 301 redirects: strip /:lang prefix from English-only pages
+app.get('/:lang/dev', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  res.redirect(301, '/dev');
+});
+app.get('/:lang/dev/connect/:platform', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  res.redirect(301, `/dev/connect/${req.params.platform}`);
+});
+app.get('/:lang/dev/connect', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  res.redirect(301, '/dev/connect');
+});
+app.get('/:lang/prompt-to-completion', (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  res.redirect(301, '/prompt-to-completion');
+});
+
 // Dev page: inject meta tags + crawler-visible content for AI agents and non-JS crawlers
 // No language-prefixed routes — /dev section is English-only
 app.get('/dev', (req, res, next) => {

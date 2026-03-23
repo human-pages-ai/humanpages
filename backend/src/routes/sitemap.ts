@@ -71,10 +71,16 @@ router.get('/sitemap-static.xml', async (req, res) => {
     ];
 
     // English-only pages — no language prefix
+    const connectPlatforms = [
+      'claude', 'cursor', 'windsurf', 'chatgpt', 'openai-agents', 'openai-responses',
+      'gemini', 'android-studio', 'langchain', 'clawhub', 'openclaw', 'nanoclaw',
+      'zeroclaw', 'nanobot', 'trustclaw', 'picoclaw', 'maxclaw', 'smithery',
+    ];
     const nonLocalizedPages = [
       { url: '/login', priority: '0.3', changefreq: 'monthly' },
       { url: '/dev', priority: '0.8', changefreq: 'weekly' },
       { url: '/dev/connect', priority: '0.7', changefreq: 'weekly' },
+      ...connectPlatforms.map(p => ({ url: `/dev/connect/${p}`, priority: '0.6', changefreq: 'monthly' })),
       { url: '/prompt-to-completion', priority: '0.8', changefreq: 'weekly' },
     ];
 
