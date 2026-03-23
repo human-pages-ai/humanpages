@@ -39,6 +39,21 @@ export interface AdminStats {
     byStatus: Record<string, number>;
     applications: number;
   };
+  timeToFirstJob?: {
+    avgHours: number | null;
+    medianHours: number | null;
+    agentsWithJobs: number;
+  };
+  usage?: {
+    dau: number;
+    wau: number;
+    mau: number;
+    dauWauRatio: number;
+    retentionRate: number;
+    returningUsers: number;
+    signupsByDay: { day: string; count: number }[];
+    activeByDay: { day: string; count: number }[];
+  };
   insights?: {
     cvUploaded: number;
     telegramConnected: number;
@@ -59,7 +74,20 @@ export interface AdminStats {
     workMode: Record<string, number>;
     utmSources: Record<string, number>;
     topSkills: { skill: string; count: number }[];
-    topLocations: { location: string; count: number }[];
+    topCountries: { country: string; count: number }[];
+    continentBreakdown: { continent: string; count: number }[];
+    crypto: {
+      usersWithWallet: number;
+      usersWithPrivyDid: number;
+      walletsTotal: number;
+      walletsVerified: number;
+      privyWallets: number;
+      externalWallets: number;
+      walletsBySource: Record<string, number>;
+      walletsByNetwork: Record<string, number>;
+      adoptionRate: number;
+      privyRate: number;
+    };
   };
 }
 

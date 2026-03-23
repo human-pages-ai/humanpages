@@ -23,7 +23,7 @@ import videoBatchRoutes from './videoBatches.js';
 import watchdogRoutes from './watchdog.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
-import { normalizeCountry, countryFromLocation } from '../lib/countries.js';
+import { normalizeCountry, countryFromLocation, continentFromCountry } from '../lib/countries.js';
 import { MODEL_PRICING, estimateTokenCost } from '../lib/solverLLM.js';
 
 const router = Router();
@@ -257,39 +257,49 @@ router.use('/productivity', authenticateToken, requireAdmin, productivityRoutes)
 router.use(authenticateToken, requireAdmin);
 
 // GET /api/admin/stats — Aggregate dashboard stats
+// Performance: ALL queries run in a single Promise.all to avoid sequential awaits.
 router.get('/stats', async (_req, res) => {
   try {
     const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+    // ── Single parallelized batch: all queries run concurrently ──
     const [
-      usersTotal,
-      usersVerified,
-      usersLast7d,
-      usersLast30d,
-      agentsTotal,
-      agentsByStatus,
-      jobsTotal,
-      jobsByStatus,
-      jobsLast7d,
-      jobsLast30d,
-      paymentVolumeOneTime,
-      paymentVolumeStream,
-      paidJobCount,
-      reportsTotal,
-      reportsPending,
-      affiliatesTotal,
-      affiliatesApproved,
-      feedbackTotal,
-      feedbackNew,
-      humanReportsTotal,
-      humanReportsPending,
-      listingsTotal,
-      listingsOpen,
-      listingsByStatus,
-      applicationsTotal,
+      // Core counts
+      usersTotal, usersVerified, usersLast7d, usersLast30d,
+      agentsTotal, agentsByStatus,
+      jobsTotal, jobsByStatus, jobsLast7d, jobsLast30d,
+      paymentVolumeOneTime, paymentVolumeStream, paidJobCount,
+      reportsTotal, reportsPending,
+      affiliatesTotal, affiliatesApproved,
+      feedbackTotal, feedbackNew,
+      humanReportsTotal, humanReportsPending,
+      listingsTotal, listingsOpen, listingsByStatus, applicationsTotal,
+      // Insight counts
+      cvUploaded, telegramConnected, telegramBotSignups,
+      withBio, withPhoto, withService, withEducation, withSkills, withLocation,
+      availableCount, googleOAuth, linkedinVerifiedCount, githubVerifiedCount,
+      workModeRemote, workModeOnsite, workModeHybrid,
+      // UTM
+      utmBreakdownRaw,
+      // Raw SQL
+      educationByTierRaw, topSkillsRaw, completenessDistRaw,
+      // Location (for app-level normalization)
+      allLocations,
+      // Time-to-first-job
+      ttfjResult,
+      // Wallet metrics
+      usersWithWallet, usersWithPrivyDid, walletsTotal, walletsVerified,
+      privyWallets, externalWallets, walletsBySource, walletsByNetwork,
+      // Usage / activity metrics
+      dauCount, wauCount, mauCount,
+      signupToActiveRaw,
+      recentSignupsByDayRaw,
+      activeByDayRaw,
     ] = await Promise.all([
+      // ── Core counts ──
       prisma.human.count(),
       prisma.human.count({ where: identityVerifiedWhere }),
       prisma.human.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -315,27 +325,7 @@ router.get('/stats', async (_req, res) => {
       prisma.listing.count({ where: { status: 'OPEN' } }),
       prisma.listing.groupBy({ by: ['status'], _count: true }),
       prisma.listingApplication.count(),
-    ]);
-
-    // --- New insight stats (separate Promise.all for clarity) ---
-    const [
-      cvUploaded,
-      telegramConnected,
-      telegramBotSignups,
-      withBio,
-      withPhoto,
-      withService,
-      withEducation,
-      withSkills,
-      withLocation,
-      availableCount,
-      googleOAuth,
-      linkedinVerifiedCount,
-      githubVerifiedCount,
-      workModeRemote,
-      workModeOnsite,
-      workModeHybrid,
-    ] = await Promise.all([
+      // ── Insight counts ──
       prisma.human.count({ where: { cvFileKey: { not: null } } }),
       prisma.human.count({ where: { telegramChatId: { not: null } } }),
       prisma.human.count({ where: { utmSource: 'telegram_bot' } }),
@@ -352,31 +342,16 @@ router.get('/stats', async (_req, res) => {
       prisma.human.count({ where: { workMode: 'REMOTE' } }),
       prisma.human.count({ where: { workMode: 'ONSITE' } }),
       prisma.human.count({ where: { workMode: 'HYBRID' } }),
-    ]);
-
-    const utmBreakdownRaw = await prisma.human.groupBy({
-      by: ['utmSource'],
-      _count: true,
-      where: { utmSource: { not: null } },
-    });
-
-    // Raw SQL queries — unique users per education tier, funnel, skills, locations, completeness
-    const [
-      educationByTierRaw,
-      topSkillsRaw,
-      topLocationsRaw,
-      completenessDistRaw,
-    ] = await Promise.all([
-      // Count distinct HUMANS at each education tier (highest degree wins)
+      // ── UTM ──
+      prisma.human.groupBy({ by: ['utmSource'], _count: true, where: { utmSource: { not: null } } }),
+      // ── Raw SQL ──
       prisma.$queryRaw`
         SELECT tier, COUNT(*)::int AS cnt FROM (
-          SELECT DISTINCT ON ("humanId")
-            "humanId",
+          SELECT DISTINCT ON ("humanId") "humanId",
             CASE
               WHEN degree IN ('PhD','Postdoc','PsyD','EdD','DBA','DMin','DNP','DO','DPharm','MD','JD') THEN 'doctorate'
               WHEN degree IN ('MA','MBA','MCom','MEd','MEng','MFA','MPH','MPhil','MSc','MSW','MTech','LLM') THEN 'masters'
               WHEN degree IN ('BA','BBA','BCA','BEd','BEng','BFA','BMus','BPharm','BSc','BTech') THEN 'bachelors'
-              WHEN degree IN ('Associate','Diploma','Certificate') THEN 'other'
               ELSE 'other'
             END AS tier
           FROM "Education"
@@ -387,31 +362,20 @@ router.get('/stats', async (_req, res) => {
               WHEN degree IN ('BA','BBA','BCA','BEd','BEng','BFA','BMus','BPharm','BSc','BTech') THEN 3
               ELSE 4
             END
-        ) ranked
-        GROUP BY tier
+        ) ranked GROUP BY tier
       ` as Promise<{ tier: string; cnt: number }[]>,
       prisma.$queryRaw`
         SELECT unnest(skills) AS skill, COUNT(*)::int AS cnt
-        FROM "Human"
-        WHERE array_length(skills, 1) > 0
+        FROM "Human" WHERE array_length(skills, 1) > 0
         GROUP BY skill ORDER BY cnt DESC LIMIT 10
       ` as Promise<{ skill: string; cnt: number }[]>,
       prisma.$queryRaw`
-        SELECT location AS loc, COUNT(*)::int AS cnt
-        FROM "Human"
-        WHERE location IS NOT NULL AND location != ''
-        GROUP BY location ORDER BY cnt DESC LIMIT 10
-      ` as Promise<{ loc: string; cnt: number }[]>,
-      prisma.$queryRaw`
         SELECT bucket, COUNT(*)::int AS cnt, ROUND(AVG(score))::int AS avg_score FROM (
           SELECT score, CASE
-            WHEN score < 20 THEN '0-19'
-            WHEN score < 40 THEN '20-39'
-            WHEN score < 60 THEN '40-59'
-            WHEN score < 80 THEN '60-79'
+            WHEN score < 20 THEN '0-19' WHEN score < 40 THEN '20-39'
+            WHEN score < 60 THEN '40-59' WHEN score < 80 THEN '60-79'
             ELSE '80-100'
-          END AS bucket
-          FROM (
+          END AS bucket FROM (
             SELECT (
               (CASE WHEN bio IS NOT NULL AND bio != '' THEN 15 ELSE 0 END) +
               (CASE WHEN "profilePhotoStatus" = 'approved' THEN 15 ELSE 0 END) +
@@ -422,15 +386,88 @@ router.get('/stats', async (_req, res) => {
               (CASE WHEN array_length(languages, 1) > 0 THEN 5 ELSE 0 END) +
               (CASE WHEN "emailVerified" = true THEN 10 ELSE 0 END) +
               (CASE WHEN telegram IS NOT NULL OR whatsapp IS NOT NULL THEN 5 ELSE 0 END)
-            ) AS score
-            FROM "Human" h
+            ) AS score FROM "Human" h
           ) scored
-        ) bucketed
-        GROUP BY bucket ORDER BY bucket
+        ) bucketed GROUP BY bucket ORDER BY bucket
       ` as Promise<{ bucket: string; cnt: number; avg_score: number }[]>,
+      // ── Location (all rows, normalized in JS) ──
+      prisma.human.findMany({ where: { location: { not: null } }, select: { location: true } }),
+      // ── Time-to-first-job ──
+      prisma.$queryRaw<{ avg_hours: number | null; median_hours: number | null; agent_count: number }[]>`
+        SELECT
+          AVG(EXTRACT(EPOCH FROM (first_job - agent_created)) / 3600)::float AS avg_hours,
+          (PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (first_job - agent_created)) / 3600))::float AS median_hours,
+          COUNT(*)::int AS agent_count
+        FROM (
+          SELECT a."createdAt" AS agent_created, MIN(j."createdAt") AS first_job
+          FROM "Agent" a JOIN "Job" j ON j."agentId" = a.id
+          GROUP BY a.id, a."createdAt"
+        ) sub
+      `,
+      // ── Wallet metrics ──
+      prisma.human.count({ where: { wallets: { some: {} } } }),
+      prisma.human.count({ where: { privyDid: { not: null } } }),
+      prisma.wallet.count(),
+      prisma.wallet.count({ where: { verified: true } }),
+      prisma.wallet.count({ where: { source: 'privy' } }),
+      prisma.wallet.count({ where: { source: 'external' } }),
+      prisma.wallet.groupBy({ by: ['source'], _count: true }),
+      prisma.wallet.groupBy({ by: ['network'], _count: true }),
+      // ── Usage / activity metrics ──
+      // DAU: users active in last 24h
+      prisma.human.count({ where: { lastActiveAt: { gte: oneDayAgo } } }),
+      // WAU: users active in last 7d
+      prisma.human.count({ where: { lastActiveAt: { gte: sevenDaysAgo } } }),
+      // MAU: users active in last 30d
+      prisma.human.count({ where: { lastActiveAt: { gte: thirtyDaysAgo } } }),
+      // Signup-to-active conversion: users who signed up 7+ days ago AND were active in last 7d
+      prisma.human.count({
+        where: { createdAt: { lt: sevenDaysAgo }, lastActiveAt: { gte: sevenDaysAgo } },
+      }),
+      // Signups per day (last 14 days)
+      prisma.$queryRaw`
+        SELECT d::date AS day, COUNT(h.id)::int AS cnt
+        FROM generate_series(
+          (NOW() - INTERVAL '13 days')::date,
+          NOW()::date,
+          '1 day'::interval
+        ) d
+        LEFT JOIN "Human" h ON h."createdAt"::date = d::date
+        GROUP BY d ORDER BY d
+      ` as Promise<{ day: Date; cnt: number }[]>,
+      // Active users per day (last 14 days)
+      prisma.$queryRaw`
+        SELECT d::date AS day, COUNT(h.id)::int AS cnt
+        FROM generate_series(
+          (NOW() - INTERVAL '13 days')::date,
+          NOW()::date,
+          '1 day'::interval
+        ) d
+        LEFT JOIN "Human" h ON h."lastActiveAt"::date = d::date
+        GROUP BY d ORDER BY d
+      ` as Promise<{ day: Date; cnt: number }[]>,
     ]);
 
-    // Compute average completeness score across all buckets
+    // ── Post-processing (pure JS, no DB calls) ──
+
+    // Location aggregation by country (normalized)
+    const countryBuckets: Record<string, number> = {};
+    const continentBuckets: Record<string, number> = {};
+    for (const { location } of allLocations) {
+      if (!location || location.toLowerCase() === 'remote') continue;
+      const country = countryFromLocation(location);
+      countryBuckets[country] = (countryBuckets[country] || 0) + 1;
+      const continent = continentFromCountry(country);
+      continentBuckets[continent] = (continentBuckets[continent] || 0) + 1;
+    }
+    const topCountriesSorted = Object.entries(countryBuckets)
+      .sort((a, b) => b[1] - a[1]).slice(0, 15)
+      .map(([country, count]) => ({ country, count }));
+    const continentSorted = Object.entries(continentBuckets)
+      .sort((a, b) => b[1] - a[1])
+      .map(([continent, count]) => ({ continent, count }));
+
+    // Profile completeness
     const totalCompUsers = (completenessDistRaw as { bucket: string; cnt: number; avg_score: number }[]).reduce((s, r) => s + r.cnt, 0);
     const weightedAvg = totalCompUsers > 0
       ? Math.round((completenessDistRaw as { bucket: string; cnt: number; avg_score: number }[]).reduce((s, r) => s + r.avg_score * r.cnt, 0) / totalCompUsers)
@@ -438,72 +475,41 @@ router.get('/stats', async (_req, res) => {
 
     // Education tier map
     const eduMap: Record<string, number> = {};
-    for (const r of (educationByTierRaw as { tier: string; cnt: number }[])) {
-      eduMap[r.tier] = r.cnt;
-    }
+    for (const r of (educationByTierRaw as { tier: string; cnt: number }[])) eduMap[r.tier] = r.cnt;
 
-    // Time-to-first-job: avg and median hours from agent registration to first job offer
-    const ttfjResult = await prisma.$queryRaw<{ avg_hours: number | null; median_hours: number | null; agent_count: number }[]>`
-      SELECT
-        AVG(EXTRACT(EPOCH FROM (first_job - agent_created)) / 3600)::float AS avg_hours,
-        (PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (first_job - agent_created)) / 3600))::float AS median_hours,
-        COUNT(*)::int AS agent_count
-      FROM (
-        SELECT a."createdAt" AS agent_created, MIN(j."createdAt") AS first_job
-        FROM "Agent" a
-        JOIN "Job" j ON j."agentId" = a.id
-        GROUP BY a.id, a."createdAt"
-      ) sub
-    `;
-
+    // Status maps
     const agentStatusMap: Record<string, number> = {};
-    for (const g of agentsByStatus) {
-      agentStatusMap[g.status] = g._count;
-    }
-
+    for (const g of agentsByStatus) agentStatusMap[g.status] = g._count;
     const jobStatusMap: Record<string, number> = {};
-    for (const g of jobsByStatus) {
-      jobStatusMap[g.status] = g._count;
-    }
+    for (const g of jobsByStatus) jobStatusMap[g.status] = g._count;
+
+    // Retention: % of users who signed up 7+ days ago that came back this week
+    const olderUsers = usersTotal - usersLast7d;
+    const retentionRate = olderUsers > 0 ? Math.round((signupToActiveRaw / olderUsers) * 10000) / 100 : 0;
+
+    // Daily sparklines
+    const signupsByDay = (recentSignupsByDayRaw as { day: Date; cnt: number }[]).map(r => ({
+      day: new Date(r.day).toISOString().slice(0, 10), count: r.cnt,
+    }));
+    const activeByDay = (activeByDayRaw as { day: Date; cnt: number }[]).map(r => ({
+      day: new Date(r.day).toISOString().slice(0, 10), count: r.cnt,
+    }));
 
     res.json({
-      users: {
-        total: usersTotal,
-        verified: usersVerified,
-        last7d: usersLast7d,
-        last30d: usersLast30d,
-      },
-      agents: {
-        total: agentsTotal,
-        byStatus: agentStatusMap,
-      },
+      users: { total: usersTotal, verified: usersVerified, last7d: usersLast7d, last30d: usersLast30d },
+      agents: { total: agentsTotal, byStatus: agentStatusMap },
       jobs: {
-        total: jobsTotal,
-        byStatus: jobStatusMap,
-        last7d: jobsLast7d,
-        last30d: jobsLast30d,
+        total: jobsTotal, byStatus: jobStatusMap,
+        last7d: jobsLast7d, last30d: jobsLast30d,
         paymentVolume: (paymentVolumeOneTime._sum.paymentAmount?.toNumber() ?? 0) + (paymentVolumeStream._sum.streamTotalPaid?.toNumber() ?? 0),
         paidJobCount,
       },
-      reports: {
-        total: reportsTotal,
-        pending: reportsPending,
-      },
-      affiliates: {
-        total: affiliatesTotal,
-        approved: affiliatesApproved,
-      },
-      feedback: {
-        total: feedbackTotal,
-        new: feedbackNew,
-      },
-      humanReports: {
-        total: humanReportsTotal,
-        pending: humanReportsPending,
-      },
+      reports: { total: reportsTotal, pending: reportsPending },
+      affiliates: { total: affiliatesTotal, approved: affiliatesApproved },
+      feedback: { total: feedbackTotal, new: feedbackNew },
+      humanReports: { total: humanReportsTotal, pending: humanReportsPending },
       listings: {
-        total: listingsTotal,
-        open: listingsOpen,
+        total: listingsTotal, open: listingsOpen,
         byStatus: Object.fromEntries(listingsByStatus.map(g => [g.status, g._count])),
         applications: applicationsTotal,
       },
@@ -512,43 +518,50 @@ router.get('/stats', async (_req, res) => {
         medianHours: ttfjResult[0]?.median_hours ?? null,
         agentsWithJobs: ttfjResult[0]?.agent_count ?? 0,
       },
+      usage: {
+        dau: dauCount,
+        wau: wauCount,
+        mau: mauCount,
+        dauWauRatio: wauCount > 0 ? Math.round((dauCount / wauCount) * 10000) / 100 : 0,
+        retentionRate,
+        returningUsers: signupToActiveRaw,
+        signupsByDay,
+        activeByDay,
+      },
       insights: {
-        cvUploaded,
-        telegramConnected,
-        telegramBotSignups,
+        cvUploaded, telegramConnected, telegramBotSignups,
         education: {
-          bachelors: eduMap['bachelors'] ?? 0,
-          masters: eduMap['masters'] ?? 0,
-          doctorate: eduMap['doctorate'] ?? 0,
-          other: eduMap['other'] ?? 0,
+          bachelors: eduMap['bachelors'] ?? 0, masters: eduMap['masters'] ?? 0,
+          doctorate: eduMap['doctorate'] ?? 0, other: eduMap['other'] ?? 0,
         },
         profileCompleteness: {
           avgScore: weightedAvg,
-          withBio,
-          withPhoto,
-          withService,
-          withEducation,
-          withSkills,
-          withLocation,
+          withBio, withPhoto, withService, withEducation, withSkills, withLocation,
           available: availableCount,
           distribution: Object.fromEntries(
             ['0-19', '20-39', '40-59', '60-79', '80-100'].map(b => [
-              b,
-              (completenessDistRaw as { bucket: string; cnt: number }[]).find(r => r.bucket === b)?.cnt ?? 0,
+              b, (completenessDistRaw as { bucket: string; cnt: number }[]).find(r => r.bucket === b)?.cnt ?? 0,
             ])
           ),
         },
         verification: { google: googleOAuth, linkedin: linkedinVerifiedCount, github: githubVerifiedCount },
         workMode: { REMOTE: workModeRemote, ONSITE: workModeOnsite, HYBRID: workModeHybrid },
         utmSources: Object.fromEntries(
-          utmBreakdownRaw
-            .filter(r => r.utmSource != null)
-            .sort((a, b) => b._count - a._count)
-            .slice(0, 15)
+          utmBreakdownRaw.filter(r => r.utmSource != null)
+            .sort((a, b) => b._count - a._count).slice(0, 15)
             .map(r => [r.utmSource, r._count])
         ),
         topSkills: (topSkillsRaw as { skill: string; cnt: number }[]).map(r => ({ skill: r.skill, count: r.cnt })),
-        topLocations: (topLocationsRaw as { loc: string; cnt: number }[]).map(r => ({ location: r.loc, count: r.cnt })),
+        topCountries: topCountriesSorted,
+        continentBreakdown: continentSorted,
+        crypto: {
+          usersWithWallet, usersWithPrivyDid, walletsTotal, walletsVerified,
+          privyWallets, externalWallets,
+          walletsBySource: Object.fromEntries(walletsBySource.map(r => [r.source, r._count])),
+          walletsByNetwork: Object.fromEntries(walletsByNetwork.map(r => [r.network, r._count])),
+          adoptionRate: usersTotal > 0 ? Math.round((usersWithWallet / usersTotal) * 10000) / 100 : 0,
+          privyRate: usersTotal > 0 ? Math.round((usersWithPrivyDid / usersTotal) * 10000) / 100 : 0,
+        },
       },
     });
   } catch (error) {

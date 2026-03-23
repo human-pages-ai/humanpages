@@ -145,6 +145,18 @@ function RankedList({ items, labelKey, valueKey, barColor = 'bg-orange-400' }: {
   );
 }
 
+function Sparkline({ data, color = '#3b82f6', height = 32 }: { data: number[]; color?: string; height?: number }) {
+  if (!data || data.length < 2) return null;
+  const max = Math.max(...data, 1);
+  const width = 120;
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * width},${height - (v / max) * (height - 4)}`).join(' ');
+  return (
+    <svg width={width} height={height} className="flex-shrink-0">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function SectionHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="pt-2">
@@ -270,6 +282,38 @@ export default function AdminOverview() {
           to="/admin/jobs"
         />
       </div>
+
+      {/* ── Usage & Activity ──────────────────────────────── */}
+      {stats.usage && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="flex items-center justify-between">
+            <div>
+              <CardTitle>DAU</CardTitle>
+              <p className="text-2xl font-bold text-gray-900">{fmt(stats.usage.dau)}</p>
+              <p className="text-xs text-gray-400">Active today</p>
+            </div>
+            <Sparkline data={stats.usage.activeByDay.map(d => d.count)} color="#3b82f6" />
+          </Card>
+          <Card className="flex items-center justify-between">
+            <div>
+              <CardTitle>WAU</CardTitle>
+              <p className="text-2xl font-bold text-gray-900">{fmt(stats.usage.wau)}</p>
+              <p className="text-xs text-gray-400">DAU/WAU: {stats.usage.dauWauRatio}%</p>
+            </div>
+            <Sparkline data={stats.usage.signupsByDay.map(d => d.count)} color="#8b5cf6" />
+          </Card>
+          <Card>
+            <CardTitle>MAU</CardTitle>
+            <p className="text-2xl font-bold text-gray-900">{fmt(stats.usage.mau)}</p>
+            <p className="text-xs text-gray-400">{pct(stats.usage.mau, total)}% of all users</p>
+          </Card>
+          <Card>
+            <CardTitle>Retention</CardTitle>
+            <p className="text-2xl font-bold text-orange-600">{stats.usage.retentionRate}%</p>
+            <p className="text-xs text-gray-400">{fmt(stats.usage.returningUsers)} returning this week</p>
+          </Card>
+        </div>
+      )}
 
       {/* ── Growth & Reports ────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -528,10 +572,80 @@ export default function AdminOverview() {
             </Card>
 
             <Card>
-              <CardTitle>Top Locations</CardTitle>
-              <RankedList items={ins.topLocations} labelKey="location" valueKey="count" barColor="bg-green-400" />
+              <CardTitle>Top Countries</CardTitle>
+              <RankedList items={ins.topCountries} labelKey="country" valueKey="count" barColor="bg-green-400" />
             </Card>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card>
+              <CardTitle>Continent Breakdown</CardTitle>
+              {ins.continentBreakdown && (
+                <RankedList items={ins.continentBreakdown} labelKey="continent" valueKey="count" barColor="bg-teal-400" />
+              )}
+            </Card>
+          </div>
+
+          {ins.crypto && (
+            <>
+              <div className="border-t border-gray-200 pt-2" />
+              <SectionHeader title="Crypto Wallets" description="Wallet connection and Privy adoption metrics" />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Users with Wallet', value: ins.crypto.usersWithWallet, color: '#f97316', desc: 'Connected any wallet' },
+                  { label: 'Privy Embedded', value: ins.crypto.privyWallets, color: '#8b5cf6', desc: 'Created via Privy' },
+                  { label: 'External Wallets', value: ins.crypto.externalWallets, color: '#3b82f6', desc: 'Connected externally' },
+                  { label: 'Verified Wallets', value: ins.crypto.walletsVerified, color: '#22c55e', desc: 'Ownership proven' },
+                ].map(({ label, value, color, desc }) => (
+                  <Card key={label} className="flex items-center gap-4">
+                    <div className="relative flex-shrink-0">
+                      <RingChart value={value} max={total} color={color} />
+                      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-gray-800">
+                        {pct(value, total)}%
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-500">{label}</p>
+                      <p className="text-xl font-semibold text-gray-900">{fmt(value)}</p>
+                      <p className="text-xs text-gray-400 truncate">{desc}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Card>
+                  <CardTitle>Wallets by Network</CardTitle>
+                  <RankedList
+                    items={Object.entries(ins.crypto.walletsByNetwork).map(([network, count]) => ({ network, count }))}
+                    labelKey="network"
+                    valueKey="count"
+                    barColor="bg-purple-400"
+                  />
+                </Card>
+                <Card>
+                  <CardTitle>Adoption Summary</CardTitle>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Wallet Adoption Rate</p>
+                      <p className="text-2xl font-bold text-orange-600">{ins.crypto.adoptionRate}%</p>
+                      <p className="text-xs text-gray-400">{fmt(ins.crypto.usersWithWallet)} of {fmt(total)} users</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Privy Connected</p>
+                      <p className="text-2xl font-bold text-purple-600">{ins.crypto.privyRate}%</p>
+                      <p className="text-xs text-gray-400">{fmt(ins.crypto.usersWithPrivyDid)} users with Privy DID</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Total Wallets</p>
+                      <p className="text-2xl font-bold text-gray-800">{fmt(ins.crypto.walletsTotal)}</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
