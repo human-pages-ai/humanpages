@@ -336,8 +336,21 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
       rejectReason: null,
     });
 
+    // Get the logged request ID for telemetry linkage
+    let solveId: number | undefined;
+    try {
+      const logged = await prisma.solverRequest.findFirst({
+        where: { agentId: agent.id, challenge },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      });
+      solveId = logged?.id;
+    } catch { /* non-critical */ }
+
     return res.json({
       answer: solve.answer,
+      solveId,
+      model: solve.model,
       solveTimeMs,
       message: getResponseMessage(),
     });
@@ -360,6 +373,39 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
       error: 'Solver error',
       message: getResponseMessage(),
     });
+  }
+});
+
+// ─── Telemetry: agent reports whether the solve was correct ──
+
+const telemetrySchema = z.object({
+  solveId: z.number().int().positive(),
+  correct: z.boolean(),
+});
+
+router.post('/telemetry', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest, res: Response) => {
+  const parsed = telemetrySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid request' });
+  }
+
+  const { solveId, correct } = parsed.data;
+
+  try {
+    // Only allow updating requests that belong to this agent
+    const updated = await prisma.solverRequest.updateMany({
+      where: { id: solveId, agentId: req.agent!.id, correct: null },
+      data: { correct },
+    });
+
+    if (updated.count === 0) {
+      return res.status(404).json({ error: 'Solve not found or already reported' });
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, 'Telemetry update failed');
+    return res.status(500).json({ error: 'Internal error' });
   }
 });
 

@@ -2414,11 +2414,11 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
       }),
     ]);
 
-    // Correctness by model (from SolverRequest)
+    // Correctness by model (from telemetry-confirmed solves)
     const solverCorrect = await prisma.solverRequest.groupBy({
       by: ['model'],
       _count: true,
-      where: { rejected: false, answer: { not: null }, model: { not: null } },
+      where: { rejected: false, correct: true, model: { not: null } },
     });
     const correctByModel: Record<string, number> = {};
     for (const row of solverCorrect) if (row.model) correctByModel[row.model] = row._count;
