@@ -348,26 +348,7 @@ function AppRoutes() {
 
       {/* Language-prefixed routes for SEO */}
       <Route path="/:lang" element={<LangWrapper><PublicRoute><LandingPage /></PublicRoute></LangWrapper>} />
-      <Route path="/:lang/dev" element={<LangWrapper><DevelopersPage /></LangWrapper>} />
-      <Route path="/:lang/dev/connect" element={<LangWrapper><ConnectOverview /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/claude" element={<LangWrapper><ConnectClaude /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/cursor" element={<LangWrapper><ConnectCursor /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/windsurf" element={<LangWrapper><ConnectWindsurf /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/chatgpt" element={<LangWrapper><ConnectChatGpt /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/openai-agents" element={<LangWrapper><ConnectOpenAiAgents /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/openai-responses" element={<LangWrapper><ConnectOpenAiResponses /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/gemini" element={<LangWrapper><ConnectGemini /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/android-studio" element={<LangWrapper><ConnectAndroidStudio /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/langchain" element={<LangWrapper><ConnectLangChain /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/clawhub" element={<LangWrapper><ConnectClawHub /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/openclaw" element={<LangWrapper><ConnectOpenClaw /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/nanoclaw" element={<LangWrapper><ConnectNanoClaw /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/zeroclaw" element={<LangWrapper><ConnectZeroClaw /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/nanobot" element={<LangWrapper><ConnectNanobot /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/trustclaw" element={<LangWrapper><ConnectTrustClaw /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/picoclaw" element={<LangWrapper><ConnectPicoClaw /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/maxclaw" element={<LangWrapper><ConnectMaxClaw /></LangWrapper>} />
-      <Route path="/:lang/dev/connect/smithery" element={<LangWrapper><ConnectSmithery /></LangWrapper>} />
+      {/* /dev/* and /dev/connect/* are English-only — no /:lang prefix */}
       <Route path="/:lang/humans/:id" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/u/:username" element={<LangWrapper><PublicProfile /></LangWrapper>} />
       <Route path="/:lang/signup" element={<LangWrapper><PublicRoute><Signup /></PublicRoute></LangWrapper>} />
@@ -389,7 +370,7 @@ function AppRoutes() {
       <Route path="/:lang/blog/:slug" element={<LangWrapper><DynamicBlogPost /></LangWrapper>} />
       <Route path="/:lang/status" element={<LangWrapper><StatusPage /></LangWrapper>} />
       <Route path="/:lang/pricing" element={<LangWrapper><PricingPage /></LangWrapper>} />
-      <Route path="/:lang/prompt-to-completion" element={<LangWrapper><PromptToCompletionPage /></LangWrapper>} />
+      {/* /prompt-to-completion is English-only — no /:lang prefix */}
       <Route path="/:lang/partners" element={<LangWrapper><PartnersPage /></LangWrapper>} />
       <Route path="/:lang/about" element={<LangWrapper><AboutPage /></LangWrapper>} />
       <Route path="/:lang/careers" element={<LangWrapper><CareersPage /></LangWrapper>} />

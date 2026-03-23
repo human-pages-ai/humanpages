@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { getI18n } from 'react-i18next';
 import Link from '../components/LocalizedLink';
 import Logo from '../components/Logo';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
 import {
@@ -297,7 +296,6 @@ export default function PromptToCompletionPage() {
             <Link to="/pricing" className="text-sm text-slate-500 hover:text-slate-900 transition-colors hidden sm:inline">
               Pricing
             </Link>
-            <LanguageSwitcher />
             <Link to="/dev/connect" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
               Get started
             </Link>

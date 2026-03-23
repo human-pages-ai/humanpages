@@ -56,7 +56,6 @@ router.get('/sitemap-static.xml', async (req, res) => {
 
     const localizedPages = [
       { url: '/', priority: '1.0', changefreq: 'daily' },
-      { url: '/dev', priority: '0.8', changefreq: 'weekly' },
       { url: '/gpt-setup', priority: '0.8', changefreq: 'weekly' },
       { url: '/signup', priority: '0.7', changefreq: 'monthly' },
       { url: '/listings', priority: '0.8', changefreq: 'daily' },
@@ -71,8 +70,18 @@ router.get('/sitemap-static.xml', async (req, res) => {
       { url: '/blog/free-moltbook-agent', priority: '0.6', changefreq: 'monthly' },
     ];
 
+    // English-only pages — no language prefix
+    const connectPlatforms = [
+      'claude', 'cursor', 'windsurf', 'chatgpt', 'openai-agents', 'openai-responses',
+      'gemini', 'android-studio', 'langchain', 'clawhub', 'openclaw', 'nanoclaw',
+      'zeroclaw', 'nanobot', 'trustclaw', 'picoclaw', 'maxclaw', 'smithery',
+    ];
     const nonLocalizedPages = [
       { url: '/login', priority: '0.3', changefreq: 'monthly' },
+      { url: '/dev', priority: '0.8', changefreq: 'weekly' },
+      { url: '/dev/connect', priority: '0.7', changefreq: 'weekly' },
+      ...connectPlatforms.map(p => ({ url: `/dev/connect/${p}`, priority: '0.6', changefreq: 'monthly' })),
+      { url: '/prompt-to-completion', priority: '0.8', changefreq: 'weekly' },
     ];
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';

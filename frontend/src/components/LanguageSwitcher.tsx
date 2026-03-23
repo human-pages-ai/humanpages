@@ -11,7 +11,6 @@ const NON_LANG_CODES = new Set<string>(supportedLanguages.map(l => l.code));
 /** SEO routes that get language-prefixed URLs */
 const SEO_ROUTE_PATTERNS = [
   /^\/$/,
-  /^\/dev$/,
   /^\/humans\/.+$/,
   /^\/signup$/,
   /^\/blog(\/.*)?$/,
