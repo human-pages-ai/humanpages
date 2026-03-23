@@ -2,6 +2,8 @@
  * Private LLM proxy service for the Moltbook solver.
  * Runs as a separate process on the server, NOT published or open-sourced.
  *
+ * Uses claude-agent-sdk (Claude Max subscription) — no API key needed.
+ *
  * Receives { systemPrompt, userPrompt, model } and returns { text, inputTokens, outputTokens }.
  * The backend solver calls this via SOLVER_LLM_URL.
  *
@@ -14,32 +16,44 @@
  */
 
 import http from 'node:http';
-import Anthropic from '@anthropic-ai/sdk';
 
 const PORT = parseInt(process.env.SOLVER_LLM_PORT ?? '3457', 10);
 
-const client = new Anthropic();
+// Rough token estimate: ~4 chars per token for English text
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
 
-async function callLLM(
-  systemPrompt: string,
-  userPrompt: string,
-  model: string,
-): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
-  const response = await client.messages.create({
-    model,
-    max_tokens: 256,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userPrompt }],
+async function callLLM(systemPrompt: string, userPrompt: string, model: string): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
+  const { query } = await import('@anthropic-ai/claude-agent-sdk');
+
+  // Strip CLAUDECODE env var to avoid nested session error
+  const env: Record<string, string> = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k !== 'CLAUDECODE' && v !== undefined) env[k] = v;
+  }
+
+  const conversation = query({
+    prompt: userPrompt,
+    options: {
+      maxTurns: 1,
+      allowedTools: [],
+      model,
+      systemPrompt,
+      env,
+    },
   });
 
-  const block = response.content[0];
-  if (block.type !== 'text') throw new Error('Non-text response from Anthropic');
-
-  return {
-    text: block.text,
-    inputTokens: response.usage?.input_tokens ?? 0,
-    outputTokens: response.usage?.output_tokens ?? 0,
-  };
+  for await (const msg of conversation) {
+    if (msg.type === 'result' && msg.subtype === 'success') {
+      return {
+        text: msg.result,
+        inputTokens: estimateTokens(systemPrompt + userPrompt),
+        outputTokens: estimateTokens(msg.result),
+      };
+    }
+  }
+  throw new Error('No result from LLM');
 }
 
 const server = http.createServer(async (req, res) => {
