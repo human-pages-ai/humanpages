@@ -23,6 +23,15 @@ const ipBurstLimiter = rateLimit({
 
 const DAILY_SOLVE_LIMIT = 50;
 
+// Internal agents bypass the daily rate limit (comma-separated agent IDs or names)
+const INTERNAL_AGENTS = new Set(
+  (process.env.SOLVER_INTERNAL_AGENTS || '').split(',').map(s => s.trim()).filter(Boolean),
+);
+
+function isInternalAgent(agent: { id: string; name: string | null }): boolean {
+  return INTERNAL_AGENTS.has(agent.id) || (agent.name != null && INTERNAL_AGENTS.has(agent.name));
+}
+
 // ─── Request Validation ──────────────────────────────────────────
 
 const solveRequestSchema = z.object({
@@ -233,10 +242,11 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
     });
   }
 
-  // 3. Check daily rate limit
+  // 3. Check daily rate limit (internal agents are exempt)
+  const internal = isInternalAgent(agent);
   try {
-    const currentUsage = await getDailyUsage(agent.id);
-    if (currentUsage >= DAILY_SOLVE_LIMIT) {
+    const currentUsage = internal ? 0 : await getDailyUsage(agent.id);
+    if (!internal && currentUsage >= DAILY_SOLVE_LIMIT) {
       const solveTimeMs = Date.now() - startTime;
       logRequest({
         agentId: agent.id,
@@ -280,8 +290,8 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
       });
     }
 
-    // Increment usage counter
-    await incrementDailyUsage(agent.id);
+    // Increment usage counter (skip for internal agents)
+    if (!internal) await incrementDailyUsage(agent.id);
 
     // Log successful request (background)
     logRequest({
