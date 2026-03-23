@@ -114,13 +114,43 @@ interface SolveResult {
   model: string;
 }
 
+// ─── Adaptive Consensus ─────────────────────────────────────────
+// Starts in single-call mode. Auto-escalates to dual/full consensus
+// when recent failure rate exceeds thresholds.
+
+const SINGLE_THRESHOLD = 0.05;  // >5% failures in last N → escalate to dual
+const DUAL_THRESHOLD   = 0.15;  // >15% failures in last N → escalate to full
+const WINDOW_SIZE      = 20;    // rolling window of recent solves
+
+// In-memory ring buffer of recent solve outcomes
+const recentOutcomes: boolean[] = []; // true = answered, false = failed
+
+function recordOutcome(success: boolean): void {
+  recentOutcomes.push(success);
+  if (recentOutcomes.length > WINDOW_SIZE) recentOutcomes.shift();
+}
+
+function getFailureRate(): number {
+  if (recentOutcomes.length < 5) return 0; // not enough data, assume fine
+  const failures = recentOutcomes.filter(x => !x).length;
+  return failures / recentOutcomes.length;
+}
+
+function getConsensusMode(): 'single' | 'dual' | 'full' {
+  const rate = getFailureRate();
+  if (rate > DUAL_THRESHOLD) return 'full';
+  if (rate > SINGLE_THRESHOLD) return 'dual';
+  return 'single';
+}
+
 /**
- * 2-primary + tiebreaker consensus solver with token tracking.
+ * Adaptive solver: single call when accuracy is high, auto-escalates
+ * to dual consensus or full 2+tiebreaker when failures increase.
  */
-async function solveLLMConsensus(challenge: string): Promise<SolveResult> {
+async function solveLLM(challenge: string): Promise<SolveResult> {
   const cleaned = sanitizeForLLM(challenge);
   const primaryModel = getPrimaryModel();
-  const tiebreakerModel = getTiebreakerModel();
+  const mode = getConsensusMode();
   let totalInput = 0;
   let totalOutput = 0;
   let calls = 0;
@@ -132,9 +162,24 @@ async function solveLLMConsensus(challenge: string): Promise<SolveResult> {
     return r.text;
   }
 
-  const result: SolveResult = { answer: null, inputTokens: 0, outputTokens: 0, llmCalls: 0, model: primaryModel };
+  const finalize = (answer: string | null): SolveResult => {
+    recordOutcome(answer !== null);
+    if (answer === null) logger.info({ mode, failureRate: getFailureRate().toFixed(2) }, 'Solve failed, mode may escalate');
+    return { answer, inputTokens: totalInput, outputTokens: totalOutput, llmCalls: calls, model: primaryModel };
+  };
 
-  // Two primary calls with diverse prompts
+  // ── Single mode: 1 call, no consensus ──
+  if (mode === 'single') {
+    try {
+      const r = await askLLM(LLM_SOLVER_PROMPT, cleaned, primaryModel);
+      return finalize(extractAnswer(track(r)));
+    } catch (e) {
+      logger.warn({ err: e }, 'Solver single call failed');
+      return finalize(null);
+    }
+  }
+
+  // ── Dual / Full mode: 2 primary calls ──
   const [resA, resB] = await Promise.allSettled([
     askLLM(LLM_SOLVER_PROMPT, cleaned, primaryModel).then(r => extractAnswer(track(r))),
     askLLM(DEOBFUSCATION_PROMPT, cleaned, primaryModel).then(r => extractAnswer(track(r))),
@@ -146,19 +191,17 @@ async function solveLLMConsensus(challenge: string): Promise<SolveResult> {
   if (resA.status === 'rejected') logger.warn({ err: resA.reason }, 'Solver primary-A failed');
   if (resB.status === 'rejected') logger.warn({ err: resB.reason }, 'Solver primary-B failed');
 
-  const finalize = (answer: string | null): SolveResult => {
-    result.answer = answer;
-    result.inputTokens = totalInput;
-    result.outputTokens = totalOutput;
-    result.llmCalls = calls;
-    return result;
-  };
-
   // Both agree → high confidence
   if (primaryA && primaryB && primaryA === primaryB) return finalize(primaryA);
 
-  // Disagree or one failed → tiebreaker
+  // Dual mode: no tiebreaker, pick whichever succeeded
+  if (mode === 'dual') {
+    return finalize(primaryA ?? primaryB);
+  }
+
+  // Full mode: disagree or one failed → tiebreaker
   if (primaryA || primaryB) {
+    const tiebreakerModel = getTiebreakerModel();
     let tiebreaker: string | null = null;
     try {
       const r = await askLLM(LLM_SOLVER_PROMPT, cleaned, tiebreakerModel);
@@ -169,9 +212,7 @@ async function solveLLMConsensus(challenge: string): Promise<SolveResult> {
 
     if (tiebreaker && tiebreaker === primaryA) return finalize(primaryA);
     if (tiebreaker && tiebreaker === primaryB) return finalize(primaryB);
-    if (primaryA && !primaryB) return finalize(primaryA);
-    if (primaryB && !primaryA) return finalize(primaryB);
-    if (primaryA) return finalize(primaryA);
+    return finalize(primaryA ?? primaryB);
   }
 
   return finalize(null);
@@ -293,7 +334,7 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
 
   // 4. Solve the challenge
   try {
-    const solve = await solveLLMConsensus(challenge);
+    const solve = await solveLLM(challenge);
     const solveTimeMs = Date.now() - startTime;
 
     if (!solve.answer) {

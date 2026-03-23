@@ -2484,6 +2484,7 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
         primaryModel,
         tiebreakerModel,
         dailyLimit: 50,
+        consensusMode: process.env.SOLVER_CONSENSUS_MODE ?? 'adaptive',
       },
       tokens: {
         totalInput: totalInputTokens,
