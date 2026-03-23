@@ -2344,4 +2344,176 @@ router.delete('/link-codes/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// ─── Solver Dashboard Stats ─────────────────────────────────────
+
+// Token cost estimates per model (input + output per solve, ~300 input tokens, ~20 output)
+const TOKEN_COSTS: Record<string, number> = {
+  'claude-opus-4-6': 0.0048,       // $15/M in + $75/M out → ~$0.0048/solve
+  'claude-sonnet-4-6': 0.00075,    // $3/M in + $15/M out → ~$0.00075/solve
+  'gpt-4o': 0.00175,               // $2.50/M in + $10/M out → ~$0.00175/solve
+  'gpt-4o-mini': 0.000255,         // $0.15/M in + $0.60/M out → ~$0.000255/solve
+};
+
+// Each solve = 2 primary calls + ~0.5 tiebreaker calls on average = 2.5 LLM calls
+function estimateSolveCost(solveCount: number, primaryModel: string, tiebreakerModel: string): number {
+  const primaryCost = TOKEN_COSTS[primaryModel] ?? 0.005;
+  const tiebreakerCost = TOKEN_COSTS[tiebreakerModel] ?? 0.001;
+  return solveCount * (2 * primaryCost + 0.5 * tiebreakerCost);
+}
+
+router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) => {
+  try {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalRequests,
+      totalCorrect,
+      totalRejected,
+      requestsToday,
+      requests7d,
+      requests30d,
+      avgSolveTime,
+      topAgents,
+      recentRequests,
+      telemetryByModel,
+      dailyUsage,
+    ] = await Promise.all([
+      // Total requests (non-rejected)
+      prisma.solverRequest.count({ where: { rejected: false } }),
+      // Total correct (where answer is not null = successful solve)
+      prisma.solverRequest.count({ where: { rejected: false, answer: { not: null } } }),
+      // Total rejected
+      prisma.solverRequest.count({ where: { rejected: true } }),
+      // Today
+      prisma.solverRequest.count({ where: { rejected: false, createdAt: { gte: new Date(todayStr) } } }),
+      // 7d
+      prisma.solverRequest.count({ where: { rejected: false, createdAt: { gte: sevenDaysAgo } } }),
+      // 30d
+      prisma.solverRequest.count({ where: { rejected: false, createdAt: { gte: thirtyDaysAgo } } }),
+      // Avg solve time
+      prisma.solverRequest.aggregate({
+        _avg: { solveTimeMs: true },
+        where: { rejected: false, answer: { not: null } },
+      }),
+      // Top agents by usage (last 30d)
+      prisma.solverRequest.groupBy({
+        by: ['agentId'],
+        _count: true,
+        where: { rejected: false, createdAt: { gte: thirtyDaysAgo } },
+        orderBy: { _count: { agentId: 'desc' } },
+        take: 10,
+      }),
+      // Recent requests (last 20)
+      prisma.solverRequest.findMany({
+        select: { id: true, agentId: true, challenge: true, answer: true, solveTimeMs: true, rejected: true, rejectReason: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      // Telemetry by model (accuracy)
+      prisma.solverTelemetry.groupBy({
+        by: ['model'],
+        _count: true,
+        _avg: { solveTimeMs: true },
+      }),
+      // Daily usage (last 14 days)
+      prisma.solverUsage.findMany({
+        where: { date: { gte: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) } },
+        orderBy: { date: 'asc' },
+      }),
+    ]);
+
+    // Get telemetry correctness stats per model
+    const telemetryCorrect = await prisma.solverTelemetry.groupBy({
+      by: ['model'],
+      _count: true,
+      where: { primaryCorrect: true },
+    });
+
+    const correctByModel: Record<string, number> = {};
+    for (const row of telemetryCorrect) {
+      correctByModel[row.model] = row._count;
+    }
+
+    // Resolve agent names
+    const agentIds = topAgents.map(a => a.agentId);
+    const agents = await prisma.agent.findMany({
+      where: { id: { in: agentIds } },
+      select: { id: true, name: true },
+    });
+    const agentNameMap: Record<string, string> = {};
+    for (const a of agents) agentNameMap[a.id] = a.name;
+
+    // Aggregate daily usage into date→count
+    const dailyTotals: Record<string, number> = {};
+    for (const row of dailyUsage) {
+      dailyTotals[row.date] = (dailyTotals[row.date] ?? 0) + row.count;
+    }
+
+    // Model accuracy breakdown
+    const modelStats = telemetryByModel.map(row => ({
+      model: row.model,
+      total: row._count,
+      correct: correctByModel[row.model] ?? 0,
+      accuracy: row._count > 0 ? ((correctByModel[row.model] ?? 0) / row._count * 100).toFixed(1) : '0',
+      avgSolveTimeMs: Math.round(row._avg.solveTimeMs ?? 0),
+    }));
+
+    // Current config
+    const backend = process.env.SOLVER_LLM_BACKEND ?? 'anthropic';
+    const primaryModel = process.env.SOLVER_MODEL_PRIMARY ?? (backend === 'openai' ? 'gpt-4o' : 'claude-opus-4-6');
+    const tiebreakerModel = process.env.SOLVER_MODEL_TIEBREAKER ?? (backend === 'openai' ? 'gpt-4o-mini' : 'claude-sonnet-4-6');
+
+    // Cost estimates
+    const cost30d = estimateSolveCost(requests30d, primaryModel, tiebreakerModel);
+    const costTotal = estimateSolveCost(totalRequests, primaryModel, tiebreakerModel);
+
+    res.json({
+      overview: {
+        totalSolves: totalRequests,
+        successfulSolves: totalCorrect,
+        rejected: totalRejected,
+        successRate: totalRequests > 0 ? ((totalCorrect / totalRequests) * 100).toFixed(1) : '0',
+        avgSolveTimeMs: Math.round(avgSolveTime._avg.solveTimeMs ?? 0),
+        today: requestsToday,
+        last7d: requests7d,
+        last30d: requests30d,
+      },
+      config: {
+        backend,
+        primaryModel,
+        tiebreakerModel,
+        dailyLimit: 50,
+      },
+      costs: {
+        last30d: +cost30d.toFixed(2),
+        total: +costTotal.toFixed(2),
+        perSolve: +(TOKEN_COSTS[primaryModel] ? (2 * TOKEN_COSTS[primaryModel] + 0.5 * (TOKEN_COSTS[tiebreakerModel] ?? 0.001)).toFixed(4) : '0.01'),
+      },
+      modelStats,
+      topAgents: topAgents.map(a => ({
+        agentId: a.agentId,
+        name: agentNameMap[a.agentId] ?? a.agentId.slice(0, 8),
+        solves: a._count,
+      })),
+      dailyVolume: dailyTotals,
+      recentRequests: recentRequests.map(r => ({
+        id: r.id,
+        agentId: r.agentId,
+        challenge: r.challenge.slice(0, 120),
+        answer: r.answer,
+        solveTimeMs: r.solveTimeMs,
+        rejected: r.rejected,
+        rejectReason: r.rejectReason,
+        createdAt: r.createdAt,
+      })),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin solver stats error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

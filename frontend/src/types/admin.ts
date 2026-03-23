@@ -63,6 +63,53 @@ export interface AdminStats {
   };
 }
 
+export interface SolverStats {
+  overview: {
+    totalSolves: number;
+    successfulSolves: number;
+    rejected: number;
+    successRate: string;
+    avgSolveTimeMs: number;
+    today: number;
+    last7d: number;
+    last30d: number;
+  };
+  config: {
+    backend: string;
+    primaryModel: string;
+    tiebreakerModel: string;
+    dailyLimit: number;
+  };
+  costs: {
+    last30d: number;
+    total: number;
+    perSolve: number;
+  };
+  modelStats: {
+    model: string;
+    total: number;
+    correct: number;
+    accuracy: string;
+    avgSolveTimeMs: number;
+  }[];
+  topAgents: {
+    agentId: string;
+    name: string;
+    solves: number;
+  }[];
+  dailyVolume: Record<string, number>;
+  recentRequests: {
+    id: number;
+    agentId: string;
+    challenge: string;
+    answer: string | null;
+    solveTimeMs: number;
+    rejected: boolean;
+    rejectReason: string | null;
+    createdAt: string;
+  }[];
+}
+
 export interface AdminUser {
   id: string;
   email: string;

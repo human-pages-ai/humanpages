@@ -91,6 +91,7 @@ const AdminEmails = lazy(() => import('./pages/admin/AdminEmails'));
 const AdminLinkCodes = lazy(() => import('./pages/admin/AdminLinkCodes'));
 const AdminModeration = lazy(() => import('./pages/admin/AdminModeration'));
 const AdminWatchDog = lazy(() => import('./pages/admin/AdminWatchDog'));
+const AdminSolver = lazy(() => import('./pages/admin/AdminSolver'));
 const AdminMarketingOps = lazy(() => import('./pages/admin/MarketingOps'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffProductivity = lazy(() => import('./pages/admin/StaffProductivity'));
@@ -410,6 +411,7 @@ function AppRoutes() {
         <Route path="moderation" element={<AdminModeration />} />
         <Route path="watchdog" element={<AdminWatchDog />} />
         <Route path="marketing-ops" element={<AdminMarketingOps />} />
+        <Route path="solver" element={<AdminSolver />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

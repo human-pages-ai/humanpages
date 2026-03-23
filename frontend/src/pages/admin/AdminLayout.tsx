@@ -30,6 +30,7 @@ const adminOnlyItems: NavItem[] = [
   { to: '/admin/moderation', label: 'Moderation' },
   { to: '/admin/watchdog', label: 'Watch Dog' },
   { to: '/admin/marketing-ops', label: 'Marketing Ops' },
+  { to: '/admin/solver', label: 'Solver' },
 ];
 
 const sharedItems: NavItem[] = [
