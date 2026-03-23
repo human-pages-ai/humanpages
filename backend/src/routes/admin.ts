@@ -2402,10 +2402,11 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
         orderBy: { createdAt: 'desc' },
         take: 20,
       }),
-      prisma.solverTelemetry.groupBy({
+      prisma.solverRequest.groupBy({
         by: ['model'],
         _count: true,
         _avg: { solveTimeMs: true },
+        where: { rejected: false, model: { not: null } },
       }),
       prisma.solverUsage.findMany({
         where: { date: { gte: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) } },
@@ -2413,14 +2414,14 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
       }),
     ]);
 
-    // Telemetry correctness
-    const telemetryCorrect = await prisma.solverTelemetry.groupBy({
+    // Correctness by model (from SolverRequest)
+    const solverCorrect = await prisma.solverRequest.groupBy({
       by: ['model'],
       _count: true,
-      where: { primaryCorrect: true },
+      where: { rejected: false, answer: { not: null }, model: { not: null } },
     });
     const correctByModel: Record<string, number> = {};
-    for (const row of telemetryCorrect) correctByModel[row.model] = row._count;
+    for (const row of solverCorrect) if (row.model) correctByModel[row.model] = row._count;
 
     // Agent names
     const agentIds = topAgents.map(a => a.agentId);
@@ -2434,10 +2435,10 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
 
     // Model accuracy
     const modelStats = telemetryByModel.map(row => ({
-      model: row.model,
+      model: row.model!,
       total: row._count,
-      correct: correctByModel[row.model] ?? 0,
-      accuracy: row._count > 0 ? ((correctByModel[row.model] ?? 0) / row._count * 100).toFixed(1) : '0',
+      correct: correctByModel[row.model!] ?? 0,
+      accuracy: row._count > 0 ? ((correctByModel[row.model!] ?? 0) / row._count * 100).toFixed(1) : '0',
       avgSolveTimeMs: Math.round(row._avg.solveTimeMs ?? 0),
     }));
 
