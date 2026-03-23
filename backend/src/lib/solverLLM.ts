@@ -131,12 +131,6 @@ export const MODEL_PRICING: Record<string, [number, number]> = {
   'claude-opus-4-6':    [15, 75],
   'claude-sonnet-4-6':  [3, 15],
   'claude-haiku-4-5':   [0.80, 4],
-  'gpt-4o':             [2.50, 10],
-  'gpt-4o-mini':        [0.15, 0.60],
-  'gpt-4.1-mini':       [0.40, 1.60],
-  'gpt-4.1-nano':       [0.10, 0.40],
-  'gemini-2.5-flash':   [0.15, 0.60],
-  'deepseek-chat':      [0.27, 1.10],
 };
 
 export function estimateTokenCost(model: string, inputTokens: number, outputTokens: number): number {

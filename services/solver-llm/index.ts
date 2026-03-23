@@ -2,7 +2,7 @@
  * Private LLM proxy service for the Moltbook solver.
  * Runs as a separate process on the server, NOT published or open-sourced.
  *
- * Receives { systemPrompt, userPrompt, model } and returns { text }.
+ * Receives { systemPrompt, userPrompt, model } and returns { text, inputTokens, outputTokens }.
  * The backend solver calls this via SOLVER_LLM_URL.
  *
  * Usage:
@@ -14,35 +14,32 @@
  */
 
 import http from 'node:http';
+import Anthropic from '@anthropic-ai/sdk';
 
 const PORT = parseInt(process.env.SOLVER_LLM_PORT ?? '3457', 10);
 
-async function callLLM(systemPrompt: string, userPrompt: string, model: string): Promise<string> {
-  const { query } = await import('@anthropic-ai/claude-agent-sdk');
+const client = new Anthropic();
 
-  // Strip CLAUDECODE env var to avoid nested session error
-  const env: Record<string, string> = {};
-  for (const [k, v] of Object.entries(process.env)) {
-    if (k !== 'CLAUDECODE' && v !== undefined) env[k] = v;
-  }
-
-  const conversation = query({
-    prompt: userPrompt,
-    options: {
-      maxTurns: 1,
-      allowedTools: [],
-      model,
-      systemPrompt,
-      env,
-    },
+async function callLLM(
+  systemPrompt: string,
+  userPrompt: string,
+  model: string,
+): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
+  const response = await client.messages.create({
+    model,
+    max_tokens: 256,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
   });
 
-  for await (const msg of conversation) {
-    if (msg.type === 'result' && msg.subtype === 'success') {
-      return msg.result;
-    }
-  }
-  throw new Error('No result from LLM');
+  const block = response.content[0];
+  if (block.type !== 'text') throw new Error('Non-text response from Anthropic');
+
+  return {
+    text: block.text,
+    inputTokens: response.usage?.input_tokens ?? 0,
+    outputTokens: response.usage?.output_tokens ?? 0,
+  };
 }
 
 const server = http.createServer(async (req, res) => {
@@ -80,10 +77,10 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const text = await callLLM(systemPrompt, userPrompt, model ?? 'claude-sonnet-4-6');
+    const result = await callLLM(systemPrompt, userPrompt, model ?? 'claude-haiku-4-5');
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ text }));
+    res.end(JSON.stringify(result));
   } catch (err) {
     console.error('[solver-llm] Error:', err);
     res.writeHead(500, { 'Content-Type': 'application/json' });
