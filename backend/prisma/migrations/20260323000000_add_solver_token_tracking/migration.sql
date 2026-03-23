@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "SolverRequest" ADD COLUMN IF NOT EXISTS "model" TEXT;
+ALTER TABLE "SolverRequest" ADD COLUMN IF NOT EXISTS "inputTokens" INTEGER;
+ALTER TABLE "SolverRequest" ADD COLUMN IF NOT EXISTS "outputTokens" INTEGER;
+ALTER TABLE "SolverRequest" ADD COLUMN IF NOT EXISTS "llmCalls" INTEGER;

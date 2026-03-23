@@ -1828,6 +1828,10 @@ model SolverRequest {
   answer        String?  // what we returned
   correct       Boolean? // if we can verify (from telemetry)
   solveTimeMs   Int
+  model         String?  // primary model used (e.g. "claude-opus-4-6")
+  inputTokens   Int?     // total input tokens across all LLM calls in this solve
+  outputTokens  Int?     // total output tokens across all LLM calls
+  llmCalls      Int?     // number of LLM calls (2 primary + 0-1 tiebreaker)
   ip            String?
   userAgent     String?
   rejected      Boolean  @default(false) // true if lobster validator rejected

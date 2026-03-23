@@ -80,11 +80,26 @@ export interface SolverStats {
     tiebreakerModel: string;
     dailyLimit: number;
   };
+  tokens: {
+    totalInput: number;
+    totalOutput: number;
+    avgInputPerSolve: number;
+    avgOutputPerSolve: number;
+    avgLlmCalls: number;
+    hasData: boolean;
+  };
   costs: {
-    last30d: number;
     total: number;
+    last30d: number;
     perSolve: number;
   };
+  modelComparison: {
+    model: string;
+    inputPrice: number;
+    outputPrice: number;
+    estCost30d: number;
+    estPerSolve: number;
+  }[];
   modelStats: {
     model: string;
     total: number;
@@ -104,6 +119,9 @@ export interface SolverStats {
     challenge: string;
     answer: string | null;
     solveTimeMs: number;
+    model: string | null;
+    inputTokens: number | null;
+    outputTokens: number | null;
     rejected: boolean;
     rejectReason: string | null;
     createdAt: string;

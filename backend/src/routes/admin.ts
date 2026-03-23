@@ -24,6 +24,7 @@ import watchdogRoutes from './watchdog.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 import { normalizeCountry, countryFromLocation } from '../lib/countries.js';
+import { MODEL_PRICING, estimateTokenCost } from '../lib/solverLLM.js';
 
 const router = Router();
 
@@ -2346,21 +2347,6 @@ router.delete('/link-codes/:id', async (req: AuthRequest, res) => {
 
 // ─── Solver Dashboard Stats ─────────────────────────────────────
 
-// Token cost estimates per model (input + output per solve, ~300 input tokens, ~20 output)
-const TOKEN_COSTS: Record<string, number> = {
-  'claude-opus-4-6': 0.0048,       // $15/M in + $75/M out → ~$0.0048/solve
-  'claude-sonnet-4-6': 0.00075,    // $3/M in + $15/M out → ~$0.00075/solve
-  'gpt-4o': 0.00175,               // $2.50/M in + $10/M out → ~$0.00175/solve
-  'gpt-4o-mini': 0.000255,         // $0.15/M in + $0.60/M out → ~$0.000255/solve
-};
-
-// Each solve = 2 primary calls + ~0.5 tiebreaker calls on average = 2.5 LLM calls
-function estimateSolveCost(solveCount: number, primaryModel: string, tiebreakerModel: string): number {
-  const primaryCost = TOKEN_COSTS[primaryModel] ?? 0.005;
-  const tiebreakerCost = TOKEN_COSTS[tiebreakerModel] ?? 0.001;
-  return solveCount * (2 * primaryCost + 0.5 * tiebreakerCost);
-}
-
 router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) => {
   try {
     const now = new Date();
@@ -2376,29 +2362,34 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
       requests7d,
       requests30d,
       avgSolveTime,
+      tokenAggAll,
+      tokenAgg30d,
       topAgents,
       recentRequests,
       telemetryByModel,
       dailyUsage,
     ] = await Promise.all([
-      // Total requests (non-rejected)
       prisma.solverRequest.count({ where: { rejected: false } }),
-      // Total correct (where answer is not null = successful solve)
       prisma.solverRequest.count({ where: { rejected: false, answer: { not: null } } }),
-      // Total rejected
       prisma.solverRequest.count({ where: { rejected: true } }),
-      // Today
       prisma.solverRequest.count({ where: { rejected: false, createdAt: { gte: new Date(todayStr) } } }),
-      // 7d
       prisma.solverRequest.count({ where: { rejected: false, createdAt: { gte: sevenDaysAgo } } }),
-      // 30d
       prisma.solverRequest.count({ where: { rejected: false, createdAt: { gte: thirtyDaysAgo } } }),
-      // Avg solve time
       prisma.solverRequest.aggregate({
         _avg: { solveTimeMs: true },
         where: { rejected: false, answer: { not: null } },
       }),
-      // Top agents by usage (last 30d)
+      // Token totals (all time)
+      prisma.solverRequest.aggregate({
+        _sum: { inputTokens: true, outputTokens: true },
+        _avg: { inputTokens: true, outputTokens: true, llmCalls: true },
+        where: { rejected: false, inputTokens: { not: null } },
+      }),
+      // Token totals (30d)
+      prisma.solverRequest.aggregate({
+        _sum: { inputTokens: true, outputTokens: true },
+        where: { rejected: false, inputTokens: { not: null }, createdAt: { gte: thirtyDaysAgo } },
+      }),
       prisma.solverRequest.groupBy({
         by: ['agentId'],
         _count: true,
@@ -2406,53 +2397,42 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
         orderBy: { _count: { agentId: 'desc' } },
         take: 10,
       }),
-      // Recent requests (last 20)
       prisma.solverRequest.findMany({
-        select: { id: true, agentId: true, challenge: true, answer: true, solveTimeMs: true, rejected: true, rejectReason: true, createdAt: true },
+        select: { id: true, agentId: true, challenge: true, answer: true, solveTimeMs: true, model: true, inputTokens: true, outputTokens: true, rejected: true, rejectReason: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
         take: 20,
       }),
-      // Telemetry by model (accuracy)
       prisma.solverTelemetry.groupBy({
         by: ['model'],
         _count: true,
         _avg: { solveTimeMs: true },
       }),
-      // Daily usage (last 14 days)
       prisma.solverUsage.findMany({
         where: { date: { gte: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) } },
         orderBy: { date: 'asc' },
       }),
     ]);
 
-    // Get telemetry correctness stats per model
+    // Telemetry correctness
     const telemetryCorrect = await prisma.solverTelemetry.groupBy({
       by: ['model'],
       _count: true,
       where: { primaryCorrect: true },
     });
-
     const correctByModel: Record<string, number> = {};
-    for (const row of telemetryCorrect) {
-      correctByModel[row.model] = row._count;
-    }
+    for (const row of telemetryCorrect) correctByModel[row.model] = row._count;
 
-    // Resolve agent names
+    // Agent names
     const agentIds = topAgents.map(a => a.agentId);
-    const agents = await prisma.agent.findMany({
-      where: { id: { in: agentIds } },
-      select: { id: true, name: true },
-    });
+    const agents = await prisma.agent.findMany({ where: { id: { in: agentIds } }, select: { id: true, name: true } });
     const agentNameMap: Record<string, string> = {};
     for (const a of agents) agentNameMap[a.id] = a.name;
 
-    // Aggregate daily usage into date→count
+    // Daily volume
     const dailyTotals: Record<string, number> = {};
-    for (const row of dailyUsage) {
-      dailyTotals[row.date] = (dailyTotals[row.date] ?? 0) + row.count;
-    }
+    for (const row of dailyUsage) dailyTotals[row.date] = (dailyTotals[row.date] ?? 0) + row.count;
 
-    // Model accuracy breakdown
+    // Model accuracy
     const modelStats = telemetryByModel.map(row => ({
       model: row.model,
       total: row._count,
@@ -2461,14 +2441,31 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
       avgSolveTimeMs: Math.round(row._avg.solveTimeMs ?? 0),
     }));
 
-    // Current config
+    // Config
     const backend = process.env.SOLVER_LLM_BACKEND ?? 'anthropic';
     const primaryModel = process.env.SOLVER_MODEL_PRIMARY ?? (backend === 'openai' ? 'gpt-4o' : 'claude-opus-4-6');
     const tiebreakerModel = process.env.SOLVER_MODEL_TIEBREAKER ?? (backend === 'openai' ? 'gpt-4o-mini' : 'claude-sonnet-4-6');
 
-    // Cost estimates
-    const cost30d = estimateSolveCost(requests30d, primaryModel, tiebreakerModel);
-    const costTotal = estimateSolveCost(totalRequests, primaryModel, tiebreakerModel);
+    // Real token stats
+    const totalInputTokens = tokenAggAll._sum.inputTokens ?? 0;
+    const totalOutputTokens = tokenAggAll._sum.outputTokens ?? 0;
+    const avgInputPerSolve = Math.round(tokenAggAll._avg.inputTokens ?? 0);
+    const avgOutputPerSolve = Math.round(tokenAggAll._avg.outputTokens ?? 0);
+    const avgLlmCalls = +(tokenAggAll._avg.llmCalls ?? 0).toFixed(1);
+    const input30d = tokenAgg30d._sum.inputTokens ?? 0;
+    const output30d = tokenAgg30d._sum.outputTokens ?? 0;
+
+    // Actual cost from real tokens
+    const costTotal = estimateTokenCost(primaryModel, totalInputTokens, totalOutputTokens);
+    const cost30d = estimateTokenCost(primaryModel, input30d, output30d);
+    const costPerSolve = totalRequests > 0 ? costTotal / totalRequests : 0;
+
+    // Model cost comparison: what would it cost with other models?
+    const modelComparison = Object.entries(MODEL_PRICING).map(([model, [inputPrice, outputPrice]]) => {
+      const estCost30d = (input30d * inputPrice + output30d * outputPrice) / 1_000_000;
+      const estPerSolve = requests30d > 0 ? estCost30d / requests30d : 0;
+      return { model, inputPrice, outputPrice, estCost30d: +estCost30d.toFixed(4), estPerSolve: +estPerSolve.toFixed(6) };
+    }).sort((a, b) => a.estCost30d - b.estCost30d);
 
     res.json({
       overview: {
@@ -2487,11 +2484,20 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
         tiebreakerModel,
         dailyLimit: 50,
       },
-      costs: {
-        last30d: +cost30d.toFixed(2),
-        total: +costTotal.toFixed(2),
-        perSolve: +(TOKEN_COSTS[primaryModel] ? (2 * TOKEN_COSTS[primaryModel] + 0.5 * (TOKEN_COSTS[tiebreakerModel] ?? 0.001)).toFixed(4) : '0.01'),
+      tokens: {
+        totalInput: totalInputTokens,
+        totalOutput: totalOutputTokens,
+        avgInputPerSolve,
+        avgOutputPerSolve,
+        avgLlmCalls,
+        hasData: totalInputTokens > 0,
       },
+      costs: {
+        total: +costTotal.toFixed(4),
+        last30d: +cost30d.toFixed(4),
+        perSolve: +costPerSolve.toFixed(6),
+      },
+      modelComparison,
       modelStats,
       topAgents: topAgents.map(a => ({
         agentId: a.agentId,
@@ -2505,6 +2511,9 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
         challenge: r.challenge.slice(0, 120),
         answer: r.answer,
         solveTimeMs: r.solveTimeMs,
+        model: r.model,
+        inputTokens: r.inputTokens,
+        outputTokens: r.outputTokens,
         rejected: r.rejected,
         rejectReason: r.rejectReason,
         createdAt: r.createdAt,

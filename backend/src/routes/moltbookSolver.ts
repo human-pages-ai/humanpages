@@ -3,7 +3,7 @@ import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
 import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
 import { validateLobsterChallenge } from '../lib/lobsterValidator.js';
-import { askLLM, getPrimaryModel, getTiebreakerModel } from '../lib/solverLLM.js';
+import { askLLM, getPrimaryModel, getTiebreakerModel, type LLMResult } from '../lib/solverLLM.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 
@@ -106,22 +106,38 @@ function extractAnswer(response: string): string | null {
   return num.toFixed(2);
 }
 
+interface SolveResult {
+  answer: string | null;
+  inputTokens: number;
+  outputTokens: number;
+  llmCalls: number;
+  model: string;
+}
+
 /**
- * 2-primary + tiebreaker consensus solver.
- * Same algorithm as agents/src/challenge-solver.ts solveLLMConsensus().
- * LLM backend is configurable via SOLVER_LLM_BACKEND env var (see solverLLM.ts).
+ * 2-primary + tiebreaker consensus solver with token tracking.
  */
-async function solveLLMConsensus(challenge: string): Promise<string | null> {
+async function solveLLMConsensus(challenge: string): Promise<SolveResult> {
   const cleaned = sanitizeForLLM(challenge);
   const primaryModel = getPrimaryModel();
   const tiebreakerModel = getTiebreakerModel();
+  let totalInput = 0;
+  let totalOutput = 0;
+  let calls = 0;
+
+  function track(r: LLMResult): string {
+    totalInput += r.inputTokens;
+    totalOutput += r.outputTokens;
+    calls++;
+    return r.text;
+  }
+
+  const result: SolveResult = { answer: null, inputTokens: 0, outputTokens: 0, llmCalls: 0, model: primaryModel };
 
   // Two primary calls with diverse prompts
   const [resA, resB] = await Promise.allSettled([
-    askLLM(LLM_SOLVER_PROMPT, cleaned, primaryModel)
-      .then(r => extractAnswer(r)),
-    askLLM(DEOBFUSCATION_PROMPT, cleaned, primaryModel)
-      .then(r => extractAnswer(r)),
+    askLLM(LLM_SOLVER_PROMPT, cleaned, primaryModel).then(r => extractAnswer(track(r))),
+    askLLM(DEOBFUSCATION_PROMPT, cleaned, primaryModel).then(r => extractAnswer(track(r))),
   ]);
 
   const primaryA = resA.status === 'fulfilled' ? resA.value : null;
@@ -130,32 +146,35 @@ async function solveLLMConsensus(challenge: string): Promise<string | null> {
   if (resA.status === 'rejected') logger.warn({ err: resA.reason }, 'Solver primary-A failed');
   if (resB.status === 'rejected') logger.warn({ err: resB.reason }, 'Solver primary-B failed');
 
+  const finalize = (answer: string | null): SolveResult => {
+    result.answer = answer;
+    result.inputTokens = totalInput;
+    result.outputTokens = totalOutput;
+    result.llmCalls = calls;
+    return result;
+  };
+
   // Both agree → high confidence
-  if (primaryA && primaryB && primaryA === primaryB) return primaryA;
+  if (primaryA && primaryB && primaryA === primaryB) return finalize(primaryA);
 
   // Disagree or one failed → tiebreaker
   if (primaryA || primaryB) {
     let tiebreaker: string | null = null;
     try {
       const r = await askLLM(LLM_SOLVER_PROMPT, cleaned, tiebreakerModel);
-      tiebreaker = extractAnswer(r);
+      tiebreaker = extractAnswer(track(r));
     } catch (e) {
       logger.warn({ err: e }, 'Solver tiebreaker failed');
     }
 
-    // 2-out-of-3 consensus
-    if (tiebreaker && tiebreaker === primaryA) return primaryA;
-    if (tiebreaker && tiebreaker === primaryB) return primaryB;
-
-    // Only one primary answered
-    if (primaryA && !primaryB) return primaryA;
-    if (primaryB && !primaryA) return primaryB;
-
-    // All 3 different — go with primary-A (primary prompt is more reliable)
-    if (primaryA) return primaryA;
+    if (tiebreaker && tiebreaker === primaryA) return finalize(primaryA);
+    if (tiebreaker && tiebreaker === primaryB) return finalize(primaryB);
+    if (primaryA && !primaryB) return finalize(primaryA);
+    if (primaryB && !primaryA) return finalize(primaryB);
+    if (primaryA) return finalize(primaryA);
   }
 
-  return null;
+  return finalize(null);
 }
 
 // ─── Daily Usage Check ───────────────────────────────────────────
@@ -184,6 +203,10 @@ async function logRequest(params: {
   challenge: string;
   answer: string | null;
   solveTimeMs: number;
+  model?: string | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  llmCalls?: number | null;
   ip: string | undefined;
   userAgent: string | undefined;
   rejected: boolean;
@@ -270,15 +293,19 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
 
   // 4. Solve the challenge
   try {
-    const answer = await solveLLMConsensus(challenge);
+    const solve = await solveLLMConsensus(challenge);
     const solveTimeMs = Date.now() - startTime;
 
-    if (!answer) {
+    if (!solve.answer) {
       logRequest({
         agentId: agent.id,
         challenge,
         answer: null,
         solveTimeMs,
+        model: solve.model,
+        inputTokens: solve.inputTokens,
+        outputTokens: solve.outputTokens,
+        llmCalls: solve.llmCalls,
         ip: req.ip,
         userAgent: req.headers['user-agent'],
         rejected: false,
@@ -297,8 +324,12 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
     logRequest({
       agentId: agent.id,
       challenge,
-      answer,
+      answer: solve.answer,
       solveTimeMs,
+      model: solve.model,
+      inputTokens: solve.inputTokens,
+      outputTokens: solve.outputTokens,
+      llmCalls: solve.llmCalls,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
       rejected: false,
@@ -306,7 +337,7 @@ router.post('/', ipBurstLimiter, authenticateAgent, async (req: AgentAuthRequest
     });
 
     return res.json({
-      answer,
+      answer: solve.answer,
       solveTimeMs,
       message: getResponseMessage(),
     });

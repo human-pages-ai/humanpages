@@ -14,7 +14,14 @@ function ms(n: number) {
 }
 
 function usd(n: number) {
+  if (n < 0.01) return `$${n.toFixed(4)}`;
   return `$${n.toFixed(2)}`;
+}
+
+function tokens(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toString();
 }
 
 /* ─── Reusable Components ──────────────────────────────────── */
@@ -97,7 +104,7 @@ export default function AdminSolver() {
   if (error) return <div className="text-center py-20 text-red-500">{error}</div>;
   if (!stats) return null;
 
-  const { overview, config, costs, modelStats, topAgents, dailyVolume, recentRequests } = stats;
+  const { overview, config, tokens: tokenStats, costs, modelComparison, modelStats, topAgents, dailyVolume, recentRequests } = stats;
 
   return (
     <div className="space-y-8">
@@ -111,12 +118,85 @@ export default function AdminSolver() {
         <StatCard label="Rejected" value={overview.rejected} accent={overview.rejected > 0 ? 'text-red-500' : 'text-gray-900'} sub="invalid challenges" />
       </div>
 
-      {/* ─── Volume Cards ─── */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* ─── Volume + Cost Cards ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Last 7 Days" value={overview.last7d} />
         <StatCard label="Last 30 Days" value={overview.last30d} />
-        <StatCard label="Est. Cost (30d)" value={usd(costs.last30d)} sub={`${usd(costs.perSolve)}/solve`} accent="text-orange-600" />
+        <StatCard label="Cost (30d)" value={usd(costs.last30d)} sub={`${usd(costs.perSolve)}/solve`} accent="text-orange-600" />
+        <StatCard label="Cost (Total)" value={usd(costs.total)} accent="text-orange-600" />
       </div>
+
+      {/* ─── Token Usage ─── */}
+      {tokenStats.hasData && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">Token Usage</h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+              <p className="text-xs text-gray-500">Total Input</p>
+              <p className="text-lg font-semibold text-gray-900">{tokens(tokenStats.totalInput)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Total Output</p>
+              <p className="text-lg font-semibold text-gray-900">{tokens(tokenStats.totalOutput)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Avg Input/Solve</p>
+              <p className="text-lg font-semibold text-gray-900">{tokens(tokenStats.avgInputPerSolve)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Avg Output/Solve</p>
+              <p className="text-lg font-semibold text-gray-900">{tokens(tokenStats.avgOutputPerSolve)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Avg LLM Calls</p>
+              <p className="text-lg font-semibold text-gray-900">{tokenStats.avgLlmCalls}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Model Cost Comparison ─── */}
+      {modelComparison.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-sm font-semibold text-gray-700 mb-1">Model Cost Comparison</h2>
+          <p className="text-xs text-gray-400 mb-4">Estimated 30d cost using real token volumes with different models</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b">
+                  <th className="pb-2 font-medium">Model</th>
+                  <th className="pb-2 font-medium text-right">Input $/M</th>
+                  <th className="pb-2 font-medium text-right">Output $/M</th>
+                  <th className="pb-2 font-medium text-right">Est. 30d Cost</th>
+                  <th className="pb-2 font-medium text-right">Est. Per Solve</th>
+                  <th className="pb-2 font-medium text-right">Savings</th>
+                </tr>
+              </thead>
+              <tbody>
+                {modelComparison.map((m) => {
+                  const isCurrent = m.model === config.primaryModel;
+                  const savings = costs.last30d > 0 ? ((1 - m.estCost30d / costs.last30d) * 100) : 0;
+                  return (
+                    <tr key={m.model} className={`border-b border-gray-50 ${isCurrent ? 'bg-blue-50' : ''}`}>
+                      <td className="py-2 font-mono text-gray-900">
+                        {m.model}
+                        {isCurrent && <span className="ml-2 text-xs text-blue-600 font-sans">(current)</span>}
+                      </td>
+                      <td className="py-2 text-right text-gray-600">${m.inputPrice}</td>
+                      <td className="py-2 text-right text-gray-600">${m.outputPrice}</td>
+                      <td className="py-2 text-right font-semibold">{usd(m.estCost30d)}</td>
+                      <td className="py-2 text-right text-gray-500">{usd(m.estPerSolve)}</td>
+                      <td className={`py-2 text-right font-medium ${isCurrent ? 'text-gray-400' : savings > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                        {isCurrent ? '-' : `${savings > 0 ? '' : '+'}${Math.abs(savings).toFixed(0)}%`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ─── Config + Accuracy Ring ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -138,10 +218,6 @@ export default function AdminSolver() {
             <div className="flex justify-between">
               <span className="text-gray-500">Daily Limit</span>
               <span className="font-mono text-gray-900">{config.dailyLimit}/agent</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Total Cost</span>
-              <span className="font-mono text-orange-600 font-semibold">{usd(costs.total)}</span>
             </div>
           </div>
         </div>
@@ -243,6 +319,7 @@ export default function AdminSolver() {
                 <th className="pb-2 font-medium">Time</th>
                 <th className="pb-2 font-medium">Challenge</th>
                 <th className="pb-2 font-medium text-right">Answer</th>
+                <th className="pb-2 font-medium text-right">Tokens</th>
                 <th className="pb-2 font-medium text-right">Time</th>
                 <th className="pb-2 font-medium text-right">Status</th>
               </tr>
@@ -255,6 +332,9 @@ export default function AdminSolver() {
                   </td>
                   <td className="py-2 font-mono text-xs text-gray-600 max-w-xs truncate">{r.challenge}</td>
                   <td className="py-2 text-right font-mono font-semibold">{r.answer ?? '-'}</td>
+                  <td className="py-2 text-right text-xs text-gray-400">
+                    {r.inputTokens != null ? `${tokens(r.inputTokens)}/${tokens(r.outputTokens ?? 0)}` : '-'}
+                  </td>
                   <td className="py-2 text-right text-gray-500">{ms(r.solveTimeMs)}</td>
                   <td className="py-2 text-right">
                     {r.rejected ? (
