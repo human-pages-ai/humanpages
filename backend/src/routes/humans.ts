@@ -1113,7 +1113,7 @@ router.get('/featured', async (_req, res) => {
           profilePhotoStatus: true,
         },
         orderBy: { lastActiveAt: 'desc' },
-        take: 50,
+        take: 200,
       });
 
       // Quality filter: require 2+ skills and a real bio (20+ chars, not just a date or junk)
@@ -1124,26 +1124,31 @@ router.get('/featured', async (_req, res) => {
       );
 
       // Pick up to 8 profiles with geographic diversity:
-      // 1. Group by continent, then by country within each continent
-      // 2. Round-robin across continents first (max 3 per continent in first pass)
-      // 3. Fill remaining slots respecting max 2 per country
+      // 1. Group by continent (skip "Other"/unknown), round-robin across continents
+      // 2. Max 2 per continent in first pass to ensure spread
+      // 3. Fill remaining slots, max 2 per country
       const shuffled = quality.sort(() => Math.random() - 0.5);
       const byContinent = new Map<string, typeof quality>();
+      const unknownPool: typeof quality = [];
       for (const h of shuffled) {
         const country = countryFromLocation(h.location ?? '');
         const continent = continentFromCountry(country);
-        if (!byContinent.has(continent)) byContinent.set(continent, []);
-        byContinent.get(continent)!.push(h);
+        if (continent === 'Other' || country === 'Unknown') {
+          unknownPool.push(h);
+        } else {
+          if (!byContinent.has(continent)) byContinent.set(continent, []);
+          byContinent.get(continent)!.push(h);
+        }
       }
       const continentGroups = [...byContinent.entries()].sort(() => Math.random() - 0.5);
       const picked: typeof quality = [];
       const perCountry = new Map<string, number>();
       const perContinent = new Map<string, number>();
       const pickedIds = new Set<string>();
-      const MAX_PER_CONTINENT = 3;
+      const MAX_PER_CONTINENT_FIRST_PASS = 2;
       const MAX_PER_COUNTRY = 2;
 
-      // First pass: round-robin across continents, capped per continent
+      // First pass: round-robin across known continents, max 2 per continent
       let round = 0;
       while (picked.length < 8) {
         let addedAny = false;
@@ -1155,7 +1160,7 @@ router.get('/featured', async (_req, res) => {
           const country = countryFromLocation(h.location ?? '');
           const cc = perCountry.get(country) ?? 0;
           const ct = perContinent.get(continent) ?? 0;
-          if (cc < MAX_PER_COUNTRY && ct < MAX_PER_CONTINENT) {
+          if (cc < MAX_PER_COUNTRY && ct < MAX_PER_CONTINENT_FIRST_PASS) {
             picked.push(h);
             pickedIds.add(h.id);
             perCountry.set(country, cc + 1);
@@ -1167,18 +1172,19 @@ router.get('/featured', async (_req, res) => {
         if (!addedAny) break;
       }
 
-      // Second pass: fill remaining slots if < 8, relaxing continent cap
+      // Second pass: fill remaining from all continents (relaxed cap) + unknown pool
       if (picked.length < 8) {
-        for (const [, group] of continentGroups) {
-          for (const h of group) {
-            if (picked.length >= 8) break;
-            if (pickedIds.has(h.id)) continue;
-            const country = countryFromLocation(h.location ?? '');
-            if ((perCountry.get(country) ?? 0) < MAX_PER_COUNTRY) {
-              picked.push(h);
-              pickedIds.add(h.id);
-              perCountry.set(country, (perCountry.get(country) ?? 0) + 1);
-            }
+        const remaining = [
+          ...continentGroups.flatMap(([, group]) => group),
+          ...unknownPool,
+        ].filter(h => !pickedIds.has(h.id));
+        for (const h of remaining) {
+          if (picked.length >= 8) break;
+          const country = countryFromLocation(h.location ?? '');
+          if ((perCountry.get(country) ?? 0) < MAX_PER_COUNTRY) {
+            picked.push(h);
+            pickedIds.add(h.id);
+            perCountry.set(country, (perCountry.get(country) ?? 0) + 1);
           }
         }
       }
