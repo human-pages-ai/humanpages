@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse } from '../types/admin';
 
 import { safeLocalStorage, safeGetItem, safeSetItem, safeRemoveItem } from './safeStorage';
 // Re-export for backward compatibility (OAuthCallback etc. import from here)
@@ -465,6 +465,15 @@ export const api = {
 
   getSolverStats: () =>
     request<SolverStats>('/admin/solver/stats'),
+
+  getSolverRequests: (params: { filter?: string; page?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.filter) query.set('filter', params.filter);
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    const qs = query.toString();
+    return request<SolverRequestsResponse>(`/admin/solver/requests${qs ? `?${qs}` : ''}`);
+  },
 
   getAdminUsers: (params: { page?: number; limit?: number; search?: string; verified?: string; catchAll?: string; sort?: string; order?: string } = {}) => {
     const query = new URLSearchParams();

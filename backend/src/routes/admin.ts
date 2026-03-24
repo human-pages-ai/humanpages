@@ -2527,4 +2527,57 @@ router.get('/solver/stats', authenticateToken, requireAdmin, async (_req, res) =
   }
 });
 
+// ─── Solver Requests (filterable, paginated) ────────────────────
+
+router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const filter = (req.query.filter as string) ?? 'all'; // all | solved | failed | rejected
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = {};
+    if (filter === 'solved') { where.rejected = false; where.answer = { not: null }; }
+    else if (filter === 'failed') { where.rejected = false; where.answer = null; }
+    else if (filter === 'rejected') { where.rejected = true; }
+
+    const [total, requests] = await Promise.all([
+      prisma.solverRequest.count({ where }),
+      prisma.solverRequest.findMany({
+        where,
+        select: {
+          id: true, agentId: true, challenge: true, answer: true, correct: true,
+          solveTimeMs: true, model: true, inputTokens: true, outputTokens: true,
+          rejected: true, rejectReason: true, createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    // Resolve agent names
+    const agentIds = [...new Set(requests.map(r => r.agentId))];
+    const agents = await prisma.agent.findMany({ where: { id: { in: agentIds } }, select: { id: true, name: true } });
+    const nameMap: Record<string, string> = {};
+    for (const a of agents) nameMap[a.id] = a.name;
+
+    res.json({
+      filter,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      requests: requests.map(r => ({
+        ...r,
+        challenge: r.challenge.slice(0, 200),
+        agentName: nameMap[r.agentId] ?? r.agentId.slice(0, 8),
+      })),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin solver requests error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

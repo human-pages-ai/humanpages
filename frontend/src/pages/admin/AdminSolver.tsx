@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
-import type { SolverStats } from '../../types/admin';
+import type { SolverStats, SolverRequestEntry } from '../../types/admin';
 
 /* ─── Helpers ──────────────────────────────────────────────── */
 
@@ -104,7 +104,7 @@ export default function AdminSolver() {
   if (error) return <div className="text-center py-20 text-red-500">{error}</div>;
   if (!stats) return null;
 
-  const { overview, config, tokens: tokenStats, costs, modelComparison, modelStats, topAgents, dailyVolume, recentRequests } = stats;
+  const { overview, config, tokens: tokenStats, costs, modelComparison, modelStats, topAgents, dailyVolume } = stats;
 
   return (
     <div className="space-y-8">
@@ -309,48 +309,145 @@ export default function AdminSolver() {
         </div>
       </div>
 
-      {/* ─── Recent Requests ─── */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Recent Requests</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-500 border-b">
-                <th className="pb-2 font-medium">Time</th>
-                <th className="pb-2 font-medium">Challenge</th>
-                <th className="pb-2 font-medium text-right">Answer</th>
-                <th className="pb-2 font-medium text-right">Tokens</th>
-                <th className="pb-2 font-medium text-right">Time</th>
-                <th className="pb-2 font-medium text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentRequests.map((r) => (
-                <tr key={r.id} className="border-b border-gray-50">
-                  <td className="py-2 text-gray-500 whitespace-nowrap">
-                    {new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </td>
-                  <td className="py-2 font-mono text-xs text-gray-600 max-w-xs truncate">{r.challenge}</td>
-                  <td className="py-2 text-right font-mono font-semibold">{r.answer ?? '-'}</td>
-                  <td className="py-2 text-right text-xs text-gray-400">
-                    {r.inputTokens != null ? `${tokens(r.inputTokens)}/${tokens(r.outputTokens ?? 0)}` : '-'}
-                  </td>
-                  <td className="py-2 text-right text-gray-500">{ms(r.solveTimeMs)}</td>
-                  <td className="py-2 text-right">
-                    {r.rejected ? (
-                      <span className="text-xs px-2 py-0.5 bg-red-50 text-red-600 rounded-full">{r.rejectReason ?? 'rejected'}</span>
-                    ) : r.answer ? (
-                      <span className="text-xs px-2 py-0.5 bg-green-50 text-green-600 rounded-full">solved</span>
-                    ) : (
-                      <span className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-600 rounded-full">failed</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* ─── Requests Table (filterable) ─── */}
+      <SolverRequestsTable overview={overview} />
+    </div>
+  );
+}
+
+/* ─── Filterable Requests Table ───────────────────────────── */
+
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'solved', label: 'Solved' },
+  { key: 'failed', label: 'Failed' },
+  { key: 'rejected', label: 'Rejected' },
+] as const;
+
+function SolverRequestsTable({ overview }: { overview: SolverStats['overview'] }) {
+  const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [requests, setRequests] = useState<SolverRequestEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const counts: Record<string, number> = {
+    all: overview.totalSolves + overview.rejected,
+    solved: overview.successfulSolves,
+    failed: overview.totalSolves - overview.successfulSolves,
+    rejected: overview.rejected,
+  };
+
+  const load = useCallback(() => {
+    setLoading(true);
+    api.getSolverRequests({ filter, page, limit: 50 })
+      .then((data) => {
+        setRequests(data.requests);
+        setTotal(data.total);
+        setTotalPages(data.totalPages);
+      })
+      .finally(() => setLoading(false));
+  }, [filter, page]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleFilter = (f: string) => { setFilter(f); setPage(1); };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-gray-700">Requests ({fmt(total)})</h2>
+        <div className="flex gap-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => handleFilter(f.key)}
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                filter === f.key
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {f.label} ({fmt(counts[f.key] ?? 0)})
+            </button>
+          ))}
         </div>
       </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-4 text-center">Loading...</p>
+      ) : requests.length === 0 ? (
+        <p className="text-sm text-gray-400 py-4 text-center">No requests</p>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b">
+                  <th className="pb-2 font-medium">Time</th>
+                  <th className="pb-2 font-medium">Agent</th>
+                  <th className="pb-2 font-medium">Challenge</th>
+                  <th className="pb-2 font-medium text-right">Answer</th>
+                  <th className="pb-2 font-medium text-right">Tokens</th>
+                  <th className="pb-2 font-medium text-right">Time</th>
+                  <th className="pb-2 font-medium text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((r) => (
+                  <tr key={r.id} className="border-b border-gray-50">
+                    <td className="py-2 text-gray-500 whitespace-nowrap text-xs">
+                      {new Date(r.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="py-2 text-xs text-gray-700 max-w-[120px] truncate">{r.agentName}</td>
+                    <td className="py-2 font-mono text-xs text-gray-600 max-w-xs truncate">{r.challenge}</td>
+                    <td className="py-2 text-right font-mono font-semibold">{r.answer ?? '-'}</td>
+                    <td className="py-2 text-right text-xs text-gray-400">
+                      {r.inputTokens != null ? `${tokens(r.inputTokens)}/${tokens(r.outputTokens ?? 0)}` : '-'}
+                    </td>
+                    <td className="py-2 text-right text-gray-500">{ms(r.solveTimeMs)}</td>
+                    <td className="py-2 text-right">
+                      {r.rejected ? (
+                        <span className="text-xs px-2 py-0.5 bg-red-50 text-red-600 rounded-full">{r.rejectReason ?? 'rejected'}</span>
+                      ) : r.answer ? (
+                        <span className="text-xs px-2 py-0.5 bg-green-50 text-green-600 rounded-full">
+                          {r.correct === true ? 'correct' : r.correct === false ? 'wrong' : 'solved'}
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-600 rounded-full">failed</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 text-sm">
+              <span className="text-gray-400">Page {page} of {totalPages}</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="px-3 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="px-3 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -128,6 +128,31 @@ export interface SolverStats {
   }[];
 }
 
+export interface SolverRequestEntry {
+  id: number;
+  agentId: string;
+  agentName: string;
+  challenge: string;
+  answer: string | null;
+  correct: boolean | null;
+  solveTimeMs: number;
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  rejected: boolean;
+  rejectReason: string | null;
+  createdAt: string;
+}
+
+export interface SolverRequestsResponse {
+  filter: string;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  requests: SolverRequestEntry[];
+}
+
 export interface AdminUser {
   id: string;
   email: string;
