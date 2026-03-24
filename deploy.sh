@@ -83,7 +83,7 @@ if [ -d /opt/humanpages ]; then
   git pull
   npm ci --include=dev
   npm run build
-  pm2 restart mcp-server 2>/dev/null || pm2 start dist/http.js --name mcp-server
+  sudo systemctl restart humanpages-mcp
   echo "MCP server updated & restarted"
 else
   echo "SKIP: /opt/humanpages not found"
