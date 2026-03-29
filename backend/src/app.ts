@@ -35,7 +35,7 @@ import mcpRemoteRoutes from './routes/mcp-remote.js';
 import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
 import moltbookSolverRoutes from './routes/moltbookSolver.js';
 import solverVerificationRoutes from './routes/solverVerification.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml, fixSpaCanonical } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -639,12 +639,22 @@ app.get('/vouch/:username', (req, res) => {
   res.redirect(302, `/u/${encodeURIComponent(req.params.username)}?vouch=1`);
 });
 
-// SPA catch-all: serve index.html for all non-API routes
+// SPA catch-all: serve index.html with corrected canonical/hreflang for all non-API routes
 app.get('*', (req, res) => {
+  // Detect language prefix
+  const langMatch = req.path.match(/^\/([a-z]{2}(?:-[A-Z]{2})?)(\/|$)/);
+  const lang = langMatch && SUPPORTED_LANGS.includes(langMatch[1]) ? langMatch[1] : undefined;
+
+  // Fix canonical URL and hreflang tags so Google doesn't flag lang variants as duplicates
+  const html = fixSpaCanonical(req.path, lang);
+  if (html) {
+    return res.send(html);
+  }
+
+  // Fallback: serve raw index.html (dev mode or template not found)
   const indexPath = path.join(frontendDistPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      // In development, frontend is served by Vite
       res.status(404).json({ error: 'Frontend not built. Run: cd frontend && npm run build' });
     }
   });

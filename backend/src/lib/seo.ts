@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const SITE_URL = process.env.FRONTEND_URL || 'https://humanpages.ai';
-const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th'];
+const SUPPORTED_LANGS = ['es', 'zh', 'tl', 'hi', 'vi', 'tr', 'th', 'fr', 'pt'];
 const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og/default`;
 const DEFAULT_TITLE = "Human Pages";
 const DEFAULT_DESCRIPTION = 'Get paid for real-world tasks — AI agents hire freelancers for photography, deliveries, research, and more. Zero platform fees.';
@@ -973,6 +973,41 @@ ${platformLinks}
   modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
   modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}${schemaJsonLd}\n  </head>`);
   modifiedHtml = modifiedHtml.replace('</body>', `${crawlerContent}\n  </body>`);
+
+  return modifiedHtml;
+}
+
+/**
+ * Fix canonical URL and add hreflang tags for SPA pages that don't have
+ * dedicated SSR meta injection. Without this, every non-SSR page serves
+ * the default canonical (https://humanpages.ai/) which causes Google to
+ * flag all /:lang/ variants as duplicates.
+ */
+export function fixSpaCanonical(requestPath: string, lang?: string): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  // Strip the lang prefix to get the base path (e.g. /es/signup -> /signup)
+  const basePath = lang && lang !== 'en'
+    ? requestPath.replace(new RegExp(`^/${lang}`), '') || '/'
+    : requestPath;
+
+  const canonicalUrl = lang && lang !== 'en'
+    ? `${SITE_URL}/${lang}${basePath}`
+    : `${SITE_URL}${basePath}`;
+
+  const hreflangTags = buildHreflangTags(basePath);
+
+  let modifiedHtml = html;
+  modifiedHtml = modifiedHtml.replace(
+    /<link rel="canonical"[^>]*>/,
+    `<link rel="canonical" href="${canonicalUrl}" />${hreflangTags}`
+  );
+
+  // Fix the html lang attribute for non-English pages
+  if (lang && lang !== 'en') {
+    modifiedHtml = modifiedHtml.replace(/<html lang="en">/, `<html lang="${lang}">`);
+  }
 
   return modifiedHtml;
 }

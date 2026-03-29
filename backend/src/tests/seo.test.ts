@@ -402,10 +402,12 @@ describe('SEO Endpoints', () => {
     it('should fall through for non-existent listing', async () => {
       const res = await request(app).get('/listings/nonexistent-id-xyz');
 
-      // Should fall through to SPA catch-all (200 with index.html or 404 if not built)
-      // The key is it should NOT return custom meta for a non-existent listing
+      // Should fall through to SPA catch-all (200 with index.html)
+      // The catch-all sets a canonical for the request path, but should NOT
+      // inject listing-specific meta (og:title, JSON-LD JobPosting, etc.)
       if (res.status === 200 && res.headers['content-type']?.includes('text/html')) {
-        expect(res.text).not.toContain('nonexistent-id-xyz');
+        expect(res.text).not.toContain('JobPosting');
+        expect(res.text).not.toContain('og:title" content="Skilled');
       }
     });
   });
