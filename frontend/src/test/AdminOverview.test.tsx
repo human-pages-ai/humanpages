@@ -5,12 +5,36 @@ import AdminOverview from '../pages/admin/AdminOverview';
 
 // ── Mock API ──────────────────────────────────────────────────
 const mockGetAdminStats = vi.fn();
+const mockGetAdminFunnelStats = vi.fn();
 
 vi.mock('../lib/api', () => ({
   api: {
     getAdminStats: () => mockGetAdminStats(),
+    getAdminFunnelStats: () => mockGetAdminFunnelStats(),
   },
 }));
+
+// Mock recharts to avoid ResponsiveContainer dimension issues in jsdom
+vi.mock('recharts', () => {
+  const React = require('react');
+  const passThrough = (name: string) =>
+    React.forwardRef(({ children, ...props }: any, ref: any) =>
+      React.createElement('div', { ...props, ref, 'data-testid': `recharts-${name}` }, children)
+    );
+  return {
+    ResponsiveContainer: passThrough('responsive-container'),
+    ComposedChart: passThrough('composed-chart'),
+    BarChart: passThrough('bar-chart'),
+    Bar: passThrough('bar'),
+    Line: passThrough('line'),
+    XAxis: passThrough('x-axis'),
+    YAxis: passThrough('y-axis'),
+    CartesianGrid: passThrough('cartesian-grid'),
+    Tooltip: passThrough('tooltip'),
+    ReferenceLine: passThrough('reference-line'),
+    Cell: passThrough('cell'),
+  };
+});
 
 vi.mock('../lib/safeStorage', () => {
   const store: Record<string, string> = {};
@@ -32,6 +56,33 @@ vi.mock('../lib/safeStorage', () => {
 });
 
 // ── Fixtures ──────────────────────────────────────────────────
+
+// Generate mock daily series (90 days)
+function mockDaySeries(baseCount = 5) {
+  const days = [];
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({ day: d.toISOString().split('T')[0], count: baseCount + Math.floor(Math.random() * 3) });
+  }
+  return days;
+}
+
+const mockFunnelStats = {
+  funnel: { total_signups: 150, email_verified: 120, profile_basic: 90, with_cv: 60, with_wallet: 40, profile_good: 30 },
+  sourceQuality: [
+    { source: 'telegram_bot', signups: 25, verified: 20, profile_basic: 15, with_cv: 10, with_wallet: 8, profile_good: 5, avg_completeness: 55, avg_active_hours_after_signup: 12 },
+  ],
+  signupMethodsByDay: [{ day: '2026-03-28', email: 5, google: 3, linkedin: 1, whatsapp: 0 }],
+  abandonment: [
+    { stage: 'unverified', count: 30, avg_completeness: 10, avg_days_inactive: 45 },
+    { stage: 'no_profile', count: 20, avg_completeness: 20, avg_days_inactive: 30 },
+  ],
+  velocity: { medianHoursToActive: 2.5, medianHoursToCv: 8.0, avgCompletenessAll: 52, avgCompleteness7d: 60, avgCompleteness30d: 55 },
+  cohortFunnel: [
+    { week: '2026-03-23', signups: 15, verified: 12, profileBasic: 9, withCv: 6, withWallet: 4, profileGood: 3, retained7d: 8, avgCompleteness: 50 },
+  ],
+};
 
 const fullStats = {
   users: { total: 150, verified: 120, last7d: 15, last30d: 45 },
@@ -92,6 +143,25 @@ const fullStats = {
       { location: 'Berlin, Germany', count: 10 },
     ],
   },
+  usage: {
+    dau: 25,
+    wau: 80,
+    mau: 150,
+    dauWauRatio: 31.25,
+    retentionRate: 45,
+    returningUsers: 30,
+    signupsByDay: mockDaySeries(5),
+    activeByDay: mockDaySeries(3),
+    cryptoSignupsByDay: mockDaySeries(1),
+    cvSignupsByDay: mockDaySeries(2),
+    verifiedSignupsByDay: mockDaySeries(4),
+    cumulativeSignups: mockDaySeries(100),
+    jobsByDay: mockDaySeries(2),
+    paidJobsByDay: mockDaySeries(1),
+    paymentVolumeByDay: mockDaySeries(50),
+    applicationsByDay: mockDaySeries(3),
+    agentsByDay: mockDaySeries(0),
+  },
 };
 
 const statsWithoutInsights = {
@@ -108,6 +178,11 @@ const statsWithoutInsights = {
 // ── Tests ─────────────────────────────────────────────────────
 
 afterEach(cleanup);
+
+// Default: funnel stats always resolves (SignupFunnelChart fetches independently)
+beforeEach(() => {
+  mockGetAdminFunnelStats.mockResolvedValue(mockFunnelStats);
+});
 
 describe('AdminOverview', () => {
 
@@ -142,7 +217,8 @@ describe('AdminOverview', () => {
       renderWithProviders(<AdminOverview />);
       await waitFor(() => {
         expect(screen.getByText('Total Users')).toBeInTheDocument();
-        expect(screen.getByText('150')).toBeInTheDocument();
+        // '150' appears in multiple places (users total + MAU), so use getAllByText
+        expect(screen.getAllByText('150').length).toBeGreaterThanOrEqual(1);
       });
     });
 
@@ -543,6 +619,78 @@ describe('AdminOverview', () => {
         const svgs = document.querySelectorAll('svg');
         // 4 ring charts for CV, TG, TG Bot, Available
         expect(svgs.length).toBeGreaterThanOrEqual(4);
+      });
+    });
+  });
+
+  describe('Growth Analytics Chart', () => {
+    beforeEach(() => {
+      mockGetAdminStats.mockResolvedValue(fullStats);
+    });
+
+    it('should render the Growth Analytics section when usage data exists', async () => {
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        expect(screen.getByText('Growth Analytics')).toBeInTheDocument();
+      });
+    });
+
+    it('should render summary stat badges', async () => {
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        // Summary stats include Signups, Avg/Day, etc.
+        expect(screen.getByText('Signups')).toBeInTheDocument();
+      });
+    });
+
+    it('should display view mode buttons', async () => {
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        expect(screen.getByText('Time Series')).toBeInTheDocument();
+        expect(screen.getByText('Conversion Rates')).toBeInTheDocument();
+        expect(screen.getByText('Signup Breakdown')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('User Behavior & Funnel Chart', () => {
+    beforeEach(() => {
+      mockGetAdminStats.mockResolvedValue(fullStats);
+    });
+
+    it('should render the funnel section', async () => {
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        expect(screen.getByText('User Behavior & Funnel')).toBeInTheDocument();
+      });
+    });
+
+    it('should display funnel tabs', async () => {
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        // Some labels may appear in multiple places (tab + section heading)
+        expect(screen.getAllByText('Onboarding Funnel').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Source Quality').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Signup Methods').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Abandonment').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('Weekly Cohorts').length).toBeGreaterThanOrEqual(1);
+      });
+    });
+
+    it('should show velocity KPIs', async () => {
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        // Velocity metrics rendered in header as "Med. to Active" and "Med. to CV"
+        expect(screen.getByText('Med. to Active')).toBeInTheDocument();
+        expect(screen.getByText('Med. to CV')).toBeInTheDocument();
+      });
+    });
+
+    it('should handle funnel API error gracefully', async () => {
+      mockGetAdminFunnelStats.mockRejectedValue(new Error('Funnel error'));
+      renderWithProviders(<AdminOverview />);
+      await waitFor(() => {
+        expect(screen.getByText('Funnel error')).toBeInTheDocument();
       });
     });
   });
