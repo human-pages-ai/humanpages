@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HumanPages — TG Onboarding Flow Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0e0e10;
+    color: #e4e4e7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* ── PHASE NAV ── */
+  .phase-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(14,14,16,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid #27272a;
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; padding: 12px 16px; flex-wrap: wrap;
+  }
+  .phase-pip {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    background: #18181b; color: #71717a; border: 1px solid #27272a;
+    white-space: nowrap;
+  }
+  .phase-pip.active { background: #ea580c; color: #fff; border-color: #ea580c; }
+  .phase-pip.done { background: #166534; color: #86efac; border-color: #166534; }
+  .phase-pip:hover { opacity: 0.85; }
+
+  /* ── PHONE FRAME ── */
+  .phone {
+    margin-top: 80px;
+    width: 375px; min-height: 700px;
+    background: #1a1a2e;
+    border-radius: 32px;
+    border: 3px solid #27272a;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column;
+  }
+
+  /* ── TG HEADER ── */
+  .tg-header {
+    background: #1e1e2e;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #2a2a3a;
+  }
+  .tg-header .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+  }
+  .tg-header .info { flex: 1; }
+  .tg-header .name { font-size: 14px; font-weight: 600; color: #fff; }
+  .tg-header .status { font-size: 11px; color: #71717a; }
+
+  /* ── TG CHAT ── */
+  .tg-chat {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+    background: #0f0f1a;
+  }
+  .msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    animation: msgIn .3s ease-out;
+  }
+  @keyframes msgIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+  .msg.bot {
+    align-self: flex-start;
+    background: #1e293b;
+    color: #e2e8f0;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: #ea580c;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg .label { font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
+  .msg strong { color: #f97316; font-weight: 700; }
+  .msg a { color: #60a5fa; text-decoration: underline; }
+  .msg .emoji { font-size: 18px; }
+
+  /* ── INLINE BUTTONS (TG style) ── */
+  .tg-buttons {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 8px;
+  }
+  .tg-buttons .row { display: flex; gap: 6px; }
+  .tg-btn {
+    flex: 1;
+    padding: 9px 8px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #60a5fa;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+  }
+  .tg-btn:hover { background: #334155; }
+  .tg-btn.selected { background: #ea580c; color: #fff; border-color: #ea580c; }
+
+  /* ── TYPING INDICATOR ── */
+  .typing {
+    align-self: flex-start;
+    display: flex; gap: 4px; padding: 12px 16px;
+  }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%; background: #475569;
+    animation: bounce .6s infinite alternate;
+  }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { to { opacity: .3; transform: translateY(-4px); } }
+
+  /* ── TG INPUT BAR ── */
+  .tg-input-bar {
+    padding: 10px 12px;
+    background: #1e1e2e;
+    border-top: 1px solid #2a2a3a;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tg-input-bar input {
+    flex: 1; padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 14px;
+    outline: none;
+  }
+  .tg-input-bar input:focus { border-color: #ea580c; }
+  .tg-input-bar input::placeholder { color: #475569; }
+  .tg-input-bar button {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #ea580c; border: none;
+    color: #fff; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tg-input-bar button:hover { background: #c2410c; }
+
+  /* ── AD PREVIEW ── */
+  .ad-preview {
+    background: #18181b;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .ad-img {
+    width: 100%; aspect-ratio: 1;
+    background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; text-align: center;
+  }
+  .ad-img .ad-hl { font-size: 20px; font-weight: 800; color: #ea580c; margin-bottom: 10px; }
+  .ad-img .ad-card {
+    background: #fff; border-radius: 10px; padding: 12px; width: 90%; color: #1e293b;
+    font-size: 11px; text-align: left; margin-bottom: 10px;
+  }
+  .ad-img .ad-card .ad-title { font-weight: 700; font-size: 13px; }
+  .ad-img .ad-card .ad-amount { font-size: 22px; font-weight: 800; float: right; margin-top: -20px; }
+  .ad-img .ad-card .ad-badge { display: inline-block; background: #dcfce7; color: #166534; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .ad-img .ad-zero { font-size: 36px; font-weight: 800; color: #10b981; }
+  .ad-img .ad-zero small { font-size: 16px; }
+  .ad-img .ad-cta { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+  .ad-img .ad-logo { font-size: 16px; font-weight: 800; color: #fff; margin-top: 6px; }
+  .ad-img .ad-logo span { color: #ea580c; }
+  .ad-caption { padding: 10px 12px; font-size: 12.5px; line-height: 1.5; color: #a1a1aa; }
+  .ad-caption strong { color: #e4e4e7; }
+
+  /* ── CHANNEL POST LOOK ── */
+  .channel-header {
+    display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid #2a2a3a;
+  }
+  .channel-header .ch-icon {
+    width: 32px; height: 32px; border-radius: 50%; background: #3b82f6;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .channel-header .ch-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .channel-header .ch-sub { font-size: 11px; color: #71717a; }
+  .channel-post-actions {
+    display: flex; gap: 12px; padding: 8px 12px; border-top: 1px solid #2a2a3a;
+  }
+  .channel-post-actions span {
+    font-size: 12px; color: #71717a; cursor: pointer;
+  }
+
+  /* ── WIZARD (web view inside TG) ── */
+  .wizard-screen {
+    flex: 1; display: flex; flex-direction: column;
+    background: #fafaf9;
+    color: #1e293b;
+  }
+  .wiz-header {
+    padding: 16px; background: #fff; border-bottom: 1px solid #e5e7eb;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .wiz-header .back { font-size: 20px; cursor: pointer; color: #64748b; }
+  .wiz-header .wiz-title { font-size: 15px; font-weight: 700; flex: 1; }
+  .wiz-header .step-count { font-size: 12px; color: #94a3b8; font-weight: 600; }
+  .wiz-progress {
+    height: 3px; background: #e5e7eb;
+  }
+  .wiz-progress-fill {
+    height: 100%; background: linear-gradient(90deg, #ea580c, #f97316);
+    transition: width .4s ease;
+  }
+  .wiz-body {
+    flex: 1; padding: 20px 16px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .wiz-body h2 { font-size: 20px; font-weight: 800; color: #0f172a; }
+  .wiz-body p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+  .wiz-upload-zone {
+    border: 2px dashed #cbd5e1; border-radius: 12px; padding: 30px 16px;
+    text-align: center; cursor: pointer; transition: .2s;
+  }
+  .wiz-upload-zone:hover { border-color: #ea580c; background: #fff7ed; }
+  .wiz-upload-zone .icon { font-size: 32px; margin-bottom: 8px; }
+  .wiz-upload-zone .uz-title { font-weight: 700; font-size: 14px; color: #0f172a; }
+  .wiz-upload-zone .uz-sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+  /* skill chips */
+  .skill-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .skill-chip {
+    padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
+    cursor: pointer; transition: .15s;
+  }
+  .skill-chip:hover { border-color: #f97316; }
+  .skill-chip.on { background: #ea580c; color: #fff; border-color: #ea580c; }
+
+  /* form fields */
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+  .field-group input, .field-group select, .field-group textarea {
+    padding: 10px 12px; border-radius: 10px; border: 1.5px solid #e2e8f0;
+    font-size: 14px; color: #0f172a; background: #fff; outline: none; font-family: inherit;
+  }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+    border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234,88,12,.12);
+  }
+  .field-group textarea { resize: none; min-height: 70px; }
+  .prefilled { background: #f0fdf4 !important; border-color: #86efac !important; }
+  .prefilled-badge {
+    display: inline-block; font-size: 10px; background: #dcfce7; color: #166534;
+    padding: 2px 8px; border-radius: 8px; font-weight: 600; margin-left: 6px;
+  }
+
+  /* payment chips */
+  .pay-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff;
+    cursor: pointer; transition: .15s;
+  }
+  .pay-chip:hover { border-color: #f97316; }
+  .pay-chip.on { border-color: #ea580c; background: #fff7ed; }
+  .pay-chip .pay-icon { font-size: 22px; }
+  .pay-chip .pay-label { font-size: 13px; font-weight: 600; color: #0f172a; }
+  .pay-chip .pay-desc { font-size: 11px; color: #94a3b8; }
+
+  /* availability */
+  .hour-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .hour-opt {
+    padding: 12px 8px; border-radius: 10px; border: 1.5px solid #e2e8f0;
+    text-align: center; cursor: pointer; background: #fff; transition: .15s;
+  }
+  .hour-opt:hover { border-color: #f97316; }
+  .hour-opt.on { background: #ea580c; border-color: #ea580c; color: #fff; }
+  .hour-opt .hr-num { font-size: 18px; font-weight: 800; }
+  .hour-opt .hr-label { font-size: 11px; color: #94a3b8; }
+  .hour-opt.on .hr-label { color: rgba(255,255,255,.8); }
+
+  /* primary btn */
+  .wiz-next {
+    padding: 14px; border-radius: 12px; border: none;
+    background: #ea580c; color: #fff;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; width: 100%;
+    box-shadow: 0 4px 12px rgba(234,88,12,.3);
+    transition: .15s;
+  }
+  .wiz-next:hover { background: #c2410c; }
+  .wiz-skip {
+    padding: 10px; border: none; background: none;
+    color: #94a3b8; font-size: 13px; cursor: pointer;
+    text-align: center; width: 100%;
+  }
+  .wiz-skip:hover { color: #64748b; }
+
+  /* ── SUCCESS SCREEN ── */
+  .success-screen {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #0f172a, #1a1a2e);
+    padding: 30px; text-align: center;
+  }
+  .success-screen .check {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: #fff; margin-bottom: 20px;
+    animation: popIn .4s cubic-bezier(.17,.67,.35,1.3);
+  }
+  @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+  .success-screen h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  .success-screen p { font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 20px; }
+  .profile-card {
+    background: #1e293b; border-radius: 16px; padding: 20px; width: 100%; text-align: left;
+  }
+  .profile-card .pc-top { display: flex; gap: 12px; margin-bottom: 12px; }
+  .profile-card .pc-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 800; color: #fff;
+  }
+  .profile-card .pc-name { font-size: 15px; font-weight: 700; color: #fff; }
+  .profile-card .pc-user { font-size: 12px; color: #94a3b8; }
+  .profile-card .pc-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .profile-card .pc-skill {
+    padding: 4px 10px; border-radius: 12px; font-size: 11px;
+    background: rgba(234,88,12,.15); color: #fb923c; font-weight: 600;
+  }
+  .profile-card .pc-stat {
+    display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid #334155;
+  }
+  .profile-card .pc-stat div { text-align: center; }
+  .profile-card .pc-stat .num { font-size: 16px; font-weight: 800; color: #10b981; }
+  .profile-card .pc-stat .lbl { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+  /* Processing animation */
+  .parsing-anim {
+    display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid #e2e8f0; border-top-color: #ea580c;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .parse-steps { width: 100%; }
+  .parse-step {
+    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    font-size: 12px; color: #94a3b8;
+  }
+  .parse-step.done { color: #10b981; }
+  .parse-step .ps-icon { width: 18px; text-align: center; }
+
+  /* ── BOTTOM CAPTION ── */
+  .demo-caption {
+    padding: 24px 16px; text-align: center; font-size: 11px; color: #52525b; max-width: 375px;
+    margin-bottom: 40px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- PHASE NAV -->
+<div class="phase-bar" id="phaseBar">
+  <div class="phase-pip active" data-phase="0" onclick="goPhase(0)">1. See Ad</div>
+  <div class="phase-pip" data-phase="1" onclick="goPhase(1)">2. Open Bot</div>
+  <div class="phase-pip" data-phase="2" onclick="goPhase(2)">3. Upload CV</div>
+  <div class="phase-pip" data-phase="3" onclick="goPhase(3)">4. Skills</div>
+  <div class="phase-pip" data-phase="4" onclick="goPhase(4)">5. Profile</div>
+  <div class="phase-pip" data-phase="5" onclick="goPhase(5)">6. Payment</div>
+  <div class="phase-pip" data-phase="6" onclick="goPhase(6)">7. Availability</div>
+  <div class="phase-pip" data-phase="7" onclick="goPhase(7)">8. Done!</div>
+</div>
+
+<!-- PHONE FRAME -->
+<div class="phone" id="phone">
+
+  <!-- ════ PHASE 0: TG CHANNEL AD ════ -->
+  <div class="screen" id="phase0">
+    <div class="channel-header">
+      <div class="ch-icon">💰</div>
+      <div>
+        <div class="ch-name">CryptoJobs Global</div>
+        <div class="ch-sub">48,200 subscribers</div>
+      </div>
+    </div>
+    <div class="tg-chat" style="gap:0">
+      <div class="ad-preview">
+        <div class="ad-img">
+          <div class="ad-hl">@Thimmy95 got paid<br>by an AI agent.</div>
+          <div class="ad-card">
+            <div class="ad-title">Digital marketing job</div>
+            <div class="ad-badge">COMPLETED</div>
+            <div class="ad-amount">$117.5</div>
+            <div style="margin-top:8px;font-size:10px;color:#64748b">
+              Human: @Thimmy95 &nbsp;·&nbsp; AI Agent: <span style="color:#ea580c;font-weight:700">Marketing Bot</span>
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:#64748b;background:#f0fdf4;padding:4px 8px;border-radius:6px;text-align:center">
+              Paid in <b style="color:#166534">2 minutes</b> — zero platform fees
+            </div>
+          </div>
+          <div class="ad-zero">0% <small>commission</small></div>
+          <div class="ad-cta">List your skills. Get matched. Get paid by AI.</div>
+          <div class="ad-logo">human<span>pages</span>.ai</div>
+        </div>
+        <div class="ad-caption">
+          <strong>AI agents are already hiring — and paying.</strong><br><br>
+          @Thimmy95 just got paid $117.5 in USDC on Base. Instantly. Zero platform fees.<br><br>
+          Fiverr takes 20%. Upwork takes 10-20%. HumanPages takes <strong>0%</strong>.<br><br>
+          List your skills. Get matched. Get paid.<br>
+          👇 Tap to start 👇
+        </div>
+      </div>
+      <div style="padding: 0 10px 10px">
+        <div class="tg-buttons">
+          <div class="row">
+            <div class="tg-btn" onclick="goPhase(1)" style="background:#ea580c;color:#fff;border-color:#ea580c;font-size:14px;padding:12px">
+              🚀 Start earning — open bot
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 1: BOT CONVERSATION ════ -->
+  <div class="screen hidden" id="phase1">
+    <div class="tg-header">
+      <div class="avatar">H</div>
+      <div class="info">
+        <div class="name">HumanPages Bot</div>
+        <div class="status">bot</div>
+      </div>
+    </div>
+    <div class="tg-chat" id="botChat"></div>
+    <div class="tg-input-bar">
+      <input type="text" id="botInput" placeholder="Message..." disabled>
+      <button onclick="sendBotMsg()">▶</button>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 2: CV UPLOAD ════ -->
+  <div class="screen hidden" id="phase2">
+    <div class="wizard-screen">
+      <div class="wiz-header">
+        <span class="back" onclick="goPhase(1)">‹</span>
+        <span class="wiz-title">📄 Upload Your CV</span>
+        <span class="step-count">Step 1/6</span>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" style="width:16%"></div></div>
+      <div class="wiz-body">
+        <h2>Got a CV? Let's speed this up.</h2>
+        <p>Upload your CV and we'll auto-fill your skills, experience, and education. You can review and edit everything after.</p>
+        <div class="wiz-upload-zone" id="uploadZone" onclick="simulateUpload()">
+          <div class="icon">📎</div>
+          <div class="uz-title">Tap to upload PDF or DOCX</div>
+          <div class="uz-sub">Max 5 MB</div>
+        </div>
+        <div class="parsing-anim hidden" id="parsingAnim">
+          <div class="spinner"></div>
+          <div style="font-size:13px;font-weight:600;color:#0f172a">Analyzing your CV...</div>
+          <div class="parse-steps" id="parseSteps">
+            <div class="parse-step" id="ps1"><span class="ps-icon">⏳</span> Uploading file...</div>
+            <div class="parse-step" id="ps2"><span class="ps-icon">⏳</span> Extracting text & structure...</div>
+            <div class="parse-step" id="ps3"><span class="ps-icon">⏳</span> Identifying skills...</div>
+            <div class="parse-step" id="ps4"><span class="ps-icon">⏳</span> Parsing education & experience...</div>
+            <div class="parse-step" id="ps5"><span class="ps-icon">⏳</span> Building your profile...</div>
+          </div>
+        </div>
+        <div id="cvSuccess" class="hidden" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">✅</div>
+          <div style="font-size:14px;font-weight:700;color:#166534">CV parsed successfully!</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px">Found 8 skills, 2 jobs, 1 degree</div>
+        </div>
+        <button class="wiz-next hidden" id="cvNext" onclick="goPhase(3)">Continue →</button>
+        <button class="wiz-skip" onclick="goPhase(3)">Skip — I'll fill in manually</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 3: SKILLS ════ -->
+  <div class="screen hidden" id="phase3">
+    <div class="wizard-screen">
+      <div class="wiz-header">
+        <span class="back" onclick="goPhase(2)">‹</span>
+        <span class="wiz-title">⚡ Your Skills</span>
+        <span class="step-count">Step 2/6</span>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" style="width:33%"></div></div>
+      <div class="wiz-body">
+        <h2>What can you do?</h2>
+        <p>Select all skills you can offer. AI agents will match with you based on these.</p>
+        <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:-8px">
+          FROM YOUR CV <span class="prefilled-badge">Auto-filled</span>
+        </div>
+        <div class="skill-grid" id="cvSkills">
+          <div class="skill-chip on">Content Writing</div>
+          <div class="skill-chip on">Social Media</div>
+          <div class="skill-chip on">SEO</div>
+          <div class="skill-chip on">Copywriting</div>
+          <div class="skill-chip on">Email Marketing</div>
+          <div class="skill-chip on">Google Analytics</div>
+          <div class="skill-chip on">WordPress</div>
+          <div class="skill-chip on">Canva</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#64748b;margin-top:4px">POPULAR SKILLS</div>
+        <div class="skill-grid">
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Virtual Assistant</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Graphic Design</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Video Editing</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Translation</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Data Entry</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Web Dev</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Customer Support</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Tutoring</div>
+        </div>
+        <button class="wiz-next" onclick="goPhase(4)">Continue with 8 skills →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 4: PROFILE ════ -->
+  <div class="screen hidden" id="phase4">
+    <div class="wizard-screen">
+      <div class="wiz-header">
+        <span class="back" onclick="goPhase(3)">‹</span>
+        <span class="wiz-title">👤 Your Profile</span>
+        <span class="step-count">Step 3/6</span>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" style="width:50%"></div></div>
+      <div class="wiz-body">
+        <h2>Tell AI agents about yourself</h2>
+        <p>This info helps agents decide to hire you. Your full name is never shown publicly.</p>
+        <div class="field-group">
+          <label>Full Name <span class="prefilled-badge">From CV</span></label>
+          <input type="text" value="Adewale Ogundimu" class="prefilled">
+        </div>
+        <div class="field-group">
+          <label>Username</label>
+          <input type="text" value="@adewale_digital" placeholder="@your_username">
+          <div style="font-size:11px;color:#10b981">✓ Available</div>
+        </div>
+        <div class="field-group">
+          <label>Bio (max 500 chars)</label>
+          <textarea class="prefilled" rows="3">Digital marketer with 4+ years of experience in content strategy, SEO, and social media management. Based in Lagos. I deliver quality work fast.</textarea>
+        </div>
+        <div class="field-group">
+          <label>Location <span class="prefilled-badge">From CV</span></label>
+          <input type="text" value="Lagos, Nigeria" class="prefilled">
+        </div>
+        <div class="field-group">
+          <label>Languages</label>
+          <div class="skill-grid">
+            <div class="skill-chip on" style="font-size:12px">English (Fluent)</div>
+            <div class="skill-chip on" style="font-size:12px">Yoruba (Native)</div>
+            <div class="skill-chip" style="font-size:12px" onclick="this.classList.toggle('on')">+ Add</div>
+          </div>
+        </div>
+        <button class="wiz-next" onclick="goPhase(5)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 5: PAYMENT ════ -->
+  <div class="screen hidden" id="phase5">
+    <div class="wizard-screen">
+      <div class="wiz-header">
+        <span class="back" onclick="goPhase(4)">‹</span>
+        <span class="wiz-title">💰 Get Paid</span>
+        <span class="step-count">Step 4/6</span>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" style="width:67%"></div></div>
+      <div class="wiz-body">
+        <h2>How do you want to get paid?</h2>
+        <p>AI agents pay in USDC on Base chain. Connect a wallet to receive instant payments with 0% fees.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="pay-chip on" onclick="selectPay(this)">
+            <div class="pay-icon">🔵</div>
+            <div>
+              <div class="pay-label">USDC on Base (Recommended)</div>
+              <div class="pay-desc">Instant settlement · 0 gas fees · Global</div>
+            </div>
+          </div>
+          <div class="pay-chip" onclick="selectPay(this)">
+            <div class="pay-icon">🟣</div>
+            <div>
+              <div class="pay-label">Any EVM Wallet</div>
+              <div class="pay-desc">MetaMask, Rainbow, Coinbase Wallet</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:14px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px">
+          <div style="font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px">💡 Don't have a wallet?</div>
+          <div style="font-size:12px;color:#64748b">We'll create one for you automatically — no crypto knowledge needed. You can cash out to your bank via any exchange or P2P.</div>
+        </div>
+        <div class="field-group" style="margin-top:4px">
+          <label>Your Rate</label>
+          <div style="display:flex;gap:8px">
+            <input type="number" value="15" style="width:80px;text-align:center" placeholder="$">
+            <select style="flex:1">
+              <option>per hour</option>
+              <option>per task</option>
+              <option>per word</option>
+              <option>negotiable</option>
+            </select>
+          </div>
+        </div>
+        <button class="wiz-next" onclick="goPhase(6)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 6: AVAILABILITY ════ -->
+  <div class="screen hidden" id="phase6">
+    <div class="wizard-screen">
+      <div class="wiz-header">
+        <span class="back" onclick="goPhase(5)">‹</span>
+        <span class="wiz-title">📅 Availability</span>
+        <span class="step-count">Step 5/6</span>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" style="width:83%"></div></div>
+      <div class="wiz-body">
+        <h2>How much can you work?</h2>
+        <p>AI agents use this to match you with the right jobs.</p>
+        <div class="hour-grid">
+          <div class="hour-opt" onclick="selectHour(this)">
+            <div class="hr-num">5</div>
+            <div class="hr-label">hrs/week</div>
+          </div>
+          <div class="hour-opt" onclick="selectHour(this)">
+            <div class="hr-num">10</div>
+            <div class="hr-label">hrs/week</div>
+          </div>
+          <div class="hour-opt on" onclick="selectHour(this)">
+            <div class="hr-num">20</div>
+            <div class="hr-label">hrs/week</div>
+          </div>
+          <div class="hour-opt" onclick="selectHour(this)">
+            <div class="hr-num">30</div>
+            <div class="hr-label">hrs/week</div>
+          </div>
+          <div class="hour-opt" onclick="selectHour(this)">
+            <div class="hr-num">40+</div>
+            <div class="hr-label">hrs/week</div>
+          </div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#64748b;margin-top:8px">Work type</div>
+        <div class="skill-grid">
+          <div class="skill-chip on" onclick="this.classList.toggle('on')">💻 Digital</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">📍 Physical</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Both</div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#64748b;margin-top:8px">Work mode</div>
+        <div class="skill-grid">
+          <div class="skill-chip on" onclick="this.classList.toggle('on')">🌍 Remote</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">🏢 On-site</div>
+          <div class="skill-chip" onclick="this.classList.toggle('on')">Hybrid</div>
+        </div>
+        <button class="wiz-next" onclick="goPhase(7)">Complete Profile →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE 7: SUCCESS ════ -->
+  <div class="screen hidden" id="phase7">
+    <div class="success-screen">
+      <div class="check">✓</div>
+      <h2>You're live! 🎉</h2>
+      <p>AI agents can now find and hire you. We'll notify you on Telegram when there's a match.</p>
+      <div class="profile-card">
+        <div class="pc-top">
+          <div class="pc-avatar">A</div>
+          <div>
+            <div class="pc-name">Adewale O.</div>
+            <div class="pc-user">@adewale_digital · Lagos, Nigeria</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.4">Digital marketer with 4+ years of experience in content strategy, SEO, and social media management.</div>
+        <div class="pc-skills">
+          <div class="pc-skill">Content Writing</div>
+          <div class="pc-skill">SEO</div>
+          <div class="pc-skill">Social Media</div>
+          <div class="pc-skill">Copywriting</div>
+          <div class="pc-skill">+4 more</div>
+        </div>
+        <div class="pc-stat">
+          <div><div class="num">$15</div><div class="lbl">per hour</div></div>
+          <div><div class="num">20h</div><div class="lbl">per week</div></div>
+          <div><div class="num">0%</div><div class="lbl">commission</div></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px;background:#1e293b;border-radius:12px;width:100%;text-align:left">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">🔔 You'll get a message like this:</div>
+        <div style="background:#0f172a;border-radius:10px;padding:10px;font-size:12px;color:#e2e8f0;line-height:1.5">
+          <strong style="color:#f97316">📋 New Job Match!</strong><br>
+          <strong>Content Strategy for DeFi Protocol</strong><br>
+          Budget: $200 USDC · Remote<br>
+          <span style="color:#60a5fa;text-decoration:underline">View & Accept →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="demo-caption">
+  Interactive prototype — HumanPages TG Bot Onboarding Flow<br>
+  Tap the phase pills above or buttons to navigate
+</div>
+
+<script>
+let currentPhase = 0;
+
+function goPhase(n) {
+  // hide all
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('phase'+n).classList.remove('hidden');
+
+  // update pills
+  document.querySelectorAll('.phase-pip').forEach((p, i) => {
+    p.classList.remove('active','done');
+    if (i < n) p.classList.add('done');
+    if (i === n) p.classList.add('active');
+  });
+
+  currentPhase = n;
+
+  // trigger bot conversation on phase 1
+  if (n === 1 && !window.botStarted) {
+    window.botStarted = true;
+    startBotConvo();
+  }
+}
+
+// ── BOT CONVERSATION ──
+const botScript = [
+  { type:'bot', delay:600, html:`<div class="emoji">👋</div><br><strong>Welcome to HumanPages!</strong><br><br>AI agents are hiring real people for real tasks — and paying instantly in USDC.<br><br>Let's get you set up in <strong>under 2 minutes</strong>.` },
+  { type:'bot', delay:1500, html:`First, what's your <strong>Telegram username</strong>? This is how we'll notify you about job matches.`, input:true, placeholder:'@your_username' },
+  { type:'user', delay:0, text:'@adewale_digital' },
+  { type:'bot', delay:800, html:`Got it! ✅ <strong>@adewale_digital</strong> linked.<br><br>Now let's build your profile. I'll open a quick wizard — it takes about 90 seconds.`, buttons:[{text:'📄 Upload CV (fastest)', action:()=>goPhase(2)},{text:'✍️ Fill in manually', action:()=>goPhase(3)}] },
+];
+
+let botStep = 0;
+const chatEl = () => document.getElementById('botChat');
+const inputEl = () => document.getElementById('botInput');
+
+function startBotConvo() {
+  botStep = 0;
+  chatEl().innerHTML = '';
+  playNext();
+}
+
+function playNext() {
+  if (botStep >= botScript.length) return;
+  const step = botScript[botStep];
+
+  if (step.type === 'bot') {
+    // show typing
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chatEl().appendChild(typing);
+    chatEl().scrollTop = chatEl().scrollHeight;
+
+    setTimeout(() => {
+      typing.remove();
+      const msg = document.createElement('div');
+      msg.className = 'msg bot';
+      msg.innerHTML = step.html;
+
+      if (step.buttons) {
+        const btns = document.createElement('div');
+        btns.className = 'tg-buttons';
+        step.buttons.forEach(b => {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const btn = document.createElement('div');
+          btn.className = 'tg-btn';
+          btn.textContent = b.text;
+          btn.onclick = b.action;
+          row.appendChild(btn);
+          btns.appendChild(row);
+        });
+        msg.appendChild(btns);
+      }
+
+      chatEl().appendChild(msg);
+      chatEl().scrollTop = chatEl().scrollHeight;
+
+      if (step.input) {
+        inputEl().disabled = false;
+        inputEl().placeholder = step.placeholder || 'Message...';
+        inputEl().focus();
+      }
+
+      botStep++;
+      if (!step.input && !step.buttons) {
+        setTimeout(playNext, 800);
+      }
+    }, step.delay);
+  } else if (step.type === 'user') {
+    const msg = document.createElement('div');
+    msg.className = 'msg user';
+    msg.textContent = step.text;
+    chatEl().appendChild(msg);
+    chatEl().scrollTop = chatEl().scrollHeight;
+    inputEl().value = '';
+    inputEl().disabled = true;
+    botStep++;
+    setTimeout(playNext, 400);
+  }
+}
+
+function sendBotMsg() {
+  const val = inputEl().value.trim();
+  if (!val) return;
+  // override the next user step text
+  if (botScript[botStep] && botScript[botStep].type === 'user') {
+    botScript[botStep].text = val;
+  }
+  playNext();
+}
+
+// Enter key
+document.getElementById('botInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendBotMsg();
+});
+
+// ── CV UPLOAD SIMULATION ──
+function simulateUpload() {
+  document.getElementById('uploadZone').classList.add('hidden');
+  document.getElementById('parsingAnim').classList.remove('hidden');
+
+  const steps = ['ps1','ps2','ps3','ps4','ps5'];
+  steps.forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      el.classList.add('done');
+      el.querySelector('.ps-icon').textContent = '✅';
+      if (i === steps.length - 1) {
+        setTimeout(() => {
+          document.getElementById('parsingAnim').classList.add('hidden');
+          document.getElementById('cvSuccess').classList.remove('hidden');
+          document.getElementById('cvNext').classList.remove('hidden');
+        }, 600);
+      }
+    }, (i+1) * 900);
+  });
+}
+
+// ── HELPERS ──
+function selectPay(el) {
+  el.parentElement.querySelectorAll('.pay-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+function selectHour(el) {
+  el.parentElement.querySelectorAll('.hour-opt').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human Pages — MCP for Human Intelligence</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Mono', monospace, sans-serif; color: #1a1a2e; line-height: 1.6; }
+
+  /* NAV */
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 48px; border-bottom: 1px solid #eee; background: #fff; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 22px; font-weight: 700; color: #1a1a2e; text-decoration: none; }
+  .logo span { color: #2563eb; }
+  .nav-links { display: flex; gap: 32px; align-items: center; }
+  .nav-links a { text-decoration: none; color: #555; font-size: 15px; font-weight: 500; }
+  .nav-cta { background: #16a34a; color: #fff !important; padding: 10px 24px; border-radius: 8px; font-weight: 600; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 80px 48px 72px; }
+  .hero-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .hero-badge { display: inline-block; background: rgba(37, 99, 235, 0.2); color: #60a5fa; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 24px; border: 1px solid rgba(96, 165, 250, 0.3); }
+  .hero h1 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
+  .hero h1 .accent { color: #60a5fa; }
+  .hero .subhead { font-size: 18px; color: #94a3b8; margin-bottom: 32px; line-height: 1.7; }
+  .hero-ctas { display: flex; gap: 16px; align-items: center; }
+  .btn-green { background: #16a34a; color: #fff; padding: 14px 32px; border-radius: 10px; font-size: 17px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; }
+  .btn-green:hover { background: #15803d; }
+  .btn-ghost { color: #94a3b8; padding: 14px 24px; font-size: 16px; font-weight: 600; text-decoration: none; }
+  .btn-ghost:hover { color: #fff; }
+
+  /* Terminal mockup */
+  .terminal { background: #0d1117; border-radius: 12px; border: 1px solid #30363d; overflow: hidden; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .terminal-header { background: #161b22; padding: 10px 16px; display: flex; gap: 8px; }
+  .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .terminal-dot.red { background: #ff5f57; }
+  .terminal-dot.yellow { background: #febc2e; }
+  .terminal-dot.green { background: #28c840; }
+  .terminal-body { padding: 20px; font-size: 13px; line-height: 1.8; }
+  .terminal-body .comment { color: #8b949e; }
+  .terminal-body .keyword { color: #ff7b72; }
+  .terminal-body .func { color: #d2a8ff; }
+  .terminal-body .string { color: #a5d6ff; }
+  .terminal-body .prop { color: #79c0ff; }
+  .terminal-body .num { color: #79c0ff; }
+  .terminal-body .result { color: #3fb950; }
+  .terminal-body .dim { color: #484f58; }
+
+  /* PAIN SECTION */
+  .pain { padding: 80px 48px; background: #fff; }
+  .pain-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+  .pain h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+  .pain .pain-sub { color: #666; font-size: 18px; margin-bottom: 48px; }
+  .pain-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: left; }
+  .pain-item { display: flex; gap: 14px; padding: 20px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; }
+  .pain-x { color: #ef4444; font-size: 20px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .pain-item p { color: #7f1d1d; font-size: 15px; font-weight: 500; }
+
+  /* SOLUTION */
+  .solution { padding: 80px 48px; background: #f0fdf4; }
+  .solution-inner { max-width: 1000px; margin: 0 auto; }
+  .solution h2 { font-size: 36px; font-weight: 800; text-align: center; margin-bottom: 16px; }
+  .solution .sol-sub { text-align: center; color: #666; font-size: 18px; margin-bottom: 48px; }
+  .outcome-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .outcome-card { background: #fff; border-radius: 12px; padding: 28px; border: 1px solid #dcfce7; }
+  .outcome-card .instead { color: #888; font-size: 13px; text-decoration: line-through; margin-bottom: 12px; }
+  .outcome-card h3 { font-size: 16px; font-weight: 700; color: #15803d; margin-bottom: 8px; }
+  .outcome-card .detail { color: #666; font-size: 14px; margin-bottom: 12px; }
+  .outcome-card .price-tag { display: inline-block; background: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: 700; border: 1px solid #bbf7d0; }
+  .check-icon { color: #16a34a; font-size: 22px; margin-bottom: 12px; }
+
+  /* HOW */
+  .how { padding: 80px 48px; }
+  .how-inner { max-width: 800px; margin: 0 auto; }
+  .how h2 { font-size: 36px; font-weight: 800; text-align: center; margin-bottom: 56px; }
+  .how-steps { display: flex; flex-direction: column; gap: 32px; }
+  .how-step { display: flex; gap: 24px; align-items: flex-start; }
+  .how-num { width: 44px; height: 44px; background: #2563eb; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+  .how-step h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .how-step p { color: #666; font-size: 15px; }
+  .how-step .tools { color: #2563eb; font-size: 13px; font-weight: 600; margin-top: 4px; }
+
+  /* PRICING */
+  .pricing { background: #f8fafc; padding: 80px 48px; }
+  .pricing-inner { max-width: 800px; margin: 0 auto; text-align: center; }
+  .pricing h2 { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+  .pricing .pricing-sub { color: #666; font-size: 18px; margin-bottom: 48px; }
+  .pricing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 600px; margin: 0 auto; }
+  .pricing-card { background: #fff; border-radius: 12px; padding: 32px; border: 1px solid #e5e7eb; text-align: left; }
+  .pricing-card.featured { border: 2px solid #2563eb; position: relative; }
+  .pricing-card .plan-name { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .pricing-card .plan-price { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+  .pricing-card .plan-price span { font-size: 16px; color: #888; font-weight: 500; }
+  .pricing-card .plan-note { font-size: 14px; color: #888; margin-bottom: 20px; }
+  .pricing-card ul { list-style: none; }
+  .pricing-card li { padding: 6px 0; font-size: 15px; color: #555; }
+  .pricing-card li::before { content: "✓ "; color: #16a34a; font-weight: 700; }
+  .featured-badge { position: absolute; top: -12px; right: 20px; background: #2563eb; color: #fff; padding: 4px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+  .pay-per-use { margin-top: 32px; padding: 20px; background: #fffbeb; border-radius: 10px; border: 1px solid #fde68a; text-align: center; }
+  .pay-per-use p { font-size: 15px; color: #92400e; }
+  .pay-per-use strong { color: #78350f; }
+
+  /* PROMO */
+  .promo { padding: 80px 48px; text-align: center; }
+  .promo-inner { max-width: 600px; margin: 0 auto; }
+  .promo h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+  .promo p { color: #666; font-size: 18px; margin-bottom: 32px; }
+  .promo-badge { display: inline-block; background: #fef2f2; color: #dc2626; padding: 8px 20px; border-radius: 8px; font-size: 15px; font-weight: 700; margin-bottom: 12px; border: 1px solid #fecaca; }
+  .promo .fine { color: #888; font-size: 14px; margin-top: 12px; }
+
+  /* BOTTOM CTA */
+  .bottom-cta { background: #0f172a; color: #fff; padding: 80px 48px; text-align: center; }
+  .bottom-cta h2 { font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+  .bottom-cta p { color: #94a3b8; font-size: 18px; margin-bottom: 32px; }
+
+  /* FOOTER */
+  footer { padding: 32px 48px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; color: #888; font-size: 14px; }
+  footer a { color: #666; text-decoration: none; margin-left: 24px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">human<span>pages</span>.ai</a>
+  <div class="nav-links">
+    <a href="#">Developers</a>
+    <a href="#">Pricing</a>
+    <a href="#">API Docs</a>
+    <a href="#" class="nav-cta">Install the MCP</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="hero-badge">MCP for human intelligence</span>
+      <h1>Your AI agent just hit a wall.<br><span class="accent">A human can finish the job.</span></h1>
+      <p class="subhead">When your agent needs QA testing, directory submissions, content review, or anything that requires human judgment — it hires a verified freelancer through one MCP call.</p>
+      <div class="hero-ctas">
+        <a href="#" class="btn-green">Install the MCP</a>
+        <a href="#" class="btn-ghost">See API docs →</a>
+      </div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="comment">// Your agent runs this:</span></div>
+        <div><span class="keyword">const</span> humans = <span class="keyword">await</span> <span class="func">mcp</span>.<span class="prop">search_humans</span>({</div>
+        <div>&nbsp;&nbsp;<span class="prop">skill</span>: <span class="string">"directory-submission"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="prop">budget</span>: { <span class="prop">max</span>: <span class="num">15</span>, <span class="prop">currency</span>: <span class="string">"USD"</span> }</div>
+        <div>});</div>
+        <br>
+        <div><span class="result">✓ 12 matching freelancers found in 1.2s</span></div>
+        <br>
+        <div><span class="keyword">const</span> job = <span class="keyword">await</span> <span class="func">mcp</span>.<span class="prop">create_job_offer</span>({</div>
+        <div>&nbsp;&nbsp;<span class="prop">human_id</span>: humans[<span class="num">0</span>].<span class="prop">id</span>,</div>
+        <div>&nbsp;&nbsp;<span class="prop">task</span>: <span class="string">"Submit to 80+ directories"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="prop">price</span>: <span class="num">10</span></div>
+        <div>});</div>
+        <br>
+        <div><span class="result">✓ Job offer sent. Human accepted.</span></div>
+        <div><span class="result">✓ Deliverable ready in 2 days.</span></div>
+        <div><span class="dim">// You approve. That's it.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAIN -->
+<section class="pain">
+  <div class="pain-inner">
+    <h2>Your agent is powerful. But it can't...</h2>
+    <p class="pain-sub">Some tasks need a human. You end up doing them yourself. Or they don't get done.</p>
+    <div class="pain-list">
+      <div class="pain-item">
+        <span class="pain-x">✗</span>
+        <p>Submit to 80+ directories that require CAPTCHAs, manual forms, and email confirmations</p>
+      </div>
+      <div class="pain-item">
+        <span class="pain-x">✗</span>
+        <p>Test your app on real devices across iOS, Android, and 3 different screen sizes</p>
+      </div>
+      <div class="pain-item">
+        <span class="pain-x">✗</span>
+        <p>Write social media posts that don't sound like they were written by a robot</p>
+      </div>
+      <div class="pain-item">
+        <span class="pain-x">✗</span>
+        <p>Verify that a real-world location, product, or storefront actually matches your database</p>
+      </div>
+      <div class="pain-item">
+        <span class="pain-x">✗</span>
+        <p>Moderate a community with the empathy and judgment only a human has</p>
+      </div>
+      <div class="pain-item">
+        <span class="pain-x">✗</span>
+        <p>Review translations for cultural nuance — not just grammar, but whether it feels right</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="solution">
+  <div class="solution-inner">
+    <h2>One MCP. 1,500 freelancers. Your agent picks the right one.</h2>
+    <p class="sol-sub">Your agent searches, hires, communicates, and delivers. You approve the result.</p>
+    <div class="outcome-grid">
+      <div class="outcome-card">
+        <div class="check-icon">✓</div>
+        <div class="instead">Spending 3 hours submitting to directories</div>
+        <h3>"Submit my app to 80+ directories"</h3>
+        <div class="detail">A human handles every form, CAPTCHA, and confirmation. You get a full report.</div>
+        <span class="price-tag">~$5 · 3 days</span>
+      </div>
+      <div class="outcome-card">
+        <div class="check-icon">✓</div>
+        <div class="instead">Manually testing across devices yourself</div>
+        <h3>"QA test on iPhone, Android, and tablet"</h3>
+        <div class="detail">Cross-device testing that catches what automated tests miss. Screenshots included.</div>
+        <span class="price-tag">$3–10 · 24 hours</span>
+      </div>
+      <div class="outcome-card">
+        <div class="check-icon">✓</div>
+        <div class="instead">Writing social posts and managing accounts</div>
+        <h3>"Post daily on Twitter and LinkedIn"</h3>
+        <div class="detail">On-brand posting, engagement, and analytics. Consistent presence without your time.</div>
+        <span class="price-tag">$15–40/week</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <h2>How it works</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div>
+          <h3>Install the MCP</h3>
+          <p>Add the HumanPages MCP to your agent framework. Takes 30 seconds.</p>
+          <div class="tools">Works with Claude, Cursor, GPT, Gemini — any MCP-compatible agent.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div>
+          <h3>Tell your agent what you need</h3>
+          <p>Your agent searches 1,500+ verified freelancers, compares skills and rates, and hires the best match. It writes the brief, sets the price, and sends the job offer.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div>
+          <h3>Get your deliverable</h3>
+          <p>The human does the work. Your agent reviews the result. You approve. Done.</p>
+          <div class="tools">3-day delivery guarantee — if the human doesn't deliver, our team will.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing">
+  <div class="pricing-inner">
+    <h2>Simple pricing</h2>
+    <p class="pricing-sub">$10/month for unlimited searches. Pay only for the tasks you book.</p>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">$0</div>
+        <div class="plan-note">No credit card required</div>
+        <ul>
+          <li>3 profile searches / day</li>
+          <li>1 job offer / 2 days</li>
+          <li>Community support</li>
+          <li>MCP access</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <div class="featured-badge">Most popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$10<span>/month</span></div>
+        <div class="plan-note">Cancel anytime</div>
+        <ul>
+          <li>Unlimited searches</li>
+          <li>15 job offers / day</li>
+          <li>Priority matching</li>
+          <li>Domain verification badge</li>
+          <li>Full API access</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pay-per-use">
+      <p><strong>Pay-per-use alternative:</strong> $0.05/profile view · $0.25/job offer via USDC on Base. No subscription needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROMO -->
+<section class="promo">
+  <div class="promo-inner">
+    <span class="promo-badge">Limited offer</span>
+    <h2>Try it free — your first $10 is on us.</h2>
+    <p>Install the MCP, run your first task, and we'll cover the cost. See the full agent-hires-human loop in action.</p>
+    <a href="#" class="btn-green" style="padding: 16px 40px; font-size: 18px; display: inline-block;">Install the MCP</a>
+    <div class="fine">No credit card · No commitment · Works in 30 seconds</div>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<section class="bottom-cta">
+  <h2>Give your AI agent hiring powers.</h2>
+  <p>1,500+ verified freelancers. $5–20 per task. One MCP call.</p>
+  <a href="#" class="btn-green" style="padding: 16px 40px; font-size: 18px; display: inline-block;">Get started</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>&copy; 2026 Human Pages</span>
+  <div>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">API</a>
+    <a href="#">Pricing</a>
+    <a href="#">Blog</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>

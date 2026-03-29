@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human Pages — Keep 100% of What You Earn</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* NAV */
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 48px; border-bottom: 1px solid #f0f0f0; background: #fff; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 22px; font-weight: 700; color: #1a1a2e; text-decoration: none; }
+  .logo span { color: #ea580c; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a { text-decoration: none; color: #666; font-size: 15px; font-weight: 500; }
+  .nav-cta { background: #ea580c; color: #fff !important; padding: 10px 24px; border-radius: 8px; font-weight: 600; transition: background 0.2s; }
+  .nav-cta:hover { background: #c2410c; }
+
+  /* HERO */
+  .hero { padding: 72px 48px 64px; background: #fff; }
+  .hero-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+  .hero h1 { font-size: 48px; font-weight: 800; line-height: 1.2; margin-bottom: 24px; min-height: 130px; }
+  .rotating-word { color: #ea580c; display: inline; }
+  .hero .follow-up { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; }
+  .hero .subhead { font-size: 19px; color: #666; max-width: 540px; margin: 0 auto 32px; }
+  .hero-ctas { display: flex; gap: 16px; justify-content: center; margin-bottom: 14px; }
+  .btn-primary { background: #ea580c; color: #fff; padding: 15px 36px; border-radius: 10px; font-size: 17px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: background 0.2s; }
+  .btn-primary:hover { background: #c2410c; }
+  .btn-secondary { background: #fff; color: #1a1a2e; padding: 15px 36px; border-radius: 10px; font-size: 17px; font-weight: 600; text-decoration: none; border: 2px solid #e5e7eb; transition: border-color 0.2s; }
+  .btn-secondary:hover { border-color: #999; }
+  .hero-note { font-size: 14px; color: #16a34a; font-weight: 600; }
+
+  /* SOLUTION STRIP */
+  .solution-strip { background: #0f172a; color: #fff; padding: 56px 48px; }
+  .solution-inner { max-width: 960px; margin: 0 auto; }
+  .solution-inner h2 { text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px; }
+  .solution-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .sol-card { text-align: center; }
+  .sol-icon { font-size: 32px; margin-bottom: 12px; }
+  .sol-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .sol-card p { color: #94a3b8; font-size: 14px; }
+  .sol-highlight { color: #34d399; font-weight: 700; }
+
+  /* COMPARISON */
+  .compare { padding: 80px 48px; background: #fff; }
+  .compare-inner { max-width: 860px; margin: 0 auto; }
+  .compare h2 { text-align: center; font-size: 36px; font-weight: 800; margin-bottom: 48px; }
+  .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .compare-table th { padding: 16px 24px; text-align: left; font-size: 15px; font-weight: 700; }
+  .compare-table th:first-child { background: #f8fafc; color: #666; width: 40%; }
+  .compare-table th:nth-child(2) { background: #fef2f2; color: #dc2626; }
+  .compare-table th:nth-child(3) { background: #f0fdf4; color: #16a34a; }
+  .compare-table td { padding: 14px 24px; font-size: 15px; border-top: 1px solid #f0f0f0; }
+  .compare-table td:first-child { color: #555; font-weight: 500; background: #fafafa; }
+  .compare-table td:nth-child(2) { color: #991b1b; background: #fffbfb; }
+  .compare-table td:nth-child(3) { color: #166534; background: #f8fdf8; font-weight: 600; }
+  .x-mark { color: #ef4444; font-weight: 700; }
+  .check-mark { color: #16a34a; font-weight: 700; }
+
+  /* WORK TYPES */
+  .work-types { padding: 80px 48px; background: #f8fafc; }
+  .work-inner { max-width: 1000px; margin: 0 auto; }
+  .work-inner h2 { text-align: center; font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+  .work-inner .work-sub { text-align: center; color: #666; font-size: 18px; margin-bottom: 48px; }
+  .work-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .work-col { background: #fff; border-radius: 16px; padding: 36px; border: 1px solid #e5e7eb; }
+  .work-col h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .work-col .col-sub { color: #888; font-size: 15px; margin-bottom: 24px; }
+  .work-col .col-icon { font-size: 24px; }
+  .task-list { list-style: none; }
+  .task-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 15px; }
+  .task-list li:last-child { border-bottom: none; }
+  .task-name { color: #333; font-weight: 500; }
+  .task-price { color: #16a34a; font-weight: 700; font-size: 14px; white-space: nowrap; }
+
+  /* HOW IT WORKS */
+  .how { padding: 80px 48px; }
+  .how-inner { max-width: 800px; margin: 0 auto; }
+  .how h2 { text-align: center; font-size: 36px; font-weight: 800; margin-bottom: 56px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .step { text-align: center; position: relative; }
+  .step-num { width: 52px; height: 52px; background: #ea580c; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; margin: 0 auto 16px; }
+  .step h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .step p { color: #666; font-size: 15px; }
+  .step-arrow { position: absolute; right: -22px; top: 26px; color: #d1d5db; font-size: 22px; font-weight: 700; }
+
+  /* TRUST */
+  .trust { padding: 56px 48px; background: #f8fafc; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+  .trust-inner { max-width: 900px; margin: 0 auto; display: flex; justify-content: center; gap: 64px; text-align: center; }
+  .trust-item .trust-num { font-size: 40px; font-weight: 800; color: #ea580c; }
+  .trust-item .trust-label { color: #666; font-size: 15px; margin-top: 2px; }
+
+  /* PROFILES */
+  .profiles { padding: 80px 48px; }
+  .profiles-inner { max-width: 1000px; margin: 0 auto; }
+  .profiles h2 { text-align: center; font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+  .profiles .prof-sub { text-align: center; color: #666; font-size: 18px; margin-bottom: 48px; }
+  .profile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .profile-card { text-align: center; padding: 28px 16px; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; transition: box-shadow 0.2s; }
+  .profile-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #fed7aa, #fdba74); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #9a3412; }
+  .profile-card h4 { font-size: 16px; font-weight: 700; }
+  .profile-card .location { color: #888; font-size: 13px; margin-bottom: 10px; }
+  .profile-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .tag { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+  .tag.physical { background: #fef3c7; color: #92400e; }
+
+  /* TESTIMONIAL */
+  .testimonial { padding: 64px 48px; background: #fff; }
+  .testimonial-inner { max-width: 640px; margin: 0 auto; text-align: center; }
+  .testimonial blockquote { font-size: 22px; font-weight: 500; font-style: italic; color: #333; margin-bottom: 16px; line-height: 1.6; }
+  .testimonial cite { color: #888; font-size: 15px; font-style: normal; }
+
+  /* BOTTOM CTA */
+  .bottom-cta { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 80px 48px; text-align: center; }
+  .bottom-cta h2 { font-size: 38px; font-weight: 800; margin-bottom: 12px; }
+  .bottom-cta p { color: #94a3b8; font-size: 18px; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto; }
+  .btn-light { background: #ea580c; color: #fff; padding: 16px 44px; border-radius: 10px; font-size: 18px; font-weight: 700; text-decoration: none; display: inline-block; transition: background 0.2s; }
+  .btn-light:hover { background: #c2410c; }
+  .bottom-note { color: #64748b; font-size: 14px; margin-top: 14px; }
+
+  /* FOOTER */
+  footer { padding: 32px 48px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; color: #999; font-size: 13px; }
+  footer a { color: #777; text-decoration: none; margin-left: 20px; }
+  footer a:hover { color: #333; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">human<span>pages</span>.ai</a>
+  <div class="nav-links">
+    <a href="#">How it works</a>
+    <a href="#">Available tasks</a>
+    <a href="#">For developers</a>
+    <a href="#" class="nav-cta">Start your profile</a>
+  </div>
+</nav>
+
+<!-- HERO — Pure pain, no AI mention -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Tired of<br><span class="rotating-word" id="rotating">losing 20% to platform fees</span>?</h1>
+    <p class="follow-up">We built something different.</p>
+    <p class="subhead">List your skills. Get hired. Keep 100% of what you earn. Get paid instantly in USDC. No middlemen, no bidding wars, no games.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn-primary">Start your profile — free</a>
+      <a href="#" class="btn-secondary">Browse open jobs</a>
+    </div>
+    <div class="hero-note">30 seconds to sign up · Free forever · Zero platform fees</div>
+  </div>
+</section>
+
+<!-- SOLUTION STRIP -->
+<section class="solution-strip">
+  <div class="solution-inner">
+    <h2>How we're different</h2>
+    <div class="solution-grid">
+      <div class="sol-card">
+        <div class="sol-icon">💰</div>
+        <h3>Keep <span class="sol-highlight">100%</span></h3>
+        <p>Zero commission. Zero platform fees. Every dollar you earn is yours.</p>
+      </div>
+      <div class="sol-card">
+        <div class="sol-icon">⚡</div>
+        <h3>Paid instantly</h3>
+        <p>Get paid in USDC the moment work is approved. No 14-day holds.</p>
+      </div>
+      <div class="sol-card">
+        <div class="sol-icon">🌍</div>
+        <h3>Works everywhere</h3>
+        <p>No PayPal needed. No bank transfers. Crypto payments work in any country.</p>
+      </div>
+      <div class="sol-card">
+        <div class="sol-icon">🛡️</div>
+        <h3>No ghosting</h3>
+        <p>Payment is committed before you start. Clear scope. No surprises.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section class="compare">
+  <div class="compare-inner">
+    <h2>You deserve better than this</h2>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th><span class="x-mark">✗</span> Other platforms</th>
+          <th><span class="check-mark">✓</span> HumanPages</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Platform fees</td>
+          <td>20% taken from every job</td>
+          <td>0% — keep everything</td>
+        </tr>
+        <tr>
+          <td>Getting paid</td>
+          <td>14-30 day holds, bank fees, PayPal blocks</td>
+          <td>Instant USDC, works everywhere</td>
+        </tr>
+        <tr>
+          <td>Finding work</td>
+          <td>Bid against millions, race to the bottom</td>
+          <td>Jobs come to you based on skills</td>
+        </tr>
+        <tr>
+          <td>Client reliability</td>
+          <td>Ghosting, scope creep, disputes</td>
+          <td>Payment locked before work starts</td>
+        </tr>
+        <tr>
+          <td>Pricing</td>
+          <td>"Devs in your country charge less"</td>
+          <td>Tasks have set prices. Your skills set your rate.</td>
+        </tr>
+        <tr>
+          <td>Getting started</td>
+          <td>Need reviews, portfolio, premium account</td>
+          <td>Sign up in 30 seconds. Get matched on day 1.</td>
+        </tr>
+        <tr>
+          <td>Visibility</td>
+          <td>Algorithm buries you overnight</td>
+          <td>Skill-based matching. No black box.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- WORK TYPES -->
+<section class="work-types">
+  <div class="work-inner">
+    <h2>What kind of work?</h2>
+    <p class="work-sub">Digital or physical — if you have the skill, there's work waiting.</p>
+    <div class="work-columns">
+      <div class="work-col">
+        <h3><span class="col-icon">💻</span> Digital tasks</h3>
+        <p class="col-sub">Work from anywhere with an internet connection</p>
+        <ul class="task-list">
+          <li><span class="task-name">QA &amp; software testing</span><span class="task-price">$3–10/session</span></li>
+          <li><span class="task-name">Directory submissions (80+ sites)</span><span class="task-price">~$5/batch</span></li>
+          <li><span class="task-name">Social media management</span><span class="task-price">$15–40/week</span></li>
+          <li><span class="task-name">Translation &amp; localization review</span><span class="task-price">$5–15/language</span></li>
+          <li><span class="task-name">Content writing &amp; copywriting</span><span class="task-price">$5–20/piece</span></li>
+          <li><span class="task-name">Data entry &amp; research</span><span class="task-price">$3–10/task</span></li>
+          <li><span class="task-name">Community management</span><span class="task-price">$25/week</span></li>
+          <li><span class="task-name">Virtual assistant</span><span class="task-price">$5–15/hour</span></li>
+        </ul>
+      </div>
+      <div class="work-col">
+        <h3><span class="col-icon">📍</span> Physical tasks</h3>
+        <p class="col-sub">Use your location and presence as a skill</p>
+        <ul class="task-list">
+          <li><span class="task-name">Photography &amp; video</span><span class="task-price">$10–50/shoot</span></li>
+          <li><span class="task-name">On-site verification &amp; inspections</span><span class="task-price">$5–25/visit</span></li>
+          <li><span class="task-name">Local deliveries &amp; pickups</span><span class="task-price">$5–20/trip</span></li>
+          <li><span class="task-name">Mystery shopping</span><span class="task-price">$10–30/visit</span></li>
+          <li><span class="task-name">Event attendance &amp; documentation</span><span class="task-price">$15–40/event</span></li>
+          <li><span class="task-name">Installation &amp; setup</span><span class="task-price">$10–50/job</span></li>
+          <li><span class="task-name">Local market research</span><span class="task-price">$5–20/report</span></li>
+          <li><span class="task-name">Signage &amp; flyer distribution</span><span class="task-price">$5–15/area</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>List your skills</h3>
+        <p>Create a free profile with what you can do, where you are, and your rate. Takes 30 seconds.</p>
+        <span class="step-arrow">→</span>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Get matched</h3>
+        <p>Clients and their AI assistants search the directory and send you job offers with a clear scope and price.</p>
+        <span class="step-arrow">→</span>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Get paid</h3>
+        <p>Do the work. Get paid instantly in USDC. We never touch your money. It's yours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST NUMBERS -->
+<section class="trust">
+  <div class="trust-inner">
+    <div class="trust-item">
+      <div class="trust-num">1,500+</div>
+      <div class="trust-label">People signed up</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-num">51</div>
+      <div class="trust-label">Countries</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-num">$5–150</div>
+      <div class="trust-label">Per task</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-num">0%</div>
+      <div class="trust-label">Platform fees</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROFILES -->
+<section class="profiles">
+  <div class="profiles-inner">
+    <h2>People already on the platform</h2>
+    <p class="prof-sub">Skilled workers from around the world, ready to get hired.</p>
+    <div class="profile-grid">
+      <div class="profile-card">
+        <div class="profile-avatar">RA</div>
+        <h4>Rihad A.</h4>
+        <div class="location">Addis Ababa, Ethiopia</div>
+        <div class="profile-tags">
+          <span class="tag">Web Development</span>
+          <span class="tag">Translation</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar">MK</div>
+        <h4>Mary K.</h4>
+        <div class="location">Nairobi, Kenya</div>
+        <div class="profile-tags">
+          <span class="tag">Virtual Assistant</span>
+          <span class="tag">Data Entry</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar">AP</div>
+        <h4>Anh P.</h4>
+        <div class="location">Da Nang, Vietnam</div>
+        <div class="profile-tags">
+          <span class="tag">QA Testing</span>
+          <span class="tag physical">Photography</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar">OT</div>
+        <h4>Okonkwo T.</h4>
+        <div class="location">Lagos, Nigeria</div>
+        <div class="profile-tags">
+          <span class="tag">Content Writing</span>
+          <span class="tag physical">Deliveries</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial">
+  <div class="testimonial-inner">
+    <blockquote>"I used to lose $4 on every $20 job on Fiverr. Here I keep all of it, and I get paid the same day. I wish I found this earlier."</blockquote>
+    <cite>— Web developer, Lagos</cite>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<section class="bottom-cta">
+  <h2>Your skills are worth more.<br>Start getting paid fairly.</h2>
+  <p>Free forever. Zero fees. Paid in USDC. Sign up in 30 seconds.</p>
+  <a href="#" class="btn-light">Start your profile</a>
+  <div class="bottom-note">Already have an account? <a href="#" style="color: #60a5fa;">Browse open jobs →</a></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>&copy; 2026 Human Pages</span>
+  <div>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Job Board</a>
+    <a href="#">API</a>
+    <a href="#">Blog</a>
+    <a href="#">For Developers</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+<!-- ROTATING HEADLINE SCRIPT -->
+<script>
+const pains = [
+  "losing 20% to platform fees",
+  "clients who ghost after delivery",
+  "PayPal not working in your country",
+  "bidding against millions for $3 jobs",
+  "waiting 30 days to get paid",
+  "your currency losing value while you wait",
+  "starting from zero on every new platform",
+  "scope creep with no extra pay",
+  "algorithms burying your profile overnight",
+  "being priced by your passport, not your skills"
+];
+let current = 0;
+const el = document.getElementById('rotating');
+
+function rotatePain() {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(8px)';
+  setTimeout(() => {
+    current = (current + 1) % pains.length;
+    el.textContent = pains[current];
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  }, 300);
+}
+
+el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+setInterval(rotatePain, 3000);
+</script>
+
+</body>
+</html>
