@@ -414,15 +414,7 @@ describe('AdminOverview', () => {
       });
     });
 
-    it('should display top locations', async () => {
-      renderWithProviders(<AdminOverview />);
-      await waitFor(() => {
-        expect(screen.getByText('Top Locations')).toBeInTheDocument();
-        expect(screen.getByText('Lagos, Nigeria')).toBeInTheDocument();
-        expect(screen.getByText('San Francisco, USA')).toBeInTheDocument();
-        expect(screen.getByText('Berlin, Germany')).toBeInTheDocument();
-      });
-    });
+    // Top Locations section was removed from the component
   });
 
   describe('Without insights data (backwards compatibility)', () => {
@@ -495,10 +487,9 @@ describe('AdminOverview', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Top Skills')).toBeInTheDocument();
-        expect(screen.getByText('Top Locations')).toBeInTheDocument();
-        // Should show "No data" for empty lists
+        // Should show "No data" for empty skills
         const noDataElements = screen.getAllByText('No data');
-        expect(noDataElements.length).toBeGreaterThanOrEqual(2);
+        expect(noDataElements.length).toBeGreaterThanOrEqual(1);
       });
     });
   });

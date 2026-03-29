@@ -58,7 +58,7 @@ describe('Admin Stats — Insights', () => {
       expect(res.body.insights).toHaveProperty('workMode');
       expect(res.body.insights).toHaveProperty('utmSources');
       expect(res.body.insights).toHaveProperty('topSkills');
-      expect(res.body.insights).toHaveProperty('topLocations');
+      // topLocations was removed from the insights API
     });
 
     it('should return zero counts when no data exists', async () => {
@@ -374,30 +374,7 @@ describe('Admin Stats — Insights', () => {
     });
   });
 
-  describe('Top Locations', () => {
-    it('should return top locations ranked by user count', async () => {
-      const u1 = await createTestUser({ email: 'loc1@example.com', name: 'Loc 1' });
-      const u2 = await createTestUser({ email: 'loc2@example.com', name: 'Loc 2' });
-      const u3 = await createTestUser({ email: 'loc3@example.com', name: 'Loc 3' });
-
-      await prisma.human.update({ where: { id: u1.id }, data: { location: 'Lagos, Nigeria' } });
-      await prisma.human.update({ where: { id: u2.id }, data: { location: 'Lagos, Nigeria' } });
-      await prisma.human.update({ where: { id: u3.id }, data: { location: 'Berlin, Germany' } });
-
-      const res = await authRequest(adminUser.token).get('/api/admin/stats');
-      const locs = res.body.insights.topLocations;
-
-      expect(Array.isArray(locs)).toBe(true);
-      expect(locs.length).toBeGreaterThan(0);
-      expect(locs[0].location).toBe('Lagos, Nigeria');
-      expect(locs[0].count).toBe(2);
-    });
-
-    it('should return at most 10 locations', async () => {
-      const res = await authRequest(adminUser.token).get('/api/admin/stats');
-      expect(res.body.insights.topLocations.length).toBeLessThanOrEqual(10);
-    });
-  });
+  // Top Locations section was removed from admin insights API
 
   describe('Available count', () => {
     it('should count users marked as available', async () => {
@@ -517,11 +494,6 @@ describe('Admin Stats — Insights', () => {
       expect(skillNames).toContain('Machine Learning');
       expect(skillNames).toContain('Python');
       expect(skillNames).toContain('JavaScript');
-
-      // Top locations
-      const locNames = ins.topLocations.map((l: any) => l.location);
-      expect(locNames).toContain('San Francisco');
-      expect(locNames).toContain('Lagos, Nigeria');
 
       // Profile completeness distribution should sum to 4
       const distSum = Object.values(ins.profileCompleteness.distribution).reduce((s: number, v) => s + (v as number), 0);
