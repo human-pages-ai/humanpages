@@ -148,6 +148,23 @@ export const CreateListingSchema = z
       .string()
       .optional()
       .describe("Location where work needs to be done"),
+    locationCountry: z
+      .string()
+      .max(2)
+      .optional()
+      .describe("ISO 3166-1 alpha-2 country code (e.g. 'US', 'PH')"),
+    locationRegion: z
+      .string()
+      .optional()
+      .describe("State or province (e.g. 'California')"),
+    locationLocality: z
+      .string()
+      .optional()
+      .describe("City name (e.g. 'San Francisco')"),
+    locationPostal: z
+      .string()
+      .optional()
+      .describe("Postal/zip code"),
     locationLat: z
       .number()
       .optional()

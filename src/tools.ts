@@ -994,6 +994,22 @@ export function createServer(): Server {
               type: 'string',
               description: 'Location name for the work (e.g., "San Francisco")',
             },
+            location_country: {
+              type: 'string',
+              description: 'ISO 3166-1 alpha-2 country code (e.g., "US", "PH"). Improves Google Search visibility.',
+            },
+            location_region: {
+              type: 'string',
+              description: 'State or province (e.g., "California", "Metro Manila"). Improves Google Search visibility.',
+            },
+            location_locality: {
+              type: 'string',
+              description: 'City name (e.g., "San Francisco", "Manila"). Improves Google Search visibility.',
+            },
+            location_postal: {
+              type: 'string',
+              description: 'Postal/zip code (e.g., "94105"). Improves Google Search visibility.',
+            },
             location_lat: {
               type: 'number',
               description: 'Latitude for location-based filtering',
@@ -1254,9 +1270,9 @@ export function createServer(): Server {
             return `- **${displayName}** | human_id: \`${h.id}\` [${displayLocation}]
   ${h.isAvailable ? '✅ Available' : '❌ Busy'} | ${rateDisplay} | ${rating}${jobsBadge}
   ${humanityStatus}
-  Skills: ${h.skills.join(', ') || 'None listed'}
-  Equipment: ${h.equipment.join(', ') || 'None listed'}
-  Languages: ${h.languages.join(', ') || 'Not specified'}
+  Skills: ${h.skills?.join(', ') || 'None listed'}
+  Equipment: ${h.equipment?.join(', ') || 'None listed'}
+  Languages: ${h.languages?.join(', ') || 'Not specified'}
   Experience: ${h.yearsOfExperience ? `${h.yearsOfExperience} years` : 'Not specified'}
   Payment methods: ${h.paymentMethods && h.paymentMethods.length > 0 ? h.paymentMethods.join(', ') : 'Not specified'}${h.acceptsCrypto ? ' | 💰 Accepts crypto (USDC)' : ''}
   Reachability: ${(h.channelCount || 0) >= 3 ? '🟢 Highly reachable' : (h.channelCount || 0) >= 2 ? '🟡 Reachable' : (h.channelCount || 0) >= 1 ? '🟠 Limited' : '🔴 Low'} (${h.channelCount || 0}/4 channels)`;
@@ -1317,9 +1333,9 @@ ${human.locationGranularity === 'neighborhood' && human.neighborhood && human.lo
   : human.location || 'Not specified'}
 
 ## Capabilities
-- **Skills:** ${human.skills.join(', ') || 'None listed'}
-- **Equipment:** ${human.equipment.join(', ') || 'None listed'}
-- **Languages:** ${human.languages.join(', ') || 'Not specified'}
+- **Skills:** ${human.skills?.join(', ') || 'None listed'}
+- **Equipment:** ${human.equipment?.join(', ') || 'None listed'}
+- **Languages:** ${human.languages?.join(', ') || 'Not specified'}
 - **Experience:** ${human.yearsOfExperience ? `${human.yearsOfExperience} years` : 'Not specified'}
 
 ## Economics
@@ -2709,6 +2725,10 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
             requiredSkills: args?.required_skills || [],
             requiredEquipment: args?.required_equipment || [],
             location: args?.location,
+            locationCountry: args?.location_country,
+            locationRegion: args?.location_region,
+            locationLocality: args?.location_locality,
+            locationPostal: args?.location_postal,
             locationLat: args?.location_lat,
             locationLng: args?.location_lng,
             radiusKm: args?.radius_km,

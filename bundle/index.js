@@ -131,8 +131,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const summary = humans
         .map((h) => {
           return `- **${h.name}** (${h.location || 'Location not specified'})
-  Skills: ${h.skills.join(', ')}
-  Services: ${h.services.map((s) => `${s.title} (${s.priceRange || 'Price negotiable'})`).join(', ')}`;
+  Skills: ${h.skills?.join(', ') || 'None listed'}
+  Services: ${h.services?.map((s) => `${s.title} (${s.priceRange || 'Price negotiable'})`).join(', ') || 'None listed'}`;
         })
         .join('\n\n');
 
@@ -144,7 +144,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'get_human') {
       const human = await getHuman(args?.id);
 
-      const servicesInfo = human.services
+      const servicesInfo = (human.services || [])
         .map((s) => `- **${s.title}** [${s.category}]\n  ${s.description}\n  Price: ${s.priceRange || 'Negotiable'}`)
         .join('\n\n');
 
@@ -158,7 +158,7 @@ ${human.bio || 'No bio provided'}
 ${human.location || 'Not specified'}
 
 ## Skills
-${human.skills.join(', ') || 'None listed'}
+${human.skills?.join(', ') || 'None listed'}
 
 ## Contact & Payment
 _Available via get_human_profile (requires ACTIVE agent)._
