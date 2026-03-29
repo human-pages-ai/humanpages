@@ -499,9 +499,14 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
         budgetFlexible: true,
         requiredSkills: true,
         location: true,
+        locationCountry: true,
+        locationRegion: true,
+        locationLocality: true,
+        locationPostal: true,
         workMode: true,
         status: true,
         expiresAt: true,
+        createdAt: true,
         _count: { select: { applications: true } },
       },
     });
@@ -551,17 +556,29 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
       "title": listing.title,
       "description": (listing.description || '').replace(/<\/script/gi, '<\\/script'),
       "url": canonicalUrl,
-      ...(listing.location && {
+      "datePosted": listing.createdAt.toISOString().split('T')[0],
+      "validThrough": listing.expiresAt.toISOString().split('T')[0],
+      ...((listing.location || listing.locationLocality) && {
         "jobLocation": {
           "@type": "Place",
-          "address": listing.location,
+          "address": {
+            "@type": "PostalAddress",
+            ...(listing.locationLocality ? { "addressLocality": listing.locationLocality } : listing.location ? { "addressLocality": listing.location } : {}),
+            ...(listing.locationRegion && { "addressRegion": listing.locationRegion }),
+            ...(listing.locationCountry && { "addressCountry": listing.locationCountry }),
+            ...(listing.locationPostal && { "postalCode": listing.locationPostal }),
+          },
         },
       }),
       ...(listing.workMode === 'REMOTE' && { "jobLocationType": "TELECOMMUTE" }),
       "baseSalary": {
         "@type": "MonetaryAmount",
         "currency": "USD",
-        "value": Number(listing.budgetUsdc),
+        "value": {
+          "@type": "QuantitativeValue",
+          "value": Number(listing.budgetUsdc),
+          "unitText": "PROJECT",
+        },
       },
       "hiringOrganization": { "@type": "Organization", "name": "Human Pages", "url": SITE_URL },
       "employmentType": "TEMPORARY",

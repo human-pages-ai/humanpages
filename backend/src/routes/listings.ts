@@ -164,6 +164,10 @@ const createListingSchema = z.object({
   requiredSkills: z.array(z.string().max(100)).max(30).default([]),
   requiredEquipment: z.array(z.string().max(100)).max(30).default([]),
   location: z.string().optional(),
+  locationCountry: z.string().max(2).optional(),
+  locationRegion: z.string().max(200).optional(),
+  locationLocality: z.string().max(200).optional(),
+  locationPostal: z.string().max(20).optional(),
   locationLat: z.number().min(-90).max(90).optional(),
   locationLng: z.number().min(-180).max(180).optional(),
   radiusKm: z.number().int().min(1).optional(),
@@ -271,6 +275,10 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
         requiredSkills: data.requiredSkills,
         requiredEquipment: data.requiredEquipment || [],
         location: data.location,
+        locationCountry: data.locationCountry,
+        locationRegion: data.locationRegion,
+        locationLocality: data.locationLocality,
+        locationPostal: data.locationPostal,
         locationLat: data.locationLat,
         locationLng: data.locationLng,
         radiusKm: data.radiusKm,
@@ -877,8 +885,11 @@ router.get('/:id/compare', authenticateToken, async (req: AuthRequest, res) => {
           select: {
             id: true, title: true, description: true,
             budgetUsdc: true, budgetFlexible: true,
-            workMode: true, location: true, locationLat: true,
-            locationLng: true, radiusKm: true, status: true,
+            workMode: true, location: true,
+            locationCountry: true, locationRegion: true,
+            locationLocality: true, locationPostal: true,
+            locationLat: true, locationLng: true,
+            radiusKm: true, status: true,
           },
         },
       },
@@ -1366,6 +1377,10 @@ const updateListingSchema = z.object({
   requiredSkills: z.array(z.string().max(100)).max(30).optional(),
   requiredEquipment: z.array(z.string().max(100)).max(30).optional(),
   location: z.string().optional().nullable(),
+  locationCountry: z.string().max(2).optional().nullable(),
+  locationRegion: z.string().max(200).optional().nullable(),
+  locationLocality: z.string().max(200).optional().nullable(),
+  locationPostal: z.string().max(20).optional().nullable(),
   locationLat: z.number().min(-90).max(90).optional().nullable(),
   locationLng: z.number().min(-180).max(180).optional().nullable(),
   radiusKm: z.number().int().min(1).optional().nullable(),
@@ -1434,6 +1449,10 @@ router.patch('/:id', authenticateAgent, requireActiveAgent, updateRateLimiter, a
     if (data.requiredSkills !== undefined) updateData.requiredSkills = data.requiredSkills;
     if (data.requiredEquipment !== undefined) updateData.requiredEquipment = data.requiredEquipment;
     if (data.location !== undefined) updateData.location = data.location;
+    if (data.locationCountry !== undefined) updateData.locationCountry = data.locationCountry;
+    if (data.locationRegion !== undefined) updateData.locationRegion = data.locationRegion;
+    if (data.locationLocality !== undefined) updateData.locationLocality = data.locationLocality;
+    if (data.locationPostal !== undefined) updateData.locationPostal = data.locationPostal;
     if (data.locationLat !== undefined) updateData.locationLat = data.locationLat;
     if (data.locationLng !== undefined) updateData.locationLng = data.locationLng;
     if (data.radiusKm !== undefined) updateData.radiusKm = data.radiusKm;
