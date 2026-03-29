@@ -463,6 +463,9 @@ export const api = {
   getAdminStats: () =>
     request<AdminStats>('/admin/stats'),
 
+  getAdminFunnelStats: () =>
+    request<import('../types/admin').FunnelStats>('/admin/stats/funnel'),
+
   getSolverStats: () =>
     request<SolverStats>('/admin/solver/stats'),
 

@@ -53,6 +53,15 @@ export interface AdminStats {
     returningUsers: number;
     signupsByDay: { day: string; count: number }[];
     activeByDay: { day: string; count: number }[];
+    cryptoSignupsByDay: { day: string; count: number }[];
+    cvSignupsByDay: { day: string; count: number }[];
+    verifiedSignupsByDay: { day: string; count: number }[];
+    cumulativeSignups: { day: string; count: number }[];
+    jobsByDay: { day: string; count: number }[];
+    paidJobsByDay: { day: string; count: number }[];
+    paymentVolumeByDay: { day: string; count: number }[];
+    applicationsByDay: { day: string; count: number }[];
+    agentsByDay: { day: string; count: number }[];
   };
   insights?: {
     cvUploaded: number;
@@ -89,6 +98,29 @@ export interface AdminStats {
       privyRate: number;
     };
   };
+}
+
+export interface FunnelStats {
+  funnel: Record<string, number>;
+  sourceQuality: {
+    source: string; signups: number; verified: number; profile_basic: number;
+    with_cv: number; with_wallet: number; profile_good: number;
+    avg_completeness: number; avg_active_hours_after_signup: number;
+  }[];
+  signupMethodsByDay: { day: string; email: number; google: number; linkedin: number; whatsapp: number }[];
+  abandonment: { stage: string; count: number; avg_completeness: number; avg_days_inactive: number }[];
+  velocity: {
+    medianHoursToActive: number | null;
+    medianHoursToCv: number | null;
+    avgCompletenessAll: number;
+    avgCompleteness7d: number;
+    avgCompleteness30d: number;
+  };
+  cohortFunnel: {
+    week: string; signups: number; verified: number; profileBasic: number;
+    withCv: number; withWallet: number; profileGood: number;
+    retained7d: number; avgCompleteness: number;
+  }[];
 }
 
 export interface SolverStats {

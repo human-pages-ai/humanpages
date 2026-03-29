@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import type { AdminStats } from '../../types/admin';
+import SignupAnalyticsChart from './SignupAnalyticsChart';
+import SignupFunnelChart from './SignupFunnelChart';
 
 /* ─── Helpers ──────────────────────────────────────────────── */
 
@@ -314,6 +316,14 @@ export default function AdminOverview() {
           </Card>
         </div>
       )}
+
+      {/* ── Signup Analytics Chart ────────────────────────────── */}
+      {stats.usage && (
+        <SignupAnalyticsChart usage={stats.usage} />
+      )}
+
+      {/* ── User Behavior & Funnel ────────────────────────────── */}
+      <SignupFunnelChart />
 
       {/* ── Growth & Reports ────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

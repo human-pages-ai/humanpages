@@ -296,8 +296,7 @@ router.get('/stats', async (_req, res) => {
       // Usage / activity metrics
       dauCount, wauCount, mauCount,
       signupToActiveRaw,
-      recentSignupsByDayRaw,
-      activeByDayRaw,
+      dailyAnalyticsRaw,
     ] = await Promise.all([
       // ── Core counts ──
       prisma.human.count(),
@@ -424,28 +423,86 @@ router.get('/stats', async (_req, res) => {
       prisma.human.count({
         where: { createdAt: { lt: sevenDaysAgo }, lastActiveAt: { gte: sevenDaysAgo } },
       }),
-      // Signups per day (last 14 days)
+      // ── Combined daily analytics (single query, 90 days) ──
+      // Returns all signup breakdown + activity + marketplace + revenue in one scan
       prisma.$queryRaw`
-        SELECT d::date AS day, COUNT(h.id)::int AS cnt
-        FROM generate_series(
-          (NOW() - INTERVAL '13 days')::date,
-          NOW()::date,
-          '1 day'::interval
-        ) d
-        LEFT JOIN "Human" h ON h."createdAt"::date = d::date
-        GROUP BY d ORDER BY d
-      ` as Promise<{ day: Date; cnt: number }[]>,
-      // Active users per day (last 14 days)
-      prisma.$queryRaw`
-        SELECT d::date AS day, COUNT(h.id)::int AS cnt
-        FROM generate_series(
-          (NOW() - INTERVAL '13 days')::date,
-          NOW()::date,
-          '1 day'::interval
-        ) d
-        LEFT JOIN "Human" h ON h."lastActiveAt"::date = d::date
-        GROUP BY d ORDER BY d
-      ` as Promise<{ day: Date; cnt: number }[]>,
+        WITH days AS (
+          SELECT d::date AS day
+          FROM generate_series(
+            (NOW() - INTERVAL '89 days')::date, NOW()::date, '1 day'::interval
+          ) d
+        ),
+        signup_base AS (
+          SELECT
+            h."createdAt"::date AS day,
+            COUNT(*)::int AS total,
+            COUNT(*) FILTER (WHERE h."emailVerified" = true)::int AS verified,
+            COUNT(*) FILTER (WHERE h."cvFileKey" IS NOT NULL)::int AS with_cv,
+            COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "Wallet" w WHERE w."humanId" = h.id))::int AS with_crypto
+          FROM "Human" h
+          WHERE h."createdAt" >= (NOW() - INTERVAL '89 days')::date
+          GROUP BY h."createdAt"::date
+        ),
+        active_base AS (
+          SELECT h."lastActiveAt"::date AS day, COUNT(*)::int AS active
+          FROM "Human" h
+          WHERE h."lastActiveAt" >= (NOW() - INTERVAL '89 days')::date
+          GROUP BY h."lastActiveAt"::date
+        ),
+        jobs_base AS (
+          SELECT
+            j."createdAt"::date AS day,
+            COUNT(*)::int AS jobs,
+            COUNT(*) FILTER (WHERE j."paidAt" IS NOT NULL OR j."streamTotalPaid" > 0)::int AS paid_jobs,
+            COALESCE(SUM(
+              COALESCE(j."paymentAmount", 0) + COALESCE(j."streamTotalPaid", 0)
+            ), 0)::float AS payment_volume
+          FROM "Job" j
+          WHERE j."createdAt" >= (NOW() - INTERVAL '89 days')::date
+          GROUP BY j."createdAt"::date
+        ),
+        apps_base AS (
+          SELECT la."createdAt"::date AS day, COUNT(*)::int AS apps
+          FROM "ListingApplication" la
+          WHERE la."createdAt" >= (NOW() - INTERVAL '89 days')::date
+          GROUP BY la."createdAt"::date
+        ),
+        agents_base AS (
+          SELECT a."createdAt"::date AS day, COUNT(*)::int AS agents
+          FROM "Agent" a
+          WHERE a."createdAt" >= (NOW() - INTERVAL '89 days')::date
+          GROUP BY a."createdAt"::date
+        ),
+        pre_count AS (
+          SELECT COUNT(*)::int AS cnt FROM "Human"
+          WHERE "createdAt"::date < (NOW() - INTERVAL '89 days')::date
+        )
+        SELECT
+          d.day,
+          COALESCE(s.total, 0)::int              AS total,
+          COALESCE(s.verified, 0)::int            AS verified,
+          COALESCE(s.with_cv, 0)::int             AS with_cv,
+          COALESCE(s.with_crypto, 0)::int         AS with_crypto,
+          COALESCE(ab.active, 0)::int             AS active,
+          COALESCE(jb.jobs, 0)::int               AS jobs,
+          COALESCE(jb.paid_jobs, 0)::int          AS paid_jobs,
+          COALESCE(jb.payment_volume, 0)::float   AS payment_volume,
+          COALESCE(ap.apps, 0)::int               AS apps,
+          COALESCE(ag.agents, 0)::int             AS agents,
+          (pc.cnt + SUM(COALESCE(s.total, 0)) OVER (ORDER BY d.day))::int AS cumulative
+        FROM days d
+        CROSS JOIN pre_count pc
+        LEFT JOIN signup_base s  ON s.day = d.day
+        LEFT JOIN active_base ab ON ab.day = d.day
+        LEFT JOIN jobs_base jb   ON jb.day = d.day
+        LEFT JOIN apps_base ap   ON ap.day = d.day
+        LEFT JOIN agents_base ag ON ag.day = d.day
+        ORDER BY d.day
+      ` as Promise<{
+        day: Date; total: number; verified: number; with_cv: number;
+        with_crypto: number; active: number; jobs: number; paid_jobs: number;
+        payment_volume: number; apps: number; agents: number; cumulative: number;
+      }[]>,
     ]);
 
     // ── Post-processing (pure JS, no DB calls) ──
@@ -487,13 +544,24 @@ router.get('/stats', async (_req, res) => {
     const olderUsers = usersTotal - usersLast7d;
     const retentionRate = olderUsers > 0 ? Math.round((signupToActiveRaw / olderUsers) * 10000) / 100 : 0;
 
-    // Daily sparklines
-    const signupsByDay = (recentSignupsByDayRaw as { day: Date; cnt: number }[]).map(r => ({
-      day: new Date(r.day).toISOString().slice(0, 10), count: r.cnt,
+    // Daily analytics — extract each series from the combined query result
+    type DailyRow = typeof dailyAnalyticsRaw[number];
+    const mapDay = (rows: DailyRow[], key: keyof Omit<DailyRow, 'day'>) =>
+      rows.map(r => ({ day: new Date(r.day).toISOString().slice(0, 10), count: Number(r[key]) }));
+    const signupsByDay = mapDay(dailyAnalyticsRaw, 'total');
+    const activeByDay = mapDay(dailyAnalyticsRaw, 'active');
+    const cryptoSignupsByDay = mapDay(dailyAnalyticsRaw, 'with_crypto');
+    const cvSignupsByDay = mapDay(dailyAnalyticsRaw, 'with_cv');
+    const verifiedSignupsByDay = mapDay(dailyAnalyticsRaw, 'verified');
+    const cumulativeSignups = mapDay(dailyAnalyticsRaw, 'cumulative');
+    const jobsByDay = mapDay(dailyAnalyticsRaw, 'jobs');
+    const paidJobsByDay = mapDay(dailyAnalyticsRaw, 'paid_jobs');
+    const paymentVolumeByDay = dailyAnalyticsRaw.map(r => ({
+      day: new Date(r.day).toISOString().slice(0, 10),
+      count: Math.round(Number(r.payment_volume) * 100) / 100,
     }));
-    const activeByDay = (activeByDayRaw as { day: Date; cnt: number }[]).map(r => ({
-      day: new Date(r.day).toISOString().slice(0, 10), count: r.cnt,
-    }));
+    const applicationsByDay = mapDay(dailyAnalyticsRaw, 'apps');
+    const agentsByDay = mapDay(dailyAnalyticsRaw, 'agents');
 
     res.json({
       users: { total: usersTotal, verified: usersVerified, last7d: usersLast7d, last30d: usersLast30d },
@@ -527,6 +595,15 @@ router.get('/stats', async (_req, res) => {
         returningUsers: signupToActiveRaw,
         signupsByDay,
         activeByDay,
+        cryptoSignupsByDay,
+        cvSignupsByDay,
+        verifiedSignupsByDay,
+        cumulativeSignups,
+        jobsByDay,
+        paidJobsByDay,
+        paymentVolumeByDay,
+        applicationsByDay,
+        agentsByDay,
       },
       insights: {
         cvUploaded, telegramConnected, telegramBotSignups,
@@ -566,6 +643,187 @@ router.get('/stats', async (_req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin stats error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/stats/funnel — Signup funnel, attribution & behavior analytics
+router.get('/stats/funnel', async (_req, res) => {
+  try {
+    const [
+      // ── Funnel stage breakdown (all-time snapshot) ──
+      funnelStagesRaw,
+      // ── Signup source quality (by UTM source, last 90 days) ──
+      sourceQualityRaw,
+      // ── Signup method breakdown by day (last 90 days) ──
+      signupMethodsByDayRaw,
+      // ── Abandonment cohort analysis: signed up N+ days ago, still stuck at each stage ──
+      abandonmentRaw,
+      // ── Onboarding velocity: median time from signup to each milestone ──
+      velocityRaw,
+      // ── Weekly cohort funnel ──
+      cohortFunnelRaw,
+    ] = await Promise.all([
+      // Funnel stages: count users at each level
+      prisma.$queryRaw`
+        SELECT
+          COUNT(*)::int                                                    AS total_signups,
+          COUNT(*) FILTER (WHERE "emailVerified" = true)::int              AS email_verified,
+          COUNT(*) FILTER (WHERE "profileCompleteness" > 0)::int           AS profile_started,
+          COUNT(*) FILTER (WHERE "profileCompleteness" >= 30)::int         AS profile_basic,
+          COUNT(*) FILTER (WHERE "profileCompleteness" >= 60)::int         AS profile_good,
+          COUNT(*) FILTER (WHERE "profileCompleteness" >= 80)::int         AS profile_complete,
+          COUNT(*) FILTER (WHERE "cvFileKey" IS NOT NULL)::int             AS cv_uploaded,
+          COUNT(*) FILTER (WHERE "cvParsedAt" IS NOT NULL)::int            AS cv_parsed,
+          COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "Wallet" w WHERE w."humanId" = h.id))::int AS wallet_connected,
+          COUNT(*) FILTER (WHERE "profilePhotoStatus" = 'approved')::int   AS photo_uploaded,
+          COUNT(*) FILTER (WHERE array_length(skills, 1) > 0)::int         AS has_skills,
+          COUNT(*) FILTER (WHERE bio IS NOT NULL AND LENGTH(bio) > 0)::int AS has_bio,
+          COUNT(*) FILTER (WHERE location IS NOT NULL)::int                AS has_location,
+          COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "Service" s WHERE s."humanId" = h.id))::int AS has_service
+        FROM "Human" h
+      ` as Promise<Record<string, number>[]>,
+
+      // Source quality: UTM source → conversion through funnel (last 90d)
+      prisma.$queryRaw`
+        SELECT
+          COALESCE(h."utmSource", 'direct') AS source,
+          COUNT(*)::int AS signups,
+          COUNT(*) FILTER (WHERE h."emailVerified" = true)::int AS verified,
+          COUNT(*) FILTER (WHERE h."profileCompleteness" >= 30)::int AS profile_basic,
+          COUNT(*) FILTER (WHERE h."cvFileKey" IS NOT NULL)::int AS with_cv,
+          COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "Wallet" w WHERE w."humanId" = h.id))::int AS with_wallet,
+          COUNT(*) FILTER (WHERE h."profileCompleteness" >= 60)::int AS profile_good,
+          ROUND(AVG(h."profileCompleteness"))::int AS avg_completeness,
+          ROUND(AVG(EXTRACT(EPOCH FROM (
+            CASE WHEN h."lastActiveAt" > h."createdAt" + INTERVAL '1 hour'
+              THEN h."lastActiveAt" - h."createdAt"
+            END
+          )) / 3600))::int AS avg_active_hours_after_signup
+        FROM "Human" h
+        WHERE h."createdAt" >= NOW() - INTERVAL '90 days'
+        GROUP BY COALESCE(h."utmSource", 'direct')
+        HAVING COUNT(*) >= 3
+        ORDER BY COUNT(*) DESC
+        LIMIT 20
+      ` as Promise<{
+        source: string; signups: number; verified: number; profile_basic: number;
+        with_cv: number; with_wallet: number; profile_good: number;
+        avg_completeness: number; avg_active_hours_after_signup: number;
+      }[]>,
+
+      // Signup method per day (email vs google vs linkedin vs whatsapp)
+      prisma.$queryRaw`
+        WITH days AS (
+          SELECT d::date AS day
+          FROM generate_series((NOW() - INTERVAL '89 days')::date, NOW()::date, '1 day'::interval) d
+        )
+        SELECT
+          d.day,
+          COUNT(h.id) FILTER (WHERE h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL)::int AS email,
+          COUNT(h.id) FILTER (WHERE h."googleId" IS NOT NULL)::int AS google,
+          COUNT(h.id) FILTER (WHERE h."linkedinId" IS NOT NULL)::int AS linkedin,
+          COUNT(h.id) FILTER (WHERE h.whatsapp IS NOT NULL AND h."googleId" IS NULL AND h."linkedinId" IS NULL)::int AS whatsapp
+        FROM days d
+        LEFT JOIN "Human" h ON h."createdAt"::date = d.day
+        GROUP BY d.day ORDER BY d.day
+      ` as Promise<{ day: Date; email: number; google: number; linkedin: number; whatsapp: number }[]>,
+
+      // Abandonment: users who signed up 7+ days ago, stuck at each stage
+      prisma.$queryRaw`
+        SELECT
+          CASE
+            WHEN "emailVerified" = false THEN 'never_verified'
+            WHEN "profileCompleteness" = 0 THEN 'never_started_profile'
+            WHEN "profileCompleteness" < 30 THEN 'profile_minimal'
+            WHEN "profileCompleteness" < 60 THEN 'profile_partial'
+            WHEN "profileCompleteness" < 80 AND NOT EXISTS (SELECT 1 FROM "Wallet" w WHERE w."humanId" = h.id) THEN 'no_wallet'
+            WHEN "profileCompleteness" >= 80 AND NOT EXISTS (SELECT 1 FROM "Wallet" w WHERE w."humanId" = h.id) THEN 'good_profile_no_wallet'
+            ELSE 'completed'
+          END AS stage,
+          COUNT(*)::int AS count,
+          ROUND(AVG("profileCompleteness"))::int AS avg_completeness,
+          ROUND(AVG(EXTRACT(EPOCH FROM (NOW() - "lastActiveAt")) / 86400))::int AS avg_days_inactive
+        FROM "Human" h
+        WHERE "createdAt" < NOW() - INTERVAL '7 days'
+        GROUP BY stage
+        ORDER BY count DESC
+      ` as Promise<{ stage: string; count: number; avg_completeness: number; avg_days_inactive: number }[]>,
+
+      // Onboarding velocity: how fast users hit milestones
+      prisma.$queryRaw`
+        SELECT
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY
+            CASE WHEN "emailVerified" = true AND "lastActiveAt" > "createdAt"
+              THEN EXTRACT(EPOCH FROM ("lastActiveAt" - "createdAt")) / 3600
+            END
+          )::float AS median_hours_to_active,
+          PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY
+            CASE WHEN "cvParsedAt" IS NOT NULL
+              THEN EXTRACT(EPOCH FROM ("cvParsedAt" - "createdAt")) / 3600
+            END
+          )::float AS median_hours_to_cv,
+          AVG("profileCompleteness")::float AS avg_completeness_all,
+          AVG(CASE WHEN "createdAt" >= NOW() - INTERVAL '7 days' THEN "profileCompleteness" END)::float AS avg_completeness_7d,
+          AVG(CASE WHEN "createdAt" >= NOW() - INTERVAL '30 days' THEN "profileCompleteness" END)::float AS avg_completeness_30d
+        FROM "Human"
+        WHERE "createdAt" >= NOW() - INTERVAL '90 days'
+      ` as Promise<{
+        median_hours_to_active: number | null; median_hours_to_cv: number | null;
+        avg_completeness_all: number | null; avg_completeness_7d: number | null;
+        avg_completeness_30d: number | null;
+      }[]>,
+
+      // Weekly cohort funnel: signup week → milestones reached
+      prisma.$queryRaw`
+        SELECT
+          DATE_TRUNC('week', h."createdAt")::date AS week,
+          COUNT(*)::int AS signups,
+          COUNT(*) FILTER (WHERE h."emailVerified" = true)::int AS verified,
+          COUNT(*) FILTER (WHERE h."profileCompleteness" >= 30)::int AS profile_basic,
+          COUNT(*) FILTER (WHERE h."cvFileKey" IS NOT NULL)::int AS with_cv,
+          COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM "Wallet" w WHERE w."humanId" = h.id))::int AS with_wallet,
+          COUNT(*) FILTER (WHERE h."profileCompleteness" >= 60)::int AS profile_good,
+          COUNT(*) FILTER (WHERE h."lastActiveAt" > h."createdAt" + INTERVAL '7 days')::int AS retained_7d,
+          ROUND(AVG(h."profileCompleteness"))::int AS avg_completeness
+        FROM "Human" h
+        WHERE h."createdAt" >= NOW() - INTERVAL '12 weeks'
+        GROUP BY DATE_TRUNC('week', h."createdAt")
+        ORDER BY week DESC
+      ` as Promise<{
+        week: Date; signups: number; verified: number; profile_basic: number;
+        with_cv: number; with_wallet: number; profile_good: number;
+        retained_7d: number; avg_completeness: number;
+      }[]>,
+    ]);
+
+    const funnel = funnelStagesRaw[0] || {};
+    const velocity = velocityRaw[0] || {};
+
+    res.json({
+      funnel,
+      sourceQuality: sourceQualityRaw,
+      signupMethodsByDay: signupMethodsByDayRaw.map(r => ({
+        day: new Date(r.day).toISOString().slice(0, 10),
+        email: r.email, google: r.google, linkedin: r.linkedin, whatsapp: r.whatsapp,
+      })),
+      abandonment: abandonmentRaw,
+      velocity: {
+        medianHoursToActive: velocity.median_hours_to_active != null ? Math.round(velocity.median_hours_to_active * 10) / 10 : null,
+        medianHoursToCv: velocity.median_hours_to_cv != null ? Math.round(velocity.median_hours_to_cv * 10) / 10 : null,
+        avgCompletenessAll: Math.round(Number(velocity.avg_completeness_all) || 0),
+        avgCompleteness7d: Math.round(Number(velocity.avg_completeness_7d) || 0),
+        avgCompleteness30d: Math.round(Number(velocity.avg_completeness_30d) || 0),
+      },
+      cohortFunnel: cohortFunnelRaw.map(r => ({
+        week: new Date(r.week).toISOString().slice(0, 10),
+        signups: r.signups, verified: r.verified, profileBasic: r.profile_basic,
+        withCv: r.with_cv, withWallet: r.with_wallet, profileGood: r.profile_good,
+        retained7d: r.retained_7d, avgCompleteness: r.avg_completeness,
+      })),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin funnel stats error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
