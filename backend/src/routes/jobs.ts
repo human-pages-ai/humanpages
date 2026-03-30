@@ -76,8 +76,10 @@ const createJobSchema = z.object({
   category: z.string().max(100).optional(),
   priceUsdc: z.number().positive().max(999999999),
   // Payment mode & timing
-  paymentMode: z.enum(['ONE_TIME', 'STREAM']).optional().default('ONE_TIME'),
+  paymentMode: z.enum(['ONE_TIME', 'STREAM', 'ESCROW']).optional().default('ONE_TIME'),
   paymentTiming: z.enum(['upfront', 'upon_completion']).optional().default('upfront'),
+  // Escrow-specific fields (required when paymentMode=ESCROW)
+  escrowArbitratorAddress: z.string().optional(),
   // Stream-specific fields (required when paymentMode=STREAM)
   streamMethod: z.enum(['SUPERFLUID', 'MICRO_TRANSFER']).optional(),
   streamInterval: z.enum(['HOURLY', 'DAILY', 'WEEKLY']).optional(),
@@ -200,6 +202,16 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
           limit: config.limit,
           retryAfter: windowLabel,
         });
+      }
+    }
+
+    // Validate escrow fields when mode is ESCROW
+    if (data.paymentMode === 'ESCROW') {
+      if (!process.env.ESCROW_ENABLED) {
+        return res.status(400).json({ error: 'Escrow payments are not enabled' });
+      }
+      if (!data.escrowArbitratorAddress) {
+        return res.status(400).json({ error: 'escrowArbitratorAddress is required when paymentMode is ESCROW' });
       }
     }
 
@@ -369,6 +381,12 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
           streamRateUsdc: data.streamRateUsdc ? new Decimal(data.streamRateUsdc) : undefined,
           streamMaxTicks: data.streamMaxTicks,
           streamGraceTicks: data.streamGraceTicks ?? 1,
+        } : {}),
+        // Escrow fields
+        ...(data.paymentMode === 'ESCROW' ? {
+          escrowStatus: 'PENDING_DEPOSIT' as const,
+          escrowArbitratorAddress: data.escrowArbitratorAddress,
+          escrowDisputeWindow: data.priceUsdc < 25 ? 86400 : data.priceUsdc < 100 ? 172800 : 259200,
         } : {}),
         callbackUrl: data.callbackUrl,
         callbackSecret: data.callbackSecret,
@@ -1323,6 +1341,49 @@ router.patch('/:id/approve-completion', authenticateEither, requireActiveIfAgent
 
     if (job.status !== 'SUBMITTED') {
       return res.status(400).json({ error: `Cannot approve completion for job in ${job.status} status` });
+    }
+
+    // For escrow jobs, redirect to the escrow mark-complete endpoint
+    if (job.paymentMode === 'ESCROW' && job.escrowStatus === 'FUNDED' && job.escrowJobIdHash) {
+      const { markCompleteOnChain } = await import('../lib/blockchain/escrow.js');
+      const now = new Date();
+      const disputeDeadline = new Date(now.getTime() + (job.escrowDisputeWindow || 259200) * 1000);
+
+      const txHash = await markCompleteOnChain(job.escrowJobIdHash as `0x${string}`);
+      const updated = await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'COMPLETED',
+          escrowStatus: 'COMPLETED_ONCHAIN',
+          escrowCompletedAt: now,
+          escrowDisputeDeadline: disputeDeadline,
+          completedAt: now,
+          lastActionBy: 'AGENT',
+        },
+      });
+
+      if (job.callbackUrl) {
+        fireWebhook(
+          { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+          'job.escrow_completed',
+        );
+      }
+
+      trackServerEvent(req.senderId!, 'job_completed', {
+        jobId: updated.id,
+        agentId: updated.registeredAgentId || updated.agentId,
+        completedBy: 'agent_approved',
+        escrow: true,
+      }, req);
+
+      return res.json({
+        id: updated.id,
+        status: updated.status,
+        escrowStatus: updated.escrowStatus,
+        escrowDisputeDeadline: updated.escrowDisputeDeadline,
+        markCompleteTxHash: txHash,
+        message: `Work approved. Funds auto-release at ${disputeDeadline.toISOString()} unless disputed.`,
+      });
     }
 
     const updated = await prisma.job.update({

@@ -32,6 +32,7 @@ const ConnectTrustClaw = lazy(() => import('./pages/connect/TrustClawPage'));
 const ConnectPicoClaw = lazy(() => import('./pages/connect/PicoClawPage'));
 const ConnectMaxClaw = lazy(() => import('./pages/connect/MaxClawPage'));
 const ConnectSmithery = lazy(() => import('./pages/connect/SmitheryPage'));
+const ArbitratorApplyPage = lazy(() => import('./pages/ArbitratorApplyPage'));
 const FundingPage = lazy(() => import('./pages/FundingPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
@@ -44,6 +45,7 @@ const GitHubVerifyCallback = lazy(() => import('./pages/GitHubVerifyCallback'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const ClaimProfile = lazy(() => import('./pages/ClaimProfile'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 const Badge = lazy(() => import('./pages/Badge'));
@@ -216,6 +218,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/dev" element={<DevelopersPage />} />
+      <Route path="/dev/arbiter" element={<ArbitratorApplyPage />} />
       <Route path="/solver" element={<SolverPage />} />
       <Route path="/dev/connect" element={<ConnectOverview />} />
       <Route path="/dev/connect/claude" element={<ConnectClaude />} />
@@ -315,6 +318,7 @@ function AppRoutes() {
         }
       />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/claim/:token" element={<ClaimProfile />} />
       <Route path="/email-verified" element={<EmailVerified />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfUse />} />

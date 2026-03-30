@@ -28,6 +28,18 @@ enum WorkMode {
 enum PaymentMode {
   ONE_TIME
   STREAM
+  ESCROW
+}
+
+// Escrow lifecycle status
+enum EscrowStatus {
+  PENDING_DEPOSIT
+  FUNDED
+  COMPLETED_ONCHAIN
+  RELEASED
+  CANCELLED
+  DISPUTED
+  RESOLVED
 }
 
 // Stream payment interval
@@ -559,6 +571,24 @@ model Agent {
   solverGithubId         String?   // GitHub user ID (prevent reuse)
   solverTelegramId       String?   // Telegram user ID (prevent reuse)
 
+  // ===== ARBITRATOR FIELDS =====
+  isArbitrator            Boolean   @default(false)
+  arbitratorFeeBps        Int?
+  arbitratorSpecialties   String[]
+  arbitratorSla           String?
+  arbitratorWebhookUrl    String?
+  arbitratorHealthy       Boolean   @default(true)
+  arbitratorLastHealthAt  DateTime?
+  arbitratorWalletSig     String?
+  arbitratorDisputeCount  Int       @default(0)
+  arbitratorWinCount      Int       @default(0)
+  arbitratorTotalEarned   Decimal   @default(0) @db.Decimal(18, 6)
+  arbitratorAvgResponseH  Float?
+
+  // ===== ESCROW REPUTATION =====
+  escrowReleaseCount   Int @default(0)
+  escrowDisputeCount   Int @default(0)
+
   // ===== ABUSE TRACKING =====
   abuseScore   Int @default(0)
   abuseStrikes Int @default(0)
@@ -736,6 +766,37 @@ model Job {
   streamGraceTicks     Int            @default(1) // Misses before auto-pause (micro-transfer)
   streamContractId     String?        // Future: Sablier stream ID
 
+  // ===== ESCROW PAYMENT FIELDS =====
+  escrowStatus                 EscrowStatus?
+  escrowContractAddress        String?
+  escrowJobIdHash              String?
+  escrowDepositTxHash          String?        @unique
+  escrowDepositedAt            DateTime?
+  escrowDepositorAddress       String?
+  escrowPayeeAddress           String?
+  escrowAmount                 Decimal?       @db.Decimal(18, 6)
+  escrowArbitratorAddress      String?
+  escrowArbitratorFeeBps       Int?
+  escrowDisputeWindow          Int?           // seconds
+  escrowCompletedAt            DateTime?
+  escrowDisputeDeadline        DateTime?
+  escrowReleaseTxHash          String?
+  escrowReleasedAt             DateTime?
+  escrowCancelTxHash           String?
+  escrowCancelledAt            DateTime?
+  escrowCancelAmountPayee      Decimal?       @db.Decimal(18, 6)
+  escrowCancelAmountDepositor  Decimal?       @db.Decimal(18, 6)
+  escrowDisputeTxHash          String?
+  escrowDisputedAt             DateTime?
+  escrowDisputeReason          String?        @db.VarChar(1000)
+  escrowVerdictAmountPayee     Decimal?       @db.Decimal(18, 6)
+  escrowVerdictAmountDepositor Decimal?       @db.Decimal(18, 6)
+  escrowVerdictArbitratorFee   Decimal?       @db.Decimal(18, 6)
+  escrowVerdictSignature       String?
+  escrowVerdictNonce           String?
+  escrowResolveTxHash          String?
+  escrowResolvedAt             DateTime?
+
   // Webhook callback (optional, provided by agent)
   callbackUrl     String?   // URL to POST status updates to
   callbackSecret  String?   // HMAC-SHA256 secret for signing payloads
@@ -797,6 +858,8 @@ model Job {
   @@index([humanId, status, createdAt])
   @@index([paymentMode, status])
   @@index([status, streamMethod])
+  @@index([escrowStatus])
+  @@index([escrowDisputeDeadline])
 }
 
 model StreamTick {

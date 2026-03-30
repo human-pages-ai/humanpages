@@ -180,6 +180,11 @@ router.post('/register', registerLimiter, async (req, res) => {
   }
 });
 
+// GET /api/agents/me — authenticated, returns own agent ID and name
+router.get('/me', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  res.json({ id: req.agent!.id, name: req.agent!.name, status: req.agent!.status });
+});
+
 // GET /api/agents/:id — public, returns agent profile + computed reputation
 router.get('/:id', async (req, res) => {
   try {
@@ -732,6 +737,125 @@ router.post('/:id/report', reportLimiter, async (req, res) => {
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Report agent error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ======================== ARBITRATOR ROUTES ========================
+
+// POST /api/agents/:id/arbitrator — register as arbitrator
+router.post('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    if (req.agent!.id !== req.params.id) {
+      return res.status(403).json({ error: 'Can only register yourself' });
+    }
+
+    const data = z.object({
+      feeBps: z.number().int().min(1).max(1000),
+      specialties: z.array(z.string().max(50)).max(10).optional(),
+      sla: z.string().max(100).optional(),
+      webhookUrl: z.string().url().optional(),
+      walletSig: z.string().optional(),
+    }).parse(req.body);
+
+    // Validate webhook URL if provided (SSRF protection)
+    if (data.webhookUrl) {
+      const url = new URL(data.webhookUrl);
+      if (url.protocol !== 'https:') {
+        return res.status(400).json({ error: 'Webhook URL must use HTTPS' });
+      }
+      const hostname = url.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' ||
+          hostname.startsWith('10.') || hostname.startsWith('192.168.') ||
+          hostname.startsWith('172.') || hostname === '169.254.169.254') {
+        return res.status(400).json({ error: 'Webhook URL cannot point to private networks' });
+      }
+    }
+
+    const updated = await prisma.agent.update({
+      where: { id: req.params.id },
+      data: {
+        isArbitrator: true,
+        arbitratorFeeBps: data.feeBps,
+        arbitratorSpecialties: data.specialties || [],
+        arbitratorSla: data.sla,
+        arbitratorWebhookUrl: data.webhookUrl,
+        arbitratorWalletSig: data.walletSig,
+      },
+    });
+
+    res.json({
+      id: updated.id,
+      isArbitrator: updated.isArbitrator,
+      arbitratorFeeBps: updated.arbitratorFeeBps,
+      arbitratorSpecialties: updated.arbitratorSpecialties,
+      arbitratorSla: updated.arbitratorSla,
+      arbitratorWebhookUrl: updated.arbitratorWebhookUrl,
+      message: 'Registered as arbitrator candidate. Platform owner will whitelist your wallet on the escrow contract.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Register arbitrator error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/agents/:id/arbitrator — update arbitrator profile
+router.patch('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    if (req.agent!.id !== req.params.id) {
+      return res.status(403).json({ error: 'Can only update yourself' });
+    }
+
+    const data = z.object({
+      feeBps: z.number().int().min(1).max(1000).optional(),
+      specialties: z.array(z.string().max(50)).max(10).optional(),
+      sla: z.string().max(100).optional(),
+      webhookUrl: z.string().url().optional(),
+    }).parse(req.body);
+
+    const updated = await prisma.agent.update({
+      where: { id: req.params.id },
+      data: {
+        ...(data.feeBps !== undefined && { arbitratorFeeBps: data.feeBps }),
+        ...(data.specialties && { arbitratorSpecialties: data.specialties }),
+        ...(data.sla !== undefined && { arbitratorSla: data.sla }),
+        ...(data.webhookUrl !== undefined && { arbitratorWebhookUrl: data.webhookUrl }),
+      },
+    });
+
+    res.json({
+      id: updated.id,
+      arbitratorFeeBps: updated.arbitratorFeeBps,
+      arbitratorSpecialties: updated.arbitratorSpecialties,
+      message: 'Arbitrator profile updated.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
+    }
+    logger.error({ err: error }, 'Update arbitrator error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/agents/:id/arbitrator — opt out as arbitrator
+router.delete('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    if (req.agent!.id !== req.params.id) {
+      return res.status(403).json({ error: 'Can only update yourself' });
+    }
+
+    await prisma.agent.update({
+      where: { id: req.params.id },
+      data: { isArbitrator: false },
+    });
+
+    res.json({ message: 'Opted out as arbitrator.' });
+  } catch (error) {
+    logger.error({ err: error }, 'Delete arbitrator error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

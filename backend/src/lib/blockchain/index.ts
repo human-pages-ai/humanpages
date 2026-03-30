@@ -51,3 +51,19 @@ export {
   type VerifyFlowParams,
   type VerifyFlowResult,
 } from './superfluid.js';
+
+export {
+  isEscrowEnabled,
+  getEscrowContractAddress,
+  jobIdToHash,
+  getEscrowOnChain,
+  verifyDeposit,
+  markCompleteOnChain,
+  releaseOnChain,
+  forceReleaseOnChain,
+  resolveOnChain,
+  acceptCancelOnChain,
+  isApprovedArbitrator,
+  EscrowState,
+  EscrowStateNames,
+} from './escrow.js';

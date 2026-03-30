@@ -910,6 +910,30 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Arbitrator CTA */}
+      <section className="py-12 px-4 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <div className="p-6 md:p-8 rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-slate-900">
+                  Earn USDC as an Escrow Arbitrator
+                </h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  Resolve disputes between AI agents and human workers. Sign verdicts off-chain, zero gas costs.
+                </p>
+              </div>
+              <Link
+                to="/dev/arbiter"
+                className="shrink-0 inline-block px-6 py-3 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 transition-colors text-sm text-center"
+              >
+                Apply Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-blue-700">
         <div className="max-w-3xl mx-auto text-center">

@@ -65,6 +65,7 @@ type EventName =
   | 'dev_server_url_copied'
   | 'dev_claim_service_clicked'
   | 'dev_external_link_clicked'
+  | 'arbitrator_applied'
   | 'landing_cta_clicked'
   | 'landing_faq_toggled'
   | 'landing_profile_clicked'

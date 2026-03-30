@@ -1,0 +1,409 @@
+/**
+ * Escrow API routes.
+ * All routes gated behind ESCROW_ENABLED env var (checked in app.ts before mounting).
+ */
+import { Router } from 'express';
+import { z } from 'zod';
+import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
+import { authenticateAgent, AgentAuthRequest } from '../middleware/agentAuth.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { authenticateEither, EitherAuthRequest } from '../middleware/eitherAuth.js';
+import { requireActiveAgent } from '../middleware/requireActiveAgent.js';
+import { fireWebhook } from '../lib/webhook.js';
+import {
+  jobIdToHash,
+  getEscrowOnChain,
+  verifyDeposit,
+  markCompleteOnChain,
+  releaseOnChain,
+  forceReleaseOnChain,
+  resolveOnChain,
+  acceptCancelOnChain,
+  getEscrowContractAddress,
+  EscrowState,
+  EscrowStateNames,
+} from '../lib/blockchain/escrow.js';
+import type { Hex } from 'viem';
+
+const router = Router();
+
+// ======================== VERIFY DEPOSIT ========================
+// Agent calls after depositing USDC into contract
+router.post('/:jobId/verify-deposit', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const { txHash } = z.object({
+      txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid tx hash'),
+    }).parse(req.body);
+
+    const job = await prisma.job.findUnique({ where: { id: req.params.jobId } });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.registeredAgentId !== req.agent?.id) {
+      return res.status(403).json({ error: 'Not your job' });
+    }
+    if (job.paymentMode !== 'ESCROW') {
+      return res.status(400).json({ error: 'Job is not in escrow mode' });
+    }
+    if (job.escrowStatus && job.escrowStatus !== 'PENDING_DEPOSIT') {
+      return res.status(400).json({ error: `Escrow already in ${job.escrowStatus} state` });
+    }
+
+    // Check tx not already used
+    const existing = await prisma.job.findUnique({ where: { escrowDepositTxHash: txHash } });
+    if (existing) {
+      return res.status(400).json({ error: 'Transaction already used for another escrow' });
+    }
+
+    const jobIdHash = jobIdToHash(job.id);
+
+    // Verify on-chain
+    const deposit = await verifyDeposit(txHash as Hex, jobIdHash);
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'PAID',
+        escrowStatus: 'FUNDED',
+        escrowContractAddress: getEscrowContractAddress(),
+        escrowJobIdHash: jobIdHash,
+        escrowDepositTxHash: txHash,
+        escrowDepositedAt: new Date(),
+        escrowDepositorAddress: deposit.depositor,
+        escrowPayeeAddress: deposit.payee,
+        escrowAmount: deposit.amount.toString(),
+        escrowArbitratorAddress: deposit.arbitrator,
+        escrowArbitratorFeeBps: deposit.arbitratorFeeBps,
+        escrowDisputeWindow: deposit.disputeWindow,
+        paidAt: new Date(),
+        paymentNetwork: 'base-sepolia',
+        paymentTxHash: txHash,
+        paymentAmount: Number(deposit.amount) / 1e6,
+      },
+    });
+
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.escrow_funded',
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      escrowStatus: updated.escrowStatus,
+      escrowContractAddress: updated.escrowContractAddress,
+      escrowJobIdHash: updated.escrowJobIdHash,
+      escrowAmount: Number(updated.escrowAmount),
+      escrowArbitratorAddress: updated.escrowArbitratorAddress,
+      escrowArbitratorFeeBps: updated.escrowArbitratorFeeBps,
+      escrowDisputeWindow: updated.escrowDisputeWindow,
+    });
+  } catch (error: any) {
+    logger.error({ err: error, jobId: req.params.jobId }, 'Verify escrow deposit error');
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// ======================== MARK COMPLETE ========================
+// Agent approves work → relayer calls markComplete on-chain
+router.post('/:jobId/mark-complete', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({ where: { id: req.params.jobId } });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.registeredAgentId !== req.agent?.id) {
+      return res.status(403).json({ error: 'Not your job' });
+    }
+    if (job.paymentMode !== 'ESCROW' || job.escrowStatus !== 'FUNDED') {
+      return res.status(400).json({ error: 'Escrow not in FUNDED state' });
+    }
+    if (job.status !== 'SUBMITTED') {
+      return res.status(400).json({ error: `Cannot approve completion for job in ${job.status} status` });
+    }
+
+    const jobIdHash = job.escrowJobIdHash as Hex;
+    const txHash = await markCompleteOnChain(jobIdHash);
+
+    const now = new Date();
+    const disputeDeadline = new Date(now.getTime() + (job.escrowDisputeWindow || 72 * 3600) * 1000);
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'COMPLETED',
+        escrowStatus: 'COMPLETED_ONCHAIN',
+        escrowCompletedAt: now,
+        escrowDisputeDeadline: disputeDeadline,
+        completedAt: now,
+        lastActionBy: 'AGENT',
+      },
+    });
+
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.escrow_completed',
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      escrowStatus: updated.escrowStatus,
+      escrowDisputeDeadline: updated.escrowDisputeDeadline,
+      markCompleteTxHash: txHash,
+      message: `Work approved. Funds auto-release at ${disputeDeadline.toISOString()} unless disputed.`,
+    });
+  } catch (error: any) {
+    logger.error({ err: error, jobId: req.params.jobId }, 'Mark complete error');
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// ======================== ESCROW STATUS ========================
+router.get('/:jobId/status', async (req, res) => {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: req.params.jobId },
+      select: {
+        id: true,
+        status: true,
+        paymentMode: true,
+        escrowStatus: true,
+        escrowContractAddress: true,
+        escrowJobIdHash: true,
+        escrowAmount: true,
+        escrowArbitratorAddress: true,
+        escrowArbitratorFeeBps: true,
+        escrowDisputeWindow: true,
+        escrowCompletedAt: true,
+        escrowDisputeDeadline: true,
+        escrowReleasedAt: true,
+        escrowDisputedAt: true,
+        escrowResolvedAt: true,
+        escrowCancelledAt: true,
+        escrowVerdictAmountPayee: true,
+        escrowVerdictAmountDepositor: true,
+        escrowVerdictArbitratorFee: true,
+      },
+    });
+
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.paymentMode !== 'ESCROW') {
+      return res.status(400).json({ error: 'Job is not in escrow mode' });
+    }
+
+    // Include live on-chain state if funded
+    let onChainState = null;
+    if (job.escrowJobIdHash && job.escrowStatus && job.escrowStatus !== 'PENDING_DEPOSIT') {
+      try {
+        onChainState = await getEscrowOnChain(job.escrowJobIdHash as Hex);
+      } catch {
+        // On-chain read may fail, that's ok
+      }
+    }
+
+    const now = Date.now();
+    const timeRemaining = job.escrowDisputeDeadline
+      ? Math.max(0, Math.floor((job.escrowDisputeDeadline.getTime() - now) / 1000))
+      : null;
+
+    res.json({
+      ...job,
+      escrowAmount: job.escrowAmount ? Number(job.escrowAmount) : null,
+      escrowVerdictAmountPayee: job.escrowVerdictAmountPayee ? Number(job.escrowVerdictAmountPayee) : null,
+      escrowVerdictAmountDepositor: job.escrowVerdictAmountDepositor ? Number(job.escrowVerdictAmountDepositor) : null,
+      escrowVerdictArbitratorFee: job.escrowVerdictArbitratorFee ? Number(job.escrowVerdictArbitratorFee) : null,
+      timeRemaining,
+      onChainState,
+    });
+  } catch (error: any) {
+    logger.error({ err: error, jobId: req.params.jobId }, 'Escrow status error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ======================== PROPOSE CANCEL ========================
+router.post('/:jobId/propose-cancel', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const { amountToPayee } = z.object({
+      amountToPayee: z.number().min(0),
+    }).parse(req.body);
+
+    const job = await prisma.job.findUnique({ where: { id: req.params.jobId } });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.registeredAgentId !== req.agent?.id) {
+      return res.status(403).json({ error: 'Not your job' });
+    }
+    if (job.paymentMode !== 'ESCROW') {
+      return res.status(400).json({ error: 'Not an escrow job' });
+    }
+    if (!['FUNDED', 'COMPLETED_ONCHAIN'].includes(job.escrowStatus || '')) {
+      return res.status(400).json({ error: `Cannot cancel in ${job.escrowStatus} state` });
+    }
+
+    // Record the proposal (on-chain proposeCancel is called by the depositor directly)
+    res.json({
+      message: 'Cancel proposed. The worker must accept on-chain. Proposal expires in 7 days.',
+      amountToPayee,
+      amountToDepositor: Number(job.escrowAmount || 0) - amountToPayee,
+      expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+    });
+  } catch (error: any) {
+    logger.error({ err: error, jobId: req.params.jobId }, 'Propose cancel error');
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// ======================== ACCEPT CANCEL ========================
+router.post('/:jobId/accept-cancel', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const job = await prisma.job.findUnique({ where: { id: req.params.jobId } });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.humanId !== req.userId) {
+      return res.status(403).json({ error: 'Not your job' });
+    }
+    if (job.paymentMode !== 'ESCROW') {
+      return res.status(400).json({ error: 'Not an escrow job' });
+    }
+
+    const jobIdHash = job.escrowJobIdHash as Hex;
+    const txHash = await acceptCancelOnChain(jobIdHash);
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        status: 'CANCELLED',
+        escrowStatus: 'CANCELLED',
+        escrowCancelTxHash: txHash,
+        escrowCancelledAt: new Date(),
+        cancelledAt: new Date(),
+        cancelledBy: 'HUMAN',
+      },
+    });
+
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.escrow_cancelled',
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      status: updated.status,
+      escrowStatus: updated.escrowStatus,
+      cancelTxHash: txHash,
+    });
+  } catch (error: any) {
+    logger.error({ err: error, jobId: req.params.jobId }, 'Accept cancel error');
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// ======================== SUBMIT VERDICT ========================
+// Anyone (usually relayer) submits arbitrator's signed verdict
+router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  try {
+    const body = z.object({
+      jobId: z.string(),
+      toPayee: z.string(), // raw USDC amount (6 decimals)
+      toDepositor: z.string(),
+      arbitratorFee: z.string(),
+      nonce: z.string(),
+      signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
+    }).parse(req.body);
+
+    const job = await prisma.job.findUnique({ where: { id: body.jobId } });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.paymentMode !== 'ESCROW' || job.escrowStatus !== 'DISPUTED') {
+      return res.status(400).json({ error: 'Escrow not in DISPUTED state' });
+    }
+
+    const jobIdHash = job.escrowJobIdHash as Hex;
+    const txHash = await resolveOnChain(
+      jobIdHash,
+      BigInt(body.toPayee),
+      BigInt(body.toDepositor),
+      BigInt(body.arbitratorFee),
+      BigInt(body.nonce),
+      body.signature as Hex,
+    );
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        escrowStatus: 'RESOLVED',
+        escrowVerdictAmountPayee: (Number(body.toPayee) / 1e6).toString(),
+        escrowVerdictAmountDepositor: (Number(body.toDepositor) / 1e6).toString(),
+        escrowVerdictArbitratorFee: (Number(body.arbitratorFee) / 1e6).toString(),
+        escrowVerdictSignature: body.signature,
+        escrowVerdictNonce: body.nonce,
+        escrowResolveTxHash: txHash,
+        escrowResolvedAt: new Date(),
+      },
+    });
+
+    if (job.callbackUrl) {
+      fireWebhook(
+        { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
+        'job.escrow_resolved',
+      );
+    }
+
+    res.json({
+      id: updated.id,
+      escrowStatus: updated.escrowStatus,
+      resolveTxHash: txHash,
+      toPayee: body.toPayee,
+      toDepositor: body.toDepositor,
+      arbitratorFee: body.arbitratorFee,
+    });
+  } catch (error: any) {
+    logger.error({ err: error }, 'Resolve escrow error');
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// ======================== LIST ARBITRATORS ========================
+router.get('/arbitrators', async (_req, res) => {
+  try {
+    const arbitrators = await prisma.agent.findMany({
+      where: {
+        isArbitrator: true,
+        arbitratorHealthy: true,
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        isVerified: true,
+        arbitratorFeeBps: true,
+        arbitratorSpecialties: true,
+        arbitratorSla: true,
+        arbitratorHealthy: true,
+        arbitratorDisputeCount: true,
+        arbitratorWinCount: true,
+        arbitratorTotalEarned: true,
+        arbitratorAvgResponseH: true,
+        escrowReleaseCount: true,
+        escrowDisputeCount: true,
+        wallets: {
+          where: { verified: true },
+          select: { address: true, network: true },
+        },
+      },
+    });
+
+    res.json(arbitrators.map(a => ({
+      ...a,
+      arbitratorTotalEarned: Number(a.arbitratorTotalEarned),
+    })));
+  } catch (error) {
+    logger.error({ err: error }, 'List arbitrators error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default router;

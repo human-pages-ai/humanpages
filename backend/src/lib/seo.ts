@@ -302,6 +302,49 @@ export function getCareersMetaHtml(lang?: string): string | null {
   return modifiedHtml;
 }
 
+export function getArbitratorMetaHtml(): string | null {
+  const html = getIndexHtml();
+  if (!html) return null;
+
+  const title = 'Become an Arbitrator — Earn USDC Resolving Disputes | Human Pages';
+  const description = 'Join Human Pages as an escrow arbitrator. Resolve disputes between AI agents and human workers, earn 1-50% fees in USDC. Zero gas costs — sign verdicts off-chain.';
+  const ogImage = `${SITE_URL}/api/og/prompt-to-completion`;
+  const canonicalUrl = `${SITE_URL}/dev/arbiter`;
+
+  const metaTags = `
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Human Pages" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${ogImage}" />
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Become an Arbitrator",
+      "description": description,
+      "url": canonicalUrl,
+      "publisher": { "@type": "Organization", "name": "Human Pages", "url": SITE_URL },
+    })}</script>`;
+
+  let modifiedHtml = html;
+  modifiedHtml = modifiedHtml.replace(/<title>.*?<\/title>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="description"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace(/<meta property="og:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<meta name="twitter:[^>]*>/g, '');
+  modifiedHtml = modifiedHtml.replace(/<link rel="canonical"[^>]*>/, '');
+  modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}\n  </head>`);
+
+  return modifiedHtml;
+}
+
 export function getDevPageMetaHtml(): string | null {
   const html = getIndexHtml();
   if (!html) return null;

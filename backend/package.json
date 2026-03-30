@@ -22,6 +22,7 @@
     "@axiomhq/js": "^1.4.0",
     "@axiomhq/pino": "^1.4.0",
     "@infisical/sdk": "^4.0.6",
+    "@libsql/client": "^0.17.2",
     "@prisma/client": "^5.10.0",
     "@privy-io/node": "^0.10.1",
     "@resvg/resvg-js": "^2.6.2",

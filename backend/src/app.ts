@@ -24,6 +24,7 @@ import geoRoutes from './routes/geo.js';
 import affiliateRoutes from './routes/affiliate.js';
 import adminRoutes from './routes/admin.js';
 import feedbackRoutes from './routes/feedback.js';
+import claimRoutes from './routes/claim.js';
 import listingsRoutes from './routes/listings.js';
 import careersRoutes from './routes/careers.js';
 import photosRoutes from './routes/photos.js';
@@ -33,9 +34,10 @@ import cvRouter from './routes/cv.js';
 import mcpOAuthRoutes from './routes/mcp-oauth.js';
 import mcpRemoteRoutes from './routes/mcp-remote.js';
 import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
+import escrowRoutes from './routes/escrow.js';
 import moltbookSolverRoutes from './routes/moltbookSolver.js';
 import solverVerificationRoutes from './routes/solverVerification.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml, fixSpaCanonical } from './lib/seo.js';
+import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getArbitratorMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml, fixSpaCanonical } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -168,6 +170,12 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/blog', blogApiRoutes);
 app.use('/api/careers', careersRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/claim', claimRoutes);
+
+// Escrow routes (gated behind ESCROW_ENABLED env var)
+if (process.env.ESCROW_ENABLED === 'true') {
+  app.use('/api/escrow', express.json({ limit: '10kb' }), escrowRoutes);
+}
 
 // MCP OAuth 2.0 endpoints (well-known discovery, client registration, authorize, token)
 app.use(mcpOAuthRoutes);
@@ -285,6 +293,16 @@ app.get('/:lang/prompt-to-completion', (req, res, next) => {
 // No language-prefixed routes — /dev section is English-only
 app.get('/dev', (req, res, next) => {
   const html = getDevPageMetaHtml();
+  if (html) {
+    res.set('Content-Type', 'text/html');
+    return res.send(html);
+  }
+  next();
+});
+
+// Arbitrator apply page: inject OG meta tags
+app.get('/dev/arbiter', (req, res, next) => {
+  const html = getArbitratorMetaHtml();
   if (html) {
     res.set('Content-Type', 'text/html');
     return res.send(html);
