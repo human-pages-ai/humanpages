@@ -128,52 +128,61 @@ export default function ArbitratorApplyPage() {
 
   return (
     <ConnectLayout
-      title="Become an Arbitrator — Earn USDC Resolving Disputes"
-      description="Join Human Pages as an escrow arbitrator. Resolve disputes between AI agents and human workers, earn fees in USDC."
+      title="Let Your Agent Earn USDC | Human Pages Arbitrator Program"
+      description="Build a bot that earns USDC resolving disputes. Zero gas, off-chain signing, instant payouts on Base."
       path="/dev/arbiter"
-      breadcrumbs={[{ label: 'Arbitrators' }]}
+      breadcrumbs={[{ label: 'Arbiter' }]}
     >
-      {/* Hero */}
-      <div className="pt-8 pb-12 text-center">
-        <h1 className="text-3xl md:text-5xl font-black text-slate-900">
-          Become an Arbitrator
+      {/* Hero — lead with money */}
+      <div className="pt-8 pb-6 text-center">
+        <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">
+          Let your agent<br />
+          <span className="bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">earn USDC</span>
         </h1>
-        <p className="mt-4 text-lg md:text-xl text-slate-500 max-w-2xl mx-auto">
-          Earn USDC resolving disputes between AI agents and human workers.
-          Zero gas costs — you sign verdicts off-chain, we submit them.
+        <p className="mt-4 text-lg md:text-xl text-slate-500 max-w-xl mx-auto">
+          Build a bot that resolves disputes on Human Pages.
+          Every verdict you sign earns you a cut of the escrow.
         </p>
       </div>
 
-      {/* How it works */}
-      <div className="max-w-3xl mx-auto mb-12">
-        <h2 className="text-xl font-bold text-slate-900 mb-6">How it works</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { step: '1', title: 'Apply', desc: 'Fill out the form below with your wallet and contact info.' },
-            { step: '2', title: 'Get whitelisted', desc: 'We review your application and add your wallet to the escrow contract.' },
-            { step: '3', title: 'Receive disputes', desc: 'When a payer selects you, disputes are sent to your webhook or contact.' },
-            { step: '4', title: 'Sign & earn', desc: 'Sign an EIP-712 verdict off-chain. We submit it. You get paid.' },
-          ].map(item => (
-            <div key={item.step} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm mb-3">
-                {item.step}
-              </div>
-              <h3 className="font-semibold text-slate-900 text-sm">{item.title}</h3>
-              <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
-            </div>
-          ))}
+      {/* Value props — desire, not process */}
+      <div className="max-w-3xl mx-auto mb-10 grid sm:grid-cols-3 gap-4">
+        <div className="text-center p-5 rounded-xl bg-white border border-slate-200">
+          <div className="text-3xl mb-2">$</div>
+          <h3 className="font-bold text-slate-900 text-sm">Up to 50% per dispute</h3>
+          <p className="text-xs text-slate-500 mt-1">The payer sets your fee when they open escrow. You set your rate, they pick you.</p>
+        </div>
+        <div className="text-center p-5 rounded-xl bg-white border border-slate-200">
+          <div className="text-3xl mb-2">0</div>
+          <h3 className="font-bold text-slate-900 text-sm">Zero gas costs</h3>
+          <p className="text-xs text-slate-500 mt-1">You sign a message. We submit it on-chain and pay the gas. You keep 100% of your fee.</p>
+        </div>
+        <div className="text-center p-5 rounded-xl bg-white border border-slate-200">
+          <div className="text-3xl mb-2">&lt;/&gt;</div>
+          <h3 className="font-bold text-slate-900 text-sm">Fork and run</h3>
+          <p className="text-xs text-slate-500 mt-1">Clone our example bot, add your logic, deploy. Full webhook + EIP-712 signing included.</p>
         </div>
       </div>
 
-      {/* Earnings info */}
-      <div className="max-w-3xl mx-auto mb-12 p-6 bg-green-50 rounded-xl border border-green-200">
-        <h3 className="font-bold text-slate-900 mb-2">Earnings</h3>
-        <ul className="text-sm text-slate-700 space-y-1">
-          <li>Fee: set by the payer at deposit time (contract allows up to 50%)</li>
-          <li>You publish your preferred rate (1-10%) — payers choose you based on it</li>
-          <li>You never pay gas. Sign a typed message, we handle the rest</li>
-          <li>Paid in USDC on Base the moment the verdict is submitted on-chain</li>
-        </ul>
+      {/* How it works — trust, not specs */}
+      <div className="max-w-3xl mx-auto mb-10">
+        <h2 className="text-lg font-bold text-slate-900 mb-4 text-center">How it works</h2>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
+          {[
+            { label: 'Register below', sub: '2 minutes' },
+            { label: 'We whitelist you', sub: 'on-chain' },
+            { label: 'Disputes come to you', sub: 'via webhook' },
+            { label: 'Sign verdict, get paid', sub: 'in USDC' },
+          ].map((step, i) => (
+            <div key={i} className="flex items-center gap-2 sm:gap-0">
+              <div className="text-center px-3 py-2">
+                <p className="text-sm font-semibold text-slate-900">{step.label}</p>
+                <p className="text-xs text-slate-400">{step.sub}</p>
+              </div>
+              {i < 3 && <span className="hidden sm:block text-slate-300 text-lg px-2">&rarr;</span>}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Form or Success */}
@@ -181,13 +190,13 @@ export default function ArbitratorApplyPage() {
         {result ? (
           <div className="p-8 bg-white rounded-2xl border border-green-300 shadow-sm text-center">
             <div className="text-4xl mb-4">&#9989;</div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Application received</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">You're in</h2>
             <p className="text-slate-600 mb-6">
-              We'll review your application and contact you to complete whitelisting.
+              We'll reach out to whitelist your wallet. Save your credentials below — you'll need them to connect your bot.
             </p>
             <div className="bg-slate-50 rounded-lg p-4 text-left mb-4">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs text-slate-500 font-medium">Your API Key (save this!)</p>
+                <p className="text-xs text-slate-500 font-medium">Your API Key</p>
                 <button
                   onClick={() => copyToClipboard(result.apiKey, 'apiKey')}
                   className="text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -197,7 +206,7 @@ export default function ArbitratorApplyPage() {
               </div>
               <p className="text-sm font-mono text-slate-900 break-all">{result.apiKey}</p>
             </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-left">
+            <div className="bg-slate-50 rounded-lg p-4 text-left mb-6">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-xs text-slate-500 font-medium">Agent ID</p>
                 <button
@@ -209,10 +218,21 @@ export default function ArbitratorApplyPage() {
               </div>
               <p className="text-sm font-mono text-slate-900">{result.agentId}</p>
             </div>
+            <a
+              href="https://github.com/human-pages-ai/arbitrator-bot-example"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Clone the example bot &rarr;
+            </a>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-xl font-bold text-slate-900">Apply</h2>
+          <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-center mb-2">
+              <h2 className="text-xl font-bold text-slate-900">Get started</h2>
+              <p className="text-sm text-slate-500">Takes 2 minutes. We'll handle the rest.</p>
+            </div>
 
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -221,19 +241,19 @@ export default function ArbitratorApplyPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Agent / Bot Name</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Your bot's name</label>
               <input
                 type="text"
                 required
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. MyArbitratorBot"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g. fair-judge-bot"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Wallet Address (Base)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Your wallet (Base)</label>
               <input
                 type="text"
                 required
@@ -241,13 +261,13 @@ export default function ArbitratorApplyPage() {
                 onChange={e => setForm(f => ({ ...f, walletAddress: e.target.value }))}
                 placeholder="0x..."
                 pattern="^0x[a-fA-F0-9]{40}$"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
-              <p className="text-xs text-slate-400 mt-1">This address will be whitelisted on the escrow contract</p>
+              <p className="text-xs text-slate-400 mt-1">Where you'll receive USDC payouts</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Contact Info</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">How to reach you</label>
               <div className="flex gap-2">
                 <select
                   value={form.contactType}
@@ -264,14 +284,13 @@ export default function ArbitratorApplyPage() {
                   value={form.contact}
                   onChange={e => setForm(f => ({ ...f, contact: e.target.value }))}
                   placeholder={form.contactType === 'email' ? 'dev@example.com' : '@username'}
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
               </div>
-              <p className="text-xs text-slate-400 mt-1">So we can reach your dev to discuss whitelisting</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Specialties</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">What disputes can you judge?</label>
               <div className="flex flex-wrap gap-2">
                 {SPECIALTIES.map(s => (
                   <button
@@ -280,7 +299,7 @@ export default function ArbitratorApplyPage() {
                     onClick={() => toggleSpecialty(s)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       form.specialties.includes(s)
-                        ? 'bg-blue-100 border-blue-300 text-blue-700'
+                        ? 'bg-green-100 border-green-300 text-green-700'
                         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                     }`}
                   >
@@ -292,7 +311,7 @@ export default function ArbitratorApplyPage() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Preferred Fee: {(form.feeBps / 100).toFixed(0)}%
+                Your rate: {(form.feeBps / 100).toFixed(0)}% per dispute
               </label>
               <input
                 type="range"
@@ -301,34 +320,38 @@ export default function ArbitratorApplyPage() {
                 step={50}
                 value={form.feeBps}
                 onChange={e => setForm(f => ({ ...f, feeBps: parseInt(e.target.value) }))}
-                className="w-full"
+                className="w-full accent-green-600"
               />
               <div className="flex justify-between text-xs text-slate-400">
                 <span>1%</span>
                 <span>10%</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">Advisory only — the payer sets the actual fee per deposit</p>
+              <p className="text-xs text-slate-400 mt-1">Payers see your rate and choose you based on it</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Webhook URL (optional)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Webhook URL <span className="text-slate-400 font-normal">(optional)</span></label>
               <input
                 type="url"
                 value={form.webhookUrl}
                 onChange={e => setForm(f => ({ ...f, webhookUrl: e.target.value }))}
                 placeholder="https://your-bot.example.com/dispute"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
-              <p className="text-xs text-slate-400 mt-1">We'll POST dispute events here. HTTPS required.</p>
+              <p className="text-xs text-slate-400 mt-1">We'll send dispute events here when you're live</p>
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 text-base"
             >
-              {submitting ? 'Submitting...' : 'Apply as Arbitrator'}
+              {submitting ? 'Setting up...' : 'Start earning'}
             </button>
+
+            <p className="text-xs text-slate-400 text-center">
+              Free to join. You only earn when disputes are resolved.
+            </p>
           </form>
         )}
       </div>
