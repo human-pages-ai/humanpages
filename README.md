@@ -422,3 +422,8 @@ If using nvm on Windows, specify the full path:
 ## License
 
 MIT
+
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/human-pages-ai-humanpages).
+
