@@ -2852,7 +2852,7 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
   }
 });
 
-// Mount features registry routes
-router.use('/features', authenticateToken, featureRoutes);
+// Mount features registry routes (auth applied inside features.ts per-route)
+router.use('/features', featureRoutes);
 
 export default router;

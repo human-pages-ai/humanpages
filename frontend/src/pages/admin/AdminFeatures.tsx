@@ -334,7 +334,7 @@ export default function AdminFeatures() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
   const [expandedFeature, setExpandedFeature] = useState<string | null>(null);
-  const [metricsMap, setMetricsMap] = useState<Record<string, any>>({});
+  const [metricsMap, setMetricsMap] = useState<Record<string, FeatureLiveMetric[]>>({});
   const [metricsLoading, setMetricsLoading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -350,8 +350,8 @@ export default function AdminFeatures() {
     try {
       const metrics = await api.getAdminFeatureMetrics(featureId);
       setMetricsMap((prev) => ({ ...prev, [featureId]: metrics.metrics }));
-    } catch (err) {
-      console.error('Failed to fetch metrics:', err);
+    } catch {
+      // Metrics are non-critical; silently degrade
     } finally {
       setMetricsLoading((prev) => ({ ...prev, [featureId]: false }));
     }
@@ -392,8 +392,8 @@ export default function AdminFeatures() {
     filtered = filtered.filter((f) => f.monitoring.currentStatus === monitoringFilter);
   }
 
-  // Sort
-  filtered.sort((a, b) => {
+  // Sort (copy first to avoid mutating React state)
+  filtered = [...filtered].sort((a, b) => {
     let aVal = 0,
       bVal = 0;
     if (sortBy === 'codeQuality') {

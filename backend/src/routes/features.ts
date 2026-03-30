@@ -54,7 +54,6 @@ interface FeatureItem {
     formula: string;
     target: string;
   };
-  liveMetrics?: MetricData[];
 }
 
 interface FeaturesRegistry {
@@ -70,12 +69,6 @@ interface MetricResult {
   label: string;
   value: number;
   recent?: number;
-  trend?: number; // percentage change
-}
-
-interface MetricData {
-  tableName: string;
-  metrics: MetricResult[];
 }
 
 interface SummaryData {
@@ -88,7 +81,7 @@ interface SummaryData {
   totalIssues: number;
 }
 
-// ─── Load features.json ───
+// ─── Load features.json (cached in memory) ───
 
 let featuresRegistry: FeaturesRegistry | null = null;
 
@@ -108,275 +101,218 @@ function loadFeaturesRegistry(): FeaturesRegistry {
   }
 }
 
-// ─── Helper: Calculate summary ───
+// ─── Summary calculation ───
 
 function calculateSummary(features: FeatureItem[]): SummaryData {
-  const codeQualityScores = features.map(f => f.codeQuality.score);
-  const businessValueScores = features.map(f => f.businessValue.score);
-
-  const testCoverageDistribution = {
-    high: features.filter(f => f.testCoverage === 'high').length,
-    medium: features.filter(f => f.testCoverage === 'medium').length,
-    low: features.filter(f => f.testCoverage === 'low').length,
-    none: features.filter(f => f.testCoverage === 'none').length,
-  };
-
-  const monitoringDistribution = {
-    good: features.filter(f => f.monitoring.currentStatus === 'good').length,
-    partial: features.filter(f => f.monitoring.currentStatus === 'partial').length,
-    none: features.filter(f => f.monitoring.currentStatus === 'none').length,
-  };
-
-  const totalIssues = features.reduce((sum, f) => sum + f.codeQuality.issues.length, 0);
-  const totalTestCount = features.reduce((sum, f) => sum + f.testCount, 0);
+  if (features.length === 0) {
+    return {
+      totalFeatures: 0,
+      avgCodeQuality: 0,
+      avgBusinessValue: 0,
+      testCoverageDistribution: { high: 0, medium: 0, low: 0, none: 0 },
+      monitoringDistribution: { good: 0, partial: 0, none: 0 },
+      totalTestCount: 0,
+      totalIssues: 0,
+    };
+  }
 
   return {
     totalFeatures: features.length,
-    avgCodeQuality: Math.round(codeQualityScores.reduce((a, b) => a + b, 0) / codeQualityScores.length),
-    avgBusinessValue: Math.round(businessValueScores.reduce((a, b) => a + b, 0) / businessValueScores.length),
-    testCoverageDistribution,
-    monitoringDistribution,
-    totalTestCount,
-    totalIssues,
+    avgCodeQuality: Math.round(
+      features.reduce((sum, f) => sum + f.codeQuality.score, 0) / features.length,
+    ),
+    avgBusinessValue: Math.round(
+      features.reduce((sum, f) => sum + f.businessValue.score, 0) / features.length,
+    ),
+    testCoverageDistribution: {
+      high: features.filter(f => f.testCoverage === 'high').length,
+      medium: features.filter(f => f.testCoverage === 'medium').length,
+      low: features.filter(f => f.testCoverage === 'low').length,
+      none: features.filter(f => f.testCoverage === 'none').length,
+    },
+    monitoringDistribution: {
+      good: features.filter(f => f.monitoring.currentStatus === 'good').length,
+      partial: features.filter(f => f.monitoring.currentStatus === 'partial').length,
+      none: features.filter(f => f.monitoring.currentStatus === 'none').length,
+    },
+    totalTestCount: features.reduce((sum, f) => sum + f.testCount, 0),
+    totalIssues: features.reduce((sum, f) => sum + f.codeQuality.issues.length, 0),
   };
 }
 
-// ─── TABLE_METRICS mapping ───
+// ─── Metric queries per DB table ───
+// Each returns an array of MetricResult. Only tables with a createdAt field
+// include a `recent` count for the given period.
 
-type PeriodStartGetter = () => Date;
-
-const TABLE_METRICS: Record<string, (prismaInstance: typeof prisma, periodStart: PeriodStartGetter) => Promise<MetricResult[]>> = {
-  Human: async (prismaInstance, periodStart) => [
-    {
-      label: 'Total Users',
-      value: await prismaInstance.human.count(),
-      recent: await prismaInstance.human.count({ where: { createdAt: { gte: periodStart() } } }),
-    },
-  ],
-  Wallet: async (prismaInstance, periodStart) => [
-    {
-      label: 'Total Wallets',
-      value: await prismaInstance.wallet.count(),
-      recent: await prismaInstance.wallet.count({ where: { createdAt: { gte: periodStart() } } }),
-    },
-    {
-      label: 'Verified Wallets',
-      value: await prismaInstance.wallet.count({ where: { verified: true } }),
-    },
-  ],
-  Job: async (prismaInstance, periodStart) => [
-    {
-      label: 'Total Jobs',
-      value: await prismaInstance.job.count(),
-      recent: await prismaInstance.job.count({ where: { createdAt: { gte: periodStart() } } }),
-    },
-  ],
-  Agent: async (prismaInstance, periodStart) => [
-    {
-      label: 'Total Agents',
-      value: await prismaInstance.agent.count(),
-      recent: await prismaInstance.agent.count({ where: { createdAt: { gte: periodStart() } } }),
-    },
-  ],
-  Review: async (prismaInstance, periodStart) => [
-    {
-      label: 'Total Reviews',
-      value: await prismaInstance.review.count(),
-    },
-  ],
-  Service: async (prismaInstance, periodStart) => [
-    {
-      label: 'Services Listed',
-      value: await prismaInstance.service.count(),
-    },
-  ],
-  Vouch: async (prismaInstance, periodStart) => [
-    {
-      label: 'Total Vouches',
-      value: await prismaInstance.vouch.count(),
-    },
-  ],
-  FiatPaymentMethod: async (prismaInstance, periodStart) => [
-    {
-      label: 'Fiat Methods',
-      value: await prismaInstance.fiatPaymentMethod.count(),
-    },
-  ],
-  Listing: async (prismaInstance, periodStart) => [
-    {
-      label: 'Active Listings',
-      value: await prismaInstance.listing.count(),
-    },
-  ],
-  ListingApplication: async (prismaInstance, periodStart) => [
-    {
-      label: 'Applications',
-      value: await prismaInstance.listingApplication.count(),
-    },
-  ],
-  Education: async (prismaInstance, periodStart) => [
-    {
-      label: 'Education Entries',
-      value: await prismaInstance.education.count(),
-    },
-  ],
-  Affiliate: async (prismaInstance, periodStart) => [
-    {
-      label: 'Affiliates',
-      value: await prismaInstance.affiliate.count(),
-    },
-  ],
-  ModerationQueue: async (prismaInstance, periodStart) => [
-    {
-      label: 'Moderation Items',
-      value: await prismaInstance.moderationQueue.count(),
-    },
-  ],
-  ContentItem: async (prismaInstance, periodStart) => [
-    {
-      label: 'Content Items',
-      value: await prismaInstance.contentItem.count(),
-    },
-  ],
-  Video: async (prismaInstance, periodStart) => [
-    {
-      label: 'Videos',
-      value: await prismaInstance.video.count(),
-    },
-  ],
-  Feedback: async (prismaInstance, periodStart) => [
-    {
-      label: 'Feedback Items',
-      value: await prismaInstance.feedback.count(),
-    },
-  ],
-  PasswordReset: async (prismaInstance, periodStart) => [
-    {
-      label: 'Password Resets',
-      value: await prismaInstance.passwordReset.count(),
-    },
-  ],
-  EmailLog: async (prismaInstance, periodStart) => [
-    {
-      label: 'Emails Sent',
-      value: await prismaInstance.emailLog.count(),
-    },
-  ],
-};
-
-// ─── Helper: Parse period parameter ───
-
-function getPeriodDates(period: string): { start: Date; previous: Date } {
-  const now = new Date();
-  const days = period === '24h' ? 1 : period === '30d' ? 30 : 7; // default 7d
-  const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-  const previous = new Date(start.getTime() - days * 24 * 60 * 60 * 1000);
-
-  return { start, previous };
+function buildTableMetrics(periodStart: Date): Record<string, () => Promise<MetricResult[]>> {
+  return {
+    Human: async () => [
+      {
+        label: 'Total Users',
+        value: await prisma.human.count(),
+        recent: await prisma.human.count({ where: { createdAt: { gte: periodStart } } }),
+      },
+    ],
+    Wallet: async () => [
+      {
+        label: 'Total Wallets',
+        value: await prisma.wallet.count(),
+        recent: await prisma.wallet.count({ where: { createdAt: { gte: periodStart } } }),
+      },
+      {
+        label: 'Verified Wallets',
+        value: await prisma.wallet.count({ where: { verified: true } }),
+      },
+    ],
+    Job: async () => [
+      {
+        label: 'Total Jobs',
+        value: await prisma.job.count(),
+        recent: await prisma.job.count({ where: { createdAt: { gte: periodStart } } }),
+      },
+    ],
+    Agent: async () => [
+      {
+        label: 'Total Agents',
+        value: await prisma.agent.count(),
+        recent: await prisma.agent.count({ where: { createdAt: { gte: periodStart } } }),
+      },
+    ],
+    Review: async () => [
+      { label: 'Total Reviews', value: await prisma.review.count() },
+    ],
+    Service: async () => [
+      { label: 'Services Listed', value: await prisma.service.count() },
+    ],
+    Vouch: async () => [
+      { label: 'Total Vouches', value: await prisma.vouch.count() },
+    ],
+    FiatPaymentMethod: async () => [
+      { label: 'Fiat Methods', value: await prisma.fiatPaymentMethod.count() },
+    ],
+    Listing: async () => [
+      { label: 'Active Listings', value: await prisma.listing.count() },
+    ],
+    ListingApplication: async () => [
+      { label: 'Applications', value: await prisma.listingApplication.count() },
+    ],
+    Education: async () => [
+      { label: 'Education Entries', value: await prisma.education.count() },
+    ],
+    Affiliate: async () => [
+      { label: 'Affiliates', value: await prisma.affiliate.count() },
+    ],
+    ModerationQueue: async () => [
+      { label: 'Moderation Items', value: await prisma.moderationQueue.count() },
+    ],
+    ContentItem: async () => [
+      { label: 'Content Items', value: await prisma.contentItem.count() },
+    ],
+    Video: async () => [
+      { label: 'Videos', value: await prisma.video.count() },
+    ],
+    Feedback: async () => [
+      { label: 'Feedback Items', value: await prisma.feedback.count() },
+    ],
+    PasswordReset: async () => [
+      { label: 'Password Resets', value: await prisma.passwordReset.count() },
+    ],
+    EmailLog: async () => [
+      { label: 'Emails Sent', value: await prisma.emailLog.count() },
+    ],
+  };
 }
 
-// ─── Helper: Calculate trend ───
+// ─── Period helpers ───
 
-function calculateTrend(current: number, previous: number): number {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
+function parsePeriodDays(period: string): number {
+  if (period === '24h') return 1;
+  if (period === '30d') return 30;
+  return 7; // default 7d
+}
+
+// ─── Fetch metrics for a single feature ───
+
+const METRIC_TIMEOUT_MS = 5_000;
+
+async function fetchFeatureMetrics(
+  feature: FeatureItem,
+  periodStart: Date,
+): Promise<MetricResult[]> {
+  const tableMetrics = buildTableMetrics(periodStart);
+  const results: MetricResult[] = [];
+
+  // Collect which tables this feature uses AND have a metric function
+  const tablesToQuery = feature.dbTables.filter(t => t in tableMetrics);
+  if (tablesToQuery.length === 0) return results;
+
+  // Query all tables in parallel with timeout
+  const promises = tablesToQuery.map(async tableName => {
+    try {
+      const metricFn = tableMetrics[tableName];
+      const metrics = await Promise.race([
+        metricFn(),
+        new Promise<MetricResult[]>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout querying ${tableName}`)), METRIC_TIMEOUT_MS),
+        ),
+      ]);
+      return metrics;
+    } catch (err) {
+      logger.warn({ err, tableName, featureId: feature.id }, 'Metric query failed');
+      return [];
+    }
+  });
+
+  const allResults = await Promise.all(promises);
+  for (const arr of allResults) {
+    results.push(...arr);
+  }
+  return results;
 }
 
 // ─── Routes ───
 
-// GET /features
+// GET /features — list all features with optional live metrics
 router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const registry = loadFeaturesRegistry();
-    const domainFilter = (req.query.domain as string)?.split(',').map(d => d.trim()) || null;
+    const domainParam = req.query.domain as string | undefined;
     const includeMetrics = req.query.metrics === 'true';
     const period = (req.query.period as string) || '7d';
 
     let features = registry.features;
 
-    // Filter by domain if specified
-    if (domainFilter && domainFilter.length > 0) {
-      features = features.filter(f => domainFilter.includes(f.domain));
-    }
-
-    // Optionally enrich with live metrics
-    if (includeMetrics) {
-      const { start: periodStart, previous: previousStart } = getPeriodDates(period);
-      const periodStartFn = () => periodStart;
-      const previousStartFn = () => previousStart;
-
-      const enrichedFeatures: FeatureItem[] = await Promise.all(
-        features.map(async feature => {
-          const liveMetrics: MetricData[] = [];
-
-          for (const tableName of feature.dbTables) {
-            const metricFn = TABLE_METRICS[tableName];
-            if (!metricFn) continue;
-
-            try {
-              const currentMetrics = await Promise.race([
-                metricFn(prisma, periodStartFn),
-                new Promise<MetricResult[]>((_, reject) =>
-                  setTimeout(() => reject(new Error('Metric query timeout')), 5000)
-                ),
-              ]);
-
-              const previousMetrics = await Promise.race([
-                metricFn(prisma, previousStartFn),
-                new Promise<MetricResult[]>((_, reject) =>
-                  setTimeout(() => reject(new Error('Metric query timeout')), 5000)
-                ),
-              ]);
-
-              // Calculate trends
-              const metricsWithTrend = currentMetrics.map(curr => {
-                const prev = previousMetrics.find(p => p.label === curr.label);
-                if (prev && curr.recent !== undefined) {
-                  return {
-                    ...curr,
-                    trend: calculateTrend(curr.recent, prev.value),
-                  };
-                }
-                return curr;
-              });
-
-              liveMetrics.push({
-                tableName,
-                metrics: metricsWithTrend,
-              });
-            } catch (error) {
-              logger.warn({ err: error, tableName, featureId: feature.id }, 'Failed to fetch metrics for table');
-            }
-          }
-
-          return {
-            ...feature,
-            liveMetrics: liveMetrics.length > 0 ? liveMetrics : undefined,
-          };
-        })
-      );
-
-      const summary = calculateSummary(enrichedFeatures);
-
-      return res.json({
-        summary,
-        features: enrichedFeatures,
-      });
+    // Filter by domain
+    if (domainParam) {
+      const domains = domainParam.split(',').map(d => d.trim());
+      features = features.filter(f => domains.includes(f.domain));
     }
 
     const summary = calculateSummary(features);
 
-    res.json({
-      summary,
-      features,
-    });
+    // Optionally attach live metrics (slower — runs DB queries)
+    if (includeMetrics) {
+      const days = parsePeriodDays(period);
+      const periodStart = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const enriched = await Promise.all(
+        features.map(async feature => {
+          const metrics = await fetchFeatureMetrics(feature, periodStart);
+          return { ...feature, liveMetrics: metrics.length > 0 ? metrics : undefined };
+        }),
+      );
+
+      return res.json({ summary, features: enriched });
+    }
+
+    res.json({ summary, features });
   } catch (error) {
     logger.error({ err: error }, 'Features registry error');
-    res.status(500).json({ error: 'Internal server error', detail: error instanceof Error ? error.message : String(error) });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// GET /features/:id/metrics
+// GET /features/:id/metrics — live metrics for a single feature
 router.get('/:id/metrics', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const registry = loadFeaturesRegistry();
@@ -387,62 +323,20 @@ router.get('/:id/metrics', authenticateToken, requireAdmin, async (req: AuthRequ
     }
 
     const period = (req.query.period as string) || '7d';
-    const { start: periodStart, previous: previousStart } = getPeriodDates(period);
-    const periodStartFn = () => periodStart;
-    const previousStartFn = () => previousStart;
+    const days = parsePeriodDays(period);
+    const periodStart = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const liveMetrics: MetricData[] = [];
-
-    for (const tableName of feature.dbTables) {
-      const metricFn = TABLE_METRICS[tableName];
-      if (!metricFn) continue;
-
-      try {
-        const currentMetrics = await Promise.race([
-          metricFn(prisma, periodStartFn),
-          new Promise<MetricResult[]>((_, reject) =>
-            setTimeout(() => reject(new Error('Metric query timeout')), 5000)
-          ),
-        ]);
-
-        const previousMetrics = await Promise.race([
-          metricFn(prisma, previousStartFn),
-          new Promise<MetricResult[]>((_, reject) =>
-            setTimeout(() => reject(new Error('Metric query timeout')), 5000)
-          ),
-        ]);
-
-        // Calculate trends
-        const metricsWithTrend = currentMetrics.map(curr => {
-          const prev = previousMetrics.find(p => p.label === curr.label);
-          if (prev && curr.recent !== undefined) {
-            return {
-              ...curr,
-              trend: calculateTrend(curr.recent, prev.value),
-            };
-          }
-          return curr;
-        });
-
-        liveMetrics.push({
-          tableName,
-          metrics: metricsWithTrend,
-        });
-      } catch (error) {
-        logger.warn({ err: error, tableName, featureId: feature.id }, 'Failed to fetch metrics for table');
-      }
-    }
+    const metrics = await fetchFeatureMetrics(feature, periodStart);
 
     res.json({
       featureId: feature.id,
-      featureName: feature.name,
       period,
-      periodStart: periodStart.toISOString(),
-      metrics: liveMetrics,
+      fetchedAt: new Date().toISOString(),
+      metrics,
     });
   } catch (error) {
-    logger.error({ err: error }, 'Features metrics error');
-    res.status(500).json({ error: 'Internal server error', detail: error instanceof Error ? error.message : String(error) });
+    logger.error({ err: error }, 'Feature metrics error');
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

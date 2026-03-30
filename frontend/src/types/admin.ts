@@ -1407,7 +1407,6 @@ export interface FeatureLiveMetric {
   label: string;
   value: number;
   recent?: number;
-  previousPeriod?: number;
 }
 
 export interface FeatureMetricsResponse {

@@ -21,10 +21,10 @@
         "POST /api/auth/login"
       ],
       "backendFiles": [
-        "src/routes/auth.ts"
+        "backend/src/routes/auth.ts"
       ],
       "frontendPages": [
-        "src/pages/Login.tsx"
+        "frontend/src/pages/Login.tsx"
       ],
       "dbTables": [
         "Human"
@@ -40,8 +40,8 @@
         "login_success"
       ],
       "testFiles": [
-        "src/tests/auth.test.ts",
-        "src/test/Login.test.tsx"
+        "backend/src/tests/auth.test.ts",
+        "backend/src/test/Login.test.tsx"
       ],
       "testCount": 19,
       "testCoverage": "high",
@@ -95,10 +95,10 @@
         "POST /api/auth/signup"
       ],
       "backendFiles": [
-        "src/routes/auth.ts"
+        "backend/src/routes/auth.ts"
       ],
       "frontendPages": [
-        "src/pages/Signup.tsx"
+        "frontend/src/pages/Signup.tsx"
       ],
       "dbTables": [
         "Human",
@@ -125,8 +125,8 @@
         "user_signed_up_server"
       ],
       "testFiles": [
-        "src/tests/auth.test.ts",
-        "src/test/Signup.test.tsx"
+        "backend/src/tests/auth.test.ts",
+        "backend/src/test/Signup.test.tsx"
       ],
       "testCount": 31,
       "testCoverage": "high",
@@ -183,10 +183,10 @@
         "POST /api/auth/resend-verification"
       ],
       "backendFiles": [
-        "src/routes/auth.ts"
+        "backend/src/routes/auth.ts"
       ],
       "frontendPages": [
-        "src/pages/EmailVerified.tsx"
+        "frontend/src/pages/EmailVerified.tsx"
       ],
       "dbTables": [
         "Human"
@@ -200,7 +200,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/auth.test.ts"
+        "backend/src/tests/auth.test.ts"
       ],
       "testCount": 8,
       "testCoverage": "medium",
@@ -257,7 +257,7 @@
         "POST /api/oauth/github/verify/callback"
       ],
       "backendFiles": [
-        "src/routes/oauth.ts"
+        "backend/src/routes/oauth.ts"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -274,7 +274,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/flows/oauth-flows.flow.test.ts"
+        "backend/src/tests/flows/oauth-flows.flow.test.ts"
       ],
       "testCount": 3,
       "testCoverage": "low",
@@ -331,11 +331,11 @@
         "POST /api/oauth/google/callback"
       ],
       "backendFiles": [
-        "src/routes/oauth.ts"
+        "backend/src/routes/oauth.ts"
       ],
       "frontendPages": [
-        "src/pages/Signup.tsx",
-        "src/pages/Login.tsx"
+        "frontend/src/pages/Signup.tsx",
+        "frontend/src/pages/Login.tsx"
       ],
       "dbTables": [
         "Human",
@@ -363,8 +363,8 @@
         "user_signed_up_server"
       ],
       "testFiles": [
-        "src/tests/oauth.test.ts",
-        "src/tests/flows/oauth-flows.flow.test.ts"
+        "backend/src/tests/oauth.test.ts",
+        "backend/src/tests/flows/oauth-flows.flow.test.ts"
       ],
       "testCount": 22,
       "testCoverage": "high",
@@ -421,11 +421,11 @@
         "POST /api/oauth/linkedin/callback"
       ],
       "backendFiles": [
-        "src/routes/oauth.ts"
+        "backend/src/routes/oauth.ts"
       ],
       "frontendPages": [
-        "src/pages/Signup.tsx",
-        "src/pages/Login.tsx"
+        "frontend/src/pages/Signup.tsx",
+        "frontend/src/pages/Login.tsx"
       ],
       "dbTables": [
         "Human",
@@ -454,7 +454,7 @@
         "user_signed_up_server"
       ],
       "testFiles": [
-        "src/tests/flows/oauth-flows.flow.test.ts"
+        "backend/src/tests/flows/oauth-flows.flow.test.ts"
       ],
       "testCount": 8,
       "testCoverage": "medium",
@@ -508,7 +508,7 @@
         "POST /api/oauth/linkedin/verify/callback"
       ],
       "backendFiles": [
-        "src/routes/oauth.ts"
+        "backend/src/routes/oauth.ts"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -524,7 +524,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/flows/oauth-flows.flow.test.ts"
+        "backend/src/tests/flows/oauth-flows.flow.test.ts"
       ],
       "testCount": 4,
       "testCoverage": "low",
@@ -581,11 +581,11 @@
         "GET /api/auth/verify-reset-token"
       ],
       "backendFiles": [
-        "src/routes/auth.ts"
+        "backend/src/routes/auth.ts"
       ],
       "frontendPages": [
-        "src/pages/ForgotPassword.tsx",
-        "src/pages/ResetPassword.tsx"
+        "frontend/src/pages/ForgotPassword.tsx",
+        "frontend/src/pages/ResetPassword.tsx"
       ],
       "dbTables": [
         "Human",
@@ -605,9 +605,9 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/password-reset.test.ts",
-        "src/test/ForgotPassword.test.tsx",
-        "src/test/ResetPassword.test.tsx"
+        "backend/src/tests/password-reset.test.ts",
+        "backend/src/test/ForgotPassword.test.tsx",
+        "backend/src/test/ResetPassword.test.tsx"
       ],
       "testCount": 30,
       "testCoverage": "high",
@@ -663,8 +663,8 @@
         "GET /api/auth/unsubscribe"
       ],
       "backendFiles": [
-        "src/routes/auth.ts",
-        "src/middleware/auth.ts"
+        "backend/src/routes/auth.ts",
+        "backend/src/middleware/auth.ts"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -677,7 +677,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/auth.test.ts"
+        "backend/src/tests/auth.test.ts"
       ],
       "testCount": 5,
       "testCoverage": "medium",
@@ -734,11 +734,11 @@
         "POST /api/auth/whatsapp/verify-otp"
       ],
       "backendFiles": [
-        "src/routes/auth.ts"
+        "backend/src/routes/auth.ts"
       ],
       "frontendPages": [
-        "src/pages/Signup.tsx",
-        "src/pages/Login.tsx"
+        "frontend/src/pages/Signup.tsx",
+        "frontend/src/pages/Login.tsx"
       ],
       "dbTables": [
         "Human",
@@ -773,7 +773,7 @@
         "login_success"
       ],
       "testFiles": [
-        "src/tests/auth.test.ts"
+        "backend/src/tests/auth.test.ts"
       ],
       "testCount": 2,
       "testCoverage": "low",
@@ -833,12 +833,10 @@
         "DELETE /api/push/unsubscribe"
       ],
       "backendFiles": [
-        "src/routes/push.ts",
-        "src/lib/push.js"
+        "backend/src/routes/push.ts",
+        "backend/src/lib/push.js"
       ],
-      "frontendPages": [
-        "Service Worker (web push integration)"
-      ],
+      "frontendPages": [],
       "dbTables": [
         "Human",
         "PushSubscription"
@@ -921,7 +919,7 @@
         "DELETE /api/admin/posting/ads/:id"
       ],
       "backendFiles": [
-        "src/routes/posting.ts"
+        "backend/src/routes/posting.ts"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1021,8 +1019,8 @@
         "POST /api/telegram/webhook"
       ],
       "backendFiles": [
-        "src/routes/telegram.ts",
-        "src/lib/telegram.js"
+        "backend/src/routes/telegram.ts",
+        "backend/src/lib/telegram.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1036,7 +1034,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/telegram.test.ts"
+        "backend/src/tests/telegram.test.ts"
       ],
       "testCount": 8,
       "testCoverage": "medium",
@@ -1096,13 +1094,11 @@
         "PATCH /api/feedback/admin/:id"
       ],
       "backendFiles": [
-        "src/routes/feedback.ts",
-        "src/lib/captcha.js",
-        "src/lib/email.js"
+        "backend/src/routes/feedback.ts",
+        "backend/src/lib/captcha.js",
+        "backend/src/lib/email.js"
       ],
-      "frontendPages": [
-        "Feedback Widget (client-side capture)"
-      ],
+      "frontendPages": [],
       "dbTables": [
         "Feedback",
         "Human"
@@ -1136,7 +1132,7 @@
         "Feedback submitted (type, category, userId)"
       ],
       "testFiles": [
-        "src/tests/feedback.test.ts"
+        "backend/src/tests/feedback.test.ts"
       ],
       "testCount": 12,
       "testCoverage": "medium",
@@ -1197,8 +1193,8 @@
         "POST /api/whatsapp/incoming"
       ],
       "backendFiles": [
-        "src/routes/whatsapp.ts",
-        "src/lib/whatsapp.js"
+        "backend/src/routes/whatsapp.ts",
+        "backend/src/lib/whatsapp.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1292,12 +1288,9 @@
         "GET /api/blog/posts/:slug"
       ],
       "backendFiles": [
-        "src/routes/blog.ts"
+        "backend/src/routes/blog.ts"
       ],
-      "frontendPages": [
-        "Blog listing page",
-        "Blog post detail page"
-      ],
+      "frontendPages": [],
       "dbTables": [
         "ContentItem"
       ],
@@ -1382,10 +1375,10 @@
         "DELETE /api/admin/content/:id"
       ],
       "backendFiles": [
-        "src/routes/content.ts",
-        "src/lib/social-publish.js",
-        "src/lib/storage.js",
-        "src/lib/blogCovers.js"
+        "backend/src/routes/content.ts",
+        "backend/src/lib/social-publish.js",
+        "backend/src/lib/storage.js",
+        "backend/src/lib/blogCovers.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1497,7 +1490,7 @@
         "GET /api/og/:id"
       ],
       "backendFiles": [
-        "src/routes/og.ts"
+        "backend/src/routes/og.ts"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1594,14 +1587,14 @@
         "GET /api/admin/photo-concepts/:slug/image/:platform/:filename"
       ],
       "backendFiles": [
-        "src/routes/photoConcepts.ts"
+        "backend/src/routes/photoConcepts.ts"
       ],
       "frontendPages": [],
       "dbTables": [],
       "dbColumns": {},
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/photoConcepts.test.ts"
+        "backend/src/tests/photoConcepts.test.ts"
       ],
       "testCount": 18,
       "testCoverage": "medium",
@@ -1672,8 +1665,8 @@
         "POST /api/admin/video-batches/:date/reject"
       ],
       "backendFiles": [
-        "src/routes/videoBatches.ts",
-        "src/lib/storage.js"
+        "backend/src/routes/videoBatches.ts",
+        "backend/src/lib/storage.js"
       ],
       "frontendPages": [],
       "dbTables": [],
@@ -1754,8 +1747,8 @@
         "PUT /api/admin/video-concepts/:slug/script/:tier"
       ],
       "backendFiles": [
-        "src/routes/videoConcepts.ts",
-        "src/lib/storage.js"
+        "backend/src/routes/videoConcepts.ts",
+        "backend/src/lib/storage.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1841,8 +1834,8 @@
         "POST /api/admin/videos/:id/confirm-upload"
       ],
       "backendFiles": [
-        "src/routes/videos.ts",
-        "src/lib/storage.js"
+        "backend/src/routes/videos.ts",
+        "backend/src/lib/storage.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -1947,8 +1940,8 @@
         "DELETE /api/admin/leads/:id"
       ],
       "backendFiles": [
-        "src/routes/leads.ts",
-        "src/lib/capabilities.js"
+        "backend/src/routes/leads.ts",
+        "backend/src/lib/capabilities.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -2046,8 +2039,8 @@
       "description": "Content moderation workflow for flagged human profiles and agent reports. Manual review queue with status transitions (PENDING \u2192 REVIEWED \u2192 DISMISSED/BLOCKED). Spam detection via OpenAI moderation API. Action tracking with reason logging. Admin dashboard with filtering by status/reason.",
       "backendRoutes": [],
       "backendFiles": [
-        "src/lib/moderation.js",
-        "src/routes/admin.ts (implied)"
+        "backend/src/lib/moderation.js",
+        "backend/src/routes/admin.ts (implied)"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -2080,8 +2073,8 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/moderation.test.ts",
-        "src/tests/flows/admin-moderation.flow.test.ts"
+        "backend/src/tests/moderation.test.ts",
+        "backend/src/tests/flows/admin-moderation.flow.test.ts"
       ],
       "testCount": 14,
       "testCoverage": "medium",
@@ -2153,9 +2146,9 @@
         "GET /api/time-tracking/balance/all-staff"
       ],
       "backendFiles": [
-        "src/routes/timeTracking.ts",
-        "src/lib/idle-worker.js",
-        "src/lib/email.js"
+        "backend/src/routes/timeTracking.ts",
+        "backend/src/lib/idle-worker.js",
+        "backend/src/lib/email.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -2198,7 +2191,7 @@
         "clock_out"
       ],
       "testFiles": [
-        "src/tests/timeTracking.test.ts"
+        "backend/src/tests/timeTracking.test.ts"
       ],
       "testCount": 16,
       "testCoverage": "medium",
@@ -2266,9 +2259,9 @@
         "POST /api/admin/watchdog/:id/reject-fix"
       ],
       "backendFiles": [
-        "src/routes/watchdog.ts",
-        "src/lib/error-monitor.js",
-        "src/lib/error-autofix.js"
+        "backend/src/routes/watchdog.ts",
+        "backend/src/lib/error-monitor.js",
+        "backend/src/lib/error-autofix.js"
       ],
       "frontendPages": [],
       "dbTables": [
@@ -2298,7 +2291,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/watchdog.test.ts"
+        "backend/src/tests/watchdog.test.ts"
       ],
       "testCount": 10,
       "testCoverage": "low",
@@ -2358,9 +2351,7 @@
       "backendRoutes": [
         "POST /api/agents/:id/report"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/agents.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "AgentReport",
@@ -2385,9 +2376,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/agent-report.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 13,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -2435,9 +2424,7 @@
       "backendRoutes": [
         "POST /api/agents/:id/verify-domain"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/agents.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Agent"
@@ -2452,9 +2439,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/agents.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 3,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -2500,9 +2485,7 @@
         "POST /api/agents/activate/payment",
         "POST /api/agents/activate/payment/verify"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/agentActivation.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Agent"
@@ -2521,9 +2504,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/agent-activation.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 4,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -2571,9 +2552,7 @@
         "GET /api/agents/:id",
         "PATCH /api/agents/:id"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/agents.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Agent"
@@ -2601,9 +2580,7 @@
       "analyticsEvents": [
         "agent_registered"
       ],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/agents.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 5,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -2651,9 +2628,7 @@
         "POST /api/agents/activate/social/verify",
         "GET /api/agents/activate/status"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/agentActivation.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Agent"
@@ -2676,9 +2651,7 @@
       "analyticsEvents": [
         "agent_activated_via_social"
       ],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/agent-activation.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 12,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -2731,12 +2704,8 @@
         "PATCH /api/listings/:id/application",
         "POST /api/listings/:id/reconfirm"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/listings.ts"
-      ],
-      "frontendPages": [
-        "ListingDetail.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "ListingApplication",
         "Job"
@@ -2754,9 +2723,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/listings-update.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 30,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -2805,13 +2772,8 @@
         "GET /api/listings/by-code/:code",
         "GET /api/listings/:id"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/listings.ts"
-      ],
-      "frontendPages": [
-        "JobBoard.tsx",
-        "JobDetail.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "Listing",
         "ListingLink"
@@ -2842,9 +2804,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/listings-update.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 82,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -2893,9 +2853,7 @@
       "backendRoutes": [
         "POST /api/jobs"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/jobs.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Job"
@@ -2918,9 +2876,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/jobs.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 10,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -2976,12 +2932,8 @@
         "PATCH /api/jobs/:id/cancel",
         "PATCH /api/jobs/:id/dispute"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/jobs.ts"
-      ],
-      "frontendPages": [
-        "JobDetail.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "Job",
         "Review"
@@ -3010,10 +2962,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/jobs.test.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/flows/job-lifecycle.flow.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 20,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -3062,9 +3011,7 @@
       "backendRoutes": [
         "PATCH /api/jobs/:id (with paymentMode=STREAM)"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/jobs.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Job",
@@ -3104,10 +3051,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/stream-payments.test.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/stream-monitor.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 29,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -3158,9 +3102,7 @@
         "POST /api/listings",
         "PATCH /api/listings/:id"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/listings.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Listing",
@@ -3196,9 +3138,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/listings-update.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 40,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -3249,16 +3189,12 @@
         "GET /mcp",
         "DELETE /mcp"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/mcp-remote.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [],
       "dbColumns": {},
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/mcp.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 15,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -3311,16 +3247,12 @@
         "POST /oauth/token",
         "POST /oauth/revoke"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/mcp-oauth.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [],
       "dbColumns": {},
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/mcp.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 20,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -3368,9 +3300,7 @@
         "PATCH /api/jobs/:id/claim-payment",
         "PATCH /api/jobs/:id/confirm-payment"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/jobs.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Job"
@@ -3385,9 +3315,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/offchain-cancel-dispute.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 15,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -3435,16 +3363,12 @@
       "backendRoutes": [
         "PATCH /api/jobs/:id/paid"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/lib/blockchain/verify-payment.js"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [],
       "dbColumns": {},
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/payment-verification.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 18,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -3490,10 +3414,7 @@
         "POST /api/jobs/:id/review",
         "GET /api/agents/:id"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/jobs.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/agents.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Review",
@@ -3522,9 +3443,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/jobs.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 5,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -3580,9 +3499,7 @@
         "POST /api/agents/solver/telegram/confirm",
         "POST /api/agents/solver/wallet/verify"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/solverVerification.ts"
-      ],
+      "backendFiles": [],
       "frontendPages": [],
       "dbTables": [
         "Agent"
@@ -3648,11 +3565,11 @@
         "GET /api/admin/stats (usage.dau, usage.wau, usage.mau, usage.activeByDay)"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (lines 415-425)"
+        "backend/src/routes/admin.ts (lines 415-425)"
       ],
       "frontendPages": [
-        "src/pages/admin/SignupAnalyticsChart.tsx",
-        "src/pages/admin/AdminOverview.tsx (usage display)"
+        "frontend/src/pages/admin/SignupAnalyticsChart.tsx",
+        "frontend/src/pages/admin/AdminOverview.tsx (usage display)"
       ],
       "dbTables": [
         "Human"
@@ -3671,8 +3588,8 @@
         "retention_cohort"
       ],
       "testFiles": [
-        "src/tests/admin-analytics.test.ts",
-        "src/test/AdminOverview.test.tsx"
+        "backend/src/tests/admin-analytics.test.ts",
+        "backend/src/test/AdminOverview.test.tsx"
       ],
       "testCount": 18,
       "testCoverage": "medium",
@@ -3736,11 +3653,11 @@
         "PATCH /api/admin/agents/:id"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (agent endpoints)"
+        "backend/src/routes/admin.ts (agent endpoints)"
       ],
       "frontendPages": [
-        "src/pages/admin/AdminAgents.tsx",
-        "src/pages/admin/AdminAgentDetail.tsx"
+        "frontend/src/pages/admin/AdminAgents.tsx",
+        "frontend/src/pages/admin/AdminAgentDetail.tsx"
       ],
       "dbTables": [
         "Agent"
@@ -3770,7 +3687,7 @@
         "admin_agent_tier_change"
       ],
       "testFiles": [
-        "src/tests/admin.test.ts (agent filtering, sorting)"
+        "backend/src/tests/admin.test.ts (agent filtering, sorting)"
       ],
       "testCount": 12,
       "testCoverage": "low",
@@ -3829,11 +3746,11 @@
         "PATCH /api/admin/jobs/:id"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (job endpoints)"
+        "backend/src/routes/admin.ts (job endpoints)"
       ],
       "frontendPages": [
-        "src/pages/admin/AdminJobs.tsx",
-        "src/pages/admin/AdminJobDetail.tsx"
+        "frontend/src/pages/admin/AdminJobs.tsx",
+        "frontend/src/pages/admin/AdminJobDetail.tsx"
       ],
       "dbTables": [
         "Job",
@@ -3862,7 +3779,7 @@
         "admin_dispute_resolution"
       ],
       "testFiles": [
-        "src/tests/admin.test.ts (job filtering)"
+        "backend/src/tests/admin.test.ts (job filtering)"
       ],
       "testCount": 8,
       "testCoverage": "low",
@@ -3926,10 +3843,10 @@
         "PATCH /api/admin/moderation/:id"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (lines 2310-2399)"
+        "backend/src/routes/admin.ts (lines 2310-2399)"
       ],
       "frontendPages": [
-        "src/pages/admin/AdminModeration.tsx"
+        "frontend/src/pages/admin/AdminModeration.tsx"
       ],
       "dbTables": [
         "ModerationQueue",
@@ -3957,8 +3874,8 @@
         "moderation_override"
       ],
       "testFiles": [
-        "src/tests/moderation.test.ts",
-        "src/tests/flows/admin-moderation.flow.test.ts"
+        "backend/src/tests/moderation.test.ts",
+        "backend/src/tests/flows/admin-moderation.flow.test.ts"
       ],
       "testCount": 28,
       "testCoverage": "medium",
@@ -4020,10 +3937,10 @@
         "GET /api/admin/ai/stats"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (lines 41-648)"
+        "backend/src/routes/admin.ts (lines 41-648)"
       ],
       "frontendPages": [
-        "src/pages/admin/AdminOverview.tsx"
+        "frontend/src/pages/admin/AdminOverview.tsx"
       ],
       "dbTables": [
         "Human",
@@ -4081,10 +3998,10 @@
         "profile_photo_approved"
       ],
       "testFiles": [
-        "src/tests/admin.test.ts (lines 1-100)",
-        "src/tests/admin-analytics.test.ts",
-        "src/tests/admin-insights.test.ts",
-        "src/test/AdminOverview.test.tsx"
+        "backend/src/tests/admin.test.ts (lines 1-100)",
+        "backend/src/tests/admin-analytics.test.ts",
+        "backend/src/tests/admin-insights.test.ts",
+        "backend/src/test/AdminOverview.test.tsx"
       ],
       "testCount": 101,
       "testCoverage": "medium",
@@ -4146,10 +4063,10 @@
         "GET /api/admin/stats (usage data)"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (lines 426-564)"
+        "backend/src/routes/admin.ts (lines 426-564)"
       ],
       "frontendPages": [
-        "src/pages/admin/SignupAnalyticsChart.tsx"
+        "frontend/src/pages/admin/SignupAnalyticsChart.tsx"
       ],
       "dbTables": [
         "Human",
@@ -4185,8 +4102,8 @@
         "daily_agent_activations"
       ],
       "testFiles": [
-        "src/test/AdminOverview.test.tsx",
-        "src/tests/admin-analytics.test.ts"
+        "backend/src/test/AdminOverview.test.tsx",
+        "backend/src/tests/admin-analytics.test.ts"
       ],
       "testCount": 42,
       "testCoverage": "medium",
@@ -4257,10 +4174,10 @@
         "GET /api/admin/stats/funnel"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (lines 650-829)"
+        "backend/src/routes/admin.ts (lines 650-829)"
       ],
       "frontendPages": [
-        "src/pages/admin/SignupFunnelChart.tsx"
+        "frontend/src/pages/admin/SignupFunnelChart.tsx"
       ],
       "dbTables": [
         "Human",
@@ -4291,7 +4208,7 @@
         "signup_source_tracking"
       ],
       "testFiles": [
-        "src/tests/admin-analytics.test.ts",
+        "backend/src/tests/admin-analytics.test.ts",
         "src/pages/admin/SignupFunnelChart.tsx (component has inline data handling)"
       ],
       "testCount": 24,
@@ -4357,11 +4274,11 @@
         "PATCH /api/admin/users/:id"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (lines 832-890+, user detail routes)"
+        "backend/src/routes/admin.ts (lines 832-890+, user detail routes)"
       ],
       "frontendPages": [
-        "src/pages/admin/AdminUsers.tsx",
-        "src/pages/admin/AdminUserDetail.tsx"
+        "frontend/src/pages/admin/AdminUsers.tsx",
+        "frontend/src/pages/admin/AdminUserDetail.tsx"
       ],
       "dbTables": [
         "Human"
@@ -4388,7 +4305,7 @@
         "admin_user_detail_view"
       ],
       "testFiles": [
-        "src/tests/admin.test.ts (user list, filtering, sorting tests)"
+        "backend/src/tests/admin.test.ts (user list, filtering, sorting tests)"
       ],
       "testCount": 15,
       "testCoverage": "low",
@@ -4445,10 +4362,10 @@
         "GET /api/admin/stats (includes vouch metrics in future extensions)"
       ],
       "backendFiles": [
-        "src/routes/admin.ts (not yet implemented - mentioned in types)"
+        "backend/src/routes/admin.ts (not yet implemented - mentioned in types)"
       ],
       "frontendPages": [
-        "src/pages/admin/AdminOverview.tsx (referral code display)"
+        "frontend/src/pages/admin/AdminOverview.tsx (referral code display)"
       ],
       "dbTables": [
         "Vouch"
@@ -4526,14 +4443,8 @@
         "DELETE /api/wallets/:id",
         "PATCH /api/wallets/:address/label"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/wallets.ts"
-      ],
-      "frontendPages": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/pages/onboarding/steps/StepPayment.tsx",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/pages/onboarding/steps/PrivyWalletConnect.tsx",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/components/dashboard/WalletsSection.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "Wallet"
       ],
@@ -4559,10 +4470,7 @@
         "wallet_sign_failed",
         "wallet_create_embedded"
       ],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/wallets.test.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/flows/wallet-management.flow.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 33,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -4626,13 +4534,8 @@
         "DELETE /api/fiatPaymentMethods/:id",
         "POST /api/fiatPaymentMethods/:id/primary"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/fiatPaymentMethods.ts"
-      ],
-      "frontendPages": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/pages/onboarding/steps/StepPayment.tsx",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/components/dashboard/FiatPaymentMethodsSection.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "FiatPaymentMethod"
       ],
@@ -4648,9 +4551,7 @@
         ]
       },
       "analyticsEvents": [],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/"
-      ],
+      "testFiles": [],
       "testCount": 0,
       "testCoverage": "none",
       "hasUnitTests": false,
@@ -4714,10 +4615,7 @@
         "POST /api/fiatPaymentMethods"
       ],
       "backendFiles": [],
-      "frontendPages": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/pages/onboarding/steps/StepPayment.tsx",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/pages/onboarding/steps/PrivyWalletConnect.tsx"
-      ],
+      "frontendPages": [],
       "dbTables": [
         "Wallet",
         "FiatPaymentMethod",
@@ -4791,13 +4689,8 @@
       "backendRoutes": [
         "POST /api/wallets/manual"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/wallets.ts"
-      ],
-      "frontendPages": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/pages/onboarding/steps/PrivyWalletConnect.tsx",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/components/dashboard/WalletsSection.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "Wallet",
         "Human"
@@ -4815,10 +4708,7 @@
         "wallet_connect_success",
         "wallet_create_embedded"
       ],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/wallets.test.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/flows/wallet-management.flow.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 8,
       "testCoverage": "medium",
       "hasUnitTests": true,
@@ -4881,14 +4771,8 @@
         "POST /api/fiatPaymentMethods",
         "POST /api/fiatPaymentMethods/:id/primary"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/wallets.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/fiatPaymentMethods.ts"
-      ],
-      "frontendPages": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/components/dashboard/WalletsSection.tsx",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/components/dashboard/FiatPaymentMethodsSection.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "Wallet",
         "FiatPaymentMethod",
@@ -4914,9 +4798,7 @@
         "wallet_connect_started",
         "wallet_connect_success"
       ],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/flows/wallet-management.flow.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 6,
       "testCoverage": "low",
       "hasUnitTests": false,
@@ -4977,12 +4859,8 @@
         "POST /api/wallets",
         "POST /api/wallets/manual"
       ],
-      "backendFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/routes/wallets.ts"
-      ],
-      "frontendPages": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/frontend/src/components/dashboard/WalletsSection.tsx"
-      ],
+      "backendFiles": [],
+      "frontendPages": [],
       "dbTables": [
         "Wallet",
         "Job"
@@ -5002,11 +4880,7 @@
         "wallet_sign_failed",
         "wallet_connect_success"
       ],
-      "testFiles": [
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/wallets.test.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/payment-verification.test.ts",
-        "/sessions/youthful-kind-ptolemy/mnt/Work/humans/backend/src/tests/flows/wallet-management.flow.test.ts"
-      ],
+      "testFiles": [],
       "testCount": 51,
       "testCoverage": "high",
       "hasUnitTests": true,
@@ -5067,11 +4941,11 @@
         "GET /api/affiliate/leaderboard"
       ],
       "backendFiles": [
-        "src/routes/affiliate.ts",
-        "src/routes/humans.ts (getReferralProgramData)"
+        "backend/src/routes/affiliate.ts",
+        "backend/src/routes/humans.ts (getReferralProgramData)"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Affiliate",
@@ -5119,9 +4993,9 @@
         "referral_qualified (logged in affiliate.ts)"
       ],
       "testFiles": [
-        "src/tests/affiliate.test.ts",
-        "src/tests/referralCode.test.ts",
-        "src/tests/flows/referral-program.flow.test.ts"
+        "backend/src/tests/affiliate.test.ts",
+        "backend/src/tests/referralCode.test.ts",
+        "backend/src/tests/flows/referral-program.flow.test.ts"
       ],
       "testCount": 19,
       "testCoverage": "medium",
@@ -5179,10 +5053,10 @@
         "PATCH /api/humans/me"
       ],
       "backendFiles": [
-        "src/routes/humans.ts"
+        "backend/src/routes/humans.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Human"
@@ -5203,8 +5077,8 @@
         "availability_updated (trackServerEvent)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts",
-        "src/tests/flows/human-onboarding.flow.test.ts"
+        "backend/src/tests/profile.test.ts",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts"
       ],
       "testCount": 20,
       "testCoverage": "high",
@@ -5262,11 +5136,9 @@
         "GET /api/badge (generic)"
       ],
       "backendFiles": [
-        "src/routes/badge.ts"
+        "backend/src/routes/badge.ts"
       ],
-      "frontendPages": [
-        "None (embeddable widget)"
-      ],
+      "frontendPages": [],
       "dbTables": [
         "Human (read-only for name)"
       ],
@@ -5278,7 +5150,7 @@
       },
       "analyticsEvents": [],
       "testFiles": [
-        "src/tests/badge.test.ts"
+        "backend/src/tests/badge.test.ts"
       ],
       "testCount": 8,
       "testCoverage": "high",
@@ -5331,10 +5203,10 @@
         "GET /api/cv/parse-status/:fileId (if implemented)"
       ],
       "backendFiles": [
-        "src/routes/cv.ts"
+        "backend/src/routes/cv.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Human",
@@ -5378,8 +5250,8 @@
         "cv_parsed (trackServerEvent)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts (indirect)",
-        "src/tests/flows/human-onboarding.flow.test.ts"
+        "backend/src/tests/profile.test.ts (indirect)",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts"
       ],
       "testCount": 15,
       "testCoverage": "medium",
@@ -5439,11 +5311,11 @@
         "POST /api/cv/upload (creates education + certificates from CV parse)"
       ],
       "backendFiles": [
-        "src/routes/humans.ts",
-        "src/routes/cv.ts"
+        "backend/src/routes/humans.ts",
+        "backend/src/routes/cv.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Education",
@@ -5474,8 +5346,8 @@
         "education_added (if tracked)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts",
-        "src/tests/flows/human-onboarding.flow.test.ts"
+        "backend/src/tests/profile.test.ts",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts"
       ],
       "testCount": 15,
       "testCoverage": "medium",
@@ -5530,11 +5402,11 @@
         "PATCH /api/humans/me (location, locationLat, locationLng, timezone)"
       ],
       "backendFiles": [
-        "src/routes/humans.ts",
-        "src/lib/geo.js"
+        "backend/src/routes/humans.ts",
+        "backend/src/lib/geo.js"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Human"
@@ -5553,9 +5425,9 @@
         "location_updated (trackServerEvent)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts",
-        "src/tests/flows/human-onboarding.flow.test.ts",
-        "src/tests/geo.test.ts"
+        "backend/src/tests/profile.test.ts",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts",
+        "backend/src/tests/geo.test.ts"
       ],
       "testCount": 25,
       "testCoverage": "high",
@@ -5616,11 +5488,11 @@
         "GET /api/humans/u/:username"
       ],
       "backendFiles": [
-        "src/routes/humans.ts"
+        "backend/src/routes/humans.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx",
-        "src/pages/PublicProfile.tsx"
+        "frontend/src/pages/Dashboard.tsx",
+        "frontend/src/pages/PublicProfile.tsx"
       ],
       "dbTables": [
         "Human"
@@ -5641,10 +5513,10 @@
         "profile_updated (trackServerEvent in PATCH /me)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts",
-        "src/tests/flows/human-onboarding.flow.test.ts",
-        "src/test/Dashboard.test.tsx",
-        "src/test/PublicProfile.test.tsx"
+        "backend/src/tests/profile.test.ts",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts",
+        "backend/src/test/Dashboard.test.tsx",
+        "backend/src/test/PublicProfile.test.tsx"
       ],
       "testCount": 51,
       "testCoverage": "high",
@@ -5702,11 +5574,11 @@
         "DELETE /api/photos"
       ],
       "backendFiles": [
-        "src/routes/photos.ts"
+        "backend/src/routes/photos.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx",
-        "src/components/ProfilePhoto.tsx"
+        "frontend/src/pages/Dashboard.tsx",
+        "frontend/src/components/ProfilePhoto.tsx"
       ],
       "dbTables": [
         "Human",
@@ -5723,9 +5595,9 @@
         "photo_uploaded (implicit via queueModeration)"
       ],
       "testFiles": [
-        "src/tests/photos.test.ts (not in file list but referenced)",
-        "src/tests/profile.test.ts (indirect)",
-        "src/test/ProfilePhoto.test.tsx"
+        "backend/src/tests/photos.test.ts (not in file list but referenced)",
+        "backend/src/tests/profile.test.ts (indirect)",
+        "backend/src/test/ProfilePhoto.test.tsx"
       ],
       "testCount": 23,
       "testCoverage": "medium",
@@ -5787,11 +5659,9 @@
         "POST /api/admin/schedule/:id/mark-published"
       ],
       "backendFiles": [
-        "src/routes/schedule.ts"
+        "backend/src/routes/schedule.ts"
       ],
-      "frontendPages": [
-        "None (admin-only)"
-      ],
+      "frontendPages": [],
       "dbTables": [
         "PublicationSchedule"
       ],
@@ -5876,10 +5746,10 @@
         "DELETE /api/services/:id"
       ],
       "backendFiles": [
-        "src/routes/services.ts"
+        "backend/src/routes/services.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Service"
@@ -5905,9 +5775,9 @@
         "service_updated (if tracked)"
       ],
       "testFiles": [
-        "src/tests/services.test.ts",
-        "src/tests/flows/human-onboarding.flow.test.ts",
-        "src/test/ServicesSection.test.tsx"
+        "backend/src/tests/services.test.ts",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts",
+        "backend/src/test/ServicesSection.test.tsx"
       ],
       "testCount": 18,
       "testCoverage": "medium",
@@ -5964,11 +5834,11 @@
         "PATCH /api/humans/me (skills field)"
       ],
       "backendFiles": [
-        "src/routes/humans.ts",
-        "src/routes/cv.ts"
+        "backend/src/routes/humans.ts",
+        "backend/src/routes/cv.ts"
       ],
       "frontendPages": [
-        "src/pages/Dashboard.tsx"
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "dbTables": [
         "Human"
@@ -5984,8 +5854,8 @@
         "skills_updated (trackServerEvent)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts",
-        "src/tests/flows/human-onboarding.flow.test.ts"
+        "backend/src/tests/profile.test.ts",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts"
       ],
       "testCount": 15,
       "testCoverage": "medium",
@@ -6045,10 +5915,10 @@
         "DELETE /api/humans/me/vouch/:voucheeId"
       ],
       "backendFiles": [
-        "src/routes/humans.ts"
+        "backend/src/routes/humans.ts"
       ],
       "frontendPages": [
-        "src/pages/PublicProfile.tsx"
+        "frontend/src/pages/PublicProfile.tsx"
       ],
       "dbTables": [
         "Vouch",
@@ -6070,8 +5940,8 @@
         "vouch_created (trackServerEvent)"
       ],
       "testFiles": [
-        "src/tests/profile.test.ts (indirect)",
-        "src/tests/flows/human-onboarding.flow.test.ts (indirect)"
+        "backend/src/tests/profile.test.ts (indirect)",
+        "backend/src/tests/flows/human-onboarding.flow.test.ts (indirect)"
       ],
       "testCount": 8,
       "testCoverage": "low",
