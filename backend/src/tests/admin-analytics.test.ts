@@ -118,6 +118,7 @@ describe('Admin Analytics — Growth Dashboard', () => {
         data: {
           humanId: cryptoUser.id,
           address: '0x' + 'a'.repeat(40),
+          network: 'ethereum',
           chain: 'ETHEREUM',
         },
       });
