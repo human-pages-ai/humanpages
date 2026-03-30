@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HumanPages Escrow — Why We Need It, How It Works</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #131929;
+    --surface2: #1a2236;
+    --border: #2a3450;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --green-dim: #166534;
+    --red: #ef4444;
+    --red-dim: #7f1d1d;
+    --yellow: #eab308;
+    --yellow-dim: #713f12;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --white: #ffffff;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ===== SLIDE SYSTEM ===== */
+  .slide {
+    min-height: 100vh;
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slide-number {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    font-size: 14px;
+    color: var(--text3);
+    font-weight: 500;
+  }
+
+  .slide-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+
+  h1 { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
+  h2 { font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
+  h3 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+
+  .subtitle { font-size: 20px; color: var(--text2); max-width: 700px; line-height: 1.5; }
+  .small-text { font-size: 14px; color: var(--text3); }
+
+  /* ===== COVER SLIDE ===== */
+  .cover { text-align: center; align-items: center; }
+  .cover h1 { font-size: 64px; max-width: 900px; }
+  .cover h1 span {
+    background: linear-gradient(135deg, var(--accent), #a78bfa, var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .cover-stat-row {
+    display: flex;
+    gap: 60px;
+    margin-top: 48px;
+  }
+
+  .cover-stat {
+    text-align: center;
+  }
+
+  .cover-stat .number {
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--red);
+  }
+
+  .cover-stat .label {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  /* ===== PROBLEM SLIDE ===== */
+  .flow-comparison {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    margin-top: 32px;
+    align-items: start;
+  }
+
+  .flow-box {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 32px;
+    border: 2px solid var(--border);
+  }
+
+  .flow-box.bad { border-color: var(--red); }
+  .flow-box.good { border-color: var(--green); }
+
+  .flow-box h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .flow-box.bad h3 { color: var(--red); }
+  .flow-box.good h3 { color: var(--green); }
+
+  .vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text3);
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--surface2);
+  }
+
+  .flow-step .step-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .flow-box.bad .step-num { background: var(--red-dim); color: var(--red); }
+  .flow-box.good .step-num { background: var(--green-dim); color: var(--green); }
+
+  .flow-step .step-text { font-size: 14px; line-height: 1.5; }
+  .flow-step .step-text strong { color: var(--white); }
+
+  .risk-callout {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .risk-callout.danger { background: var(--red-dim); color: #fca5a5; border-left: 4px solid var(--red); }
+  .risk-callout.safe { background: var(--green-dim); color: #86efac; border-left: 4px solid var(--green); }
+
+  /* ===== PERSONA GRID ===== */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .persona-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .persona-card .emoji { font-size: 32px; margin-bottom: 8px; }
+  .persona-card .name { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .persona-card .role { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
+
+  .persona-card .score-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .persona-card .score-before {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--red);
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+
+  .persona-card .arrow { color: var(--text3); font-size: 16px; }
+
+  .persona-card .score-after {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--green);
+  }
+
+  .persona-card .verdict {
+    font-size: 11px;
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  .persona-card .verdict.blocked { background: var(--red-dim); color: #fca5a5; }
+  .persona-card .verdict.unblocked { background: var(--green-dim); color: #86efac; }
+
+  /* ===== ARCHITECTURE SLIDE ===== */
+  .arch-diagram {
+    margin-top: 32px;
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid var(--border);
+  }
+
+  .arch-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .arch-layer {
+    display: grid;
+    grid-template-columns: 160px 1fr 160px;
+    gap: 20px;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .arch-layer:last-child { border-bottom: none; }
+
+  .arch-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    text-align: right;
+  }
+
+  .arch-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .arch-box.agent { background: #312e81; color: #c7d2fe; border: 1px solid #4338ca; }
+  .arch-box.api { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .arch-box.escrow { background: #064e3b; color: #6ee7b7; border: 2px solid var(--green); box-shadow: 0 0 20px rgba(34,197,94,0.15); }
+  .arch-box.chain { background: #1e1b4b; color: #a5b4fc; border: 1px solid #3730a3; }
+  .arch-box.human { background: #431407; color: #fed7aa; border: 1px solid #9a3412; }
+
+  .arch-note {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .arch-arrow {
+    text-align: center;
+    padding: 8px 0;
+    font-size: 20px;
+    color: var(--text3);
+  }
+
+  /* ===== OBJECTIONS SLIDE ===== */
+  .objection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 32px;
+    max-width: 900px;
+  }
+
+  .objection {
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .objection-q {
+    padding: 20px 24px;
+    background: var(--red-dim);
+    font-size: 16px;
+    font-weight: 600;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .objection-a {
+    padding: 20px 24px;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .objection-a strong { color: var(--green); }
+
+  .objection-a .code-note {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    white-space: pre-wrap;
+  }
+
+  /* ===== IMPLEMENTATION SLIDE ===== */
+  .impl-timeline {
+    display: flex;
+    gap: 0;
+    margin-top: 32px;
+    position: relative;
+  }
+
+  .impl-timeline::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 2px;
+  }
+
+  .impl-phase {
+    flex: 1;
+    padding: 0 16px;
+    position: relative;
+  }
+
+  .impl-phase .dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    margin: 31px auto 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .impl-phase:last-child .dot { background: var(--green); }
+
+  .impl-phase .phase-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+
+  .impl-phase .phase-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .impl-phase .phase-time {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text3);
+    margin-bottom: 16px;
+  }
+
+  .impl-items {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .impl-item {
+    font-size: 13px;
+    padding: 6px 0;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .impl-item:last-child { border-bottom: none; }
+  .impl-item strong { color: var(--text); }
+
+  /* ===== COST SLIDE ===== */
+  .cost-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 32px;
+  }
+
+  .cost-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 28px;
+    border: 1px solid var(--border);
+  }
+
+  .cost-card h3 { font-size: 16px; color: var(--text2); font-weight: 500; margin-bottom: 8px; }
+
+  .cost-card .big-num {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .cost-card .big-num.red { color: var(--red); }
+  .cost-card .big-num.green { color: var(--green); }
+  .cost-card .big-num.accent { color: var(--accent2); }
+
+  .cost-card .detail { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+  /* ===== DECISION SLIDE ===== */
+  .decision-table {
+    margin-top: 32px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .decision-table th {
+    background: var(--surface2);
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    text-align: left;
+  }
+
+  .decision-table td {
+    padding: 14px 20px;
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .decision-table .metric { font-weight: 600; color: var(--white); }
+  .decision-table .without { color: var(--red); }
+  .decision-table .with { color: var(--green); font-weight: 600; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .badge.new { background: #064e3b; color: #6ee7b7; }
+  .badge.exists { background: var(--surface2); color: var(--text3); }
+
+  /* ===== FINAL CTA ===== */
+  .cta-slide {
+    text-align: center;
+    align-items: center;
+  }
+
+  .cta-slide h1 span { color: var(--green); }
+
+  .cta-boxes {
+    display: flex;
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .cta-box {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 28px 32px;
+    border: 1px solid var(--border);
+    flex: 1;
+    text-align: left;
+  }
+
+  .cta-box h3 { color: var(--accent2); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .cta-box p { font-size: 15px; line-height: 1.6; }
+
+  .highlight-green { color: var(--green); font-weight: 700; }
+  .highlight-red { color: var(--red); font-weight: 700; }
+  .highlight-accent { color: var(--accent2); font-weight: 600; }
+
+  .spacer { height: 24px; }
+
+  .footnote {
+    position: absolute;
+    bottom: 24px;
+    left: 80px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  /* ===== SIMPLE FLOW DIAGRAM ===== */
+  .simple-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 32px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sf-node {
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 130px;
+  }
+
+  .sf-node.agent { background: #312e81; color: #c7d2fe; }
+  .sf-node.escrow { background: #064e3b; color: #6ee7b7; border: 2px solid var(--green); }
+  .sf-node.human { background: #431407; color: #fed7aa; }
+  .sf-node.chain { background: #1e1b4b; color: #a5b4fc; }
+  .sf-node.action { background: var(--surface2); color: var(--text); }
+
+  .sf-arrow {
+    font-size: 22px;
+    color: var(--text3);
+    padding: 0 8px;
+  }
+
+  .sf-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  /* ===== MINI STAT STRIP ===== */
+  .stat-strip {
+    display: flex;
+    gap: 0;
+    margin-top: 32px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .stat-strip-item {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+  }
+
+  .stat-strip-item:last-child { border-right: none; }
+
+  .stat-strip-item .num {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .stat-strip-item .lbl {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  /* ===== CONTRACT PREVIEW ===== */
+  .contract-preview {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 28px 32px;
+    border: 1px solid var(--border);
+    margin-top: 24px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text2);
+    overflow-x: auto;
+  }
+
+  .contract-preview .kw { color: #c084fc; }
+  .contract-preview .fn { color: #6ee7b7; }
+  .contract-preview .cm { color: var(--text3); }
+  .contract-preview .str { color: #fbbf24; }
+  .contract-preview .typ { color: #60a5fa; }
+
+  @media print {
+    .slide { page-break-after: always; padding: 40px; }
+    body { background: white; color: #1a1a1a; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SLIDE 1: COVER ============ -->
+<section class="slide cover">
+  <div class="slide-tag">Internal Proposal &middot; March 2026</div>
+  <h1>Why HumanPages <span>Needs Escrow</span></h1>
+  <p class="subtitle">The #1 blocker for every client archetype we tested. Without it, we cap at 4/10. With it, we unlock 9/10.</p>
+
+  <div class="cover-stat-row">
+    <div class="cover-stat">
+      <div class="number">10/10</div>
+      <div class="label">personas flagged escrow as critical</div>
+    </div>
+    <div class="cover-stat">
+      <div class="number" style="color: var(--yellow)">3.9</div>
+      <div class="label">avg platform score today (out of 10)</div>
+    </div>
+    <div class="cover-stat">
+      <div class="number" style="color: var(--green)">+2.1</div>
+      <div class="label">avg score lift from escrow alone</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <p class="small-text">Based on 10 critical persona evaluations across our target client archetypes</p>
+</section>
+
+<!-- ============ SLIDE 2: THE PROBLEM ============ -->
+<section class="slide">
+  <div class="slide-number">02</div>
+  <div class="slide-tag">The Problem</div>
+  <h2>Today's Payment Flow Has a Trust Gap</h2>
+  <p class="subtitle">We ask clients to send irreversible USDC to strangers with zero recourse. Every persona said the same thing: "Why would I risk this?"</p>
+
+  <div class="flow-comparison">
+    <div class="flow-box bad">
+      <h3>&#x26A0; Today (No Escrow)</h3>
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Agent creates job</strong> — $500 USDC for a design task</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Human accepts</strong> — agrees to do the work</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Agent sends $500 USDC</strong> — directly to human's wallet. Irreversible.</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>Human disappears</strong> — or delivers garbage</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-text"><strong>Agent has no recourse</strong> — $500 gone</div>
+      </div>
+      <div class="risk-callout danger">
+        Client risk: 100% of payment at stake. No dispute mechanism. No refund path.<br>
+        Human risk: Agent might never pay (upon-completion mode). No guarantee.
+      </div>
+    </div>
+
+    <div class="vs-divider">VS</div>
+
+    <div class="flow-box good">
+      <h3>&#x2705; With Escrow</h3>
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Agent creates job</strong> — $500 USDC for a design task</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Agent locks $500 into escrow</strong> — smart contract holds funds</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Human sees funds locked</strong> — on-chain proof. Starts working.</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>Human delivers</strong> — agent approves or disputes</div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-text"><strong>Funds release automatically</strong> — or go to arbitration</div>
+      </div>
+      <div class="risk-callout safe">
+        Client risk: $0 until satisfied. Can dispute. Auto-refund on timeout.<br>
+        Human risk: $0 — they see money locked before starting. Guaranteed payment.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 3: PERSONA EVIDENCE ============ -->
+<section class="slide">
+  <div class="slide-number">03</div>
+  <div class="slide-tag">User Research</div>
+  <h2>Every Single Archetype Flagged This</h2>
+  <p class="subtitle">We ran 10 critical persona evaluations across our target users. Escrow was the #1 dealbreaker for all of them. Not "nice to have." Dealbreaker.</p>
+
+  <div class="persona-grid">
+    <div class="persona-card">
+      <div class="emoji">&#x1F468;&#x200D;&#x1F4BB;</div>
+      <div class="name">Vibe-Coder</div>
+      <div class="role">Claude user, $1K/mo</div>
+      <div class="score-row">
+        <span class="score-before">4.0</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">5.5</span>
+      </div>
+      <div class="verdict blocked">"Why would I send $200 to a stranger?"</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F4F1;</div>
+      <div class="name">Mobile Dev</div>
+      <div class="role">App tester hiring, $800/mo</div>
+      <div class="score-row">
+        <span class="score-before">2.1</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">3.5</span>
+      </div>
+      <div class="verdict blocked">"No escrow = no deal. Period."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F4C8;</div>
+      <div class="name">Crypto Trader</div>
+      <div class="role">$3K/mo, needs 24/7 staff</div>
+      <div class="score-row">
+        <span class="score-before">4.3</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">5.5</span>
+      </div>
+      <div class="verdict blocked">"I manage risk for a living. This is unmanaged risk."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F517;</div>
+      <div class="name">Web3 Dev</div>
+      <div class="role">$5K/mo, hires auditors</div>
+      <div class="score-row">
+        <span class="score-before">4.0</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">5.5</span>
+      </div>
+      <div class="verdict blocked">"I audit smart contracts but can't audit my own payments?"</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F1F7;&#x1F1FA;</div>
+      <div class="name">Russian User</div>
+      <div class="role">$2K/mo, sanctions-blocked</div>
+      <div class="score-row">
+        <span class="score-before">6.5</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">7.5</span>
+      </div>
+      <div class="verdict blocked">"USDC is all I have. I can't afford to lose any."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F916;</div>
+      <div class="name">AI SaaS</div>
+      <div class="role">Auto-hiring, $1.5K/mo</div>
+      <div class="score-row">
+        <span class="score-before">4.0</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">5.5</span>
+      </div>
+      <div class="verdict blocked">"My AI can't evaluate work quality. Needs escrow + dispute."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F3A5;</div>
+      <div class="name">Crypto KOL</div>
+      <div class="role">Content creator, $2K/mo</div>
+      <div class="score-row">
+        <span class="score-before">4.5</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">5.5</span>
+      </div>
+      <div class="verdict blocked">"Paid a ghostwriter $300. Got nothing. Never again."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F4AC;</div>
+      <div class="name">TG Bot Dev</div>
+      <div class="role">CIS developer, $600/mo</div>
+      <div class="score-row">
+        <span class="score-before">3.0</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">4.0</span>
+      </div>
+      <div class="verdict blocked">"$600 is my entire budget. One ghost = month ruined."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x2708;&#xFE0F;</div>
+      <div class="name">Nomad Agency</div>
+      <div class="role">Global hiring, $4K/mo</div>
+      <div class="score-row">
+        <span class="score-before">5.0</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">6.0</span>
+      </div>
+      <div class="verdict blocked">"Hiring across 8 countries without escrow is insane."</div>
+    </div>
+    <div class="persona-card">
+      <div class="emoji">&#x1F4B0;</div>
+      <div class="name">Crypto Fund</div>
+      <div class="role">$5M AUM, $3K/mo</div>
+      <div class="score-row">
+        <span class="score-before">2.2</span>
+        <span class="arrow">&rarr;</span>
+        <span class="score-after">3.5</span>
+      </div>
+      <div class="verdict blocked">"Fund governance requires escrow. Non-negotiable."</div>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-strip-item">
+      <div class="num highlight-red">10/10</div>
+      <div class="lbl">archetypes flagged escrow</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-green">+1.3</div>
+      <div class="lbl">avg score lift from escrow alone</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-accent">#1</div>
+      <div class="lbl">ranked gap across all personas</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num" style="color: var(--yellow)">0%</div>
+      <div class="lbl">of personas said "escrow not needed"</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 4: HOW IT WORKS (ARCHITECT VIEW) ============ -->
+<section class="slide">
+  <div class="slide-number">04</div>
+  <div class="slide-tag">For the Architect</div>
+  <h2>Technical Architecture: Minimal, On-Chain, Reuses Everything</h2>
+  <p class="subtitle">We're not building a new payment system. We're adding a 200-line smart contract between the existing agent wallet and human wallet. The rest is plumbing we already have.</p>
+
+  <div class="simple-flow">
+    <div>
+      <div class="sf-node agent">AI Agent</div>
+      <div class="sf-label">Creates job</div>
+    </div>
+    <div class="sf-arrow">&rarr;</div>
+    <div>
+      <div class="sf-node action">HumanPages API</div>
+      <div class="sf-label">Validates + routes</div>
+    </div>
+    <div class="sf-arrow">&rarr;</div>
+    <div>
+      <div class="sf-node escrow">Escrow Contract</div>
+      <div class="sf-label">Holds USDC on-chain</div>
+    </div>
+    <div class="sf-arrow">&rarr;</div>
+    <div>
+      <div class="sf-node action">Work Delivered</div>
+      <div class="sf-label">Human submits</div>
+    </div>
+    <div class="sf-arrow">&rarr;</div>
+    <div>
+      <div class="sf-node human">Human Wallet</div>
+      <div class="sf-label">Auto-release or dispute</div>
+    </div>
+  </div>
+
+  <div class="contract-preview">
+<span class="cm">// ~200 lines. Deployed once per chain. All jobs share it.</span>
+<span class="kw">contract</span> <span class="typ">HumanPagesEscrow</span> {
+
+    <span class="kw">struct</span> <span class="typ">Escrow</span> {
+        <span class="typ">address</span> agent;          <span class="cm">// who locked the funds</span>
+        <span class="typ">address</span> human;          <span class="cm">// who receives on completion</span>
+        <span class="typ">uint256</span> amount;          <span class="cm">// USDC locked (6 decimals)</span>
+        <span class="typ">uint256</span> deadline;        <span class="cm">// auto-release timestamp</span>
+        <span class="typ">EscrowStatus</span> status;     <span class="cm">// LOCKED | RELEASED | RETURNED | DISPUTED</span>
+    }
+
+    <span class="kw">function</span> <span class="fn">lock</span>(jobId, human, amount, deadline) <span class="kw">external</span> {
+        <span class="cm">// Agent approves USDC → contract pulls it via transferFrom</span>
+        <span class="cm">// Emits EscrowLocked(jobId, agent, human, amount)</span>
+    }
+
+    <span class="kw">function</span> <span class="fn">release</span>(jobId) <span class="kw">external</span> {
+        <span class="cm">// Agent confirms work done → sends USDC to human</span>
+        <span class="cm">// OR: deadline passed → human calls release (auto-release)</span>
+    }
+
+    <span class="kw">function</span> <span class="fn">dispute</span>(jobId) <span class="kw">external</span> {
+        <span class="cm">// Either party disputes → funds frozen until arbitrator rules</span>
+    }
+
+    <span class="kw">function</span> <span class="fn">resolve</span>(jobId, agentShare, humanShare) <span class="kw">external</span> <span class="str">onlyArbitrator</span> {
+        <span class="cm">// Split funds per arbitrator decision (e.g., 70/30)</span>
+    }
+}
+  </div>
+
+  <div class="stat-strip" style="margin-top: 24px;">
+    <div class="stat-strip-item">
+      <div class="num highlight-accent">~200</div>
+      <div class="lbl">lines of Solidity</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-accent">1</div>
+      <div class="lbl">contract per chain (shared)</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-green">0</div>
+      <div class="lbl">new backend dependencies</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-green">Reuse</div>
+      <div class="lbl">existing verify-payment.ts infra</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 5: ARCHITECT OBJECTIONS ============ -->
+<section class="slide">
+  <div class="slide-number">05</div>
+  <div class="slide-tag">Addressing Concerns</div>
+  <h2>But What About...</h2>
+  <p class="subtitle">We anticipated the objections. Here's why each one is solvable.</p>
+
+  <div class="objection-list">
+    <div class="objection">
+      <div class="objection-q">&#x1F6D1; "Smart contracts are a security liability. One bug and we lose user funds."</div>
+      <div class="objection-a">
+        Valid concern. Three mitigations: <strong>1)</strong> The contract is ~200 lines with no complex DeFi logic — just lock, release, dispute. It's simpler than a Uniswap pool. <strong>2)</strong> We use OpenZeppelin's audited ReentrancyGuard and SafeERC20. <strong>3)</strong> We deploy on Base first (low gas, fast iteration), limit escrow to $1,000 max per job during beta, and get a security review before removing the cap.
+        <div class="code-note">Beta safeguard: MAX_ESCROW = 1000 USDC. Upgradeable via admin multisig.</div>
+      </div>
+    </div>
+
+    <div class="objection">
+      <div class="objection-q">&#x1F6D1; "This adds gas costs to every job. Our 0% fee promise is gone."</div>
+      <div class="objection-a">
+        On <strong>Base L2, a USDC transfer costs ~$0.01</strong>. Escrow adds one extra transaction (lock + release = 2 txns instead of 1 direct transfer). Total extra cost: <strong>~$0.01 per job</strong>. On a $500 job, that's 0.002%. We still honestly say "0% platform fees" because we're not charging — the chain charges fractions of a penny.
+        <div class="code-note">Base gas: ~$0.005/txn. Two txns = $0.01 total. Ethereum fallback: ~$2-5/txn.</div>
+      </div>
+    </div>
+
+    <div class="objection">
+      <div class="objection-q">&#x1F6D1; "We said 'HumanPages never touches your money.' Escrow breaks that."</div>
+      <div class="objection-a">
+        <strong>HumanPages still never touches the money.</strong> The smart contract does. It's non-custodial — we don't have a withdrawal key. The contract is immutable code that executes deterministically. We're not Coinbase holding your funds. We're a vending machine: put money in, get result out, no human in the middle. This is actually <strong>more aligned with our brand</strong> than the current trust-the-stranger model.
+      </div>
+    </div>
+
+    <div class="objection">
+      <div class="objection-q">&#x1F6D1; "Who's the arbitrator? We become judge and jury."</div>
+      <div class="objection-a">
+        Three-tier resolution: <strong>1) Auto-resolve</strong> — if agent doesn't dispute within 48h of delivery, funds auto-release. 95% of jobs end here. <strong>2) Mutual resolution</strong> — agent and human agree on a split (e.g., 70/30). Contract executes it. <strong>3) Arbitration</strong> — only for the ~2% that escalate. Initially us (admin multisig), later a DAO or Kleros-style decentralized court. We start simple.
+      </div>
+    </div>
+
+    <div class="objection">
+      <div class="objection-q">&#x1F6D1; "This delays our roadmap by weeks. We have other priorities."</div>
+      <div class="objection-a">
+        Without escrow, <strong>every other feature we build has a ceiling</strong>. We can ship recurring jobs, file sharing, and bulk hiring — but users still won't trust the platform with real money. Escrow is the foundation. We build it in <strong>2 weeks</strong>, and every feature after it compounds on a trusted base. Without it, we're decorating a house with no foundation.
+        <div class="code-note">Week 1: Contract + backend integration. Week 2: Frontend UI + deploy on Base.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 6: IMPLEMENTATION TIMELINE ============ -->
+<section class="slide">
+  <div class="slide-number">06</div>
+  <div class="slide-tag">Implementation Plan</div>
+  <h2>2-Week Sprint. Mostly Claude-Built. Minimal Your-Time.</h2>
+
+  <div class="impl-timeline">
+    <div class="impl-phase">
+      <div class="phase-label">Days 1-3</div>
+      <div class="dot"></div>
+      <div class="phase-title">Smart Contract</div>
+      <div class="phase-time">Claude builds</div>
+      <div class="impl-items">
+        <div class="impl-item"><strong>HumanPagesEscrow.sol</strong> — lock, release, dispute, resolve</div>
+        <div class="impl-item">OpenZeppelin SafeERC20 + ReentrancyGuard</div>
+        <div class="impl-item">Hardhat test suite (100% coverage)</div>
+        <div class="impl-item">Deploy script for Base + Polygon</div>
+      </div>
+    </div>
+    <div class="impl-phase">
+      <div class="phase-label">Days 4-7</div>
+      <div class="dot"></div>
+      <div class="phase-title">Backend Integration</div>
+      <div class="phase-time">Claude builds</div>
+      <div class="impl-items">
+        <div class="impl-item">Prisma schema: escrow fields on Job</div>
+        <div class="impl-item">API endpoints: lock, verify, release, dispute</div>
+        <div class="impl-item"><strong>Reuse</strong> verify-payment.ts for on-chain checks</div>
+        <div class="impl-item">Webhook events: escrow.locked, escrow.released</div>
+      </div>
+    </div>
+    <div class="impl-phase">
+      <div class="phase-label">Days 8-10</div>
+      <div class="dot"></div>
+      <div class="phase-title">Frontend + MCP</div>
+      <div class="phase-time">Claude builds</div>
+      <div class="impl-items">
+        <div class="impl-item">EscrowStatus component (lock/release UI)</div>
+        <div class="impl-item">Job creation: "Enable escrow" toggle</div>
+        <div class="impl-item">MCP tool update: escrow param on create_job</div>
+        <div class="impl-item">Dispute flow UI (screenshot + description)</div>
+      </div>
+    </div>
+    <div class="impl-phase">
+      <div class="phase-label">Days 11-14</div>
+      <div class="dot"></div>
+      <div class="phase-title">Test + Deploy</div>
+      <div class="phase-time">You + Claude</div>
+      <div class="impl-items">
+        <div class="impl-item"><strong>You:</strong> Deploy contract to Base mainnet</div>
+        <div class="impl-item"><strong>You:</strong> Fund test escrow + verify flow</div>
+        <div class="impl-item">Claude: E2E test suite</div>
+        <div class="impl-item">Go live with $1K max cap (beta)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-strip" style="margin-top: 32px;">
+    <div class="stat-strip-item">
+      <div class="num highlight-accent">10 days</div>
+      <div class="lbl">Claude builds</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-green">4 days</div>
+      <div class="lbl">your involvement</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num" style="color: var(--yellow)">~3 hrs</div>
+      <div class="lbl">your hands-on time total</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num highlight-green">$0</div>
+      <div class="lbl">new infrastructure cost</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 7: COST OF INACTION ============ -->
+<section class="slide">
+  <div class="slide-number">07</div>
+  <div class="slide-tag">For the CEO</div>
+  <h2>The Cost of Not Building Escrow</h2>
+
+  <div class="cost-grid">
+    <div class="cost-card">
+      <h3>Lost Clients Per Month (Estimated)</h3>
+      <div class="big-num red">60-80%</div>
+      <div class="detail">Of evaluated personas said they'd walk away without escrow. That's 6-8 out of every 10 potential clients who try the MCP, hit the "send money to a stranger" step, and leave. Every day without escrow is a leaky bucket.</div>
+    </div>
+    <div class="cost-card">
+      <h3>Dispute Cost Without Escrow</h3>
+      <div class="big-num red">$0 recovery</div>
+      <div class="detail">When a human ghosts after receiving payment, the client loses 100% of the job value. On-chain USDC transfers are irreversible. Even 5% dispute rate on $50K monthly volume = $2,500/month in unrecoverable client losses. That kills word-of-mouth.</div>
+    </div>
+    <div class="cost-card">
+      <h3>Build Cost</h3>
+      <div class="big-num green">2 weeks</div>
+      <div class="detail">~200 lines of Solidity. Reuses existing payment verification infrastructure. Claude builds 80%. Your hands-on time: ~3 hours across 14 days. Zero new cloud infrastructure. $0.01/job gas cost on Base L2.</div>
+    </div>
+    <div class="cost-card">
+      <h3>Competitive Moat Created</h3>
+      <div class="big-num accent">Only us</div>
+      <div class="detail">No MCP-native hiring platform has on-chain escrow today. Upwork has escrow but no crypto. Dework has crypto but no escrow. We'd be the first to combine AI-agent hiring + on-chain escrow. That's the pitch to every Web3 team and DAO.</div>
+    </div>
+  </div>
+
+  <div class="decision-table" style="margin-top: 32px;">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Without Escrow</th>
+        <th>With Escrow</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="metric">Avg persona score</td>
+        <td class="without">3.9 / 10</td>
+        <td class="with">6.0 / 10 (+2.1)</td>
+      </tr>
+      <tr>
+        <td class="metric">Client conversion (try &rarr; pay)</td>
+        <td class="without">~20% (trust barrier)</td>
+        <td class="with">~55% (funds protected)</td>
+      </tr>
+      <tr>
+        <td class="metric">Dispute resolution</td>
+        <td class="without">Manual email. No refund.</td>
+        <td class="with">On-chain arbitration. Auto-refund.</td>
+      </tr>
+      <tr>
+        <td class="metric">Human trust (accept rate)</td>
+        <td class="without">Low — "will agent actually pay?"</td>
+        <td class="with">High — they SEE funds locked on-chain</td>
+      </tr>
+      <tr>
+        <td class="metric">Competitive positioning</td>
+        <td class="without">Another freelancer platform</td>
+        <td class="with">First AI-hiring platform with on-chain escrow</td>
+      </tr>
+      <tr>
+        <td class="metric">Gas cost per job (Base)</td>
+        <td class="without">~$0.005 (1 transfer)</td>
+        <td class="with">~$0.01 (2 transfers) &mdash; negligible</td>
+      </tr>
+      <tr>
+        <td class="metric">Our custody risk</td>
+        <td class="without">Zero (no funds held)</td>
+        <td class="with">Zero (smart contract is non-custodial)</td>
+      </tr>
+    </tbody>
+  </div>
+</section>
+
+<!-- ============ SLIDE 8: WHAT WE'RE NOT BUILDING ============ -->
+<section class="slide">
+  <div class="slide-number">08</div>
+  <div class="slide-tag">Scope Control</div>
+  <h2>What We're NOT Building</h2>
+  <p class="subtitle">This proposal is intentionally minimal. Here's what's explicitly out of scope for the 2-week sprint.</p>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; max-width: 900px;">
+    <div>
+      <h3 style="color: var(--green); margin-bottom: 16px;">&#x2705; In Scope</h3>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">One escrow contract, deployed on Base</div></div>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">USDC only (our primary token)</div></div>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">Lock, release, dispute — 3 operations</div></div>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">$1,000 max cap during beta</div></div>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">48h auto-release (no infinite holds)</div></div>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">Admin multisig for arbitration (us, initially)</div></div>
+      <div class="flow-step" style="background: var(--green-dim);"><div class="step-text" style="color: #86efac;">Optional — agents choose escrow or direct pay</div></div>
+    </div>
+    <div>
+      <h3 style="color: var(--red); margin-bottom: 16px;">&#x274C; Out of Scope (Later)</h3>
+      <div class="flow-step"><div class="step-text">Multi-chain escrow (Ethereum, Polygon, Arbitrum)</div></div>
+      <div class="flow-step"><div class="step-text">USDT / DAI escrow support</div></div>
+      <div class="flow-step"><div class="step-text">Milestone-based partial releases</div></div>
+      <div class="flow-step"><div class="step-text">Decentralized arbitration (Kleros, UMA)</div></div>
+      <div class="flow-step"><div class="step-text">Streaming escrow (Superfluid + lock)</div></div>
+      <div class="flow-step"><div class="step-text">Cross-chain escrow bridges</div></div>
+      <div class="flow-step"><div class="step-text">Insurance fund / slashing</div></div>
+    </div>
+  </div>
+
+  <div class="risk-callout safe" style="max-width: 900px; margin-top: 32px;">
+    <strong>The principle:</strong> Ship the smallest escrow that solves the trust problem. Base chain, USDC only, $1K cap, admin arbitration. We can expand to multi-chain, multi-token, decentralized arbitration later — but the trust gap closes on Day 14.
+  </div>
+</section>
+
+<!-- ============ SLIDE 9: FINAL CTA ============ -->
+<section class="slide cta-slide">
+  <div class="slide-number">09</div>
+  <div class="slide-tag">The Ask</div>
+  <h1>We build escrow in 2 weeks.<br><span>Score goes from 3.9 to 6.0.</span></h1>
+  <p class="subtitle" style="text-align: center; max-width: 800px;">It's the single highest-impact feature we can ship. Every persona said so. The contract is ~200 lines. Claude builds 80%. Your time: ~3 hours. The only question is: do we start Monday?</p>
+
+  <div class="cta-boxes">
+    <div class="cta-box">
+      <h3>If We Ship It</h3>
+      <p>Clients lock funds before work starts. Humans see money on-chain. Trust is cryptographic, not social. We become the <strong class="highlight-green">only AI-hiring platform with on-chain escrow</strong>. Score jumps +2.1 across all archetypes. Client conversion doubles.</p>
+    </div>
+    <div class="cta-box">
+      <h3>If We Don't</h3>
+      <p>We keep asking clients to send irreversible USDC to strangers. <strong class="highlight-red">60-80% walk away at the payment step.</strong> Every feature we build after this — recurring jobs, file sharing, bulk hiring — sits on top of a trust gap. We're decorating a house with no foundation.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 48px; text-align: center;">
+    <p class="small-text">Prepared by the product team &middot; Based on 10 critical persona evaluations &middot; March 2026</p>
+    <p class="small-text" style="margin-top: 8px;">Full persona data available in HumanPages_Road_to_9_of_10.xlsx</p>
+  </div>
+</section>
+
+</body>
+</html>

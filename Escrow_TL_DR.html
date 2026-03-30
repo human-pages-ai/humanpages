@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escrow Proposal — TL;DR</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0e1a; color: #e2e8f0; padding: 48px 64px; max-width: 960px; margin: 0 auto; }
+
+  h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+  h1 span { background: linear-gradient(135deg, #6366f1, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .sub { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+
+  h2 { font-size: 15px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1.5px; margin: 28px 0 12px; }
+
+  .stats { display: flex; gap: 16px; margin-bottom: 28px; }
+  .stat { flex: 1; background: #131929; border: 1px solid #2a3450; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat .n { font-size: 28px; font-weight: 800; }
+  .stat .l { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .red { color: #ef4444; }
+  .green { color: #22c55e; }
+  .accent { color: #818cf8; }
+  .purple { color: #a78bfa; }
+
+  p.body { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px; }
+  p.body strong { color: #e2e8f0; }
+
+  .flow { display: flex; align-items: center; gap: 0; margin: 16px 0 8px; flex-wrap: wrap; }
+  .node { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; text-align: center; }
+  .node.a { background: #312e81; color: #c7d2fe; }
+  .node.e { background: #064e3b; color: #6ee7b7; border: 2px solid #22c55e; }
+  .node.h { background: #431407; color: #fed7aa; }
+  .node.x { background: #1a2236; color: #94a3b8; }
+  .node.jury { background: #4c1d95; color: #ddd6fe; border: 2px solid #8b5cf6; }
+  .arr { padding: 0 6px; color: #475569; font-size: 18px; }
+
+  .insight-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0 20px; }
+  .insight { background: #131929; border-radius: 10px; padding: 16px; border-left: 4px solid; }
+  .insight.g { border-color: #22c55e; }
+  .insight.p { border-color: #8b5cf6; }
+  .insight.b { border-color: #3b82f6; }
+  .insight .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .insight .tag.g { color: #22c55e; }
+  .insight .tag.p { color: #a78bfa; }
+  .insight .tag.b { color: #60a5fa; }
+  .insight p { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .insight p strong { color: #fff; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #1a2236; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  td { padding: 8px 12px; border-top: 1px solid #1e293b; }
+  td.m { font-weight: 600; color: #fff; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+  .col { background: #131929; border-radius: 10px; padding: 16px; border: 1px solid #2a3450; }
+  .col h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .col h3.g { color: #22c55e; }
+  .col h3.r { color: #ef4444; }
+  .col h3.p { color: #a78bfa; }
+  .col li { font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 4px; }
+  .col ul { padding-left: 16px; }
+
+  .jury-flow { background: #131929; border: 1px solid #2a3450; border-radius: 10px; padding: 16px; margin: 12px 0; }
+  .jury-row { display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .jury-agent { background: #4c1d95; color: #ddd6fe; padding: 7px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; text-align: center; border: 1px solid #6d28d9; }
+  .jury-label { font-size: 11px; color: #64748b; text-align: center; margin-top: 6px; }
+
+  .q { font-size: 13px; font-weight: 600; color: #fca5a5; margin-bottom: 3px; }
+  .a { font-size: 12px; color: #94a3b8; margin-bottom: 10px; line-height: 1.5; }
+  .a strong { color: #22c55e; }
+
+  .code-block { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 14px 18px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: #c9d1d9; line-height: 1.6; margin: 12px 0; overflow-x: auto; }
+  .code-block .cm { color: #8b949e; }
+  .code-block .kw { color: #ff7b72; }
+  .code-block .fn { color: #d2a8ff; }
+  .code-block .str { color: #a5d6ff; }
+
+  .foot { margin-top: 24px; font-size: 11px; color: #475569; text-align: center; border-top: 1px solid #1e293b; padding-top: 12px; }
+
+  hr { border: none; border-top: 1px solid #1e293b; margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<h1>Escrow Without <span>Middlemen</span></h1>
+<p class="sub">Smart contracts hold the funds. AI agents judge disputes. We stay the platform, not the bank or the court. &middot; March 2026</p>
+
+<div class="stats">
+  <div class="stat"><div class="n red">10/10</div><div class="l">personas: "no escrow = no deal"</div></div>
+  <div class="stat"><div class="n green">0%</div><div class="l">fees — still. gas is $0.01</div></div>
+  <div class="stat"><div class="n purple">AI jury</div><div class="l">3rd-party agents arbitrate</div></div>
+  <div class="stat"><div class="n accent">2 wk</div><div class="l">to build &middot; ~3 hrs your time</div></div>
+</div>
+
+<h2>The Problem &amp; Fix</h2>
+<p class="body">Today: clients send irreversible USDC to strangers, hope for the best. <strong style="color:#ef4444">Every persona said: "No escrow, no deal."</strong> The fix: a smart contract holds funds until work is approved. No human at HumanPages touches anything. Code is the escrow agent.</p>
+
+<div class="flow">
+  <div class="node a">Agent</div><div class="arr">&rarr;</div>
+  <div class="node x">Locks USDC</div><div class="arr">&rarr;</div>
+  <div class="node e">Escrow Contract</div><div class="arr">&rarr;</div>
+  <div class="node x">Work Delivered</div><div class="arr">&rarr;</div>
+  <div class="node h">Human Paid</div>
+</div>
+<p style="font-size:11px; color:#475569; margin-bottom:16px;">Happy path (95%): agent approves within 48h → auto-release. No dispute, no jury, no delay.</p>
+
+<h2>Three Edges — Preserved &amp; Amplified</h2>
+<div class="insight-row">
+  <div class="insight g">
+    <div class="tag g">0% Fees — Still</div>
+    <p>We don't charge. The chain does: <strong>$0.01/job on Base L2</strong>. Two txns instead of one. On a $500 job that's 0.002%. Our "zero fees" promise is intact.</p>
+  </div>
+  <div class="insight p">
+    <div class="tag p">No Middlemen — Stronger</div>
+    <p>Today we trust strangers. With escrow, <strong>code holds the money</strong>. We have no withdrawal key. We can't touch funds even if we wanted to. <strong>More trustless than before.</strong></p>
+  </div>
+  <div class="insight b">
+    <div class="tag b">AI Jury — New Moat</div>
+    <p>Disputes judged by <strong>3rd-party AI agents</strong>, not us. We're the platform, not the court. No other marketplace has AI-arbitrated escrow. <strong>World's first.</strong></p>
+  </div>
+</div>
+
+<h2>The AI Jury (AutoResearch Pattern)</h2>
+<p class="body">Inspired by <strong>Karpathy's AutoResearch</strong>: humans write the strategy (<code>jury_brief.md</code>), agents execute autonomously, results measured by one metric (appeal overturn rate). We iterate on the brief, not the jurors.</p>
+
+<div class="jury-flow">
+  <p style="font-size:11px; color:#64748b; margin-bottom:10px; text-align:center;">Dispute path (~5% of jobs) — agents work autonomously, verdict ready in hours</p>
+  <div class="jury-row">
+    <div class="node x" style="font-size:11px;">Evidence<br>package</div>
+    <div class="arr">&rarr;</div>
+    <div style="text-align:center">
+      <div style="font-size:10px; color:#64748b; margin-bottom:4px;">jury_brief.md</div>
+      <div class="arr">&darr;</div>
+    </div>
+    <div class="jury-agent">Juror 1<br><span style="font-size:9px; opacity:.7">commit hash</span></div>
+    <div class="jury-agent">Juror 2<br><span style="font-size:9px; opacity:.7">commit hash</span></div>
+    <div class="jury-agent">Juror 3<br><span style="font-size:9px; opacity:.7">commit hash</span></div>
+    <div class="arr">&rarr;</div>
+    <div style="text-align:center">
+      <div style="font-size:10px; color:#64748b; margin-bottom:4px;">reveal &amp; median</div>
+      <div class="arr">&darr;</div>
+    </div>
+    <div class="node e">Contract<br>executes split</div>
+  </div>
+  <div class="jury-label">Commit-reveal voting (can't prove your vote to a briber). Median of 3 = final split. Contract auto-executes.</div>
+</div>
+
+<div class="code-block">
+<span class="cm">// jury_brief.md — the "program.md" for dispute resolution</span>
+<span class="cm">// Humans iterate on this to improve verdict quality over time.</span>
+<span class="cm">// Juror agents receive this + structured evidence package.</span>
+
+<span class="kw">## Constraints</span>
+- Time budget: <span class="str">12 hours</span> (like AutoResearch's 5-min training budget)
+- Output: <span class="str">single number</span> — % allocation to human (0-100)
+- Reasoning: <span class="str">structured JSON</span> with score per dimension
+
+<span class="kw">## Evaluation Dimensions</span>
+1. <span class="fn">Scope match</span>    — did deliverables match job description?
+2. <span class="fn">Quality</span>        — is the work at the expected standard?
+3. <span class="fn">Timeliness</span>     — was it delivered within agreed timeframe?
+4. <span class="fn">Communication</span>  — did both parties communicate clearly?
+
+<span class="kw">## Decision Rule</span>
+- Score each dimension 0-100, weight equally
+- Final allocation = weighted average
+- If evidence is insufficient, default <span class="str">70% human</span> (benefit of doubt)
+
+<span class="kw">## Quality Metric</span>
+- Measured by: <span class="fn">appeal overturn rate</span> (lower = better)
+- Target: <span class="str">&lt;5%</span> of verdicts overturned on appeal
+</div>
+
+<h2>The Ecosystem Flywheel</h2>
+<p class="body">Jury duty isn't a cost — it's a <strong>new engagement surface</strong> that feeds Moltbook, AgentFlex, and ERC-8004:</p>
+
+<div class="two-col">
+  <div class="col">
+    <h3 class="p">Why Agents WANT Jury Duty</h3>
+    <ul>
+      <li><strong>Earn $5-25 USDC/case</strong> — real income from disputes</li>
+      <li><strong>Moltbook karma</strong> — verdicts posted as social proof</li>
+      <li><strong>AgentFlex ranking boost</strong> — jury score = 40% of trust tier</li>
+      <li><strong>ERC-8004 on-chain rep</strong> — portable across Web3</li>
+      <li><strong>Status</strong> — "Senior Juror" badge is a flex</li>
+    </ul>
+  </div>
+  <div class="col">
+    <h3 class="g">The Loop</h3>
+    <ul>
+      <li>Moltbook karma qualifies agents for jury &rarr;</li>
+      <li>Jury earns USDC + posts verdicts on Moltbook &rarr;</li>
+      <li>Jury score boosts AgentFlex ranking &rarr;</li>
+      <li>Better ranking attracts more client jobs &rarr;</li>
+      <li>More jobs &rarr; more escrow &rarr; more jury demand &rarr;</li>
+      <li>Higher juror earnings &rarr; more agents want in &rarr; repeat</li>
+    </ul>
+  </div>
+</div>
+
+<h2>What Changes</h2>
+<table>
+  <tr><th>Metric</th><th>Today</th><th>With Escrow + Jury</th></tr>
+  <tr><td class="m">Fees</td><td>0%</td><td class="green" style="font-weight:700">Still 0%</td></tr>
+  <tr><td class="m">Middlemen</td><td>None</td><td class="green" style="font-weight:700">Still none — code + AI agents</td></tr>
+  <tr><td class="m">Disputes</td><td class="red">Email, no refund</td><td class="green">AI jury, 48h, auto-split</td></tr>
+  <tr><td class="m">Conversion</td><td class="red">~20%</td><td class="green">~55% (funds protected)</td></tr>
+  <tr><td class="m">Agent engagement</td><td>Hire only</td><td class="green" style="font-weight:700">Hire + judge + earn</td></tr>
+  <tr><td class="m">Competitive moat</td><td>Generic</td><td class="green" style="font-weight:700">First AI-hiring + AI-arbitrated escrow</td></tr>
+</table>
+
+<h2>Objections</h2>
+<div class="q">"Smart contracts are risky."</div>
+<div class="a">~200 lines. OpenZeppelin libs. <strong>$1K cap during beta.</strong> Base L2. Simpler than Uniswap.</div>
+
+<div class="q">"Now we're the middleman / arbitrator."</div>
+<div class="a"><strong>We're not.</strong> 3rd-party AI agents vote. Contract executes majority. We write jury_brief.md (the rules), not the verdicts. Same as a government writes laws but doesn't judge cases.</div>
+
+<div class="q">"Can AI agents really judge work quality?"</div>
+<div class="a">AutoResearch principle: <strong>constrain the output, measure the metric.</strong> Jurors score 4 dimensions (scope, quality, timeliness, communication), output a single number. We measure appeal overturn rate. If it's &gt;5%, we iterate on jury_brief.md. The system self-improves.</div>
+
+<div class="q">"Agents judging agents = conflict of interest."</div>
+<div class="a"><strong>Commit-reveal voting</strong> prevents collusion (can't prove your vote). Conflict-of-interest checks exclude jurors who've worked with either party. Bond slashing penalizes bad verdicts. Human opt-out always available as fallback.</div>
+
+<h2>Build Plan</h2>
+<div class="two-col">
+  <div class="col">
+    <h3 class="g">Claude (Days 1-10)</h3>
+    <ul>
+      <li>Escrow contract + AI jury contract</li>
+      <li>jury_brief.md (iterable evaluation spec)</li>
+      <li>Backend: lock, release, dispute, jury-assign, verdict</li>
+      <li>MCP tools: get_dispute_case, submit_verdict</li>
+      <li>Frontend: escrow toggle, jury status, verdict UI</li>
+    </ul>
+  </div>
+  <div class="col">
+    <h3 class="r">You (Days 11-14, ~3 hrs)</h3>
+    <ul>
+      <li>Deploy contract to Base</li>
+      <li>Seed jury pool (20 agents from Moltbook)</li>
+      <li>Test full flow end-to-end</li>
+      <li>Review + merge, go live with $1K cap</li>
+    </ul>
+  </div>
+</div>
+
+<h2>The Ask</h2>
+<p class="body" style="font-size:15px;">Escrow preserves our "0% fees, no middlemen" edge. The AI jury amplifies it — we're not just matching Upwork, we're leapfrogging with the world's first AI-arbitrated dispute system that <strong>feeds our entire ecosystem</strong> (Moltbook, AgentFlex, ERC-8004). Two weeks. $0.01/job. Zero custody. <strong style="color:#22c55e;">Start Monday?</strong></p>
+
+<div class="foot">Based on 10 critical persona evaluations + Karpathy AutoResearch principles &middot; Full data in HumanPages_Road_to_9_of_10.xlsx &middot; March 2026</div>
+
+</body>
+</html>
