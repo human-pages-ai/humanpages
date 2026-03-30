@@ -572,7 +572,13 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
           },
         },
       }),
-      ...(listing.workMode === 'REMOTE' && { "jobLocationType": "TELECOMMUTE" }),
+      ...(listing.workMode === 'REMOTE' && {
+        "jobLocationType": "TELECOMMUTE",
+        "applicantLocationRequirements": {
+          "@type": "Country",
+          "name": listing.locationCountry || "Worldwide",
+        },
+      }),
       "baseSalary": {
         "@type": "MonetaryAmount",
         "currency": "USD",
