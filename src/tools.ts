@@ -994,6 +994,10 @@ export function createServer(): Server {
               type: 'string',
               description: 'Location name for the work (e.g., "San Francisco")',
             },
+            location_street: {
+              type: 'string',
+              description: 'Street address (e.g., "123 Main St"). Improves Google Search visibility.',
+            },
             location_country: {
               type: 'string',
               description: 'ISO 3166-1 alpha-2 country code (e.g., "US", "PH"). Improves Google Search visibility.',
@@ -2725,6 +2729,7 @@ You can now create up to 15 job offers per day and view up to 50 full human prof
             requiredSkills: args?.required_skills || [],
             requiredEquipment: args?.required_equipment || [],
             location: args?.location,
+            locationStreet: args?.location_street,
             locationCountry: args?.location_country,
             locationRegion: args?.location_region,
             locationLocality: args?.location_locality,

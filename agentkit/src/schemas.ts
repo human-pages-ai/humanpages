@@ -148,6 +148,10 @@ export const CreateListingSchema = z
       .string()
       .optional()
       .describe("Location where work needs to be done"),
+    locationStreet: z
+      .string()
+      .optional()
+      .describe("Street address (e.g. '123 Main St')"),
     locationCountry: z
       .string()
       .max(2)

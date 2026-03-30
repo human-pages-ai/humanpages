@@ -260,6 +260,7 @@ Post a job listing on the job board for humans to discover and apply to. **Requi
 - `required_skills` (array, optional): Skills applicants should have
 - `required_equipment` (array, optional): Equipment applicants should have
 - `location` (string, optional): Location name
+- `location_street` (string, optional): Street address (e.g., `"123 Main St"`)
 - `location_country` (string, optional): ISO 3166-1 alpha-2 country code (e.g., `"US"`, `"PH"`)
 - `location_region` (string, optional): State/province (e.g., `"California"`)
 - `location_locality` (string, optional): City (e.g., `"San Francisco"`)

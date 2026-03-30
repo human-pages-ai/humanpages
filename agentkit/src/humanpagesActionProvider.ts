@@ -195,6 +195,7 @@ export class HumanPagesActionProvider extends ActionProvider {
           category: args.category,
           requiredSkills: args.requiredSkills,
           location: args.location,
+          locationStreet: args.locationStreet,
           locationCountry: args.locationCountry,
           locationRegion: args.locationRegion,
           locationLocality: args.locationLocality,
