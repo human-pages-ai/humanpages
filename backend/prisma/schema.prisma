@@ -1115,6 +1115,7 @@ model Listing {
   requiredSkills   String[]      @default([])
   requiredEquipment String[]     @default([])
   location         String?
+  locationStreet   String?       // Street address (e.g. "123 Main St")
   locationCountry  String?       // ISO 3166-1 alpha-2 (e.g. "US", "PH")
   locationRegion   String?       // State/province (e.g. "California", "Metro Manila")
   locationLocality String?       // City (e.g. "San Francisco", "Manila")

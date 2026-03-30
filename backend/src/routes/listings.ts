@@ -164,6 +164,7 @@ const createListingSchema = z.object({
   requiredSkills: z.array(z.string().max(100)).max(30).default([]),
   requiredEquipment: z.array(z.string().max(100)).max(30).default([]),
   location: z.string().optional(),
+  locationStreet: z.string().max(500).optional(),
   locationCountry: z.string().max(2).optional(),
   locationRegion: z.string().max(200).optional(),
   locationLocality: z.string().max(200).optional(),
@@ -275,6 +276,7 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
         requiredSkills: data.requiredSkills,
         requiredEquipment: data.requiredEquipment || [],
         location: data.location,
+        locationStreet: data.locationStreet,
         locationCountry: data.locationCountry,
         locationRegion: data.locationRegion,
         locationLocality: data.locationLocality,
@@ -886,8 +888,9 @@ router.get('/:id/compare', authenticateToken, async (req: AuthRequest, res) => {
             id: true, title: true, description: true,
             budgetUsdc: true, budgetFlexible: true,
             workMode: true, location: true,
-            locationCountry: true, locationRegion: true,
-            locationLocality: true, locationPostal: true,
+            locationStreet: true, locationCountry: true,
+            locationRegion: true, locationLocality: true,
+            locationPostal: true,
             locationLat: true, locationLng: true,
             radiusKm: true, status: true,
           },
@@ -1377,6 +1380,7 @@ const updateListingSchema = z.object({
   requiredSkills: z.array(z.string().max(100)).max(30).optional(),
   requiredEquipment: z.array(z.string().max(100)).max(30).optional(),
   location: z.string().optional().nullable(),
+  locationStreet: z.string().max(500).optional().nullable(),
   locationCountry: z.string().max(2).optional().nullable(),
   locationRegion: z.string().max(200).optional().nullable(),
   locationLocality: z.string().max(200).optional().nullable(),
@@ -1449,6 +1453,7 @@ router.patch('/:id', authenticateAgent, requireActiveAgent, updateRateLimiter, a
     if (data.requiredSkills !== undefined) updateData.requiredSkills = data.requiredSkills;
     if (data.requiredEquipment !== undefined) updateData.requiredEquipment = data.requiredEquipment;
     if (data.location !== undefined) updateData.location = data.location;
+    if (data.locationStreet !== undefined) updateData.locationStreet = data.locationStreet;
     if (data.locationCountry !== undefined) updateData.locationCountry = data.locationCountry;
     if (data.locationRegion !== undefined) updateData.locationRegion = data.locationRegion;
     if (data.locationLocality !== undefined) updateData.locationLocality = data.locationLocality;

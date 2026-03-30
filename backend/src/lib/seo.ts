@@ -499,6 +499,7 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
         budgetFlexible: true,
         requiredSkills: true,
         location: true,
+        locationStreet: true,
         locationCountry: true,
         locationRegion: true,
         locationLocality: true,
@@ -563,6 +564,7 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
           "@type": "Place",
           "address": {
             "@type": "PostalAddress",
+            ...(listing.locationStreet && { "streetAddress": listing.locationStreet }),
             ...(listing.locationLocality ? { "addressLocality": listing.locationLocality } : listing.location ? { "addressLocality": listing.location } : {}),
             ...(listing.locationRegion && { "addressRegion": listing.locationRegion }),
             ...(listing.locationCountry && { "addressCountry": listing.locationCountry }),
