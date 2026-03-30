@@ -1386,6 +1386,8 @@ export interface FeatureItem {
   monitoring: FeatureMonitoring;
   businessValue: FeatureBusinessValue;
   compositeGoal: FeatureCompositeGoal;
+  /** Populated when backend is called with ?metrics=true */
+  liveMetrics?: FeatureLiveMetric[];
 }
 
 export interface FeatureRegistrySummary {

@@ -225,49 +225,70 @@ function buildTableMetrics(periodStart: Date): Record<string, () => Promise<Metr
 
 // ─── Period helpers ───
 
+const VALID_PERIODS = ['24h', '7d', '30d'] as const;
+type ValidPeriod = typeof VALID_PERIODS[number];
+
 function parsePeriodDays(period: string): number {
   if (period === '24h') return 1;
   if (period === '30d') return 30;
   return 7; // default 7d
 }
 
+function sanitizePeriod(raw: string | undefined): ValidPeriod {
+  if (raw && VALID_PERIODS.includes(raw as ValidPeriod)) return raw as ValidPeriod;
+  return '7d';
+}
+
 // ─── Fetch metrics for a single feature ───
 
 const METRIC_TIMEOUT_MS = 5_000;
+const MAX_CONCURRENT_QUERIES = 10; // limit parallel DB queries to prevent connection exhaustion
+
+/** Simple concurrency limiter — runs async tasks with at most `limit` in parallel */
+async function parallelLimit<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  const results: T[] = [];
+  let i = 0;
+
+  async function runNext(): Promise<void> {
+    while (i < tasks.length) {
+      const idx = i++;
+      results[idx] = await tasks[idx]();
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => runNext());
+  await Promise.all(workers);
+  return results;
+}
 
 async function fetchFeatureMetrics(
   feature: FeatureItem,
   periodStart: Date,
 ): Promise<MetricResult[]> {
   const tableMetrics = buildTableMetrics(periodStart);
-  const results: MetricResult[] = [];
 
   // Collect which tables this feature uses AND have a metric function
-  const tablesToQuery = feature.dbTables.filter(t => t in tableMetrics);
-  if (tablesToQuery.length === 0) return results;
+  const tablesToQuery = (feature.dbTables || []).filter(t => t in tableMetrics);
+  if (tablesToQuery.length === 0) return [];
 
-  // Query all tables in parallel with timeout
-  const promises = tablesToQuery.map(async tableName => {
+  // Build tasks with timeout, then run with concurrency limit
+  const tasks = tablesToQuery.map(tableName => async (): Promise<MetricResult[]> => {
     try {
       const metricFn = tableMetrics[tableName];
-      const metrics = await Promise.race([
+      return await Promise.race([
         metricFn(),
         new Promise<MetricResult[]>((_, reject) =>
           setTimeout(() => reject(new Error(`Timeout querying ${tableName}`)), METRIC_TIMEOUT_MS),
         ),
       ]);
-      return metrics;
     } catch (err) {
       logger.warn({ err, tableName, featureId: feature.id }, 'Metric query failed');
       return [];
     }
   });
 
-  const allResults = await Promise.all(promises);
-  for (const arr of allResults) {
-    results.push(...arr);
-  }
-  return results;
+  const allResults = await parallelLimit(tasks, MAX_CONCURRENT_QUERIES);
+  return allResults.flat();
 }
 
 // ─── Routes ───
@@ -278,14 +299,17 @@ router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) =
     const registry = loadFeaturesRegistry();
     const domainParam = req.query.domain as string | undefined;
     const includeMetrics = req.query.metrics === 'true';
-    const period = (req.query.period as string) || '7d';
+    const period = sanitizePeriod(req.query.period as string | undefined);
 
     let features = registry.features;
 
-    // Filter by domain
+    // Filter by domain — validate against actual domains in the registry
     if (domainParam) {
-      const domains = domainParam.split(',').map(d => d.trim());
-      features = features.filter(f => domains.includes(f.domain));
+      const validDomains = new Set(registry.features.map(f => f.domain));
+      const requested = domainParam.split(',').map(d => d.trim()).filter(d => validDomains.has(d));
+      if (requested.length > 0) {
+        features = features.filter(f => requested.includes(f.domain));
+      }
     }
 
     const summary = calculateSummary(features);
@@ -322,7 +346,7 @@ router.get('/:id/metrics', authenticateToken, requireAdmin, async (req: AuthRequ
       return res.status(404).json({ error: 'Feature not found' });
     }
 
-    const period = (req.query.period as string) || '7d';
+    const period = sanitizePeriod(req.query.period as string | undefined);
     const days = parsePeriodDays(period);
     const periodStart = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 

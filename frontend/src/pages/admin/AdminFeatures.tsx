@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../../lib/api';
 import type { AdminFeaturesResponse, FeatureItem, FeatureLiveMetric } from '../../types/admin';
 
@@ -31,6 +31,12 @@ function truncate(text: string, len: number): string {
 }
 
 const GITHUB_BASE = 'https://github.com/humanpages/humans/blob/master/';
+
+/** Safely build GitHub URL — rejects paths with traversal or protocol injection */
+function safeGitHubUrl(filePath: string): string | null {
+  if (!filePath || filePath.includes('..') || filePath.includes(':')) return null;
+  return `${GITHUB_BASE}${filePath}`;
+}
 
 /* ─── KPI Cards ──────────────────────────────────────────────── */
 
@@ -170,17 +176,22 @@ function FeatureCardExpanded({
             <div>
               <p className="text-gray-600 font-medium">Backend Files</p>
               <div className="space-y-0.5">
-                {feature.backendFiles.map((file, idx) => (
-                  <a
-                    key={idx}
-                    href={`${GITHUB_BASE}${file}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 block"
-                  >
-                    {file}
-                  </a>
-                ))}
+                {feature.backendFiles.map((file, idx) => {
+                  const url = safeGitHubUrl(file);
+                  return url ? (
+                    <a
+                      key={idx}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 block"
+                    >
+                      {file}
+                    </a>
+                  ) : (
+                    <span key={idx} className="text-gray-500 block">{file}</span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -188,17 +199,22 @@ function FeatureCardExpanded({
             <div>
               <p className="text-gray-600 font-medium">Frontend Pages</p>
               <div className="space-y-0.5">
-                {feature.frontendPages.map((page, idx) => (
-                  <a
-                    key={idx}
-                    href={`${GITHUB_BASE}${page}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 block"
-                  >
-                    {page}
-                  </a>
-                ))}
+                {feature.frontendPages.map((page, idx) => {
+                  const url = safeGitHubUrl(page);
+                  return url ? (
+                    <a
+                      key={idx}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 block"
+                    >
+                      {page}
+                    </a>
+                  ) : (
+                    <span key={idx} className="text-gray-500 block">{page}</span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -345,17 +361,32 @@ export default function AdminFeatures() {
       .finally(() => setLoading(false));
   }, []);
 
-  const fetchMetrics = async (featureId: string) => {
+  // Track in-flight requests to prevent duplicate fetches on rapid toggle
+  const inflightRef = useRef<Record<string, boolean>>({});
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const fetchMetrics = useCallback(async (featureId: string) => {
+    if (inflightRef.current[featureId]) return; // already fetching
+    inflightRef.current[featureId] = true;
     setMetricsLoading((prev) => ({ ...prev, [featureId]: true }));
     try {
-      const metrics = await api.getAdminFeatureMetrics(featureId);
-      setMetricsMap((prev) => ({ ...prev, [featureId]: metrics.metrics }));
+      const res = await api.getAdminFeatureMetrics(featureId);
+      if (mountedRef.current) {
+        setMetricsMap((prev) => ({ ...prev, [featureId]: res.metrics }));
+      }
     } catch {
       // Metrics are non-critical; silently degrade
     } finally {
-      setMetricsLoading((prev) => ({ ...prev, [featureId]: false }));
+      inflightRef.current[featureId] = false;
+      if (mountedRef.current) {
+        setMetricsLoading((prev) => ({ ...prev, [featureId]: false }));
+      }
     }
-  };
+  }, []);
 
   if (loading) {
     return (
