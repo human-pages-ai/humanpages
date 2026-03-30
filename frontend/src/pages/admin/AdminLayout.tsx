@@ -11,6 +11,7 @@ interface NavItem {
 
 const adminOnlyItems: NavItem[] = [
   { to: '/admin', label: 'Overview', end: true },
+  { to: '/admin/features', label: 'Features' },
   { to: '/admin/people', label: 'People' },
   { to: '/admin/agents', label: 'Agents' },
   { to: '/admin/jobs', label: 'Jobs' },

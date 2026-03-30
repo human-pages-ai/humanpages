@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse, AdminFeaturesResponse, FeatureMetricsResponse } from '../types/admin';
 
 import { safeLocalStorage, safeGetItem, safeSetItem, safeRemoveItem } from './safeStorage';
 // Re-export for backward compatibility (OAuthCallback etc. import from here)
@@ -468,6 +468,21 @@ export const api = {
 
   getSolverStats: () =>
     request<SolverStats>('/admin/solver/stats'),
+
+  getAdminFeatures: (params?: { domain?: string; metrics?: boolean }) => {
+    const query = new URLSearchParams();
+    if (params?.domain) query.set('domain', params.domain);
+    if (params?.metrics) query.set('metrics', 'true');
+    const qs = query.toString();
+    return request<AdminFeaturesResponse>(`/admin/features${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminFeatureMetrics: (featureId: string, period?: string) => {
+    const query = new URLSearchParams();
+    if (period) query.set('period', period);
+    const qs = query.toString();
+    return request<FeatureMetricsResponse>(`/admin/features/${featureId}/metrics${qs ? `?${qs}` : ''}`);
+  },
 
   getSolverRequests: (params: { filter?: string; page?: number; limit?: number } = {}) => {
     const query = new URLSearchParams();

@@ -1333,3 +1333,86 @@ export interface WatchDogTrend {
   fatal: number;
   error: number;
 }
+
+export interface FeatureCodeQuality {
+  score: number;
+  errorHandling: string;
+  inputValidation: string;
+  typesSafety: string;
+  separation: string;
+  duplication: string;
+  issues: string[];
+}
+
+export interface FeatureMonitoring {
+  currentStatus: 'good' | 'partial' | 'none';
+  existingMetrics: string[];
+  gaps: string[];
+}
+
+export interface FeatureBusinessValue {
+  score: number;
+  category: 'critical' | 'high' | 'medium' | 'low';
+  rationale: string;
+  userImpact: string;
+  revenueImpact: string;
+}
+
+export interface FeatureCompositeGoal {
+  name: string;
+  formula: string;
+  target: string;
+}
+
+export interface FeatureItem {
+  id: string;
+  domain: string;
+  name: string;
+  description: string;
+  backendRoutes: string[];
+  backendFiles: string[];
+  frontendPages: string[];
+  dbTables: string[];
+  dbColumns: Record<string, string[]>;
+  analyticsEvents: string[];
+  testFiles: string[];
+  testCount: number;
+  testCoverage: 'high' | 'medium' | 'low' | 'none';
+  hasUnitTests: boolean;
+  hasIntegrationTests: boolean;
+  hasFlowTests: boolean;
+  hasFrontendTests: boolean;
+  codeQuality: FeatureCodeQuality;
+  monitoring: FeatureMonitoring;
+  businessValue: FeatureBusinessValue;
+  compositeGoal: FeatureCompositeGoal;
+}
+
+export interface FeatureRegistrySummary {
+  totalFeatures: number;
+  avgCodeQuality: number;
+  avgBusinessValue: number;
+  testCoverageDistribution: { high: number; medium: number; low: number; none: number };
+  monitoringDistribution: { good: number; partial: number; none: number };
+  totalTestCount: number;
+  totalIssues: number;
+}
+
+export interface AdminFeaturesResponse {
+  summary: FeatureRegistrySummary;
+  features: FeatureItem[];
+}
+
+export interface FeatureLiveMetric {
+  label: string;
+  value: number;
+  recent?: number;
+  previousPeriod?: number;
+}
+
+export interface FeatureMetricsResponse {
+  featureId: string;
+  period: string;
+  fetchedAt: string;
+  metrics: FeatureLiveMetric[];
+}

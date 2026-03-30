@@ -21,6 +21,7 @@ import logRoutes from './logs.js';
 import mktopsRoutes from './mktops.js';
 import videoBatchRoutes from './videoBatches.js';
 import watchdogRoutes from './watchdog.js';
+import featureRoutes from './features.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 import { normalizeCountry, countryFromLocation, continentFromCountry } from '../lib/countries.js';
@@ -2850,5 +2851,8 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Mount features registry routes
+router.use('/features', authenticateToken, featureRoutes);
 
 export default router;
