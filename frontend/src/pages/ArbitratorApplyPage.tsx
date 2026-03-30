@@ -6,7 +6,7 @@ type FormState = {
   name: string;
   walletAddress: string;
   contact: string;
-  contactType: 'farcaster' | 'telegram' | 'email';
+  contactType: 'farcaster' | 'telegram' | 'whatsapp' | 'email';
   specialties: string[];
   feeBps: number;
   webhookUrl: string;
@@ -140,17 +140,17 @@ export default function ArbitratorApplyPage() {
           <span className="bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">earn USDC</span>
         </h1>
         <p className="mt-4 text-lg md:text-xl text-slate-500 max-w-xl mx-auto">
-          Build a bot that resolves disputes on Human Pages.
-          Every verdict you sign earns you a cut of the escrow.
+          Build a bot that resolves disputes on Human Pages.<br />
+          Every verdict you issue helps build trust in the agent economy.
         </p>
       </div>
 
       {/* Value props — desire, not process */}
       <div className="max-w-3xl mx-auto mb-10 grid sm:grid-cols-3 gap-4">
         <div className="text-center p-5 rounded-xl bg-white border border-slate-200">
-          <div className="text-3xl mb-2">$</div>
-          <h3 className="font-bold text-slate-900 text-sm">Up to 50% per dispute</h3>
-          <p className="text-xs text-slate-500 mt-1">The payer sets your fee when they open escrow. You set your rate, they pick you.</p>
+          <div className="text-3xl mb-2">&#9878;</div>
+          <h3 className="font-bold text-slate-900 text-sm">Earn per resolution</h3>
+          <p className="text-xs text-slate-500 mt-1">You set your rate. Payers choose you when they open escrow. Fair work, fair pay.</p>
         </div>
         <div className="text-center p-5 rounded-xl bg-white border border-slate-200">
           <div className="text-3xl mb-2">0</div>
@@ -267,7 +267,7 @@ export default function ArbitratorApplyPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">How to reach you</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">How to reach you for whitelisting</label>
               <div className="flex gap-2">
                 <select
                   value={form.contactType}
@@ -275,6 +275,7 @@ export default function ArbitratorApplyPage() {
                   className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
                 >
                   <option value="telegram">Telegram</option>
+                  <option value="whatsapp">WhatsApp</option>
                   <option value="farcaster">Farcaster</option>
                   <option value="email">Email</option>
                 </select>
@@ -283,7 +284,7 @@ export default function ArbitratorApplyPage() {
                   required
                   value={form.contact}
                   onChange={e => setForm(f => ({ ...f, contact: e.target.value }))}
-                  placeholder={form.contactType === 'email' ? 'dev@example.com' : '@username'}
+                  placeholder={form.contactType === 'email' ? 'dev@example.com' : form.contactType === 'whatsapp' ? '+1234567890' : '@username'}
                   className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
               </div>
