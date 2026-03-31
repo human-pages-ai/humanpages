@@ -622,15 +622,17 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
           "name": listing.locationCountry || "Worldwide",
         },
       }),
-      "baseSalary": {
-        "@type": "MonetaryAmount",
-        "currency": "USD",
-        "value": {
-          "@type": "QuantitativeValue",
-          "value": Number(listing.budgetUsdc),
-          "unitText": "PROJECT",
+      ...(listing.budgetUsdc && {
+        "baseSalary": {
+          "@type": "MonetaryAmount",
+          "currency": "USD",
+          "value": {
+            "@type": "QuantitativeValue",
+            "value": Number(listing.budgetUsdc),
+            "unitText": "PROJECT",
+          },
         },
-      },
+      }),
       "hiringOrganization": { "@type": "Organization", "name": "Human Pages", "url": SITE_URL },
       "employmentType": "TEMPORARY",
       ...(listing.requiredSkills.length > 0 && { "skills": listing.requiredSkills.join(", ") }),

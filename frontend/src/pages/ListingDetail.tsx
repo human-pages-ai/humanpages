@@ -367,14 +367,22 @@ export default function ListingDetail() {
               "address": listing.location
             }
           }),
-          ...(listing.workMode && {
-            "jobLocationType": listing.workMode === 'REMOTE' ? "TELECOMMUTE" : undefined
+          ...(listing.workMode === 'REMOTE' && {
+            "jobLocationType": "TELECOMMUTE",
+            "applicantLocationRequirements": {
+              "@type": "Country",
+              "name": "Worldwide",
+            },
           }),
           ...(listing.budgetUsdc && {
             "baseSalary": {
               "@type": "MonetaryAmount",
               "currency": "USD",
-              "value": listing.budgetUsdc
+              "value": {
+                "@type": "QuantitativeValue",
+                "value": Number(listing.budgetUsdc),
+                "unitText": "PROJECT",
+              },
             }
           }),
           "hiringOrganization": {
