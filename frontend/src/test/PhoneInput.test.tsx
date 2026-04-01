@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import PhoneInput from '../components/PhoneInput';
+import PhoneInput, { COUNTRY_CODES } from '../components/PhoneInput';
 
 describe('PhoneInput', () => {
   describe('rendering', () => {
@@ -300,28 +300,16 @@ describe('PhoneInput', () => {
   });
 
   describe('country data integrity', () => {
-    it('has no duplicate country code + name combinations', { timeout: 30000 }, () => {
-      // This is a data integrity check — import the module and verify
-      // We can check by rendering and opening dropdown
+    it('has no duplicate country code + name combinations', () => {
       const seen = new Set<string>();
-      render(<PhoneInput id="phone" value="" onChange={vi.fn()} />);
-
-      fireEvent.click(screen.getByRole('button'));
-
-      const buttons = screen.getAllByRole('button').filter(
-        (btn) => btn.textContent && btn.textContent.includes('+')
-          && btn !== screen.getAllByRole('button')[0] // exclude the toggle button
-      );
-
-      for (const btn of buttons) {
-        const text = btn.textContent || '';
-        if (seen.has(text)) {
-          throw new Error(`Duplicate country row: ${text}`);
+      for (const { code, name } of COUNTRY_CODES) {
+        const key = `${code} ${name}`;
+        if (seen.has(key)) {
+          throw new Error(`Duplicate country row: ${key}`);
         }
-        seen.add(text);
+        seen.add(key);
       }
-
-      expect(buttons.length).toBeGreaterThan(150);
+      expect(COUNTRY_CODES.length).toBeGreaterThan(150);
     });
   });
 });

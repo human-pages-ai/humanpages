@@ -468,9 +468,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     analytics.track('dashboard_logout');
-    logout();
+    await logout();
     navigate('/login');
   };
 

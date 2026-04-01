@@ -105,7 +105,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { isNew: !!result.isNew, needsSignup: false };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const token = safeLocalStorage.getItem('token');
+      if (token) {
+        await fetch('/api/auth/logout-all', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      // Best-effort — still clear local state even if server call fails
+    }
     safeLocalStorage.removeItem('token');
     setUser(null);
     posthog.reset();

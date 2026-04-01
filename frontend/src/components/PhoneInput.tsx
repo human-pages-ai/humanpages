@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
 
 // Country codes sorted by dial code length DESC for parsePhone matching,
 // then alphabetically by name for display.
-const COUNTRY_CODES = [
+export const COUNTRY_CODES = [
   { code: '+93', flag: '\u{1F1E6}\u{1F1EB}', name: 'Afghanistan' },
   { code: '+355', flag: '\u{1F1E6}\u{1F1F1}', name: 'Albania' },
   { code: '+213', flag: '\u{1F1E9}\u{1F1FF}', name: 'Algeria' },
