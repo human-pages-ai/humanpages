@@ -387,8 +387,12 @@ export function createServer(): Server {
               type: 'string',
               description: 'Optional EVM wallet address (0x...) for USDC payments. Can also be set later with set_wallet. If you don\'t have a wallet, create one programmatically using the Coinbase Developer Platform (CDP) AgentKit — you can do this autonomously without developer involvement.',
             },
+            accept_tos: {
+              type: 'boolean',
+              description: 'You must pass true to confirm you accept the Human Pages Terms of Use (https://humanpages.ai/terms). Required.',
+            },
           },
-          required: ['name'],
+          required: ['name', 'accept_tos'],
         },
       },
       {
@@ -569,8 +573,12 @@ export function createServer(): Server {
             },
             payment_mode: {
               type: 'string',
-              enum: ['ONE_TIME', 'STREAM'],
-              description: 'Payment mode. ONE_TIME (default) for single payments. STREAM for ongoing stream payments.',
+              enum: ['ONE_TIME', 'STREAM', 'ESCROW'],
+              description: 'Payment mode. ONE_TIME (default) for single payments. STREAM for ongoing stream payments. ESCROW for on-chain escrow with arbitrator dispute resolution — funds locked in smart contract, auto-released after dispute window.',
+            },
+            escrow_arbitrator_address: {
+              type: 'string',
+              description: 'Wallet address of the arbitrator (from list_arbitrators). Required when payment_mode=ESCROW. The arbitrator resolves disputes and earns a fee (set by them, max 10%).',
             },
             payment_timing: {
               type: 'string',
@@ -1179,6 +1187,109 @@ export function createServer(): Server {
         },
       },
       {
+        name: 'list_arbitrators',
+        description:
+          'Browse available escrow arbitrators. Returns their wallet address, fee (in basis points, e.g. 500 = 5%), specialties, SLA, health status, and dispute track record. Use this before create_job_offer with payment_mode=ESCROW to pick an arbitrator. No authentication required.',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+        },
+      },
+      {
+        name: 'register_as_arbitrator',
+        description:
+          'Register your agent as an escrow arbitrator. Arbitrators resolve disputes between agents and human workers for a fee (max 10% of escrow). You must be whitelisted by the platform owner first. Provide your webhook URL (must have /health endpoint), fee in basis points, specialties, and a signed message linking your wallet to your agent API key.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            agent_key: {
+              type: 'string',
+              description: 'Your registered agent API key (starts with hp_)',
+            },
+            fee_bps: {
+              type: 'number',
+              description: 'Your fee in basis points (e.g., 500 = 5%). Max 1000 (10%).',
+            },
+            specialties: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Areas of expertise for dispute resolution (e.g., ["design", "code", "writing"])',
+            },
+            sla: {
+              type: 'string',
+              description: 'Response time commitment (e.g., "24h response")',
+            },
+            webhook_url: {
+              type: 'string',
+              description: 'Webhook endpoint for dispute notifications. Must have a /health endpoint that returns 200.',
+            },
+            wallet_signature: {
+              type: 'string',
+              description: 'Signed message linking your wallet to your agent: "I am arbitrator {wallet} for HP Agent {apiKeyHash}"',
+            },
+          },
+          required: ['agent_key', 'fee_bps', 'webhook_url'],
+        },
+      },
+      {
+        name: 'get_dispute_details',
+        description:
+          'Get full case details for an escrow dispute. Returns job info, messages, evidence, amounts, and deadline. Used by arbitrators to review a case before submitting a verdict.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            job_id: {
+              type: 'string',
+              description: 'The job ID of the disputed escrow',
+            },
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key (must be the assigned arbitrator)',
+            },
+          },
+          required: ['job_id', 'agent_key'],
+        },
+      },
+      {
+        name: 'submit_verdict',
+        description:
+          'Submit a signed EIP-712 verdict to resolve an escrow dispute. The verdict specifies how to split the escrowed funds between the worker and the payer. Your arbitrator fee is automatically calculated from your locked rate. Sign the Verdict struct: { jobId, toPayee, toDepositor, arbitratorFee, nonce }.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            agent_key: {
+              type: 'string',
+              description: 'Your agent API key',
+            },
+            job_id: {
+              type: 'string',
+              description: 'The disputed job ID',
+            },
+            to_payee: {
+              type: 'string',
+              description: 'Amount to send to worker (raw USDC, 6 decimals, e.g. "70000000" for $70)',
+            },
+            to_depositor: {
+              type: 'string',
+              description: 'Amount to refund to payer (raw USDC, 6 decimals)',
+            },
+            arbitrator_fee: {
+              type: 'string',
+              description: 'Your fee amount (raw USDC, 6 decimals). Must match your locked rate.',
+            },
+            nonce: {
+              type: 'string',
+              description: 'Unique nonce for replay protection',
+            },
+            signature: {
+              type: 'string',
+              description: 'EIP-712 signature of the Verdict struct (hex string starting with 0x)',
+            },
+          },
+          required: ['agent_key', 'job_id', 'to_payee', 'to_depositor', 'arbitrator_fee', 'nonce', 'signature'],
+        },
+      },
+      {
         name: 'get_promo_status',
         description:
           'Check the launch promo status — free PRO tier for the first 100 agents. Returns how many slots are claimed and remaining. No authentication required.',
@@ -1369,6 +1480,7 @@ ${servicesInfo || 'No services listed'}`;
             contactEmail: args?.contact_email,
             webhookUrl: args?.webhook_url,
             walletAddress: args?.wallet_address,
+            acceptTos: args?.accept_tos,
           }),
         });
 
@@ -1893,6 +2005,7 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
             agentLat: args?.agent_lat,
             agentLng: args?.agent_lng,
             preferredPaymentMethod: args?.preferred_payment_method,
+            escrowArbitratorAddress: args?.escrow_arbitrator_address,
             callbackUrl: args?.callback_url,
             callbackSecret: args?.callback_secret,
           }),
@@ -1915,6 +2028,16 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
           ? `\n\n🔔 **Webhook configured.** Status updates will be sent to your callback URL. On acceptance, the human's contact info will be included in the webhook payload.`
           : `\n\nUse \`get_job_status\` with job_id "${job.id}" to check if they've accepted.`;
 
+        const escrowNote = args?.payment_mode === 'ESCROW'
+          ? `\n\n**Escrow Details:**
+**Contract:** ${(job as any).escrowContractAddress || 'Pending deposit'}
+**Job ID Hash:** ${(job as any).escrowJobIdHash || 'Computed at deposit'}
+**Arbitrator:** ${args?.escrow_arbitrator_address}
+**Dispute Window:** ${(job as any).escrowDisputeWindow ? Math.floor((job as any).escrowDisputeWindow / 3600) + 'h' : 'TBD'}
+
+**Next:** After the human accepts, deposit USDC into the escrow contract. Then use \`get_job_status\` to track escrow state.`
+          : '';
+
         return {
           content: [
             {
@@ -1924,7 +2047,7 @@ Your agent profile now shows a verified badge. Humans will see this when reviewi
 **Job ID:** ${job.id}
 **Status:** ${job.status}
 **Human:** ${human.name}
-**Price:** $${args?.price_usd}${args?.preferred_payment_method ? `\n**Payment Preference:** ${args.preferred_payment_method}` : ''}
+**Price:** $${args?.price_usd}${args?.preferred_payment_method ? `\n**Payment Preference:** ${args.preferred_payment_method}` : ''}${escrowNote}
 
 ⏳ **Next Step:** Wait for ${human.name} to accept the offer.${webhookNote}
 
@@ -3044,8 +3167,173 @@ Thank you for your feedback. This helps build the human's reputation.`,
         };
       }
 
+      // ======================== ESCROW TOOLS ========================
+
+      if (name === 'list_arbitrators') {
+        const res = await fetch(`${API_BASE}/api/escrow/arbitrators`);
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.error || 'Escrow not enabled on this server');
+        }
+        const arbitrators = await res.json() as any[];
+
+        if (arbitrators.length === 0) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'No arbitrators available yet. The platform is onboarding vetted arbitrators. Check back soon or contact the platform owner.',
+            }],
+          };
+        }
+
+        const list = arbitrators.map((a: any) => `- **${a.name}** (${a.id})
+  Fee: ${a.arbitratorFeeBps / 100}% | Specialties: ${a.arbitratorSpecialties?.join(', ') || 'General'} | SLA: ${a.arbitratorSla || 'N/A'}
+  Disputes: ${a.arbitratorDisputeCount} resolved | Wallet: ${a.wallets?.[0]?.address || 'Not set'}`
+        ).join('\n');
+
+        return {
+          content: [{
+            type: 'text',
+            text: `**Available Arbitrators (${arbitrators.length})**\n\n${list}\n\nUse the wallet address as \`escrow_arbitrator_address\` in \`create_job_offer\` with \`payment_mode: "ESCROW"\`.`,
+          }],
+        };
+      }
+
+      if (name === 'register_as_arbitrator') {
+        const agentKey = args?.agent_key as string;
+        if (!agentKey) throw new Error('agent_key is required');
+
+        // Get agent profile to find ID
+        const profileRes = await fetch(`${API_BASE}/api/agents/me`, {
+          headers: { 'X-Agent-Key': agentKey },
+        });
+        if (!profileRes.ok) throw new Error('Invalid agent key');
+        const agent = await profileRes.json() as any;
+
+        // Update agent with arbitrator fields
+        const res = await fetch(`${API_BASE}/api/agents/${agent.id}/arbitrator`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Agent-Key': agentKey,
+          },
+          body: JSON.stringify({
+            feeBps: args?.fee_bps,
+            specialties: args?.specialties,
+            sla: args?.sla,
+            webhookUrl: args?.webhook_url,
+            walletSig: args?.wallet_signature,
+          }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.error || 'Failed to register as arbitrator');
+        }
+
+        return {
+          content: [{
+            type: 'text',
+            text: `**Registered as Arbitrator!**
+
+Your agent "${agent.name}" is now listed as an arbitrator candidate. The platform owner will review and whitelist your wallet on the escrow contract.
+
+**Fee:** ${(args?.fee_bps as number) / 100}%
+**Webhook:** ${args?.webhook_url}
+**Specialties:** ${(args?.specialties as string[])?.join(', ') || 'General'}
+
+**Next:** Wait for platform approval. Once whitelisted, payers can select you as arbitrator. Your fee is passed by the payer at deposit time — no on-chain setup needed from you.`,
+          }],
+        };
+      }
+
+      if (name === 'get_dispute_details') {
+        const agentKey = args?.agent_key as string;
+        if (!agentKey) throw new Error('agent_key is required');
+
+        const res = await fetch(`${API_BASE}/api/escrow/${args?.job_id}/status`);
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.error || 'Failed to get dispute details');
+        }
+        const escrow = await res.json() as any;
+
+        // Also get job messages as evidence
+        const msgRes = await fetch(`${API_BASE}/api/jobs/${args?.job_id}/messages`, {
+          headers: { 'X-Agent-Key': agentKey },
+        });
+        const messages = msgRes.ok ? await msgRes.json() as any[] : [];
+
+        const jobRes = await fetch(`${API_BASE}/api/jobs/${args?.job_id}`);
+        const job = jobRes.ok ? await jobRes.json() as any : null;
+
+        return {
+          content: [{
+            type: 'text',
+            text: `**Dispute Details for Job ${args?.job_id}**
+
+**Title:** ${job?.title || 'N/A'}
+**Description:** ${job?.description || 'N/A'}
+**Price:** $${job?.priceUsdc || 'N/A'}
+**Status:** ${escrow.escrowStatus}
+**Escrowed Amount:** $${escrow.escrowAmount || 'N/A'}
+**Dispute Reason:** ${job?.disputeReason || 'Not specified'}
+**Disputed At:** ${escrow.escrowDisputedAt || 'N/A'}
+**Arbitrator Fee Rate:** ${escrow.escrowArbitratorFeeBps / 100}%
+
+**Messages (${messages.length}):**
+${messages.map((m: any) => `[${m.senderType}] ${m.content}`).join('\n') || 'No messages'}
+
+**Your Task:** Review the evidence and submit a verdict using \`submit_verdict\`. Split the escrowed amount between payee and depositor. Your fee is automatically calculated from your locked rate.`,
+          }],
+        };
+      }
+
+      if (name === 'submit_verdict') {
+        const agentKey = args?.agent_key as string;
+        if (!agentKey) throw new Error('agent_key is required');
+
+        const res = await fetch(`${API_BASE}/api/escrow/resolve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Agent-Key': agentKey,
+          },
+          body: JSON.stringify({
+            jobId: args?.job_id,
+            toPayee: args?.to_payee,
+            toDepositor: args?.to_depositor,
+            arbitratorFee: args?.arbitrator_fee,
+            nonce: args?.nonce,
+            signature: args?.signature,
+          }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json() as ApiError;
+          throw new Error(error.error || 'Failed to submit verdict');
+        }
+
+        const result = await res.json() as any;
+
+        return {
+          content: [{
+            type: 'text',
+            text: `**Verdict Submitted!**
+
+**Job:** ${args?.job_id}
+**To Worker:** $${Number(args?.to_payee as string) / 1e6}
+**To Payer:** $${Number(args?.to_depositor as string) / 1e6}
+**Your Fee:** $${Number(args?.arbitrator_fee as string) / 1e6}
+**Tx Hash:** ${result.resolveTxHash}
+
+The escrow has been resolved on-chain. Funds will be distributed to the respective parties.`,
+          }],
+        };
+      }
+
       return {
-        content: [{ type: 'text', text: `Unknown tool: "${name}". Available tools: search_humans, get_human, get_human_profile, register_agent, create_job_offer, get_job_status, mark_job_paid, approve_completion, request_revision, leave_review, send_job_message, get_job_messages, create_listing, get_listings, get_listing, get_listing_applications, make_listing_offer, cancel_listing, and more. Start with search_humans or register_agent.` }],
+        content: [{ type: 'text', text: `Unknown tool: "${name}". Available tools: search_humans, get_human, get_human_profile, register_agent, create_job_offer, get_job_status, mark_job_paid, approve_completion, request_revision, leave_review, send_job_message, get_job_messages, create_listing, get_listings, get_listing, get_listing_applications, make_listing_offer, cancel_listing, list_arbitrators, register_as_arbitrator, get_dispute_details, submit_verdict, and more. Start with search_humans or register_agent.` }],
         isError: true,
       };
     } catch (error) {
