@@ -589,6 +589,12 @@ export const api = {
   updateAdminAgent: (id: string, data: { status?: string; activationTier?: string; activationExpiresAt?: string | null }) =>
     request<AdminAgentDetail>(`/admin/agents/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
+  getAdminArbitrators: () =>
+    request<any[]>(`/admin/arbitrators`),
+
+  updateAdminArbitrator: (id: string, data: { approved?: boolean; healthy?: boolean }) =>
+    request<any>(`/admin/arbitrators/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
   getAdminJob: (id: string) =>
     request<AdminJobDetail>(`/admin/jobs/${id}`),
 

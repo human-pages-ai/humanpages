@@ -186,6 +186,51 @@ export default function ArbitratorApplyPage() {
         </div>
       </div>
 
+      {/* Live on Base — proof strip */}
+      <div className="max-w-3xl mx-auto mb-10">
+        <div className="bg-slate-900 rounded-2xl p-6 md:p-8 text-white">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Live on Base Sepolia</h2>
+          </div>
+          <p className="text-slate-400 text-sm mb-5">
+            Real escrow. Real USDC. Every transaction verifiable on-chain.
+          </p>
+          <div className="grid sm:grid-cols-4 gap-3 text-center mb-5">
+            {[
+              { label: 'Deposited', amount: '5 USDC', tx: '0x1ede56ab1a37760f7c0d33f0c8e03eac7ff1d3bf3c8e081d56bcf44dba502c94' },
+              { label: 'Completed', amount: 'on-chain', tx: '0x926c344d2dfa4f939620d194f67bc507fce408d447819cb7c61d6f04ac1ea1e0' },
+              { label: 'Disputed', amount: 'by depositor', tx: '0x3ee8c0b545fc46026363c0b86de290bf774b9e260f63923ddda133b7e5a28fbd' },
+              { label: 'Resolved', amount: '70 / 27 / 3%', tx: '0xa73c922f40120994ae877093a19c34a9c62ba9849bdfb804672a22db617b1bc4' },
+            ].map((step, i) => (
+              <a
+                key={i}
+                href={`https://sepolia.basescan.org/tx/${step.tx}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+              >
+                <p className="text-xs text-slate-500 mb-1">{step.label}</p>
+                <p className="text-sm font-semibold text-white group-hover:text-green-400 transition-colors">{step.amount}</p>
+              </a>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-700">
+            <a
+              href="https://sepolia.basescan.org/address/0xa88dC37a5a05329f3a088aDe1b22D64BF5155729"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-400 hover:text-green-400 font-mono transition-colors"
+            >
+              Contract: 0xa88d...5729
+            </a>
+            <span className="text-xs text-slate-500">
+              Arbiter earned 0.15 USDC for signing one verdict
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Form or Success */}
       <div className="max-w-xl mx-auto mb-20">
         {result ? (
