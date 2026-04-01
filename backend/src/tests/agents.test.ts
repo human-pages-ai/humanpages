@@ -13,7 +13,7 @@ describe('Agent Identity & Reputation', () => {
     it('should register an agent and return API key starting with hp_', async () => {
       const res = await request(app)
         .post('/api/agents/register')
-        .send({ name: 'Acme AI' });
+        .send({ name: 'Acme AI', acceptTos: true });
 
       expect(res.status).toBe(201);
       expect(res.body.agent.name).toBe('Acme AI');
@@ -27,7 +27,7 @@ describe('Agent Identity & Reputation', () => {
     it('should auto-activate agent as ACTIVE on PRO tier', async () => {
       const res = await request(app)
         .post('/api/agents/register')
-        .send({ name: 'Auto PRO Agent' });
+        .send({ name: 'Auto PRO Agent', acceptTos: true });
 
       expect(res.status).toBe(201);
       expect(res.body.status).toBe('ACTIVE');
@@ -56,6 +56,7 @@ describe('Agent Identity & Reputation', () => {
           description: 'A test agent with all fields',
           websiteUrl: 'https://example.com',
           contactEmail: 'agent@example.com',
+          acceptTos: true,
         });
 
       expect(res.status).toBe(201);

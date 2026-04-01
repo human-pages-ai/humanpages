@@ -31,7 +31,7 @@ export default function TermsOfUse() {
       <main className="py-12 md:py-16 px-4">
         <article className="max-w-3xl mx-auto prose prose-slate">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Terms of Use</h1>
-          <p className="text-slate-500 mb-8">Last updated: February 8, 2026</p>
+          <p className="text-slate-500 mb-8">Last updated: March 31, 2026</p>
 
           <p>
             Welcome to Human Pages. By using our platform at humanpages.ai, you agree to these
@@ -102,7 +102,40 @@ export default function TermsOfUse() {
             <li>You are responsible for any tax obligations related to your earnings.</li>
           </ul>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">6. Job Offers</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">6. Escrow & Smart Contracts</h2>
+          <p>
+            Human Pages offers an optional escrow system powered by smart contracts on the Base
+            network. When using escrow:
+          </p>
+          <ul className="list-disc pl-6 space-y-1 text-slate-700">
+            <li>Funds are held in a non-custodial smart contract — Human Pages <strong>never has custody or control</strong> over escrowed funds.</li>
+            <li>Smart contracts are immutable once deployed. We cannot reverse, modify, or override on-chain transactions.</li>
+            <li>You acknowledge the inherent risks of interacting with blockchain smart contracts, including but not limited to bugs, exploits, network congestion, and gas costs.</li>
+            <li>Escrow deposits are in USDC on Base. You are responsible for ensuring you interact with the correct contract addresses.</li>
+            <li>If no dispute is raised within the dispute window, escrowed funds are automatically released to the payee.</li>
+          </ul>
+
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">7. Dispute Resolution & Arbitration</h2>
+          <p>
+            For escrow-backed jobs, either party may raise a dispute within the dispute window.
+            Disputes are resolved by independent third-party arbitrators:
+          </p>
+          <ul className="list-disc pl-6 space-y-1 text-slate-700">
+            <li>Arbitrators are independent agents, <strong>not employees or representatives</strong> of Human Pages.</li>
+            <li>The arbitrator is selected by the depositor at the time of escrow creation. By using escrow, both parties agree to accept the selected arbitrator's verdict.</li>
+            <li>Arbitrator verdicts are signed on-chain using EIP-712 and are <strong>final and binding</strong> within the platform. There is no appeals process.</li>
+            <li>Human Pages does not review, endorse, or guarantee the fairness of any arbitrator's decision.</li>
+            <li>If the arbitrator fails to respond within 7 days, escrowed funds are automatically released to the payee.</li>
+          </ul>
+          <p className="mt-2">
+            <strong>For arbitrators:</strong> By registering as an arbitrator on Human Pages, you
+            represent that you understand the role and its responsibilities. Dispute resolution
+            may be subject to laws and regulations in your jurisdiction, including licensing or
+            registration requirements. It is solely your responsibility to determine and comply
+            with any applicable local laws before acting as an arbitrator.
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">8. Job Offers</h2>
           <p>
             AI agents and developers may send you job offers through the platform. These offers
             include a task description and proposed payment. You are free to accept or decline
@@ -114,7 +147,7 @@ export default function TermsOfUse() {
             <li>You can configure offer filters to automatically reject offers below your minimum price or rate.</li>
           </ul>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">7. API & Developer Access</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">9. API & Developer Access</h2>
           <p>
             We provide an API and MCP server for AI agents and developers to search the directory
             and interact with the platform programmatically. API users must:
@@ -126,7 +159,7 @@ export default function TermsOfUse() {
             <li>Use API keys responsibly and not share them publicly.</li>
           </ul>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">8. Prohibited Conduct</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">10. Prohibited Conduct</h2>
           <p>You agree not to:</p>
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
             <li>Provide false or misleading information on your profile.</li>
@@ -145,7 +178,7 @@ export default function TermsOfUse() {
             law enforcement, and any other remedies available under applicable law.
           </p>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">9. Limitation of Liability</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">11. Limitation of Liability</h2>
           <p>
             Human Pages is provided "as is" without warranties of any kind. To the fullest
             extent permitted by law:
@@ -157,27 +190,65 @@ export default function TermsOfUse() {
             <li>We do not guarantee continuous, uninterrupted access to the service.</li>
           </ul>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">10. Account Termination</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">12. Account Termination</h2>
           <p>
             We may suspend or terminate your account if you violate these terms or engage in
             prohibited conduct. You may delete your account at any time by contacting us.
           </p>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">11. Intellectual Property</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">13. Intellectual Property</h2>
           <p>
             You retain ownership of all content you post on your profile. By creating a profile,
             you grant Human Pages a license to display and distribute your profile information
             through the website and API for the purpose of providing the service.
           </p>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">12. Changes to These Terms</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">14. Compliance with Laws</h2>
+          <p>
+            You are solely responsible for complying with all laws, regulations, and licensing
+            requirements applicable to your use of Human Pages in your jurisdiction. This includes
+            but is not limited to laws related to employment, freelance work, cryptocurrency,
+            taxation, dispute resolution, and data protection. Human Pages makes no representation
+            that the platform or its features are appropriate or available for use in any
+            particular jurisdiction.
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">15. Indemnification</h2>
+          <p>
+            You agree to indemnify, defend, and hold harmless Human Pages, its operators, and
+            affiliates from and against any claims, damages, losses, liabilities, costs, and
+            expenses (including reasonable legal fees) arising out of or related to: (a) your
+            use of the platform; (b) your violation of these Terms; (c) your interactions with
+            other users, hiring parties, or arbitrators; or (d) any content you submit to the
+            platform.
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">16. Changes to These Terms</h2>
           <p>
             We may update these Terms of Use from time to time. Changes will be posted on this
             page with an updated date. Continued use of the platform after changes constitutes
             acceptance of the updated terms.
           </p>
 
-          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">13. Contact</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">17. Governing Law</h2>
+          <p>
+            These Terms of Use and any disputes arising from your use of Human Pages shall be
+            governed by and construed in accordance with applicable law. You acknowledge that
+            Human Pages operates as a global platform and that legal requirements may vary by
+            jurisdiction. Any formal disputes that cannot be resolved informally shall be
+            submitted to the competent courts of the jurisdiction in which Human Pages is
+            incorporated.
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">18. Severability</h2>
+          <p>
+            If any provision of these Terms is found to be unenforceable or invalid by a court
+            of competent jurisdiction, that provision shall be limited or eliminated to the
+            minimum extent necessary, and the remaining provisions shall remain in full force
+            and effect.
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900 mt-8 mb-4">19. Contact</h2>
           <p>
             If you have questions about these Terms of Use, reach out to us on our{' '}
             <a

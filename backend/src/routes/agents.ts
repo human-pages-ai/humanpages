@@ -64,6 +64,9 @@ const registerSchema = z.object({
   walletNetwork: z.enum(SUPPORTED_NETWORKS as [string, ...string[]]).optional(),
   source: z.enum(['direct', 'mcp_directory', 'search', 'llm', 'blog', 'other']).optional(),
   sourceDetail: z.string().max(500).optional(),
+  acceptTos: z.literal(true, {
+    errorMap: () => ({ message: 'You must accept the Terms of Use at https://humanpages.ai/terms to register' }),
+  }),
 });
 
 const updateSchema = z.object({

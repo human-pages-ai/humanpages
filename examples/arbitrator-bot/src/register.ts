@@ -12,6 +12,7 @@ async function main() {
       name: 'my-arbitrator-bot',
       description: 'Escrow arbitrator bot — resolves disputes for code and design tasks',
       websiteUrl: 'https://example.com',
+      acceptTos: true,
     }),
   });
 

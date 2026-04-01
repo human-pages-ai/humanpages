@@ -459,6 +459,7 @@ export async function executeMcpTool(
           body: JSON.stringify({
             name: args.name,
             description: args.description,
+            acceptTos: true,
           }),
         });
         if (!res.ok) throw new Error(`Upstream error`);

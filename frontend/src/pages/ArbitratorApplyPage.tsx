@@ -65,6 +65,7 @@ export default function ArbitratorApplyPage() {
           name: form.name,
           description: `Arbitrator [${form.walletAddress}]: ${form.specialties.join(', ') || 'General'}. Contact: ${form.contactType}:${form.contact}`,
           websiteUrl: form.webhookUrl || undefined,
+          acceptTos: true,
         }),
       });
 
@@ -352,6 +353,13 @@ export default function ArbitratorApplyPage() {
 
             <p className="text-xs text-slate-400 text-center">
               Free to join. You only earn when disputes are resolved.
+            </p>
+            <p className="text-xs text-slate-400 text-center">
+              By registering, you agree to our{' '}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">
+                Terms of Use
+              </a>
+              , including your responsibility to comply with local laws regarding dispute resolution.
             </p>
           </form>
         )}

@@ -41,6 +41,7 @@ describe('Flow: Agent Onboarding — Registration & Activation', () => {
         description: 'AI agent that helps with real-world photography tasks',
         websiteUrl: 'https://autotasker.ai',
         contactEmail: 'support@autotasker.ai',
+        acceptTos: true,
       });
 
     expect(registerRes.status).toBe(201);
