@@ -617,11 +617,11 @@ export async function getListingMetaHtml(listingId: string, lang?: string): Prom
       }),
       ...(listing.workMode === 'REMOTE' && {
         "jobLocationType": "TELECOMMUTE",
-        "applicantLocationRequirements": {
-          "@type": "Country",
-          "name": listing.locationCountry || "Worldwide",
-        },
       }),
+      "applicantLocationRequirements": {
+        "@type": "Country",
+        "name": listing.locationCountry || "Worldwide",
+      },
       ...(listing.budgetUsdc && {
         "baseSalary": {
           "@type": "MonetaryAmount",
