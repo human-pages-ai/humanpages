@@ -1118,6 +1118,13 @@ router.patch('/:id/paid', async (req, res) => {
       });
     }
 
+    // Track payment initiation
+    trackServerEvent(job.humanId, 'payment_initiated', {
+      jobId: job.id,
+      network: data.paymentNetwork,
+      amount: job.priceUsdc.toNumber(),
+    }, req);
+
     // Verify payment on-chain
     const agreedPrice = job.priceUsdc.toNumber();
     const token = (data.paymentToken?.toUpperCase() || 'USDC') as SupportedToken;
@@ -1199,6 +1206,10 @@ router.patch('/:id/paid', async (req, res) => {
     }
     if (error instanceof PaymentVerificationError) {
       logger.warn({ err: error, jobId: req.params.id }, 'Payment verification failed');
+      trackServerEvent('anonymous', 'payment_failed', {
+        jobId: req.params.id,
+        reason: error.message,
+      }, req);
       return res.status(400).json(error.toResponse());
     }
     logger.error({ err: error }, 'Mark paid error');
@@ -1969,6 +1980,13 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
         content: data.content,
       },
     });
+
+    // Track message sent
+    trackServerEvent(req.senderId!, 'message_sent', {
+      jobId: job.id,
+      senderType: req.senderType,
+      messageLength: data.content.length,
+    }, req);
 
     // If sender is human, fire job.message webhook so agent can auto-reply
     if (req.senderType === 'human' && job.callbackUrl) {

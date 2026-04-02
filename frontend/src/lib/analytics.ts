@@ -85,7 +85,51 @@ type EventName =
   | 'jobboard_listing_clicked'
   | 'jobboard_paginated'
   | 'pricing_cta_clicked'
-  | 'blog_article_clicked';
+  | 'blog_article_clicked'
+  | 'onboarding_started'
+  | 'onboarding_completed'
+  | 'search_initiated'
+  | 'cv_uploaded_onboarding'
+  | 'cv_quality_rejected'
+  | 'job_message_sent'
+  | 'job_accepted'
+  | 'job_rejected'
+  | 'job_completed'
+  | 'job_submitted_for_review'
+  | 'payment_confirmed'
+  | 'job_cancelled'
+  | 'job_disputed';
+
+/**
+ * Wizard event suffixes used in wizardAnalytics.tsx
+ * When adding a new tracking method to WizardAnalyticsAPI, add the suffix here.
+ * This enables type-safe event names like `${wizardName}_field_focused`.
+ */
+export type WizardEventSuffix =
+  | 'field_focused'
+  | 'field_blurred'
+  | 'field_error'
+  | 'button_clicked'
+  | 'help_viewed'
+  | 'form_opened'
+  | 'form_abandoned'
+  | 'form_completed'
+  | 'item_added'
+  | 'item_removed'
+  | 'suggestion_accepted'
+  | 'suggestion_ignored'
+  | 'abandoned';
+
+/**
+ * Template literal type for wizard-generated event names.
+ * Example matches: 'onboarding_field_focused', 'job_application_form_completed'
+ */
+export type WizardEventName = `${string}_${WizardEventSuffix}`;
+
+/**
+ * All trackable event names: both known EventName literals and dynamically-generated WizardEventNames
+ */
+export type TrackableEvent = EventName | WizardEventName;
 
 interface EventProperties {
   [key: string]: string | number | boolean | undefined;
@@ -111,7 +155,7 @@ class Analytics {
     posthog.identify(userId);
   }
 
-  track(event: EventName, properties?: EventProperties) {
+  track(event: TrackableEvent, properties?: EventProperties) {
     const payload = {
       event,
       userId: this.userId,

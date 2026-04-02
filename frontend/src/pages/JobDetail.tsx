@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
-import { posthog } from '../lib/posthog';
+import { analytics } from '../lib/analytics';
 import { Job, JobMessage } from '../components/dashboard/types';
 import { getExplorerTxUrl } from '../lib/blockchain';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -111,7 +111,7 @@ export default function JobDetail() {
       await api.sendJobMessage(id!, messageText.trim());
       setMessageText('');
       await loadMessages();
-      posthog.capture('job_message_sent', { jobId: id });
+      analytics.track('job_message_sent', { jobId: id });
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
     } finally {
@@ -122,7 +122,7 @@ export default function JobDetail() {
   const handleAccept = async () => {
     try {
       await api.acceptJob(id!);
-      posthog.capture('job_accepted', { jobId: id });
+      analytics.track('job_accepted', { jobId: id });
       toast.success(t('toast.jobAccepted'));
       await loadJob();
     } catch (error: any) {
@@ -139,7 +139,7 @@ export default function JobDetail() {
         setConfirmDialog(d => ({ ...d, open: false }));
         try {
           await api.rejectJob(id!);
-          posthog.capture('job_rejected', { jobId: id });
+          analytics.track('job_rejected', { jobId: id });
           toast.success(t('toast.jobRejected'));
           await loadJob();
         } catch (error: any) {
@@ -161,7 +161,7 @@ export default function JobDetail() {
     // Standard flow (PAID → COMPLETED)
     try {
       await api.completeJob(id!);
-      posthog.capture('job_completed', { jobId: id });
+      analytics.track('job_completed', { jobId: id });
       toast.success(t('toast.jobCompleted'));
       await loadJob();
     } catch (error: any) {
@@ -174,7 +174,7 @@ export default function JobDetail() {
     setSubmitting(true);
     try {
       await api.completeJob(id!, { message: submitEvidence });
-      posthog.capture('job_submitted_for_review', { jobId: id });
+      analytics.track('job_submitted_for_review', { jobId: id });
       toast.success(t('toast.workSubmitted', 'Work submitted for review'));
       setShowSubmitModal(false);
       setSubmitEvidence('');
@@ -191,7 +191,7 @@ export default function JobDetail() {
   const handleConfirmPayment = async () => {
     try {
       await api.confirmPayment(id!);
-      posthog.capture('payment_confirmed', { jobId: id });
+      analytics.track('payment_confirmed', { jobId: id });
       toast.success(t('toast.paymentConfirmed', 'Payment confirmed'));
       await loadJob();
     } catch (error: any) {
@@ -208,7 +208,7 @@ export default function JobDetail() {
         setConfirmDialog(d => ({ ...d, open: false }));
         try {
           await api.cancelJob(id!);
-          posthog.capture('job_cancelled', { jobId: id });
+          analytics.track('job_cancelled', { jobId: id });
           toast.success(t('toast.jobCancelled', 'Job cancelled'));
           await loadJob();
         } catch (error: any) {
@@ -227,7 +227,7 @@ export default function JobDetail() {
         setConfirmDialog(d => ({ ...d, open: false }));
         try {
           await api.disputeJob(id!, 'Dispute raised by human');
-          posthog.capture('job_disputed', { jobId: id });
+          analytics.track('job_disputed', { jobId: id });
           toast.success(t('toast.jobDisputed', 'Job disputed'));
           await loadJob();
         } catch (error: any) {

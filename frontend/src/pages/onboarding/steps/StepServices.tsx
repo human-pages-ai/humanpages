@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CompactCvProcessingBar } from '../components/CvProcessingBar';
 import { SuggestionInput } from '../components/SuggestionInput';
 import { POPULAR_SERVICE_CATEGORIES, SERVICE_CATEGORY_HIERARCHY } from '../constants';
+import { useWizardAnalytics } from '../../../lib/wizardAnalytics';
 import type { Service } from '../types';
 
 const formatUnitLabel = (unit: string): string => {
@@ -218,6 +219,7 @@ interface StepServicesProps {
 
 export function StepServices({ cvProcessing, cvData, skills, services, setServices, equipment, setEquipment, equipmentOnly, onNext, onSkip: _onSkip, error }: StepServicesProps) {
   const { t } = useTranslation();
+  const wa = useWizardAnalytics();
   const [addingService, setAddingService] = useState(false);
   const localeCurrency = detectUserCurrency();
   const [newService, setNewService] = useState<Service>({ title: '', category: '', subcategory: '', description: '', price: '', currency: localeCurrency, unit: 'per hour' });
@@ -760,6 +762,8 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
                     inputMode="decimal"
                     value={newService.price}
                     onChange={(e) => { const val = e.target.value; if (val === '' || /^\d*\.?\d*$/.test(val)) { setNewService({ ...newService, price: val }); setPriceError(''); } }}
+                    onFocus={() => wa?.trackFieldFocus('service_price')}
+                    onBlur={() => wa?.trackFieldBlur('service_price', !!newService.price)}
                     placeholder="Price"
                     className={`w-full px-3 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${priceError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`}
                   />

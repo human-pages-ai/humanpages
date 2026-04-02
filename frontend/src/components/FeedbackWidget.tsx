@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { ChatBubbleLeftEllipsisIcon, XMarkIcon, BugAntIcon, LightBulbIcon, ChatBubbleOvalLeftIcon, PaperClipIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { api } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
+import { isInAppBrowser } from '../lib/deviceDetection';
 
 // ─── Environment diagnostics (auto-captured with feedback) ───
 function getDiagnostics(): Record<string, unknown> {
@@ -27,7 +28,7 @@ function getDiagnostics(): Record<string, unknown> {
   }
 
   // In-app / WebView browser detection
-  diag.isInAppBrowser = /FBAN|FBAV|Instagram|TikTok|BytedanceWebview|CoinbaseBrowser|Coinbase|wv\)|WebView/i.test(ua);
+  diag.isInAppBrowser = isInAppBrowser();
   diag.isWebView = /wv\)|WebView/i.test(ua);
 
   // Connection type (if available)

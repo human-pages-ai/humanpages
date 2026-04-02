@@ -7,7 +7,7 @@ import { FeedbackProvider, useFeedback } from './hooks/useFeedback';
 import { AdminRoleContext } from './hooks/useAdminRole';
 import ErrorBoundary from './components/ErrorBoundary';
 import LangWrapper from './components/LangWrapper';
-import { posthog } from './lib/posthog';
+import { analytics } from './lib/analytics';
 import { api } from './lib/api';
 import { safeSessionStorage } from './lib/safeStorage';
 
@@ -200,8 +200,8 @@ function AdminIndex() {
 function usePageView() {
   const location = useLocation();
   useEffect(() => {
-    posthog.capture('$pageview', {
-      $current_url: window.location.href,
+    analytics.track('page_view', {
+      current_url: window.location.href,
       path: location.pathname,
     });
     // Persist UTM params from any landing URL into sessionStorage

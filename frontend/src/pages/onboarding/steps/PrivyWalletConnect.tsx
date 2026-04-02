@@ -4,6 +4,7 @@ import { usePrivy, useWallets, getIdentityToken } from '@privy-io/react-auth';
 import { isMobile } from '../../../components/dashboard/WalletProvider';
 import { extractWalletAddress } from '../../../lib/walletUtils';
 import { api } from '../../../lib/api';
+import { useWizardAnalytics } from '../../../lib/wizardAnalytics';
 
 interface Props {
   walletAddress: string;
@@ -17,6 +18,7 @@ interface Props {
  */
 function PrivyWalletConnectInner({ walletAddress, onWalletConnected, setError }: Props) {
   const { t } = useTranslation();
+  const wa = useWizardAnalytics();
   const { login, authenticated, ready, user: privyUser, logout } = usePrivy();
   const { wallets: privyWallets, ready: walletsReady } = useWallets();
   const handledRef = useRef(false);
@@ -55,6 +57,7 @@ function PrivyWalletConnectInner({ walletAddress, onWalletConnected, setError }:
   const handleClick = () => {
     if (setError) setError('');
     handledRef.current = false;
+    wa?.trackButtonClick('connect_wallet_privy');
     login();
   };
 

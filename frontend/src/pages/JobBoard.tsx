@@ -55,6 +55,13 @@ export default function JobBoard() {
       const data = await api.getListings(params);
       setListings(data.listings);
       setPagination(data.pagination);
+      analytics.track('search_initiated', {
+        skill: skill || undefined,
+        category: category || undefined,
+        workMode: workMode || undefined,
+        resultCount: data.pagination.total,
+        page,
+      });
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
     } finally {

@@ -146,13 +146,22 @@ export function useDraftPersistence(draftData: Partial<OnboardingDraft>): DraftS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(draftData)]);
 
-  // Synchronous save on beforeunload to handle network loss
+  // Save on page close — use multiple event listeners for in-app browser compatibility.
+  // beforeunload: standard browsers. pagehide: Safari/iOS + some in-app browsers.
+  // visibilitychange: broadest support (FB/TG/IG WebViews often fire this but not beforeunload).
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      saveDraft(draftData);
+    const save = () => saveDraft(draftData);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') save();
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', save);
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', save);
+      window.removeEventListener('pagehide', save);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [draftData]);
 
   return saveStatus;

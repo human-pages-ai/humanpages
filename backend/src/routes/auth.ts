@@ -186,16 +186,19 @@ router.post('/login', authRateLimiter, async (req, res) => {
 
     const human = await prisma.human.findUnique({ where: { email } });
     if (!human) {
+      trackServerEvent('anonymous', 'login_failed', { reason: 'user_not_found' }, req);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Check if user has a password (OAuth-only users don't)
     if (!human.passwordHash) {
+      trackServerEvent(human.id, 'login_failed', { reason: 'oauth_only_account' }, req);
       return res.status(401).json({ error: 'Please use social login for this account' });
     }
 
     const validPassword = await bcrypt.compare(password, human.passwordHash);
     if (!validPassword) {
+      trackServerEvent(human.id, 'login_failed', { reason: 'wrong_password' }, req);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

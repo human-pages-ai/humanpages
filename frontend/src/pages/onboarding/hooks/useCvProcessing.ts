@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '../../../lib/api';
-import { posthog } from '../../../lib/posthog';
+import { analytics } from '../../../lib/analytics';
 import toast from 'react-hot-toast';
 import type { LanguageEntry, EducationEntry } from '../types';
 import { parseLanguageString } from '../utils';
@@ -219,7 +219,7 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     ].filter(Boolean).length;
 
     toast.success(`CV analyzed! ${fieldsPopulated} sections auto-filled.`);
-    posthog.capture('cv_uploaded_onboarding', {
+    analytics.track('cv_uploaded_onboarding', {
       skillsExtracted: skillCount,
       educationCount: result.education?.length || 0,
       certsCount: result.certificates?.length || 0,
@@ -341,7 +341,7 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     if (!valid) {
       setCvStage('failed');
       toast.error(reason);
-      posthog.capture('cv_quality_rejected', {
+      analytics.track('cv_quality_rejected', {
         skillCount: (result.skills?.explicit?.length || 0) + (result.skills?.inferred?.length || 0),
         hasName: !!result.name,
         hasEducation: (result.education?.length || 0) > 0,

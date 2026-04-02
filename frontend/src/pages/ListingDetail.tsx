@@ -6,7 +6,8 @@ import { useAuth } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import { setListingApplyIntent } from '../lib/applyIntent';
 import { analytics } from '../lib/analytics';
-import { posthog } from '../lib/posthog';
+import { isInAppBrowser } from '../lib/deviceDetection';
+
 import InlineSignupForm from '../components/InlineSignupForm';
 
 // Lazy-load ReportAgentModal — only downloaded when a logged-in user clicks "Report"
@@ -25,16 +26,6 @@ function formatTimeUntil(dateStr: string): string {
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   if (days > 0) return `${days}d ${hours}h`;
   return `${hours}h`;
-}
-
-/**
- * Detect embedded in-app browsers where Google/LinkedIn OAuth is blocked or unreliable.
- * Covers: Facebook, Facebook Lite, Instagram, Telegram, Opera Mini, Line, WeChat, Snapchat.
- * These all use restricted WebViews that break standard OAuth popup/redirect flows.
- */
-function isEmbeddedBrowser(): boolean {
-  const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|FBLC|FB_IAB|Instagram|Telegram|OPiOS|OPR\/.*Mini|Line\/|KAKAOTALK|Snapchat|MicroMessenger/i.test(ua);
 }
 
 export default function ListingDetail() {
@@ -89,7 +80,6 @@ export default function ListingDetail() {
     if (listing) setListingApplyIntent(id!, listing.title, listing.requiredSkills);
     await signup(data.email, data.password, data.name, true, data.captchaToken);
     analytics.track('listing_signup_clicked', { listingId: id, method: 'email', title: listing?.title, budget: listing?.budgetUsdc, ref });
-    posthog.capture('listing_signup_clicked', { listingId: id, method: 'email', title: listing?.title, budget: listing?.budgetUsdc, ref });
     // Save skills from listing to profile (non-blocking)
     if (listing?.requiredSkills?.length) {
       api.updateProfile({ skills: listing.requiredSkills }).catch(() => {});
@@ -128,7 +118,6 @@ export default function ListingDetail() {
 
     if (shared) {
       analytics.track('listing_share', { listingId: id, title: listing?.title });
-      posthog.capture('listing_share', { listingId: id, title: listing?.title });
     }
   };
 
@@ -162,7 +151,6 @@ export default function ListingDetail() {
       // Persist ref to sessionStorage so it survives signup redirect
       if (ref) safeSessionStorage.setItem('hp_listing_ref', ref);
       analytics.track('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource, ref });
-      posthog.capture('listing_viewed', { listingId: id, title: data.title, budget: data.budgetUsdc, utm_source: utmSource, ref });
     } catch (error: any) {
       toast.error(error.message || t('common.error'));
     } finally {
@@ -184,7 +172,6 @@ export default function ListingDetail() {
     try {
       await api.applyToListing(id!, pitch.trim());
       analytics.track('listing_applied', { listingId: id, hasPitch: true });
-      posthog.capture('listing_applied', { listingId: id, hasPitch: true });
       toast.success(t('listings.detail.applicationSubmitted'));
       setPitch('');
       setShowMobileApplySheet(false);
@@ -201,7 +188,6 @@ export default function ListingDetail() {
     const ref = linkCode || safeSessionStorage.getItem('hp_listing_ref') || undefined;
     // Funnel step 2: signup button clicked
     analytics.track('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc, ref });
-    posthog.capture('listing_signup_clicked', { listingId: id, method, title: listing.title, budget: listing.budgetUsdc, ref });
     setListingApplyIntent(id!, listing.title, listing.requiredSkills);
     if (method === 'linkedin') {
       loginWithLinkedIn();
@@ -234,7 +220,7 @@ export default function ListingDetail() {
   const hasApplied = listing.hasApplied || !!listing.myApplication;
   const canApply = user && !hasApplied && !isClosed;
   const showMobileBottomBar = !hasApplied && !isClosed;
-  const inEmbeddedBrowser = isEmbeddedBrowser();
+  const inEmbeddedBrowser = isInAppBrowser();
 
   // ─── Desktop Sidebar Apply Card ────────────────────────────────────────────
 

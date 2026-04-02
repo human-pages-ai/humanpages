@@ -1,4 +1,5 @@
 import type { LanguageEntry } from './types';
+import { isInAppBrowser as isInAppBrowserDetected } from '../../lib/deviceDetection';
 
 /** Parse "English (Native)" → { language: "English", proficiency: "Native" } */
 export function parseLanguageString(s: string): LanguageEntry {
@@ -14,8 +15,7 @@ export function serializeLanguageEntry(entry: LanguageEntry): string {
 
 /** Detect in-app browsers (FB, IG, TikTok, etc.) that block window.open */
 export function isInAppBrowser(): boolean {
-  const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|Instagram|Line\/|Twitter|Snapchat|BytedanceWebview|TikTok|LinkedIn|MicroMessenger|WeChat|Puffin|UCBrowser|SamsungBrowser.*CrossApp|; wv\)/i.test(ua);
+  return isInAppBrowserDetected();
 }
 
 /** Scroll an error alert into view and focus it for screen readers */

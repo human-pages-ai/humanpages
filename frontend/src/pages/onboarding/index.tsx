@@ -16,6 +16,8 @@ import { useDraftPersistence, loadDraft, clearDraft } from './hooks/useDraftPers
 import { getFlow, getStepLabels, stepAt, totalSteps } from './useStepFlow';
 import type { StepId } from './useStepFlow';
 import type { LanguageEntry } from './types';
+import { WizardAnalyticsProvider } from '../../lib/wizardAnalytics';
+import { getDeviceContext } from '../../lib/deviceDetection';
 
 // Step components — each is a self-contained module
 import { StepConnect } from './steps/StepConnect';
@@ -680,6 +682,13 @@ export default function Onboarding() {
 
   // ─── Render ───
   return (
+    <WizardAnalyticsProvider config={{
+      wizardName: 'onboarding',
+      totalSteps: total,
+      currentStepId,
+      isCompleted: position === total,
+      getDeviceContext,
+    }}>
     <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       <SEO title="Complete Your Profile" noindex />
 
@@ -833,6 +842,7 @@ export default function Onboarding() {
         </div>
       </div>
     </div>
+    </WizardAnalyticsProvider>
   );
 }
 
