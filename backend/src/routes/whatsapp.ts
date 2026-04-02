@@ -171,6 +171,12 @@ router.post('/incoming', webhookRateLimiter, async (req, res) => {
       data: { whatsappLastInboundAt: new Date() },
     });
 
+    // Track inbound message received
+    trackServerEvent(human.id, 'whatsapp_inbound_received', {
+      has_job_context: true,
+      message_type: body ? 'text' : 'unknown',
+    });
+
     // ── 3. Flush pending messages if any ──
     const flushed = await flushPendingMessages(human.id, from);
 
@@ -245,6 +251,11 @@ async function handleLinkCode(from: string, body: string): Promise<string | null
     },
   });
 
+  // Track link code verification
+  trackServerEvent(human.id, 'whatsapp_verified', {
+    method: 'link_code',
+  });
+
   logger.info({ humanId: human.id, from }, 'WhatsApp linked via code');
   return "You're connected to Human Pages! You'll receive job offers and messages here.";
 }
@@ -273,6 +284,11 @@ async function flushPendingMessages(humanId: string, to: string): Promise<boolea
 
   // Delete flushed messages
   await prisma.pendingWhatsAppMessage.deleteMany({ where: { humanId } });
+
+  // Track pending messages flushed
+  trackServerEvent(humanId, 'whatsapp_pending_flushed', {
+    message_count: pending.length,
+  });
 
   return true;
 }
@@ -328,6 +344,13 @@ async function handleDisambiguation(humanId: string, body: string, from: string)
   });
 
   const selectedJob = jobs[pick - 1];
+
+  // Track message routed via disambiguation
+  trackServerEvent(humanId, 'whatsapp_message_routed', {
+    job_id: selectedJob.id,
+    route_method: 'disambiguation',
+  });
+
   return `Got it! Future messages will be routed to "${selectedJob.title}". Send your message now.`;
 }
 
@@ -342,7 +365,15 @@ async function routeToJob(humanId: string, humanName: string, body: string, from
   }
 
   if (jobs.length === 1) {
-    await createJobMessage(jobs[0].id, humanId, humanName, body, jobs[0].callbackUrl, jobs[0].callbackSecret);
+    const jobId = jobs[0].id;
+    await createJobMessage(jobId, humanId, humanName, body, jobs[0].callbackUrl, jobs[0].callbackSecret);
+
+    // Track message routed to job
+    trackServerEvent(humanId, 'whatsapp_message_routed', {
+      job_id: jobId,
+      route_method: 'direct',
+    });
+
     return ack();
   }
 
@@ -352,6 +383,11 @@ async function routeToJob(humanId: string, humanName: string, body: string, from
   await prisma.human.update({
     where: { id: humanId },
     data: { whatsappAwaitingJobSelection: true, whatsappDisambiguationAt: new Date() },
+  });
+
+  // Track disambiguation needed
+  trackServerEvent(humanId, 'whatsapp_disambiguation_needed', {
+    active_job_count: jobs.length,
   });
 
   return reply(`You have ${jobs.length} active jobs. Which one are you replying to?\n\n${list}\n\nReply with the number.`);

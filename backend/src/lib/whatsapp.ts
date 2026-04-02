@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import { logger } from './logger.js';
 import { writeToOutbox } from './email.js';
+import { trackServerEvent } from './posthog.js';
 
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -184,6 +185,12 @@ export async function sendWhatsAppNotification(opts: {
   }
 
   // Outside 24h window — send template to wake user, queue original message
+  if (!isWithin24hWindow(opts.lastInboundAt) && opts.lastInboundAt) {
+    const hoursSinceInbound = Math.round((Date.now() - opts.lastInboundAt.getTime()) / 3600000);
+    trackServerEvent(opts.humanId, 'whatsapp_window_expired', {
+      hours_since_last_inbound: hoursSinceInbound,
+    });
+  }
   const templateSid = opts.templateType === 'offer' ? TEMPLATE_OFFER
     : opts.templateType === 'login' ? TEMPLATE_LOGIN
     : TEMPLATE_MESSAGE;
