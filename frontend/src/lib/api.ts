@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse, AdminFeaturesResponse, FeatureMetricsResponse, McpFunnelAnalyticsResponse } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse, AdminFeaturesResponse, FeatureMetricsResponse, McpFunnelAnalyticsResponse, McpAnalyticsResponse } from '../types/admin';
 
 import { safeLocalStorage, safeGetItem, safeSetItem, safeRemoveItem } from './safeStorage';
 // Re-export for backward compatibility (OAuthCallback etc. import from here)
@@ -1457,6 +1457,13 @@ export const api = {
 
   deleteCertificate: (id: string) =>
     request(`/cv/certificate/${id}`, { method: 'DELETE' }),
+
+  // Admin MCP Analytics
+  getAdminMcpAnalytics: (range?: number) => {
+    const params = new URLSearchParams();
+    if (range) params.append('range', String(range));
+    return request<McpAnalyticsResponse>(`/admin/mcp/analytics?${params}`);
+  },
 
   // Push Notifications
   getVapidPublicKey: () =>

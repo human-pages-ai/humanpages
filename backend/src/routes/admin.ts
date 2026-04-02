@@ -3467,6 +3467,129 @@ router.patch('/arbitrators/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// ─── Helper function for PostHog HogQL queries ───
+async function queryPostHog(query: string): Promise<any> {
+  const POSTHOG_KEY = process.env.POSTHOG_KEY;
+  const POSTHOG_PROJECT_ID = process.env.POSTHOG_PROJECT_ID || '1';
+
+  if (!POSTHOG_KEY) {
+    throw new Error('POSTHOG_KEY not configured');
+  }
+
+  const response = await fetch(`https://us.posthog.com/api/projects/${POSTHOG_PROJECT_ID}/query/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${POSTHOG_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: {
+        kind: 'HogQLQuery',
+        query,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`PostHog query failed: ${error}`);
+  }
+
+  const data = await response.json();
+  return data.results || [];
+}
+
+// GET /api/admin/mcp/analytics — MCP communication & notification analytics
+router.get('/mcp/analytics', apiKeyAdmin, async (req: any, res) => {
+  try {
+    const range = Math.max(1, Math.min(90, parseInt(req.query.range as string) || 30));
+
+    const results = await Promise.allSettled([
+      // 10. Notification delivery by channel
+      queryPostHog(`
+        SELECT properties.channel as channel, properties.type as type,
+          countIf(event = 'notification_sent') as sent,
+          countIf(event = 'notification_failed') as failed
+        FROM events
+        WHERE event IN ('notification_sent', 'notification_failed')
+          AND timestamp > now() - interval ${range} day
+        GROUP BY channel, type
+        ORDER BY sent DESC
+      `),
+
+      // 11. Webhook delivery stats
+      queryPostHog(`
+        SELECT
+          countIf(event = 'webhook_fired') as fired,
+          countIf(event = 'webhook_delivered') as delivered,
+          countIf(event = 'webhook_failed') as failed,
+          countIf(event = 'webhook_retry') as retries
+        FROM events
+        WHERE event LIKE 'webhook_%'
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 12. WhatsApp engagement
+      queryPostHog(`
+        SELECT
+          countIf(event = 'whatsapp_inbound_received') as inbound_messages,
+          countIf(event = 'whatsapp_verified') as verifications,
+          countIf(event = 'whatsapp_window_expired') as window_expired,
+          countIf(event = 'whatsapp_pending_flushed') as pending_flushed,
+          countIf(event = 'whatsapp_disambiguation_needed') as disambiguation_needed
+        FROM events
+        WHERE event LIKE 'whatsapp_%'
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 13. Rate limit hits
+      queryPostHog(`
+        SELECT properties.limit_type as limit_type, properties.tier as tier, count() as count
+        FROM events
+        WHERE event = 'rate_limit_hit'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY limit_type, tier
+        ORDER BY count DESC
+      `),
+
+      // 14. Outbox delivery stats
+      queryPostHog(`
+        SELECT properties.channel as channel,
+          countIf(event = 'outbox_delivered') as delivered,
+          countIf(event = 'outbox_failed') as failed,
+          countIf(event = 'outbox_expired') as expired
+        FROM events
+        WHERE event LIKE 'outbox_%'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY channel
+      `),
+    ]);
+
+    // Extract results safely
+    const [notifDelivery, webhookStats, whatsappEng, rateLimits, outboxStats] = results.map((r) => {
+      if (r.status === 'fulfilled') {
+        const data = r.value;
+        return Array.isArray(data) ? data : [data];
+      }
+      logger.warn({ reason: r.reason }, 'PostHog query failed, returning empty');
+      return [];
+    });
+
+    res.json({
+      notificationDelivery: notifDelivery,
+      webhookStats: webhookStats[0] || {},
+      whatsappEngagement: whatsappEng[0] || {},
+      rateLimits: rateLimits,
+      outboxStats: outboxStats,
+      range,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP analytics error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // Mount features registry routes (auth applied inside features.ts per-route)
 router.use('/features', featureRoutes);
 

@@ -1472,3 +1472,13 @@ export interface McpFunnelAnalyticsResponse {
   range: number;
   timestamp: string;
 }
+
+export interface McpAnalyticsResponse {
+  notificationDelivery: { channel: string; type: string; sent: number; failed: number }[];
+  webhookStats: { fired: number; delivered: number; failed: number; retries: number };
+  whatsappEngagement: { inbound_messages: number; verifications: number; window_expired: number; pending_flushed: number; disambiguation_needed: number };
+  rateLimits: { limit_type: string; tier: string; count: number }[];
+  outboxStats: { channel: string; delivered: number; failed: number; expired: number }[];
+  range: number;
+  timestamp: string;
+}

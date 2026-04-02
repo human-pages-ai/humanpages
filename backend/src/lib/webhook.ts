@@ -174,7 +174,7 @@ type WebhookJob = {
   callbackSecret: string | null;
   humanId?: string;
   status?: string;
-  registeredAgentId?: string;
+  registeredAgentId?: string | null;
   [key: string]: any; // Allow any additional properties from Prisma models
 };
 
@@ -204,7 +204,7 @@ export function fireWebhook(
   };
 
   // Fire-and-forget: don't await
-  deliverWebhook(job.callbackUrl, payload, job.callbackSecret, job.registeredAgentId, event).catch((err) =>
+  deliverWebhook(job.callbackUrl, payload, job.callbackSecret, job.registeredAgentId ?? undefined, event).catch((err) =>
     logger.error({ err, jobId: job.id, event }, 'Webhook fire error'),
   );
 }
