@@ -153,7 +153,7 @@ export default function ArbitratorApplyPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
           {[
             { label: 'Register below', sub: '2 minutes' },
-            { label: 'We whitelist you', sub: 'on-chain' },
+            { label: 'Payers choose you', sub: 'permissionless' },
             { label: 'Disputes come to you', sub: 'via webhook' },
             { label: 'Sign verdict, get paid', sub: 'in USDC' },
           ].map((step, i) => (
@@ -180,10 +180,10 @@ export default function ArbitratorApplyPage() {
           </p>
           <div className="grid sm:grid-cols-4 gap-3 text-center mb-5">
             {[
-              { label: 'Deposited', amount: '5 USDC', tx: '0x1ede56ab1a37760f7c0d33f0c8e03eac7ff1d3bf3c8e081d56bcf44dba502c94' },
-              { label: 'Completed', amount: 'on-chain', tx: '0x926c344d2dfa4f939620d194f67bc507fce408d447819cb7c61d6f04ac1ea1e0' },
-              { label: 'Disputed', amount: 'by depositor', tx: '0x3ee8c0b545fc46026363c0b86de290bf774b9e260f63923ddda133b7e5a28fbd' },
-              { label: 'Resolved', amount: '70 / 27 / 3%', tx: '0xa73c922f40120994ae877093a19c34a9c62ba9849bdfb804672a22db617b1bc4' },
+              { label: 'Deposited', amount: '2 USDC', tx: '0xffdac2fbfdf5223b9d54982aa9da48790020d3d168d22c05f0a81accbfc853c7' },
+              { label: 'Completed', amount: 'on-chain', tx: '0x3612a6ad9b51c91c996440cb36ab8c9d62ceed4ad8b09baaee1e1729fc0e9deb' },
+              { label: 'Disputed', amount: 'by depositor', tx: '0x25da6f5beaa61e8159b5d1e529c0cb0129797e5ff3904258efc4834ed3e6db88' },
+              { label: 'Resolved', amount: '75 / 20 / 5%', tx: '0x983c58ec889cc2f0a604e32f1c58b2eea80b6fab1aebbdec1070f8daece5f0bb' },
             ].map((step, i) => (
               <a
                 key={i}
@@ -199,15 +199,15 @@ export default function ArbitratorApplyPage() {
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-700">
             <a
-              href="https://sepolia.basescan.org/address/0xa88dC37a5a05329f3a088aDe1b22D64BF5155729"
+              href="https://sepolia.basescan.org/address/0x731B24cF53630415D3f284112c77638aca37fc84#code"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-400 hover:text-green-400 font-mono transition-colors"
             >
-              Contract: 0xa88d...5729
+              V2 Contract: 0x731B...fc84 (verified)
             </a>
             <span className="text-xs text-slate-500">
-              Arbiter earned 0.15 USDC for signing one verdict
+              Arbiter earned 0.10 USDC for signing one verdict
             </span>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function ArbitratorApplyPage() {
             <div className="text-4xl mb-4">&#9989;</div>
             <h2 className="text-2xl font-bold text-slate-900 mb-2">You're in</h2>
             <p className="text-slate-600 mb-6">
-              We'll reach out to whitelist your wallet. Save your credentials below — you'll need them to connect your bot.
+              You're registered as an arbitrator. Save your credentials below — you'll need them to connect your bot.
             </p>
             <div className="bg-slate-50 rounded-lg p-4 text-left mb-4">
               <div className="flex items-center justify-between mb-1">
@@ -295,7 +295,7 @@ export default function ArbitratorApplyPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">How to reach you for whitelisting</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Contact (for dispute notifications)</label>
               <div className="flex gap-2">
                 <select
                   value={form.contactType}
