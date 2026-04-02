@@ -488,6 +488,9 @@ export const api = {
   getSolverStats: () =>
     request<SolverStats>('/admin/solver/stats'),
 
+  getWizardAnalytics: (range = '30d', wizardName = 'onboarding') =>
+    request<import('../types/admin').WizardAnalyticsResponse>(`/admin/analytics/wizard?range=${range}&wizardName=${wizardName}`),
+
   getAdminFeatures: (params?: { domain?: string; metrics?: boolean }) => {
     const query = new URLSearchParams();
     if (params?.domain) query.set('domain', params.domain);

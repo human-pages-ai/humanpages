@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useTrackedField, useTrackedButton } from '../../../lib/wizardAnalytics';
 
 interface StepAboutYouProps {
   name: string;
@@ -24,6 +25,10 @@ export function StepAboutYou({
   onNext, error, setError,
 }: StepAboutYouProps) {
   const { t } = useTranslation();
+  const nameField = useTrackedField('name');
+  const bioField = useTrackedField('bio');
+  const photoUploadBtn = useTrackedButton('photo_upload');
+  const photoRemoveBtn = useTrackedButton('photo_remove');
 
   return (
     <>
@@ -39,12 +44,12 @@ export function StepAboutYou({
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
             <img src={photoPreview || oauthPhotoUrl || ''} alt="Profile photo preview" loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-orange-200" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).alt = 'Photo failed to load'; }} />
             <div className="flex flex-row sm:flex-col gap-3 sm:gap-2">
-              <button type="button" onClick={() => photoInputRef.current?.click()} className="text-sm font-medium text-orange-600 hover:text-orange-700 py-1">Change photo</button>
-              <button type="button" onClick={onPhotoRemove} className="text-xs font-medium text-slate-500 hover:text-slate-700 py-1">Remove</button>
+              <button type="button" onClick={() => { photoUploadBtn.track(); photoInputRef.current?.click(); }} className="text-sm font-medium text-orange-600 hover:text-orange-700 py-1">Change photo</button>
+              <button type="button" onClick={() => { photoRemoveBtn.track(); onPhotoRemove(); }} className="text-xs font-medium text-slate-500 hover:text-slate-700 py-1">Remove</button>
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => photoInputRef.current?.click()} aria-label="Upload profile photo" className="w-full px-4 py-5 sm:py-8 border-2 border-dashed border-slate-300 rounded-lg text-center hover:border-orange-400 hover:bg-orange-50 active:bg-orange-50">
+          <button type="button" onClick={() => { photoUploadBtn.track(); photoInputRef.current?.click(); }} aria-label="Upload profile photo" className="w-full px-4 py-5 sm:py-8 border-2 border-dashed border-slate-300 rounded-lg text-center hover:border-orange-400 hover:bg-orange-50 active:bg-orange-50">
             <div className="text-3xl mb-2" aria-hidden="true">📷</div>
             <p className="text-sm font-medium text-slate-700">Click to upload photo</p>
             <p className="text-xs text-slate-500">JPG, PNG — max 5MB</p>
@@ -56,13 +61,13 @@ export function StepAboutYou({
       {/* Name */}
       <div className="mb-4">
         <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">{t('onboarding.profile.nameLabel')}</label>
-        <input id="name" type="text" value={name} onChange={(e) => { setName(e.target.value.slice(0, 100)); setError(''); }} onBlur={(e) => { setName(e.target.value.trim()); }} maxLength={100} placeholder="John Doe" autoComplete="name" className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+        <input id="name" type="text" value={name} onChange={(e) => { setName(e.target.value.slice(0, 100)); setError(''); }} onFocus={nameField.props.onFocus} onBlur={(e) => { nameField.props.onBlur(e); setName(e.target.value.trim()); }} maxLength={100} placeholder="John Doe" autoComplete="name" className="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
       </div>
 
       {/* Bio */}
       <div className="mb-6">
         <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-1">{t('onboarding.profile.bioLabel')}</label>
-        <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value.slice(0, 500))} placeholder="Tell us a bit about yourself..." maxLength={500} rows={2} aria-describedby="bio-count" className="w-full px-4 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+        <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value.slice(0, 500))} onFocus={bioField.props.onFocus} onBlur={bioField.props.onBlur} placeholder="Tell us a bit about yourself..." maxLength={500} rows={2} aria-describedby="bio-count" className="w-full px-4 py-2 border border-slate-300 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
         <p id="bio-count" className={`text-xs mt-1 ${bio.length >= 480 ? 'text-red-500 font-medium' : bio.length >= 400 ? 'text-orange-600 font-medium' : 'text-slate-400'}`}>{bio.length}/500 characters{bio.length === 0 && ' — a good bio helps you stand out'}</p>
       </div>
 

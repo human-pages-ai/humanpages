@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../../lib/api';
 import { PLATFORM_OPTIONS, PLATFORM_LABELS, isValidEvmAddress } from '../../../lib/paymentConstants';
+import { useTrackedField, useTrackedButton } from '../../../lib/wizardAnalytics';
 import type { FiatPaymentMethod } from '../../../components/dashboard/types';
 
 interface StepPaymentProps {
@@ -26,6 +27,10 @@ export function StepPayment({
   setError,
 }: StepPaymentProps) {
   const { t } = useTranslation();
+
+  // Analytics tracking
+  const walletField = useTrackedField('wallet_address');
+  const addMethodBtn = useTrackedButton('add_fiat_method');
 
   // Existing fiat payment methods (loaded from API)
   const [methods, setMethods] = useState<FiatPaymentMethod[]>([]);
@@ -56,6 +61,7 @@ export function StepPayment({
   }, [loadMethods]);
 
   const handleAddMethod = async () => {
+    addMethodBtn.track();
     const handle = newHandle.trim();
     if (!handle) {
       if (setError) setError('Please enter your handle or username for this platform.');
@@ -275,6 +281,13 @@ export function StepPayment({
             onChange={(e) => { setWalletAddress(e.target.value.trim()); if (setError) setError(''); }}
             placeholder="0x..."
             className={`w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono ${walletAddress && !isValidEvmAddress(walletAddress) ? 'border-red-300' : 'border-slate-300'}`}
+            onFocus={walletField.props.onFocus}
+            onBlur={(e) => {
+              walletField.props.onBlur(e);
+              if (e.target.value && !isValidEvmAddress(e.target.value)) {
+                walletField.trackError('invalid_evm_address');
+              }
+            }}
           />
           {walletAddress && !isValidEvmAddress(walletAddress) ? (
             <p className="text-xs text-red-500 mt-2">Please enter a valid EVM wallet address (0x followed by 40 hex characters).</p>

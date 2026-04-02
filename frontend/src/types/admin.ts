@@ -1482,3 +1482,19 @@ export interface McpAnalyticsResponse {
   range: number;
   timestamp: string;
 }
+
+export interface WizardAnalyticsResponse {
+  configured: boolean;
+  message?: string;
+  range: string;
+  wizardName: string;
+  funnel: { step: string; unique_runs: number }[];
+  abandonment: { step: string; count: number }[];
+  stepTiming: { step: string; avg_duration: number }[];
+  buttonClicks: { button: string; clicks: number }[];
+  fieldEngagement: { field: string; focus: number; blur: number; errors: number }[];
+  formLifecycle: { form: string; opened: number; completed: number; abandoned: number }[];
+  deviceBreakdown: { mobile: number; desktop: number; inAppBrowser: number };
+  dailyActivity: { day: string; sessions: number; events: number }[];
+  completionRate: { started: number; completed: number; abandoned: number };
+}

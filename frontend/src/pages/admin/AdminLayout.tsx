@@ -18,6 +18,7 @@ const adminOnlyItems: NavItem[] = [
   { to: '/admin/listings', label: 'Listings' },
   { to: '/admin/activity', label: 'Activity' },
   { to: '/admin/feedback', label: 'Feedback' },
+  { to: '/admin/analytics', label: 'Analytics' },
   { to: '/admin/video', label: 'Videos' },
   { to: '/admin/schedule', label: 'Schedule' },
   { to: '/admin/photos', label: 'Photos' },

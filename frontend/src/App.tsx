@@ -97,6 +97,7 @@ const AdminSolver = lazy(() => import('./pages/admin/AdminSolver'));
 const AdminFeatures = lazy(() => import('./pages/admin/AdminFeatures'));
 const AdminArbitrators = lazy(() => import('./pages/admin/AdminArbitrators'));
 const AdminMarketingOps = lazy(() => import('./pages/admin/MarketingOps'));
+const AdminWizardAnalytics = lazy(() => import('./pages/admin/AdminWizardAnalytics'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffProductivity = lazy(() => import('./pages/admin/StaffProductivity'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
@@ -400,6 +401,7 @@ function AppRoutes() {
         <Route path="listings/:id" element={<AdminListingDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
+        <Route path="analytics" element={<AdminWizardAnalytics />} />
         <Route path="tasks" element={<TaskCentral />} />
         <Route path="time-tracking" element={<StaffDashboard />} />
         <Route path="content" element={<ContentManager />} />
