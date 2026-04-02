@@ -204,7 +204,7 @@ export default function ArbitratorApplyPage() {
               rel="noopener noreferrer"
               className="text-xs text-slate-400 hover:text-green-400 font-mono transition-colors"
             >
-              V2 Contract: 0x731B...fc84 (verified)
+              Contract: 0x731B...fc84 (verified)
             </a>
             <span className="text-xs text-slate-500">
               Arbiter earned 0.10 USDC for signing one verdict
