@@ -172,6 +172,15 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
       });
 
       if (recentOfferCount >= config.limit) {
+        // Track rate limit hit
+        trackServerEvent(agent.id, 'rate_limit_hit', {
+          tier: agent.activationTier,
+          limit_type: 'job_creation',
+          jobs_in_period: recentOfferCount,
+          limit: config.limit,
+          window_ms: config.windowMs,
+        });
+
         const windowHours = config.windowMs / (60 * 60 * 1000);
         const windowLabel = windowHours >= 48 ? `${windowHours / 24} days` : `${windowHours} hours`;
         const tierMsg = `Your ${agent.activationTier} tier allows ${config.limit} job offer(s) per ${windowLabel}. Accepted offers don't count toward this limit.`;
@@ -427,7 +436,9 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         jobDetailUrl,
         jobId: job.id,
         agentId: agent.id,
-      }).catch((err) => logger.error({ err }, 'Email notification failed'));
+      })
+        .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'email', type: 'job_offer', job_id: job.id, agent_id: agent.id }))
+        .catch((err) => { logger.error({ err }, 'Email notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'email', type: 'job_offer', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
     }
 
     // Send Telegram notification (async, don't block response)
@@ -440,7 +451,9 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         priceUsdc: data.priceUsdc,
         agentName: displayName,
         dashboardUrl: jobDetailUrl,
-      }).catch((err) => logger.error({ err }, 'Telegram notification failed'));
+      })
+        .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'telegram', type: 'job_offer', job_id: job.id, agent_id: agent.id }))
+        .catch((err) => { logger.error({ err }, 'Telegram notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'telegram', type: 'job_offer', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
     }
 
     // Send WhatsApp notification (async, don't block response)
@@ -455,28 +468,42 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         templateType: 'offer',
         templateVars: { '1': data.title, '2': `$${data.priceUsdc} USDC` },
         prisma,
-      }).catch((err) => logger.error({ err }, 'WhatsApp notification failed'));
+      })
+        .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'whatsapp', type: 'job_offer', job_id: job.id, agent_id: agent.id }))
+        .catch((err) => { logger.error({ err }, 'WhatsApp notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'whatsapp', type: 'job_offer', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
     }
 
     // Send push notification (async, don't block response)
     if (human.pushNotifications) {
-      sendJobOfferPush(human.id, job.id).catch((err) => logger.error({ err }, 'Push notification failed'));
+      sendJobOfferPush(human.id, job.id)
+        .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'push', type: 'job_offer', job_id: job.id, agent_id: agent.id }))
+        .catch((err) => { logger.error({ err }, 'Push notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'push', type: 'job_offer', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
     }
 
     // Log x402 payment if this was a paid request
     if (req.x402Paid && req.x402PaymentPayload) {
+      const amount = X402_PRICES.job_offer;
       prisma.x402Payment.create({
         data: {
           agentId: agent.id,
           resourceType: 'job_offer',
           resourceId: job.id,
-          amountUsd: X402_PRICES.job_offer,
+          amountUsd: amount,
           network: req.x402MatchedRequirements?.network || 'eip155:8453',
           paymentPayload: req.x402PaymentPayload as any,
           settled: true,
           agentIp: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
         },
       }).catch((err) => logger.error({ err }, 'Failed to log x402 payment'));
+
+      // Track x402 payment received
+      trackServerEvent(agent.id, 'x402_payment_received', {
+        resource_type: 'job_offer',
+        amount_usd: amount,
+        agent_id: agent.id,
+        job_id: job.id,
+        network: req.x402MatchedRequirements?.network || 'eip155:8453',
+      });
     }
 
     const windowHours = config.windowMs / (60 * 60 * 1000);
@@ -637,6 +664,14 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
     if (job.updateCount >= RATE_LIMIT_UPDATES_PER_JOB) {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       if (job.lastUpdatedByAgent && job.lastUpdatedByAgent > oneHourAgo) {
+        // Track rate limit hit for per-job updates
+        trackServerEvent(agent.id, 'rate_limit_hit', {
+          limit_type: 'job_updates_per_job',
+          job_id: job.id,
+          update_count: job.updateCount,
+          limit: RATE_LIMIT_UPDATES_PER_JOB,
+        });
+
         return res.status(429).json({
           error: 'Update rate limit exceeded',
           message: `Maximum ${RATE_LIMIT_UPDATES_PER_JOB} updates per job. Try again later.`,
@@ -721,6 +756,11 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
         'job.updated',
         { changes: data },
       );
+      trackServerEvent(job.agentId || 'system', 'webhook_fired', {
+        event_type: 'job.updated',
+        job_id: job.id,
+        has_callback: true,
+      });
     }
 
     // Send notifications to human
@@ -760,7 +800,9 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
           category: updated.category || undefined,
           language: human.preferredLanguage,
           jobDetailUrl,
-        }).catch((err) => logger.error({ err }, 'Updated offer email notification failed'));
+        })
+          .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'email', type: 'job_offer_updated', job_id: updated.id, agent_id: agent.id }))
+          .catch((err) => { logger.error({ err }, 'Updated offer email notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'email', type: 'job_offer_updated', job_id: updated.id, reason: err?.message?.slice(0, 100) }); });
       }
 
       if (human.telegramChatId && human.telegramNotifications) {
@@ -772,7 +814,9 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
           priceUsdc: updated.priceUsdc.toNumber(),
           agentName: displayName,
           dashboardUrl: jobDetailUrl,
-        }).catch((err) => logger.error({ err }, 'Updated offer Telegram notification failed'));
+        })
+          .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'telegram', type: 'job_offer_updated', job_id: updated.id, agent_id: agent.id }))
+          .catch((err) => { logger.error({ err }, 'Updated offer Telegram notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'telegram', type: 'job_offer_updated', job_id: updated.id, reason: err?.message?.slice(0, 100) }); });
       }
 
       if (isWhatsAppEnabled() && human.whatsapp && human.whatsappVerified && human.whatsappNotifications) {
@@ -786,12 +830,16 @@ router.patch('/:id', authenticateAgent, async (req: AgentAuthRequest, res) => {
           templateType: 'offer',
           templateVars: { '1': updated.title, '2': `$${updated.priceUsdc.toNumber()} USDC` },
           prisma,
-        }).catch((err) => logger.error({ err }, 'Updated offer WhatsApp notification failed'));
+        })
+          .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'whatsapp', type: 'job_offer_updated', job_id: updated.id, agent_id: agent.id }))
+          .catch((err) => { logger.error({ err }, 'Updated offer WhatsApp notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'whatsapp', type: 'job_offer_updated', job_id: updated.id, reason: err?.message?.slice(0, 100) }); });
       }
 
       // Push notification
       if (human.pushNotifications) {
-        sendJobOfferUpdatedPush(human.id, updated.id).catch((err) => logger.error({ err }, 'Updated offer push notification failed'));
+        sendJobOfferUpdatedPush(human.id, updated.id)
+          .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'push', type: 'job_offer_updated', job_id: updated.id, agent_id: agent.id }))
+          .catch((err) => { logger.error({ err }, 'Updated offer push notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'push', type: 'job_offer_updated', job_id: updated.id, reason: err?.message?.slice(0, 100) }); });
       }
     }
 
@@ -916,6 +964,11 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
           },
         },
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.accepted',
+        job_id: updated.id,
+        has_callback: true,
+      });
 
     }
 
@@ -961,6 +1014,13 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
               network,
               timestamp: new Date().toISOString(),
             }, agent.webhookSecret);
+            trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+              event_type: 'agent.funding_needed',
+              job_id: updated.id,
+              has_callback: true,
+              required_amount: required.toFixed(2),
+              current_balance: balance.toFixed(2),
+            });
           }
         } catch (err) {
           logger.error({ err, agentId: updated.registeredAgentId, jobId: updated.id, network: 'base' }, 'funding_needed webhook failed — agent may not know they need funding');
@@ -1025,6 +1085,11 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
         { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
         'job.rejected',
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.rejected',
+        job_id: updated.id,
+        has_callback: true,
+      });
     }
 
     trackServerEvent(req.userId!, 'job_rejected', {
@@ -1182,6 +1247,13 @@ router.patch('/:id/paid', async (req, res) => {
           },
         },
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.payment_received',
+        job_id: updated.id,
+        has_callback: true,
+        amount: verification.amount,
+        network: verification.network,
+      });
     }
 
     // Track payment received in PostHog (pass req for country geolocation)
@@ -1288,6 +1360,11 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
           { ...updated, callbackUrl: updated.callbackUrl, callbackSecret: updated.callbackSecret },
           'job.submitted',
         );
+        trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+          event_type: 'job.submitted',
+          job_id: updated.id,
+          has_callback: true,
+        });
       }
 
       return res.json({
@@ -1317,6 +1394,11 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
         { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
         'job.completed',
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.completed',
+        job_id: updated.id,
+        has_callback: true,
+      });
     }
 
     trackServerEvent(req.userId!, 'job_completed', {
@@ -1392,6 +1474,11 @@ router.patch('/:id/approve-completion', authenticateEither, requireActiveIfAgent
           { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
           'job.escrow_completed',
         );
+        trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+          event_type: 'job.escrow_completed',
+          job_id: updated.id,
+          has_callback: true,
+        });
       }
 
       trackServerEvent(req.senderId!, 'job_completed', {
@@ -1425,6 +1512,11 @@ router.patch('/:id/approve-completion', authenticateEither, requireActiveIfAgent
         { ...updated, callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
         'job.completed',
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.completed',
+        job_id: updated.id,
+        has_callback: true,
+      });
     }
 
     trackServerEvent(req.senderId!, 'job_completed', {
@@ -1495,6 +1587,11 @@ router.patch('/:id/request-revision', authenticateEither, requireActiveIfAgent, 
         'job.revision_requested',
         { reason: body.reason },
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.revision_requested',
+        job_id: updated.id,
+        has_callback: true,
+      });
     }
 
     trackServerEvent(req.senderId!, 'job_revision_requested', {
@@ -1596,6 +1693,12 @@ router.patch('/:id/claim-payment', authenticateAgent, requireActiveAgent, async 
         'job.payment_claimed',
         { method: data.method, note: data.note },
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.payment_claimed',
+        job_id: updated.id,
+        has_callback: true,
+        method: data.method,
+      });
     }
 
     res.json({
@@ -1652,6 +1755,12 @@ router.patch('/:id/confirm-payment', authenticateToken, requireEmailVerified, as
         'job.paid',
         { method: 'off_chain', claimMethod: job.paymentClaimMethod },
       );
+      trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.payment_confirmed_offchain',
+        job_id: updated.id,
+        has_callback: true,
+        method: 'off_chain',
+      });
     }
 
     trackServerEvent(job.humanId, 'payment_confirmed_offchain', {
@@ -1744,6 +1853,12 @@ router.patch('/:id/cancel', authenticateEither, requireActiveIfAgent, async (req
         'job.cancelled',
         { cancelledBy, reason: body.reason },
       );
+      trackServerEvent(updated.registeredAgentId || updated.agentId || 'system', 'webhook_fired', {
+        event_type: 'job.cancelled',
+        job_id: updated.id,
+        has_callback: true,
+        cancelled_by: cancelledBy,
+      });
     }
 
     const action = job.status === 'PENDING' && isAgent ? 'Offer withdrawn.' : 'Job cancelled.';
@@ -1830,6 +1945,13 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
         'job.disputed',
         { disputedBy, reason: body.reason, disputeType },
       );
+      trackServerEvent(updated.registeredAgentId || updated.agentId || 'system', 'webhook_fired', {
+        event_type: 'job.disputed',
+        job_id: updated.id,
+        has_callback: true,
+        disputed_by: disputedBy,
+        dispute_type: disputeType,
+      });
     }
 
     res.json({
@@ -2043,6 +2165,11 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
           },
         },
       );
+      trackServerEvent(job.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.message',
+        job_id: job.id,
+        has_callback: true,
+      });
     }
 
     // If sender is agent, notify the human via email/Telegram
@@ -2081,7 +2208,9 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
             jobTitle: job.title,
             jobDetailUrl,
             language: human.preferredLanguage ?? undefined,
-          }).catch((err) => logger.error({ err }, 'Agent message email notification failed'));
+          })
+            .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'email', type: 'job_message', job_id: job.id, agent_id: job.registeredAgentId }))
+            .catch((err) => { logger.error({ err }, 'Agent message email notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'email', type: 'job_message', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
         }
 
         if (human.telegramChatId && human.telegramNotifications) {
@@ -2090,7 +2219,9 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
             chatId: human.telegramChatId,
             text: `<b>New message from ${req.senderName!.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</b>\n\nOn: ${job.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}\n\n"${preview.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"\n\n<a href="${jobDetailUrl}">View &amp; Reply</a>`,
             parseMode: 'HTML',
-          }).catch((err) => logger.error({ err }, 'Agent message Telegram notification failed'));
+          })
+            .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'telegram', type: 'job_message', job_id: job.id, agent_id: job.registeredAgentId }))
+            .catch((err) => { logger.error({ err }, 'Agent message Telegram notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'telegram', type: 'job_message', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
         }
 
         if (isWhatsAppEnabled() && human.whatsapp && human.whatsappVerified && human.whatsappNotifications) {
@@ -2105,12 +2236,16 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
             templateType: 'message',
             templateVars: { '1': '1' },
             prisma,
-          }).catch((err) => logger.error({ err }, 'Agent message WhatsApp notification failed'));
+          })
+            .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'whatsapp', type: 'job_message', job_id: job.id, agent_id: job.registeredAgentId }))
+            .catch((err) => { logger.error({ err }, 'Agent message WhatsApp notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'whatsapp', type: 'job_message', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
         }
 
         // Push notification
         if (human.pushNotifications) {
-          sendJobMessagePush(human.id, job.id).catch((err) => logger.error({ err }, 'Agent message push notification failed'));
+          sendJobMessagePush(human.id, job.id)
+            .then(() => trackServerEvent(human.id, 'notification_sent', { channel: 'push', type: 'job_message', job_id: job.id, agent_id: job.registeredAgentId }))
+            .catch((err) => { logger.error({ err }, 'Agent message push notification failed'); trackServerEvent(human.id, 'notification_failed', { channel: 'push', type: 'job_message', job_id: job.id, reason: err?.message?.slice(0, 100) }); });
         }
       }
     }
@@ -2285,6 +2420,13 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
           'job.stream_started',
           { method: 'SUPERFLUID', network: networkLower, flowRate: flowResult.flowRate },
         );
+        trackServerEvent(agent.id || 'system', 'webhook_fired', {
+          event_type: 'job.stream_started',
+          job_id: updated.id,
+          has_callback: true,
+          method: 'SUPERFLUID',
+          network: networkLower,
+        });
       }
 
       trackServerEvent(agent.id, 'stream_started', {
@@ -2358,6 +2500,13 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
           'job.stream_started',
           { method: 'MICRO_TRANSFER', network: networkLower },
         );
+        trackServerEvent(agent.id || 'system', 'webhook_fired', {
+          event_type: 'job.stream_started',
+          job_id: updated.id,
+          has_callback: true,
+          method: 'MICRO_TRANSFER',
+          network: networkLower,
+        });
       }
 
       trackServerEvent(agent.id, 'stream_started', {
@@ -2662,6 +2811,11 @@ router.patch('/:id/pause-stream', authenticateEither, requireActiveIfAgent, asyn
         { ...job, status: 'PAUSED', callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
         'job.stream_paused',
       );
+      trackServerEvent(job.registeredAgentId || job.agentId || 'system', 'webhook_fired', {
+        event_type: 'job.stream_paused',
+        job_id: job.id,
+        has_callback: true,
+      });
     }
 
     res.json({
@@ -2788,6 +2942,11 @@ router.patch('/:id/resume-stream', authenticateAgent, requireActiveAgent, async 
         { ...job, status: 'STREAMING', callbackUrl: job.callbackUrl, callbackSecret: job.callbackSecret },
         'job.stream_resumed',
       );
+      trackServerEvent(job.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.stream_resumed',
+        job_id: job.id,
+        has_callback: true,
+      });
     }
 
     res.json({
@@ -2847,6 +3006,11 @@ router.patch('/:id/stop-stream', authenticateEither, requireActiveIfAgent, async
         'job.stream_stopped',
         { totalPaid: job.streamTotalPaid?.toString() },
       );
+      trackServerEvent(job.registeredAgentId || 'system', 'webhook_fired', {
+        event_type: 'job.stream_stopped',
+        job_id: job.id,
+        has_callback: true,
+      });
     }
 
     trackServerEvent(req.senderId!, 'stream_stopped', {
