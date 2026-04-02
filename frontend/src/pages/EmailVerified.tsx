@@ -8,7 +8,7 @@ export default function EmailVerified() {
 
   return (
     <>
-      <SEO title={t('emailVerifiedPage.title')} />
+      <SEO title={t('emailVerifiedPage.title')} noindex />
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
         <div className="max-w-md w-full text-center space-y-6">
           <Logo className="h-8 mx-auto" />

@@ -223,13 +223,13 @@ export default function PublicProfile() {
         description={ogDescription}
         ogImage={`https://humanpages.ai/api/og/${profile.id}?v=2`}
         ogType="profile"
-        path={`/humans/${profile.id}`}
+        path={profile.username ? `/u/${profile.username}` : `/humans/${profile.id}`}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",
           "name": formatPublicName(profile.displayName),
           "description": profile.bio,
-          "url": `https://humanpages.ai/humans/${profile.id}`,
+          "url": `https://humanpages.ai${profile.username ? `/u/${profile.username}` : `/humans/${profile.id}`}`,
           ...(profile.location && { "address": {
             "@type": "PostalAddress",
             "addressLocality": profile.location,

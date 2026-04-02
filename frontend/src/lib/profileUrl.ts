@@ -1,7 +1,7 @@
 /**
  * Single source of truth for constructing profile URLs.
- * Prefers /u/{username} when available (shorter, more memorable).
- * Falls back to /humans/{id} as the canonical, always-working URL.
+ * Canonical is /u/{username} (nicer, shorter).
+ * Falls back to /humans/{id} when username is not available.
  */
 export function getProfileUrl(opts: { username?: string; id: string }): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://humanpages.ai';

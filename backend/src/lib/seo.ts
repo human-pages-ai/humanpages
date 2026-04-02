@@ -53,7 +53,7 @@ export async function getProfileMetaHtml(humanId: string, lang?: string): Promis
   try {
     const human = await prisma.human.findUnique({
       where: { id: humanId },
-      select: { name: true, bio: true, location: true, neighborhood: true, locationGranularity: true, skills: true, isAvailable: true },
+      select: { name: true, username: true, bio: true, location: true, neighborhood: true, locationGranularity: true, skills: true, isAvailable: true },
     });
 
     if (!human) return null;
@@ -68,7 +68,8 @@ export async function getProfileMetaHtml(humanId: string, lang?: string): Promis
         || `${human.name} on Human Pages${displayLocation ? ` in ${displayLocation}` : ''}${human.skills.length > 0 ? ` - ${human.skills.slice(0, 3).join(', ')}` : ''}`
     );
     const ogImage = `${SITE_URL}/api/og/${humanId}`;
-    const unprefixedPath = `/humans/${humanId}`;
+    // Prefer /u/:username as canonical (nicer URL), fall back to /humans/:id
+    const unprefixedPath = human.username ? `/u/${human.username}` : `/humans/${humanId}`;
     const canonicalUrl = lang && lang !== 'en'
       ? `${SITE_URL}/${lang}${unprefixedPath}`
       : `${SITE_URL}${unprefixedPath}`;

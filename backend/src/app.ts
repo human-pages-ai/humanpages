@@ -37,7 +37,7 @@ import moltbookTelemetryRoutes from './routes/moltbookTelemetry.js';
 import escrowRoutes from './routes/escrow.js';
 import moltbookSolverRoutes from './routes/moltbookSolver.js';
 import solverVerificationRoutes from './routes/solverVerification.js';
-import { getProfileMetaHtml, getProfileMetaHtmlByUsername, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getArbitratorMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml, fixSpaCanonical } from './lib/seo.js';
+import { getProfileMetaHtml, getBlogMetaHtml, getCareersMetaHtml, getDevPageMetaHtml, getArbitratorMetaHtml, getPromptToCompletionMetaHtml, getGptSetupMetaHtml, getListingMetaHtml, getConnectMetaHtml, fixSpaCanonical } from './lib/seo.js';
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
@@ -520,10 +520,60 @@ app.get('/work/:code', async (req, res, next) => {
 });
 
 // Profile pages: inject dynamic meta tags for social sharing / SEO
+// Canonical URL is /u/:username (nicer). /humans/:id 301-redirects to it.
 
+app.get('/:lang/u/:username', async (req, res, next) => {
+  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
+  try {
+    const human = await prisma.human.findUnique({
+      where: { username: req.params.username },
+      select: { id: true },
+    });
+    if (human) {
+      const html = await getProfileMetaHtml(human.id, req.params.lang);
+      if (html) {
+        res.set('Content-Type', 'text/html');
+        return res.send(html);
+      }
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+app.get('/u/:username', async (req, res, next) => {
+  try {
+    const human = await prisma.human.findUnique({
+      where: { username: req.params.username },
+      select: { id: true },
+    });
+    if (human) {
+      const html = await getProfileMetaHtml(human.id);
+      if (html) {
+        res.set('Content-Type', 'text/html');
+        return res.send(html);
+      }
+    }
+  } catch {
+    // Fall through to SPA
+  }
+  next();
+});
+
+// /humans/:id → 301 redirect to /u/:username (canonical is username URL)
 app.get('/:lang/humans/:id', async (req, res, next) => {
   if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
   try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.params.id },
+      select: { username: true },
+    });
+    if (human?.username) {
+      const qs = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+      return res.redirect(301, `/${req.params.lang}/u/${human.username}${qs}`);
+    }
+    // No username — serve SSR HTML at /humans/:id
     const html = await getProfileMetaHtml(req.params.id, req.params.lang);
     if (html) {
       res.set('Content-Type', 'text/html');
@@ -537,34 +587,16 @@ app.get('/:lang/humans/:id', async (req, res, next) => {
 
 app.get('/humans/:id', async (req, res, next) => {
   try {
+    const human = await prisma.human.findUnique({
+      where: { id: req.params.id },
+      select: { username: true },
+    });
+    if (human?.username) {
+      const qs = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+      return res.redirect(301, `/u/${human.username}${qs}`);
+    }
+    // No username — serve SSR HTML at /humans/:id
     const html = await getProfileMetaHtml(req.params.id);
-    if (html) {
-      res.set('Content-Type', 'text/html');
-      return res.send(html);
-    }
-  } catch {
-    // Fall through to SPA
-  }
-  next();
-});
-
-app.get('/:lang/u/:username', async (req, res, next) => {
-  if (!SUPPORTED_LANGS.includes(req.params.lang)) return next();
-  try {
-    const html = await getProfileMetaHtmlByUsername(req.params.username, req.params.lang);
-    if (html) {
-      res.set('Content-Type', 'text/html');
-      return res.send(html);
-    }
-  } catch {
-    // Fall through to SPA
-  }
-  next();
-});
-
-app.get('/u/:username', async (req, res, next) => {
-  try {
-    const html = await getProfileMetaHtmlByUsername(req.params.username);
     if (html) {
       res.set('Content-Type', 'text/html');
       return res.send(html);
@@ -652,7 +684,7 @@ app.get('/from/:slug', (req, res) => {
   res.redirect(302, url.toString());
 });
 
-// /vouch/:username — shareable vouch request link
+// /vouch/:username — shareable vouch request link (redirects to /u/ which 301s to /humans/:id)
 app.get('/vouch/:username', (req, res) => {
   res.redirect(302, `/u/${encodeURIComponent(req.params.username)}?vouch=1`);
 });
