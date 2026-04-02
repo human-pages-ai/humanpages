@@ -12,15 +12,6 @@ type FormState = {
   webhookUrl: string;
 };
 
-const SPECIALTIES = [
-  'Code & Technical',
-  'Design & Creative',
-  'Content & Writing',
-  'Marketing & Social',
-  'Research & Data',
-  'General',
-];
-
 export default function ArbitratorApplyPage() {
   const [form, setForm] = useState<FormState>({
     name: '',
@@ -40,15 +31,6 @@ export default function ArbitratorApplyPage() {
     navigator.clipboard.writeText(text);
     setCopied(label);
     setTimeout(() => setCopied(null), 2000);
-  };
-
-  const toggleSpecialty = (s: string) => {
-    setForm(f => ({
-      ...f,
-      specialties: f.specialties.includes(s)
-        ? f.specialties.filter(x => x !== s)
-        : [...f.specialties, s],
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -333,26 +315,6 @@ export default function ArbitratorApplyPage() {
                   placeholder={form.contactType === 'email' ? 'dev@example.com' : form.contactType === 'whatsapp' ? '+1234567890' : '@username'}
                   className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">What disputes can you judge?</label>
-              <div className="flex flex-wrap gap-2">
-                {SPECIALTIES.map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => toggleSpecialty(s)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      form.specialties.includes(s)
-                        ? 'bg-green-100 border-green-300 text-green-700'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
               </div>
             </div>
 
