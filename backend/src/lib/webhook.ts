@@ -1,7 +1,8 @@
-import { createHmac } from 'crypto';
+import { createHmac, createHash } from 'crypto';
 import { URL } from 'url';
 import dns from 'dns/promises';
 import { logger } from './logger.js';
+import { trackServerEvent } from './posthog.js';
 
 /**
  * Check if a URL is safe to call (not pointing to private/internal networks).
@@ -77,13 +78,28 @@ export function signPayload(payload: string, secret: string): string {
 }
 
 /**
+ * Hash a URL for logging (doesn't expose secrets in query params).
+ */
+function hashUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return createHash('sha256').update(parsed.hostname).digest('hex').slice(0, 16);
+  } catch {
+    return createHash('sha256').update(url).digest('hex').slice(0, 16);
+  }
+}
+
+/**
  * Deliver a webhook with retries and exponential backoff.
  * Fire-and-forget: logs failures but never throws.
+ * Optional agentId and eventType for PostHog tracking.
  */
 export async function deliverWebhook(
   url: string,
   payload: object,
   secret?: string | null,
+  agentId?: string,
+  eventType?: string,
 ): Promise<void> {
   const body = JSON.stringify(payload);
   const headers: Record<string, string> = {
@@ -96,6 +112,8 @@ export async function deliverWebhook(
   }
 
   const delays = [1000, 4000, 16000]; // 3 attempts with exponential backoff
+  const urlHash = hashUrl(url);
+  const distinctId = agentId || 'system';
 
   for (let attempt = 0; attempt < delays.length; attempt++) {
     try {
@@ -113,6 +131,7 @@ export async function deliverWebhook(
 
       if (res.ok) {
         logger.info({ url, attempt: attempt + 1 }, 'Webhook delivered');
+        trackServerEvent(distinctId, 'webhook_delivered', { url_hash: urlHash, attempt: attempt + 1, event_type: eventType });
         return;
       }
 
@@ -120,11 +139,20 @@ export async function deliverWebhook(
         { url, status: res.status, attempt: attempt + 1 },
         'Webhook delivery failed with non-OK status',
       );
+
+      if (attempt < delays.length - 1) {
+        trackServerEvent(distinctId, 'webhook_retry', { url_hash: urlHash, attempt: attempt + 1, error: `HTTP ${res.status}`, event_type: eventType });
+      }
     } catch (err) {
       logger.warn(
         { url, err, attempt: attempt + 1 },
         'Webhook delivery attempt failed',
       );
+
+      if (attempt < delays.length - 1) {
+        const errorMsg = (err instanceof Error ? err.message : String(err))?.slice(0, 100);
+        trackServerEvent(distinctId, 'webhook_retry', { url_hash: urlHash, attempt: attempt + 1, error: errorMsg, event_type: eventType });
+      }
     }
 
     // Wait before retry (except on last attempt)
@@ -134,18 +162,21 @@ export async function deliverWebhook(
   }
 
   logger.error({ url }, 'Webhook delivery failed after all retries');
+  trackServerEvent(distinctId, 'webhook_failed', { url_hash: urlHash, total_attempts: delays.length, event_type: eventType });
 }
 
-interface WebhookJob {
+type WebhookJob = {
   id: string;
-  title: string;
-  description: string;
-  priceUsdc: { toString(): string };
+  title?: string;
+  description?: string;
+  priceUsdc?: { toString(): string } | number | null;
   callbackUrl: string | null;
   callbackSecret: string | null;
-  humanId: string;
-  status: string;
-}
+  humanId?: string;
+  status?: string;
+  registeredAgentId?: string;
+  [key: string]: any; // Allow any additional properties from Prisma models
+};
 
 /**
  * Fire a webhook for a job status change.
@@ -166,14 +197,14 @@ export function fireWebhook(
     data: {
       title: job.title,
       description: job.description,
-      priceUsdc: job.priceUsdc.toString(),
+      priceUsdc: job.priceUsdc?.toString?.() || job.priceUsdc,
       humanId: job.humanId,
       ...extra,
     },
   };
 
   // Fire-and-forget: don't await
-  deliverWebhook(job.callbackUrl, payload, job.callbackSecret).catch((err) =>
+  deliverWebhook(job.callbackUrl, payload, job.callbackSecret, job.registeredAgentId, event).catch((err) =>
     logger.error({ err, jobId: job.id, event }, 'Webhook fire error'),
   );
 }
