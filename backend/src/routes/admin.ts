@@ -31,6 +31,17 @@ import { MODEL_PRICING, estimateTokenCost } from '../lib/solverLLM.js';
 
 const router = Router();
 
+// ─── Rate limiters ───
+const adminExportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 exports per hour
+  keyGenerator: (req: any) => req.headers['x-admin-api-key'] || req.userId || req.ip || 'unknown',
+  message: { error: 'Export rate limit exceeded. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+});
+
 // ─── Helper function ───
 function errMsg(error: unknown): string {
   if (error instanceof Error) return `${error.name}: ${error.message}`;
@@ -2897,18 +2908,6 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
     logger.error({ err: error }, 'Admin solver requests error');
     res.status(500).json({ error: 'Internal server error' });
   }
-});
-
-// ======================== EXPORT RATE LIMITING ========================
-
-const adminExportLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 exports per hour
-  keyGenerator: (req: any) => req.headers['x-admin-api-key'] || req.userId || req.ip || 'unknown',
-  message: { error: 'Export rate limit exceeded. Try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  validate: false,
 });
 
 // ======================== MCP ANALYTICS ========================
