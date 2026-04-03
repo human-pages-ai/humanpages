@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 import { BCRYPT_ROUNDS } from '../lib/bcrypt-rounds.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
@@ -2900,8 +2901,18 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
 
 // ======================== MCP ANALYTICS ========================
 
+const mcpAdminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 min per key
+  keyGenerator: (req: any) => req.headers['x-admin-api-key'] || req.ip || 'unknown',
+  message: { error: 'Rate limit exceeded. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+});
+
 // GET /api/admin/mcp/funnel — Full MCP operator funnel analytics
-router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
+router.get('/mcp/funnel', apiKeyAdmin, mcpAdminLimiter, async (req: any, res) => {
   try {
     const range = Math.max(1, Math.min(90, parseInt(req.query.range as string) || 30));
 
@@ -3240,18 +3251,30 @@ router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin MCP funnel analytics error');
-    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/admin/mcp/sessions — List MCP sessions with conversation replay
-router.get('/mcp/sessions', apiKeyAdmin, async (req: any, res) => {
+router.get('/mcp/sessions', apiKeyAdmin, mcpAdminLimiter, async (req: any, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
-    const offset = parseInt(req.query.offset as string) || 0;
+    const offset = Math.max(0, Math.min(parseInt(req.query.offset as string) || 0, 50000));
     const agentId = req.query.agentId as string | undefined;
     const platform = req.query.platform as string | undefined;
     const sessionId = req.query.sessionId as string | undefined;
+
+    // Validate filter formats
+    const validPlatforms = ['chatgpt', 'claude', 'gemini', 'cursor', 'copilot', 'custom'];
+    if (platform && !validPlatforms.includes(platform)) {
+      return res.status(400).json({ error: 'Invalid platform filter' });
+    }
+    if (agentId && !/^[a-zA-Z0-9_-]{1,128}$/.test(agentId)) {
+      return res.status(400).json({ error: 'Invalid agentId filter' });
+    }
+    if (sessionId && !/^session_[a-f0-9]{32}$/.test(sessionId)) {
+      return res.status(400).json({ error: 'Invalid sessionId filter' });
+    }
 
     const where: any = {};
     if (agentId) where.agentId = agentId;
@@ -3299,15 +3322,29 @@ router.get('/mcp/sessions', apiKeyAdmin, async (req: any, res) => {
       s.turns.sort((a: any, b: any) => a.sequenceNum - b.sequenceNum);
     }
 
+    // Mask sensitive fields before sending to frontend
+    for (const s of sessions) {
+      if (s.callerIp) {
+        const parts = s.callerIp.split('.');
+        s.callerIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : s.callerIp.substring(0, 8) + '***';
+      }
+      for (const t of s.turns) {
+        if (t.callerIp) {
+          const parts = t.callerIp.split('.');
+          t.callerIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : t.callerIp.substring(0, 8) + '***';
+        }
+      }
+    }
+
     res.json({ sessions, limit, offset });
   } catch (error) {
     logger.error({ err: error }, 'Admin MCP sessions error');
-    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/admin/mcp/sessions/:sessionId — Get full conversation for a session
-router.get('/mcp/sessions/:sessionId', apiKeyAdmin, async (req: any, res) => {
+router.get('/mcp/sessions/:sessionId', apiKeyAdmin, mcpAdminLimiter, async (req: any, res) => {
   try {
     const turns = await prisma.mcpSessionLog.findMany({
       where: { sessionId: req.params.sessionId },
@@ -3319,11 +3356,24 @@ router.get('/mcp/sessions/:sessionId', apiKeyAdmin, async (req: any, res) => {
     }
 
     const first = turns[0];
+    const maskedIp = first.callerIp ? (() => {
+      const parts = first.callerIp.split('.');
+      return parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : first.callerIp.substring(0, 8) + '***';
+    })() : null;
+
+    // Mask IPs in turns too
+    for (const t of turns) {
+      if ((t as any).callerIp) {
+        const parts = (t as any).callerIp.split('.');
+        (t as any).callerIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : (t as any).callerIp.substring(0, 8) + '***';
+      }
+    }
+
     res.json({
       sessionId: first.sessionId,
       agentId: first.agentId,
       platform: first.platform,
-      callerIp: first.callerIp,
+      callerIp: maskedIp,
       callerUa: first.callerUa,
       apiKeyPrefix: first.apiKeyPrefix,
       startedAt: first.createdAt,
@@ -3332,7 +3382,7 @@ router.get('/mcp/sessions/:sessionId', apiKeyAdmin, async (req: any, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin MCP session detail error');
-    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

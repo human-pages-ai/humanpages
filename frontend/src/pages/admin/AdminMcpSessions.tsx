@@ -114,13 +114,13 @@ function SessionCard({ session, onSelect }: { session: McpSessionSummary; onSele
       <div className="flex items-center gap-4 text-xs text-gray-500">
         <span>Agent: <span className="font-mono">{session.agentId.slice(0, 12)}...</span></span>
         {session.callerIp && <span>IP: <span className="font-mono">{session.callerIp}</span></span>}
-        {session.apiKeyPrefix && <span>Key: <span className="font-mono">{session.apiKeyPrefix}</span></span>}
+        {session.apiKeyPrefix && <span>Key: <span className="font-mono">{session.apiKeyPrefix.substring(0, 4)}****</span></span>}
       </div>
       <div className="flex items-center gap-3 mt-2 text-xs">
         <span className="text-blue-600 font-medium">{session.turns.length} turns</span>
         <span className="text-green-600">{session.toolCalls} tool calls</span>
         {session.errorCount > 0 && <span className="text-red-600">{session.errorCount} errors</span>}
-        {session.callerUa && <span className="text-gray-400 truncate max-w-xs" title={session.callerUa}>{session.callerUa.slice(0, 60)}</span>}
+        {session.callerUa && <span className="text-gray-400 truncate max-w-xs">{session.callerUa.slice(0, 30)}...</span>}
       </div>
     </div>
   );
@@ -149,6 +149,10 @@ export default function AdminMcpSessions() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4">MCP Session Replay</h1>
       <p className="text-gray-600 mb-6">Full conversation logs for every MCP operator session — args, responses, caller metadata</p>
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+        This page contains sensitive session data. IPs are partially masked. Do not share screenshots.
+      </div>
 
       {/* Filters */}
       <div className="flex gap-3 mb-6">
@@ -215,11 +219,11 @@ export default function AdminMcpSessions() {
               </div>
               <div>
                 <p className="text-gray-500">API Key</p>
-                <p className="font-mono text-xs">{selected.apiKeyPrefix || '—'}</p>
+                <p className="font-mono text-xs">{selected.apiKeyPrefix ? selected.apiKeyPrefix.substring(0, 4) + '****' : '—'}</p>
               </div>
               <div>
                 <p className="text-gray-500">User-Agent</p>
-                <p className="text-xs truncate" title={selected.callerUa || ''}>{selected.callerUa || '—'}</p>
+                <p className="text-xs truncate">{selected.callerUa ? selected.callerUa.substring(0, 40) + '...' : '—'}</p>
               </div>
               <div>
                 <p className="text-gray-500">Turns</p>

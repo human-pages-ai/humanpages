@@ -112,9 +112,6 @@ setInterval(() => {
           session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
           session.searchQueries.length > 0 ? 'searched' :
           session.toolCallCount > 0 ? 'used_tools' : 'idle',
-        caller_ip: session.callerIp,
-        user_agent: session.callerUa?.substring(0, 200),
-        api_key_prefix: session.apiKeyPrefix,
       });
       activeSessions.delete(sessionId);
       cleaned++;
@@ -134,15 +131,44 @@ function getCallerMeta(req: Request) {
   return { ip, ua };
 }
 
+/** Deep clone and redact PII from objects before logging */
+function redactPII(obj: unknown): unknown {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => redactPII(item));
+  }
+
+  const cloned = { ...(obj as Record<string, unknown>) };
+  const sensitiveFields = ['email', 'phone', 'phoneNumber', 'contactEmail', 'ssn', 'password', 'token', 'secret', 'apiKey', 'api_key'];
+
+  for (const key in cloned) {
+    if (sensitiveFields.includes(key)) {
+      delete cloned[key];
+    } else if (key === 'description' || key === 'bio') {
+      const val = cloned[key];
+      if (typeof val === 'string') {
+        cloned[key] = val.length > 100 ? val.substring(0, 100) + '[redacted]' : val;
+      }
+    } else if (typeof cloned[key] === 'object' && cloned[key] !== null) {
+      cloned[key] = redactPII(cloned[key]);
+    }
+  }
+
+  return cloned;
+}
+
 /** Safely extract API key prefix for identification (never log full key) */
 function getApiKeyPrefix(agentApiKey?: string): string | undefined {
-  if (!agentApiKey || agentApiKey.length < 12) return undefined;
-  return agentApiKey.substring(0, 12) + '...'; // "hp_xxxxxxxx..."
+  if (!agentApiKey || agentApiKey.length < 4) return undefined;
+  return agentApiKey.substring(0, 4) + '****';
 }
 
 /** Truncate large objects for PostHog (keep under 4KB) */
 function truncateForPostHog(obj: unknown, maxLen = 4000): string {
-  const str = JSON.stringify(obj);
+  const sanitized = redactPII(obj);
+  const str = JSON.stringify(sanitized);
   if (str.length <= maxLen) return str;
   return str.substring(0, maxLen) + '...[truncated]';
 }
@@ -164,7 +190,9 @@ function logMcpTurn(data: {
   errorMessage?: string;
   latencyMs?: number;
 }) {
-  const responseStr = data.responseBody ? JSON.stringify(data.responseBody) : null;
+  const redactedRequestArgs = data.requestArgs ? redactPII(data.requestArgs) : undefined;
+  const redactedResponseBody = data.responseBody ? redactPII(data.responseBody) : undefined;
+  const responseStr = redactedResponseBody ? JSON.stringify(redactedResponseBody) : null;
   prisma.mcpSessionLog.create({
     data: {
       sessionId: data.sessionId,
@@ -176,8 +204,8 @@ function logMcpTurn(data: {
       method: data.method,
       toolName: data.toolName || null,
       sequenceNum: data.sequenceNum,
-      requestArgs: data.requestArgs ? (data.requestArgs as any) : undefined,
-      responseBody: data.responseBody ? (data.responseBody as any) : undefined,
+      requestArgs: redactedRequestArgs ? (redactedRequestArgs as any) : undefined,
+      responseBody: redactedResponseBody ? (redactedResponseBody as any) : undefined,
       responseSize: responseStr ? responseStr.length : null,
       isError: data.isError || false,
       errorMessage: data.errorMessage || null,
@@ -323,8 +351,6 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
               client_name: sess.clientInfo.name,
               client_version: sess.clientInfo.version,
               platform,
-              caller_ip: sess.callerIp,
-              user_agent: sess.callerUa?.substring(0, 200),
             });
             // Log conversation turn to database
             logMcpTurn({
@@ -594,6 +620,9 @@ router.delete('/mcp', deleteRateLimiter, async (req: Request, res: Response) => 
       if (!tokenInfo || tokenInfo.agentId !== session.agentId) {
         return res.status(403).json({ error: 'Forbidden' });
       }
+    } else {
+      // No auth token — reject unauthenticated session termination
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     const duration = Date.now() - session.createdAt.getTime();
@@ -611,9 +640,6 @@ router.delete('/mcp', deleteRateLimiter, async (req: Request, res: Response) => 
         session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
         session.searchQueries.length > 0 ? 'searched' :
         session.toolCallCount > 0 ? 'used_tools' : 'idle',
-      caller_ip: session.callerIp,
-      user_agent: session.callerUa?.substring(0, 200),
-      api_key_prefix: session.apiKeyPrefix,
     });
 
     // Log session end event to database
