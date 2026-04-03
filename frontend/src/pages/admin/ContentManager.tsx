@@ -1093,6 +1093,19 @@ function RejectionReasonModal({
 }
 
 // Simple markdown to HTML for preview (handles headers, bold, links, lists)
+function sanitizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url, 'https://placeholder.com');
+    if (!['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+      return '#';
+    }
+    return url;
+  } catch {
+    // Relative URLs are fine
+    return url.startsWith('/') ? url : '#';
+  }
+}
+
 function simpleMarkdown(md: string): string {
   // Escape HTML entities first to prevent XSS
   const escaped = md
@@ -1108,7 +1121,8 @@ function simpleMarkdown(md: string): string {
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match: string, text: string, url: string) =>
+      `<a href="${sanitizeUrl(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`)
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
     .replace(/\n\n/g, '</p><p>')

@@ -12,6 +12,19 @@ interface DynamicPost {
   publishedAt: string;
 }
 
+function sanitizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url, 'https://placeholder.com');
+    if (!['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+      return '#';
+    }
+    return url;
+  } catch {
+    // Relative URLs are fine
+    return url.startsWith('/') ? url : '#';
+  }
+}
+
 export default function DynamicBlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<DynamicPost | null>(null);
@@ -68,7 +81,15 @@ export default function DynamicBlogPost() {
 
 // Convert markdown to HTML for rendering inside the prose container
 function markdownToHtml(md: string): string {
-  return md
+  // Escape HTML entities first to prevent XSS
+  const escaped = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  return escaped
     // Code blocks
     .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
     // Headers
@@ -79,8 +100,9 @@ function markdownToHtml(md: string): string {
     // Bold and italic
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    // Links - use function callback to sanitize URLs
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match: string, text: string, url: string) =>
+      `<a href="${sanitizeUrl(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`)
     // Unordered lists
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     // Ordered lists
