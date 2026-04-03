@@ -20,6 +20,14 @@ export default defineConfig({
     // Keep old chunk files around so users with stale HTML don't get 404s.
     // Old assets are cleaned up by scripts/clean-old-assets.sh after deploy.
     emptyOutDir: false,
+    rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        if (warning.code === 'SOURCEMAP_ERROR') return;
+        if (warning.message?.includes('/*#__PURE__*/')) return;
+        if (warning.message?.includes('annotation that Rollup cannot interpret')) return;
+        defaultHandler(warning);
+      },
+    },
   },
   test: {
     environment: 'jsdom',
