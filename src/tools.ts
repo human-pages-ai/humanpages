@@ -60,6 +60,8 @@ interface Human {
   channelCount?: number;
   activeChannels?: string[];
   services: { title: string; description: string; category: string; priceMin?: string; priceCurrency?: string; priceUnit?: string }[];
+  educations?: { institution?: string; country?: string; degree?: string; field?: string; year?: number; startYear?: number; endYear?: number }[];
+  certificates?: { name?: string; issuer?: string; year?: number }[];
 }
 
 interface AgentProfile {
@@ -1379,7 +1381,7 @@ export function createServer(): Server {
               ? `${h.neighborhood}, ${h.location}`
               : h.location || 'Location not specified';
 
-            const displayName = h.username || 'Anonymous';
+            const displayName = h.name || h.username || 'Anonymous';
             const jobsCompleted = rep?.jobsCompleted || 0;
             const jobsBadge = jobsCompleted > 0 ? ` | 🏆 ${jobsCompleted} job${jobsCompleted !== 1 ? 's' : ''} completed` : '';
             return `- **${displayName}** | human_id: \`${h.id}\` [${displayLocation}]
@@ -2395,7 +2397,9 @@ ${fiatInfo || 'No fiat payment methods listed'}
 ${(human.fiatPaymentMethods || []).length > 0 ? '\n_Note: Fiat payments are self-reported. The human must confirm receipt before the job is marked as paid._' : ''}
 
 ## Social Profiles
-${socialLinks || 'No social profiles added'}`;
+${socialLinks || 'No social profiles added'}
+${(human.educations?.length ?? 0) > 0 ? `\n## Education\n${human.educations!.map(e => `- ${e.degree || 'Degree'}${e.field ? ` in ${e.field}` : ''}${e.institution ? `, ${e.institution}` : ''}${e.country ? ` (${e.country})` : ''}${e.endYear ? ` — ${e.endYear}` : e.year ? ` — ${e.year}` : ''}`).join('\n')}` : ''}
+${(human.certificates?.length ?? 0) > 0 ? `\n## Certificates\n${human.certificates!.map(c => `- ${c.name || 'Certificate'}${c.issuer ? ` — ${c.issuer}` : ''}${c.year ? ` (${c.year})` : ''}`).join('\n')}` : ''}`;
 
         return {
           content: [{ type: 'text', text: details }],
