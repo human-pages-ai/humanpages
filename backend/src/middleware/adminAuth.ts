@@ -127,6 +127,36 @@ export function jwtOrApiKey(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
+ * Admin JWT or shared AI_ADMIN_API_KEY only. Staff API keys are rejected.
+ * Use on sensitive admin routes that should only be accessible by admin users
+ * or the local AI assistant via the shared admin API key.
+ */
+export function adminJwtOrSharedKey(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers['authorization'];
+  const hasJwt = authHeader && authHeader.startsWith('Bearer ');
+  const apiKey = req.headers['x-admin-api-key'] as string | undefined;
+
+  if (hasJwt) {
+    // JWT path — delegate to JWT auth, then requireAdmin will check role
+    return authenticateToken(req as AuthRequest, res, () => {
+      return requireAdmin(req as AuthRequest, res, next);
+    });
+  }
+
+  if (apiKey) {
+    // Only accept the shared AI_ADMIN_API_KEY, not per-user staff keys
+    const expected = process.env.AI_ADMIN_API_KEY;
+    if (expected && apiKey.length === expected.length &&
+        crypto.timingSafeEqual(Buffer.from(apiKey), Buffer.from(expected))) {
+      (req as any).effectiveRole = 'ADMIN';
+      return next();
+    }
+  }
+
+  return res.status(401).json({ error: 'Admin JWT or AI admin API key required' });
+}
+
+/**
  * After jwtOrApiKey, enforce staff/admin for JWT users. API-key users skip this.
  */
 export async function requireStaffOrApiKey(req: AuthRequest, res: Response, next: NextFunction) {

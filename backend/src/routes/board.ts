@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { requireAdmin, apiKeyAdmin } from '../middleware/adminAuth.js';
+import { AuthRequest } from '../middleware/auth.js';
+import { adminJwtOrSharedKey } from '../middleware/adminAuth.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 
@@ -35,7 +35,7 @@ const listSchema = z.object({
 });
 
 // ─── LIST tasks ───
-router.get('/', apiKeyAdmin, async (req, res) => {
+router.get('/', adminJwtOrSharedKey, async (req: AuthRequest, res) => {
   try {
     const params = listSchema.parse(req.query);
     const where: any = {};
@@ -82,7 +82,7 @@ router.get('/', apiKeyAdmin, async (req, res) => {
 });
 
 // ─── CREATE task ───
-router.post('/', apiKeyAdmin, async (req, res) => {
+router.post('/', adminJwtOrSharedKey, async (req: AuthRequest, res) => {
   try {
     const data = createSchema.parse(req.body);
     // Put new tasks at top of their column
@@ -104,7 +104,7 @@ router.post('/', apiKeyAdmin, async (req, res) => {
 });
 
 // ─── GET single task ───
-router.get('/:id', apiKeyAdmin, async (req, res) => {
+router.get('/:id', adminJwtOrSharedKey, async (req: AuthRequest, res) => {
   try {
     const task = await prisma.adminTask.findUnique({ where: { id: req.params.id } });
     if (!task) return res.status(404).json({ error: 'Task not found' });
@@ -116,7 +116,7 @@ router.get('/:id', apiKeyAdmin, async (req, res) => {
 });
 
 // ─── UPDATE task ───
-router.patch('/:id', apiKeyAdmin, async (req, res) => {
+router.patch('/:id', adminJwtOrSharedKey, async (req: AuthRequest, res) => {
   try {
     const data = updateSchema.parse(req.body);
     const task = await prisma.adminTask.update({
@@ -132,7 +132,7 @@ router.patch('/:id', apiKeyAdmin, async (req, res) => {
 });
 
 // ─── DELETE task ───
-router.delete('/:id', apiKeyAdmin, async (req, res) => {
+router.delete('/:id', adminJwtOrSharedKey, async (req: AuthRequest, res) => {
   try {
     await prisma.adminTask.delete({ where: { id: req.params.id } });
     res.json({ success: true });
@@ -143,7 +143,7 @@ router.delete('/:id', apiKeyAdmin, async (req, res) => {
 });
 
 // ─── BULK import (for Linear migration) ───
-router.post('/import', apiKeyAdmin, async (req, res) => {
+router.post('/import', adminJwtOrSharedKey, async (req: AuthRequest, res) => {
   try {
     const tasksSchema = z.array(createSchema);
     const tasks = tasksSchema.parse(req.body);
