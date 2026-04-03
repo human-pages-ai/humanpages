@@ -109,38 +109,41 @@ router.post('/register', registerLimiter, async (req, res) => {
 
     // ERC-8004: Assign the next sequential agent ID for the reputation registry.
     // See docs/ERC-8004-MAPPING.md for the mapping specification.
-    const maxResult = await prisma.agent.aggregate({ _max: { erc8004AgentId: true } });
-    const erc8004AgentId = (maxResult._max.erc8004AgentId ?? 0) + 1;
+    // Wrapped in a serializable transaction to prevent ID collisions from concurrent registrations.
+    const agent = await prisma.$transaction(async (tx) => {
+      const maxResult = await tx.agent.aggregate({ _max: { erc8004AgentId: true } });
+      const erc8004AgentId = (maxResult._max.erc8004AgentId ?? 0) + 1;
 
-    const agent = await prisma.agent.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        websiteUrl: data.websiteUrl,
-        contactEmail: data.contactEmail,
-        apiKeyHash,
-        apiKeyPrefix,
-        verificationToken,
-        erc8004AgentId,
-        webhookUrl: data.webhookUrl,
-        webhookSecret,
-        ...(data.walletAddress && {
-          wallets: {
-            create: {
-              address: data.walletAddress.toLowerCase(),
-              network: data.walletNetwork || 'base',
+      return tx.agent.create({
+        data: {
+          name: data.name,
+          description: data.description,
+          websiteUrl: data.websiteUrl,
+          contactEmail: data.contactEmail,
+          apiKeyHash,
+          apiKeyPrefix,
+          verificationToken,
+          erc8004AgentId,
+          webhookUrl: data.webhookUrl,
+          webhookSecret,
+          ...(data.walletAddress && {
+            wallets: {
+              create: {
+                address: data.walletAddress.toLowerCase(),
+                network: data.walletNetwork || 'base',
+              },
             },
-          },
-        }),
-        discoverySource: data.source,
-        discoveryDetail: data.sourceDetail,
-        // Auto-activate as PRO with no expiry (free launch offer)
-        status: 'ACTIVE',
-        activatedAt: new Date(),
-        activationMethod: 'AUTO',
-        activationTier: 'PRO',
-        activationExpiresAt: null,
-      },
+          }),
+          discoverySource: data.source,
+          discoveryDetail: data.sourceDetail,
+          // Auto-activate as PRO with no expiry (free launch offer)
+          status: 'ACTIVE',
+          activatedAt: new Date(),
+          activationMethod: 'AUTO',
+          activationTier: 'PRO',
+          activationExpiresAt: null,
+        },
+      });
     });
 
     // Track registration in PostHog (fire-and-forget)
@@ -818,6 +821,22 @@ router.patch('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest,
       sla: z.string().max(100).optional(),
       webhookUrl: z.string().url().optional(),
     }).parse(req.body);
+
+    // Validate webhook URL if provided (SSRF protection — mirrors POST handler)
+    if (data.webhookUrl) {
+      const url = new URL(data.webhookUrl);
+      if (url.protocol !== 'https:') {
+        return res.status(400).json({ error: 'Webhook URL must use HTTPS' });
+      }
+      const hostname = url.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' ||
+          hostname.startsWith('10.') || hostname.startsWith('192.168.') ||
+          hostname.startsWith('172.') || hostname === '169.254.169.254') {
+        return res.status(400).json({
+          error: 'Webhook URL must be a public HTTP(S) endpoint (no private IPs or localhost)',
+        });
+      }
+    }
 
     const updated = await prisma.agent.update({
       where: { id: req.params.id },

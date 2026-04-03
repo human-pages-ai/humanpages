@@ -185,10 +185,10 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
             logger.error({ userId: req.userId, privyDid }, 'Privy DID already bound to another account');
             throw new Error('PRIVY_DID_CONFLICT');
           }
-          // P2025 = record not found — user was deleted mid-flow, log and continue
+          // P2025 = record not found — user was deleted mid-flow
           if (err.code === 'P2025') {
             logger.warn({ userId: req.userId, privyDid }, 'User not found during privyDid binding');
-            return;
+            throw new Error('USER_NOT_FOUND');
           }
           throw err;
         });
@@ -211,6 +211,9 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
       } catch (err: any) {
         if (err.message === 'PRIVY_DID_CONFLICT') {
           return res.status(409).json({ error: 'This Privy account is already linked to a different Human Pages account' });
+        }
+        if (err.message === 'USER_NOT_FOUND') {
+          return res.status(404).json({ error: 'User account not found' });
         }
         logger.error({ err, userId: req.userId }, 'Privy identity token verification failed');
         return res.status(401).json({ error: 'Invalid or expired Privy identity token' });

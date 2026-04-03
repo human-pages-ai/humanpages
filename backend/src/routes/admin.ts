@@ -779,14 +779,15 @@ router.get('/stats/funnel', async (_req, res) => {
         )
         SELECT
           d.day,
-          COUNT(h.id) FILTER (WHERE h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL)::int AS email,
           COUNT(h.id) FILTER (WHERE h."googleId" IS NOT NULL)::int AS google,
           COUNT(h.id) FILTER (WHERE h."linkedinId" IS NOT NULL)::int AS linkedin,
-          COUNT(h.id) FILTER (WHERE h.whatsapp IS NOT NULL AND h."googleId" IS NULL AND h."linkedinId" IS NULL)::int AS whatsapp
+          COUNT(h.id) FILTER (WHERE h.whatsapp IS NOT NULL AND h."googleId" IS NULL AND h."linkedinId" IS NULL)::int AS whatsapp,
+          COUNT(h.id) FILTER (WHERE h."utmSource" = 'telegram_bot' AND h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL)::int AS telegram,
+          COUNT(h.id) FILTER (WHERE h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL AND (h."utmSource" IS NULL OR h."utmSource" != 'telegram_bot'))::int AS email
         FROM days d
         LEFT JOIN "Human" h ON h."createdAt"::date = d.day
         GROUP BY d.day ORDER BY d.day
-      ` as Promise<{ day: Date; email: number; google: number; linkedin: number; whatsapp: number }[]>,
+      ` as Promise<{ day: Date; email: number; google: number; linkedin: number; whatsapp: number; telegram: number }[]>,
 
       // Abandonment: users who signed up 7+ days ago, stuck at each stage
       prisma.$queryRaw`
@@ -864,7 +865,7 @@ router.get('/stats/funnel', async (_req, res) => {
       sourceQuality: sourceQualityRaw,
       signupMethodsByDay: signupMethodsByDayRaw.map(r => ({
         day: new Date(r.day).toISOString().slice(0, 10),
-        email: r.email, google: r.google, linkedin: r.linkedin, whatsapp: r.whatsapp,
+        email: r.email, google: r.google, linkedin: r.linkedin, whatsapp: r.whatsapp, telegram: r.telegram,
       })),
       abandonment: abandonmentRaw,
       velocity: {
@@ -2426,25 +2427,33 @@ router.patch('/moderation/:id', async (req: AuthRequest, res) => {
       await prisma.human.update({
         where: { id: item.contentId },
         data: { profilePhotoStatus: status },
-      }).catch(() => {}); // Source may have been deleted
+      }).catch((err: unknown) => {
+        logger.warn({ err, contentId: item.contentId, contentType: item.contentType }, 'Moderation: source record update failed (may have been deleted)');
+      });
     } else if (item.contentType === 'job_posting') {
       await prisma.job.update({
         where: { id: item.contentId },
         data: { moderationStatus: status },
-      }).catch(() => {});
+      }).catch((err: unknown) => {
+        logger.warn({ err, contentId: item.contentId, contentType: item.contentType }, 'Moderation: source record update failed (may have been deleted)');
+      });
     } else if (item.contentType === 'human_report') {
       if (status === 'rejected') {
         await prisma.humanReport.update({
           where: { id: item.contentId },
           data: { status: 'DISMISSED' },
-        }).catch(() => {});
+        }).catch((err: unknown) => {
+          logger.warn({ err, contentId: item.contentId }, 'Moderation: human report dismiss failed (may have been deleted)');
+        });
       }
     } else if (item.contentType === 'agent_report') {
       if (status === 'rejected') {
         await prisma.agentReport.update({
           where: { id: item.contentId },
           data: { status: 'DISMISSED' },
-        }).catch(() => {});
+        }).catch((err: unknown) => {
+          logger.warn({ err, contentId: item.contentId }, 'Moderation: agent report dismiss failed (may have been deleted)');
+        });
       }
     }
 
