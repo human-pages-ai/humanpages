@@ -464,7 +464,7 @@ router.get('/stats', async (_req, res) => {
       `,
       // ── Wallet metrics ──
       prisma.human.count({ where: { wallets: { some: {} } } }),
-      prisma.human.count({ where: { privyDid: { not: null } } }),
+      prisma.human.count({ where: { wallets: { some: { source: 'privy' } } } }),
       prisma.wallet.count(),
       prisma.wallet.count({ where: { verified: true } }),
       prisma.wallet.count({ where: { source: 'privy' } }),
