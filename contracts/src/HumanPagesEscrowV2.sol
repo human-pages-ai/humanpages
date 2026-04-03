@@ -96,6 +96,7 @@ contract HumanPagesEscrowV2 is EIP712, AccessControl, Pausable, ReentrancyGuard 
         require(arbitrator != address(0), "Invalid arbitrator");
         require(msg.sender != arbitrator, "Depositor cannot be arbitrator");
         require(msg.sender != payee, "Depositor cannot be payee");
+        require(payee != arbitrator, "Payee cannot be arbitrator");
         require(amount >= MIN_DEPOSIT, "Below minimum deposit");
         require(disputeWindow >= 1 hours && disputeWindow <= 30 days, "Invalid dispute window");
         require(feeBps > 0 && feeBps <= MAX_ARBITRATOR_FEE_BPS, "Fee out of range");
@@ -192,6 +193,7 @@ contract HumanPagesEscrowV2 is EIP712, AccessControl, Pausable, ReentrancyGuard 
         bytes32 digest = _hashTypedDataV4(structHash);
         address signer = _recoverSigner(digest, signature);
 
+        require(signer != address(0), "Invalid signature");
         require(signer == e.arbitrator, "Invalid arbitrator signature");
 
         verdictExecuted[verdictHash] = true;
@@ -228,6 +230,12 @@ contract HumanPagesEscrowV2 is EIP712, AccessControl, Pausable, ReentrancyGuard 
             "Cannot cancel"
         );
         require(amountToPayee <= e.amount, "Exceeds escrow amount");
+
+        CancelProposal memory existing = cancelProposals[jobId];
+        require(
+            existing.proposedAt == 0 || block.timestamp > existing.proposedAt + CANCEL_PROPOSAL_EXPIRY,
+            "Active proposal exists"
+        );
 
         cancelProposals[jobId] = CancelProposal({
             amountToPayee: amountToPayee,
@@ -299,6 +307,7 @@ contract HumanPagesEscrowV2 is EIP712, AccessControl, Pausable, ReentrancyGuard 
             s := calldataload(add(signature.offset, 32))
             v := byte(0, calldataload(add(signature.offset, 64)))
         }
+        require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, "Invalid s value");
         return ecrecover(digest, v, r, s);
     }
 }
