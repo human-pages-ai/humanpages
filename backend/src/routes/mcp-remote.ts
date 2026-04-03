@@ -35,6 +35,7 @@ import {
   getAgentApiKey,
 } from '../lib/mcp-auth.js';
 import { trackServerEvent } from '../lib/posthog.js';
+import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
@@ -83,6 +84,10 @@ interface McpSession {
   jobsCreated: string[];
   lastToolCalledAt?: Date;
   errorsEncountered: number;
+  // Caller metadata for logging
+  callerIp?: string;
+  callerUa?: string;
+  apiKeyPrefix?: string;
 }
 
 const activeSessions = new Map<string, McpSession>();
@@ -107,6 +112,9 @@ setInterval(() => {
           session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
           session.searchQueries.length > 0 ? 'searched' :
           session.toolCallCount > 0 ? 'used_tools' : 'idle',
+        caller_ip: session.callerIp,
+        user_agent: session.callerUa?.substring(0, 200),
+        api_key_prefix: session.apiKeyPrefix,
       });
       activeSessions.delete(sessionId);
       cleaned++;
@@ -118,6 +126,67 @@ setInterval(() => {
 // ---------------------------------------------------------------------------
 // Session helpers
 // ---------------------------------------------------------------------------
+
+/** Extract caller metadata from request for logging */
+function getCallerMeta(req: Request) {
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
+  const ua = (req.headers['user-agent'] as string) || '';
+  return { ip, ua };
+}
+
+/** Safely extract API key prefix for identification (never log full key) */
+function getApiKeyPrefix(agentApiKey?: string): string | undefined {
+  if (!agentApiKey || agentApiKey.length < 12) return undefined;
+  return agentApiKey.substring(0, 12) + '...'; // "hp_xxxxxxxx..."
+}
+
+/** Truncate large objects for PostHog (keep under 4KB) */
+function truncateForPostHog(obj: unknown, maxLen = 4000): string {
+  const str = JSON.stringify(obj);
+  if (str.length <= maxLen) return str;
+  return str.substring(0, maxLen) + '...[truncated]';
+}
+
+/** Log MCP conversation turn to database (fire-and-forget) */
+function logMcpTurn(data: {
+  sessionId: string;
+  agentId: string;
+  platform?: string;
+  callerIp?: string;
+  callerUa?: string;
+  apiKeyPrefix?: string;
+  method: string;
+  toolName?: string;
+  sequenceNum: number;
+  requestArgs?: unknown;
+  responseBody?: unknown;
+  isError?: boolean;
+  errorMessage?: string;
+  latencyMs?: number;
+}) {
+  const responseStr = data.responseBody ? JSON.stringify(data.responseBody) : null;
+  prisma.mcpSessionLog.create({
+    data: {
+      sessionId: data.sessionId,
+      agentId: data.agentId,
+      platform: data.platform || null,
+      callerIp: data.callerIp || null,
+      callerUa: data.callerUa || null,
+      apiKeyPrefix: data.apiKeyPrefix || null,
+      method: data.method,
+      toolName: data.toolName || null,
+      sequenceNum: data.sequenceNum,
+      requestArgs: data.requestArgs ? (data.requestArgs as any) : undefined,
+      responseBody: data.responseBody ? (data.responseBody as any) : undefined,
+      responseSize: responseStr ? responseStr.length : null,
+      isError: data.isError || false,
+      errorMessage: data.errorMessage || null,
+      latencyMs: data.latencyMs || null,
+    },
+  }).catch((err: unknown) => {
+    logger.warn({ err, sessionId: data.sessionId }, 'Failed to log MCP conversation turn');
+  });
+}
 
 function createSession(agentId: string): string {
   // LRU eviction
@@ -153,7 +222,7 @@ function createSession(agentId: string): string {
     session_id: sessionId,
   });
   logger.info({ sessionId, agentId }, 'Created MCP session');
-  return sessionId;
+  return sessionId; // Note: caller metadata captured later in POST handler
 }
 
 async function getOrCreateSession(req: Request): Promise<{ sessionId: string; agentId: string } | null> {
@@ -201,6 +270,14 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
       });
     }
 
+    // Capture caller metadata on session
+    const session = activeSessions.get(sessionInfo.sessionId);
+    if (session && !session.callerIp) {
+      const caller = getCallerMeta(req);
+      session.callerIp = caller.ip;
+      session.callerUa = caller.ua;
+    }
+
     const { jsonrpc, method, params, id } = req.body;
 
     if (jsonrpc !== '2.0' || !method) {
@@ -226,8 +303,8 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
         };
         // Track client info from initialization params
         if (params?.clientInfo) {
-          const session = activeSessions.get(sessionInfo.sessionId);
-          if (session) {
+          const sess = activeSessions.get(sessionInfo.sessionId);
+          if (sess) {
             const ci = params.clientInfo as Record<string, unknown>;
             const name = String(ci.name || '').toLowerCase();
             let platform = 'custom';
@@ -236,16 +313,30 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
             else if (name.includes('gemini') || name.includes('google')) platform = 'gemini';
             else if (name.includes('cursor')) platform = 'cursor';
             else if (name.includes('copilot') || name.includes('github')) platform = 'copilot';
-            session.clientInfo = {
+            sess.clientInfo = {
               name: String(ci.name || ''),
               version: String(ci.version || ''),
               platform,
             };
             trackServerEvent(sessionInfo.agentId, 'mcp_session_initialized', {
               session_id: sessionInfo.sessionId,
-              client_name: session.clientInfo.name,
-              client_version: session.clientInfo.version,
+              client_name: sess.clientInfo.name,
+              client_version: sess.clientInfo.version,
               platform,
+              caller_ip: sess.callerIp,
+              user_agent: sess.callerUa?.substring(0, 200),
+            });
+            // Log conversation turn to database
+            logMcpTurn({
+              sessionId: sessionInfo.sessionId,
+              agentId: sessionInfo.agentId,
+              platform: sess.clientInfo.platform,
+              callerIp: sess.callerIp,
+              callerUa: sess.callerUa,
+              method: 'initialize',
+              sequenceNum: 0,
+              requestArgs: params,
+              responseBody: result,
             });
           }
         }
@@ -258,9 +349,20 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
 
       case 'tools/list': {
         result = { tools: Object.values(MCP_TOOLS) };
+        const sess = activeSessions.get(sessionInfo.sessionId);
         trackServerEvent(sessionInfo.agentId, 'mcp_tools_listed', {
           session_id: sessionInfo.sessionId,
           tool_count: Object.keys(MCP_TOOLS).length,
+        });
+        logMcpTurn({
+          sessionId: sessionInfo.sessionId,
+          agentId: sessionInfo.agentId,
+          platform: sess?.clientInfo?.platform,
+          callerIp: sess?.callerIp,
+          callerUa: sess?.callerUa,
+          method: 'tools/list',
+          sequenceNum: sess?.toolCallCount || 0,
+          responseBody: result,
         });
         break;
       }
@@ -327,20 +429,53 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
             searches_so_far: session?.searchQueries.length || 0,
             profiles_viewed_so_far: session?.viewedHumanIds.length || 0,
             jobs_created_so_far: session?.jobsCreated.length || 0,
+            args_preview: truncateForPostHog(toolArgs, 500),
+            response_preview: truncateForPostHog(toolResult, 500),
+          });
+
+          // Log full conversation turn to DB
+          logMcpTurn({
+            sessionId: sessionInfo.sessionId,
+            agentId: sessionInfo.agentId,
+            platform: session?.clientInfo?.platform,
+            callerIp: session?.callerIp,
+            callerUa: session?.callerUa,
+            apiKeyPrefix: getApiKeyPrefix(agentApiKey),
+            method: 'tools/call',
+            toolName: name,
+            sequenceNum: sequenceNumber,
+            requestArgs: toolArgs,
+            responseBody: toolResult,
+            latencyMs: latencyMs,
           });
 
           result = {
             content: [{ type: 'text', text: JSON.stringify(toolResult) }],
           };
         } catch {
-          const session = activeSessions.get(sessionInfo.sessionId);
-          if (session) session.errorsEncountered++;
+          const sess = activeSessions.get(sessionInfo.sessionId);
+          if (sess) sess.errorsEncountered++;
 
           trackServerEvent(sessionInfo.agentId, 'mcp_tool_error', {
             session_id: sessionInfo.sessionId,
             tool_name: name,
-            sequence_number: (session?.toolCallCount || 0) + 1,
-            platform: session?.clientInfo?.platform || 'unknown',
+            sequence_number: (sess?.toolCallCount || 0) + 1,
+            platform: sess?.clientInfo?.platform || 'unknown',
+          });
+
+          // Log error turn to DB
+          logMcpTurn({
+            sessionId: sessionInfo.sessionId,
+            agentId: sessionInfo.agentId,
+            platform: sess?.clientInfo?.platform,
+            callerIp: sess?.callerIp,
+            callerUa: sess?.callerUa,
+            method: 'tools/call',
+            toolName: name,
+            sequenceNum: (sess?.toolCallCount || 0) + 1,
+            requestArgs: toolArgs,
+            isError: true,
+            errorMessage: 'Tool execution failed',
           });
 
           return res.status(500).json({
@@ -476,6 +611,29 @@ router.delete('/mcp', deleteRateLimiter, async (req: Request, res: Response) => 
         session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
         session.searchQueries.length > 0 ? 'searched' :
         session.toolCallCount > 0 ? 'used_tools' : 'idle',
+      caller_ip: session.callerIp,
+      user_agent: session.callerUa?.substring(0, 200),
+      api_key_prefix: session.apiKeyPrefix,
+    });
+
+    // Log session end event to database
+    logMcpTurn({
+      sessionId: sessionId,
+      agentId: session.agentId,
+      platform: session.clientInfo?.platform,
+      callerIp: session.callerIp,
+      callerUa: session.callerUa,
+      method: 'session_end',
+      sequenceNum: session.toolCallCount + 1,
+      requestArgs: { reason: 'client_terminated' },
+      responseBody: {
+        duration_ms: duration,
+        tool_calls: session.toolCallCount,
+        funnel_stage: session.jobsCreated.length > 0 ? 'hired' :
+          session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
+          session.searchQueries.length > 0 ? 'searched' :
+          session.toolCallCount > 0 ? 'used_tools' : 'idle',
+      },
     });
 
     activeSessions.delete(sessionId);

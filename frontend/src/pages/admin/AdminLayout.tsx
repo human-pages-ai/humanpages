@@ -34,6 +34,7 @@ const adminOnlyItems: NavItem[] = [
   { to: '/admin/solver', label: 'Solver' },
   { to: '/admin/arbitrators', label: 'Arbitrators' },
   { to: '/admin/mcp-funnel', label: 'MCP Funnel' },
+  { to: '/admin/mcp-sessions', label: 'MCP Sessions' },
 ];
 
 const sharedItems: NavItem[] = [

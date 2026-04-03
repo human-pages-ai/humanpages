@@ -1932,3 +1932,39 @@ model SolverTelemetry {
   @@index([model])
   @@index([createdAt])
 }
+
+// MCP session log — full conversation replay for admin analytics
+model McpSessionLog {
+  id            Int      @id @default(autoincrement())
+  sessionId     String   // MCP session ID (session_xxx)
+  agentId       String   // Registered agent ID
+  platform      String?  // Detected platform (chatgpt, claude, gemini, etc.)
+
+  // Caller metadata
+  callerIp      String?  // Client IP (from x-forwarded-for or req.ip)
+  callerUa      String?  // User-Agent header
+  apiKeyPrefix  String?  // First 8 chars of API key (hp_xxxxxxxx) for identification
+  country       String?  // GeoIP country (resolved later or from PostHog)
+
+  // The actual conversation turn
+  method        String   // JSON-RPC method (initialize, tools/list, tools/call, etc.)
+  toolName      String?  // Tool name (for tools/call only)
+  sequenceNum   Int      @default(0) // Position in session (1st call, 2nd call, etc.)
+
+  // Payloads
+  requestArgs   Json?    // Full tool arguments / params sent by agent
+  responseBody  Json?    // Full response returned to agent
+  responseSize  Int?     // Size of response in bytes
+  isError       Boolean  @default(false) // Whether this was an error response
+  errorMessage  String?  // Error message if isError
+
+  latencyMs     Int?     // Execution time
+
+  createdAt     DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([agentId])
+  @@index([platform])
+  @@index([createdAt])
+  @@index([toolName])
+}

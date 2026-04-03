@@ -472,6 +472,19 @@ export const api = {
     return request<McpFunnelAnalyticsResponse>(`/admin/mcp/funnel?${params}`);
   },
 
+  getAdminMcpSessions: (params?: { limit?: number; offset?: number; agentId?: string; platform?: string; sessionId?: string }) => {
+    const qp = new URLSearchParams();
+    if (params?.limit) qp.append('limit', String(params.limit));
+    if (params?.offset) qp.append('offset', String(params.offset));
+    if (params?.agentId) qp.append('agentId', params.agentId);
+    if (params?.platform) qp.append('platform', params.platform);
+    if (params?.sessionId) qp.append('sessionId', params.sessionId);
+    return request<any>(`/admin/mcp/sessions?${qp}`);
+  },
+
+  getAdminMcpSession: (sessionId: string) =>
+    request<any>(`/admin/mcp/sessions/${sessionId}`),
+
   getSolverStats: () =>
     request<SolverStats>('/admin/solver/stats'),
 

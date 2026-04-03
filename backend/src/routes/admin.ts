@@ -3244,6 +3244,98 @@ router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
   }
 });
 
+// GET /api/admin/mcp/sessions — List MCP sessions with conversation replay
+router.get('/mcp/sessions', apiKeyAdmin, async (req: any, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const offset = parseInt(req.query.offset as string) || 0;
+    const agentId = req.query.agentId as string | undefined;
+    const platform = req.query.platform as string | undefined;
+    const sessionId = req.query.sessionId as string | undefined;
+
+    const where: any = {};
+    if (agentId) where.agentId = agentId;
+    if (platform) where.platform = platform;
+    if (sessionId) where.sessionId = sessionId;
+
+    // Get all turns, grouped by session on the frontend
+    const turns = await prisma.mcpSessionLog.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }],
+      take: limit * 20, // Get enough turns to fill `limit` sessions
+      skip: offset,
+    });
+
+    // Group by sessionId for session-level view
+    const sessionMap = new Map<string, any>();
+    for (const turn of turns) {
+      if (!sessionMap.has(turn.sessionId)) {
+        sessionMap.set(turn.sessionId, {
+          sessionId: turn.sessionId,
+          agentId: turn.agentId,
+          platform: turn.platform,
+          callerIp: turn.callerIp,
+          callerUa: turn.callerUa,
+          apiKeyPrefix: turn.apiKeyPrefix,
+          startedAt: turn.createdAt,
+          turns: [],
+          toolCalls: 0,
+          errorCount: 0,
+        });
+      }
+      const session = sessionMap.get(turn.sessionId)!;
+      session.turns.push(turn);
+      if (turn.method === 'tools/call') session.toolCalls++;
+      if (turn.isError) session.errorCount++;
+      if (turn.createdAt < session.startedAt) session.startedAt = turn.createdAt;
+    }
+
+    const sessions = Array.from(sessionMap.values())
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+      .slice(0, limit);
+
+    // Sort turns within each session by sequence
+    for (const s of sessions) {
+      s.turns.sort((a: any, b: any) => a.sequenceNum - b.sequenceNum);
+    }
+
+    res.json({ sessions, limit, offset });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP sessions error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// GET /api/admin/mcp/sessions/:sessionId — Get full conversation for a session
+router.get('/mcp/sessions/:sessionId', apiKeyAdmin, async (req: any, res) => {
+  try {
+    const turns = await prisma.mcpSessionLog.findMany({
+      where: { sessionId: req.params.sessionId },
+      orderBy: { sequenceNum: 'asc' },
+    });
+
+    if (turns.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const first = turns[0];
+    res.json({
+      sessionId: first.sessionId,
+      agentId: first.agentId,
+      platform: first.platform,
+      callerIp: first.callerIp,
+      callerUa: first.callerUa,
+      apiKeyPrefix: first.apiKeyPrefix,
+      startedAt: first.createdAt,
+      endedAt: turns[turns.length - 1].createdAt,
+      turns,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP session detail error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // ======================== ARBITRATOR MANAGEMENT ========================
 
 // GET /api/admin/arbitrators — List all arbitrators (including unhealthy/pending)
