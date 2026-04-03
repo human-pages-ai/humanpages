@@ -39,6 +39,7 @@ import {
   generateMcpAccessToken,
   validateAgentApiKey,
 } from '../lib/mcp-auth.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -95,6 +96,20 @@ const revokeLimiter = rateLimit({
   validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
+
+/** Infer the AI platform from client_name and User-Agent */
+function inferPlatform(clientName?: string, userAgent?: string): string {
+  const name = (clientName || '').toLowerCase();
+  const ua = (userAgent || '').toLowerCase();
+  const combined = `${name} ${ua}`;
+  if (combined.includes('chatgpt') || combined.includes('openai') || combined.includes('gpt-')) return 'chatgpt';
+  if (combined.includes('claude') || combined.includes('anthropic')) return 'claude';
+  if (combined.includes('gemini') || combined.includes('google')) return 'gemini';
+  if (combined.includes('cursor')) return 'cursor';
+  if (combined.includes('copilot') || combined.includes('github')) return 'copilot';
+  if (combined.includes('perplexity')) return 'perplexity';
+  return 'custom';
+}
 
 // ---------------------------------------------------------------------------
 // In-memory stores with size caps
@@ -277,6 +292,14 @@ router.post('/oauth/register', registerLimiter, (req: Request, res: Response) =>
 
     logger.info({ clientId, clientName: client_name }, 'OAuth client registered');
 
+    const platform = inferPlatform(client_name, req.headers['user-agent'] as string);
+    trackServerEvent(clientId, 'mcp_client_registered', {
+      client_id: clientId,
+      client_name,
+      platform,
+      redirect_uri_domain: (() => { try { return new URL(redirect_uris[0]).hostname; } catch { return 'unknown'; } })(),
+    }, req);
+
     return res.status(201).json({
       client_id: clientId,
       client_secret: clientSecret,
@@ -374,6 +397,12 @@ router.get('/oauth/authorize', authorizeLimiter, (req: Request, res: Response) =
       'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'",
       'Cache-Control': 'no-store',
     });
+
+    trackServerEvent('anonymous', 'mcp_auth_page_viewed', {
+      client_id: String(client_id),
+      client_name: client?.name,
+    }, req);
+
     return res.send(html);
   } catch (error) {
     logger.error({ error }, 'OAuth authorize GET error');
@@ -393,6 +422,11 @@ router.post('/oauth/authorize', authorizeLimiter, async (req: Request, res: Resp
     const agent = await validateAgentApiKey(agent_key);
     if (!agent) {
       // Generic error — don't reveal whether the key format was wrong or the agent doesn't exist
+      trackServerEvent('anonymous', 'mcp_auth_failed', {
+        client_id: String(client_id),
+        reason: 'invalid_credentials',
+      }, req);
+
       return res.status(400).set({
         'Content-Type': 'text/html; charset=utf-8',
         'X-Content-Type-Options': 'nosniff',
@@ -447,6 +481,12 @@ router.post('/oauth/authorize', authorizeLimiter, async (req: Request, res: Resp
     redirectUrl.searchParams.set('code', code);
     if (state) redirectUrl.searchParams.set('state', String(state));
 
+    trackServerEvent(agent.id, 'mcp_auth_completed', {
+      client_id: String(client_id),
+      client_name: (oauthClients.get(String(client_id)))?.name,
+      platform: inferPlatform((oauthClients.get(String(client_id)))?.name, req.headers['user-agent'] as string),
+    }, req);
+
     return res.redirect(302, redirectUrl.toString());
   } catch (error) {
     logger.error({ error }, 'OAuth authorize POST error');
@@ -493,6 +533,7 @@ router.post('/oauth/token', tokenLimiter, async (req: Request, res: Response) =>
       const authCode = authorizationCodes.get(code);
       if (!authCode || authCode.expiresAt.getTime() < Date.now()) {
         if (authCode) authorizationCodes.delete(code);
+        trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'invalid_auth_code', grant_type: 'authorization_code' }, req);
         return res.status(400).json({ error: 'invalid_grant', error_description: 'Authorization code expired or invalid' });
       }
 
@@ -507,21 +548,26 @@ router.post('/oauth/token', tokenLimiter, async (req: Request, res: Response) =>
 
       // Validate client credentials (timing-safe)
       if (!clientId || !clientSecret) {
+        trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'invalid_client', grant_type: 'authorization_code' }, req);
         return res.status(401).json({ error: 'invalid_client', error_description: 'Client credentials required' });
       }
       if (clientId !== authCode.clientId) {
+        trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'invalid_client', grant_type: 'authorization_code' }, req);
         return res.status(401).json({ error: 'invalid_client', error_description: 'Authorization failed' });
       }
       if (!timingSafeCompare(hashClientSecret(clientSecret), client.clientSecretHash)) {
+        trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'invalid_client', grant_type: 'authorization_code' }, req);
         return res.status(401).json({ error: 'invalid_client', error_description: 'Authorization failed' });
       }
 
       // Validate PKCE (S256 mandatory when challenge was provided)
       if (authCode.codeChallenge) {
         if (!code_verifier) {
+          trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'pkce_failed', grant_type: 'authorization_code' }, req);
           return res.status(400).json({ error: 'invalid_request', error_description: 'code_verifier is required' });
         }
         if (!validatePKCE(authCode.codeChallenge, code_verifier, authCode.codeChallengeMethod)) {
+          trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'pkce_failed', grant_type: 'authorization_code' }, req);
           return res.status(400).json({ error: 'invalid_grant', error_description: 'Invalid code_verifier' });
         }
       }
@@ -555,6 +601,12 @@ router.post('/oauth/token', tokenLimiter, async (req: Request, res: Response) =>
 
       logger.info({ clientId: authCode.clientId, agentId: authCode.agentId }, 'Access token issued');
 
+      trackServerEvent(authCode.agentId, 'mcp_token_issued', {
+        client_id: authCode.clientId,
+        grant_type: 'authorization_code',
+        has_pkce: !!authCode.codeChallenge,
+      }, req);
+
       return res.json({
         access_token: accessToken,
         token_type: 'Bearer',
@@ -572,6 +624,7 @@ router.post('/oauth/token', tokenLimiter, async (req: Request, res: Response) =>
       const tokenRecord = refreshTokens.get(refresh_token);
       if (!tokenRecord || tokenRecord.expiresAt.getTime() < Date.now()) {
         if (tokenRecord) refreshTokens.delete(refresh_token);
+        trackServerEvent('anonymous', 'mcp_token_failed', { reason: 'invalid_refresh_token', grant_type: 'refresh_token' }, req);
         return res.status(400).json({ error: 'invalid_grant', error_description: 'Refresh token expired or invalid' });
       }
 
@@ -601,6 +654,10 @@ router.post('/oauth/token', tokenLimiter, async (req: Request, res: Response) =>
 
       logger.info({ clientId: tokenRecord.clientId, agentId: tokenRecord.agentId }, 'Token refreshed');
 
+      trackServerEvent(tokenRecord.agentId, 'mcp_token_refreshed', {
+        client_id: tokenRecord.clientId,
+      }, req);
+
       return res.json({
         access_token: accessToken,
         token_type: 'Bearer',
@@ -628,10 +685,17 @@ router.post('/oauth/revoke', revokeLimiter, (_req: Request, res: Response) => {
     }
 
     // Try to revoke as refresh token
+    let clientId: string | undefined;
     if (refreshTokens.has(token)) {
+      const tokenRecord = refreshTokens.get(token);
+      clientId = tokenRecord?.clientId;
       refreshTokens.delete(token);
       logger.info({ token: token.substring(0, 8) }, 'Refresh token revoked');
     }
+
+    trackServerEvent('anonymous', 'mcp_token_revoked', {
+      client_id: clientId,
+    }, _req);
 
     // RFC 7009: always return 200 even if token not found
     return res.status(200).send('');

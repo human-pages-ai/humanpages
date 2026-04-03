@@ -14,6 +14,7 @@
  */
 
 import { logger } from './logger.js';
+import { trackServerEvent } from './posthog.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -41,6 +42,16 @@ export interface McpToolDefinition {
   description: string;
   inputSchema: Record<string, unknown>;
   annotations?: McpToolAnnotations;
+}
+
+/** Session context passed from mcp-remote for funnel tracking */
+export interface McpToolContext {
+  sessionId: string;
+  agentId: string;
+  platform?: string;
+  searchQueries: { skill?: string; location?: string; resultCount?: number; timestamp: Date }[];
+  viewedHumanIds: string[];
+  jobsCreated: string[];
 }
 
 export const MCP_TOOLS: Record<string, McpToolDefinition> = {
@@ -375,11 +386,13 @@ export function minimizeResponse(data: unknown): unknown {
  * @param toolName - one of the keys in MCP_TOOLS
  * @param args     - tool arguments from the client
  * @param agentApiKey - resolved API key for X-Agent-Key header
+ * @param context  - optional session context for funnel tracking
  */
 export async function executeMcpTool(
   toolName: string,
   args: Record<string, unknown>,
   agentApiKey: string,
+  context?: McpToolContext,
 ): Promise<unknown> {
   const baseUrl = process.env.HUMAN_PAGES_API_URL || 'https://humanpages.ai';
 
@@ -433,7 +446,33 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const searchResult = minimizeResponse(await res.json()) as any;
+        const resultCount = Array.isArray(searchResult?.humans) ? searchResult.humans.length :
+                           Array.isArray(searchResult) ? searchResult.length : 0;
+
+        // Update session context for funnel tracking
+        if (context) {
+          context.searchQueries.push({
+            skill: args.skill ? String(args.skill) : undefined,
+            location: args.location ? String(args.location) : undefined,
+            resultCount,
+            timestamp: new Date(),
+          });
+        }
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_search_executed', {
+          session_id: context?.sessionId,
+          skill: args.skill ? String(args.skill) : undefined,
+          location: args.location ? String(args.location) : undefined,
+          result_count: resultCount,
+          has_filters: !!(args.timezone || args.min_capacity || args.response_time || args.work_type || args.min_experience || args.industry || args.equipment),
+          filters_used: Object.keys(args).filter(k => args[k] !== undefined && k !== 'skill' && k !== 'location'),
+          platform: context?.platform,
+          views_so_far: context?.viewedHumanIds.length || 0,
+          jobs_so_far: context?.jobsCreated.length || 0,
+        });
+
+        return searchResult;
       }
 
       case 'get_human': {
@@ -441,7 +480,26 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const profile = minimizeResponse(await res.json());
+
+        const humanId = String(args.id || '');
+        if (context && humanId) {
+          context.viewedHumanIds.push(humanId);
+        }
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_profile_viewed', {
+          session_id: context?.sessionId,
+          human_id: humanId,
+          is_authenticated: false,
+          view_type: 'public',
+          platform: context?.platform,
+          views_before_this: context?.viewedHumanIds.length ? context.viewedHumanIds.length - 1 : 0,
+          searches_before_this: context?.searchQueries.length || 0,
+          came_from_search: (context?.searchQueries.length || 0) > 0,
+          last_search_skill: context?.searchQueries[context.searchQueries.length - 1]?.skill,
+        });
+
+        return profile;
       }
 
       case 'get_human_profile': {
@@ -449,7 +507,26 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const profile = minimizeResponse(await res.json());
+
+        const humanId = String(args.id || '');
+        if (context && humanId && !context.viewedHumanIds.includes(humanId)) {
+          context.viewedHumanIds.push(humanId);
+        }
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_profile_viewed', {
+          session_id: context?.sessionId,
+          human_id: humanId,
+          is_authenticated: true,
+          view_type: 'full_profile',
+          platform: context?.platform,
+          unique_profiles_viewed: context?.viewedHumanIds.length || 0,
+          searches_before_this: context?.searchQueries.length || 0,
+          came_from_search: (context?.searchQueries.length || 0) > 0,
+          last_search_skill: context?.searchQueries[context.searchQueries.length - 1]?.skill,
+        });
+
+        return profile;
       }
 
       case 'register_agent': {
@@ -463,7 +540,15 @@ export async function executeMcpTool(
           }),
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const agentResult = minimizeResponse(await res.json());
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_agent_registered_via_tool', {
+          session_id: context?.sessionId,
+          agent_name: args.name ? String(args.name) : undefined,
+          platform: context?.platform,
+        });
+
+        return agentResult;
       }
 
       case 'get_agent': {
@@ -495,7 +580,34 @@ export async function executeMcpTool(
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const jobResult = minimizeResponse(await res.json()) as any;
+
+        const jobId = jobResult?.id || jobResult?.job?.id || '';
+        if (context && jobId) {
+          context.jobsCreated.push(jobId);
+        }
+
+        // Calculate time from first search to hire
+        const firstSearch = context?.searchQueries[0];
+        const timeFromFirstSearchMs = firstSearch ? Date.now() - firstSearch.timestamp.getTime() : null;
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_job_created', {
+          session_id: context?.sessionId,
+          job_id: jobId,
+          human_id: args.humanId ? String(args.humanId) : undefined,
+          price_usdc: args.priceUsdc || args.budget,
+          has_callback: !!(args.callbackUrl),
+          payment_mode: args.paymentMode ? String(args.paymentMode) : undefined,
+          platform: context?.platform,
+          // Full funnel context
+          searches_before_hire: context?.searchQueries.length || 0,
+          profiles_viewed_before_hire: context?.viewedHumanIds.length || 0,
+          time_from_first_search_ms: timeFromFirstSearchMs,
+          viewed_this_human_before: context?.viewedHumanIds.includes(String(args.humanId || '')) || false,
+          is_first_job_in_session: (context?.jobsCreated.length || 0) <= 1,
+        });
+
+        return jobResult;
       }
 
       case 'browse_listings': {
@@ -507,7 +619,17 @@ export async function executeMcpTool(
           headers: { 'X-Agent-Key': agentApiKey },
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const listings = minimizeResponse(await res.json());
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_listings_browsed', {
+          session_id: context?.sessionId,
+          limit: args.limit,
+          offset: args.offset,
+          category: args.category ? String(args.category) : undefined,
+          platform: context?.platform,
+        });
+
+        return listings;
       }
 
       case 'create_listing': {
@@ -522,10 +644,24 @@ export async function executeMcpTool(
           }),
         });
         if (!res.ok) throw new Error(`Upstream error`);
-        return minimizeResponse(await res.json());
+        const listingResult = minimizeResponse(await res.json());
+
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_listing_created', {
+          session_id: context?.sessionId,
+          title: args.title ? String(args.title) : undefined,
+          category: args.category ? String(args.category) : undefined,
+          price: args.price,
+          platform: context?.platform,
+        });
+
+        return listingResult;
       }
 
       case 'ping':
+        trackServerEvent(context?.agentId || 'anonymous', 'mcp_ping', {
+          session_id: context?.sessionId,
+          platform: context?.platform,
+        });
         return { status: 'ok' };
 
       default:
@@ -534,6 +670,12 @@ export async function executeMcpTool(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error({ error, tool: toolName }, 'MCP tool execution failed');
+    trackServerEvent(context?.agentId || 'anonymous', 'mcp_tool_execution_error', {
+      session_id: context?.sessionId,
+      tool: toolName,
+      error: errorMessage,
+      platform: context?.platform,
+    });
     return { error: errorMessage || 'Tool execution failed' };
   }
 }

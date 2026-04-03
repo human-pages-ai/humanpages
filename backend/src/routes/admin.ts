@@ -7,6 +7,7 @@ import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from
 import { prisma, identityVerifiedWhere } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendStaffApiKeyEmail, sendFeaturedInviteEmail } from '../lib/email.js';
+import { queryPostHog } from '../lib/posthog.js';
 import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
@@ -2894,6 +2895,233 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
   } catch (error) {
     logger.error({ err: error }, 'Admin solver requests error');
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ======================== MCP ANALYTICS ========================
+
+// GET /api/admin/mcp/funnel — Full MCP operator funnel analytics
+router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
+  try {
+    const range = Math.max(1, Math.min(90, parseInt(req.query.range as string) || 30));
+
+    const results = await Promise.allSettled([
+      // 1. Registration → Auth → Session funnel
+      queryPostHog(`
+        SELECT
+          countIf(event = 'mcp_client_registered') as registered,
+          countIf(event = 'mcp_auth_completed') as auth_completed,
+          countIf(event = 'mcp_auth_failed') as auth_failed,
+          countIf(event = 'mcp_session_started') as sessions_started,
+          countIf(event = 'mcp_session_initialized') as sessions_initialized,
+          countIf(event = 'mcp_tools_listed') as tools_listed,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_profile_viewed') as profile_views,
+          countIf(event = 'mcp_job_created') as jobs_created
+        FROM events
+        WHERE event IN ('mcp_client_registered', 'mcp_auth_completed', 'mcp_auth_failed',
+          'mcp_session_started', 'mcp_session_initialized', 'mcp_tools_listed',
+          'mcp_search_executed', 'mcp_profile_viewed', 'mcp_job_created')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 2. Full hiring funnel (distinct agents at each stage)
+      queryPostHog(`
+        SELECT
+          countDistinct(if(event = 'mcp_session_started', distinct_id, NULL)) as unique_sessions,
+          countDistinct(if(event = 'mcp_search_executed', distinct_id, NULL)) as unique_searchers,
+          countDistinct(if(event = 'mcp_profile_viewed', distinct_id, NULL)) as unique_viewers,
+          countDistinct(if(event = 'mcp_job_created', distinct_id, NULL)) as unique_hirers,
+          countDistinct(if(event = 'job_accepted', properties.agentId, NULL)) as unique_accepted,
+          countDistinct(if(event = 'job_completed', properties.agentId, NULL)) as unique_completed
+        FROM events
+        WHERE event IN ('mcp_session_started', 'mcp_search_executed', 'mcp_profile_viewed',
+          'mcp_job_created', 'job_accepted', 'job_completed')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 3. Platform distribution
+      queryPostHog(`
+        SELECT properties.platform as platform, count() as count
+        FROM events
+        WHERE event IN ('mcp_client_registered', 'mcp_session_initialized')
+          AND properties.platform IS NOT NULL AND properties.platform != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY platform
+        ORDER BY count DESC
+      `),
+
+      // 4. Tool usage breakdown
+      queryPostHog(`
+        SELECT properties.tool_name as tool, count() as calls,
+          countDistinct(distinct_id) as unique_agents,
+          avg(properties.latency_ms) as avg_latency_ms
+        FROM events
+        WHERE event = 'mcp_tool_called'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY tool
+        ORDER BY calls DESC
+      `),
+
+      // 5. Tool error rates
+      queryPostHog(`
+        SELECT properties.tool_name as tool,
+          countIf(event = 'mcp_tool_called') as calls,
+          countIf(event = 'mcp_tool_error') as errors
+        FROM events
+        WHERE event IN ('mcp_tool_called', 'mcp_tool_error')
+          AND timestamp > now() - interval ${range} day
+        GROUP BY tool
+        ORDER BY errors DESC
+      `),
+
+      // 6. Daily activity trend
+      queryPostHog(`
+        SELECT toDate(timestamp) as day,
+          countIf(event = 'mcp_session_started') as sessions,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_profile_viewed') as views,
+          countIf(event = 'mcp_job_created') as hires,
+          countIf(event = 'mcp_tool_called') as tool_calls
+        FROM events
+        WHERE event IN ('mcp_session_started', 'mcp_search_executed', 'mcp_profile_viewed',
+          'mcp_job_created', 'mcp_tool_called')
+          AND timestamp > now() - interval ${range} day
+        GROUP BY day
+        ORDER BY day
+      `),
+
+      // 7. Session end funnel stages (where agents drop off)
+      queryPostHog(`
+        SELECT properties.funnel_stage as stage, count() as count,
+          avg(properties.duration_ms) as avg_duration_ms,
+          avg(properties.tool_calls) as avg_tool_calls,
+          avg(properties.searches) as avg_searches,
+          avg(properties.profiles_viewed) as avg_profiles_viewed
+        FROM events
+        WHERE event = 'mcp_session_ended'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY stage
+        ORDER BY count DESC
+      `),
+
+      // 8. Auth success/failure breakdown
+      queryPostHog(`
+        SELECT
+          countIf(event = 'mcp_auth_completed') as auth_success,
+          countIf(event = 'mcp_auth_failed') as auth_failed,
+          countIf(event = 'mcp_token_issued') as tokens_issued,
+          countIf(event = 'mcp_token_refreshed') as tokens_refreshed,
+          countIf(event = 'mcp_token_failed') as tokens_failed,
+          countIf(event = 'mcp_token_revoked') as tokens_revoked
+        FROM events
+        WHERE event IN ('mcp_auth_completed', 'mcp_auth_failed', 'mcp_token_issued',
+          'mcp_token_refreshed', 'mcp_token_failed', 'mcp_token_revoked')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 9. Job acceptance rates (human response)
+      queryPostHog(`
+        SELECT
+          countIf(event = 'job_offer_sent') as offers_sent,
+          countIf(event = 'job_accepted') as accepted,
+          countIf(event = 'job_rejected') as rejected,
+          countIf(event = 'job_completed') as completed,
+          avg(if(event IN ('job_accepted', 'job_rejected'), properties.time_to_response_ms, NULL)) as avg_response_time_ms
+        FROM events
+        WHERE event IN ('job_offer_sent', 'job_accepted', 'job_rejected', 'job_completed')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 10. Payment flow
+      queryPostHog(`
+        SELECT
+          countIf(event = 'payment_initiated') as initiated,
+          countIf(event = 'payment_received') as received,
+          countIf(event = 'payment_failed') as failed,
+          countIf(event = 'payment_confirmed_offchain') as confirmed_offchain,
+          countIf(event = 'x402_payment_received') as x402_payments
+        FROM events
+        WHERE event IN ('payment_initiated', 'payment_received', 'payment_failed',
+          'payment_confirmed_offchain', 'x402_payment_received')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 11. Search patterns (top skills & locations)
+      queryPostHog(`
+        SELECT properties.skill as skill, properties.location as location, count() as count,
+          avg(properties.result_count) as avg_results
+        FROM events
+        WHERE event = 'mcp_search_executed'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY skill, location
+        ORDER BY count DESC
+        LIMIT 20
+      `),
+
+      // 12. Agent retention (repeat sessions per agent)
+      queryPostHog(`
+        SELECT distinct_id as agent_id,
+          count() as session_count,
+          min(timestamp) as first_seen,
+          max(timestamp) as last_seen,
+          dateDiff('day', min(timestamp), max(timestamp)) as active_days
+        FROM events
+        WHERE event = 'mcp_session_started'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY agent_id
+        ORDER BY session_count DESC
+        LIMIT 50
+      `),
+
+      // 13. Search-to-hire conversion (from tool context)
+      queryPostHog(`
+        SELECT
+          avg(properties.searches_before_hire) as avg_searches_before_hire,
+          avg(properties.profiles_viewed_before_hire) as avg_profiles_before_hire,
+          avg(properties.time_from_first_search_ms) as avg_time_to_hire_ms,
+          countIf(properties.viewed_this_human_before = 'true') as hired_after_viewing,
+          countIf(properties.is_first_job_in_session = 'true') as first_time_hirers
+        FROM events
+        WHERE event = 'mcp_job_created'
+          AND timestamp > now() - interval ${range} day
+      `),
+    ]);
+
+    // Extract results safely
+    const extracted = results.map((r) => {
+      if (r.status === 'fulfilled') {
+        const data = r.value;
+        return Array.isArray(data) ? data : [data];
+      }
+      logger.warn({ reason: r.reason }, 'PostHog MCP funnel query failed');
+      return [];
+    });
+
+    const [overallFunnel, uniqueAgentFunnel, platformDist, toolUsage, toolErrors,
+      dailyActivity, sessionStages, authStats, jobAcceptance, paymentFlow,
+      searchPatterns, agentRetention, searchToHire] = extracted;
+
+    res.json({
+      overallFunnel: overallFunnel[0] || {},
+      uniqueAgentFunnel: uniqueAgentFunnel[0] || {},
+      platformDistribution: platformDist,
+      toolUsage,
+      toolErrors,
+      dailyActivity,
+      sessionDropoff: sessionStages,
+      authStats: authStats[0] || {},
+      jobAcceptance: jobAcceptance[0] || {},
+      paymentFlow: paymentFlow[0] || {},
+      searchPatterns,
+      agentRetention,
+      searchToHire: searchToHire[0] || {},
+      range,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP funnel analytics error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });
 

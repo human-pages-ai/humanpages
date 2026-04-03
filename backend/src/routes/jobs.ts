@@ -972,7 +972,9 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
       jobId: updated.id,
       agentId: updated.registeredAgentId || updated.agentId,
       responseTimeMinutes: updated.responseTimeMinutes,
+      time_to_response_ms: Date.now() - new Date(updated.createdAt).getTime(),
       priceUsdc: updated.priceUsdc?.toString(),
+      category: (updated as any).category,
     }, req);
 
     res.json({
@@ -1029,6 +1031,9 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
       jobId: updated.id,
       agentId: updated.registeredAgentId || updated.agentId,
       responseTimeMinutes: updated.responseTimeMinutes,
+      time_to_response_ms: Date.now() - new Date(updated.createdAt).getTime(),
+      priceUsdc: updated.priceUsdc?.toString(),
+      category: (updated as any).category,
     }, req);
 
     res.json({
@@ -1311,6 +1316,8 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
       jobId: updated.id,
       agentId: updated.registeredAgentId || updated.agentId,
       completedBy: 'human',
+      time_to_complete_ms: Date.now() - new Date(updated.createdAt).getTime(),
+      priceUsdc: updated.priceUsdc?.toString(),
     }, req);
 
     res.json({

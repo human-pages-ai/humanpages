@@ -1417,3 +1417,40 @@ export interface FeatureMetricsResponse {
   fetchedAt: string;
   metrics: FeatureLiveMetric[];
 }
+
+export interface McpFunnelAnalyticsResponse {
+  overallFunnel: {
+    registered: number; auth_completed: number; auth_failed: number;
+    sessions_started: number; sessions_initialized: number; tools_listed: number;
+    searches: number; profile_views: number; jobs_created: number;
+  };
+  uniqueAgentFunnel: {
+    unique_sessions: number; unique_searchers: number; unique_viewers: number;
+    unique_hirers: number; unique_accepted: number; unique_completed: number;
+  };
+  platformDistribution: { platform: string; count: number }[];
+  toolUsage: { tool: string; calls: number; unique_agents: number; avg_latency_ms: number }[];
+  toolErrors: { tool: string; calls: number; errors: number }[];
+  dailyActivity: { day: string; sessions: number; searches: number; views: number; hires: number; tool_calls: number }[];
+  sessionDropoff: { stage: string; count: number; avg_duration_ms: number; avg_tool_calls: number; avg_searches: number; avg_profiles_viewed: number }[];
+  authStats: {
+    auth_success: number; auth_failed: number; tokens_issued: number;
+    tokens_refreshed: number; tokens_failed: number; tokens_revoked: number;
+  };
+  jobAcceptance: {
+    offers_sent: number; accepted: number; rejected: number;
+    completed: number; avg_response_time_ms: number;
+  };
+  paymentFlow: {
+    initiated: number; received: number; failed: number;
+    confirmed_offchain: number; x402_payments: number;
+  };
+  searchPatterns: { skill: string; location: string; count: number; avg_results: number }[];
+  agentRetention: { agent_id: string; session_count: number; first_seen: string; last_seen: string; active_days: number }[];
+  searchToHire: {
+    avg_searches_before_hire: number; avg_profiles_before_hire: number;
+    avg_time_to_hire_ms: number; hired_after_viewing: number; first_time_hirers: number;
+  };
+  range: number;
+  timestamp: string;
+}

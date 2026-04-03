@@ -101,6 +101,7 @@ const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffProductivity = lazy(() => import('./pages/admin/StaffProductivity'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
 const TaskCentral = lazy(() => import('./pages/admin/TaskCentral'));
+const AdminMcpFunnel = lazy(() => import('./pages/admin/AdminMcpFunnel'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -420,6 +421,7 @@ function AppRoutes() {
         <Route path="marketing-ops" element={<AdminMarketingOps />} />
         <Route path="solver" element={<AdminSolver />} />
         <Route path="arbitrators" element={<AdminArbitrators />} />
+        <Route path="mcp-funnel" element={<AdminMcpFunnel />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

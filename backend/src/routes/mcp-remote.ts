@@ -28,12 +28,13 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
 import { logger } from '../lib/logger.js';
-import { MCP_TOOLS, executeMcpTool } from '../lib/mcp-tools.js';
+import { MCP_TOOLS, executeMcpTool, type McpToolContext } from '../lib/mcp-tools.js';
 import {
   extractBearerToken,
   verifyMcpAccessToken,
   getAgentApiKey,
 } from '../lib/mcp-auth.js';
+import { trackServerEvent } from '../lib/posthog.js';
 
 const router = Router();
 
@@ -68,6 +69,15 @@ interface McpSession {
   createdAt: Date;
   lastActivityAt: Date;
   agentId: string;
+  // Session-level funnel tracking
+  clientInfo?: { name?: string; version?: string; platform?: string };
+  toolCallSequence: string[];
+  toolCallCount: number;
+  searchQueries: { skill?: string; location?: string; resultCount?: number; timestamp: Date }[];
+  viewedHumanIds: string[];
+  jobsCreated: string[];
+  lastToolCalledAt?: Date;
+  errorsEncountered: number;
 }
 
 const activeSessions = new Map<string, McpSession>();
@@ -77,6 +87,22 @@ setInterval(() => {
   let cleaned = 0;
   for (const [sessionId, session] of activeSessions.entries()) {
     if (now - session.lastActivityAt.getTime() > SESSION_TIMEOUT) {
+      const duration = now - session.createdAt.getTime();
+      trackServerEvent(session.agentId, 'mcp_session_ended', {
+        session_id: sessionId,
+        duration_ms: duration,
+        reason: 'timeout',
+        tool_calls: session.toolCallCount,
+        tools_used: [...new Set(session.toolCallSequence)],
+        searches: session.searchQueries.length,
+        profiles_viewed: session.viewedHumanIds.length,
+        jobs_created: session.jobsCreated.length,
+        errors: session.errorsEncountered,
+        funnel_stage: session.jobsCreated.length > 0 ? 'hired' :
+          session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
+          session.searchQueries.length > 0 ? 'searched' :
+          session.toolCallCount > 0 ? 'used_tools' : 'idle',
+      });
       activeSessions.delete(sessionId);
       cleaned++;
     }
@@ -107,7 +133,20 @@ function createSession(agentId: string): string {
 
   const sessionId = `session_${crypto.randomBytes(16).toString('hex')}`;
   const now = new Date();
-  activeSessions.set(sessionId, { createdAt: now, lastActivityAt: now, agentId });
+  activeSessions.set(sessionId, {
+    createdAt: now,
+    lastActivityAt: now,
+    agentId,
+    toolCallSequence: [],
+    toolCallCount: 0,
+    searchQueries: [],
+    viewedHumanIds: [],
+    jobsCreated: [],
+    errorsEncountered: 0,
+  });
+  trackServerEvent(agentId, 'mcp_session_started', {
+    session_id: sessionId,
+  });
   logger.info({ sessionId, agentId }, 'Created MCP session');
   return sessionId;
 }
@@ -175,6 +214,31 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
           },
           serverInfo: { name: 'Human Pages MCP Server', version: '1.0.0' },
         };
+        // Track client info from initialization params
+        if (params?.clientInfo) {
+          const session = activeSessions.get(sessionInfo.sessionId);
+          if (session) {
+            const ci = params.clientInfo as Record<string, unknown>;
+            const name = String(ci.name || '').toLowerCase();
+            let platform = 'custom';
+            if (name.includes('chatgpt') || name.includes('openai') || name.includes('gpt')) platform = 'chatgpt';
+            else if (name.includes('claude') || name.includes('anthropic')) platform = 'claude';
+            else if (name.includes('gemini') || name.includes('google')) platform = 'gemini';
+            else if (name.includes('cursor')) platform = 'cursor';
+            else if (name.includes('copilot') || name.includes('github')) platform = 'copilot';
+            session.clientInfo = {
+              name: String(ci.name || ''),
+              version: String(ci.version || ''),
+              platform,
+            };
+            trackServerEvent(sessionInfo.agentId, 'mcp_session_initialized', {
+              session_id: sessionInfo.sessionId,
+              client_name: session.clientInfo.name,
+              client_version: session.clientInfo.version,
+              platform,
+            });
+          }
+        }
         break;
       }
 
@@ -184,6 +248,10 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
 
       case 'tools/list': {
         result = { tools: Object.values(MCP_TOOLS) };
+        trackServerEvent(sessionInfo.agentId, 'mcp_tools_listed', {
+          session_id: sessionInfo.sessionId,
+          tool_count: Object.keys(MCP_TOOLS).length,
+        });
         break;
       }
 
@@ -211,11 +279,60 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
         }
 
         try {
-          const toolResult = await executeMcpTool(name, toolArgs || {}, agentApiKey);
+          const session = activeSessions.get(sessionInfo.sessionId);
+          const previousTool = session?.toolCallSequence[session.toolCallSequence.length - 1] || null;
+          const sequenceNumber = (session?.toolCallCount || 0) + 1;
+          const startTime = Date.now();
+
+          // Build context for tool-level funnel tracking
+          const toolContext: McpToolContext | undefined = session ? {
+            sessionId: sessionInfo.sessionId,
+            agentId: sessionInfo.agentId,
+            platform: session.clientInfo?.platform,
+            searchQueries: session.searchQueries,
+            viewedHumanIds: session.viewedHumanIds,
+            jobsCreated: session.jobsCreated,
+          } : undefined;
+
+          const toolResult = await executeMcpTool(name, toolArgs || {}, agentApiKey, toolContext);
+
+          const latencyMs = Date.now() - startTime;
+
+          // Update session funnel state (context arrays are shared references, already updated by tool)
+          if (session) {
+            session.toolCallSequence.push(name);
+            session.toolCallCount++;
+            session.lastToolCalledAt = new Date();
+          }
+
+          // Track every tool call with sequence context
+          trackServerEvent(sessionInfo.agentId, 'mcp_tool_called', {
+            session_id: sessionInfo.sessionId,
+            tool_name: name,
+            latency_ms: latencyMs,
+            sequence_number: sequenceNumber,
+            previous_tool: previousTool,
+            platform: session?.clientInfo?.platform || 'unknown',
+            // Funnel context at time of call
+            searches_so_far: session?.searchQueries.length || 0,
+            profiles_viewed_so_far: session?.viewedHumanIds.length || 0,
+            jobs_created_so_far: session?.jobsCreated.length || 0,
+          });
+
           result = {
             content: [{ type: 'text', text: JSON.stringify(toolResult) }],
           };
         } catch {
+          const session = activeSessions.get(sessionInfo.sessionId);
+          if (session) session.errorsEncountered++;
+
+          trackServerEvent(sessionInfo.agentId, 'mcp_tool_error', {
+            session_id: sessionInfo.sessionId,
+            tool_name: name,
+            sequence_number: (session?.toolCallCount || 0) + 1,
+            platform: session?.clientInfo?.platform || 'unknown',
+          });
+
           return res.status(500).json({
             jsonrpc: '2.0',
             error: { code: -32603, message: 'Tool execution failed' },
@@ -279,6 +396,9 @@ router.get('/mcp', async (req: Request, res: Response) => {
     });
 
     logger.info({ sessionId: sessionInfo.sessionId }, 'MCP SSE stream opened');
+    trackServerEvent(sessionInfo.agentId, 'mcp_sse_connected', {
+      session_id: sessionInfo.sessionId,
+    });
   } catch (error) {
     logger.error({ error }, 'MCP GET error');
     res.status(500).json({ error: 'Internal server error' });
@@ -319,6 +439,23 @@ router.delete('/mcp', deleteRateLimiter, async (req: Request, res: Response) => 
         return res.status(403).json({ error: 'Forbidden' });
       }
     }
+
+    const duration = Date.now() - session.createdAt.getTime();
+    trackServerEvent(session.agentId, 'mcp_session_ended', {
+      session_id: sessionId,
+      duration_ms: duration,
+      reason: 'client_terminated',
+      tool_calls: session.toolCallCount,
+      tools_used: [...new Set(session.toolCallSequence)],
+      searches: session.searchQueries.length,
+      profiles_viewed: session.viewedHumanIds.length,
+      jobs_created: session.jobsCreated.length,
+      errors: session.errorsEncountered,
+      funnel_stage: session.jobsCreated.length > 0 ? 'hired' :
+        session.viewedHumanIds.length > 0 ? 'viewed_profiles' :
+        session.searchQueries.length > 0 ? 'searched' :
+        session.toolCallCount > 0 ? 'used_tools' : 'idle',
+    });
 
     activeSessions.delete(sessionId);
     logger.info({ sessionId }, 'MCP session terminated');
