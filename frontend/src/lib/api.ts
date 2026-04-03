@@ -795,6 +795,20 @@ export const api = {
   getTaskSummary: () =>
     request<TaskSummary>('/admin/tasks/summary'),
 
+  // Board (task tracker)
+  getBoardTasks: (params: { status?: string; priority?: string; assignee?: string; label?: string; search?: string; page?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined) query.set(k, String(v)); });
+    const qs = query.toString();
+    return request<import('../types/admin').BoardTaskListResponse>(`/admin/board${qs ? `?${qs}` : ''}`);
+  },
+  createBoardTask: (data: { title: string; description?: string; status?: string; priority?: string; labels?: string[]; assignee?: string }) =>
+    request<import('../types/admin').BoardTask>('/admin/board', { method: 'POST', body: JSON.stringify(data) }),
+  updateBoardTask: (id: string, data: Partial<{ title: string; description: string; status: string; priority: string; labels: string[]; assignee: string; sortOrder: number }>) =>
+    request<import('../types/admin').BoardTask>(`/admin/board/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteBoardTask: (id: string) =>
+    request<{ success: boolean }>(`/admin/board/${id}`, { method: 'DELETE' }),
+
   // Career Applications
   submitCareerApplication: (data: {
     positionId: string;

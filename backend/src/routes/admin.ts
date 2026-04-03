@@ -22,6 +22,7 @@ import mktopsRoutes from './mktops.js';
 import videoBatchRoutes from './videoBatches.js';
 import watchdogRoutes from './watchdog.js';
 import featureRoutes from './features.js';
+import boardRoutes from './board.js';
 import { STAFF_CAPABILITIES, isValidCapability, getEffectiveCapabilities } from '../lib/capabilities.js';
 import { getProfilePhotoSignedUrl } from '../lib/storage.js';
 import { normalizeCountry, countryFromLocation, continentFromCountry } from '../lib/countries.js';
@@ -135,6 +136,9 @@ router.use('/posting', postingRoutes);
 
 // ─── Time tracking routes (staff + admin) ───
 router.use('/time-tracking', timeTrackingRoutes);
+
+// ─── Board / task tracker routes (admin only, API key) ───
+router.use('/board', boardRoutes);
 
 // GET /api/admin/me — Confirm role (used by frontend to gate UI)
 router.get('/me', authenticateToken, requireStaffOrAdmin, async (req: AuthRequest, res) => {

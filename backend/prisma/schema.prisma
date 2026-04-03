@@ -1932,3 +1932,23 @@ model SolverTelemetry {
   @@index([model])
   @@index([createdAt])
 }
+
+// Admin task board — replaces Linear
+model AdminTask {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  status      String   @default("TODO")    // TODO, IN_PROGRESS, DONE, CANCELLED
+  priority    String   @default("P2")      // P0, P0.5, P1, P1.5, P2, P2.5, P3
+  labels      String[] @default([])        // e.g. ["Marketing", "Engineering"]
+  assignee    String?                      // free-text name
+  sortOrder   Int      @default(0)         // for manual ordering within columns
+  linearId    String?  @unique             // original Linear issue identifier
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([assignee])
+  @@index([createdAt])
+}
