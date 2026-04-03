@@ -58,7 +58,7 @@ export async function requireAdmin(req: AuthRequest, res: Response, next: NextFu
 
     const effectiveRole = getEffectiveRole(user.email, user.role);
     if (effectiveRole !== 'ADMIN') {
-      logger.warn({ userId: req.userId, email: user.email }, 'Non-admin attempted admin access');
+      logger.warn({ userId: req.userId }, 'Non-admin attempted admin access');
       return res.status(403).json({ error: 'Admin access required' });
     }
 
@@ -156,7 +156,7 @@ export async function requireStaffOrAdmin(req: AuthRequest, res: Response, next:
 
     const effectiveRole = getEffectiveRole(user.email, user.role);
     if (effectiveRole !== 'ADMIN' && effectiveRole !== 'STAFF') {
-      logger.warn({ userId: req.userId, email: user.email }, 'Unauthorized staff/admin access attempt');
+      logger.warn({ userId: req.userId }, 'Unauthorized staff/admin access attempt');
       return res.status(403).json({ error: 'Staff or admin access required' });
     }
 

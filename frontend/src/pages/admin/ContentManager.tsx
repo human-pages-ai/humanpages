@@ -1094,7 +1094,15 @@ function RejectionReasonModal({
 
 // Simple markdown to HTML for preview (handles headers, bold, links, lists)
 function simpleMarkdown(md: string): string {
-  return md
+  // Escape HTML entities first to prevent XSS
+  const escaped = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  // Then apply markdown formatting on the escaped text
+  return escaped
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')

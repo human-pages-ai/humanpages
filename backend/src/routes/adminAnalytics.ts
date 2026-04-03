@@ -73,12 +73,15 @@ async function queryPostHogHogQL(
   }
 }
 
+// Whitelist allowed wizard names to prevent HogQL injection
+const ALLOWED_WIZARDS = ['onboarding', 'kyc', 'payment', 'profile', 'verification'];
+
 function parseIntervalToSQLInterval(range: string): string {
   // Convert '30d' to '30 day', '7d' to '7 day', etc.
   const match = range.match(/^(\d+)([dwmy])$/);
   if (!match) return '30 day'; // default to 30 days
 
-  const num = match[1];
+  const num = Math.min(parseInt(match[1], 10), 365); // Cap at 365
   const unit = match[2];
   const unitMap: Record<string, string> = {
     d: 'day',
@@ -101,6 +104,16 @@ router.get(
       const { range = '30d', wizardName = 'onboarding' } = req.query;
       const rangeStr = String(range);
       const wizardStr = String(wizardName);
+
+      // Validate wizard name to prevent HogQL injection
+      if (!ALLOWED_WIZARDS.includes(wizardStr) && !/^[a-zA-Z0-9_-]{1,50}$/.test(wizardStr)) {
+        return res.status(400).json({ error: 'Invalid wizard name' });
+      }
+
+      // Validate range format
+      if (!/^\d{1,3}[dwmy]$/.test(rangeStr)) {
+        return res.status(400).json({ error: 'Invalid range format. Use e.g. 30d, 7d, 1m' });
+      }
 
       const config = getPostHogConfig();
 

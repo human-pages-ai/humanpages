@@ -1185,7 +1185,7 @@ router.post('/people/:id/featured-invite', async (req: AuthRequest, res) => {
 });
 
 // GET /api/admin/people/export — CSV export with same filters
-router.get('/people/export', async (req: AuthRequest, res) => {
+router.get('/people/export', adminExportLimiter, async (req: AuthRequest, res) => {
   try {
     const search = (req.query.search as string) || '';
     const country = (req.query.country as string) || '';
@@ -1638,7 +1638,7 @@ router.patch('/users/:id', async (req: AuthRequest, res) => {
 });
 
 // GET /api/admin/agents/export — Export agents as CSV
-router.get('/agents/export', async (req: AuthRequest, res) => {
+router.get('/agents/export', adminExportLimiter, async (req: AuthRequest, res) => {
   try {
     const agents = await prisma.agent.findMany({
       select: {
@@ -2897,6 +2897,18 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
     logger.error({ err: error }, 'Admin solver requests error');
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// ======================== EXPORT RATE LIMITING ========================
+
+const adminExportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 exports per hour
+  keyGenerator: (req: any) => req.headers['x-admin-api-key'] || req.userId || req.ip || 'unknown',
+  message: { error: 'Export rate limit exceeded. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
 });
 
 // ======================== MCP ANALYTICS ========================
