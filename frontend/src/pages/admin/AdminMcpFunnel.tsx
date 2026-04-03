@@ -392,6 +392,179 @@ export default function AdminMcpFunnel() {
         </div>
       </div>
 
+      {/* Chart 13: Per-Platform Conversion Funnel */}
+      {data.platformFunnel && data.platformFunnel.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Conversion by Platform</h2>
+          <p className="text-sm text-gray-600 mb-4">Which AI platform converts best — session to hire</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data.platformFunnel}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="platform" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="sessions" fill="#2563eb" name="Sessions" />
+              <Bar dataKey="searches" fill="#10b981" name="Searches" />
+              <Bar dataKey="profile_views" fill="#f59e0b" name="Profile Views" />
+              <Bar dataKey="jobs_created" fill="#ef4444" name="Jobs Created" />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="mt-3 overflow-x-auto">
+            <table className="text-sm w-full">
+              <thead>
+                <tr className="text-left text-gray-600 border-b">
+                  <th className="p-2">Platform</th><th className="p-2">Sessions</th><th className="p-2">Searches</th>
+                  <th className="p-2">Views</th><th className="p-2">Hires</th><th className="p-2">Search→Hire</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.platformFunnel.map((p, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="p-2 font-medium">{p.platform}</td>
+                    <td className="p-2">{p.sessions}</td>
+                    <td className="p-2">{p.searches}</td>
+                    <td className="p-2">{p.profile_views}</td>
+                    <td className="p-2 font-bold">{p.jobs_created}</td>
+                    <td className="p-2 text-blue-600 font-bold">{pct(p.jobs_created, p.searches)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Chart 14: Tool Call Transitions */}
+      {data.toolTransitions && data.toolTransitions.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Tool Call Flow</h2>
+          <p className="text-sm text-gray-600 mb-4">Most common tool→tool transitions — reveals the &quot;happy path&quot;</p>
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={data.toolTransitions.slice(0, 15)} layout="vertical" margin={{ left: 200 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis dataKey={(d: any) => `${d.from_tool} → ${d.to_tool}`} type="category" width={190} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="transitions" fill="#8b5cf6" name="Transitions" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Chart 15: Skill-to-Hire Conversion */}
+      {data.skillConversion && data.skillConversion.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Skill Search → Hire Conversion</h2>
+          <p className="text-sm text-gray-600 mb-4">Which searched skills actually lead to job creation</p>
+          <div className="overflow-x-auto">
+            <table className="text-sm w-full">
+              <thead>
+                <tr className="text-left text-gray-600 border-b">
+                  <th className="p-2">#</th><th className="p-2">Skill</th><th className="p-2">Searches</th>
+                  <th className="p-2">Hires</th><th className="p-2">Conversion</th><th className="p-2">Avg Results</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.skillConversion.map((s, i) => (
+                  <tr key={i} className="border-b hover:bg-gray-50">
+                    <td className="p-2 text-gray-400">{i + 1}</td>
+                    <td className="p-2 font-medium">{s.skill}</td>
+                    <td className="p-2">{s.searches}</td>
+                    <td className="p-2 font-bold">{s.hires}</td>
+                    <td className={`p-2 font-bold ${s.hires > 0 ? 'text-green-600' : 'text-gray-400'}`}>{pct(s.hires, s.searches)}</td>
+                    <td className="p-2">{s.avg_results?.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Chart 16: Tool Latency Percentiles */}
+      {data.toolLatency && data.toolLatency.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Tool Latency Distribution</h2>
+          <p className="text-sm text-gray-600 mb-4">p50, p95, p99 latency per tool — spot slow tools and outliers</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data.toolLatency} layout="vertical" margin={{ left: 140 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" label={{ value: 'ms', position: 'insideBottomRight' }} />
+              <YAxis dataKey="tool" type="category" width={130} />
+              <Tooltip formatter={(val: any) => `${Number(val).toFixed(0)}ms`} />
+              <Legend />
+              <Bar dataKey="p50_ms" fill="#10b981" name="p50" />
+              <Bar dataKey="p95_ms" fill="#f59e0b" name="p95" />
+              <Bar dataKey="p99_ms" fill="#ef4444" name="p99" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Chart 17: Full Job Lifecycle */}
+      {data.jobLifecycle && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Full Job Lifecycle</h2>
+          <p className="text-sm text-gray-600 mb-4">Every status transition from offer to completion</p>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={[
+              { name: 'Offers', value: data.jobLifecycle.offers, fill: '#2563eb' },
+              { name: 'Accepted', value: data.jobLifecycle.accepted, fill: '#10b981' },
+              { name: 'Rejected', value: data.jobLifecycle.rejected, fill: '#f59e0b' },
+              { name: 'Submissions', value: data.jobLifecycle.submissions, fill: '#06b6d4' },
+              { name: 'Revisions', value: data.jobLifecycle.revisions, fill: '#8b5cf6' },
+              { name: 'Completed', value: data.jobLifecycle.completed, fill: '#10b981' },
+              { name: 'Cancelled', value: data.jobLifecycle.cancelled, fill: '#ef4444' },
+              { name: 'Disputed', value: data.jobLifecycle.disputed, fill: '#dc2626' },
+              { name: 'Reviews', value: data.jobLifecycle.reviews, fill: '#84cc16' },
+              { name: 'Messages', value: data.jobLifecycle.messages, fill: '#64748b' },
+            ]}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value">
+                {[0,1,2,3,4,5,6,7,8,9].map(i => (
+                  <Cell key={i} fill={['#2563eb','#10b981','#f59e0b','#06b6d4','#8b5cf6','#10b981','#ef4444','#dc2626','#84cc16','#64748b'][i]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Chart 18: Stream & Payment Stats */}
+      {data.streamStats && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">Stream Payments & Off-Chain</h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <StatCard label="Streams Started" value={data.streamStats.started} />
+            <StatCard label="Streams Stopped" value={data.streamStats.stopped} />
+            <StatCard label="Payments Initiated" value={data.streamStats.payments_initiated} />
+            <StatCard label="Payments Received" value={data.streamStats.payments_received} color="text-green-600" />
+            <StatCard label="Off-Chain Claims" value={data.streamStats.offchain_claims} color="text-blue-600" />
+          </div>
+        </div>
+      )}
+
+      {/* Chart 19: Infrastructure Health */}
+      {data.infraHealth && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-2">MCP Infrastructure Health</h2>
+          <p className="text-sm text-gray-600 mb-4">Errors, rate limits, and edge cases in the MCP layer</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard label="Rate Limit Hits" value={data.infraHealth.rate_limits} color={data.infraHealth.rate_limits > 0 ? 'text-orange-600' : 'text-gray-900'} />
+            <StatCard label="Auth Rejections" value={data.infraHealth.auth_rejections} color={data.infraHealth.auth_rejections > 0 ? 'text-red-600' : 'text-gray-900'} />
+            <StatCard label="Unknown Methods" value={data.infraHealth.unknown_methods} color={data.infraHealth.unknown_methods > 0 ? 'text-orange-600' : 'text-gray-900'} />
+            <StatCard label="Tool Errors" value={data.infraHealth.tool_errors} color={data.infraHealth.tool_errors > 0 ? 'text-red-600' : 'text-gray-900'} />
+            <StatCard label="SSE Timeouts" value={data.infraHealth.sse_timeouts} />
+            <StatCard label="SSE Disconnects" value={data.infraHealth.sse_disconnects} />
+            <StatCard label="Discovery Hits" value={data.infraHealth.discovery_hits} color="text-blue-600" />
+          </div>
+        </div>
+      )}
+
       {/* Data Info */}
       <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600">
         <p>Last updated: {new Date(data.timestamp).toLocaleString()}</p>

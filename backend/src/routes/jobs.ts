@@ -1276,6 +1276,13 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
         },
       });
 
+      // Track work submission
+      trackServerEvent(req.userId!, 'work_submitted', {
+        jobId: updated.id,
+        agentId: updated.registeredAgentId || updated.agentId,
+        time_since_accepted_ms: updated.acceptedAt ? Date.now() - new Date(updated.acceptedAt).getTime() : null,
+      }, req);
+
       if (updated.callbackUrl) {
         fireWebhook(
           { ...updated, callbackUrl: updated.callbackUrl, callbackSecret: updated.callbackSecret },
@@ -1494,6 +1501,7 @@ router.patch('/:id/request-revision', authenticateEither, requireActiveIfAgent, 
       jobId: updated.id,
       agentId: updated.registeredAgentId || updated.agentId,
       humanId: updated.humanId,
+      time_since_submission_ms: updated.submittedAt ? Date.now() - new Date(updated.submittedAt).getTime() : null,
     }, req);
 
     res.json({
@@ -1649,6 +1657,7 @@ router.patch('/:id/confirm-payment', authenticateToken, requireEmailVerified, as
     trackServerEvent(job.humanId, 'payment_confirmed_offchain', {
       jobId: job.id,
       method: job.paymentClaimMethod,
+      priceUsdc: job.priceUsdc?.toString(),
     }, req);
 
     res.json({
@@ -1705,6 +1714,7 @@ router.patch('/:id/cancel', authenticateEither, requireActiveIfAgent, async (req
     }
 
     const cancelledBy = isHuman ? 'HUMAN' : 'AGENT';
+    const previousStatus = job.status;
 
     const updated = await prisma.job.update({
       where: { id: job.id },
@@ -1716,6 +1726,16 @@ router.patch('/:id/cancel', authenticateEither, requireActiveIfAgent, async (req
         lastActionBy: cancelledBy,
       },
     });
+
+    // Track job cancellation
+    trackServerEvent(req.senderId!, 'job_cancelled', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      cancelled_by: cancelledBy === 'HUMAN' ? 'human' : 'agent',
+      time_since_creation_ms: Date.now() - new Date(updated.createdAt).getTime(),
+      had_payment: !!(updated as any).paymentTxHash,
+      status_before: previousStatus,
+    }, req);
 
     // Fire webhook
     if (job.callbackUrl) {
@@ -1792,6 +1812,16 @@ router.patch('/:id/dispute', authenticateEither, requireActiveIfAgent, async (re
         lastActionBy: disputedBy,
       },
     });
+
+    // Track job dispute
+    trackServerEvent(req.senderId!, 'job_disputed', {
+      jobId: updated.id,
+      agentId: updated.registeredAgentId || updated.agentId,
+      disputed_by: disputedBy === 'HUMAN' ? 'human' : 'agent',
+      time_since_creation_ms: Date.now() - new Date(updated.createdAt).getTime(),
+      priceUsdc: updated.priceUsdc?.toString(),
+      dispute_type: disputeType,
+    }, req);
 
     // Fire webhook
     if (job.callbackUrl) {
@@ -1989,10 +2019,13 @@ router.post('/:id/messages', messageRateLimiter, authenticateEither, requireActi
     });
 
     // Track message sent
+    const direction = req.senderType === 'agent' ? 'agent→human' : 'human→agent';
     trackServerEvent(req.senderId!, 'message_sent', {
       jobId: job.id,
       senderType: req.senderType,
       messageLength: data.content.length,
+      agentId: job.registeredAgentId || job.agentId,
+      direction,
     }, req);
 
     // If sender is human, fire job.message webhook so agent can auto-reply
@@ -2257,9 +2290,9 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
       trackServerEvent(agent.id, 'stream_started', {
         jobId: updated.id,
         humanId: updated.humanId,
-        method: 'SUPERFLUID',
-        network: networkLower,
-        rateUsdc: job.streamRateUsdc?.toString(),
+        streamMethod: 'SUPERFLUID',
+        streamRateUsdc: job.streamRateUsdc?.toString(),
+        streamNetwork: networkLower,
       }, req);
 
       return res.json({
@@ -2330,9 +2363,10 @@ router.patch('/:id/start-stream', authenticateAgent, requireActiveAgent, async (
       trackServerEvent(agent.id, 'stream_started', {
         jobId: updated.id,
         humanId: updated.humanId,
-        method: 'MICRO_TRANSFER',
-        network: networkLower,
-        rateUsdc: job.streamRateUsdc?.toString(),
+        streamMethod: 'MICRO_TRANSFER',
+        streamRateUsdc: job.streamRateUsdc?.toString(),
+        streamNetwork: networkLower,
+        streamInterval: interval,
       }, req);
 
       return res.json({
@@ -2820,7 +2854,8 @@ router.patch('/:id/stop-stream', authenticateEither, requireActiveIfAgent, async
       humanId: job.humanId,
       agentId: job.registeredAgentId || job.agentId,
       stoppedBy: req.senderType,
-      totalPaid: job.streamTotalPaid?.toString(),
+      totalPaidUsdc: job.streamTotalPaid?.toString(),
+      duration_ms: job.streamStartedAt ? Date.now() - new Date(job.streamStartedAt).getTime() : null,
     }, req);
 
     res.json({

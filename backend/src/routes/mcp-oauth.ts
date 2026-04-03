@@ -60,7 +60,13 @@ const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 20,
-  message: { error: 'invalid_request', error_description: 'Rate limit exceeded' },
+  handler: (req: Request, res: Response) => {
+    trackServerEvent('anonymous', 'mcp_rate_limit_hit', {
+      endpoint: 'oauth_register',
+      ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+    }, req);
+    res.status(429).json({ error: 'invalid_request', error_description: 'Rate limit exceeded' });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
@@ -70,7 +76,13 @@ const registerLimiter = rateLimit({
 const authorizeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: { error: 'invalid_request', error_description: 'Rate limit exceeded' },
+  handler: (req: Request, res: Response) => {
+    trackServerEvent('anonymous', 'mcp_rate_limit_hit', {
+      endpoint: 'oauth_authorize',
+      ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+    }, req);
+    res.status(429).json({ error: 'invalid_request', error_description: 'Rate limit exceeded' });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
@@ -80,7 +92,13 @@ const authorizeLimiter = rateLimit({
 const tokenLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 60,
-  message: { error: 'invalid_request', error_description: 'Rate limit exceeded' },
+  handler: (req: Request, res: Response) => {
+    trackServerEvent('anonymous', 'mcp_rate_limit_hit', {
+      endpoint: 'oauth_token',
+      ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+    }, req);
+    res.status(429).json({ error: 'invalid_request', error_description: 'Rate limit exceeded' });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
@@ -90,7 +108,13 @@ const tokenLimiter = rateLimit({
 const revokeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: { error: 'invalid_request', error_description: 'Rate limit exceeded' },
+  handler: (req: Request, res: Response) => {
+    trackServerEvent('anonymous', 'mcp_rate_limit_hit', {
+      endpoint: 'oauth_revoke',
+      ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+    }, req);
+    res.status(429).json({ error: 'invalid_request', error_description: 'Rate limit exceeded' });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
@@ -216,6 +240,9 @@ function isValidRedirectUri(uri: string): boolean {
 
 router.get('/.well-known/oauth-protected-resource', (_req: Request, res: Response) => {
   const baseUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
+  trackServerEvent('anonymous', 'mcp_discovery_hit', {
+    endpoint: 'oauth-protected-resource',
+  }, _req);
   res.json({
     resource: 'https://mcp.humanpages.ai/mcp',
     authorization_server: baseUrl,
@@ -225,6 +252,9 @@ router.get('/.well-known/oauth-protected-resource', (_req: Request, res: Respons
 
 router.get('/.well-known/oauth-authorization-server', (_req: Request, res: Response) => {
   const baseUrl = process.env.FRONTEND_URL || 'https://humanpages.ai';
+  trackServerEvent('anonymous', 'mcp_discovery_hit', {
+    endpoint: 'oauth-authorization-server',
+  }, _req);
   res.json({
     issuer: baseUrl,
     authorization_endpoint: `${baseUrl}/oauth/authorize`,

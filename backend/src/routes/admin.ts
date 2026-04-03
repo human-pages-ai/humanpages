@@ -3086,6 +3086,117 @@ router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
         WHERE event = 'mcp_job_created'
           AND timestamp > now() - interval ${range} day
       `),
+
+      // 14. Per-platform conversion funnel
+      queryPostHog(`
+        SELECT properties.platform as platform,
+          countIf(event = 'mcp_session_started') as sessions,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_profile_viewed') as profile_views,
+          countIf(event = 'mcp_job_created') as jobs_created
+        FROM events
+        WHERE event IN ('mcp_session_started', 'mcp_search_executed', 'mcp_profile_viewed', 'mcp_job_created')
+          AND properties.platform IS NOT NULL AND properties.platform != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY platform
+        ORDER BY sessions DESC
+      `),
+
+      // 15. Tool call transitions (previous_tool → current tool)
+      queryPostHog(`
+        SELECT properties.previous_tool as from_tool,
+          properties.tool_name as to_tool,
+          count() as transitions
+        FROM events
+        WHERE event = 'mcp_tool_called'
+          AND properties.previous_tool IS NOT NULL AND properties.previous_tool != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY from_tool, to_tool
+        ORDER BY transitions DESC
+        LIMIT 30
+      `),
+
+      // 16. Skill-to-hire conversion (which searched skills lead to jobs)
+      queryPostHog(`
+        SELECT properties.skill as skill,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_job_created') as hires,
+          avg(if(event = 'mcp_search_executed', properties.result_count, NULL)) as avg_results
+        FROM events
+        WHERE event IN ('mcp_search_executed', 'mcp_job_created')
+          AND properties.skill IS NOT NULL AND properties.skill != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY skill
+        ORDER BY searches DESC
+        LIMIT 20
+      `),
+
+      // 17. Tool latency percentiles
+      queryPostHog(`
+        SELECT properties.tool_name as tool,
+          count() as calls,
+          avg(properties.latency_ms) as avg_ms,
+          quantile(0.5)(properties.latency_ms) as p50_ms,
+          quantile(0.95)(properties.latency_ms) as p95_ms,
+          quantile(0.99)(properties.latency_ms) as p99_ms,
+          max(properties.latency_ms) as max_ms
+        FROM events
+        WHERE event = 'mcp_tool_called'
+          AND properties.latency_ms IS NOT NULL
+          AND timestamp > now() - interval ${range} day
+        GROUP BY tool
+        ORDER BY avg_ms DESC
+      `),
+
+      // 18. Job full lifecycle (all status events)
+      queryPostHog(`
+        SELECT
+          countIf(event = 'job_offer_sent') as offers,
+          countIf(event = 'job_accepted') as accepted,
+          countIf(event = 'job_rejected') as rejected,
+          countIf(event = 'job_cancelled') as cancelled,
+          countIf(event = 'work_submitted') as submissions,
+          countIf(event = 'job_revision_requested') as revisions,
+          countIf(event = 'job_completed') as completed,
+          countIf(event = 'job_disputed') as disputed,
+          countIf(event = 'review_submitted') as reviews,
+          countIf(event = 'message_sent') as messages
+        FROM events
+        WHERE event IN ('job_offer_sent', 'job_accepted', 'job_rejected', 'job_cancelled',
+          'work_submitted', 'job_revision_requested', 'job_completed', 'job_disputed',
+          'review_submitted', 'message_sent')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 19. Stream payment stats
+      queryPostHog(`
+        SELECT
+          countIf(event = 'stream_started') as started,
+          countIf(event = 'stream_stopped') as stopped,
+          countIf(event = 'payment_initiated') as payments_initiated,
+          countIf(event = 'payment_received') as payments_received,
+          countIf(event = 'payment_claimed_offchain') as offchain_claims
+        FROM events
+        WHERE event IN ('stream_started', 'stream_stopped', 'payment_initiated',
+          'payment_received', 'payment_claimed_offchain')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 20. MCP infrastructure health
+      queryPostHog(`
+        SELECT
+          countIf(event = 'mcp_rate_limit_hit') as rate_limits,
+          countIf(event = 'mcp_auth_rejected') as auth_rejections,
+          countIf(event = 'mcp_unknown_method') as unknown_methods,
+          countIf(event = 'mcp_sse_max_duration') as sse_timeouts,
+          countIf(event = 'mcp_sse_disconnected') as sse_disconnects,
+          countIf(event = 'mcp_discovery_hit') as discovery_hits,
+          countIf(event = 'mcp_tool_error') as tool_errors
+        FROM events
+        WHERE event IN ('mcp_rate_limit_hit', 'mcp_auth_rejected', 'mcp_unknown_method',
+          'mcp_sse_max_duration', 'mcp_sse_disconnected', 'mcp_discovery_hit', 'mcp_tool_error')
+          AND timestamp > now() - interval ${range} day
+      `),
     ]);
 
     // Extract results safely
@@ -3100,7 +3211,8 @@ router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
 
     const [overallFunnel, uniqueAgentFunnel, platformDist, toolUsage, toolErrors,
       dailyActivity, sessionStages, authStats, jobAcceptance, paymentFlow,
-      searchPatterns, agentRetention, searchToHire] = extracted;
+      searchPatterns, agentRetention, searchToHire, platformFunnel, toolTransitions,
+      skillConversion, toolLatency, jobLifecycle, streamStats, infraHealth] = extracted;
 
     res.json({
       overallFunnel: overallFunnel[0] || {},
@@ -3116,6 +3228,13 @@ router.get('/mcp/funnel', apiKeyAdmin, async (req: any, res) => {
       searchPatterns,
       agentRetention,
       searchToHire: searchToHire[0] || {},
+      platformFunnel,
+      toolTransitions,
+      skillConversion,
+      toolLatency,
+      jobLifecycle: jobLifecycle[0] || {},
+      streamStats: streamStats[0] || {},
+      infraHealth: infraHealth[0] || {},
       range,
       timestamp: new Date().toISOString(),
     });

@@ -54,7 +54,12 @@ const SSE_MAX_DURATION = 5 * 60 * 1000;
 const mcpRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
-  message: { jsonrpc: '2.0', error: { code: -32000, message: 'Rate limit exceeded' }, id: null },
+  handler: (req: Request, res: Response) => {
+    trackServerEvent('anonymous', 'mcp_rate_limit_hit', {
+      endpoint: 'mcp_post',
+    }, req);
+    res.status(429).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Rate limit exceeded' }, id: null });
+  },
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
@@ -184,6 +189,11 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
   try {
     const sessionInfo = await getOrCreateSession(req);
     if (!sessionInfo) {
+      trackServerEvent('anonymous', 'mcp_auth_rejected', {
+        reason: 'invalid_session_or_token',
+        has_session_header: !!req.headers['mcp-session-id'],
+        has_auth_header: !!req.headers['authorization'],
+      }, req);
       return res.status(401).json({
         jsonrpc: '2.0',
         error: { code: -32000, message: 'Unauthorized' },
@@ -343,6 +353,10 @@ router.post('/mcp', mcpRateLimiter, async (req: Request, res: Response) => {
       }
 
       default:
+        trackServerEvent(sessionInfo.agentId, 'mcp_unknown_method', {
+          session_id: sessionInfo.sessionId,
+          method,
+        }, req);
         return res.status(400).json({
           jsonrpc: '2.0',
           error: { code: -32601, message: 'Method not found' },
@@ -381,6 +395,10 @@ router.get('/mcp', async (req: Request, res: Response) => {
     });
 
     const maxDurationTimer = setTimeout(() => {
+      trackServerEvent(sessionInfo.agentId, 'mcp_sse_max_duration', {
+        session_id: sessionInfo.sessionId,
+        duration_ms: SSE_MAX_DURATION,
+      });
       res.write('event: close\ndata: max duration reached\n\n');
       res.end();
     }, SSE_MAX_DURATION);
@@ -392,6 +410,9 @@ router.get('/mcp', async (req: Request, res: Response) => {
     res.on('close', () => {
       clearTimeout(maxDurationTimer);
       clearInterval(keepAliveInterval);
+      trackServerEvent(sessionInfo.agentId, 'mcp_sse_disconnected', {
+        session_id: sessionInfo.sessionId,
+      });
       logger.info({ sessionId: sessionInfo.sessionId }, 'MCP SSE stream closed');
     });
 

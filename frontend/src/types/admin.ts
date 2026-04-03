@@ -1451,6 +1451,24 @@ export interface McpFunnelAnalyticsResponse {
     avg_searches_before_hire: number; avg_profiles_before_hire: number;
     avg_time_to_hire_ms: number; hired_after_viewing: number; first_time_hirers: number;
   };
+  platformFunnel: { platform: string; sessions: number; searches: number; profile_views: number; jobs_created: number }[];
+  toolTransitions: { from_tool: string; to_tool: string; transitions: number }[];
+  skillConversion: { skill: string; searches: number; hires: number; avg_results: number }[];
+  toolLatency: { tool: string; calls: number; avg_ms: number; p50_ms: number; p95_ms: number; p99_ms: number; max_ms: number }[];
+  jobLifecycle: {
+    offers: number; accepted: number; rejected: number; cancelled: number;
+    submissions: number; revisions: number; completed: number; disputed: number;
+    reviews: number; messages: number;
+  };
+  streamStats: {
+    started: number; stopped: number; payments_initiated: number;
+    payments_received: number; offchain_claims: number;
+  };
+  infraHealth: {
+    rate_limits: number; auth_rejections: number; unknown_methods: number;
+    sse_timeouts: number; sse_disconnects: number; discovery_hits: number;
+    tool_errors: number;
+  };
   range: number;
   timestamp: string;
 }
