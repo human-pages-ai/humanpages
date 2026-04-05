@@ -33,6 +33,7 @@ const walletNonceLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
 

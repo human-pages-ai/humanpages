@@ -13,6 +13,7 @@ const telemetryLimiter = rateLimit({
   message: { error: 'Too many telemetry reports' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
 

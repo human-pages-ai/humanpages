@@ -54,6 +54,7 @@ const uploadLimiter = rateLimit({
   message: { error: 'Too many uploads. Try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
 

@@ -15,6 +15,7 @@ const subscribeRateLimiter = rateLimit({
   message: { error: 'Too many subscription requests. Try again in a minute.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
 });
 
 // Max subscriptions per user (prevent table bloat)

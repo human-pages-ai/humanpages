@@ -15,6 +15,7 @@ const webhookRateLimiter = rateLimit({
   max: 30, // 30 requests per minute per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
 });
 
 const router = Router();
