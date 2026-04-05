@@ -30,7 +30,7 @@ async function main() {
   let all = [], cursor = null;
   while (true) {
     const after = cursor ? `, after: "${cursor}"` : "";
-    const res = await graphql(`{ issues(first: 250${after}, filter: { team: { id: { eq: "${TEAM}" } } }) { pageInfo { hasNextPage endCursor } nodes { identifier title description state { name } priority labels { nodes { name } } } } }`);
+    const res = await graphql(`{ issues(first: 250${after}, filter: { team: { id: { eq: "${TEAM}" } } }) { pageInfo { hasNextPage endCursor } nodes { identifier title description state { name } priority labels { nodes { name } } comments { nodes { body createdAt user { name } } } relations { nodes { type relatedIssue { identifier title } } } } } }`);
     all.push(...res.data.issues.nodes);
     console.log("Fetched " + all.length + " issues");
     if (!res.data.issues.pageInfo.hasNextPage) break;
@@ -52,9 +52,27 @@ async function main() {
     for (const l of labels) {
       if (ownerLabels.has(l) && l !== "Unassigned" && l !== "Other") { assignee = l; break; }
     }
+    // Append comments and relations to description
+    let desc = (issue.description || "").slice(0, 5000);
+    const comments = issue.comments.nodes;
+    if (comments.length > 0) {
+      desc += "\n\n---\n**Comments (from Linear):**";
+      for (const c of comments) {
+        const user = c.user?.name || "Unknown";
+        const date = c.createdAt.slice(0, 10);
+        desc += `\n\n*${user} (${date}):*\n${c.body}`;
+      }
+    }
+    const relations = issue.relations.nodes;
+    if (relations.length > 0) {
+      desc += "\n\n---\n**Relations (from Linear):**";
+      for (const r of relations) {
+        desc += `\n- ${r.type}: ${r.relatedIssue.identifier} — ${r.relatedIssue.title}`;
+      }
+    }
     return {
       title: issue.title,
-      description: (issue.description || "").slice(0, 5000) || null,
+      description: desc || null,
       status: stateMap[issue.state.name] || "TODO",
       priority,
       labels: labels.filter((l) => !prioLabels.has(l) && !ownerLabels.has(l)),
