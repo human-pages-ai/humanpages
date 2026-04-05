@@ -356,14 +356,29 @@ contract HumanPagesEscrowTest is Test {
     }
 
     // ================================================================
-    // NEGATIVE: markComplete requires relayer
+    // NEGATIVE: markComplete access control
     // ================================================================
 
-    function test_markComplete_reverts_not_relayer() public {
+    function test_markComplete_reverts_unauthorized() public {
+        _deposit();
+        address stranger = makeAddr("stranger");
+        vm.prank(stranger);
+        vm.expectRevert("Not authorized");
+        escrow.markComplete(jobId);
+    }
+
+    function test_markComplete_by_depositor() public {
         _deposit();
         vm.prank(depositor);
-        vm.expectRevert();
         escrow.markComplete(jobId);
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Completed));
+    }
+
+    function test_markComplete_by_payee() public {
+        _deposit();
+        vm.prank(payee);
+        escrow.markComplete(jobId);
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Completed));
     }
 
     function test_markComplete_reverts_not_funded() public {

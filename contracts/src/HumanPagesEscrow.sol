@@ -120,9 +120,13 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
     }
 
     // ======================== MARK COMPLETE ========================
-    function markComplete(bytes32 jobId) external onlyRole(RELAYER_ROLE) {
+    function markComplete(bytes32 jobId) external {
         Escrow storage e = escrows[jobId];
         require(e.state == EscrowState.Funded, "Not funded");
+        require(
+            msg.sender == e.depositor || msg.sender == e.payee || hasRole(RELAYER_ROLE, msg.sender),
+            "Not authorized"
+        );
 
         e.state = EscrowState.Completed;
         e.completedAt = block.timestamp;

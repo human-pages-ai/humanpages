@@ -515,46 +515,23 @@ contract GriefingDoSTest is Test {
     //  Finding: DESIGN_LIMITATION - no timeout on Funded state
     // ================================================================
 
-    /// @notice If the relayer never calls markComplete(), the escrow stays in Funded forever.
-    /// The depositor can only recover via proposeCancel + payee acceptCancel.
-    /// If payee refuses to accept cancel, funds are locked indefinitely.
-    /// There is NO timeout mechanism on the Funded state.
-    /// Finding: DESIGN_LIMITATION
-    function test_grief_relayer_refuses_markComplete_stuck_in_funded() public {
+    /// @notice If the relayer disappears, depositor or payee can markComplete themselves.
+    /// No longer a design limitation — parties are not dependent on the relayer.
+    /// Finding: SAFE
+    function test_grief_relayer_refuses_parties_can_proceed() public {
         _deposit(jobId);
 
-        // Escrow is Funded. Relayer never calls markComplete.
-        // Depositor cannot release (requires Completed state)
+        // Relayer never calls markComplete — but depositor can
         vm.prank(depositor);
-        vm.expectRevert("Not completed");
-        escrow.release(jobId);
+        escrow.markComplete(jobId);
 
-        // Depositor cannot dispute (requires Completed state)
-        vm.prank(depositor);
-        vm.expectRevert("Not completed");
-        escrow.dispute(jobId);
-
-        // Depositor CAN propose cancel
-        vm.prank(depositor);
-        escrow.proposeCancel(jobId, 0); // propose full refund to depositor
-
-        // But payee must accept. If payee refuses, funds stuck.
-        // Warp far into the future - still stuck
-        vm.warp(block.timestamp + 365 days);
-
-        // The only thing depositor can do is re-propose after expiry
-        vm.prank(depositor);
-        escrow.proposeCancel(jobId, 0);
-
-        // Still need payee to accept
         HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Funded), "Still stuck in Funded");
-        assertEq(usdc.balanceOf(address(escrow)), AMOUNT, "Funds still locked");
+        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Completed));
 
-        // Payee eventually accepts (proving cancel path works if cooperative)
-        vm.prank(payee);
-        escrow.acceptCancel(jobId);
-        assertEq(usdc.balanceOf(depositor), 100_000e6, "Depositor gets full refund");
+        // And then release works normally
+        vm.prank(depositor);
+        escrow.release(jobId);
+        assertEq(usdc.balanceOf(payee), AMOUNT, "Payee receives funds");
     }
 
     // ================================================================
@@ -747,31 +724,23 @@ contract GriefingDoSTest is Test {
     }
 
     // ================================================================
-    //  BLOCKING: markComplete only callable by RELAYER_ROLE
-    //  Finding: DESIGN_LIMITATION - no permissionless completion path
+    //  markComplete callable by depositor, payee, or relayer
+    //  Finding: SAFE - no single point of failure
     // ================================================================
 
-    /// @notice If the relayer role holder disappears, no escrow can ever move
-    /// from Funded to Completed. Depositor can only recover via proposeCancel.
-    /// Finding: DESIGN_LIMITATION
-    function test_grief_relayer_disappears_escrow_stuck() public {
+    /// @notice If the relayer disappears, depositor or payee can still markComplete.
+    /// Finding: SAFE
+    function test_grief_relayer_disappears_parties_can_complete() public {
         _deposit(jobId);
 
-        // Depositor tries to markComplete - not a relayer
+        // Stranger can't markComplete
+        address stranger = makeAddr("stranger");
+        vm.prank(stranger);
+        vm.expectRevert("Not authorized");
+        escrow.markComplete(jobId);
+
+        // But depositor can
         vm.prank(depositor);
-        vm.expectRevert();
-        escrow.markComplete(jobId);
-
-        // Payee tries - not a relayer
-        vm.prank(payee);
-        vm.expectRevert();
-        escrow.markComplete(jobId);
-
-        // Admin can grant relayer role to someone else though
-        address newRelayer = makeAddr("new-relayer");
-        escrow.grantRole(escrow.RELAYER_ROLE(), newRelayer);
-
-        vm.prank(newRelayer);
         escrow.markComplete(jobId);
 
         HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
