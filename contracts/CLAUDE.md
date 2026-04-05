@@ -16,7 +16,7 @@ All tests must pass before committing, deploying, or opening a PR.
 
 | File | Tests | What it covers |
 |------|-------|----------------|
-| `test/HumanPagesEscrowV2.t.sol` | 69 | Flow tests, negative tests, security fix regression tests, attack vector smoke tests |
+| `test/HumanPagesEscrow.t.sol` | 69 | Flow tests, negative tests, security fix regression tests, attack vector smoke tests |
 | `test/attacks/Reentrancy.t.sol` | 10 | Classic reentrancy, cross-function reentrancy, read-only reentrancy, transferFrom reentrancy |
 | `test/attacks/SignatureAttacks.t.sol` | 14 | EIP-712 replay (cross-chain, cross-contract, cross-job), malleability, zero-address, truncated/empty/oversized sigs, wrong domain |
 | `test/attacks/StateMachine.t.sol` | 72 | Exhaustive state transition matrix (every function x every state), conservation of funds invariant, state finality (terminal states immutable) |
@@ -50,7 +50,7 @@ These are design decisions with tests proving the behavior:
 ### Deploying
 
 1. Run full test suite: `forge test`
-2. Deploy to Sepolia first: `forge script script/DeployV2.s.sol --rpc-url $BASE_SEPOLIA_RPC --broadcast`
-3. Verify on Basescan: `forge verify-contract <address> src/HumanPagesEscrowV2.sol:HumanPagesEscrowV2 --chain base-sepolia --constructor-args $(cast abi-encode "constructor(address)" 0x036CbD53842c5426634e7929541eC2318f3dCF7e)`
+2. Deploy to Sepolia first: `forge script script/Deploy.s.sol --rpc-url $BASE_SEPOLIA_RPC --broadcast`
+3. Verify on Basescan: `forge verify-contract <address> src/HumanPagesEscrow.sol:HumanPagesEscrow --chain base-sepolia --constructor-args $(cast abi-encode "constructor(address)" 0x036CbD53842c5426634e7929541eC2318f3dCF7e)`
 4. Test all flows on Sepolia using cast
 5. Only then deploy to mainnet

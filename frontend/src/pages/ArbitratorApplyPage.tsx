@@ -180,9 +180,9 @@ export default function ArbitratorApplyPage() {
           </p>
           <div className="grid sm:grid-cols-3 gap-3 text-center mb-5">
             {[
-              { label: 'Deposited', amount: '2 USDC', tx: '0x131e48a382821dc1fd7303bf2e45224bee278fd19b39f81ed820c17b87483bbe' },
-              { label: 'Completed', amount: 'on-chain', tx: '0x4dc8c4a3d8f05f35080c2170a525e8d384b39c7a1bda5db13386e72dc9f357f9' },
-              { label: 'Released', amount: 'to payee', tx: '0x751ec0f4bdda068418e8ab18c376032fdadab50e7aeca7265836e86d155b4598' },
+              { label: 'Deposited', amount: '2 USDC', tx: '0xbd23a2399d3076e76d8090791e716a12adb15428d1a64835535200fe3668ae9d' },
+              { label: 'Completed', amount: 'on-chain', tx: '0x631084bdf5e2c2cb2244b3b4ed7c6975a1da72bf08621241a913264f63fd5fbb' },
+              { label: 'Released', amount: 'to payee', tx: '0x4e7039d8098cc11d2d471c15cd5ac53faad092d6d11dc1858ab9af475e646d86' },
             ].map((step, i) => (
               <a
                 key={i}
@@ -198,12 +198,12 @@ export default function ArbitratorApplyPage() {
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-700">
             <a
-              href="https://sepolia.basescan.org/address/0x8Ec32Bd92453e24036d86C0fcA86A80A23066eD2#code"
+              href="https://sepolia.basescan.org/address/0xf20D4d9d75f6e5dD295B286D08Dc90Ed4DbE6917#code"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-400 hover:text-green-400 font-mono transition-colors"
             >
-              Contract: 0x8Ec3...6eD2 (verified)
+              Contract: 0xf20D...6917 (verified)
             </a>
             <span className="text-xs text-slate-500">
               Arbiter earned 0.10 USDC for signing one verdict

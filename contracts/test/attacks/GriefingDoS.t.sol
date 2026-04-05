@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrowV2.sol";
+import "../../src/HumanPagesEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // ======================== HELPER CONTRACTS ========================
@@ -57,7 +57,7 @@ contract SelectiveRevertToken is ERC20 {
 // ======================== MAIN TEST CONTRACT ========================
 
 contract GriefingDoSTest is Test {
-    HumanPagesEscrowV2 public escrow;
+    HumanPagesEscrow public escrow;
     MockUSDC public usdc;
 
     address public admin = address(this);
@@ -77,7 +77,7 @@ contract GriefingDoSTest is Test {
         arbitrator = vm.addr(arbitratorPk);
 
         usdc = new MockUSDC();
-        escrow = new HumanPagesEscrowV2(address(usdc));
+        escrow = new HumanPagesEscrow(address(usdc));
 
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
 
@@ -196,8 +196,8 @@ contract GriefingDoSTest is Test {
         assertEq(usdc.balanceOf(payee), AMOUNT, "Payee should receive full amount");
         assertEq(usdc.balanceOf(address(escrow)), 0, "Escrow should be empty");
 
-        HumanPagesEscrowV2.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrowV2.EscrowState.Released));
+        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Released));
     }
 
     // ================================================================
@@ -418,7 +418,7 @@ contract GriefingDoSTest is Test {
     /// Finding: VULNERABLE (external dependency on USDC blacklist)
     function test_grief_blacklisted_payee_blocks_release() public {
         SelectiveRevertToken srt = new SelectiveRevertToken();
-        HumanPagesEscrowV2 escrow2 = new HumanPagesEscrowV2(address(srt));
+        HumanPagesEscrow escrow2 = new HumanPagesEscrow(address(srt));
         escrow2.grantRole(escrow2.RELAYER_ROLE(), relayer);
 
         address badPayee = makeAddr("blacklisted-payee");
@@ -471,7 +471,7 @@ contract GriefingDoSTest is Test {
     ///          because resolve() does all transfers atomically.
     function test_grief_blacklisted_depositor_blocks_resolve() public {
         SelectiveRevertToken srt = new SelectiveRevertToken();
-        HumanPagesEscrowV2 escrow2 = new HumanPagesEscrowV2(address(srt));
+        HumanPagesEscrow escrow2 = new HumanPagesEscrow(address(srt));
         escrow2.grantRole(escrow2.RELAYER_ROLE(), relayer);
 
         bytes32 jid = keccak256("grief-blacklist-depositor");
@@ -547,8 +547,8 @@ contract GriefingDoSTest is Test {
         escrow.proposeCancel(jobId, 0);
 
         // Still need payee to accept
-        HumanPagesEscrowV2.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrowV2.EscrowState.Funded), "Still stuck in Funded");
+        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Funded), "Still stuck in Funded");
         assertEq(usdc.balanceOf(address(escrow)), AMOUNT, "Funds still locked");
 
         // Payee eventually accepts (proving cancel path works if cooperative)
@@ -623,8 +623,8 @@ contract GriefingDoSTest is Test {
         // Verify all are disputed
         for (uint256 i = 0; i < numEscrows; i++) {
             bytes32 jid = keccak256(abi.encodePacked("mass-dispute-", i));
-            HumanPagesEscrowV2.Escrow memory e = escrow.getEscrow(jid);
-            assertEq(uint8(e.state), uint8(HumanPagesEscrowV2.EscrowState.Disputed));
+            HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jid);
+            assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Disputed));
         }
 
         // After 7 days, all auto-release to payee
@@ -700,7 +700,7 @@ contract GriefingDoSTest is Test {
     /// Finding: VULNERABLE - atomic transfers in resolve() create a coupling risk
     function test_grief_blacklisted_payee_blocks_depositor_share_in_resolve() public {
         SelectiveRevertToken srt = new SelectiveRevertToken();
-        HumanPagesEscrowV2 escrow2 = new HumanPagesEscrowV2(address(srt));
+        HumanPagesEscrow escrow2 = new HumanPagesEscrow(address(srt));
         escrow2.grantRole(escrow2.RELAYER_ROLE(), relayer);
 
         bytes32 jid = keccak256("grief-atomic-resolve");
@@ -774,8 +774,8 @@ contract GriefingDoSTest is Test {
         vm.prank(newRelayer);
         escrow.markComplete(jobId);
 
-        HumanPagesEscrowV2.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrowV2.EscrowState.Completed));
+        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Completed));
     }
 
     // ================================================================
@@ -790,7 +790,7 @@ contract GriefingDoSTest is Test {
         _depositAndComplete(jobId);
 
         // Warp to 1 second before dispute window closes
-        HumanPagesEscrowV2.Escrow memory e = escrow.getEscrow(jobId);
+        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
         vm.warp(e.completedAt + e.disputeWindow - 1);
 
         vm.prank(depositor);
@@ -798,7 +798,7 @@ contract GriefingDoSTest is Test {
 
         // Dispute succeeded. Arbitrator still has full 7 days.
         e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrowV2.EscrowState.Disputed));
+        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Disputed));
 
         // After 7 days from dispute (not from completion), forceRelease works
         vm.warp(e.disputedAt + 7 days + 1);

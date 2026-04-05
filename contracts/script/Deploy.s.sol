@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../src/HumanPagesEscrowV2.sol";
+import "../src/HumanPagesEscrow.sol";
 
-contract DeployV2 is Script {
+contract Deploy is Script {
     // Base Sepolia USDC
     address constant USDC_BASE_SEPOLIA = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
 
@@ -14,14 +14,14 @@ contract DeployV2 is Script {
 
         vm.startBroadcast(deployerPk);
 
-        HumanPagesEscrowV2 escrow = new HumanPagesEscrowV2(USDC_BASE_SEPOLIA);
+        HumanPagesEscrow escrow = new HumanPagesEscrow(USDC_BASE_SEPOLIA);
 
         // Grant relayer role
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
 
         vm.stopBroadcast();
 
-        console.log("EscrowV2 deployed to:", address(escrow));
+        console.log("Escrow deployed to:", address(escrow));
         console.log("Token:", USDC_BASE_SEPOLIA);
         console.log("Relayer:", relayer);
     }

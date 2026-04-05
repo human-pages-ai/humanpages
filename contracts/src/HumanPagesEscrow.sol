@@ -15,14 +15,13 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     // ======================== CONSTANTS ========================
+    uint256 public constant MIN_DEPOSIT = 1e6;             // $1 USDC (dust prevention)
     uint256 public constant CANCEL_PROPOSAL_EXPIRY = 7 days;
     uint256 public constant ARBITRATOR_TIMEOUT = 7 days;
-    uint256 public constant MAX_ARBITRATOR_FEE_BPS = 5000; // 50% structural cap
+    uint256 public constant MAX_ARBITRATOR_FEE_BPS = 5000;  // 50% structural cap
 
     // ======================== STORAGE ========================
     IERC20 public immutable token; // USDC
-    uint256 public maxDeposit = 500e6; // $500
-    uint256 public minDeposit = 5e6;   // $5
 
     enum EscrowState { Empty, Funded, Completed, Released, Cancelled, Disputed, Resolved }
 
@@ -45,10 +44,8 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
     }
 
     mapping(bytes32 => Escrow) public escrows;
-    mapping(address => bool) public approvedArbitrators;
     mapping(bytes32 => bool) public verdictExecuted;
     mapping(bytes32 => CancelProposal) public cancelProposals;
-    mapping(address => bool) public blacklisted;
 
     // ======================== EIP-712 ========================
     bytes32 private constant VERDICT_TYPEHASH =
@@ -76,21 +73,12 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
     );
     event CancelProposed(bytes32 indexed jobId, uint256 amountToPayee, uint256 amountToDepositor);
     event CancelAccepted(bytes32 indexed jobId);
-    event ArbitratorAdded(address indexed arbitrator);
-    event ArbitratorRemoved(address indexed arbitrator);
     event ForceReleased(bytes32 indexed jobId, address indexed payee, uint256 amount);
 
     // ======================== CONSTRUCTOR ========================
-    constructor(
-        address _token,
-        uint256 _maxDeposit,
-        uint256 _minDeposit
-    ) EIP712("HumanPagesEscrow", "1") {
+    constructor(address _token) EIP712("HumanPagesEscrow", "2") {
         require(_token != address(0), "Invalid token");
-        require(_maxDeposit > _minDeposit, "Max must exceed min");
         token = IERC20(_token);
-        maxDeposit = _maxDeposit;
-        minDeposit = _minDeposit;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -103,14 +91,13 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
         uint256 amount,
         uint256 feeBps
     ) external whenNotPaused nonReentrant {
-        require(!blacklisted[msg.sender], "Blacklisted");
         require(escrows[jobId].state == EscrowState.Empty, "Escrow exists");
         require(payee != address(0), "Invalid payee");
         require(arbitrator != address(0), "Invalid arbitrator");
-        require(approvedArbitrators[arbitrator], "Arbitrator not approved");
         require(msg.sender != arbitrator, "Depositor cannot be arbitrator");
         require(msg.sender != payee, "Depositor cannot be payee");
-        require(amount >= minDeposit && amount <= maxDeposit, "Amount out of range");
+        require(payee != arbitrator, "Payee cannot be arbitrator");
+        require(amount >= MIN_DEPOSIT, "Below minimum deposit");
         require(disputeWindow >= 1 hours && disputeWindow <= 30 days, "Invalid dispute window");
         require(feeBps > 0 && feeBps <= MAX_ARBITRATOR_FEE_BPS, "Fee out of range");
 
@@ -148,7 +135,6 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
         Escrow storage e = escrows[jobId];
         require(e.state == EscrowState.Completed, "Not completed");
 
-        // Depositor can release early; anyone else must wait for dispute window
         if (msg.sender != e.depositor) {
             require(
                 block.timestamp >= e.completedAt + e.disputeWindow,
@@ -193,31 +179,26 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
         Escrow storage e = escrows[jobId];
         require(e.state == EscrowState.Disputed, "Not disputed");
 
-        // Build verdict hash
         bytes32 verdictHash = keccak256(abi.encode(nonce, jobId));
         require(!verdictExecuted[verdictHash], "Verdict already executed");
 
-        // Verify amounts
         require(toPayee + toDepositor + arbitratorFee == e.amount, "Amounts don't sum");
 
-        // Verify fee matches locked rate
         uint256 expectedFee = (e.amount * e.arbitratorFeeBps) / 10000;
         require(arbitratorFee == expectedFee, "Fee mismatch");
 
-        // Verify EIP-712 signature from arbitrator
         bytes32 structHash = keccak256(
             abi.encode(VERDICT_TYPEHASH, jobId, toPayee, toDepositor, arbitratorFee, nonce)
         );
         bytes32 digest = _hashTypedDataV4(structHash);
         address signer = _recoverSigner(digest, signature);
 
+        require(signer != address(0), "Invalid signature");
         require(signer == e.arbitrator, "Invalid arbitrator signature");
-        require(approvedArbitrators[signer], "Arbitrator no longer approved");
 
         verdictExecuted[verdictHash] = true;
         e.state = EscrowState.Resolved;
 
-        // Distribute funds
         if (toPayee > 0) token.safeTransfer(e.payee, toPayee);
         if (toDepositor > 0) token.safeTransfer(e.depositor, toDepositor);
         if (arbitratorFee > 0) token.safeTransfer(e.arbitrator, arbitratorFee);
@@ -249,6 +230,12 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
             "Cannot cancel"
         );
         require(amountToPayee <= e.amount, "Exceeds escrow amount");
+
+        CancelProposal memory existing = cancelProposals[jobId];
+        require(
+            existing.proposedAt == 0 || block.timestamp > existing.proposedAt + CANCEL_PROPOSAL_EXPIRY,
+            "Active proposal exists"
+        );
 
         cancelProposals[jobId] = CancelProposal({
             amountToPayee: amountToPayee,
@@ -283,33 +270,7 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
         emit CancelAccepted(jobId);
     }
 
-    // ======================== ARBITRATOR MANAGEMENT ========================
-    function addArbitrator(address arbitrator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(arbitrator != address(0), "Invalid address");
-        approvedArbitrators[arbitrator] = true;
-        emit ArbitratorAdded(arbitrator);
-    }
-
-    function removeArbitrator(address arbitrator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        approvedArbitrators[arbitrator] = false;
-        emit ArbitratorRemoved(arbitrator);
-    }
-
-    // ======================== ADMIN ========================
-    function setMaxDeposit(uint256 _maxDeposit) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_maxDeposit > minDeposit, "Max must exceed min");
-        maxDeposit = _maxDeposit;
-    }
-
-    function setMinDeposit(uint256 _minDeposit) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(maxDeposit > _minDeposit, "Max must exceed min");
-        minDeposit = _minDeposit;
-    }
-
-    function setBlacklisted(address account, bool status) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        blacklisted[account] = status;
-    }
-
+    // ======================== ADMIN (pause only) ========================
     function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
@@ -346,6 +307,7 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
             s := calldataload(add(signature.offset, 32))
             v := byte(0, calldataload(add(signature.offset, 64)))
         }
+        require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, "Invalid s value");
         return ecrecover(digest, v, r, s);
     }
 }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrowV2.sol";
+import "../../src/HumanPagesEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockUSDC2 is ERC20 {
@@ -12,8 +12,8 @@ contract MockUSDC2 is ERC20 {
 }
 
 contract SignatureAttacks is Test {
-    HumanPagesEscrowV2 public escrow;
-    HumanPagesEscrowV2 public escrow2; // second instance for cross-contract tests
+    HumanPagesEscrow public escrow;
+    HumanPagesEscrow public escrow2; // second instance for cross-contract tests
     MockUSDC2 public usdc;
 
     address public owner = address(this);
@@ -40,8 +40,8 @@ contract SignatureAttacks is Test {
         arbitrator = vm.addr(arbitratorPk);
 
         usdc = new MockUSDC2();
-        escrow = new HumanPagesEscrowV2(address(usdc));
-        escrow2 = new HumanPagesEscrowV2(address(usdc));
+        escrow = new HumanPagesEscrow(address(usdc));
+        escrow2 = new HumanPagesEscrow(address(usdc));
 
         // Grant relayer role on both escrows
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
@@ -57,12 +57,12 @@ contract SignatureAttacks is Test {
 
     // ======================== HELPERS ========================
 
-    function _deposit(HumanPagesEscrowV2 _escrow, bytes32 _jobId) internal {
+    function _deposit(HumanPagesEscrow _escrow, bytes32 _jobId) internal {
         vm.prank(depositor);
         _escrow.deposit(_jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
-    function _depositCompleteDispute(HumanPagesEscrowV2 _escrow, bytes32 _jobId) internal {
+    function _depositCompleteDispute(HumanPagesEscrow _escrow, bytes32 _jobId) internal {
         _deposit(_escrow, _jobId);
         vm.prank(relayer);
         _escrow.markComplete(_jobId);
@@ -71,7 +71,7 @@ contract SignatureAttacks is Test {
     }
 
     function _signVerdict(
-        HumanPagesEscrowV2 _escrow,
+        HumanPagesEscrow _escrow,
         bytes32 _jobId,
         uint256 toPayee,
         uint256 toDepositor,
@@ -87,7 +87,7 @@ contract SignatureAttacks is Test {
     }
 
     /// @dev Builds the EIP-712 digest for a given escrow contract
-    function _hashTypedDataV4(HumanPagesEscrowV2 _escrow, bytes32 structHash) internal view returns (bytes32) {
+    function _hashTypedDataV4(HumanPagesEscrow _escrow, bytes32 structHash) internal view returns (bytes32) {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -449,8 +449,8 @@ contract SignatureAttacks is Test {
 
         escrow.resolve(jobId, toPayee, toDepositor, arbFee, 1, sig);
 
-        HumanPagesEscrowV2.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrowV2.EscrowState.Resolved));
+        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Resolved));
         assertEq(usdc.balanceOf(payee), toPayee);
         assertEq(usdc.balanceOf(arbitrator), arbFee);
     }
