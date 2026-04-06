@@ -427,9 +427,15 @@ export default function Onboarding() {
       }
 
       if (form.photoFile) {
-        nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => console.error('Photo upload failed:', err)));
+        nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => {
+          console.error('Photo upload failed:', err);
+          toast.error(t('onboarding.photoUploadFailed', 'Photo upload failed. You can retry from your dashboard.'));
+        }));
       } else if (form.oauthPhotoUrl) {
-        nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => console.error('OAuth photo import failed:', err)));
+        nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => {
+          console.error('OAuth photo import failed:', err);
+          toast.error(t('onboarding.photoUploadFailed', 'Photo upload failed. You can retry from your dashboard.'));
+        }));
       }
 
       // Delete existing education entries before re-creating to avoid duplicates
