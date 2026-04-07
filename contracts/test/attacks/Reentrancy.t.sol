@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrow.sol";
+import "../../src/AgentEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @dev Token whose transfer() re-enters escrow.release()
 contract ReentrantOnTransferRelease is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public attackJobId;
     bool public armed;
     uint256 public reentrancyAttempts;
@@ -22,7 +22,7 @@ contract ReentrantOnTransferRelease is ERC20 {
     function mint(address to, uint256 amount) external { _mint(to, amount); }
 
     function setAttack(address _target, bytes32 _jobId) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         attackJobId = _jobId;
     }
 
@@ -46,7 +46,7 @@ contract ReentrantOnTransferRelease is ERC20 {
 
 /// @dev Token whose transfer() re-enters escrow.resolve()
 contract ReentrantOnTransferResolve is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public attackJobId;
     bytes public storedSig;
     uint256 public storedToPayee;
@@ -69,7 +69,7 @@ contract ReentrantOnTransferResolve is ERC20 {
         uint256 nonce,
         bytes calldata sig
     ) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         attackJobId = _jobId;
         storedToPayee = toPayee;
         storedToDepositor = toDepositor;
@@ -103,7 +103,7 @@ contract ReentrantOnTransferResolve is ERC20 {
 
 /// @dev Token whose transfer() re-enters escrow.acceptCancel()
 contract ReentrantOnTransferAcceptCancel is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public attackJobId;
     bool public armed;
     uint256 public reentrancyAttempts;
@@ -113,7 +113,7 @@ contract ReentrantOnTransferAcceptCancel is ERC20 {
     function mint(address to, uint256 amount) external { _mint(to, amount); }
 
     function setAttack(address _target, bytes32 _jobId) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         attackJobId = _jobId;
     }
 
@@ -135,7 +135,7 @@ contract ReentrantOnTransferAcceptCancel is ERC20 {
 
 /// @dev Token whose transfer() re-enters escrow.forceRelease()
 contract ReentrantOnTransferForceRelease is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public attackJobId;
     bool public armed;
     uint256 public reentrancyAttempts;
@@ -145,7 +145,7 @@ contract ReentrantOnTransferForceRelease is ERC20 {
     function mint(address to, uint256 amount) external { _mint(to, amount); }
 
     function setAttack(address _target, bytes32 _jobId) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         attackJobId = _jobId;
     }
 
@@ -167,7 +167,7 @@ contract ReentrantOnTransferForceRelease is ERC20 {
 
 /// @dev Token whose transfer() during release() tries cross-function calls (dispute, proposeCancel, deposit)
 contract CrossFunctionReentrant is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public attackJobId;
 
     enum AttackType { Dispute, ProposeCancel, Deposit }
@@ -181,7 +181,7 @@ contract CrossFunctionReentrant is ERC20 {
     function mint(address to, uint256 amount) external { _mint(to, amount); }
 
     function setAttack(address _target, bytes32 _jobId, AttackType _type) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         attackJobId = _jobId;
         attackType = _type;
     }
@@ -232,7 +232,7 @@ contract CrossFunctionReentrant is ERC20 {
 
 /// @dev Token whose transferFrom() during deposit re-enters deposit with a different jobId
 contract ReentrantOnTransferFromDeposit is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public secondJobId;
     address public attackPayee;
     address public attackArbitrator;
@@ -250,7 +250,7 @@ contract ReentrantOnTransferFromDeposit is ERC20 {
         address _payee,
         address _arbitrator
     ) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         secondJobId = _secondJobId;
         attackPayee = _payee;
         attackArbitrator = _arbitrator;
@@ -283,7 +283,7 @@ contract ReentrantOnTransferFromDeposit is ERC20 {
 
 /// @dev Token whose transfer() reads escrow state to check read-only reentrancy
 contract ReadOnlyReentrant is ERC20 {
-    HumanPagesEscrow public target;
+    AgentEscrow public target;
     bytes32 public attackJobId;
     bool public armed;
 
@@ -297,7 +297,7 @@ contract ReadOnlyReentrant is ERC20 {
     function mint(address to, uint256 amount) external { _mint(to, amount); }
 
     function setAttack(address _target, bytes32 _jobId) external {
-        target = HumanPagesEscrow(_target);
+        target = AgentEscrow(_target);
         attackJobId = _jobId;
     }
 
@@ -307,7 +307,7 @@ contract ReadOnlyReentrant is ERC20 {
         if (armed) {
             armed = false;
             // Read the escrow state mid-transfer
-            HumanPagesEscrow.Escrow memory e = target.getEscrow(attackJobId);
+            AgentEscrow.Escrow memory e = target.getEscrow(attackJobId);
             stateWasCaptured = true;
             capturedState = uint8(e.state);
             capturedAmount = e.amount;
@@ -325,7 +325,7 @@ contract ReadOnlyReentrant is ERC20 {
 // ============================================================
 
 contract ReentrancyTest is Test {
-    HumanPagesEscrow public escrow;
+    AgentEscrow public escrow;
 
     address public owner = address(this);
     address public relayer = makeAddr("relayer");
@@ -346,7 +346,7 @@ contract ReentrancyTest is Test {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(escrow)
@@ -374,8 +374,8 @@ contract ReentrancyTest is Test {
     }
 
     /// @dev Deploy escrow with a given token, set up roles and fund depositor
-    function _setupWithToken(ERC20 token) internal returns (HumanPagesEscrow) {
-        HumanPagesEscrow e = new HumanPagesEscrow(address(token));
+    function _setupWithToken(ERC20 token) internal returns (AgentEscrow) {
+        AgentEscrow e = new AgentEscrow(address(token));
         e.grantRole(e.RELAYER_ROLE(), relayer);
         return e;
     }
@@ -416,8 +416,8 @@ contract ReentrancyTest is Test {
         // The re-entrant transfer callback triggers a revert that propagates up
         // through SafeERC20, reverting the entire transaction.
         // Verify escrow is still in Completed state (release did not execute)
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Completed));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Completed));
     }
 
     // ================================================================
@@ -470,8 +470,8 @@ contract ReentrancyTest is Test {
         escrow.resolve(jobId, toPayee, toDepositor, arbitratorFee, nonce, sig);
 
         // Escrow should still be Disputed
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Disputed));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Disputed));
     }
 
     // ================================================================
@@ -525,8 +525,8 @@ contract ReentrancyTest is Test {
         escrow.acceptCancel(jobId2);
 
         // Verify still Funded
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId2);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Funded));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId2);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Funded));
     }
 
     // ================================================================
@@ -566,8 +566,8 @@ contract ReentrancyTest is Test {
         escrow.forceRelease(jobId);
 
         // Still Disputed
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Disputed));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Disputed));
     }
 
     // ================================================================
@@ -608,8 +608,8 @@ contract ReentrancyTest is Test {
 
         // Verify: release succeeded, dispute did not
         assertFalse(token.attackSucceeded(), "Cross-function dispute should have failed");
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Released));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Released));
     }
 
     // ================================================================
@@ -645,8 +645,8 @@ contract ReentrancyTest is Test {
         escrow.release(jobId);
 
         assertFalse(token.attackSucceeded(), "Cross-function proposeCancel should have failed");
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Released));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Released));
     }
 
     // ================================================================
@@ -682,8 +682,8 @@ contract ReentrancyTest is Test {
         escrow.release(jobId);
 
         assertFalse(token.attackSucceeded(), "Cross-function deposit should have failed");
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Released));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Released));
     }
 
     // ================================================================
@@ -721,7 +721,7 @@ contract ReentrancyTest is Test {
         // State should already be Released during the transfer callback (CEI pattern)
         assertEq(
             token.capturedState(),
-            uint8(HumanPagesEscrow.EscrowState.Released),
+            uint8(AgentEscrow.EscrowState.Released),
             "State should be Released during transfer (CEI pattern)"
         );
     }
@@ -764,7 +764,7 @@ contract ReentrancyTest is Test {
         assertTrue(token.stateWasCaptured(), "State should have been captured during resolve transfer");
         assertEq(
             token.capturedState(),
-            uint8(HumanPagesEscrow.EscrowState.Resolved),
+            uint8(AgentEscrow.EscrowState.Resolved),
             "State should be Resolved during transfer (CEI pattern)"
         );
     }
@@ -797,12 +797,12 @@ contract ReentrancyTest is Test {
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
 
         // First deposit succeeded
-        HumanPagesEscrow.Escrow memory e1 = escrow.getEscrow(jobId);
-        assertEq(uint8(e1.state), uint8(HumanPagesEscrow.EscrowState.Funded));
+        AgentEscrow.Escrow memory e1 = escrow.getEscrow(jobId);
+        assertEq(uint8(e1.state), uint8(AgentEscrow.EscrowState.Funded));
 
         // Second deposit was blocked by reentrancy guard
         assertFalse(token.attackSucceeded(), "Reentrant deposit should have been blocked");
-        HumanPagesEscrow.Escrow memory e2 = escrow.getEscrow(secondJobId);
-        assertEq(uint8(e2.state), uint8(HumanPagesEscrow.EscrowState.Empty));
+        AgentEscrow.Escrow memory e2 = escrow.getEscrow(secondJobId);
+        assertEq(uint8(e2.state), uint8(AgentEscrow.EscrowState.Empty));
     }
 }

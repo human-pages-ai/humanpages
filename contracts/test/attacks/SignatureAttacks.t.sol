@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrow.sol";
+import "../../src/AgentEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockUSDC2 is ERC20 {
@@ -12,8 +12,8 @@ contract MockUSDC2 is ERC20 {
 }
 
 contract SignatureAttacks is Test {
-    HumanPagesEscrow public escrow;
-    HumanPagesEscrow public escrow2; // second instance for cross-contract tests
+    AgentEscrow public escrow;
+    AgentEscrow public escrow2; // second instance for cross-contract tests
     MockUSDC2 public usdc;
 
     address public owner = address(this);
@@ -40,8 +40,8 @@ contract SignatureAttacks is Test {
         arbitrator = vm.addr(arbitratorPk);
 
         usdc = new MockUSDC2();
-        escrow = new HumanPagesEscrow(address(usdc));
-        escrow2 = new HumanPagesEscrow(address(usdc));
+        escrow = new AgentEscrow(address(usdc));
+        escrow2 = new AgentEscrow(address(usdc));
 
         // Grant relayer role on both escrows
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
@@ -57,12 +57,12 @@ contract SignatureAttacks is Test {
 
     // ======================== HELPERS ========================
 
-    function _deposit(HumanPagesEscrow _escrow, bytes32 _jobId) internal {
+    function _deposit(AgentEscrow _escrow, bytes32 _jobId) internal {
         vm.prank(depositor);
         _escrow.deposit(_jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
-    function _depositCompleteDispute(HumanPagesEscrow _escrow, bytes32 _jobId) internal {
+    function _depositCompleteDispute(AgentEscrow _escrow, bytes32 _jobId) internal {
         _deposit(_escrow, _jobId);
         vm.prank(relayer);
         _escrow.markComplete(_jobId);
@@ -71,7 +71,7 @@ contract SignatureAttacks is Test {
     }
 
     function _signVerdict(
-        HumanPagesEscrow _escrow,
+        AgentEscrow _escrow,
         bytes32 _jobId,
         uint256 toPayee,
         uint256 toDepositor,
@@ -87,11 +87,11 @@ contract SignatureAttacks is Test {
     }
 
     /// @dev Builds the EIP-712 digest for a given escrow contract
-    function _hashTypedDataV4(HumanPagesEscrow _escrow, bytes32 structHash) internal view returns (bytes32) {
+    function _hashTypedDataV4(AgentEscrow _escrow, bytes32 structHash) internal view returns (bytes32) {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(_escrow)
@@ -142,7 +142,7 @@ contract SignatureAttacks is Test {
             abi.encode(VERDICT_TYPEHASH, jobId, toPayee, toDepositor, arbFee, uint256(1))
         );
         bytes32 wrongChainDigest = _customDomainDigest(
-            "HumanPagesEscrow", "2", 1, address(escrow), structHash
+            "AgentEscrow", "2", 1, address(escrow), structHash
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(arbitratorPk, wrongChainDigest);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -264,7 +264,7 @@ contract SignatureAttacks is Test {
         bytes memory malleableSig = abi.encodePacked(r, highS, flippedV);
 
         // The contract checks s <= half-order, so this must revert
-        vm.expectRevert("Invalid s value");
+        vm.expectRevert("Invalid arbitrator signature");
         escrow.resolve(jobId, toPayee, toDepositor, arbFee, 1, malleableSig);
     }
 
@@ -313,7 +313,7 @@ contract SignatureAttacks is Test {
 
         // Build digest with version "1" instead of "2"
         bytes32 wrongDigest = _customDomainDigest(
-            "HumanPagesEscrow", "1", block.chainid, address(escrow), structHash
+            "AgentEscrow", "1", block.chainid, address(escrow), structHash
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(arbitratorPk, wrongDigest);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -324,7 +324,7 @@ contract SignatureAttacks is Test {
 
     // ================================================================
     // 9. Wrong EIP-712 name
-    // Sign with name "WrongEscrow" instead of "HumanPagesEscrow".
+    // Sign with name "WrongEscrow" instead of "AgentEscrow".
     // ================================================================
     function test_sig_wrongEIP712Name() public {
         _depositCompleteDispute(escrow, jobId);
@@ -360,7 +360,7 @@ contract SignatureAttacks is Test {
             truncated[i] = bytes1(uint8(i));
         }
 
-        vm.expectRevert("Invalid signature length");
+        vm.expectRevert("Invalid arbitrator signature");
         escrow.resolve(jobId, toPayee, toDepositor, arbFee, 1, truncated);
     }
 
@@ -374,7 +374,7 @@ contract SignatureAttacks is Test {
 
         bytes memory empty = new bytes(0);
 
-        vm.expectRevert("Invalid signature length");
+        vm.expectRevert("Invalid arbitrator signature");
         escrow.resolve(jobId, toPayee, toDepositor, arbFee, 1, empty);
     }
 
@@ -393,7 +393,7 @@ contract SignatureAttacks is Test {
             oversized[i] = bytes1(uint8(i));
         }
 
-        vm.expectRevert("Invalid signature length");
+        vm.expectRevert("Invalid arbitrator signature");
         escrow.resolve(jobId, toPayee, toDepositor, arbFee, 1, oversized);
     }
 
@@ -449,8 +449,8 @@ contract SignatureAttacks is Test {
 
         escrow.resolve(jobId, toPayee, toDepositor, arbFee, 1, sig);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Resolved));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Resolved));
         assertEq(usdc.balanceOf(payee), toPayee);
         assertEq(usdc.balanceOf(arbitrator), arbFee);
     }

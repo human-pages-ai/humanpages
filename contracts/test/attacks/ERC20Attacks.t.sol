@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrow.sol";
+import "../../src/AgentEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -193,14 +193,14 @@ contract ERC20AttacksTest is Test {
 
     // ======================== HELPERS ========================
 
-    function _createEscrow(address tokenAddr) internal returns (HumanPagesEscrow) {
-        HumanPagesEscrow e = new HumanPagesEscrow(tokenAddr);
+    function _createEscrow(address tokenAddr) internal returns (AgentEscrow) {
+        AgentEscrow e = new AgentEscrow(tokenAddr);
         e.grantRole(e.RELAYER_ROLE(), relayer);
         return e;
     }
 
     function _doDeposit(
-        HumanPagesEscrow esc,
+        AgentEscrow esc,
         bytes32 jobId,
         address tokenAddr
     ) internal {
@@ -211,7 +211,7 @@ contract ERC20AttacksTest is Test {
     }
 
     function _doDepositAndComplete(
-        HumanPagesEscrow esc,
+        AgentEscrow esc,
         bytes32 jobId,
         address tokenAddr
     ) internal {
@@ -221,7 +221,7 @@ contract ERC20AttacksTest is Test {
     }
 
     function _signVerdict(
-        HumanPagesEscrow esc,
+        AgentEscrow esc,
         bytes32 _jobId,
         uint256 toPayee,
         uint256 toDepositor,
@@ -239,11 +239,11 @@ contract ERC20AttacksTest is Test {
         return abi.encodePacked(r, s, v);
     }
 
-    function _hashTypedDataV4(HumanPagesEscrow esc, bytes32 structHash) internal view returns (bytes32) {
+    function _hashTypedDataV4(AgentEscrow esc, bytes32 structHash) internal view returns (bytes32) {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(esc)
@@ -260,7 +260,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_feeOnTransfer_insolvency() public {
         FeeOnTransferToken tok = new FeeOnTransferToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("fee-on-transfer-1");
@@ -276,7 +276,7 @@ contract ERC20AttacksTest is Test {
         uint256 contractBalance = tok.balanceOf(address(esc));
         assertEq(contractBalance, 99e6, "Contract should only have 99e6 due to fee");
 
-        HumanPagesEscrow.Escrow memory e = esc.getEscrow(jid);
+        AgentEscrow.Escrow memory e = esc.getEscrow(jid);
         assertEq(e.amount, AMOUNT, "Escrow records 100e6");
 
         // Mark complete and try to release
@@ -299,7 +299,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_rebasingToken_balanceShrinks() public {
         RebasingToken tok = new RebasingToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("rebase-1");
@@ -328,7 +328,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_pausableToken_lockedFunds() public {
         PausableToken tok = new PausableToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("pausable-1");
@@ -362,7 +362,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_blacklistPayee_releaseReverts() public {
         BlacklistableToken tok = new BlacklistableToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("blacklist-payee-1");
@@ -382,7 +382,7 @@ contract ERC20AttacksTest is Test {
     function test_erc20_blacklistPayee_resolveZeroToPayee() public {
         // Can depositor get money back via dispute+resolve with toPayee=0?
         BlacklistableToken tok = new BlacklistableToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("blacklist-payee-resolve-1");
@@ -414,7 +414,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_blacklistContract_allFundsLocked() public {
         BlacklistableToken tok = new BlacklistableToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("blacklist-contract-1");
@@ -458,7 +458,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_returnFalse_safeERC20Catches() public {
         ReturnFalseToken tok = new ReturnFalseToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("return-false-1");
@@ -487,7 +487,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_noReturnToken_safeERC20Handles() public {
         NoReturnToken tok = new NoReturnToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("no-return-1");
@@ -524,7 +524,7 @@ contract ERC20AttacksTest is Test {
         // spends X+Y) is not an escrow-contract concern.
 
         PausableToken tok = new PausableToken(); // any normal token
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
 
@@ -556,7 +556,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_deflationaryToken_insolvency() public {
         DeflationaryToken tok = new DeflationaryToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("deflation-1");
@@ -570,7 +570,7 @@ contract ERC20AttacksTest is Test {
         uint256 bal = tok.balanceOf(address(esc));
         assertEq(bal, 99e6, "Contract holds less due to burn");
 
-        HumanPagesEscrow.Escrow memory e = esc.getEscrow(jid);
+        AgentEscrow.Escrow memory e = esc.getEscrow(jid);
         assertEq(e.amount, AMOUNT, "Recorded amount is 100e6");
 
         vm.prank(relayer);
@@ -592,7 +592,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_maxBalance_overflowInFeeCalc() public {
         RebasingToken tok = new RebasingToken(); // any normal mintable token
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         // Mint a huge amount — close to type(uint256).max
         // amount * feeBps must overflow for the attack to matter
@@ -642,7 +642,7 @@ contract ERC20AttacksTest is Test {
     function test_erc20_maxBalance_overflowRevert() public {
         // Simpler test: directly verify the overflow reverts in resolve
         RebasingToken tok = new RebasingToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         uint256 hugeAmount = type(uint256).max / 100; // still huge
 
@@ -695,7 +695,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_feeOnTransfer_cascadingInsolvency() public {
         FeeOnTransferToken tok = new FeeOnTransferToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         address depositor2 = makeAddr("depositor2");
         address payee2 = makeAddr("payee2");
@@ -755,7 +755,7 @@ contract ERC20AttacksTest is Test {
 
     function test_erc20_pausableToken_forceReleaseBlocked() public {
         PausableToken tok = new PausableToken();
-        HumanPagesEscrow esc = _createEscrow(address(tok));
+        AgentEscrow esc = _createEscrow(address(tok));
 
         tok.mint(depositor, 10_000e6);
         bytes32 jid = keccak256("pausable-force-1");

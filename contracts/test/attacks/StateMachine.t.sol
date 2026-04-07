@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrow.sol";
+import "../../src/AgentEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // ======================== MOCK TOKEN ========================
@@ -16,7 +16,7 @@ contract MockUSDC is ERC20 {
 // ======================== HANDLER FOR INVARIANT TESTING ========================
 
 contract EscrowHandler is Test {
-    HumanPagesEscrow public escrow;
+    AgentEscrow public escrow;
     MockUSDC public usdc;
 
     address public relayer;
@@ -32,7 +32,7 @@ contract EscrowHandler is Test {
     uint256 private _nonce;
 
     constructor(
-        HumanPagesEscrow _escrow,
+        AgentEscrow _escrow,
         MockUSDC _usdc,
         address _relayer,
         uint256 _arbitratorPk
@@ -71,8 +71,8 @@ contract EscrowHandler is Test {
         uint256 idx = bound(indexSeed, 0, activeJobIds.length - 1);
         bytes32 jobId = activeJobIds[idx];
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        if (e.state != HumanPagesEscrow.EscrowState.Funded) return;
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        if (e.state != AgentEscrow.EscrowState.Funded) return;
 
         vm.prank(relayer);
         escrow.markComplete(jobId);
@@ -90,8 +90,8 @@ contract EscrowHandler is Test {
         uint256 idx = bound(indexSeed, 0, activeJobIds.length - 1);
         bytes32 jobId = activeJobIds[idx];
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        if (e.state != HumanPagesEscrow.EscrowState.Funded) return;
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        if (e.state != AgentEscrow.EscrowState.Funded) return;
 
         uint256 amountToPayee = bound(splitSeed, 0, e.amount);
 
@@ -110,8 +110,8 @@ contract EscrowHandler is Test {
         uint256 idx = bound(indexSeed, 0, activeJobIds.length - 1);
         bytes32 jobId = activeJobIds[idx];
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        if (e.state != HumanPagesEscrow.EscrowState.Funded) return;
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        if (e.state != AgentEscrow.EscrowState.Funded) return;
 
         // Mark complete
         vm.prank(relayer);
@@ -152,7 +152,7 @@ contract EscrowHandler is Test {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(escrow)
@@ -171,7 +171,7 @@ contract EscrowHandler is Test {
 // ======================== MAIN TEST CONTRACT ========================
 
 contract StateMachineTest is Test {
-    HumanPagesEscrow public escrow;
+    AgentEscrow public escrow;
     MockUSDC public usdc;
     EscrowHandler public handler;
 
@@ -195,7 +195,7 @@ contract StateMachineTest is Test {
         arbitrator = vm.addr(arbitratorPk);
 
         usdc = new MockUSDC();
-        escrow = new HumanPagesEscrow(address(usdc));
+        escrow = new AgentEscrow(address(usdc));
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
 
         // Fund depositor
@@ -261,17 +261,17 @@ contract StateMachineTest is Test {
         escrow.forceRelease(jobId);
     }
 
-    function _toState(HumanPagesEscrow.EscrowState target) internal {
-        if (target == HumanPagesEscrow.EscrowState.Empty) return;
+    function _toState(AgentEscrow.EscrowState target) internal {
+        if (target == AgentEscrow.EscrowState.Empty) return;
         _deposit();
-        if (target == HumanPagesEscrow.EscrowState.Funded) return;
+        if (target == AgentEscrow.EscrowState.Funded) return;
         _complete();
-        if (target == HumanPagesEscrow.EscrowState.Completed) return;
-        if (target == HumanPagesEscrow.EscrowState.Released) { _release(); return; }
-        if (target == HumanPagesEscrow.EscrowState.Cancelled) { _cancel(); return; }
+        if (target == AgentEscrow.EscrowState.Completed) return;
+        if (target == AgentEscrow.EscrowState.Released) { _release(); return; }
+        if (target == AgentEscrow.EscrowState.Cancelled) { _cancel(); return; }
         _dispute();
-        if (target == HumanPagesEscrow.EscrowState.Disputed) return;
-        if (target == HumanPagesEscrow.EscrowState.Resolved) { _resolve(); return; }
+        if (target == AgentEscrow.EscrowState.Disputed) return;
+        if (target == AgentEscrow.EscrowState.Resolved) { _resolve(); return; }
     }
 
     function _signVerdict(
@@ -290,7 +290,7 @@ contract StateMachineTest is Test {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(escrow)
@@ -309,42 +309,42 @@ contract StateMachineTest is Test {
     // Valid: Empty -> Funded (covered by flow tests)
 
     function test_sm_deposit_from_funded_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Funded);
+        _toState(AgentEscrow.EscrowState.Funded);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_sm_deposit_from_completed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Completed);
+        _toState(AgentEscrow.EscrowState.Completed);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_sm_deposit_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_sm_deposit_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_sm_deposit_from_disputed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Disputed);
+        _toState(AgentEscrow.EscrowState.Disputed);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_sm_deposit_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
@@ -361,35 +361,35 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_markComplete_from_completed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Completed);
+        _toState(AgentEscrow.EscrowState.Completed);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_sm_markComplete_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_sm_markComplete_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_sm_markComplete_from_disputed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Disputed);
+        _toState(AgentEscrow.EscrowState.Disputed);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_sm_markComplete_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
@@ -405,35 +405,35 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_release_from_funded_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Funded);
+        _toState(AgentEscrow.EscrowState.Funded);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_sm_release_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_sm_release_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_sm_release_from_disputed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Disputed);
+        _toState(AgentEscrow.EscrowState.Disputed);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_sm_release_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
@@ -449,35 +449,35 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_dispute_from_funded_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Funded);
+        _toState(AgentEscrow.EscrowState.Funded);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_sm_dispute_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_sm_dispute_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_sm_dispute_from_disputed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Disputed);
+        _toState(AgentEscrow.EscrowState.Disputed);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_sm_dispute_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
@@ -492,31 +492,31 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_resolve_from_funded_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Funded);
+        _toState(AgentEscrow.EscrowState.Funded);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
 
     function test_sm_resolve_from_completed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Completed);
+        _toState(AgentEscrow.EscrowState.Completed);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
 
     function test_sm_resolve_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
 
     function test_sm_resolve_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
 
     function test_sm_resolve_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
@@ -530,31 +530,31 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_forceRelease_from_funded_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Funded);
+        _toState(AgentEscrow.EscrowState.Funded);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_sm_forceRelease_from_completed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Completed);
+        _toState(AgentEscrow.EscrowState.Completed);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_sm_forceRelease_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_sm_forceRelease_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_sm_forceRelease_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
@@ -570,28 +570,28 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_proposeCancel_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
     }
 
     function test_sm_proposeCancel_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
     }
 
     function test_sm_proposeCancel_from_disputed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Disputed);
+        _toState(AgentEscrow.EscrowState.Disputed);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
     }
 
     function test_sm_proposeCancel_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
@@ -608,28 +608,28 @@ contract StateMachineTest is Test {
     }
 
     function test_sm_acceptCancel_from_released_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);
     }
 
     function test_sm_acceptCancel_from_cancelled_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);
     }
 
     function test_sm_acceptCancel_from_disputed_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Disputed);
+        _toState(AgentEscrow.EscrowState.Disputed);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);
     }
 
     function test_sm_acceptCancel_from_resolved_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);
@@ -732,54 +732,54 @@ contract StateMachineTest is Test {
     // ---- Released is final ----
 
     function test_final_released_deposit_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_final_released_markComplete_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_final_released_release_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_final_released_dispute_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_final_released_resolve_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
 
     function test_final_released_forceRelease_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_final_released_proposeCancel_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
     }
 
     function test_final_released_acceptCancel_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Released);
+        _toState(AgentEscrow.EscrowState.Released);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);
@@ -788,54 +788,54 @@ contract StateMachineTest is Test {
     // ---- Cancelled is final ----
 
     function test_final_cancelled_deposit_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_final_cancelled_markComplete_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_final_cancelled_release_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_final_cancelled_dispute_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_final_cancelled_resolve_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 1, dummySig);
     }
 
     function test_final_cancelled_forceRelease_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_final_cancelled_proposeCancel_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
     }
 
     function test_final_cancelled_acceptCancel_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Cancelled);
+        _toState(AgentEscrow.EscrowState.Cancelled);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);
@@ -844,54 +844,54 @@ contract StateMachineTest is Test {
     // ---- Resolved is final ----
 
     function test_final_resolved_deposit_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Escrow exists");
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
     }
 
     function test_final_resolved_markComplete_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(relayer);
         vm.expectRevert("Not funded");
         escrow.markComplete(jobId);
     }
 
     function test_final_resolved_release_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.release(jobId);
     }
 
     function test_final_resolved_dispute_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Not completed");
         escrow.dispute(jobId);
     }
 
     function test_final_resolved_resolve_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.expectRevert("Not disputed");
         escrow.resolve(jobId, 0, 0, 0, 2, dummySig);
     }
 
     function test_final_resolved_forceRelease_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.expectRevert("Not disputed");
         escrow.forceRelease(jobId);
     }
 
     function test_final_resolved_proposeCancel_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(depositor);
         vm.expectRevert("Cannot cancel");
         escrow.proposeCancel(jobId, 0);
     }
 
     function test_final_resolved_acceptCancel_reverts() public {
-        _toState(HumanPagesEscrow.EscrowState.Resolved);
+        _toState(AgentEscrow.EscrowState.Resolved);
         vm.prank(payee);
         vm.expectRevert("Cannot cancel");
         escrow.acceptCancel(jobId);

@@ -88,8 +88,8 @@ export async function signVerdict(params: {
 
   const signature = await account.signTypedData({
     domain: {
-      name: 'HumanPagesEscrow',
-      version: '1',
+      name: 'AgentEscrow',
+      version: '2',
       chainId: CHAIN_ID,
       verifyingContract: ESCROW_CONTRACT,
     },

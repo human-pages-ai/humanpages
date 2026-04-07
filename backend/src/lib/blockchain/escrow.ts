@@ -1,16 +1,26 @@
 /**
  * Escrow contract interaction service.
- * Reads escrow state from the HumanPagesEscrow contract on Base Sepolia.
+ * Reads escrow state from the AgentEscrow contract on Base (or Base Sepolia).
  * Writes (markComplete, release, forceRelease, resolve) via relayer wallet.
+ *
+ * Chain selection via ESCROW_CHAIN env var: "base" (default) or "base-sepolia".
  */
 import { createPublicClient, createWalletClient, http, parseAbi, type Hex, keccak256, encodePacked, encodeAbiParameters, parseAbiParameters } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base, baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import { logger } from '../logger.js';
 
 // ======================== CONFIG ========================
 
-const ESCROW_CONTRACT = process.env.ESCROW_CONTRACT_BASE_SEPOLIA as Hex | undefined;
+const ESCROW_CHAIN_NAME = process.env.ESCROW_CHAIN || 'base';
+const IS_TESTNET = ESCROW_CHAIN_NAME === 'base-sepolia';
+const ESCROW_CHAIN = IS_TESTNET ? baseSepolia : base;
+const ESCROW_RPC_URL = IS_TESTNET
+  ? (process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org')
+  : (process.env.BASE_RPC_URL || 'https://mainnet.base.org');
+const ESCROW_CONTRACT = (IS_TESTNET
+  ? process.env.ESCROW_CONTRACT_BASE_SEPOLIA
+  : process.env.ESCROW_CONTRACT_BASE) as Hex | undefined;
 const RELAYER_KEY = process.env.ESCROW_RELAYER_PRIVATE_KEY as Hex | undefined;
 
 const ESCROW_ABI = parseAbi([
@@ -18,7 +28,6 @@ const ESCROW_ABI = parseAbi([
   'function getEscrow(bytes32 jobId) view returns ((address depositor, address payee, address arbitrator, uint256 amount, uint256 arbitratorFeeBps, uint8 state, uint256 fundedAt, uint256 completedAt, uint32 disputeWindow, uint256 disputedAt))',
   'function getDisputeDeadline(bytes32 jobId) view returns (uint256)',
   'function getArbitratorTimeout(bytes32 jobId) view returns (uint256)',
-  'function approvedArbitrators(address) view returns (bool)',
   'function escrows(bytes32) view returns (address depositor, address payee, address arbitrator, uint256 amount, uint256 arbitratorFeeBps, uint8 state, uint256 fundedAt, uint256 completedAt, uint32 disputeWindow, uint256 disputedAt)',
   // Write (relayer)
   'function markComplete(bytes32 jobId)',
@@ -53,19 +62,19 @@ export const EscrowStateNames = ['Empty', 'Funded', 'Completed', 'Released', 'Ca
 
 function getPublicClient() {
   return createPublicClient({
-    chain: baseSepolia,
-    transport: http(process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'),
+    chain: ESCROW_CHAIN,
+    transport: http(ESCROW_RPC_URL),
   });
 }
 
 function getRelayerWallet() {
   if (!RELAYER_KEY) throw new Error('ESCROW_RELAYER_PRIVATE_KEY not set');
-  if (!ESCROW_CONTRACT) throw new Error('ESCROW_CONTRACT_BASE_SEPOLIA not set');
+  if (!ESCROW_CONTRACT) throw new Error(`ESCROW_CONTRACT_BASE${IS_TESTNET ? '_SEPOLIA' : ''} not set`);
   const account = privateKeyToAccount(RELAYER_KEY);
   return createWalletClient({
     account,
-    chain: baseSepolia,
-    transport: http(process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'),
+    chain: ESCROW_CHAIN,
+    transport: http(ESCROW_RPC_URL),
   });
 }
 
@@ -76,7 +85,7 @@ export function jobIdToHash(jobId: string): Hex {
 }
 
 function getContractAddress(): Hex {
-  if (!ESCROW_CONTRACT) throw new Error('ESCROW_CONTRACT_BASE_SEPOLIA not set');
+  if (!ESCROW_CONTRACT) throw new Error(`ESCROW_CONTRACT_BASE${IS_TESTNET ? '_SEPOLIA' : ''} not set`);
   return ESCROW_CONTRACT;
 }
 
@@ -114,16 +123,6 @@ export async function getDisputeDeadline(jobIdHash: Hex): Promise<number> {
     args: [jobIdHash],
   });
   return Number(result);
-}
-
-export async function isApprovedArbitrator(address: Hex): Promise<boolean> {
-  const client = getPublicClient();
-  return client.readContract({
-    address: getContractAddress(),
-    abi: ESCROW_ABI,
-    functionName: 'approvedArbitrators',
-    args: [address],
-  });
 }
 
 // ======================== WRITE FUNCTIONS (RELAYER) ========================

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../../src/HumanPagesEscrow.sol";
+import "../../src/AgentEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockUSDC_Atk is ERC20 {
@@ -12,7 +12,7 @@ contract MockUSDC_Atk is ERC20 {
 }
 
 contract EconomicAttacks is Test {
-    HumanPagesEscrow public escrow;
+    AgentEscrow public escrow;
     MockUSDC_Atk public usdc;
 
     address public owner = address(this);
@@ -33,7 +33,7 @@ contract EconomicAttacks is Test {
         arbitrator = vm.addr(arbitratorPk);
 
         usdc = new MockUSDC_Atk();
-        escrow = new HumanPagesEscrow(address(usdc));
+        escrow = new AgentEscrow(address(usdc));
 
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
 
@@ -102,7 +102,7 @@ contract EconomicAttacks is Test {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(escrow)
@@ -130,7 +130,7 @@ contract EconomicAttacks is Test {
         escrow.deposit(jobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
 
         // Attacker controls the escrow — funds go to attackerPayee
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
         assertEq(e.depositor, attacker);
         assertEq(e.payee, attackerPayee);
 
@@ -355,7 +355,7 @@ contract EconomicAttacks is Test {
         for (uint256 i = 0; i < numEscrows; i++) {
             bytes32 dustJobId = keccak256(abi.encodePacked("dust-", i));
             vm.prank(attacker);
-            escrow.deposit(dustJobId, dustPayee, dustArbitrator, 1 hours, minDeposit, 1);
+            escrow.deposit(dustJobId, dustPayee, dustArbitrator, 3 days, minDeposit, 1);
         }
 
         uint256 gasUsed = gasBefore - gasleft();
@@ -425,8 +425,8 @@ contract EconomicAttacks is Test {
         escrow.dispute(jobId);
 
         // Verify disputed
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Disputed));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Disputed));
     }
 
     /// @notice At exactly the deadline, dispute should fail (uses strict <)
@@ -546,8 +546,8 @@ contract EconomicAttacks is Test {
         escrow.dispute(job1);
 
         // Job2 should still be Completed, unaffected
-        HumanPagesEscrow.Escrow memory e2 = escrow.getEscrow(job2);
-        assertEq(uint8(e2.state), uint8(HumanPagesEscrow.EscrowState.Completed));
+        AgentEscrow.Escrow memory e2 = escrow.getEscrow(job2);
+        assertEq(uint8(e2.state), uint8(AgentEscrow.EscrowState.Completed));
 
         // Release job2 (depositor early release)
         vm.prank(depositor);
@@ -601,8 +601,8 @@ contract EconomicAttacks is Test {
         escrow.resolve(job2, toPayee, 0, fee, 1, sig2);
 
         // FINDING: Verdict signatures are bound to jobId. Cross-escrow replay is impossible.
-        assertEq(uint8(escrow.getEscrow(job1).state), uint8(HumanPagesEscrow.EscrowState.Resolved));
-        assertEq(uint8(escrow.getEscrow(job2).state), uint8(HumanPagesEscrow.EscrowState.Resolved));
+        assertEq(uint8(escrow.getEscrow(job1).state), uint8(AgentEscrow.EscrowState.Resolved));
+        assertEq(uint8(escrow.getEscrow(job2).state), uint8(AgentEscrow.EscrowState.Resolved));
     }
 
     /// @notice Verdict nonce replay: same nonce on same job is blocked

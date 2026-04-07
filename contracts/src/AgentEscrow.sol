@@ -2,20 +2,23 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
+/// @title AgentEscrow — by humans.page
+/// @notice Programmatic smart contract escrow for agent-human transactions. Not a licensed escrow service.
+contract AgentEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // ======================== ROLES ========================
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     // ======================== CONSTANTS ========================
-    uint256 public constant MIN_DEPOSIT = 1e6;             // $1 USDC (dust prevention)
+    uint256 public constant MIN_DEPOSIT = 1e6;             // 1 USDC (dust prevention)
     uint256 public constant CANCEL_PROPOSAL_EXPIRY = 7 days;
     uint256 public constant ARBITRATOR_TIMEOUT = 7 days;
     uint256 public constant MAX_ARBITRATOR_FEE_BPS = 5000;  // 50% structural cap
@@ -76,7 +79,7 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
     event ForceReleased(bytes32 indexed jobId, address indexed payee, uint256 amount);
 
     // ======================== CONSTRUCTOR ========================
-    constructor(address _token) EIP712("HumanPagesEscrow", "2") {
+    constructor(address _token) EIP712("AgentEscrow", "2") {
         require(_token != address(0), "Invalid token");
         token = IERC20(_token);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -98,7 +101,7 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
         require(msg.sender != payee, "Depositor cannot be payee");
         require(payee != arbitrator, "Payee cannot be arbitrator");
         require(amount >= MIN_DEPOSIT, "Below minimum deposit");
-        require(disputeWindow >= 1 hours && disputeWindow <= 30 days, "Invalid dispute window");
+        require(disputeWindow >= 3 days && disputeWindow <= 30 days, "Invalid dispute window");
         require(feeBps > 0 && feeBps <= MAX_ARBITRATOR_FEE_BPS, "Fee out of range");
 
         escrows[jobId] = Escrow({
@@ -195,10 +198,10 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
             abi.encode(VERDICT_TYPEHASH, jobId, toPayee, toDepositor, arbitratorFee, nonce)
         );
         bytes32 digest = _hashTypedDataV4(structHash);
-        address signer = _recoverSigner(digest, signature);
-
-        require(signer != address(0), "Invalid signature");
-        require(signer == e.arbitrator, "Invalid arbitrator signature");
+        require(
+            SignatureChecker.isValidSignatureNow(e.arbitrator, digest, signature),
+            "Invalid arbitrator signature"
+        );
 
         verdictExecuted[verdictHash] = true;
         e.state = EscrowState.Resolved;
@@ -300,18 +303,4 @@ contract HumanPagesEscrow is EIP712, AccessControl, Pausable, ReentrancyGuard {
         return e.disputedAt + ARBITRATOR_TIMEOUT;
     }
 
-    // ======================== INTERNAL ========================
-    function _recoverSigner(bytes32 digest, bytes calldata signature) internal pure returns (address) {
-        require(signature.length == 65, "Invalid signature length");
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := calldataload(signature.offset)
-            s := calldataload(add(signature.offset, 32))
-            v := byte(0, calldataload(add(signature.offset, 64)))
-        }
-        require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, "Invalid s value");
-        return ecrecover(digest, v, r, s);
-    }
 }

@@ -63,7 +63,6 @@ export {
   forceReleaseOnChain,
   resolveOnChain,
   acceptCancelOnChain,
-  isApprovedArbitrator,
   EscrowState,
   EscrowStateNames,
 } from './escrow.js';

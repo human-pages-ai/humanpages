@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import "../src/HumanPagesEscrow.sol";
+import "../src/AgentEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockUSDC is ERC20 {
@@ -23,8 +23,8 @@ contract FeeOnTransferToken is ERC20 {
     }
 }
 
-contract HumanPagesEscrowTest is Test {
-    HumanPagesEscrow public escrow;
+contract AgentEscrowTest is Test {
+    AgentEscrow public escrow;
     MockUSDC public usdc;
 
     address public owner = address(this);
@@ -44,7 +44,7 @@ contract HumanPagesEscrowTest is Test {
         arbitrator = vm.addr(arbitratorPk);
 
         usdc = new MockUSDC();
-        escrow = new HumanPagesEscrow(address(usdc));
+        escrow = new AgentEscrow(address(usdc));
 
         // Grant relayer role
         escrow.grantRole(escrow.RELAYER_ROLE(), relayer);
@@ -90,7 +90,7 @@ contract HumanPagesEscrowTest is Test {
         bytes32 domainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256("HumanPagesEscrow"),
+                keccak256("AgentEscrow"),
                 keccak256("2"),
                 block.chainid,
                 address(escrow)
@@ -110,8 +110,8 @@ contract HumanPagesEscrowTest is Test {
         vm.warp(block.timestamp + DISPUTE_WINDOW + 1);
         escrow.release(jobId);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Released));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Released));
         assertEq(usdc.balanceOf(payee), AMOUNT);
         assertEq(usdc.balanceOf(address(escrow)), 0);
     }
@@ -148,8 +148,8 @@ contract HumanPagesEscrowTest is Test {
         bytes memory sig = _signVerdict(jobId, toPayee, toDepositor, fee, 1);
         escrow.resolve(jobId, toPayee, toDepositor, fee, 1, sig);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Resolved));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Resolved));
         assertEq(usdc.balanceOf(payee), toPayee);
         assertEq(usdc.balanceOf(depositor), 10_000e6 - AMOUNT + toDepositor);
         assertEq(usdc.balanceOf(arbitrator), fee);
@@ -197,8 +197,8 @@ contract HumanPagesEscrowTest is Test {
         vm.warp(block.timestamp + 7 days + 1);
         escrow.forceRelease(jobId);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Released));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Released));
         assertEq(usdc.balanceOf(payee), AMOUNT);
     }
 
@@ -215,8 +215,8 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(payee);
         escrow.acceptCancel(jobId);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Cancelled));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Cancelled));
         assertEq(usdc.balanceOf(payee), 30e6);
         assertEq(usdc.balanceOf(depositor), 10_000e6 - AMOUNT + 70e6);
     }
@@ -247,8 +247,8 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(payee);
         escrow.acceptCancel(jobId);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Cancelled));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Cancelled));
         assertEq(usdc.balanceOf(payee), 50e6);
         assertEq(usdc.balanceOf(depositor), 10_000e6 - AMOUNT + 50e6);
     }
@@ -271,8 +271,8 @@ contract HumanPagesEscrowTest is Test {
         escrow.acceptCancel(jobId);
 
         // Escrow still funded — funds safe
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Funded));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Funded));
         assertEq(usdc.balanceOf(address(escrow)), AMOUNT);
     }
 
@@ -286,9 +286,9 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(depositor);
         escrow.deposit(keccak256("permissionless-job"), payee, randomArb, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(keccak256("permissionless-job"));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(keccak256("permissionless-job"));
         assertEq(e.arbitrator, randomArb);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Funded));
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Funded));
     }
 
     // ================================================================
@@ -304,7 +304,7 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(depositor);
         escrow.deposit(keccak256("big-job"), payee, arbitrator, DISPUTE_WINDOW, 5000e6, FEE_BPS);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(keccak256("big-job"));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(keccak256("big-job"));
         assertEq(e.amount, 5000e6);
     }
 
@@ -371,14 +371,14 @@ contract HumanPagesEscrowTest is Test {
         _deposit();
         vm.prank(depositor);
         escrow.markComplete(jobId);
-        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Completed));
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(AgentEscrow.EscrowState.Completed));
     }
 
     function test_markComplete_by_payee() public {
         _deposit();
         vm.prank(payee);
         escrow.markComplete(jobId);
-        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Completed));
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(AgentEscrow.EscrowState.Completed));
     }
 
     function test_markComplete_reverts_not_funded() public {
@@ -420,8 +420,8 @@ contract HumanPagesEscrowTest is Test {
         _depositAndComplete();
         vm.prank(payee);
         escrow.dispute(jobId);
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
-        assertEq(uint8(e.state), uint8(HumanPagesEscrow.EscrowState.Disputed));
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        assertEq(uint8(e.state), uint8(AgentEscrow.EscrowState.Disputed));
     }
 
     // ================================================================
@@ -623,7 +623,7 @@ contract HumanPagesEscrowTest is Test {
         bytes memory badSig = new bytes(65);
         // All zeros => ecrecover returns address(0)
 
-        vm.expectRevert("Invalid signature");
+        vm.expectRevert("Invalid arbitrator signature");
         escrow.resolve(jobId, toPayee, 0, fee, 1, badSig);
     }
 
@@ -652,7 +652,7 @@ contract HumanPagesEscrowTest is Test {
         uint8 flippedV = v == 27 ? 28 : 27;
         bytes memory malleableSig = abi.encodePacked(r, highS, flippedV);
 
-        vm.expectRevert("Invalid s value");
+        vm.expectRevert("Invalid arbitrator signature");
         escrow.resolve(jobId, toPayee, 0, fee, 1, malleableSig);
     }
 
@@ -688,7 +688,7 @@ contract HumanPagesEscrowTest is Test {
     // Fee-on-transfer token causes recorded amount > actual balance, making later releases insolvent
     function test_attack_fee_on_transfer_underfunds_escrow() public {
         FeeOnTransferToken feeToken = new FeeOnTransferToken();
-        HumanPagesEscrow feeEscrow = new HumanPagesEscrow(address(feeToken));
+        AgentEscrow feeEscrow = new AgentEscrow(address(feeToken));
         feeEscrow.grantRole(feeEscrow.RELAYER_ROLE(), relayer);
         feeToken.mint(depositor, 200e6);
         vm.prank(depositor);
@@ -751,7 +751,7 @@ contract HumanPagesEscrowTest is Test {
         escrow.deposit(testJobId, payee, arbitrator, DISPUTE_WINDOW, AMOUNT, FEE_BPS);
 
         // EVM reverts entire tx — slot must be Empty
-        assertEq(uint8(escrow.getEscrow(testJobId).state), uint8(HumanPagesEscrow.EscrowState.Empty));
+        assertEq(uint8(escrow.getEscrow(testJobId).state), uint8(AgentEscrow.EscrowState.Empty));
     }
 
     // ================================================================
@@ -862,7 +862,7 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(depositor);
         escrow.dispute(jobId);
 
-        HumanPagesEscrow.Escrow memory e = escrow.getEscrow(jobId);
+        AgentEscrow.Escrow memory e = escrow.getEscrow(jobId);
         uint256 forceReleaseAt = e.disputedAt + 7 days;
         // Total wait from completion: nearly disputeWindow + 7 days
         assertGt(forceReleaseAt, completedAt + DISPUTE_WINDOW + 6 days);
@@ -945,7 +945,7 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(payee);
         escrow.acceptCancel(jobId);
 
-        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Cancelled));
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(AgentEscrow.EscrowState.Cancelled));
         assertEq(usdc.balanceOf(payee), 30e6);
     }
 
@@ -988,7 +988,7 @@ contract HumanPagesEscrowTest is Test {
         vm.prank(payee);
         escrow.acceptCancel(jobId);
 
-        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Cancelled));
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(AgentEscrow.EscrowState.Cancelled));
         assertEq(usdc.balanceOf(payee), 40e6);
         assertEq(usdc.balanceOf(depositor), 10_000e6 - AMOUNT + 60e6);
     }
@@ -1002,7 +1002,7 @@ contract HumanPagesEscrowTest is Test {
         _deposit();
         escrow.grantRole(escrow.RELAYER_ROLE(), owner);
         escrow.markComplete(jobId);
-        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(HumanPagesEscrow.EscrowState.Completed));
+        assertEq(uint8(escrow.getEscrow(jobId).state), uint8(AgentEscrow.EscrowState.Completed));
     }
 
     // Renouncing admin role bricks pause and relayer management
