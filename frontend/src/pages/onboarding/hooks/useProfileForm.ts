@@ -338,7 +338,7 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
   };
 
   // ─── Photo handlers ───
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -351,15 +351,17 @@ export function useProfileForm(draft: Partial<OnboardingDraft> | null): UseProfi
       if (photoInputRef.current) photoInputRef.current.value = '';
       return;
     }
-    setPhotoFile(file);
-    if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+    // Eagerly read the file into a stable ArrayBuffer to prevent iOS Safari
+    // from detaching the underlying data during the multi-step wizard.
     try {
-      setPhotoPreview(URL.createObjectURL(file));
+      const buffer = await file.arrayBuffer();
+      const stableFile = new File([buffer], file.name, { type: file.type });
+      setPhotoFile(stableFile);
+      if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(URL.createObjectURL(stableFile));
     } catch {
-      // Blob URL creation failed — fallback to data URL
-      const reader = new FileReader();
-      reader.onload = () => { if (mountedRef.current && typeof reader.result === 'string') setPhotoPreview(reader.result); };
-      reader.readAsDataURL(file);
+      toast.error('Failed to read photo. Please try again.');
+      if (photoInputRef.current) photoInputRef.current.value = '';
     }
   };
 
