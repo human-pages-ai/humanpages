@@ -1234,8 +1234,7 @@ router.patch('/:id/complete', authenticateToken, requireEmailVerified, async (re
     }
 
     // Determine if this is an upon-completion flow (needs SUBMITTED review step)
-    const isUponCompletion = job.paymentTiming === 'upon_completion'
-      || job.human.paymentPreferences.includes('UPON_COMPLETION');
+    const isUponCompletion = job.paymentTiming === 'upon_completion';
 
     // For stream jobs, allow completion from STREAMING or PAUSED
     if (job.paymentMode === 'STREAM') {
