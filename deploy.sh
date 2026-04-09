@@ -19,7 +19,7 @@ export INFISICAL_CLIENT_ID=$(extract_env INFISICAL_CLIENT_ID)
 export INFISICAL_CLIENT_SECRET=$(extract_env INFISICAL_CLIENT_SECRET)
 export INFISICAL_PROJECT_ID=$(extract_env INFISICAL_PROJECT_ID)
 node ../scripts/inject-frontend-env.mjs
-npm run build 2>&1 | grep -v "contains an annotation that Rollup cannot interpret"
+npm run build
 # Clean up JS/CSS assets older than 24h (keeps old chunks for users with stale HTML)
 DELETED=$(bash ../scripts/clean-old-assets.sh 2>&1 | grep -c "^/")
 echo "Cleaned $DELETED old asset(s)"

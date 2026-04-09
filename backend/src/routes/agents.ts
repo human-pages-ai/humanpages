@@ -33,6 +33,7 @@ const walletNonceLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
 
@@ -797,7 +798,7 @@ router.post('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest, 
       arbitratorSpecialties: updated.arbitratorSpecialties,
       arbitratorSla: updated.arbitratorSla,
       arbitratorWebhookUrl: updated.arbitratorWebhookUrl,
-      message: 'Registered as arbitrator candidate. Platform owner will whitelist your wallet on the escrow contract.',
+      message: 'Registered as arbitrator. Payers can now choose you when creating escrows.',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

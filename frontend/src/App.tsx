@@ -96,6 +96,7 @@ const AdminWatchDog = lazy(() => import('./pages/admin/AdminWatchDog'));
 const AdminSolver = lazy(() => import('./pages/admin/AdminSolver'));
 const AdminFeatures = lazy(() => import('./pages/admin/AdminFeatures'));
 const AdminArbitrators = lazy(() => import('./pages/admin/AdminArbitrators'));
+const AdminBoard = lazy(() => import('./pages/admin/AdminBoard'));
 const AdminMarketingOps = lazy(() => import('./pages/admin/MarketingOps'));
 const AdminWizardAnalytics = lazy(() => import('./pages/admin/AdminWizardAnalytics'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
@@ -428,6 +429,7 @@ function AppRoutes() {
         <Route path="mcp-funnel" element={<AdminMcpFunnel />} />
         <Route path="mcp-sessions" element={<AdminMcpSessions />} />
         <Route path="mcp-comms" element={<AdminMcpAnalytics />} />
+        <Route path="board" element={<AdminBoard />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

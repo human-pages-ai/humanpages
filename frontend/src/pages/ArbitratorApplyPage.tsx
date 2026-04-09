@@ -12,6 +12,19 @@ type FormState = {
   webhookUrl: string;
 };
 
+// Escrow chain config — flip to mainnet when ready
+const ESCROW_CONFIG = {
+  contract: '0xe4825ad0E2A22a3De4322cD687633e8dF37CAC5A',
+  contractShort: '0xe482...AC5A',
+  explorer: 'https://sepolia.basescan.org',
+  chainLabel: 'Base Sepolia',
+  proofTxs: [
+    { label: 'Deposited', amount: '2 USDC', tx: '0x36b4ad904032b8384fa2ff7f2a95e1a01a745f0539e70a7e2662f8cd644c1da5' },
+    { label: 'Completed', amount: 'on-chain', tx: '0x36e61a80b4b35a8e2c5a14264d208e12251caf0b60adcc57f666eb53b287d4ee' },
+    { label: 'Released', amount: 'to payee', tx: '0x93c95783f84638e1a3cd59daf0ba684d8be65789be3663669445975cc8304ba6' },
+  ],
+};
+
 export default function ArbitratorApplyPage() {
   const [form, setForm] = useState<FormState>({
     name: '',
@@ -173,21 +186,16 @@ export default function ArbitratorApplyPage() {
         <div className="bg-slate-900 rounded-2xl p-6 md:p-8 text-white">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Live on Base Sepolia</h2>
+            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Live on {ESCROW_CONFIG.chainLabel}</h2>
           </div>
           <p className="text-slate-400 text-sm mb-5">
             Real escrow. Real USDC. Every transaction verifiable on-chain.
           </p>
-          <div className="grid sm:grid-cols-4 gap-3 text-center mb-5">
-            {[
-              { label: 'Deposited', amount: '2 USDC', tx: '0xffdac2fbfdf5223b9d54982aa9da48790020d3d168d22c05f0a81accbfc853c7' },
-              { label: 'Completed', amount: 'on-chain', tx: '0x3612a6ad9b51c91c996440cb36ab8c9d62ceed4ad8b09baaee1e1729fc0e9deb' },
-              { label: 'Disputed', amount: 'by depositor', tx: '0x25da6f5beaa61e8159b5d1e529c0cb0129797e5ff3904258efc4834ed3e6db88' },
-              { label: 'Resolved', amount: '75 / 20 / 5%', tx: '0x983c58ec889cc2f0a604e32f1c58b2eea80b6fab1aebbdec1070f8daece5f0bb' },
-            ].map((step, i) => (
+          <div className="grid sm:grid-cols-3 gap-3 text-center mb-5">
+            {ESCROW_CONFIG.proofTxs.map((step, i) => (
               <a
                 key={i}
-                href={`https://sepolia.basescan.org/tx/${step.tx}`}
+                href={`${ESCROW_CONFIG.explorer}/tx/${step.tx}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
@@ -199,12 +207,12 @@ export default function ArbitratorApplyPage() {
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-700">
             <a
-              href="https://sepolia.basescan.org/address/0x731B24cF53630415D3f284112c77638aca37fc84#code"
+              href={`${ESCROW_CONFIG.explorer}/address/${ESCROW_CONFIG.contract}#code`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-slate-400 hover:text-green-400 font-mono transition-colors"
             >
-              Contract: 0x731B...fc84 (verified)
+              Contract: {ESCROW_CONFIG.contractShort} (verified)
             </a>
             <span className="text-xs text-slate-500">
               Arbiter earned 0.10 USDC for signing one verdict

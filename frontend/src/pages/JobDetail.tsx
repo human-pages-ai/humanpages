@@ -149,8 +149,7 @@ export default function JobDetail() {
     });
   };
 
-  const isUponCompletion = job?.paymentTiming === 'upon_completion'
-    || job?.human?.paymentPreferences?.includes('UPON_COMPLETION');
+  const isUponCompletion = job?.paymentTiming === 'upon_completion';
 
   const handleComplete = async () => {
     // For upon_completion jobs in ACCEPTED status, show the submit modal

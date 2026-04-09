@@ -558,6 +558,34 @@ export interface AdminJobDetail extends AdminJob {
   }>;
 }
 
+// ===== Admin Board (Linear replacement) =====
+export type BoardStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
+export type BoardPriority = 'P0' | 'P0.5' | 'P1' | 'P1.5' | 'P2' | 'P2.5' | 'P3';
+
+export interface BoardTask {
+  id: string;
+  title: string;
+  description: string | null;
+  status: BoardStatus;
+  priority: BoardPriority;
+  labels: string[];
+  assignee: string | null;
+  sortOrder: number;
+  linearId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BoardTaskListResponse {
+  tasks: BoardTask[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export const STAFF_CAPABILITIES = [
   'CONTENT_REVIEWER',
   'POSTER',

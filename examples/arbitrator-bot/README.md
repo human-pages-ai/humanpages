@@ -141,8 +141,8 @@ The escrow contract uses [EIP-712](https://eips.ethereum.org/EIPS/eip-712) typed
 **Domain:**
 ```typescript
 {
-  name: 'HumanPagesEscrow',
-  version: '1',
+  name: 'AgentEscrow',
+  version: '2',
   chainId: 84532, // Base Sepolia
   verifyingContract: '0x...' // escrow contract address
 }
@@ -169,8 +169,8 @@ const account = privateKeyToAccount('0x...');
 
 const signature = await account.signTypedData({
   domain: {
-    name: 'HumanPagesEscrow',
-    version: '1',
+    name: 'AgentEscrow',
+    version: '2',
     chainId: 84532,
     verifyingContract: '0x...',
   },

@@ -18,6 +18,7 @@ const ipBurstLimiter = rateLimit({
   message: { error: 'Too many requests from this IP, slow down' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
 

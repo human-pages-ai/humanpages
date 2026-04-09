@@ -408,6 +408,14 @@ export default function Onboarding() {
           freelancerJobsRange: form.freelancerJobsRange || null,
           platformPresence: form.platformPresence.length > 0 ? form.platformPresence : null,
           externalProfiles: form.externalProfiles.length > 0 ? form.externalProfiles : undefined,
+          linkedinUrl: form.linkedinUrl.trim() || null,
+          githubUrl: form.githubUrl.trim() || null,
+          twitterUrl: form.twitterUrl.trim() || null,
+          websiteUrl: form.websiteUrl.trim() || null,
+          instagramUrl: form.instagramUrl.trim() || null,
+          youtubeUrl: form.youtubeUrl.trim() || null,
+          facebookUrl: form.facebookUrl.trim() || null,
+          tiktokUrl: form.tiktokUrl.trim() || null,
         }),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 15000)),
       ]);
@@ -427,9 +435,15 @@ export default function Onboarding() {
       }
 
       if (form.photoFile) {
-        nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => console.error('Photo upload failed:', err)));
+        nonBlocking.push(api.uploadProfilePhoto(form.photoFile).then(() => {}).catch(err => {
+          console.error('Photo upload failed:', err);
+          toast.error(t('onboarding.photoUploadFailed', 'Photo upload failed. You can retry from your dashboard.'));
+        }));
       } else if (form.oauthPhotoUrl) {
-        nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => console.error('OAuth photo import failed:', err)));
+        nonBlocking.push(api.importOAuthPhoto('google').then(() => {}).catch(err => {
+          console.error('OAuth photo import failed:', err);
+          toast.error(t('onboarding.photoUploadFailed', 'Photo upload failed. You can retry from your dashboard.'));
+        }));
       }
 
       // Delete existing education entries before re-creating to avoid duplicates

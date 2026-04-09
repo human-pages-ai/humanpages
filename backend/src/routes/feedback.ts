@@ -18,6 +18,7 @@ const feedbackLimiter = rateLimit({
   message: { error: 'Too many feedback submissions. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   skip: () => process.env.NODE_ENV === 'test',
 });
 
