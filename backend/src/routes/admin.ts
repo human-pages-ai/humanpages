@@ -8,7 +8,7 @@ import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from
 import { prisma, identityVerifiedWhere } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendStaffApiKeyEmail, sendFeaturedInviteEmail } from '../lib/email.js';
-import { queryPostHog } from '../lib/posthog.js';
+
 import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
@@ -3519,7 +3519,7 @@ async function queryPostHog(query: string): Promise<any> {
     throw new Error(`PostHog query failed: ${error}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as { results?: unknown[] };
   return data.results || [];
 }
 
