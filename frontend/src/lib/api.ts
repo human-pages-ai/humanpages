@@ -1,5 +1,5 @@
 import type { Profile, Wallet, Service, Job, JobMessage, ReviewStats, Vouch, Listing, ListingApplication, FiatPaymentMethod } from '../components/dashboard/types';
-import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse, AdminFeaturesResponse, FeatureMetricsResponse } from '../types/admin';
+import type { AdminStats, AdminUser, AdminAgent, AdminJob, AdminActivity, AdminFeedback, AdminUserDetail, AdminAgentDetail, AdminJobDetail, AdminMeResponse, PostingGroup, AdCopy, Pagination, StaffStats, StaffMember, GenerateApiKeyResponse, ClockStatus, TimeEntry, HoursSummary, StaffClockOverview, StaffPayment, HoursAdjustment, StaffBalance, ContentItem, ContentStats, ContentPlatform, StaffCapability, TaskSummary, VideoConcept, VideoJob, VideoScriptData, PhotoConcept, CareerApplication, CareerApplicationStats, VideoItem, VideoDetail, ScheduleEntry, ScheduleStats, ProductivityDashboardData, IdleAlertEntry, StaffActivityEvent, InfluencerLead, LeadStats, BatchSummary, BatchDetail, BatchConceptDetail, GalleryConcept, LogQueryResult, LogStats, MktOpsLog, MktOpsDecision, MktOpsConfig, AdminPerson, PeopleFilterOptions, SolverStats, SolverRequestsResponse, AdminFeaturesResponse, FeatureMetricsResponse, McpFunnelAnalyticsResponse, McpAnalyticsResponse } from '../types/admin';
 
 import { safeLocalStorage, safeGetItem, safeSetItem, safeRemoveItem } from './safeStorage';
 // Re-export for backward compatibility (OAuthCallback etc. import from here)
@@ -466,8 +466,30 @@ export const api = {
   getAdminFunnelStats: () =>
     request<import('../types/admin').FunnelStats>('/admin/stats/funnel'),
 
+  getAdminMcpFunnel: (range?: number) => {
+    const params = new URLSearchParams();
+    if (range) params.append('range', String(range));
+    return request<McpFunnelAnalyticsResponse>(`/admin/mcp/funnel?${params}`);
+  },
+
+  getAdminMcpSessions: (params?: { limit?: number; offset?: number; agentId?: string; platform?: string; sessionId?: string }) => {
+    const qp = new URLSearchParams();
+    if (params?.limit) qp.append('limit', String(params.limit));
+    if (params?.offset) qp.append('offset', String(params.offset));
+    if (params?.agentId) qp.append('agentId', params.agentId);
+    if (params?.platform) qp.append('platform', params.platform);
+    if (params?.sessionId) qp.append('sessionId', params.sessionId);
+    return request<any>(`/admin/mcp/sessions?${qp}`);
+  },
+
+  getAdminMcpSession: (sessionId: string) =>
+    request<any>(`/admin/mcp/sessions/${sessionId}`),
+
   getSolverStats: () =>
     request<SolverStats>('/admin/solver/stats'),
+
+  getWizardAnalytics: (range = '30d', wizardName = 'onboarding') =>
+    request<import('../types/admin').WizardAnalyticsResponse>(`/admin/analytics/wizard?range=${range}&wizardName=${wizardName}`),
 
   getAdminFeatures: (params?: { domain?: string; metrics?: boolean }) => {
     const query = new URLSearchParams();
@@ -1452,6 +1474,13 @@ export const api = {
 
   deleteCertificate: (id: string) =>
     request(`/cv/certificate/${id}`, { method: 'DELETE' }),
+
+  // Admin MCP Analytics
+  getAdminMcpAnalytics: (range?: number) => {
+    const params = new URLSearchParams();
+    if (range) params.append('range', String(range));
+    return request<McpAnalyticsResponse>(`/admin/mcp/analytics?${params}`);
+  },
 
   // Push Notifications
   getVapidPublicKey: () =>

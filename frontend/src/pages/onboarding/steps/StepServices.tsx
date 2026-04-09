@@ -246,6 +246,10 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
   }, []);
 
   const handleCancelService = () => {
+    const fieldsCompleted = [newService.title, newService.category, newService.description, newService.price].filter(Boolean).length;
+    if (fieldsCompleted > 0) {
+      wa?.trackFormAbandoned('service', fieldsCompleted);
+    }
     setAddingService(false);
     setNewService({ title: '', category: '', subcategory: '', description: '', price: '', currency: localeCurrency, unit: 'per hour' });
     setCategoryError(false);
@@ -320,7 +324,10 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
         return;
       }
     }
-    setServices(prev => [...prev, { ...newService, title: newService.title.trim(), category: newService.category.trim() }]);
+    const serviceToAdd = { ...newService, title: newService.title.trim(), category: newService.category.trim() };
+    setServices(prev => [...prev, serviceToAdd]);
+    wa?.trackFormCompleted('service', { has_price: !!newService.price, category: newService.category });
+    wa?.trackItemAdded('service', serviceToAdd.title, 'manual');
     setNewService({ title: '', category: '', subcategory: '', description: '', price: '', currency: localeCurrency, unit: 'per hour' });
     setAddingService(false);
     setCategoryError(false);
@@ -329,6 +336,8 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
   };
 
   const handleRemoveService = (index: number) => {
+    const removed = services[index];
+    if (removed) wa?.trackItemRemoved('service', removed.title);
     setServices(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -660,7 +669,7 @@ export function StepServices({ cvProcessing, cvData, skills, services, setServic
         )}
 
         {!addingService && (
-          <button type="button" onClick={() => setAddingService(true)} disabled={services.length >= 5} aria-disabled={services.length >= 5} className={`w-full py-3 min-h-[44px] border-2 border-dashed rounded-lg text-sm font-medium mb-4 transition-colors ${services.length >= 5 ? 'border-slate-300 text-slate-400 bg-slate-50 cursor-not-allowed opacity-50' : 'border-orange-300 text-orange-600 hover:text-orange-700 hover:border-orange-400 hover:bg-orange-50 active:bg-orange-100'}`}>{t('onboarding.services.addButton')}</button>
+          <button type="button" onClick={() => { wa?.trackFormOpened('service'); setAddingService(true); }} disabled={services.length >= 5} aria-disabled={services.length >= 5} className={`w-full py-3 min-h-[44px] border-2 border-dashed rounded-lg text-sm font-medium mb-4 transition-colors ${services.length >= 5 ? 'border-slate-300 text-slate-400 bg-slate-50 cursor-not-allowed opacity-50' : 'border-orange-300 text-orange-600 hover:text-orange-700 hover:border-orange-400 hover:bg-orange-50 active:bg-orange-100'}`}>{t('onboarding.services.addButton')}</button>
         )}
 
         {addingService && (

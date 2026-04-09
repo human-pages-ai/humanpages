@@ -45,9 +45,11 @@ interface WhatsAppSectionProps {
   setWhatsappNumber: (v: string) => void;
   smsNumber?: string;
   setSmsNumber?: (v: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber = '', setSmsNumber }: WhatsAppSectionProps) {
+export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber = '', setSmsNumber, onFocus, onBlur }: WhatsAppSectionProps) {
   const [countryCode, setCountryCode] = useState(() => {
     if (whatsappNumber) {
       const match = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length).find(c => whatsappNumber.startsWith(c.code));
@@ -200,6 +202,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
             inputMode="tel"
             value={localPhone}
             onChange={(e) => setLocalPhone(e.target.value.replace(/[^\d\s\-()]/g, ''))}
+            onFocus={onFocus}
             onBlur={() => {
               const digitsOnly = localPhone.replace(/\D/g, '');
               if (localPhone && digitsOnly.length < 7) {
@@ -207,6 +210,7 @@ export function WhatsAppSection({ whatsappNumber, setWhatsappNumber, smsNumber =
               } else {
                 setWhatsappPhoneWarning('');
               }
+              onBlur?.();
             }}
             placeholder="555 123 4567"
             autoComplete="tel-national"

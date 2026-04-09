@@ -143,8 +143,7 @@ export function WizardAnalyticsProvider({ config, children }: WizardAnalyticsPro
         Object.assign(beaconPayload, deviceContext);
       }
 
-      // Cast to any to allow dynamic event names
-      analytics.track(`${wizardName}_abandoned` as any, beaconPayload as any);
+      analytics.trackBeacon(buildWizardEvent(wizardName, 'abandoned'), beaconPayload as Record<string, string | number | boolean | undefined>);
     };
 
     const handleVisibilityChange = () => {
@@ -170,51 +169,51 @@ export function WizardAnalyticsProvider({ config, children }: WizardAnalyticsPro
 
   // ─── Tracking methods ───
   const trackFieldFocus = useCallback((fieldName: string) => {
-    analytics.track(`${wizardName}_field_focused` as any, { ...baseProps(), field: fieldName });
+    analytics.track(buildWizardEvent(wizardName, 'field_focused'), { ...baseProps(), field: fieldName });
   }, [wizardName, baseProps]);
 
   const trackFieldBlur = useCallback((fieldName: string, hasValue: boolean) => {
-    analytics.track(`${wizardName}_field_blurred` as any, { ...baseProps(), field: fieldName, has_value: hasValue });
+    analytics.track(buildWizardEvent(wizardName, 'field_blurred'), { ...baseProps(), field: fieldName, has_value: hasValue });
   }, [wizardName, baseProps]);
 
   const trackFieldError = useCallback((fieldName: string, errorType: string) => {
-    analytics.track(`${wizardName}_field_error` as any, { ...baseProps(), field: fieldName, error_type: errorType });
+    analytics.track(buildWizardEvent(wizardName, 'field_error'), { ...baseProps(), field: fieldName, error_type: errorType });
   }, [wizardName, baseProps]);
 
   const trackButtonClick = useCallback((buttonName: string, action?: string) => {
-    analytics.track(`${wizardName}_button_clicked` as any, { ...baseProps(), button: buttonName, action });
+    analytics.track(buildWizardEvent(wizardName, 'button_clicked'), { ...baseProps(), button: buttonName, action });
   }, [wizardName, baseProps]);
 
   const trackHelpViewed = useCallback((helpId: string) => {
-    analytics.track(`${wizardName}_help_viewed` as any, { ...baseProps(), help_id: helpId });
+    analytics.track(buildWizardEvent(wizardName, 'help_viewed'), { ...baseProps(), help_id: helpId });
   }, [wizardName, baseProps]);
 
   const trackFormOpened = useCallback((formName: string) => {
-    analytics.track(`${wizardName}_form_opened` as any, { ...baseProps(), form_name: formName });
+    analytics.track(buildWizardEvent(wizardName, 'form_opened'), { ...baseProps(), form_name: formName });
   }, [wizardName, baseProps]);
 
   const trackFormAbandoned = useCallback((formName: string, fieldsCompleted: number) => {
-    analytics.track(`${wizardName}_form_abandoned` as any, { ...baseProps(), form_name: formName, fields_completed: fieldsCompleted });
+    analytics.track(buildWizardEvent(wizardName, 'form_abandoned'), { ...baseProps(), form_name: formName, fields_completed: fieldsCompleted });
   }, [wizardName, baseProps]);
 
   const trackFormCompleted = useCallback((formName: string, properties?: Record<string, string | number | boolean>) => {
-    analytics.track(`${wizardName}_form_completed` as any, { ...baseProps(), form_name: formName, ...properties });
+    analytics.track(buildWizardEvent(wizardName, 'form_completed'), { ...baseProps(), form_name: formName, ...properties });
   }, [wizardName, baseProps]);
 
   const trackItemAdded = useCallback((itemType: string, item: string, source?: string) => {
-    analytics.track(`${wizardName}_item_added` as any, { ...baseProps(), item_type: itemType, item, source });
+    analytics.track(buildWizardEvent(wizardName, 'item_added'), { ...baseProps(), item_type: itemType, item, source });
   }, [wizardName, baseProps]);
 
   const trackItemRemoved = useCallback((itemType: string, item: string) => {
-    analytics.track(`${wizardName}_item_removed` as any, { ...baseProps(), item_type: itemType, item });
+    analytics.track(buildWizardEvent(wizardName, 'item_removed'), { ...baseProps(), item_type: itemType, item });
   }, [wizardName, baseProps]);
 
   const trackSuggestionAccepted = useCallback((suggestionType: string) => {
-    analytics.track(`${wizardName}_suggestion_accepted` as any, { ...baseProps(), suggestion_type: suggestionType });
+    analytics.track(buildWizardEvent(wizardName, 'suggestion_accepted'), { ...baseProps(), suggestion_type: suggestionType });
   }, [wizardName, baseProps]);
 
   const trackSuggestionIgnored = useCallback((suggestionType: string, totalSuggestions: number) => {
-    analytics.track(`${wizardName}_suggestion_ignored` as any, { ...baseProps(), suggestion_type: suggestionType, total_suggestions: totalSuggestions });
+    analytics.track(buildWizardEvent(wizardName, 'suggestion_ignored'), { ...baseProps(), suggestion_type: suggestionType, total_suggestions: totalSuggestions });
   }, [wizardName, baseProps]);
 
   const api: WizardAnalyticsAPI = {

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
 
 export interface EitherAuthRequest extends Request {
   senderType?: 'human' | 'agent';
@@ -58,7 +59,9 @@ export async function authenticateEither(req: EitherAuthRequest, res: Response, 
           prisma.agent.update({
             where: { id: agent.id },
             data: { lastActiveAt: new Date() },
-          }).catch(() => {});
+          }).catch((err: unknown) => {
+            logger.warn({ err, agentId: agent.id }, 'Failed to update agent lastActiveAt');
+          });
 
           req.senderType = 'agent';
           req.senderId = agent.id;

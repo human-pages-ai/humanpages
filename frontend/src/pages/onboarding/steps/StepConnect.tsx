@@ -4,6 +4,7 @@ import { api } from '../../../lib/api';
 import { analytics } from '../../../lib/analytics';
 import { isInAppBrowser } from '../utils';
 import { WhatsAppSection } from '../components/WhatsAppSection';
+import { useWizardAnalytics, useTrackedButton } from '../../../lib/wizardAnalytics';
 import type { TelegramState } from '../types';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -49,6 +50,10 @@ export function StepConnect({
   onNext, onSkip: _onSkip, error,
 }: StepConnectProps) {
   const { t } = useTranslation();
+  const wa = useWizardAnalytics();
+  const pushEnableBtn = useTrackedButton('push_enable');
+  const installAppBtn = useTrackedButton('install_app');
+  const telegramConnectBtn = useTrackedButton('telegram_connect');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isConnectingRef = useRef(false); // Guard against rapid clicks
@@ -104,6 +109,7 @@ export function StepConnect({
   }
 
   const handleInstallApp = async () => {
+    installAppBtn.track();
     if (!installPromptRef.current) return;
     try {
       await installPromptRef.current.prompt();
@@ -118,6 +124,7 @@ export function StepConnect({
   };
 
   const handleEnablePushNotifications = async () => {
+    pushEnableBtn.track();
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setRegistrationError(t('onboarding.connect.pushNotSupported', 'Push notifications are not supported on this browser'));
       return;
@@ -185,6 +192,7 @@ export function StepConnect({
   };
 
   const handleConnectTelegram = async () => {
+    telegramConnectBtn.track();
     // Guard against rapid clicks — ref-based because state updates are async
     if (isConnectingRef.current) return;
     isConnectingRef.current = true;
@@ -385,7 +393,7 @@ export function StepConnect({
         )}
       </div>
 
-      <WhatsAppSection whatsappNumber={whatsappNumber} setWhatsappNumber={setWhatsappNumber} smsNumber={smsNumber} setSmsNumber={setSmsNumber} />
+      <WhatsAppSection whatsappNumber={whatsappNumber} setWhatsappNumber={setWhatsappNumber} smsNumber={smsNumber} setSmsNumber={setSmsNumber} onFocus={() => wa?.trackFieldFocus('whatsapp')} onBlur={() => wa?.trackFieldBlur('whatsapp', !!whatsappNumber)} />
 
       <div className="flex justify-end mt-6">
         <button type="button" onClick={() => {

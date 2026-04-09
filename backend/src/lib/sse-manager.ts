@@ -48,7 +48,13 @@ export function removeSSEClient(userId: string): void {
 }
 
 export function broadcastSSE(event: string, data: unknown): void {
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  let payload: string;
+  try {
+    payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  } catch (err) {
+    logger.error({ err, event }, 'SSE broadcast: failed to serialize data');
+    return;
+  }
   for (const client of clients.values()) {
     try {
       client.res.write(payload);

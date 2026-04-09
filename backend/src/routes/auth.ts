@@ -16,6 +16,11 @@ import { verifyCaptcha } from '../lib/captcha.js';
 
 const router = Router();
 
+// Hash a token using SHA256 for secure storage
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 async function generateUsername(name: string): Promise<string> {
   const firstName = name.split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   const base = firstName.length >= 2 ? firstName : 'user';
@@ -244,9 +249,9 @@ router.post('/forgot-password', authRateLimiter, async (req, res) => {
       data: { usedAt: new Date() },
     });
 
-    // Create new reset token
+    // Create new reset token (hash it before storing)
     await prisma.passwordReset.create({
-      data: { email, token, expiresAt },
+      data: { email, token: hashToken(token), expiresAt },
     });
 
     // Send password reset email
@@ -270,7 +275,7 @@ router.post('/reset-password', authRateLimiter, async (req, res) => {
     const { token, password } = resetPasswordSchema.parse(req.body);
 
     const resetRecord = await prisma.passwordReset.findUnique({
-      where: { token },
+      where: { token: hashToken(token) },
     });
 
     if (!resetRecord) {
@@ -327,7 +332,7 @@ router.get('/verify-reset-token', authRateLimiter, async (req, res) => {
     }
 
     const resetRecord = await prisma.passwordReset.findUnique({
-      where: { token },
+      where: { token: hashToken(token) },
     });
 
     if (!resetRecord || resetRecord.usedAt || resetRecord.expiresAt < new Date()) {

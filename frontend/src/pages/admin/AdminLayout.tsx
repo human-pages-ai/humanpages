@@ -19,6 +19,7 @@ const adminOnlyItems: NavItem[] = [
   { to: '/admin/listings', label: 'Listings' },
   { to: '/admin/activity', label: 'Activity' },
   { to: '/admin/feedback', label: 'Feedback' },
+  { to: '/admin/analytics', label: 'Analytics' },
   { to: '/admin/video', label: 'Videos' },
   { to: '/admin/schedule', label: 'Schedule' },
   { to: '/admin/photos', label: 'Photos' },
@@ -34,6 +35,9 @@ const adminOnlyItems: NavItem[] = [
   { to: '/admin/marketing-ops', label: 'Marketing Ops' },
   { to: '/admin/solver', label: 'Solver' },
   { to: '/admin/arbitrators', label: 'Arbitrators' },
+  { to: '/admin/mcp-funnel', label: 'MCP Funnel' },
+  { to: '/admin/mcp-sessions', label: 'MCP Sessions' },
+  { to: '/admin/mcp-comms', label: 'MCP Comms' },
 ];
 
 const sharedItems: NavItem[] = [

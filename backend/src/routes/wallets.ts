@@ -171,27 +171,11 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
       try {
         // Verify the identity token and extract wallet addresses
         const privyUser = await verifyIdentityToken(idToken);
-        const ownedAddresses = getEmbeddedWalletAddresses(privyUser);
-
-        if (!ownedAddresses.includes(normalizedAddress)) {
-          // Fallback: fetch fresh user data via REST in case identity token is stale
-          // (e.g. wallet was just created and token hasn't refreshed yet)
-          const human = await prisma.human.findUnique({ where: { id: req.userId! }, select: { privyDid: true } });
-          if (human?.privyDid) {
-            const freshUser = await getPrivyUserByDid(human.privyDid);
-            const freshAddresses = getEmbeddedWalletAddresses(freshUser);
-            if (!freshAddresses.includes(normalizedAddress)) {
-              logger.warn({ userId: req.userId, address: normalizedAddress }, 'Privy wallet ownership verification failed');
-              return res.status(403).json({ error: 'This wallet is not linked to your Privy account' });
-            }
-          } else {
-            logger.warn({ userId: req.userId, address: normalizedAddress }, 'Privy wallet claim without privyDid binding');
-            return res.status(403).json({ error: 'This wallet is not linked to your Privy account' });
-          }
-        }
-
-        // Bind privyDid if not already bound
         const privyDid = privyUser.id;
+
+        // Bind privyDid BEFORE address check so the stale-token fallback works
+        // for first-time users (fixes chicken-and-egg where fallback needs privyDid
+        // but privyDid was only set after the check that depends on it)
         await prisma.human.update({
           where: { id: req.userId! },
           data: { privyDid },
@@ -201,14 +185,35 @@ router.post('/manual', authenticateToken, walletCreateLimiter, async (req: AuthR
             logger.error({ userId: req.userId, privyDid }, 'Privy DID already bound to another account');
             throw new Error('PRIVY_DID_CONFLICT');
           }
-          // Ignore if already set to same value
-          if (err.code !== 'P2025') throw err;
+          // P2025 = record not found — user was deleted mid-flow
+          if (err.code === 'P2025') {
+            logger.warn({ userId: req.userId, privyDid }, 'User not found during privyDid binding');
+            throw new Error('USER_NOT_FOUND');
+          }
+          throw err;
         });
+
+        const ownedAddresses = getEmbeddedWalletAddresses(privyUser);
+
+        if (!ownedAddresses.includes(normalizedAddress)) {
+          // Fallback: fetch fresh user data via REST in case identity token is stale
+          // (e.g. wallet was just created and token hasn't refreshed yet)
+          // privyDid is now always available since we bound it above
+          const freshUser = await getPrivyUserByDid(privyDid);
+          const freshAddresses = getEmbeddedWalletAddresses(freshUser);
+          if (!freshAddresses.includes(normalizedAddress)) {
+            logger.warn({ userId: req.userId, address: normalizedAddress }, 'Privy wallet ownership verification failed');
+            return res.status(403).json({ error: 'This wallet is not linked to your Privy account' });
+          }
+        }
 
         verified = true;
       } catch (err: any) {
         if (err.message === 'PRIVY_DID_CONFLICT') {
           return res.status(409).json({ error: 'This Privy account is already linked to a different Human Pages account' });
+        }
+        if (err.message === 'USER_NOT_FOUND') {
+          return res.status(404).json({ error: 'User account not found' });
         }
         logger.error({ err, userId: req.userId }, 'Privy identity token verification failed');
         return res.status(401).json({ error: 'Invalid or expired Privy identity token' });

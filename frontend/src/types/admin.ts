@@ -1445,3 +1445,84 @@ export interface FeatureMetricsResponse {
   fetchedAt: string;
   metrics: FeatureLiveMetric[];
 }
+
+export interface McpFunnelAnalyticsResponse {
+  overallFunnel: {
+    registered: number; auth_completed: number; auth_failed: number;
+    sessions_started: number; sessions_initialized: number; tools_listed: number;
+    searches: number; profile_views: number; jobs_created: number;
+  };
+  uniqueAgentFunnel: {
+    unique_sessions: number; unique_searchers: number; unique_viewers: number;
+    unique_hirers: number; unique_accepted: number; unique_completed: number;
+  };
+  platformDistribution: { platform: string; count: number }[];
+  toolUsage: { tool: string; calls: number; unique_agents: number; avg_latency_ms: number }[];
+  toolErrors: { tool: string; calls: number; errors: number }[];
+  dailyActivity: { day: string; sessions: number; searches: number; views: number; hires: number; tool_calls: number }[];
+  sessionDropoff: { stage: string; count: number; avg_duration_ms: number; avg_tool_calls: number; avg_searches: number; avg_profiles_viewed: number }[];
+  authStats: {
+    auth_success: number; auth_failed: number; tokens_issued: number;
+    tokens_refreshed: number; tokens_failed: number; tokens_revoked: number;
+  };
+  jobAcceptance: {
+    offers_sent: number; accepted: number; rejected: number;
+    completed: number; avg_response_time_ms: number;
+  };
+  paymentFlow: {
+    initiated: number; received: number; failed: number;
+    confirmed_offchain: number; x402_payments: number;
+  };
+  searchPatterns: { skill: string; location: string; count: number; avg_results: number }[];
+  agentRetention: { agent_id: string; session_count: number; first_seen: string; last_seen: string; active_days: number }[];
+  searchToHire: {
+    avg_searches_before_hire: number; avg_profiles_before_hire: number;
+    avg_time_to_hire_ms: number; hired_after_viewing: number; first_time_hirers: number;
+  };
+  platformFunnel: { platform: string; sessions: number; searches: number; profile_views: number; jobs_created: number }[];
+  toolTransitions: { from_tool: string; to_tool: string; transitions: number }[];
+  skillConversion: { skill: string; searches: number; hires: number; avg_results: number }[];
+  toolLatency: { tool: string; calls: number; avg_ms: number; p50_ms: number; p95_ms: number; p99_ms: number; max_ms: number }[];
+  jobLifecycle: {
+    offers: number; accepted: number; rejected: number; cancelled: number;
+    submissions: number; revisions: number; completed: number; disputed: number;
+    reviews: number; messages: number;
+  };
+  streamStats: {
+    started: number; stopped: number; payments_initiated: number;
+    payments_received: number; offchain_claims: number;
+  };
+  infraHealth: {
+    rate_limits: number; auth_rejections: number; unknown_methods: number;
+    sse_timeouts: number; sse_disconnects: number; discovery_hits: number;
+    tool_errors: number;
+  };
+  range: number;
+  timestamp: string;
+}
+
+export interface McpAnalyticsResponse {
+  notificationDelivery: { channel: string; type: string; sent: number; failed: number }[];
+  webhookStats: { fired: number; delivered: number; failed: number; retries: number };
+  whatsappEngagement: { inbound_messages: number; verifications: number; window_expired: number; pending_flushed: number; disambiguation_needed: number };
+  rateLimits: { limit_type: string; tier: string; count: number }[];
+  outboxStats: { channel: string; delivered: number; failed: number; expired: number }[];
+  range: number;
+  timestamp: string;
+}
+
+export interface WizardAnalyticsResponse {
+  configured: boolean;
+  message?: string;
+  range: string;
+  wizardName: string;
+  funnel: { step: string; unique_runs: number }[];
+  abandonment: { step: string; count: number }[];
+  stepTiming: { step: string; avg_duration: number }[];
+  buttonClicks: { button: string; clicks: number }[];
+  fieldEngagement: { field: string; focus: number; blur: number; errors: number }[];
+  formLifecycle: { form: string; opened: number; completed: number; abandoned: number }[];
+  deviceBreakdown: { mobile: number; desktop: number; inAppBrowser: number };
+  dailyActivity: { day: string; sessions: number; events: number }[];
+  completionRate: { started: number; completed: number; abandoned: number };
+}

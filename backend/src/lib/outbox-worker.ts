@@ -1,5 +1,6 @@
 import { prisma } from './prisma.js';
 import { logger } from './logger.js';
+import { trackServerEvent } from './posthog.js';
 
 // How often the worker runs
 const POLL_INTERVAL_MS = 30_000; // 30 seconds
@@ -91,6 +92,14 @@ async function processOutbox() {
           data: { status: 'FAILED', lastError: 'Exceeded max age (24h)' },
         });
         logger.warn({ id: entry.id, channel: entry.channel }, 'Outbox entry expired');
+
+        // Track notification expired
+        const ageHours = Math.round((now.getTime() - entry.createdAt.getTime()) / 3600000);
+        trackServerEvent('system', 'outbox_expired', {
+          channel: entry.channel,
+          age_hours: ageHours,
+        });
+
         continue;
       }
 
@@ -106,6 +115,12 @@ async function processOutbox() {
           where: { id: entry.id },
           data: { status: 'SENT', attempts: entry.attempts + 1 },
         });
+
+        // Track notification successfully sent
+        trackServerEvent('system', 'outbox_delivered', {
+          channel: entry.channel,
+          attempts: entry.attempts + 1,
+        });
       } catch (err) {
         const attempts = entry.attempts + 1;
         const errorMsg = err instanceof Error ? err.message : String(err);
@@ -116,6 +131,13 @@ async function processOutbox() {
             data: { status: 'FAILED', attempts, lastError: errorMsg },
           });
           logger.error({ id: entry.id, channel: entry.channel, attempts }, 'Outbox entry permanently failed');
+
+          // Track notification failed after max retries
+          trackServerEvent('system', 'outbox_failed', {
+            channel: entry.channel,
+            attempts,
+            reason: errorMsg.slice(0, 100),
+          });
         } else {
           const backoffMs = BACKOFF_SCHEDULE_MS[Math.min(attempts - 1, BACKOFF_SCHEDULE_MS.length - 1)];
           await prisma.notificationOutbox.update({

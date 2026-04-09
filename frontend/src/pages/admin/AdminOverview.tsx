@@ -645,7 +645,7 @@ export default function AdminOverview() {
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Privy Connected</p>
                       <p className="text-2xl font-bold text-purple-600">{ins.crypto.privyRate}%</p>
-                      <p className="text-xs text-gray-400">{fmt(ins.crypto.usersWithPrivyDid)} users with Privy DID</p>
+                      <p className="text-xs text-gray-400">{fmt(ins.crypto.usersWithPrivyDid)} users with Privy wallet</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Total Wallets</p>

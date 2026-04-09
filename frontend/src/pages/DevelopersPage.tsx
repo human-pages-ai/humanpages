@@ -540,7 +540,9 @@ export default function DevelopersPage() {
             <h3 className="text-lg font-semibold text-slate-900 mb-3">
               {t('dev.install.optionA')}
             </h3>
-            <p className="text-slate-600 mb-4" dangerouslySetInnerHTML={{ __html: t('dev.install.optionADesc') }} />
+            <p className="text-slate-600 mb-4">
+              {t('dev.install.optionADesc')}
+            </p>
             <CodeBlock code={MCP_CONFIG} />
           </div>
 
@@ -560,7 +562,9 @@ export default function DevelopersPage() {
             <h3 className="text-lg font-semibold text-slate-900 mb-3">
               {t('dev.install.optionC')}
             </h3>
-            <p className="text-slate-600 mb-4" dangerouslySetInnerHTML={{ __html: t('dev.install.optionCDesc') }} />
+            <p className="text-slate-600 mb-4">
+              {t('dev.install.optionCDesc')}
+            </p>
             <CodeBlock code={CLAWHUB_INSTALL} />
           </div>
 

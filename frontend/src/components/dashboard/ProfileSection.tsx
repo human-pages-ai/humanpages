@@ -4,6 +4,17 @@ import { Profile } from './types';
 import LocationAutocomplete from '../LocationAutocomplete';
 import ProfilePhoto from './ProfilePhoto';
 
+function safeSocialUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return undefined;
+    return url;
+  } catch {
+    return undefined;
+  }
+}
+
 interface Props {
   profile: Profile;
   editingProfile: boolean;
@@ -736,56 +747,56 @@ export default function ProfileSection({
                     {t('dashboard.profile.socialProfiles')}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {profile.linkedinUrl && (
-                      <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.linkedinUrl) && (
+                      <a href={safeSocialUrl(profile.linkedinUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
                         {t('dashboard.profile.linkedin')}
                         {profile.linkedinFollowers != null && <span className="font-medium">{profile.linkedinFollowers.toLocaleString()}</span>}
                       </a>
                     )}
-                    {profile.twitterUrl && (
-                      <a href={profile.twitterUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.twitterUrl) && (
+                      <a href={safeSocialUrl(profile.twitterUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs hover:bg-sky-200">
                         {t('dashboard.profile.twitter')}
                         {profile.twitterFollowers != null && <span className="font-medium">{profile.twitterFollowers.toLocaleString()}</span>}
                       </a>
                     )}
-                    {profile.githubUrl && (
-                      <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.githubUrl) && (
+                      <a href={safeSocialUrl(profile.githubUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300">
                         {t('dashboard.profile.github')}
                       </a>
                     )}
-                    {profile.facebookUrl && (
-                      <a href={profile.facebookUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.facebookUrl) && (
+                      <a href={safeSocialUrl(profile.facebookUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
                         {t('dashboard.profile.facebook')}
                         {profile.facebookFollowers != null && <span className="font-medium">{profile.facebookFollowers.toLocaleString()}</span>}
                       </a>
                     )}
-                    {profile.instagramUrl && (
-                      <a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.instagramUrl) && (
+                      <a href={safeSocialUrl(profile.instagramUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200">
                         {t('dashboard.profile.instagram')}
                         {profile.instagramFollowers != null && <span className="font-medium">{profile.instagramFollowers.toLocaleString()}</span>}
                       </a>
                     )}
-                    {profile.youtubeUrl && (
-                      <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.youtubeUrl) && (
+                      <a href={safeSocialUrl(profile.youtubeUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
                         {t('dashboard.profile.youtube')}
                         {profile.youtubeFollowers != null && <span className="font-medium">{profile.youtubeFollowers.toLocaleString()}</span>}
                       </a>
                     )}
-                    {profile.tiktokUrl && (
-                      <a href={profile.tiktokUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.tiktokUrl) && (
+                      <a href={safeSocialUrl(profile.tiktokUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-gray-900 text-white rounded text-xs hover:bg-gray-800">
                         {t('dashboard.profile.tiktok', 'TikTok')}
                         {profile.tiktokFollowers != null && <span className="font-medium">{profile.tiktokFollowers.toLocaleString()}</span>}
                       </a>
                     )}
-                    {profile.websiteUrl && (
-                      <a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer"
+                    {safeSocialUrl(profile.websiteUrl) && (
+                      <a href={safeSocialUrl(profile.websiteUrl) || '#'} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200">
                         {t('dashboard.profile.website')}
                       </a>

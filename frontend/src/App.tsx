@@ -98,10 +98,14 @@ const AdminFeatures = lazy(() => import('./pages/admin/AdminFeatures'));
 const AdminArbitrators = lazy(() => import('./pages/admin/AdminArbitrators'));
 const AdminBoard = lazy(() => import('./pages/admin/AdminBoard'));
 const AdminMarketingOps = lazy(() => import('./pages/admin/MarketingOps'));
+const AdminWizardAnalytics = lazy(() => import('./pages/admin/AdminWizardAnalytics'));
 const StaffManagement = lazy(() => import('./pages/admin/StaffManagement'));
 const StaffProductivity = lazy(() => import('./pages/admin/StaffProductivity'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
 const TaskCentral = lazy(() => import('./pages/admin/TaskCentral'));
+const AdminMcpFunnel = lazy(() => import('./pages/admin/AdminMcpFunnel'));
+const AdminMcpSessions = lazy(() => import('./pages/admin/AdminMcpSessions'));
+const AdminMcpAnalytics = lazy(() => import('./pages/admin/AdminMcpAnalytics'));
 const BlogIndex = lazy(() => import('./pages/blog/BlogIndex'));
 const AiAgentsHiringHumans = lazy(() => import('./pages/blog/articles/AiAgentsHiringHumans'));
 const GettingPaidUsdc = lazy(() => import('./pages/blog/articles/GettingPaidUsdc'));
@@ -399,6 +403,7 @@ function AppRoutes() {
         <Route path="listings/:id" element={<AdminListingDetailPage />} />
         <Route path="activity" element={<AdminActivity />} />
         <Route path="feedback" element={<AdminFeedback />} />
+        <Route path="analytics" element={<AdminWizardAnalytics />} />
         <Route path="tasks" element={<TaskCentral />} />
         <Route path="time-tracking" element={<StaffDashboard />} />
         <Route path="content" element={<ContentManager />} />
@@ -421,6 +426,9 @@ function AppRoutes() {
         <Route path="marketing-ops" element={<AdminMarketingOps />} />
         <Route path="solver" element={<AdminSolver />} />
         <Route path="arbitrators" element={<AdminArbitrators />} />
+        <Route path="mcp-funnel" element={<AdminMcpFunnel />} />
+        <Route path="mcp-sessions" element={<AdminMcpSessions />} />
+        <Route path="mcp-comms" element={<AdminMcpAnalytics />} />
         <Route path="board" element={<AdminBoard />} />
       </Route>
 

@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 import { BCRYPT_ROUNDS } from '../lib/bcrypt-rounds.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireStaffOrAdmin, apiKeyAdmin, getEffectiveRole } from '../middleware/adminAuth.js';
 import { prisma, identityVerifiedWhere } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { sendStaffApiKeyEmail, sendFeaturedInviteEmail } from '../lib/email.js';
+
 import postingRoutes from './posting.js';
 import timeTrackingRoutes from './timeTracking.js';
 import contentRoutes from './content.js';
@@ -29,6 +31,17 @@ import { normalizeCountry, countryFromLocation, continentFromCountry } from '../
 import { MODEL_PRICING, estimateTokenCost } from '../lib/solverLLM.js';
 
 const router = Router();
+
+// ─── Rate limiters ───
+const adminExportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 exports per hour
+  keyGenerator: (req: any) => req.headers['x-admin-api-key'] || req.userId || req.ip || 'unknown',
+  message: { error: 'Export rate limit exceeded. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+});
 
 // ─── Helper function ───
 function errMsg(error: unknown): string {
@@ -455,7 +468,7 @@ router.get('/stats', async (_req, res) => {
       `,
       // ── Wallet metrics ──
       prisma.human.count({ where: { wallets: { some: {} } } }),
-      prisma.human.count({ where: { privyDid: { not: null } } }),
+      prisma.human.count({ where: { wallets: { some: { source: 'privy' } } } }),
       prisma.wallet.count(),
       prisma.wallet.count({ where: { verified: true } }),
       prisma.wallet.count({ where: { source: 'privy' } }),
@@ -770,14 +783,15 @@ router.get('/stats/funnel', async (_req, res) => {
         )
         SELECT
           d.day,
-          COUNT(h.id) FILTER (WHERE h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL)::int AS email,
           COUNT(h.id) FILTER (WHERE h."googleId" IS NOT NULL)::int AS google,
           COUNT(h.id) FILTER (WHERE h."linkedinId" IS NOT NULL)::int AS linkedin,
-          COUNT(h.id) FILTER (WHERE h.whatsapp IS NOT NULL AND h."googleId" IS NULL AND h."linkedinId" IS NULL)::int AS whatsapp
+          COUNT(h.id) FILTER (WHERE h.whatsapp IS NOT NULL AND h."googleId" IS NULL AND h."linkedinId" IS NULL)::int AS whatsapp,
+          COUNT(h.id) FILTER (WHERE h."utmSource" = 'telegram_bot' AND h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL)::int AS telegram,
+          COUNT(h.id) FILTER (WHERE h."googleId" IS NULL AND h."linkedinId" IS NULL AND h.whatsapp IS NULL AND (h."utmSource" IS NULL OR h."utmSource" != 'telegram_bot'))::int AS email
         FROM days d
         LEFT JOIN "Human" h ON h."createdAt"::date = d.day
         GROUP BY d.day ORDER BY d.day
-      ` as Promise<{ day: Date; email: number; google: number; linkedin: number; whatsapp: number }[]>,
+      ` as Promise<{ day: Date; email: number; google: number; linkedin: number; whatsapp: number; telegram: number }[]>,
 
       // Abandonment: users who signed up 7+ days ago, stuck at each stage
       prisma.$queryRaw`
@@ -855,7 +869,7 @@ router.get('/stats/funnel', async (_req, res) => {
       sourceQuality: sourceQualityRaw,
       signupMethodsByDay: signupMethodsByDayRaw.map(r => ({
         day: new Date(r.day).toISOString().slice(0, 10),
-        email: r.email, google: r.google, linkedin: r.linkedin, whatsapp: r.whatsapp,
+        email: r.email, google: r.google, linkedin: r.linkedin, whatsapp: r.whatsapp, telegram: r.telegram,
       })),
       abandonment: abandonmentRaw,
       velocity: {
@@ -1187,7 +1201,7 @@ router.post('/people/:id/featured-invite', async (req: AuthRequest, res) => {
 });
 
 // GET /api/admin/people/export — CSV export with same filters
-router.get('/people/export', async (req: AuthRequest, res) => {
+router.get('/people/export', adminExportLimiter, async (req: AuthRequest, res) => {
   try {
     const search = (req.query.search as string) || '';
     const country = (req.query.country as string) || '';
@@ -1640,7 +1654,7 @@ router.patch('/users/:id', async (req: AuthRequest, res) => {
 });
 
 // GET /api/admin/agents/export — Export agents as CSV
-router.get('/agents/export', async (req: AuthRequest, res) => {
+router.get('/agents/export', adminExportLimiter, async (req: AuthRequest, res) => {
   try {
     const agents = await prisma.agent.findMany({
       select: {
@@ -2417,25 +2431,33 @@ router.patch('/moderation/:id', async (req: AuthRequest, res) => {
       await prisma.human.update({
         where: { id: item.contentId },
         data: { profilePhotoStatus: status },
-      }).catch(() => {}); // Source may have been deleted
+      }).catch((err: unknown) => {
+        logger.warn({ err, contentId: item.contentId, contentType: item.contentType }, 'Moderation: source record update failed (may have been deleted)');
+      });
     } else if (item.contentType === 'job_posting') {
       await prisma.job.update({
         where: { id: item.contentId },
         data: { moderationStatus: status },
-      }).catch(() => {});
+      }).catch((err: unknown) => {
+        logger.warn({ err, contentId: item.contentId, contentType: item.contentType }, 'Moderation: source record update failed (may have been deleted)');
+      });
     } else if (item.contentType === 'human_report') {
       if (status === 'rejected') {
         await prisma.humanReport.update({
           where: { id: item.contentId },
           data: { status: 'DISMISSED' },
-        }).catch(() => {});
+        }).catch((err: unknown) => {
+          logger.warn({ err, contentId: item.contentId }, 'Moderation: human report dismiss failed (may have been deleted)');
+        });
       }
     } else if (item.contentType === 'agent_report') {
       if (status === 'rejected') {
         await prisma.agentReport.update({
           where: { id: item.contentId },
           data: { status: 'DISMISSED' },
-        }).catch(() => {});
+        }).catch((err: unknown) => {
+          logger.warn({ err, contentId: item.contentId }, 'Moderation: agent report dismiss failed (may have been deleted)');
+        });
       }
     }
 
@@ -2901,6 +2923,493 @@ router.get('/solver/requests', authenticateToken, requireAdmin, async (req, res)
   }
 });
 
+// ======================== MCP ANALYTICS ========================
+
+const mcpAdminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 min per key
+  keyGenerator: (req: any) => req.headers['x-admin-api-key'] || req.ip || 'unknown',
+  message: { error: 'Rate limit exceeded. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+});
+
+// GET /api/admin/mcp/funnel — Full MCP operator funnel analytics
+router.get('/mcp/funnel', apiKeyAdmin, mcpAdminLimiter, async (req: any, res) => {
+  try {
+    const range = Math.max(1, Math.min(90, parseInt(req.query.range as string) || 30));
+
+    const results = await Promise.allSettled([
+      // 1. Registration → Auth → Session funnel
+      queryPostHog(`
+        SELECT
+          countIf(event = 'mcp_client_registered') as registered,
+          countIf(event = 'mcp_auth_completed') as auth_completed,
+          countIf(event = 'mcp_auth_failed') as auth_failed,
+          countIf(event = 'mcp_session_started') as sessions_started,
+          countIf(event = 'mcp_session_initialized') as sessions_initialized,
+          countIf(event = 'mcp_tools_listed') as tools_listed,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_profile_viewed') as profile_views,
+          countIf(event = 'mcp_job_created') as jobs_created
+        FROM events
+        WHERE event IN ('mcp_client_registered', 'mcp_auth_completed', 'mcp_auth_failed',
+          'mcp_session_started', 'mcp_session_initialized', 'mcp_tools_listed',
+          'mcp_search_executed', 'mcp_profile_viewed', 'mcp_job_created')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 2. Full hiring funnel (distinct agents at each stage)
+      queryPostHog(`
+        SELECT
+          countDistinct(if(event = 'mcp_session_started', distinct_id, NULL)) as unique_sessions,
+          countDistinct(if(event = 'mcp_search_executed', distinct_id, NULL)) as unique_searchers,
+          countDistinct(if(event = 'mcp_profile_viewed', distinct_id, NULL)) as unique_viewers,
+          countDistinct(if(event = 'mcp_job_created', distinct_id, NULL)) as unique_hirers,
+          countDistinct(if(event = 'job_accepted', properties.agentId, NULL)) as unique_accepted,
+          countDistinct(if(event = 'job_completed', properties.agentId, NULL)) as unique_completed
+        FROM events
+        WHERE event IN ('mcp_session_started', 'mcp_search_executed', 'mcp_profile_viewed',
+          'mcp_job_created', 'job_accepted', 'job_completed')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 3. Platform distribution
+      queryPostHog(`
+        SELECT properties.platform as platform, count() as count
+        FROM events
+        WHERE event IN ('mcp_client_registered', 'mcp_session_initialized')
+          AND properties.platform IS NOT NULL AND properties.platform != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY platform
+        ORDER BY count DESC
+      `),
+
+      // 4. Tool usage breakdown
+      queryPostHog(`
+        SELECT properties.tool_name as tool, count() as calls,
+          countDistinct(distinct_id) as unique_agents,
+          avg(properties.latency_ms) as avg_latency_ms
+        FROM events
+        WHERE event = 'mcp_tool_called'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY tool
+        ORDER BY calls DESC
+      `),
+
+      // 5. Tool error rates
+      queryPostHog(`
+        SELECT properties.tool_name as tool,
+          countIf(event = 'mcp_tool_called') as calls,
+          countIf(event = 'mcp_tool_error') as errors
+        FROM events
+        WHERE event IN ('mcp_tool_called', 'mcp_tool_error')
+          AND timestamp > now() - interval ${range} day
+        GROUP BY tool
+        ORDER BY errors DESC
+      `),
+
+      // 6. Daily activity trend
+      queryPostHog(`
+        SELECT toDate(timestamp) as day,
+          countIf(event = 'mcp_session_started') as sessions,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_profile_viewed') as views,
+          countIf(event = 'mcp_job_created') as hires,
+          countIf(event = 'mcp_tool_called') as tool_calls
+        FROM events
+        WHERE event IN ('mcp_session_started', 'mcp_search_executed', 'mcp_profile_viewed',
+          'mcp_job_created', 'mcp_tool_called')
+          AND timestamp > now() - interval ${range} day
+        GROUP BY day
+        ORDER BY day
+      `),
+
+      // 7. Session end funnel stages (where agents drop off)
+      queryPostHog(`
+        SELECT properties.funnel_stage as stage, count() as count,
+          avg(properties.duration_ms) as avg_duration_ms,
+          avg(properties.tool_calls) as avg_tool_calls,
+          avg(properties.searches) as avg_searches,
+          avg(properties.profiles_viewed) as avg_profiles_viewed
+        FROM events
+        WHERE event = 'mcp_session_ended'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY stage
+        ORDER BY count DESC
+      `),
+
+      // 8. Auth success/failure breakdown
+      queryPostHog(`
+        SELECT
+          countIf(event = 'mcp_auth_completed') as auth_success,
+          countIf(event = 'mcp_auth_failed') as auth_failed,
+          countIf(event = 'mcp_token_issued') as tokens_issued,
+          countIf(event = 'mcp_token_refreshed') as tokens_refreshed,
+          countIf(event = 'mcp_token_failed') as tokens_failed,
+          countIf(event = 'mcp_token_revoked') as tokens_revoked
+        FROM events
+        WHERE event IN ('mcp_auth_completed', 'mcp_auth_failed', 'mcp_token_issued',
+          'mcp_token_refreshed', 'mcp_token_failed', 'mcp_token_revoked')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 9. Job acceptance rates (human response)
+      queryPostHog(`
+        SELECT
+          countIf(event = 'job_offer_sent') as offers_sent,
+          countIf(event = 'job_accepted') as accepted,
+          countIf(event = 'job_rejected') as rejected,
+          countIf(event = 'job_completed') as completed,
+          avg(if(event IN ('job_accepted', 'job_rejected'), properties.time_to_response_ms, NULL)) as avg_response_time_ms
+        FROM events
+        WHERE event IN ('job_offer_sent', 'job_accepted', 'job_rejected', 'job_completed')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 10. Payment flow
+      queryPostHog(`
+        SELECT
+          countIf(event = 'payment_initiated') as initiated,
+          countIf(event = 'payment_received') as received,
+          countIf(event = 'payment_failed') as failed,
+          countIf(event = 'payment_confirmed_offchain') as confirmed_offchain,
+          countIf(event = 'x402_payment_received') as x402_payments
+        FROM events
+        WHERE event IN ('payment_initiated', 'payment_received', 'payment_failed',
+          'payment_confirmed_offchain', 'x402_payment_received')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 11. Search patterns (top skills & locations)
+      queryPostHog(`
+        SELECT properties.skill as skill, properties.location as location, count() as count,
+          avg(properties.result_count) as avg_results
+        FROM events
+        WHERE event = 'mcp_search_executed'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY skill, location
+        ORDER BY count DESC
+        LIMIT 20
+      `),
+
+      // 12. Agent retention (repeat sessions per agent)
+      queryPostHog(`
+        SELECT distinct_id as agent_id,
+          count() as session_count,
+          min(timestamp) as first_seen,
+          max(timestamp) as last_seen,
+          dateDiff('day', min(timestamp), max(timestamp)) as active_days
+        FROM events
+        WHERE event = 'mcp_session_started'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY agent_id
+        ORDER BY session_count DESC
+        LIMIT 50
+      `),
+
+      // 13. Search-to-hire conversion (from tool context)
+      queryPostHog(`
+        SELECT
+          avg(properties.searches_before_hire) as avg_searches_before_hire,
+          avg(properties.profiles_viewed_before_hire) as avg_profiles_before_hire,
+          avg(properties.time_from_first_search_ms) as avg_time_to_hire_ms,
+          countIf(properties.viewed_this_human_before = 'true') as hired_after_viewing,
+          countIf(properties.is_first_job_in_session = 'true') as first_time_hirers
+        FROM events
+        WHERE event = 'mcp_job_created'
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 14. Per-platform conversion funnel
+      queryPostHog(`
+        SELECT properties.platform as platform,
+          countIf(event = 'mcp_session_started') as sessions,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_profile_viewed') as profile_views,
+          countIf(event = 'mcp_job_created') as jobs_created
+        FROM events
+        WHERE event IN ('mcp_session_started', 'mcp_search_executed', 'mcp_profile_viewed', 'mcp_job_created')
+          AND properties.platform IS NOT NULL AND properties.platform != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY platform
+        ORDER BY sessions DESC
+      `),
+
+      // 15. Tool call transitions (previous_tool → current tool)
+      queryPostHog(`
+        SELECT properties.previous_tool as from_tool,
+          properties.tool_name as to_tool,
+          count() as transitions
+        FROM events
+        WHERE event = 'mcp_tool_called'
+          AND properties.previous_tool IS NOT NULL AND properties.previous_tool != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY from_tool, to_tool
+        ORDER BY transitions DESC
+        LIMIT 30
+      `),
+
+      // 16. Skill-to-hire conversion (which searched skills lead to jobs)
+      queryPostHog(`
+        SELECT properties.skill as skill,
+          countIf(event = 'mcp_search_executed') as searches,
+          countIf(event = 'mcp_job_created') as hires,
+          avg(if(event = 'mcp_search_executed', properties.result_count, NULL)) as avg_results
+        FROM events
+        WHERE event IN ('mcp_search_executed', 'mcp_job_created')
+          AND properties.skill IS NOT NULL AND properties.skill != ''
+          AND timestamp > now() - interval ${range} day
+        GROUP BY skill
+        ORDER BY searches DESC
+        LIMIT 20
+      `),
+
+      // 17. Tool latency percentiles
+      queryPostHog(`
+        SELECT properties.tool_name as tool,
+          count() as calls,
+          avg(properties.latency_ms) as avg_ms,
+          quantile(0.5)(properties.latency_ms) as p50_ms,
+          quantile(0.95)(properties.latency_ms) as p95_ms,
+          quantile(0.99)(properties.latency_ms) as p99_ms,
+          max(properties.latency_ms) as max_ms
+        FROM events
+        WHERE event = 'mcp_tool_called'
+          AND properties.latency_ms IS NOT NULL
+          AND timestamp > now() - interval ${range} day
+        GROUP BY tool
+        ORDER BY avg_ms DESC
+      `),
+
+      // 18. Job full lifecycle (all status events)
+      queryPostHog(`
+        SELECT
+          countIf(event = 'job_offer_sent') as offers,
+          countIf(event = 'job_accepted') as accepted,
+          countIf(event = 'job_rejected') as rejected,
+          countIf(event = 'job_cancelled') as cancelled,
+          countIf(event = 'work_submitted') as submissions,
+          countIf(event = 'job_revision_requested') as revisions,
+          countIf(event = 'job_completed') as completed,
+          countIf(event = 'job_disputed') as disputed,
+          countIf(event = 'review_submitted') as reviews,
+          countIf(event = 'message_sent') as messages
+        FROM events
+        WHERE event IN ('job_offer_sent', 'job_accepted', 'job_rejected', 'job_cancelled',
+          'work_submitted', 'job_revision_requested', 'job_completed', 'job_disputed',
+          'review_submitted', 'message_sent')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 19. Stream payment stats
+      queryPostHog(`
+        SELECT
+          countIf(event = 'stream_started') as started,
+          countIf(event = 'stream_stopped') as stopped,
+          countIf(event = 'payment_initiated') as payments_initiated,
+          countIf(event = 'payment_received') as payments_received,
+          countIf(event = 'payment_claimed_offchain') as offchain_claims
+        FROM events
+        WHERE event IN ('stream_started', 'stream_stopped', 'payment_initiated',
+          'payment_received', 'payment_claimed_offchain')
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 20. MCP infrastructure health
+      queryPostHog(`
+        SELECT
+          countIf(event = 'mcp_rate_limit_hit') as rate_limits,
+          countIf(event = 'mcp_auth_rejected') as auth_rejections,
+          countIf(event = 'mcp_unknown_method') as unknown_methods,
+          countIf(event = 'mcp_sse_max_duration') as sse_timeouts,
+          countIf(event = 'mcp_sse_disconnected') as sse_disconnects,
+          countIf(event = 'mcp_discovery_hit') as discovery_hits,
+          countIf(event = 'mcp_tool_error') as tool_errors
+        FROM events
+        WHERE event IN ('mcp_rate_limit_hit', 'mcp_auth_rejected', 'mcp_unknown_method',
+          'mcp_sse_max_duration', 'mcp_sse_disconnected', 'mcp_discovery_hit', 'mcp_tool_error')
+          AND timestamp > now() - interval ${range} day
+      `),
+    ]);
+
+    // Extract results safely
+    const extracted = results.map((r) => {
+      if (r.status === 'fulfilled') {
+        const data = r.value;
+        return Array.isArray(data) ? data : [data];
+      }
+      logger.warn({ reason: r.reason }, 'PostHog MCP funnel query failed');
+      return [];
+    });
+
+    const [overallFunnel, uniqueAgentFunnel, platformDist, toolUsage, toolErrors,
+      dailyActivity, sessionStages, authStats, jobAcceptance, paymentFlow,
+      searchPatterns, agentRetention, searchToHire, platformFunnel, toolTransitions,
+      skillConversion, toolLatency, jobLifecycle, streamStats, infraHealth] = extracted;
+
+    res.json({
+      overallFunnel: overallFunnel[0] || {},
+      uniqueAgentFunnel: uniqueAgentFunnel[0] || {},
+      platformDistribution: platformDist,
+      toolUsage,
+      toolErrors,
+      dailyActivity,
+      sessionDropoff: sessionStages,
+      authStats: authStats[0] || {},
+      jobAcceptance: jobAcceptance[0] || {},
+      paymentFlow: paymentFlow[0] || {},
+      searchPatterns,
+      agentRetention,
+      searchToHire: searchToHire[0] || {},
+      platformFunnel,
+      toolTransitions,
+      skillConversion,
+      toolLatency,
+      jobLifecycle: jobLifecycle[0] || {},
+      streamStats: streamStats[0] || {},
+      infraHealth: infraHealth[0] || {},
+      range,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP funnel analytics error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/mcp/sessions — List MCP sessions with conversation replay
+router.get('/mcp/sessions', apiKeyAdmin, mcpAdminLimiter, async (req: any, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const offset = Math.max(0, Math.min(parseInt(req.query.offset as string) || 0, 50000));
+    const agentId = req.query.agentId as string | undefined;
+    const platform = req.query.platform as string | undefined;
+    const sessionId = req.query.sessionId as string | undefined;
+
+    // Validate filter formats
+    const validPlatforms = ['chatgpt', 'claude', 'gemini', 'cursor', 'copilot', 'custom'];
+    if (platform && !validPlatforms.includes(platform)) {
+      return res.status(400).json({ error: 'Invalid platform filter' });
+    }
+    if (agentId && !/^[a-zA-Z0-9_-]{1,128}$/.test(agentId)) {
+      return res.status(400).json({ error: 'Invalid agentId filter' });
+    }
+    if (sessionId && !/^session_[a-f0-9]{32}$/.test(sessionId)) {
+      return res.status(400).json({ error: 'Invalid sessionId filter' });
+    }
+
+    const where: any = {};
+    if (agentId) where.agentId = agentId;
+    if (platform) where.platform = platform;
+    if (sessionId) where.sessionId = sessionId;
+
+    // Get all turns, grouped by session on the frontend
+    const turns = await prisma.mcpSessionLog.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }],
+      take: limit * 20, // Get enough turns to fill `limit` sessions
+      skip: offset,
+    });
+
+    // Group by sessionId for session-level view
+    const sessionMap = new Map<string, any>();
+    for (const turn of turns) {
+      if (!sessionMap.has(turn.sessionId)) {
+        sessionMap.set(turn.sessionId, {
+          sessionId: turn.sessionId,
+          agentId: turn.agentId,
+          platform: turn.platform,
+          callerIp: turn.callerIp,
+          callerUa: turn.callerUa,
+          apiKeyPrefix: turn.apiKeyPrefix,
+          startedAt: turn.createdAt,
+          turns: [],
+          toolCalls: 0,
+          errorCount: 0,
+        });
+      }
+      const session = sessionMap.get(turn.sessionId)!;
+      session.turns.push(turn);
+      if (turn.method === 'tools/call') session.toolCalls++;
+      if (turn.isError) session.errorCount++;
+      if (turn.createdAt < session.startedAt) session.startedAt = turn.createdAt;
+    }
+
+    const sessions = Array.from(sessionMap.values())
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+      .slice(0, limit);
+
+    // Sort turns within each session by sequence
+    for (const s of sessions) {
+      s.turns.sort((a: any, b: any) => a.sequenceNum - b.sequenceNum);
+    }
+
+    // Mask sensitive fields before sending to frontend
+    for (const s of sessions) {
+      if (s.callerIp) {
+        const parts = s.callerIp.split('.');
+        s.callerIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : s.callerIp.substring(0, 8) + '***';
+      }
+      for (const t of s.turns) {
+        if (t.callerIp) {
+          const parts = t.callerIp.split('.');
+          t.callerIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : t.callerIp.substring(0, 8) + '***';
+        }
+      }
+    }
+
+    res.json({ sessions, limit, offset });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP sessions error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/mcp/sessions/:sessionId — Get full conversation for a session
+router.get('/mcp/sessions/:sessionId', apiKeyAdmin, mcpAdminLimiter, async (req: any, res) => {
+  try {
+    const turns = await prisma.mcpSessionLog.findMany({
+      where: { sessionId: req.params.sessionId },
+      orderBy: { sequenceNum: 'asc' },
+    });
+
+    if (turns.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const first = turns[0];
+    const maskedIp = first.callerIp ? (() => {
+      const parts = first.callerIp.split('.');
+      return parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : first.callerIp.substring(0, 8) + '***';
+    })() : null;
+
+    // Mask IPs in turns too
+    for (const t of turns) {
+      if ((t as any).callerIp) {
+        const parts = (t as any).callerIp.split('.');
+        (t as any).callerIp = parts.length === 4 ? `${parts[0]}.${parts[1]}.*.*` : (t as any).callerIp.substring(0, 8) + '***';
+      }
+    }
+
+    res.json({
+      sessionId: first.sessionId,
+      agentId: first.agentId,
+      platform: first.platform,
+      callerIp: maskedIp,
+      callerUa: first.callerUa,
+      apiKeyPrefix: first.apiKeyPrefix,
+      startedAt: first.createdAt,
+      endedAt: turns[turns.length - 1].createdAt,
+      turns,
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP session detail error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ======================== ARBITRATOR MANAGEMENT ========================
 
 // GET /api/admin/arbitrators — List all arbitrators (including unhealthy/pending)
@@ -2978,6 +3487,129 @@ router.patch('/arbitrators/:id', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, 'Admin arbitrator update error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// ─── Helper function for PostHog HogQL queries ───
+async function queryPostHog(query: string): Promise<any> {
+  const POSTHOG_KEY = process.env.POSTHOG_KEY;
+  const POSTHOG_PROJECT_ID = process.env.POSTHOG_PROJECT_ID || '1';
+
+  if (!POSTHOG_KEY) {
+    throw new Error('POSTHOG_KEY not configured');
+  }
+
+  const response = await fetch(`https://us.posthog.com/api/projects/${POSTHOG_PROJECT_ID}/query/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${POSTHOG_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: {
+        kind: 'HogQLQuery',
+        query,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`PostHog query failed: ${error}`);
+  }
+
+  const data = await response.json() as { results?: unknown[] };
+  return data.results || [];
+}
+
+// GET /api/admin/mcp/analytics — MCP communication & notification analytics
+router.get('/mcp/analytics', apiKeyAdmin, async (req: any, res) => {
+  try {
+    const range = Math.max(1, Math.min(90, parseInt(req.query.range as string) || 30));
+
+    const results = await Promise.allSettled([
+      // 10. Notification delivery by channel
+      queryPostHog(`
+        SELECT properties.channel as channel, properties.type as type,
+          countIf(event = 'notification_sent') as sent,
+          countIf(event = 'notification_failed') as failed
+        FROM events
+        WHERE event IN ('notification_sent', 'notification_failed')
+          AND timestamp > now() - interval ${range} day
+        GROUP BY channel, type
+        ORDER BY sent DESC
+      `),
+
+      // 11. Webhook delivery stats
+      queryPostHog(`
+        SELECT
+          countIf(event = 'webhook_fired') as fired,
+          countIf(event = 'webhook_delivered') as delivered,
+          countIf(event = 'webhook_failed') as failed,
+          countIf(event = 'webhook_retry') as retries
+        FROM events
+        WHERE event LIKE 'webhook_%'
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 12. WhatsApp engagement
+      queryPostHog(`
+        SELECT
+          countIf(event = 'whatsapp_inbound_received') as inbound_messages,
+          countIf(event = 'whatsapp_verified') as verifications,
+          countIf(event = 'whatsapp_window_expired') as window_expired,
+          countIf(event = 'whatsapp_pending_flushed') as pending_flushed,
+          countIf(event = 'whatsapp_disambiguation_needed') as disambiguation_needed
+        FROM events
+        WHERE event LIKE 'whatsapp_%'
+          AND timestamp > now() - interval ${range} day
+      `),
+
+      // 13. Rate limit hits
+      queryPostHog(`
+        SELECT properties.limit_type as limit_type, properties.tier as tier, count() as count
+        FROM events
+        WHERE event = 'rate_limit_hit'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY limit_type, tier
+        ORDER BY count DESC
+      `),
+
+      // 14. Outbox delivery stats
+      queryPostHog(`
+        SELECT properties.channel as channel,
+          countIf(event = 'outbox_delivered') as delivered,
+          countIf(event = 'outbox_failed') as failed,
+          countIf(event = 'outbox_expired') as expired
+        FROM events
+        WHERE event LIKE 'outbox_%'
+          AND timestamp > now() - interval ${range} day
+        GROUP BY channel
+      `),
+    ]);
+
+    // Extract results safely
+    const [notifDelivery, webhookStats, whatsappEng, rateLimits, outboxStats] = results.map((r) => {
+      if (r.status === 'fulfilled') {
+        const data = r.value;
+        return Array.isArray(data) ? data : [data];
+      }
+      logger.warn({ reason: r.reason }, 'PostHog query failed, returning empty');
+      return [];
+    });
+
+    res.json({
+      notificationDelivery: notifDelivery,
+      webhookStats: webhookStats[0] || {},
+      whatsappEngagement: whatsappEng[0] || {},
+      rateLimits: rateLimits,
+      outboxStats: outboxStats,
+      range,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Admin MCP analytics error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
   }
 });

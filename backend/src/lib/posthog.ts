@@ -58,6 +58,44 @@ export function trackServerEvent(
   });
 }
 
+/**
+ * Execute a HogQL query against PostHog.
+ * Requires POSTHOG_KEY and POSTHOG_PROJECT_ID env vars.
+ *
+ * @param query - HogQL query string
+ * @returns Query results as array of records
+ */
+export async function queryPostHog(query: string): Promise<any[]> {
+  const projectId = process.env.POSTHOG_PROJECT_ID;
+  const apiKey = process.env.POSTHOG_PERSONAL_API_KEY;
+
+  if (!projectId || !apiKey) {
+    throw new Error('POSTHOG_PROJECT_ID and POSTHOG_PERSONAL_API_KEY required for analytics');
+  }
+
+  const response = await fetch(`https://us.posthog.com/api/projects/${projectId}/query/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      query: {
+        kind: 'HogQLQuery',
+        query,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`PostHog query failed: ${response.status} ${error}`);
+  }
+
+  const data = (await response.json()) as any;
+  return data.results || [];
+}
+
 export async function shutdownPostHog() {
   if (posthogClient) {
     await posthogClient.shutdown();

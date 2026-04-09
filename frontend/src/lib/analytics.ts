@@ -155,6 +155,42 @@ class Analytics {
     posthog.identify(userId);
   }
 
+  /**
+   * Send a critical event via sendBeacon (for page close/abandonment).
+   * Falls back to posthog.capture if beacon fails.
+   * Uses text/plain MIME type — some in-app browsers silently reject application/json.
+   */
+  trackBeacon(event: TrackableEvent, properties?: EventProperties) {
+    if (this.optedOut) return;
+
+    const apiHost = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
+    const apiKey = import.meta.env.VITE_POSTHOG_KEY;
+    if (!apiKey) return;
+
+    const payload = JSON.stringify({
+      api_key: apiKey,
+      event,
+      properties: {
+        distinct_id: this.userId || 'anonymous',
+        ...properties,
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    let beaconSent = false;
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+      beaconSent = navigator.sendBeacon(
+        `${apiHost}/capture/`,
+        new Blob([payload], { type: 'text/plain' })
+      );
+    }
+
+    // Fallback to posthog.capture only if beacon wasn't sent
+    if (!beaconSent) {
+      posthog.capture(event, properties);
+    }
+  }
+
   track(event: TrackableEvent, properties?: EventProperties) {
     const payload = {
       event,

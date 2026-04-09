@@ -475,7 +475,9 @@ export async function applyAutoFix(
     await prisma.monitoredError.update({
       where: { id: monitoredErrorId },
       data: { autoFixStatus: 'failed', autoFixTestOutput: err.message?.slice(0, 5000) },
-    }).catch(() => {});
+    }).catch((dbErr: unknown) => {
+      logger.error({ err: dbErr, monitoredErrorId }, 'Failed to record autofix failure status in DB');
+    });
 
     return { status: 'failed', error: err.message };
   } finally {
