@@ -42,7 +42,7 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
               disabled={cvProcessing}
               className="text-sm font-medium text-red-600 hover:text-red-700 underline disabled:opacity-50"
             >
-              Retry upload
+              {t('onboarding.cvUpload.retryUpload', 'Retry upload')}
             </button>
           )}
         </div>
@@ -52,10 +52,10 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-blue-600">📄</span>
-            <p className="font-medium text-blue-900">CV already uploaded</p>
+            <p className="font-medium text-blue-900">{t('onboarding.cvUpload.alreadyUploaded', 'CV already uploaded')}</p>
           </div>
-          <p className="text-sm text-blue-700 mb-3">Your CV has already been analyzed and your profile was pre-filled with the extracted data.</p>
-          <button type="button" onClick={onReupload} className="text-sm text-orange-600 hover:text-orange-700 font-medium">Upload a different CV</button>
+          <p className="text-sm text-blue-700 mb-3">{t('onboarding.cvUpload.alreadyAnalyzed', 'Your CV has already been analyzed and your profile was pre-filled with the extracted data.')}</p>
+          <button type="button" onClick={onReupload} className="text-sm text-orange-600 hover:text-orange-700 font-medium">{t('onboarding.cvUpload.uploadDifferent', 'Upload a different CV')}</button>
         </div>
       )}
 
@@ -65,25 +65,25 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold flex-shrink-0">&#10003;</div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-green-800">CV analyzed successfully!</p>
-                <p className="text-xs text-green-600">Your profile has been auto-filled. Continue to review it.</p>
+                <p className="text-sm font-semibold text-green-800">{t('onboarding.cvUpload.analyzeSuccess', 'CV analyzed successfully!')}</p>
+                <p className="text-xs text-green-600">{t('onboarding.cvUpload.autoFilled', 'Your profile has been auto-filled. Continue to review it.')}</p>
                 {currentFile && (
-                  <p className="text-xs text-green-600 mt-1">Uploaded: {currentFile.name} ({formatFileSize(currentFile.size)})</p>
+                  <p className="text-xs text-green-600 mt-1">{t('onboarding.cvUpload.uploaded', 'Uploaded')}: {currentFile.name} ({formatFileSize(currentFile.size)})</p>
                 )}
               </div>
-              <button type="button" onClick={onReupload} className="text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 px-2.5 py-1.5 rounded transition-colors flex-shrink-0 w-full sm:w-auto text-center">Upload different CV</button>
+              <button type="button" onClick={onReupload} className="text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 px-2.5 py-1.5 rounded transition-colors flex-shrink-0 w-full sm:w-auto text-center">{t('onboarding.cvUpload.uploadDifferent', 'Upload a different CV')}</button>
             </div>
             {cvData && (
               <div className="mt-2 pt-2 border-t border-green-200 grid grid-cols-1 min-[320px]:grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs text-green-700">
                 {(cvData.skills?.explicit?.length || 0) + (cvData.skills?.inferred?.length || 0) > 0 && (
-                  <span>{(cvData.skills.explicit?.length || 0) + (cvData.skills.inferred?.length || 0)} skills</span>
+                  <span>{(cvData.skills.explicit?.length || 0) + (cvData.skills.inferred?.length || 0)} {t('onboarding.cvUpload.skills', 'skills')}</span>
                 )}
-                {cvData.workExperience?.length > 0 && <span>{cvData.workExperience.length} jobs</span>}
-                {cvData.education?.length > 0 && <span>{cvData.education.length} education</span>}
-                {cvData.certificates?.length > 0 && <span>{cvData.certificates.length} certificates</span>}
-                {cvData.languages?.length > 0 && <span>{cvData.languages.length} languages</span>}
-                {(cvData.linkedinUrl || cvData.githubUrl || cvData.websiteUrl) && <span>social links</span>}
-                {cvData.suggestedServices?.length > 0 && <span>{cvData.suggestedServices.length} service ideas</span>}
+                {cvData.workExperience?.length > 0 && <span>{cvData.workExperience.length} {t('onboarding.cvUpload.jobs', 'jobs')}</span>}
+                {cvData.education?.length > 0 && <span>{cvData.education.length} {t('onboarding.cvUpload.education', 'education')}</span>}
+                {cvData.certificates?.length > 0 && <span>{cvData.certificates.length} {t('onboarding.cvUpload.certificates', 'certificates')}</span>}
+                {cvData.languages?.length > 0 && <span>{cvData.languages.length} {t('onboarding.cvUpload.languages', 'languages')}</span>}
+                {(cvData.linkedinUrl || cvData.githubUrl || cvData.websiteUrl) && <span>{t('onboarding.cvUpload.socialLinks', 'social links')}</span>}
+                {cvData.suggestedServices?.length > 0 && <span>{cvData.suggestedServices.length} {t('onboarding.cvUpload.serviceIdeas', 'service ideas')}</span>}
               </div>
             )}
           </div>

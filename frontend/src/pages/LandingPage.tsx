@@ -667,6 +667,7 @@ function LiveListingCards() {
 
 /** Mockup of a job offer notification */
 function JobOfferMockup() {
+  const { t } = useTranslation();
   return (
     <div className="relative w-full max-w-sm mx-auto">
       <div className="absolute -inset-4 bg-gradient-to-br from-green-100 via-transparent to-blue-100 rounded-3xl blur-2xl opacity-60" />
@@ -674,19 +675,19 @@ function JobOfferMockup() {
         <div className="px-6 py-5">
           <div className="flex items-center gap-2 mb-3">
             <BoltIcon className="w-5 h-5 text-amber-500" />
-            <span className="text-sm font-medium text-amber-600">New job offer</span>
+            <span className="text-sm font-medium text-amber-600">{t('landing.jobMockup.newOffer', 'New job offer')}</span>
           </div>
-          <h3 className="font-semibold text-slate-900">Photograph 5 storefronts</h3>
-          <p className="text-sm text-slate-500 mt-1">Brooklyn, NY — 5 exterior photos needed for a local business directory update.</p>
+          <h3 className="font-semibold text-slate-900">{t('landing.jobMockup.title', 'Photograph 5 storefronts')}</h3>
+          <p className="text-sm text-slate-500 mt-1">{t('landing.jobMockup.description', 'Brooklyn, NY — 5 exterior photos needed for a local business directory update.')}</p>
           <div className="mt-4 flex items-center justify-between">
             <span className="text-2xl font-bold text-slate-900">$150</span>
-            <span className="text-xs text-slate-400">one-time task</span>
+            <span className="text-xs text-slate-400">{t('landing.jobMockup.oneTime', 'one-time task')}</span>
           </div>
           <div className="mt-4 flex gap-2">
-            <div className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg text-center">Accept</div>
-            <div className="flex-1 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg text-center">Decline</div>
+            <div className="flex-1 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg text-center">{t('landing.jobMockup.accept', 'Accept')}</div>
+            <div className="flex-1 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg text-center">{t('landing.jobMockup.decline', 'Decline')}</div>
           </div>
-          <p className="text-xs text-slate-400 mt-3 text-center">From: agent-47x · Paid on completion</p>
+          <p className="text-xs text-slate-400 mt-3 text-center">{t('landing.jobMockup.from', 'From: agent-47x · Paid on completion')}</p>
         </div>
       </div>
     </div>

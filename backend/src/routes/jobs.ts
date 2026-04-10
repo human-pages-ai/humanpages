@@ -145,6 +145,7 @@ const TIER_OFFER_CONFIG: Record<string, { limit: number; windowMs: number }> = {
 
 // Create a job offer (requires registered + activated agent, or x402 payment)
 router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent, requireActiveOrPaid, async (req: X402Request, res) => {
+  logger.debug({ agentId: req.agent?.id }, 'job create called');
   try {
     const data = createJobSchema.parse(req.body);
     const agent = req.agent!;
@@ -915,6 +916,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 
 // Human accepts a job offer
 router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req: AuthRequest, res) => {
+  logger.debug({ jobId: req.params.id, userId: req.userId }, 'job accept called');
   try {
     // Use transaction to prevent race condition where two users accept the same job
     const result = await prisma.$transaction(async (tx) => {
@@ -1134,6 +1136,7 @@ router.patch('/:id/reject', authenticateToken, async (req: AuthRequest, res) => 
 // Mark job as paid (called by agent after sending payment)
 // Performs on-chain verification of USDC transfer
 router.patch('/:id/paid', async (req, res) => {
+  logger.debug({ jobId: req.params.id }, 'job mark-paid called');
   try {
     const data = markPaidSchema.parse(req.body);
 

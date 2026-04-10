@@ -332,18 +332,25 @@ router.get('/staff-stats', jwtOrApiKey, requireStaffOrApiKey, async (req: AuthRe
         where: completedWhere,
         _count: true,
       }),
-      // Raw SQL for daily breakdown
-      prisma.$queryRawUnsafe<Array<{ completedById: string; day: string; count: bigint }>>(
-        `SELECT "completedById", DATE("updatedAt") as day, COUNT(*)::bigint as count
-         FROM "PostingGroup"
-         WHERE "completedById" IS NOT NULL
-           AND "updatedAt" >= $1
-           AND "status" IN ('POSTED', 'REJECTED', 'SKIPPED')
-           ${!isAdmin ? `AND "completedById" = $2` : ''}
-         GROUP BY "completedById", DATE("updatedAt")
-         ORDER BY day DESC`,
-        ...(isAdmin ? [since] : [since, req.userId!])
-      ),
+      // Raw SQL for daily breakdown (split by role to avoid $queryRawUnsafe)
+      isAdmin
+        ? prisma.$queryRaw<Array<{ completedById: string; day: string; count: bigint }>>`
+            SELECT "completedById", DATE("updatedAt") as day, COUNT(*)::bigint as count
+            FROM "PostingGroup"
+            WHERE "completedById" IS NOT NULL
+              AND "updatedAt" >= ${since}
+              AND "status" IN ('POSTED', 'REJECTED', 'SKIPPED')
+            GROUP BY "completedById", DATE("updatedAt")
+            ORDER BY day DESC`
+        : prisma.$queryRaw<Array<{ completedById: string; day: string; count: bigint }>>`
+            SELECT "completedById", DATE("updatedAt") as day, COUNT(*)::bigint as count
+            FROM "PostingGroup"
+            WHERE "completedById" IS NOT NULL
+              AND "updatedAt" >= ${since}
+              AND "status" IN ('POSTED', 'REJECTED', 'SKIPPED')
+              AND "completedById" = ${req.userId!}
+            GROUP BY "completedById", DATE("updatedAt")
+            ORDER BY day DESC`,
     ]);
 
     // Fetch staff names for the grouped results

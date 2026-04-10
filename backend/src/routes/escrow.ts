@@ -31,6 +31,7 @@ const router = Router();
 // ======================== VERIFY DEPOSIT ========================
 // Agent calls after depositing USDC into contract
 router.post('/:jobId/verify-deposit', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  logger.debug({ jobId: req.params.jobId, agentId: req.agent?.id }, 'escrow verify-deposit called');
   try {
     const { txHash } = z.object({
       txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid tx hash'),
@@ -108,6 +109,7 @@ router.post('/:jobId/verify-deposit', authenticateAgent, requireActiveAgent, asy
 // ======================== MARK COMPLETE ========================
 // Agent approves work → relayer calls markComplete on-chain
 router.post('/:jobId/mark-complete', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  logger.debug({ jobId: req.params.jobId, agentId: req.agent?.id }, 'escrow mark-complete called');
   try {
     const job = await prisma.job.findUnique({ where: { id: req.params.jobId } });
     if (!job) return res.status(404).json({ error: 'Job not found' });
@@ -162,6 +164,7 @@ router.post('/:jobId/mark-complete', authenticateAgent, requireActiveAgent, asyn
 
 // ======================== ESCROW STATUS ========================
 router.get('/:jobId/status', async (req, res) => {
+  logger.debug({ jobId: req.params.jobId }, 'escrow status called');
   try {
     const job = await prisma.job.findUnique({
       where: { id: req.params.jobId },
@@ -225,6 +228,7 @@ router.get('/:jobId/status', async (req, res) => {
 
 // ======================== PROPOSE CANCEL ========================
 router.post('/:jobId/propose-cancel', authenticateAgent, requireActiveAgent, async (req: AgentAuthRequest, res) => {
+  logger.debug({ jobId: req.params.jobId, agentId: req.agent?.id }, 'escrow propose-cancel called');
   try {
     const { amountToPayee } = z.object({
       amountToPayee: z.number().min(0),
@@ -257,6 +261,7 @@ router.post('/:jobId/propose-cancel', authenticateAgent, requireActiveAgent, asy
 
 // ======================== ACCEPT CANCEL ========================
 router.post('/:jobId/accept-cancel', authenticateToken, async (req: AuthRequest, res) => {
+  logger.debug({ jobId: req.params.jobId, userId: req.userId }, 'escrow accept-cancel called');
   try {
     const job = await prisma.job.findUnique({ where: { id: req.params.jobId } });
     if (!job) return res.status(404).json({ error: 'Job not found' });
@@ -305,6 +310,7 @@ router.post('/:jobId/accept-cancel', authenticateToken, async (req: AuthRequest,
 // Anyone (usually relayer) submits arbitrator's signed verdict
 // Transaction pattern: state check + arbitrator verify + on-chain call + DB update (atomic)
 router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  logger.debug({ agentId: req.agent?.id }, 'escrow resolve called');
   let body: { jobId: string; toPayee: string; toDepositor: string; arbitratorFee: string; nonce: string; signature: string } | undefined;
   try {
     const parsed = z.object({

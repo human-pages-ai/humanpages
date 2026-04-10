@@ -183,6 +183,15 @@
       "api": "API",
       "contact": "Contact"
     },
+    "jobMockup": {
+      "newOffer": "New job offer",
+      "title": "Photograph 5 storefronts",
+      "description": "Brooklyn, NY — 5 exterior photos needed for a local business directory update.",
+      "oneTime": "one-time task",
+      "accept": "Accept",
+      "decline": "Decline",
+      "from": "From: agent-47x · Paid on completion"
+    },
     "featured": {
       "title": "Featured"
     },
@@ -716,7 +725,21 @@
       "subtitle": "Upload your CV to quickly auto-fill your profile",
       "uploadButton": "Upload your CV",
       "format": "PDF or Word document",
-      "source": "From your device, Google Drive, or Dropbox"
+      "source": "From your device, Google Drive, or Dropbox",
+      "retryUpload": "Retry upload",
+      "alreadyUploaded": "CV already uploaded",
+      "alreadyAnalyzed": "Your CV has already been analyzed and your profile was pre-filled with the extracted data.",
+      "uploadDifferent": "Upload a different CV",
+      "analyzeSuccess": "CV analyzed successfully!",
+      "autoFilled": "Your profile has been auto-filled. Continue to review it.",
+      "uploaded": "Uploaded",
+      "skills": "skills",
+      "jobs": "jobs",
+      "education": "education",
+      "certificates": "certificates",
+      "languages": "languages",
+      "socialLinks": "social links",
+      "serviceIdeas": "service ideas"
     },
     "skills": {
       "heading": "What can you do?",
