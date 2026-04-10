@@ -125,7 +125,7 @@ router.post('/:jobId/mark-complete', authenticateAgent, requireActiveAgent, asyn
     const txHash = await markCompleteOnChain(jobIdHash);
 
     const now = new Date();
-    const disputeDeadline = new Date(now.getTime() + (job.escrowDisputeWindow || 72 * 3600) * 1000);
+    const disputeDeadline = new Date(now.getTime() + (job.escrowDisputeWindow ?? 72 * 3600) * 1000);
 
     const updated = await prisma.job.update({
       where: { id: job.id },
@@ -305,8 +305,9 @@ router.post('/:jobId/accept-cancel', authenticateToken, async (req: AuthRequest,
 // Anyone (usually relayer) submits arbitrator's signed verdict
 // Transaction pattern: state check + arbitrator verify + on-chain call + DB update (atomic)
 router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) => {
+  let body: { jobId: string; toPayee: string; toDepositor: string; arbitratorFee: string; nonce: string; signature: string } | undefined;
   try {
-    const body = z.object({
+    const parsed = z.object({
       jobId: z.string(),
       toPayee: z.string(), // raw USDC amount (6 decimals)
       toDepositor: z.string(),
@@ -314,13 +315,15 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
       nonce: z.string(),
       signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
     }).parse(req.body);
+    body = parsed;
+    const b = parsed;
 
     // Use interactive transaction to ensure atomicity.
     // Timeout: 30s to accommodate on-chain call (typical ~5-10s, plus network/RPC delays).
     const result = await prisma.$transaction(
-      async (tx) => {
+      async (tx): Promise<{error: string; status: number} | {success: true; updated: any; job: any; txHash: string}> => {
         // Fetch job with lock-like semantics (within transaction, read is consistent)
-        const job = await tx.job.findUnique({ where: { id: body.jobId } });
+        const job = await tx.job.findUnique({ where: { id: b.jobId } });
         if (!job) {
           return { error: 'Job not found', status: 404 };
         }
@@ -346,6 +349,11 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
           return { error: 'Caller is not the assigned arbitrator for this job', status: 403 };
         }
 
+        const arbAgent = await tx.agent.findUnique({ where: { id: req.agent!.id }, select: { arbitratorApproved: true } });
+        if (!arbAgent?.arbitratorApproved) {
+          return { error: 'Arbitrator not approved', status: 403 };
+        }
+
         // All pre-conditions passed. Now execute on-chain call.
         // If this fails, the transaction rolls back and the error propagates.
         const jobIdHash = job.escrowJobIdHash as Hex;
@@ -353,16 +361,16 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
         try {
           txHash = await resolveOnChain(
             jobIdHash,
-            BigInt(body.toPayee),
-            BigInt(body.toDepositor),
-            BigInt(body.arbitratorFee),
-            BigInt(body.nonce),
-            body.signature as Hex,
+            BigInt(b.toPayee),
+            BigInt(b.toDepositor),
+            BigInt(b.arbitratorFee),
+            BigInt(b.nonce),
+            b.signature as Hex,
           );
         } catch (onChainError) {
           // On-chain error → transaction rolls back, safe to retry
           logger.error(
-            { err: onChainError, jobId: body.jobId },
+            { err: onChainError, jobId: b.jobId },
             'Resolve escrow: on-chain call failed, transaction rolled back'
           );
           throw onChainError;
@@ -374,11 +382,11 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
           where: { id: job.id },
           data: {
             escrowStatus: 'RESOLVED',
-            escrowVerdictAmountPayee: (Number(body.toPayee) / 1e6).toString(),
-            escrowVerdictAmountDepositor: (Number(body.toDepositor) / 1e6).toString(),
-            escrowVerdictArbitratorFee: (Number(body.arbitratorFee) / 1e6).toString(),
-            escrowVerdictSignature: body.signature,
-            escrowVerdictNonce: body.nonce,
+            escrowVerdictAmountPayee: (Number(b.toPayee) / 1e6).toString(),
+            escrowVerdictAmountDepositor: (Number(b.toDepositor) / 1e6).toString(),
+            escrowVerdictArbitratorFee: (Number(b.arbitratorFee) / 1e6).toString(),
+            escrowVerdictSignature: b.signature,
+            escrowVerdictNonce: b.nonce,
             escrowResolveTxHash: txHash,
             escrowResolvedAt: new Date(),
           },
@@ -407,9 +415,9 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
       id: updated.id,
       escrowStatus: updated.escrowStatus,
       resolveTxHash: txHash,
-      toPayee: body.toPayee,
-      toDepositor: body.toDepositor,
-      arbitratorFee: body.arbitratorFee,
+      toPayee: b.toPayee,
+      toDepositor: b.toDepositor,
+      arbitratorFee: b.arbitratorFee,
     });
   } catch (error: any) {
     // CRITICAL: If we reach here, it could be:
@@ -423,11 +431,11 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
     logger.error(
       {
         err: error,
-        jobId: body.jobId,
+        jobId: body?.jobId,
         verdictData: {
-          toPayee: body.toPayee,
-          toDepositor: body.toDepositor,
-          arbitratorFee: body.arbitratorFee,
+          toPayee: body?.toPayee,
+          toDepositor: body?.toDepositor,
+          arbitratorFee: body?.arbitratorFee,
         },
       },
       'CRITICAL: Resolve escrow error - possible on-chain/DB divergence. Manual reconciliation may be needed.'

@@ -224,6 +224,21 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
       if (!data.escrowArbitratorAddress) {
         return res.status(400).json({ error: 'escrowArbitratorAddress is required when paymentMode is ESCROW' });
       }
+      const approvedArbitrator = await prisma.agent.findFirst({
+        where: {
+          isArbitrator: true,
+          arbitratorApproved: true,
+          wallets: {
+            some: {
+              address: data.escrowArbitratorAddress.toLowerCase(),
+              verified: true,
+            },
+          },
+        },
+      });
+      if (!approvedArbitrator) {
+        return res.status(400).json({ error: 'Specified arbitrator address is not an approved arbitrator' });
+      }
     }
 
     // Validate stream fields when mode is STREAM
@@ -934,7 +949,7 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
     });
 
     if (!result) {
-      return res.status(409).send({ error: 'Job already accepted or cancelled' });
+      return res.status(409).json({ error: 'Job already accepted or cancelled' });
     }
 
     const updated = result;

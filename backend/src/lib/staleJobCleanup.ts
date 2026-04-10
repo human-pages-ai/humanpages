@@ -15,6 +15,12 @@ const PAYMENT_CLAIMED_TIMEOUT_DAYS = parseInt(
 const CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
+let isRunning = false;
+const wrappedCleanup = async () => {
+  if (isRunning) return;
+  isRunning = true;
+  try { await cleanupStaleJobs(); } finally { isRunning = false; }
+};
 
 /**
  * Auto-reject stale jobs that have been in ACCEPTED status too long.
@@ -108,10 +114,10 @@ export function startStaleJobCleanup(): void {
   );
 
   // Run immediately after a short delay to allow startup to complete
-  setTimeout(() => cleanupStaleJobs(), 30 * 1000);
+  setTimeout(() => wrappedCleanup(), 30 * 1000);
 
   // Then run on regular interval
-  intervalId = setInterval(() => cleanupStaleJobs(), CLEANUP_INTERVAL_MS);
+  intervalId = setInterval(() => wrappedCleanup(), CLEANUP_INTERVAL_MS);
 }
 
 /**
