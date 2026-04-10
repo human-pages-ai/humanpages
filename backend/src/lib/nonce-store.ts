@@ -5,7 +5,9 @@ interface NonceEntry {
   expiresAt: number;
 }
 
-const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// Increased to 15 minutes to accommodate slow mobile networks in developing markets
+// (e.g., Nigeria, Philippines) where wallet signing can take longer due to high latency
+const NONCE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const SWEEP_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 class NonceStore {
