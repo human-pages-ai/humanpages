@@ -278,6 +278,7 @@ router.get('/ai/arbitrators', apiKeyAdmin, async (_req, res) => {
       where: { isArbitrator: true },
       select: {
         id: true, name: true, description: true, status: true, isVerified: true,
+        arbitratorApproved: true, arbitratorApprovedAt: true,
         arbitratorFeeBps: true, arbitratorSpecialties: true, arbitratorSla: true,
         arbitratorWebhookUrl: true, arbitratorHealthy: true, arbitratorLastHealthAt: true,
         arbitratorDisputeCount: true, arbitratorWinCount: true, arbitratorTotalEarned: true,
@@ -294,6 +295,26 @@ router.get('/ai/arbitrators', apiKeyAdmin, async (_req, res) => {
   }
 });
 
+// GET /api/admin/ai/arbitrators/pending — List pending arbitrator applications
+router.get('/ai/arbitrators/pending', apiKeyAdmin, async (_req, res) => {
+  try {
+    const pending = await prisma.agent.findMany({
+      where: { isArbitrator: true, arbitratorApproved: false },
+      select: {
+        id: true, name: true, description: true, status: true,
+        arbitratorFeeBps: true, arbitratorSpecialties: true, arbitratorSla: true,
+        arbitratorWebhookUrl: true, createdAt: true,
+        wallets: { select: { address: true, network: true, verified: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    res.json({ pending });
+  } catch (error) {
+    logger.error({ err: error }, 'AI admin pending arbitrators list error');
+    res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
 // PATCH /api/admin/ai/arbitrators/:id — Approve/reject arbitrator
 router.patch('/ai/arbitrators/:id', apiKeyAdmin, async (req, res) => {
   try {
@@ -303,15 +324,99 @@ router.patch('/ai/arbitrators/:id', apiKeyAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Arbitrator not found' });
     }
     const data: any = {};
-    if (approved === true) { data.isVerified = true; data.verifiedByAdminAt = new Date(); }
-    else if (approved === false) { data.isArbitrator = false; data.isVerified = false; }
+    if (approved === true) {
+      data.arbitratorApproved = true;
+      data.arbitratorApprovedAt = new Date();
+      data.isVerified = true;
+      data.verifiedByAdminAt = new Date();
+    }
+    else if (approved === false) {
+      data.arbitratorApproved = false;
+      data.isArbitrator = false;
+      data.isVerified = false;
+    }
     if (healthy !== undefined) { data.arbitratorHealthy = !!healthy; }
     const updated = await prisma.agent.update({ where: { id: req.params.id }, data });
-    logger.info({ agentId: req.params.id, approved, healthy }, 'AI admin arbitrator update');
-    res.json({ id: updated.id, name: updated.name, isArbitrator: updated.isArbitrator, isVerified: updated.isVerified, arbitratorHealthy: updated.arbitratorHealthy });
+    logger.info({ agentId: req.params.id, approved, healthy }, 'AI admin arbitrator approval update');
+    res.json({
+      id: updated.id,
+      name: updated.name,
+      isArbitrator: updated.isArbitrator,
+      arbitratorApproved: updated.arbitratorApproved,
+      isVerified: updated.isVerified,
+      arbitratorHealthy: updated.arbitratorHealthy
+    });
   } catch (error) {
     logger.error({ err: error }, 'AI admin arbitrator update error');
     res.status(500).json({ error: 'Internal server error', detail: errMsg(error) });
+  }
+});
+
+// POST /api/admin/arbitrators/:agentId/approve — Approve arbitrator application
+router.post('/arbitrators/:agentId/approve', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  try {
+    const agent = await prisma.agent.findUnique({ where: { id: req.params.agentId } });
+    if (!agent || !agent.isArbitrator) {
+      return res.status(404).json({ error: 'Arbitrator application not found' });
+    }
+    if (agent.arbitratorApproved) {
+      return res.status(400).json({ error: 'Arbitrator is already approved' });
+    }
+
+    const updated = await prisma.agent.update({
+      where: { id: req.params.agentId },
+      data: {
+        arbitratorApproved: true,
+        arbitratorApprovedAt: new Date(),
+        isVerified: true,
+        verifiedByAdminAt: new Date(),
+      },
+    });
+
+    logger.info({ agentId: req.params.agentId, adminId: req.userId }, 'Arbitrator application approved');
+
+    res.json({
+      id: updated.id,
+      name: updated.name,
+      arbitratorApproved: updated.arbitratorApproved,
+      message: 'Arbitrator approved. They can now be selected for disputes.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Arbitrator approve error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/arbitrators/:agentId/reject — Reject arbitrator application
+router.post('/arbitrators/:agentId/reject', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  try {
+    const { reason } = req.body;
+    const agent = await prisma.agent.findUnique({ where: { id: req.params.agentId } });
+    if (!agent || !agent.isArbitrator) {
+      return res.status(404).json({ error: 'Arbitrator application not found' });
+    }
+    if (agent.arbitratorApproved) {
+      return res.status(400).json({ error: 'Cannot reject already-approved arbitrators' });
+    }
+
+    const updated = await prisma.agent.update({
+      where: { id: req.params.agentId },
+      data: {
+        isArbitrator: false,
+        arbitratorApproved: false,
+      },
+    });
+
+    logger.info({ agentId: req.params.agentId, adminId: req.userId, reason }, 'Arbitrator application rejected');
+
+    res.json({
+      id: updated.id,
+      name: updated.name,
+      message: 'Arbitrator application rejected.',
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Arbitrator reject error');
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -3423,6 +3528,8 @@ router.get('/arbitrators', async (req: AuthRequest, res) => {
         description: true,
         status: true,
         isVerified: true,
+        arbitratorApproved: true,
+        arbitratorApprovedAt: true,
         arbitratorFeeBps: true,
         arbitratorSpecialties: true,
         arbitratorSla: true,
@@ -3464,9 +3571,12 @@ router.patch('/arbitrators/:id', async (req: AuthRequest, res) => {
 
     const data: any = {};
     if (approved === true) {
+      data.arbitratorApproved = true;
+      data.arbitratorApprovedAt = new Date();
       data.isVerified = true;
       data.verifiedByAdminAt = new Date();
     } else if (approved === false) {
+      data.arbitratorApproved = false;
       data.isArbitrator = false;
       data.isVerified = false;
     }
@@ -3481,6 +3591,7 @@ router.patch('/arbitrators/:id', async (req: AuthRequest, res) => {
       id: updated.id,
       name: updated.name,
       isArbitrator: updated.isArbitrator,
+      arbitratorApproved: updated.arbitratorApproved,
       isVerified: updated.isVerified,
       arbitratorHealthy: updated.arbitratorHealthy,
       message: approved === false ? 'Arbitrator rejected and removed.' : 'Arbitrator updated.',

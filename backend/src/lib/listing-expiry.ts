@@ -51,12 +51,47 @@ async function processExpiredListings() {
   }
 }
 
+/**
+ * Auto-downgrade agents whose activation has expired.
+ * Downgrade from any tier (PRO, WHALE, etc.) back to BASIC.
+ */
+async function processExpiredAgentActivations() {
+  try {
+    const now = new Date();
+
+    // Find ACTIVE agents with expired activationExpiresAt
+    const expiredCount = await prisma.agent.updateMany({
+      where: {
+        status: 'ACTIVE',
+        activationExpiresAt: { lte: now },
+      },
+      data: {
+        activationTier: 'BASIC',
+      },
+    });
+
+    if (expiredCount.count > 0) {
+      logger.info(
+        { count: expiredCount.count },
+        'Auto-downgraded expired agent activations to BASIC'
+      );
+    }
+  } catch (err) {
+    logger.error({ err }, 'Agent activation expiry processing failed');
+  }
+}
+
 let timer: ReturnType<typeof setInterval> | null = null;
+
+async function tick() {
+  await processExpiredListings();
+  await processExpiredAgentActivations();
+}
 
 export function startListingExpiryWorker() {
   logger.info('Starting listing expiry worker');
-  setTimeout(() => processExpiredListings(), 15 * 1000); // 15s after startup
-  timer = setInterval(() => processExpiredListings(), INTERVAL);
+  setTimeout(() => tick(), 15 * 1000); // 15s after startup
+  timer = setInterval(() => tick(), INTERVAL);
 }
 
 export function stopListingExpiryWorker() {

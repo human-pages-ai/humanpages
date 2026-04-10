@@ -98,6 +98,7 @@ async function checkArbitratorHealth() {
     const arbitrators = await prisma.agent.findMany({
       where: {
         isArbitrator: true,
+        arbitratorApproved: true,  // Only check health for approved arbitrators
         arbitratorWebhookUrl: { not: null },
       },
       select: {

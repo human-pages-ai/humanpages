@@ -784,6 +784,7 @@ router.post('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest, 
       where: { id: req.params.id },
       data: {
         isArbitrator: true,
+        arbitratorApproved: false,  // Requires admin approval
         arbitratorFeeBps: data.feeBps,
         arbitratorSpecialties: data.specialties || [],
         arbitratorSla: data.sla,
@@ -792,14 +793,16 @@ router.post('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest, 
       },
     });
 
-    res.json({
+    logger.info({ agentId: req.params.id }, 'Arbitrator registration application submitted, pending admin approval');
+
+    res.status(201).json({
       id: updated.id,
       isArbitrator: updated.isArbitrator,
+      arbitratorApproved: updated.arbitratorApproved,
       arbitratorFeeBps: updated.arbitratorFeeBps,
       arbitratorSpecialties: updated.arbitratorSpecialties,
       arbitratorSla: updated.arbitratorSla,
-      arbitratorWebhookUrl: updated.arbitratorWebhookUrl,
-      message: 'Registered as arbitrator. Payers can now choose you when creating escrows.',
+      message: 'Arbitrator application submitted. Pending admin review. You will be notified via email when approved.',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -874,7 +877,7 @@ router.delete('/:id/arbitrator', authenticateAgent, async (req: AgentAuthRequest
 
     await prisma.agent.update({
       where: { id: req.params.id },
-      data: { isArbitrator: false },
+      data: { isArbitrator: false, arbitratorApproved: false },
     });
 
     res.json({ message: 'Opted out as arbitrator.' });

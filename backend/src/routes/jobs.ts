@@ -1015,7 +1015,9 @@ router.patch('/:id/accept', authenticateToken, requireEmailVerified, async (req:
               currency: 'USDC',
               network,
               timestamp: new Date().toISOString(),
-            }, agent.webhookSecret);
+            }, agent.webhookSecret).catch((err) =>
+              logger.error({ err, agentId: updated.registeredAgentId, jobId: updated.id }, 'Failed to deliver agent funding_needed webhook'),
+            );
             trackServerEvent(updated.registeredAgentId || 'system', 'webhook_fired', {
               event_type: 'agent.funding_needed',
               job_id: updated.id,
@@ -3161,6 +3163,45 @@ router.post('/:id/review/response', authenticateToken, requireEmailVerified, asy
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     }
     logger.error({ err: error }, 'Review response error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── GET /api/jobs/recent-payments ───────────────────────────────────────────
+// Public endpoint — returns anonymized recent payments for the trust feed
+// shown on the Android app onboarding screen ("Recent Payments" widget).
+// Shows real payment data with humanized currency display. No auth required.
+router.get('/recent-payments', async (_req, res) => {
+  try {
+    const payments = await prisma.job.findMany({
+      where: {
+        paidAt: { not: null },
+        status: 'COMPLETED',
+      },
+      orderBy: { paidAt: 'desc' },
+      take: 20,
+      select: {
+        paidAt: true,
+        priceUsdc: true,
+        human: {
+          select: {
+            location: true,
+          },
+        },
+      },
+    });
+
+    // Anonymize: first name initial + city only
+    const items = payments.map((job) => ({
+      // e.g. "₱ 450" (display in local currency hint — we show USD here, UI converts)
+      amountUsdc: job.priceUsdc,
+      paidAt: job.paidAt,
+      location: job.human?.location ?? null,
+    }));
+
+    res.json({ payments: items });
+  } catch (error) {
+    logger.error({ err: error }, 'Recent payments error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -284,6 +284,10 @@ model Human {
   linkCode          String?   @unique
   linkCodeExpiresAt DateTime?
 
+  // Android app / channel tracking
+  signupChannel        String?   // "app" | "telegram" | "whatsapp" | "web"
+  lastReviewPromptAt   DateTime? // When last asked to leave app store review
+
   // WhatsApp conversation state
   whatsappAwaitingJobSelection Boolean  @default(false)
   whatsappDisambiguationAt     DateTime? // When the "which job?" prompt was sent
@@ -376,6 +380,8 @@ model Human {
   certificates  Certificate[]
   pushSubscriptions PushSubscription[]
   pendingWhatsAppMessages PendingWhatsAppMessage[]
+  deviceRegistrations DeviceRegistration[]
+  conversations       Conversation[]
 
   // Indexes for fast agent search
   @@index([skills])
@@ -573,6 +579,8 @@ model Agent {
 
   // ===== ARBITRATOR FIELDS =====
   isArbitrator            Boolean   @default(false)
+  arbitratorApproved      Boolean   @default(false)  // Admin approval gate
+  arbitratorApprovedAt    DateTime?
   arbitratorFeeBps        Int?
   arbitratorSpecialties   String[]
   arbitratorSla           String?
@@ -849,6 +857,7 @@ model Job {
   messages        JobMessage[]
   streamTicks     StreamTick[]
   sourceApplication ListingApplication?
+  conversations   Conversation[]
 
   @@index([humanId, status])
   @@index([agentId])
@@ -1987,4 +1996,73 @@ model AdminTask {
   @@index([priority])
   @@index([assignee])
   @@index([createdAt])
+}
+
+// ===== ANDROID APP / CHANNEL MESSAGING =====
+
+// Device token registry for FCM (Android/iOS) and VAPID (web) push
+model DeviceRegistration {
+  id           String   @id @default(cuid())
+  humanId      String
+  human        Human    @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  platform     String   // "android" | "ios" | "web"
+  // For web: use a stable fingerprint UUID (never NULL — breaks unique constraint)
+  // For android/ios: FCM registration token
+  deviceToken  String
+  deviceName   String?  // e.g. "Tecno Spark 10", "Redmi Note 12"
+  appVersion   String?  // e.g. "1.0.3"
+  isActive     Boolean  @default(true)
+  lastSeenAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([humanId, deviceToken])
+  @@index([humanId, isActive])
+  @@index([platform])
+}
+
+// One conversation per (human, job) pair — or general support conversation
+model Conversation {
+  id                 String    @id @default(cuid())
+  humanId            String
+  human              Human     @relation(fields: [humanId], references: [id], onDelete: Cascade)
+  jobId              String?
+  job                Job?      @relation(fields: [jobId], references: [id])
+  status             String    @default("active") // "active" | "closed" | "archived"
+  // Denormalized for fast list rendering (avoids JOIN on every conversation fetch)
+  lastMessageAt      DateTime?
+  lastMessagePreview String?   @db.VarChar(200)
+  unreadCount        Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  messages           Message[]
+
+  @@unique([humanId, jobId])
+  @@index([humanId, lastMessageAt])
+  @@index([jobId])
+}
+
+// Unified message store — channel-agnostic, delivery is channel-specific
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  // "human" | "agent" | "system"
+  sender         String
+  content        String       @db.Text
+  contentType    String       @default("text") // "text" | "image" | "audio" | "task_card" | "payment_confirmation"
+  // Which channel delivered / received this message
+  channel        String       // "app" | "telegram" | "whatsapp" | "web"
+  // Webhook deduplication — set when message originated from external channel
+  externalId     String?
+  deliveryStatus String       @default("sent") // "sent" | "delivered" | "read" | "failed"
+  metadata       Json?        // Channel-specific extras (e.g. Telegram message_id, WhatsApp wamid)
+  // Denormalized for task-context queries without joining Conversation
+  jobId          String?
+  createdAt      DateTime     @default(now())
+
+  @@unique([channel, externalId])
+  @@index([conversationId, createdAt])
+  @@index([channel])
+  @@index([jobId])
 }
