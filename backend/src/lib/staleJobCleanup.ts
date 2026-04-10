@@ -35,10 +35,12 @@ async function cleanupStaleJobs(): Promise<void> {
     );
 
     // Find and reject stale ACCEPTED jobs
+    // Use acceptedAt (set when status moved to ACCEPTED), NOT updatedAt
+    // which gets bumped by messages and other unrelated writes.
     const staleAcceptedResult = await prisma.job.updateMany({
       where: {
         status: 'ACCEPTED',
-        updatedAt: { lte: acceptedCutoff },
+        acceptedAt: { not: null, lte: acceptedCutoff },
       },
       data: {
         status: 'REJECTED',
@@ -58,10 +60,11 @@ async function cleanupStaleJobs(): Promise<void> {
 
     // Find and reject stale PAYMENT_CLAIMED jobs
     // (agent claimed they paid, but human never confirmed receipt after timeout)
+    // Use paymentClaimedAt (set when status moved to PAYMENT_CLAIMED).
     const stalePaymentClaimedResult = await prisma.job.updateMany({
       where: {
         status: 'PAYMENT_CLAIMED',
-        updatedAt: { lte: paymentClaimedCutoff },
+        paymentClaimedAt: { not: null, lte: paymentClaimedCutoff },
       },
       data: {
         status: 'REJECTED',

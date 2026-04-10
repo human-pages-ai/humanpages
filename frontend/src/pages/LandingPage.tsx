@@ -700,6 +700,7 @@ export default function LandingPage() {
   const heroTick = useHeroTick();
 
   const handleSignupNavigation = () => {
+    if (isNavigating) return; // Guard against double-click during timeout
     analytics.track('landing_cta_clicked', { location: 'hero', target: 'signup' });
     setIsNavigating(true);
     // Brief delay for visual feedback, then navigate

@@ -68,10 +68,10 @@ router.post('/:jobId/verify-deposit', authenticateAgent, requireActiveAgent, asy
         escrowJobIdHash: jobIdHash,
         escrowDepositTxHash: txHash,
         escrowDepositedAt: new Date(),
-        escrowDepositorAddress: deposit.depositor.toLowerCase(),
-        escrowPayeeAddress: deposit.payee.toLowerCase(),
-        escrowAmount: deposit.amount.toString(),
-        escrowArbitratorAddress: deposit.arbitrator.toLowerCase(),
+        escrowDepositorAddress: deposit.depositor?.toLowerCase() ?? null,
+        escrowPayeeAddress: deposit.payee?.toLowerCase() ?? null,
+        escrowAmount: deposit.amount?.toString() ?? '0',
+        escrowArbitratorAddress: deposit.arbitrator?.toLowerCase() ?? null,
         escrowArbitratorFeeBps: deposit.arbitratorFeeBps,
         escrowDisputeWindow: deposit.disputeWindow,
         paidAt: new Date(),
@@ -390,7 +390,7 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
     );
 
     // Handle transaction-level validation errors (400/403/404)
-    if (result.error) {
+    if ('error' in result) {
       return res.status(result.status).json({ error: result.error });
     }
 
