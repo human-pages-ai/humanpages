@@ -30,8 +30,17 @@ function getBucket(): string {
   return process.env.R2_BUCKET_NAME || 'humans-profile-photos';
 }
 
-export function isStorageConfigured(): boolean {
+/**
+ * Check if R2 storage is properly configured without throwing.
+ * Returns true if all required environment variables are set.
+ */
+export function isR2Configured(): boolean {
   return !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY);
+}
+
+// Alias for backwards compatibility
+export function isStorageConfigured(): boolean {
+  return isR2Configured();
 }
 
 /**

@@ -13,17 +13,40 @@ interface StepCvUploadProps {
   onNext: () => void;
   onSkip: () => void;
   error: string;
+  currentFile?: File | null;
+  onRetry?: (file: File) => void;
 }
 
-export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessing, cvUploaded, cvData, onReupload, onNext, onSkip: _onSkip, error }: StepCvUploadProps) {
+export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessing, cvUploaded, cvData, onReupload, onNext, onSkip: _onSkip, error, currentFile, onRetry }: StepCvUploadProps) {
   const { t } = useTranslation();
   const [dragActive, setDragActive] = useState(false);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <>
       <h2 data-step-heading tabIndex={-1} className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 outline-none">{t('onboarding.cvUpload.heading')}</h2>
       <p className="text-slate-600 mb-6">{t('onboarding.cvUpload.subtitle')}</p>
 
-      {error && <div role="alert" tabIndex={-1} className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">{error}</div>}
+      {error && (
+        <div role="alert" tabIndex={-1} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 outline-none">
+          <p className="font-medium mb-2">{error}</p>
+          {currentFile && onRetry && (
+            <button
+              type="button"
+              onClick={() => onRetry(currentFile)}
+              disabled={cvProcessing}
+              className="text-sm font-medium text-red-600 hover:text-red-700 underline disabled:opacity-50"
+            >
+              Retry upload
+            </button>
+          )}
+        </div>
+      )}
 
       {cvUploaded && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -44,6 +67,9 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-green-800">CV analyzed successfully!</p>
                 <p className="text-xs text-green-600">Your profile has been auto-filled. Continue to review it.</p>
+                {currentFile && (
+                  <p className="text-xs text-green-600 mt-1">Uploaded: {currentFile.name} ({formatFileSize(currentFile.size)})</p>
+                )}
               </div>
               <button type="button" onClick={onReupload} className="text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 px-2.5 py-1.5 rounded transition-colors flex-shrink-0 w-full sm:w-auto text-center">Upload different CV</button>
             </div>
@@ -62,7 +88,14 @@ export function StepCvUpload({ cvInputRef, onCVChange, onProcessFile, cvProcessi
             )}
           </div>
         ) : cvProcessing ? (
-          <CvProcessingBar />
+          <div>
+            <CvProcessingBar />
+            {currentFile && (
+              <p className="text-xs text-slate-600 mt-2 text-center">
+                {t('onboarding.cvUpload.uploading', 'Uploading')}: {currentFile.name} ({formatFileSize(currentFile.size)})
+              </p>
+            )}
+          </div>
         ) : (
           <div
             onDragEnter={() => setDragActive(true)}

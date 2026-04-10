@@ -1,0 +1,272 @@
+========================================================================
+MCP ANALYTICS EVENT FLOW DIAGRAM
+========================================================================
+
+CLIENT REQUEST FLOW & TRACKING
+========================================================================
+
+POST /api/mcp (initialize)
+├─ getOrCreateSession()
+│  ├─ createSession() [NEW SESSION]
+│  │  └─ TRACK: mcp_session_started(agent_id, session_id)
+│  └─ Update lastActivityAt
+└─ JSON-RPC response with Mcp-Session-Id header
+
+
+POST /api/mcp (tools/list)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ TRACK: mcp_tools_listed(agent_id, session_id, tool_count=13)
+└─ Return tool definitions
+
+
+POST /api/mcp (tools/call: ping)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ startTime = Date.now()
+├─ executeMcpTool('ping', {}, apiKey, agentId)
+│  └─ TRACK: mcp_ping(agent_id)
+│  └─ return { status: 'ok' }
+├─ latencyMs = Date.now() - startTime
+├─ TRACK: mcp_tool_called(
+│     tool_name='ping',
+│     success=true,
+│     latency_ms,
+│     error_type=undefined
+│  )
+└─ Return result
+
+
+POST /api/mcp (tools/call: search_humans)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ startTime = Date.now()
+├─ executeMcpTool('search_humans', args, apiKey, agentId)
+│  ├─ Validate args (skill, location, filters, etc.)
+│  ├─ apiFetch(url with query params)
+│  ├─ result = minimizeResponse(json)
+│  ├─ TRACK: mcp_search_executed(
+│  │     agent_id,
+│  │     skill=args.skill,
+│  │     location=args.location,
+│  │     result_count=array.length,
+│  │     has_filters=Boolean(...)
+│  │  )
+│  └─ return result
+├─ latencyMs = Date.now() - startTime
+├─ TRACK: mcp_tool_called(
+│     tool_name='search_humans',
+│     success=true,
+│     latency_ms,
+│     error_type=undefined
+│  )
+└─ Return result
+
+
+POST /api/mcp (tools/call: get_human_profile)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ startTime = Date.now()
+├─ executeMcpTool('get_human_profile', args, apiKey, agentId)
+│  ├─ apiFetch(url)
+│  ├─ result = minimizeResponse(json)
+│  ├─ TRACK: mcp_profile_viewed(
+│  │     agent_id,
+│  │     human_id=args.id,
+│  │     is_authenticated=true
+│  │  )
+│  └─ return result
+├─ latencyMs = Date.now() - startTime
+├─ TRACK: mcp_tool_called(
+│     tool_name='get_human_profile',
+│     success=true,
+│     latency_ms,
+│     error_type=undefined
+│  )
+└─ Return result
+
+
+POST /api/mcp (tools/call: create_job)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ startTime = Date.now()
+├─ executeMcpTool('create_job', args, apiKey, agentId)
+│  ├─ Build request body
+│  ├─ apiFetch(url, POST)
+│  ├─ result = minimizeResponse(json)
+│  ├─ TRACK: mcp_job_created(
+│  │     agent_id,
+│  │     human_id=args.humanId,
+│  │     price_usdc=args.priceUsdc,
+│  │     payment_mode=args.paymentMode,
+│  │     has_callback=Boolean(args.callbackUrl)
+│  │  )
+│  └─ return result
+├─ latencyMs = Date.now() - startTime
+├─ TRACK: mcp_tool_called(
+│     tool_name='create_job',
+│     success=true,
+│     latency_ms,
+│     error_type=undefined
+│  )
+└─ Return result
+
+
+POST /api/mcp (tools/call: FAILS)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ startTime = Date.now()
+├─ TRY: executeMcpTool(...)
+│  ├─ apiFetch(url)
+│  ├─ error: "Rate limit exceeded"
+│  └─ THROW Error
+├─ CATCH error
+├─ Categorize: error_type = 'rate_limited'
+├─ TRACK: mcp_tool_error(
+│     agent_id,
+│     tool_name,
+│     error_type='rate_limited',
+│     latency_ms
+│  )
+├─ latencyMs = Date.now() - startTime
+├─ TRACK: mcp_tool_called(
+│     tool_name,
+│     success=false,
+│     latency_ms,
+│     error_type='rate_limited'
+│  )
+└─ Return error response
+
+
+GET /api/mcp (SSE stream)
+├─ getOrCreateSession() [EXISTING SESSION]
+│  └─ Update lastActivityAt
+├─ Set SSE headers
+├─ TRACK: mcp_sse_connected(agent_id, session_id)
+├─ Start keep-alive interval (every 30s)
+└─ On client close:
+   └─ logger: SSE stream closed
+
+
+DELETE /api/mcp
+├─ Extract session_id from header
+├─ Verify auth
+├─ Calculate: durationSeconds = (now - session.createdAt) / 1000
+├─ activeSessions.delete(sessionId)
+├─ TRACK: mcp_session_ended(
+│     agent_id,
+│     session_id,
+│     duration_seconds,
+│     reason='client_disconnect'
+│  )
+└─ Return 204 No Content
+
+
+BACKGROUND: SESSION CLEANUP (every 15 minutes)
+├─ For each session in activeSessions:
+│  ├─ IF (now - lastActivityAt) > SESSION_TIMEOUT (1 hour):
+│  │  ├─ Calculate: durationSeconds = (now - session.createdAt) / 1000
+│  │  ├─ TRACK: mcp_session_ended(
+│  │  │     agent_id,
+│  │  │     session_id,
+│  │  │     duration_seconds,
+│  │  │     reason='timeout'
+│  │  │  )
+│  │  └─ activeSessions.delete(sessionId)
+│  └─ cleaned++
+└─ logger: Cleaned up N stale sessions
+
+
+ERROR CATEGORIZATION LOGIC
+========================================================================
+
+IF error.message.includes('Rate limit'):
+   error_type = 'rate_limited'
+ELSE IF error.message.includes('Unauthorized' or '401'):
+   error_type = 'auth_failed'
+ELSE IF error.message.includes('not found' or '404'):
+   error_type = 'not_found'
+ELSE IF error.message.includes('validation' or 'invalid'):
+   error_type = 'validation'
+ELSE:
+   error_type = 'server_error'
+
+IF toolResult contains { error: ... }:
+   error_type = 'tool_error'
+
+
+TOOL EXECUTION TRACKING MATRIX
+========================================================================
+
+Tool Name              | Event Tracked              | Properties
+─────────────────────┼────────────────────────────┼──────────────────
+search_humans         | mcp_search_executed        | skill, location, result_count, has_filters
+get_human             | mcp_profile_viewed         | human_id, is_authenticated=false
+get_human_profile     | mcp_profile_viewed         | human_id, is_authenticated=true
+register_agent        | mcp_agent_registered_via_tool | agent_name
+get_agent             | (only mcp_tool_called)     | -
+create_job            | mcp_job_created            | human_id, price_usdc, payment_mode, has_callback
+browse_listings       | mcp_listings_browsed       | category, result_count, page
+create_listing        | mcp_listing_created        | category, has_price
+ping                  | mcp_ping                   | (minimal props)
+
+
+POSTHOG BATCHING & FLUSHING
+========================================================================
+
+Events are queued and flushed based on:
+  - flushAt: 20 events max
+  - flushInterval: 10 seconds
+
+Example: If agent makes 5 tool calls (5 mcp_tool_called events):
+  t=0s: Tool call 1 → mcp_tool_called (queue size: 1)
+  t=1s: Tool call 2 → mcp_tool_called (queue size: 2)
+  t=2s: Tool call 3 → mcp_tool_called (queue size: 3)
+  t=3s: Tool call 4 → mcp_tool_called (queue size: 4)
+  t=4s: Tool call 5 → mcp_tool_called (queue size: 5)
+  t=10s: [Flush] All 5 events sent to PostHog in batch
+         Queue reset
+
+
+DISTINCT_ID USAGE
+========================================================================
+
+All events use agentId as distinctId, which allows:
+  - Cohort analysis: Group all events from a single agent
+  - Funnels: Agent journey (tool call → success vs. failure)
+  - Retention: Track agent engagement over time
+  - User properties: Set $name, $email, etc. via agentId
+
+Special case: mcp_agent_registered_via_tool uses distinctId='anonymous'
+  (agent hasn't registered yet, so unknown)
+
+
+SAMPLE POSTHOG INSIGHTS
+========================================================================
+
+1. Adoption Funnel
+   Event sequence: mcp_session_started → mcp_tools_listed → mcp_tool_called
+   Measures: What % of sessions call at least one tool?
+
+2. Tool Popularity Pie Chart
+   Event: mcp_tool_called
+   Group by: tool_name
+   Show: % of total tool calls by type
+
+3. Error Rate Trend
+   Event: mcp_tool_called
+   Formula: SUM(success=false) / SUM(*) by day
+   Alert: If error_rate > 5%
+
+4. Latency P99
+   Event: mcp_tool_called
+   Property: latency_ms
+   Calculation: PERCENTILE(latency_ms, 99)
+   Alert: If P99 > 2000ms
+
+5. Session Duration Retention
+   Cohort: created mcp_session_started
+   By: duration_seconds (bucketed: 0-5min, 5-30min, 30min+)
+   Shows: Distribution of session lengths
+
+========================================================================

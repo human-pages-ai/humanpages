@@ -652,16 +652,29 @@ export const api = {
     const formData = new FormData();
     formData.append('photo', file);
     const token = getToken();
+
+    // Create AbortController with 120s timeout for photo uploads on slow networks
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
     return fetch(`${API_BASE}/photos/upload`, {
       method: 'POST',
       headers: { ...(token && { Authorization: `Bearer ${token}` }) },
       body: formData,
+      signal: controller.signal,
     }).then(async (res) => {
+      clearTimeout(timeoutId);
       if (!res.ok) {
         const error = await res.json().catch(() => ({ error: 'Upload failed' }));
         throw new Error(error.error || 'Upload failed');
       }
       return res.json() as Promise<{ profilePhotoUrl: string; profilePhotoStatus: string }>;
+    }).catch(err => {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        throw new Error('Upload timed out. Your connection may be too slow. Please check your internet and try again.');
+      }
+      throw err;
     });
   },
 
@@ -1444,18 +1457,31 @@ export const api = {
     const token = getToken();
     const formData = new FormData();
     formData.append('cv', file);
+
+    // Create AbortController with 120s timeout for CV uploads on slow networks
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
     return fetch(`${API_BASE}/cv/upload-file`, {
       method: 'POST',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: formData,
+      signal: controller.signal,
     }).then(async res => {
+      clearTimeout(timeoutId);
       if (!res.ok) {
         const error = await res.json().catch(() => ({ error: 'Upload failed' }));
         throw new Error(error.error || 'Upload failed');
       }
       return res.json();
+    }).catch(err => {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        throw new Error('Upload timed out. Your connection may be too slow. Please check your internet and try again.');
+      }
+      throw err;
     });
   },
 

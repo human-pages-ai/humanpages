@@ -8,6 +8,7 @@ import {
   uploadProfilePhoto,
   getProfilePhotoSignedUrl,
   deleteProfilePhoto,
+  isR2Configured,
 } from '../lib/storage.js';
 import { queueModeration } from '../lib/moderation.js';
 import { logger } from '../lib/logger.js';
@@ -71,6 +72,12 @@ const dailyUploadLimiter = rateLimit({
 // POST /upload — Agent photo upload
 router.post('/upload', authenticateAgent, uploadLimiter, dailyUploadLimiter, upload.single('photo'), async (req: AgentAuthRequest, res) => {
   try {
+    // Check R2 storage configuration upfront
+    if (!isR2Configured()) {
+      logger.warn('Agent photo upload rejected: R2 storage not configured');
+      return res.status(503).json({ error: 'Photo upload is temporarily unavailable. Please try again later.' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: 'No photo file provided' });
     }

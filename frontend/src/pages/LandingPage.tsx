@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { analytics } from '../lib/analytics';
 import Link from '../components/LocalizedLink';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -694,7 +695,21 @@ function JobOfferMockup() {
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [isNavigating, setIsNavigating] = useState(false);
   const heroTick = useHeroTick();
+
+  const handleSignupNavigation = () => {
+    analytics.track('landing_cta_clicked', { location: 'hero', target: 'signup' });
+    setIsNavigating(true);
+    // Brief delay for visual feedback, then navigate
+    setTimeout(() => navigate('/signup'), 150);
+  };
+
+  const handleHeaderSignupNavigation = () => {
+    analytics.track('landing_cta_clicked', { location: 'header', target: 'signup' });
+    navigate('/signup');
+  };
 
   const TASKS = [
     { icon: CameraIcon, title: t('landing.tasks.photography'), description: t('landing.tasks.photographyDesc') },
@@ -864,14 +879,13 @@ export default function LandingPage() {
               {t('nav.blog')}
             </Link>
             <LanguageSwitcher />
-            <Link
-              to="/signup"
-              onClick={() => analytics.track('landing_cta_clicked', { location: 'header', target: 'signup' })}
-              className="px-3 py-2 bg-orange-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
+            <button
+              onClick={handleHeaderSignupNavigation}
+              className="px-3 py-2 bg-orange-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-orange-600 active:bg-orange-700 transition-colors whitespace-nowrap"
             >
               <span className="sm:hidden">Start</span>
               <span className="hidden sm:inline">{t('nav.startProfile')}</span>
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -900,13 +914,23 @@ export default function LandingPage() {
                   {t('landing.hero.example')}
                 </p>
                 <div className="mt-6 md:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
-                  <Link
-                    to="/signup"
-                    onClick={() => analytics.track('landing_cta_clicked', { location: 'hero', target: 'signup' })}
-                    className="inline-block px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors text-base sm:text-lg shadow-lg shadow-orange-500/25 text-center"
+                  <button
+                    onClick={handleSignupNavigation}
+                    disabled={isNavigating}
+                    className="inline-flex items-center justify-center px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 disabled:opacity-75 disabled:cursor-not-allowed transition-all text-base sm:text-lg shadow-lg shadow-orange-500/25 text-center"
                   >
-                    {t('landing.hero.cta')}
-                  </Link>
+                    {isNavigating ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {t('common.loading')}
+                      </>
+                    ) : (
+                      t('landing.hero.cta')
+                    )}
+                  </button>
                   <Link
                     to="/listings"
                     onClick={() => analytics.track('landing_cta_clicked', { location: 'hero', target: 'listings' })}

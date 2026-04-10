@@ -59,12 +59,17 @@ export interface UseCvProcessingReturn {
   checkCvStatus: () => Promise<boolean>;
   setCvUploaded: (v: boolean) => void;
   setCvData: (v: any) => void;
+  /** Retry the CV upload/parsing after failure */
+  retryCvUpload: (file: File) => void;
+  /** Current file being processed (for display) */
+  currentFile: File | null;
 }
 
 export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingReturn {
   const [cvUploaded, setCvUploaded] = useState(false);
   const [cvData, setCvData] = useState<any>(null);
   const [cvStage, setCvStage] = useState<CvStage>('idle');
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
 
   const cvInputRef = useRef<HTMLInputElement>(null);
   const cvUploadingRef = useRef(false);
@@ -277,6 +282,13 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     return null; // Timed out
   };
 
+  /** Format file size for display */
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   /** Process a CV file — 3-stage pipeline */
   const processFile = async (file: File) => {
     if (cvUploadingRef.current) return;
@@ -301,6 +313,9 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     setCvUploaded(false);
     setCvData(null);
     setCvStage('uploading');
+    setCurrentFile(file);
+    const fileSizeStr = formatFileSize(file.size);
+    toast.loading(`Uploading ${file.name} (${fileSizeStr})... Please wait, this may take a moment on slow connections.`, { id: 'cv-upload' });
     if (cvInputRef.current) cvInputRef.current.value = '';
 
     // Notify parent to advance to equipment NOW (before upload starts)
@@ -315,12 +330,17 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     if (!fileId) {
       cvUploadingRef.current = false;
       setCvStage('failed');
-      toast.error('CV upload failed. Please check your connection and try again.');
+      const uploadErrMsg = 'CV upload failed — your connection may be too slow. Please check your internet and try again.';
+      toast.error(uploadErrMsg);
       if (targets.onCvFailed) {
-        targets.onCvFailed('Upload failed after multiple attempts.');
+        targets.onCvFailed(uploadErrMsg);
       }
       return;
     }
+
+    // Progress update after successful upload
+    toast.loading('Analyzing your CV... (this may take a moment)', { id: 'cv-upload' });
+    setCvStage('parsing');
 
     // ─── Stage 3: Poll for parsed result ───
     const result = await pollParseResult(fileId);
@@ -329,9 +349,10 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
 
     if (!result) {
       setCvStage('failed');
-      toast.error('CV processing failed. Please try a different file.');
+      const parseErrMsg = 'CV analysis timed out. Please check your connection and try again.';
+      toast.error(parseErrMsg);
       if (targets.onCvFailed) {
-        targets.onCvFailed('Parsing failed or timed out.');
+        targets.onCvFailed(parseErrMsg);
       }
       return;
     }
@@ -355,10 +376,16 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     // ─── All good — apply data ───
     applyParsedCvData(result);
     setCvStage('done');
+    toast.success('CV analyzed successfully!', { id: 'cv-upload' });
 
     if (targets.onParseComplete) {
       targets.onParseComplete();
     }
+  };
+
+  /** Retry a failed CV upload/parse with the same file */
+  const retryCvUpload = (file: File) => {
+    processFile(file);
   };
 
   /** Handle CV file input change event */
@@ -378,5 +405,7 @@ export function useCvProcessing(targets: CvAutoFillTargets): UseCvProcessingRetu
     checkCvStatus,
     setCvUploaded,
     setCvData,
+    retryCvUpload,
+    currentFile,
   };
 }

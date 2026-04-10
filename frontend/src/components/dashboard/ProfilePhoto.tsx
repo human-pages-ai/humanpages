@@ -88,6 +88,8 @@ export default function ProfilePhoto({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [fileSizeDisplay, setFileSizeDisplay] = useState<string | null>(null);
 
   // Cropper state
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -115,6 +117,11 @@ export default function ProfilePhoto({
       return;
     }
 
+    // Display file size for transparency
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    setFileSizeDisplay(`${file.name} (${fileSizeMB} MB)`);
+    setUploadError(null);
+
     // Open cropper modal
     const url = URL.createObjectURL(file);
     setCropSrc(url);
@@ -129,13 +136,17 @@ export default function ProfilePhoto({
     if (!cropSrc || !croppedAreaPixels) return;
 
     setUploading(true);
+    setUploadError(null);
     try {
       const croppedFile = await cropImage(cropSrc, croppedAreaPixels);
       closeCropper();
       await onUpload(croppedFile);
       toast.success(t('dashboard.photo.uploaded', 'Photo uploaded'));
+      setFileSizeDisplay(null);
     } catch (err: any) {
-      toast.error(err.message || t('dashboard.photo.uploadFailed', 'Upload failed'));
+      const errorMessage = err.message || t('dashboard.photo.uploadFailed', 'Upload failed');
+      setUploadError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -263,6 +274,11 @@ export default function ProfilePhoto({
               <p className="text-xs text-gray-500 mt-0.5">
                 {t('dashboard.photo.cropHint', 'Pinch or scroll to zoom, drag to reposition')}
               </p>
+              {fileSizeDisplay && (
+                <p className="text-xs text-gray-600 mt-1">
+                  {t('dashboard.photo.uploading', 'Uploading')}: {fileSizeDisplay}
+                </p>
+              )}
             </div>
 
             {/* Cropper area */}
@@ -294,8 +310,33 @@ export default function ProfilePhoto({
               />
             </div>
 
+            {/* Error state with retry button */}
+            {uploadError && (
+              <div className="px-4 py-3 bg-red-50 border-t border-red-200">
+                <p className="text-sm text-red-700 mb-2">{uploadError}</p>
+                <button
+                  type="button"
+                  onClick={handleCropConfirm}
+                  disabled={uploading}
+                  className="w-full px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {uploading ? (
+                    <>
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      {t('dashboard.photo.retrying', 'Retrying...')}
+                    </>
+                  ) : (
+                    t('common.retry', 'Retry')
+                  )}
+                </button>
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="flex gap-2 px-4 py-3 border-t border-gray-200">
+            <div className={`flex gap-2 px-4 py-3 border-t ${uploadError ? 'border-red-200' : 'border-gray-200'}`}>
               <button
                 type="button"
                 onClick={closeCropper}
@@ -304,24 +345,26 @@ export default function ProfilePhoto({
               >
                 {t('common.cancel', 'Cancel')}
               </button>
-              <button
-                type="button"
-                onClick={handleCropConfirm}
-                disabled={uploading}
-                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center justify-center gap-1.5"
-              >
-                {uploading ? (
-                  <>
-                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    {t('dashboard.photo.uploading', 'Uploading...')}
-                  </>
-                ) : (
-                  t('dashboard.photo.save', 'Save')
-                )}
-              </button>
+              {!uploadError && (
+                <button
+                  type="button"
+                  onClick={handleCropConfirm}
+                  disabled={uploading}
+                  className="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {uploading ? (
+                    <>
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      {t('dashboard.photo.uploading', 'Uploading...')}
+                    </>
+                  ) : (
+                    t('dashboard.photo.save', 'Save')
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

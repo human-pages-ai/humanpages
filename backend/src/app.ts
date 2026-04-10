@@ -42,6 +42,7 @@ import { getProfileMetaHtml, getBlogMetaHtml, getCareersMetaHtml, getDevPageMeta
 import { getGptSetupGoHtml } from './lib/gpt-setup-page.js';
 import { prisma } from './lib/prisma.js';
 import { trackServerEvent } from './lib/posthog.js';
+import { isR2Configured } from './lib/storage.js';
 
 const app = express();
 
@@ -105,10 +106,19 @@ app.use('/api/admin/videos', express.json({ limit: '2mb' }));
 // Multipart file upload routes MUST be mounted before the global JSON body parser
 // to avoid the parser rejecting multipart/form-data requests.
 // JSON body parser is added per-path so non-multipart endpoints (PATCH, import-oauth) work.
-app.use('/api/photos', express.json({ limit: '10kb' }), photosRoutes);
-app.use('/api/agents/photos', agentPhotosRoutes);
+
+// Request timeout middleware for upload routes — increased for slow mobile networks
+// CVs and photos may be slow on 2G/3G connections (up to 120 seconds)
+const uploadTimeoutMiddleware = (req: any, res: any, next: any) => {
+  req.setTimeout(120_000); // 120 seconds for uploads
+  res.setTimeout(120_000);
+  next();
+};
+
+app.use('/api/photos', uploadTimeoutMiddleware, express.json({ limit: '10kb' }), photosRoutes);
+app.use('/api/agents/photos', uploadTimeoutMiddleware, agentPhotosRoutes);
 app.use('/api/listings', express.json({ limit: '10kb' }), listingsRoutes);
-app.use('/api/cv', cvRouter);
+app.use('/api/cv', uploadTimeoutMiddleware, cvRouter);
 
 // Global body parser — 10kb limit for all other routes (bot/abuse protection)
 // Skip JSON parser for multipart/file upload routes (already handled per-path above)
@@ -151,6 +161,16 @@ app.use(pinoHttp({
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'humans-api' });
+});
+
+// Upload health check — returns 503 if R2 storage is not configured
+app.get('/health/uploads', (req, res) => {
+  const available = isR2Configured();
+  res.status(available ? 200 : 503).json({
+    available,
+    service: 'uploads',
+    reason: available ? undefined : 'R2 storage not configured',
+  });
 });
 
 // Routes

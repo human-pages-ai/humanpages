@@ -564,6 +564,8 @@ export default function Onboarding() {
           <StepCvUpload
             cvInputRef={cv.cvInputRef} onCVChange={cv.handleCVChange} onProcessFile={cv.processFile}
             cvProcessing={cv.cvProcessing} cvUploaded={cv.cvUploaded} cvData={cv.cvData}
+            currentFile={cv.currentFile}
+            onRetry={cv.retryCvUpload}
             onReupload={() => {
               // Clear value so re-selecting the same file triggers onChange
               if (cv.cvInputRef.current) cv.cvInputRef.current.value = '';

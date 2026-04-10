@@ -44,7 +44,7 @@ export function sanitizeBio(bio: string | null | undefined, name: string | null 
   clean = clean.replace(/\s{2,}/g, ' ').replace(/^[,;.\s]+/, '').trim();
   return clean.slice(0, 500) || null;
 }
-import { uploadToR2, getR2ObjectBuffer } from '../lib/storage.js';
+import { uploadToR2, getR2ObjectBuffer, isR2Configured } from '../lib/storage.js';
 
 // pdf-parse v2 exports a PDFParse class; v1 exports a callable function.
 // Detect which version is installed and provide a unified interface.
@@ -344,6 +344,12 @@ router.post(
   upload.single('cv'),
   async (req: AuthRequest, res) => {
     try {
+      // Check R2 storage configuration upfront
+      if (!isR2Configured()) {
+        logger.warn('CV upload rejected: R2 storage not configured');
+        return res.status(503).json({ error: 'File storage is temporarily unavailable. Please try again later.' });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: 'No CV file provided' });
       }
@@ -509,6 +515,12 @@ router.post(
   upload.single('cv'),
   async (req: AuthRequest, res) => {
     try {
+      // Check R2 storage configuration upfront
+      if (!isR2Configured()) {
+        logger.warn('CV upload-file rejected: R2 storage not configured');
+        return res.status(503).json({ error: 'File storage is temporarily unavailable. Please try again later.' });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: 'No CV file provided' });
       }
@@ -721,6 +733,12 @@ router.delete('/certificate/:id', authenticateToken, async (req: AuthRequest, re
  */
 router.post('/reparse', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    // Check R2 storage configuration upfront
+    if (!isR2Configured()) {
+      logger.warn('CV reparse rejected: R2 storage not configured');
+      return res.status(503).json({ error: 'File storage is temporarily unavailable. Please try again later.' });
+    }
+
     const human = await prisma.human.findUnique({
       where: { id: req.userId },
       select: { cvFileKey: true },

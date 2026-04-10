@@ -10,6 +10,7 @@ import {
   getProfilePhotoSignedUrl,
   deleteProfilePhoto,
   downloadExternalImage,
+  isR2Configured,
 } from '../lib/storage.js';
 import { queueModeration } from '../lib/moderation.js';
 import { logger } from '../lib/logger.js';
@@ -61,6 +62,12 @@ const uploadLimiter = rateLimit({
 // POST /upload — Direct file upload
 router.post('/upload', authenticateToken, uploadLimiter, upload.single('photo'), async (req: AuthRequest, res) => {
   try {
+    // Check R2 storage configuration upfront
+    if (!isR2Configured()) {
+      logger.warn('Photo upload rejected: R2 storage not configured');
+      return res.status(503).json({ error: 'Photo upload is temporarily unavailable. Please try again later.' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: 'No photo file provided' });
     }
@@ -119,6 +126,12 @@ const importOAuthSchema = z.object({
 
 router.post('/import-oauth', authenticateToken, uploadLimiter, async (req: AuthRequest, res) => {
   try {
+    // Check R2 storage configuration upfront
+    if (!isR2Configured()) {
+      logger.warn('OAuth photo import rejected: R2 storage not configured');
+      return res.status(503).json({ error: 'Photo upload is temporarily unavailable. Please try again later.' });
+    }
+
     const { provider } = importOAuthSchema.parse(req.body);
 
     const human = await prisma.human.findUnique({
