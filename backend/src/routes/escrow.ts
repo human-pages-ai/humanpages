@@ -68,10 +68,10 @@ router.post('/:jobId/verify-deposit', authenticateAgent, requireActiveAgent, asy
         escrowJobIdHash: jobIdHash,
         escrowDepositTxHash: txHash,
         escrowDepositedAt: new Date(),
-        escrowDepositorAddress: deposit.depositor,
-        escrowPayeeAddress: deposit.payee,
+        escrowDepositorAddress: deposit.depositor.toLowerCase(),
+        escrowPayeeAddress: deposit.payee.toLowerCase(),
         escrowAmount: deposit.amount.toString(),
-        escrowArbitratorAddress: deposit.arbitrator,
+        escrowArbitratorAddress: deposit.arbitrator.toLowerCase(),
         escrowArbitratorFeeBps: deposit.arbitratorFeeBps,
         escrowDisputeWindow: deposit.disputeWindow,
         paidAt: new Date(),
@@ -318,6 +318,21 @@ router.post('/resolve', authenticateAgent, async (req: AgentAuthRequest, res) =>
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.paymentMode !== 'ESCROW' || job.escrowStatus !== 'DISPUTED') {
       return res.status(400).json({ error: 'Escrow not in DISPUTED state' });
+    }
+
+    // Verify the caller is the assigned arbitrator for this job
+    if (!job.escrowArbitratorAddress) {
+      return res.status(400).json({ error: 'No arbitrator assigned to this job' });
+    }
+    const callerWallet = await prisma.agentWallet.findFirst({
+      where: {
+        agentId: req.agent!.id,
+        address: job.escrowArbitratorAddress.toLowerCase(),
+        verified: true,
+      },
+    });
+    if (!callerWallet) {
+      return res.status(403).json({ error: 'Caller is not the assigned arbitrator for this job' });
     }
 
     const jobIdHash = job.escrowJobIdHash as Hex;

@@ -984,9 +984,11 @@ router.post('/me/verify-humanity', authenticateToken, requireIdentityVerified, v
     });
     const { walletAddress } = schema.parse(req.body);
 
-    // Verify user owns this wallet
+    // Verify user owns this wallet (lowercase both sides — Ethereum addresses
+    // are case-insensitive but may have been stored mixed-case historically).
+    const normalizedAddress = walletAddress.toLowerCase();
     const wallet = await prisma.wallet.findFirst({
-      where: { humanId: req.userId!, address: walletAddress },
+      where: { humanId: req.userId!, address: normalizedAddress },
     });
     if (!wallet) {
       return res.status(400).json({ error: 'Wallet address not found on your profile' });
@@ -1000,7 +1002,7 @@ router.post('/me/verify-humanity', authenticateToken, requireIdentityVerified, v
     }
 
     const gitcoinRes = await fetch(
-      `https://api.passport.xyz/v2/stamps/${scorerId}/score/${walletAddress}`,
+      `https://api.passport.xyz/v2/stamps/${scorerId}/score/${normalizedAddress}`,
       {
         headers: {
           'X-API-KEY': apiKey,

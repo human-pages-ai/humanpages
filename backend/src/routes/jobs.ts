@@ -167,7 +167,9 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         where: {
           registeredAgentId: agent.id,
           createdAt: { gte: windowStart },
-          status: { notIn: ['ACCEPTED', 'COMPLETED', 'PAID'] },
+          // Exclude terminal states AND DISPUTED (disputes happen post-payment
+          // and can linger — shouldn't lock an agent out of new offers).
+          status: { notIn: ['COMPLETED', 'PAID', 'CANCELLED', 'REJECTED', 'DISPUTED'] },
         },
       });
 
@@ -183,7 +185,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
 
         const windowHours = config.windowMs / (60 * 60 * 1000);
         const windowLabel = windowHours >= 48 ? `${windowHours / 24} days` : `${windowHours} hours`;
-        const tierMsg = `Your ${agent.activationTier} tier allows ${config.limit} job offer(s) per ${windowLabel}. Accepted offers don't count toward this limit.`;
+        const tierMsg = `Your ${agent.activationTier} tier allows ${config.limit} active job offer(s) per ${windowLabel}. Jobs count toward this limit until they reach COMPLETED, PAID, CANCELLED, or REJECTED status.`;
         const price = X402_PRICES.job_offer;
 
         if (isX402Enabled()) {
@@ -394,7 +396,7 @@ router.post('/', ipRateLimiter, x402PaymentCheck('job_offer'), authenticateAgent
         // Escrow fields
         ...(data.paymentMode === 'ESCROW' ? {
           escrowStatus: 'PENDING_DEPOSIT' as const,
-          escrowArbitratorAddress: data.escrowArbitratorAddress,
+          escrowArbitratorAddress: data.escrowArbitratorAddress?.toLowerCase(),
           escrowDisputeWindow: data.priceUsdc < 25 ? 86400 : data.priceUsdc < 100 ? 172800 : 259200,
         } : {}),
         callbackUrl: data.callbackUrl,

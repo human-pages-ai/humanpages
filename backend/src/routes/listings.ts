@@ -221,11 +221,16 @@ router.post('/', x402PaymentCheck('listing_post'), authenticateAgent, requireAct
 
     if (!req.x402Paid) {
       const windowStart = new Date(Date.now() - config.windowMs);
+      const now = new Date();
       recentListingCount = await prisma.listing.count({
         where: {
           agentId: agent.id,
           createdAt: { gte: windowStart },
-          status: { not: 'CLOSED' }, // Count all non-closed listings
+          // Exclude terminated listings AND listings past expiry. Status is
+          // never auto-flipped to EXPIRED, so we must check expiresAt directly
+          // or a still-OPEN-but-expired listing will eat quota forever.
+          status: { notIn: ['CLOSED', 'EXPIRED', 'CANCELLED'] },
+          expiresAt: { gt: now },
         },
       });
 

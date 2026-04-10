@@ -24,28 +24,29 @@ describe('Agent Identity & Reputation', () => {
       expect(res.body.verificationToken.length).toBe(64); // 32 bytes hex
     });
 
-    it('should auto-activate agent as ACTIVE on PRO tier', async () => {
+    it('should register new agent as PENDING on BASIC tier requiring activation', async () => {
       const res = await request(app)
         .post('/api/agents/register')
-        .send({ name: 'Auto PRO Agent', acceptTos: true });
+        .send({ name: 'New Agent', acceptTos: true });
 
       expect(res.status).toBe(201);
-      expect(res.body.status).toBe('ACTIVE');
-      expect(res.body.tier).toBe('PRO');
+      expect(res.body.status).toBe('PENDING');
+      expect(res.body.tier).toBe('BASIC');
+      expect(res.body.activationRequired).toBe(true);
+      expect(res.body.activationUrl).toContain('/activate');
       expect(res.body.dashboardUrl).toContain('/agents/');
       expect(res.body.limits).toBeDefined();
-      expect(res.body.limits.jobOffersPerDay).toBe(15);
-      expect(res.body.limits.profileViewsPerDay).toBe(50);
+      expect(res.body.limits.jobOffersPerTwoDays).toBe(1);
+      expect(res.body.limits.profileViewsPerDay).toBe(1);
 
       // Verify in database
       const agent = await prisma.agent.findUnique({
         where: { id: res.body.agent.id },
       });
-      expect(agent?.status).toBe('ACTIVE');
-      expect(agent?.activationMethod).toBe('AUTO');
-      expect(agent?.activationTier).toBe('PRO');
+      expect(agent?.status).toBe('PENDING');
+      expect(agent?.activationMethod).toBeNull();
+      expect(agent?.activationTier).toBe('BASIC');
       expect(agent?.activationExpiresAt).toBeNull();
-      expect(agent?.activatedAt).toBeDefined();
     });
 
     it('should register with all optional fields', async () => {

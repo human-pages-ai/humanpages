@@ -137,11 +137,10 @@ router.post('/register', registerLimiter, async (req, res) => {
           }),
           discoverySource: data.source,
           discoveryDetail: data.sourceDetail,
-          // Auto-activate as PRO with no expiry (free launch offer)
-          status: 'ACTIVE',
-          activatedAt: new Date(),
-          activationMethod: 'AUTO',
-          activationTier: 'PRO',
+          // New agents start as BASIC and must verify via payment or social to activate
+          status: 'PENDING',
+          activationMethod: null,
+          activationTier: 'BASIC',
           activationExpiresAt: null,
         },
       });
@@ -169,14 +168,16 @@ router.post('/register', registerLimiter, async (req, res) => {
       apiKey,
       verificationToken,
       ...(webhookSecret && { webhookSecret }),
-      status: 'ACTIVE',
-      tier: 'PRO',
+      status: 'PENDING',
+      tier: 'BASIC',
       dashboardUrl: `https://humanpages.ai/agents/${agent.id}`,
+      activationRequired: true,
+      activationUrl: `https://humanpages.ai/agents/${agent.id}/activate`,
       limits: {
-        jobOffersPerDay: 15,
-        profileViewsPerDay: 50,
+        jobOffersPerTwoDays: 1,
+        profileViewsPerDay: 1,
       },
-      message: 'Agent registered and active on PRO tier. Save your API key — it cannot be retrieved later. Pass it as X-Agent-Key header when creating jobs.' + (webhookSecret ? ' Your webhook secret is included — save it for verifying webhook signatures.' : ''),
+      message: 'Agent registered. Your account is PENDING activation — you must verify via payment or social before creating jobs at BASIC tier (1 job offer per 48h, 1 profile view per day). Complete activation at the activationUrl, or upgrade to PRO via payment. Save your API key — it cannot be retrieved later. Pass it as X-Agent-Key header when creating jobs.' + (webhookSecret ? ' Your webhook secret is included — save it for verifying webhook signatures.' : ''),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
